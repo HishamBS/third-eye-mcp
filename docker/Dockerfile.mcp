@@ -1,0 +1,8 @@
+FROM oven/bun:1
+
+WORKDIR /srv
+COPY mcp-bridge/package.json mcp-bridge/bunfig.toml mcp-bridge/tsconfig.json /srv/
+RUN bun install
+COPY mcp-bridge/src /srv/src
+EXPOSE 7331
+CMD ["bun", "run", "src/index.ts"]

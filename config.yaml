@@ -1,0 +1,67 @@
+version: 1
+groq:
+  base_url: "https://api.groq.com/openai/v1"
+  models:
+    tools:
+      "sharingan/clarify":
+        primary: meta-llama/llama-4-scout-17b-16e-instruct
+      "helper/rewrite_prompt":
+        primary: qwen/qwen3-32b
+      "jogan/confirm_intent":
+        primary: llama-3.1-8b-instant
+      "rinnegan/plan_requirements":
+        primary: qwen/qwen3-32b
+      "rinnegan/plan_review":
+        primary: openai/gpt-oss-120b
+      "rinnegan/final_approval":
+        primary: openai/gpt-oss-120b
+      "mangekyo/review_scaffold":
+        primary: llama-3.3-70b-versatile
+        fallback: deepseek-r1-distill-llama-70b
+      "mangekyo/review_impl":
+        primary: llama-3.3-70b-versatile
+        fallback: deepseek-r1-distill-llama-70b
+      "mangekyo/review_tests":
+        primary: llama-3.3-70b-versatile
+        fallback: deepseek-r1-distill-llama-70b
+      "mangekyo/review_docs":
+        primary: llama-3.3-70b-versatile
+        fallback: deepseek-r1-distill-llama-70b
+      "tenseigan/validate_claims":
+        primary: openai/gpt-oss-120b
+      "byakugan/consistency_check":
+        primary: meta-llama/llama-4-maverick-17b-128e-instruct
+    embeddings: groq/compound-mini
+    policy_filter:
+      primary: meta-llama/llama-guard-4-12b
+  inference_defaults:
+    temperature: 0.2
+    top_p: 0.9
+    max_output_tokens: 2000
+    json_mode: true
+    system_preamble_suffix: "Return VALID JSON only. No prose outside JSON."
+timeouts:
+  default_seconds: 30
+  evidence_seconds: 45
+  parallel_grace_seconds: 5
+  retry_backoff_seconds: 1.5
+retries:
+  max_attempts: 2
+thresholds:
+  ambiguity_score_min: 0.2
+  intent_confirmation_token_estimate: 2000
+  byakugan_similarity_alert: 0.85
+redis:
+  host: "redis"
+  port: 6379
+  db: 0
+sqlite:
+  path: "data/third_eye.db"
+logging:
+  level: "INFO"
+  json: true
+mcp:
+  host: "0.0.0.0"
+  port: 7331
+orchestration:
+  parallelize_consistency_and_evidence: true
