@@ -57,6 +57,7 @@ class StatusCode(str, Enum):
     E_BAD_PAYLOAD_SCHEMA = "E_BAD_PAYLOAD_SCHEMA"
     E_INTERNAL_ERROR = "E_INTERNAL_ERROR"
     E_BUDGET_EXCEEDED = "E_BUDGET_EXCEEDED"
+    E_PROMPT_GUARD = "E_PROMPT_GUARD"
 
 
 class EyeTag(str, Enum):
@@ -89,6 +90,40 @@ class ToolName(str, Enum):
     MANGEKYO_REVIEW_DOCS = "mangekyo/review_docs"
     TENSEIGAN_VALIDATE_CLAIMS = "tenseigan/validate_claims"
     BYAKUGAN_CONSISTENCY_CHECK = "byakugan/consistency_check"
+
+
+TOOL_BRANCH_MAP: Final[dict[str, str]] = {
+    ToolName.OVERSEER_NAVIGATOR.value: "shared",
+    ToolName.SHARINGAN_CLARIFY.value: "shared",
+    ToolName.PROMPT_HELPER_REWRITE.value: "shared",
+    ToolName.JOGAN_CONFIRM_INTENT.value: "shared",
+    ToolName.RINNEGAN_PLAN_REQUIREMENTS.value: "code",
+    ToolName.RINNEGAN_PLAN_REVIEW.value: "code",
+    ToolName.RINNEGAN_FINAL_APPROVAL.value: "code",
+    ToolName.MANGEKYO_REVIEW_SCAFFOLD.value: "code",
+    ToolName.MANGEKYO_REVIEW_IMPL.value: "code",
+    ToolName.MANGEKYO_REVIEW_TESTS.value: "code",
+    ToolName.MANGEKYO_REVIEW_DOCS.value: "code",
+    ToolName.TENSEIGAN_VALIDATE_CLAIMS.value: "text",
+    ToolName.BYAKUGAN_CONSISTENCY_CHECK.value: "text",
+}
+
+
+TOOL_TO_EYE: Final[dict[str, EyeTag]] = {
+    ToolName.OVERSEER_NAVIGATOR.value: EyeTag.OVERSEER,
+    ToolName.SHARINGAN_CLARIFY.value: EyeTag.SHARINGAN,
+    ToolName.PROMPT_HELPER_REWRITE.value: EyeTag.PROMPT_HELPER,
+    ToolName.JOGAN_CONFIRM_INTENT.value: EyeTag.JOGAN,
+    ToolName.RINNEGAN_PLAN_REQUIREMENTS.value: EyeTag.RINNEGAN_PLAN_REQUIREMENTS,
+    ToolName.RINNEGAN_PLAN_REVIEW.value: EyeTag.RINNEGAN_PLAN_REVIEW,
+    ToolName.RINNEGAN_FINAL_APPROVAL.value: EyeTag.RINNEGAN_FINAL,
+    ToolName.MANGEKYO_REVIEW_SCAFFOLD.value: EyeTag.MANGEKYO_REVIEW_SCAFFOLD,
+    ToolName.MANGEKYO_REVIEW_IMPL.value: EyeTag.MANGEKYO_REVIEW_IMPL,
+    ToolName.MANGEKYO_REVIEW_TESTS.value: EyeTag.MANGEKYO_REVIEW_TESTS,
+    ToolName.MANGEKYO_REVIEW_DOCS.value: EyeTag.MANGEKYO_REVIEW_DOCS,
+    ToolName.TENSEIGAN_VALIDATE_CLAIMS.value: EyeTag.TENSEIGAN,
+    ToolName.BYAKUGAN_CONSISTENCY_CHECK.value: EyeTag.BYAKUGAN,
+}
 
 
 class PersonaKey(str, Enum):
@@ -130,6 +165,7 @@ class DataKey(str, Enum):
     SCHEMA_MD = "schema_md"
     CONTRACT_JSON = "contract_json"
     BUDGET_TOKENS = "budget_tokens"
+    TOOL_VERSION = "tool_version"
 
 
 class CoverageKey(str, Enum):
@@ -213,11 +249,53 @@ class NextAction(str, Enum):
     COMPLETE_PHASES = "Complete missing phases and resubmit."
     RETURN_DELIVERABLE = "Return the final deliverable to the user (host action)."
     GO_TO_BYAKUGAN = "Proceed to byakugan/consistency_check."
+    REWRITE_REQUEST = "Rewrite the request to remove unsafe or meta-instructions, then resubmit."
 
 
 NEWLINE: Final[str] = "\n"
 DOUBLE_NEWLINE: Final[str] = f"{NEWLINE}{NEWLINE}"
 BULLET_PREFIX: Final[str] = "- "
+
+PROMPT_INJECTION_PATTERNS: Final[tuple[str, ...]] = (
+    "ignore previous instructions",
+    "forget the previous",
+    "disregard all prior",
+    "system prompt",
+    "developer prompt",
+    "begin_system_prompt",
+    "end_system_prompt",
+)
+
+
+class ToolVersion(str, Enum):
+    SHARINGAN = "sharingan/clarify@1.0.0"
+    PROMPT_HELPER = "helper/rewrite_prompt@1.0.0"
+    JOGAN = "jogan/confirm_intent@1.0.0"
+    RINNEGAN_PLAN_REQUIREMENTS = "rinnegan/plan_requirements@1.0.0"
+    RINNEGAN_PLAN_REVIEW = "rinnegan/plan_review@1.0.0"
+    RINNEGAN_FINAL = "rinnegan/final_approval@1.0.0"
+    MANGEKYO_SCAFFOLD = "mangekyo/review_scaffold@1.0.0"
+    MANGEKYO_IMPL = "mangekyo/review_impl@1.0.0"
+    MANGEKYO_TESTS = "mangekyo/review_tests@1.0.0"
+    MANGEKYO_DOCS = "mangekyo/review_docs@1.0.0"
+    TENSEIGAN = "tenseigan/validate_claims@1.0.0"
+    BYAKUGAN = "byakugan/consistency_check@1.0.0"
+
+
+EYE_TOOL_VERSIONS: dict[EyeTag, str] = {
+    EyeTag.SHARINGAN: ToolVersion.SHARINGAN.value,
+    EyeTag.PROMPT_HELPER: ToolVersion.PROMPT_HELPER.value,
+    EyeTag.JOGAN: ToolVersion.JOGAN.value,
+    EyeTag.RINNEGAN_PLAN_REQUIREMENTS: ToolVersion.RINNEGAN_PLAN_REQUIREMENTS.value,
+    EyeTag.RINNEGAN_PLAN_REVIEW: ToolVersion.RINNEGAN_PLAN_REVIEW.value,
+    EyeTag.RINNEGAN_FINAL: ToolVersion.RINNEGAN_FINAL.value,
+    EyeTag.MANGEKYO_REVIEW_SCAFFOLD: ToolVersion.MANGEKYO_SCAFFOLD.value,
+    EyeTag.MANGEKYO_REVIEW_IMPL: ToolVersion.MANGEKYO_IMPL.value,
+    EyeTag.MANGEKYO_REVIEW_TESTS: ToolVersion.MANGEKYO_TESTS.value,
+    EyeTag.MANGEKYO_REVIEW_DOCS: ToolVersion.MANGEKYO_DOCS.value,
+    EyeTag.TENSEIGAN: ToolVersion.TENSEIGAN.value,
+    EyeTag.BYAKUGAN: ToolVersion.BYAKUGAN.value,
+}
 CHECKED_BOX: Final[str] = "- [x] "
 UNCHECKED_BOX: Final[str] = "- [ ] "
 CODE_FENCE_DIFF: Final[str] = "```diff"

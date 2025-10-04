@@ -1,13 +1,26 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import fetch from "node-fetch";
+import { launchPortal } from "./portal.js";
 
 const API_URL = process.env.API_URL?.replace(/\/$/, "") ?? "http://localhost:8000";
+const RESERVED_WRAPPER_KEYS = new Set(["signal", "_meta", "requestId", "progressToken", "arguments"]);
+
+type SessionContext = {
+  session_id: string;
+  user_id: string | null;
+  lang: "auto" | "en" | "ar";
+  budget_tokens: number;
+  tenant?: string | null;
+};
+
+let cachedContext: SessionContext | null = null;
 
 const contextSchema = {
   type: "object",
   properties: {
     session_id: { type: "string" },
     user_id: { type: ["string", "null"] },
+    tenant: { type: ["string", "null"] },
     lang: { enum: ["auto", "en", "ar"] },
     budget_tokens: { type: "number", minimum: 0 },
   },
@@ -15,17 +28,101 @@ const contextSchema = {
   additionalProperties: false,
 } as const;
 
+const API_KEY = process.env.THIRD_EYE_API_KEY ?? "";
+if (!API_KEY) {
+  console.warn(
+    "[Third Eye MCP] THIRD_EYE_API_KEY is not set; API calls will be rejected with 401 until you configure it.",
+  );
+}
+
+function extractEnvelope(raw: Record<string, unknown>): Record<string, unknown> {
+  let envelope: Record<string, unknown> = raw;
+  if (raw && typeof raw.arguments === "object" && raw.arguments !== null) {
+    envelope = raw.arguments as Record<string, unknown>;
+  }
+  const cleaned: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(envelope)) {
+    if (RESERVED_WRAPPER_KEYS.has(key)) continue;
+    cleaned[key] = value;
+  }
+  return cleaned;
+}
+
+function ensureContext(): SessionContext {
+  if (!cachedContext) {
+    cachedContext = {
+      session_id: `sess-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+      user_id: null,
+      lang: "auto",
+      budget_tokens: 0,
+      tenant: null,
+    };
+  }
+  return { ...cachedContext };
+}
+
+function coalesceContext(input: unknown): SessionContext {
+  const base = ensureContext();
+  if (!input || typeof input !== "object") {
+    return base;
+  }
+  const raw = input as Record<string, unknown>;
+  if (typeof raw.session_id === "string" && raw.session_id.trim()) {
+    base.session_id = raw.session_id.trim();
+  }
+  if (typeof raw.user_id === "string" && raw.user_id.trim()) {
+    base.user_id = raw.user_id.trim();
+  } else if (raw.user_id === null) {
+    base.user_id = null;
+  }
+  if (raw.lang === "en" || raw.lang === "ar" || raw.lang === "auto") {
+    base.lang = raw.lang;
+  }
+  const numericBudget = Number(raw.budget_tokens);
+  if (Number.isFinite(numericBudget) && numericBudget >= 0) {
+    base.budget_tokens = numericBudget;
+  }
+  if (typeof raw.tenant === "string" && raw.tenant.trim()) {
+    base.tenant = raw.tenant.trim();
+  } else if (raw.tenant === null) {
+    base.tenant = null;
+  }
+  return base;
+}
+
 async function callEye(path: string, body: Record<string, unknown>) {
+  console.info(`[Third Eye MCP] raw body for ${path}: ${JSON.stringify(body)}`);
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (API_KEY) {
+    headers["X-API-Key"] = API_KEY;
+  }
+  const envelope = extractEnvelope(body);
+  const mergedContext = coalesceContext(envelope.context);
+  cachedContext = mergedContext;
+  envelope.context = mergedContext;
+  if (!envelope.payload || typeof envelope.payload !== "object") {
+    envelope.payload = {};
+  }
+
+  console.info(`[Third Eye MCP] -> ${path} ${JSON.stringify(envelope)}`);
+
   const response = await fetch(`${API_URL}${path}`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
+    headers,
+    body: JSON.stringify(envelope),
   });
   if (!response.ok) {
     const text = await response.text();
     throw new Error(`Eye request failed (${response.status}): ${text}`);
   }
   const payload = (await response.json()) as Record<string, unknown>;
+  if (path === "/eyes/overseer/navigator") {
+    const sessionId = cachedContext?.session_id;
+    if (sessionId) {
+      launchPortal(sessionId, true);
+      console.info(`[Third Eye MCP] Session established: ${sessionId}`);
+    }
+  }
   return {
     content: [
       {

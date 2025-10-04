@@ -34,19 +34,29 @@ from ..constants import (
 )
 from ..examples import EXAMPLE_SHARINGAN
 from ..schemas import EyeResponse, SharinganRequest
-from ._shared import build_response, execute_eye
+import asyncio
+
+from ._shared import build_response, execute_eye, execute_eye_async
 
 _EXAMPLE_REQUEST = EXAMPLE_SHARINGAN
 
 
-def clarify(raw: Dict[str, Any]) -> Dict[str, Any]:
-    return execute_eye(
+async def clarify_async(raw: Dict[str, Any]) -> Dict[str, Any]:
+    return await execute_eye_async(
         tag=EyeTag.SHARINGAN,
         model=SharinganRequest,
         handler=_handle,
         raw=raw,
         example=_EXAMPLE_REQUEST,
     )
+
+
+def clarify(raw: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(clarify_async(raw))
+    raise RuntimeError("clarify() cannot be called from an active event loop; use await clarify_async() instead.")
 
 
 _TOKEN_PATTERN = re.compile(r"[a-z0-9_./+-]+")
@@ -74,7 +84,7 @@ def _normalize_tokens(text: str) -> set[str]:
     return {token for token in _TOKEN_PATTERN.findall(text.lower()) if token}
 
 
-def _ambiguity_score(prompt: str) -> tuple[float, bool, int]:
+def _ambiguity_score(prompt: str, threshold: float = AMBIGUITY_SCORE_THRESHOLD) -> tuple[float, bool, int]:
     stripped = prompt.strip()
     raw_tokens = stripped.split()
     tokens = [token.strip(".,:;?!") for token in raw_tokens if token.strip(".,:;?!")]
@@ -104,7 +114,8 @@ def _ambiguity_score(prompt: str) -> tuple[float, bool, int]:
     if verb_count == 0:
         base += 0.1
     score = max(0.0, min(1.0, base))
-    ambiguous = score >= AMBIGUITY_SCORE_THRESHOLD
+    threshold = max(0.0, min(1.0, threshold))
+    ambiguous = score >= threshold
     clarification_target = math.ceil(score * CLARIFICATION_MULTIPLIER)
     x = max(CLARIFICATION_MIN_COUNT, min(CLARIFICATION_MAX_COUNT, clarification_target))
     return round(score, 2), ambiguous, x
@@ -239,9 +250,27 @@ def _status_code(ambiguous: bool) -> StatusCode:
     return StatusCode.E_NEEDS_CLARIFICATION if ambiguous else StatusCode.OK_NO_CLARIFICATION_NEEDED
 
 
+def _resolve_threshold(request: SharinganRequest) -> float:
+    context = getattr(request, "context", None)
+    settings = getattr(context, "settings", None) if context else None
+    candidate = None
+    if isinstance(settings, dict):
+        candidate = settings.get("ambiguity_threshold")
+    elif settings is not None:
+        candidate = getattr(settings, "get", lambda *_: None)("ambiguity_threshold")
+    if candidate is None:
+        return AMBIGUITY_SCORE_THRESHOLD
+    try:
+        value = float(candidate)
+    except (TypeError, ValueError):
+        return AMBIGUITY_SCORE_THRESHOLD
+    return max(0.0, min(1.0, value))
+
+
 def _handle(request: SharinganRequest) -> EyeResponse:
     prompt = request.payload.prompt
-    score, ambiguous, x = _ambiguity_score(prompt)
+    threshold = _resolve_threshold(request)
+    score, ambiguous, x = _ambiguity_score(prompt, threshold)
     is_code_related, code_features = _detect_code_features(prompt)
     questions_md = _build_questions_md(x)
     reasoning_md = _build_reasoning_md(
@@ -270,4 +299,4 @@ def _handle(request: SharinganRequest) -> EyeResponse:
     return response
 
 
-__all__ = ["clarify"]
+__all__ = ["clarify", "clarify_async"]

@@ -3,6 +3,8 @@ groq:
   base_url: "https://api.groq.com/openai/v1"
   models:
     tools:
+      "overseer/navigator":
+        primary: llama-3.1-8b-instant
       "sharingan/clarify":
         primary: meta-llama/llama-4-scout-17b-16e-instruct
       "helper/rewrite_prompt":
@@ -51,17 +53,56 @@ thresholds:
   ambiguity_score_min: 0.2
   intent_confirmation_token_estimate: 2000
   byakugan_similarity_alert: 0.85
+rate_limits:
+  per_minute: 60
+  burst: 90
+  window_seconds: 60
+budgets:
+  max_per_request: 8000
+  daily: 120000
+postgres:
+  dsn_env: "DATABASE_URL"
+  pool_min_size: 1
+  pool_max_size: 10
+  pool_timeout_seconds: 5.0
+  connect_timeout_seconds: 5
+  statement_timeout_ms: 30000
+  healthcheck_interval_seconds: 30
+  application_name: "third-eye-mcp"
+  require_ssl: true
 redis:
   host: "redis"
   port: 6379
   db: 0
+  url_env: "REDIS_URL"
+  username_env: "REDIS_USERNAME"
+  password_env: "REDIS_PASSWORD"
+  require_auth: true
+  use_tls: true
+  healthcheck_seconds: 15
+  client_name: "third-eye-mcp"
+  encoding: "utf-8"
 sqlite:
   path: "data/third_eye.db"
 logging:
   level: "INFO"
   json: true
+observability:
+  metrics_port: 9090
+  health_port: 8080
+  enable_tracing: false
+  prometheus_base_url: "http://prometheus:9090"
 mcp:
   host: "0.0.0.0"
   port: 7331
 orchestration:
   parallelize_consistency_and_evidence: true
+retention:
+  runs_days: 365
+  audit_days: 365
+  tmp_hours: 168
+  retained_days: 365
+admin:
+  email: "admin@third-eye.local"
+  display_name: "Third Eye Admin"
+  password_env: "ADMIN_BOOTSTRAP_PASSWORD"

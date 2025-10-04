@@ -7,6 +7,7 @@ COMPOSE_FILE="$PROJECT_ROOT/docker-compose.yml"
 PROJECT_NAME="third-eye-mcp"
 COMPOSE=(docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE")
 ENV_FILE="$PROJECT_ROOT/.env"
+PORTAL_PREF_FILE="$PROJECT_ROOT/.portal-pref"
 
 USE_COLOR=false
 TERM_WIDTH=80
@@ -82,6 +83,52 @@ init_colors() {
   fi
 
   update_width
+}
+
+load_portal_pref() {
+  if [[ -f "$PORTAL_PREF_FILE" ]]; then
+    # shellcheck disable=SC1090
+    source "$PORTAL_PREF_FILE"
+  fi
+}
+
+save_portal_pref() {
+  local value=$1
+  printf 'AUTO_OPEN_PORTAL=%s\n' "$value" >"$PORTAL_PREF_FILE"
+}
+
+launch_portal_cli() {
+  local session_id=${1:-}
+  local launcher=""
+  local args=()
+  if command -v uv >/dev/null 2>&1; then
+    launcher="uv"
+    args=(run third_eye.cli portal)
+  elif command -v python >/dev/null 2>&1; then
+    launcher="python"
+    args=(-m third_eye.cli portal)
+  else
+    log_warn "Neither uv nor python were found in PATH; unable to auto-launch the portal."
+    return
+  fi
+  if [[ -n "$session_id" ]]; then
+    args+=(--session-id "$session_id")
+  fi
+  if [[ -n "${AUTO_OPEN_PORTAL:-}" && "$AUTO_OPEN_PORTAL" != "true" ]]; then
+    args+=(--no-auto)
+  fi
+  nohup "$launcher" "${args[@]}" >/dev/null 2>&1 &
+}
+
+ensure_portal_pref() {
+  if [[ "${AUTO_OPEN_PORTAL:-unset}" == "unset" ]]; then
+    if prompt_yes_no "Automatically launch the Overseer portal when the stack starts?"; then
+      AUTO_OPEN_PORTAL=true
+    else
+      AUTO_OPEN_PORTAL=false
+    fi
+    save_portal_pref "$AUTO_OPEN_PORTAL"
+  fi
 }
 
 color_text() {
@@ -431,12 +478,18 @@ doctor() {
   pause
 }
 
-ensure_groq_key() {
-  if [[ -n "${GROQ_API_KEY:-}" ]]; then
+ensure_secret() {
+  local var_name=$1
+  local prompt_label=$2
+  local hint_url=${3:-}
+
+  local current_value=${!var_name:-}
+
+  if [[ -n "$current_value" ]]; then
     return 0
   fi
 
-  log_warn "Missing GROQ API key."
+  log_warn "Missing $prompt_label."
   if ! prompt_yes_no "Do you want to add it now?"; then
     return 1
   fi
@@ -444,22 +497,32 @@ ensure_groq_key() {
   local key verify
   while true; do
     printf '\n'
-    log_info "You can create a key at https://console.groq.com/keys."
-    read -r -p "Enter GROQ API key: " key || return 1
+    if [[ -n "$hint_url" ]]; then
+      log_info "Provision the credential at $hint_url"
+    fi
+    read -r -p "Enter $prompt_label: " key || return 1
     if [[ -z "$key" ]]; then
-      log_warn "The key cannot be empty."
+      log_warn "The value cannot be empty."
       continue
     fi
     read -r -p "Re-enter to confirm: " verify || return 1
     if [[ "$key" != "$verify" ]]; then
-      log_warn "Keys do not match. Let's try again."
+      log_warn "Entries do not match. Let's try again."
       continue
     fi
     break
   done
 
-  update_env_var "GROQ_API_KEY" "$key"
-  log_success "GROQ API key saved to .env."
+  update_env_var "$var_name" "$key"
+  log_success "$prompt_label saved to .env."
+}
+
+ensure_groq_key() {
+  ensure_secret "GROQ_API_KEY" "GROQ API key" "https://console.groq.com/keys"
+}
+
+ensure_platform_api_key() {
+  ensure_secret "THIRD_EYE_API_KEY" "Third Eye API key" "Generate via ./start.sh configure → Admin Control Plane"
 }
 
 compose() {
@@ -479,6 +542,10 @@ start_services() {
     log_warn "Starting without GROQ_API_KEY. Some features may fail until you configure it."
   fi
 
+  if ! ensure_platform_api_key; then
+    log_warn "Starting without THIRD_EYE_API_KEY. MCP bridge calls will fail until you configure it."
+  fi
+
   log_docker "Preparing containers..."
 
   if [[ "$rebuild" == true ]]; then
@@ -489,24 +556,34 @@ start_services() {
     fi
   fi
 
-  log_action "Launching API and Redis services."
-  if ! compose up -d third-eye-api redis; then
-    log_error "Failed to start core services."
+  local services=(postgres redis third-eye-api overseer-ui control-plane-ui prometheus)
+  if [[ "$with_mcp" == true ]]; then
+    services+=(mcp-bridge)
+  fi
+
+  log_action "Launching Docker services: ${services[*]}"
+  if ! compose up -d "${services[@]}"; then
+    log_error "Failed to start one or more services."
     return 1
   fi
 
-  if [[ "$with_mcp" == true ]]; then
-    log_action "Launching MCP bridge."
-    if ! compose up -d mcp-bridge; then
-      log_warn "MCP bridge did not start. Use the logs command to investigate."
-    fi
-  else
-    log_warn "MCP bridge skipped by request."
+  if [[ "$with_mcp" != true ]]; then
+    log_warn "MCP bridge skipped by request (--no-mcp). Launch it later with './start.sh start' or 'docker compose up mcp-bridge'."
   fi
 
   log_success "Services running!"
   log_info "API available at http://localhost:8000"
-  log_info "MCP bridge available at tcp://localhost:7331"
+  log_info "Overseer dashboard available at http://localhost:5173"
+  log_info "Control plane available at http://localhost:5174"
+  log_info "PostgreSQL available at postgresql://third_eye:third_eye@localhost:5432/third_eye"
+  log_info "Prometheus available at http://localhost:9090"
+  if [[ "$with_mcp" == true ]]; then
+    log_info "MCP bridge available at tcp://localhost:7331"
+  fi
+  if [[ "${AUTO_OPEN_PORTAL:-false}" == true ]]; then
+    log_info "Launching Overseer portal..."
+    launch_portal_cli
+  fi
   return 0
 }
 
@@ -554,7 +631,7 @@ tail_logs() {
   local service=${1:-}
   if [[ -z "$service" ]]; then
     printf '\n'
-    read -r -p "Enter a service name (third-eye-api, mcp-bridge, redis) or leave blank for all: " service || true
+    read -r -p "Enter a service name (third-eye-api, mcp-bridge, redis, postgres, overseer-ui, control-plane-ui) or leave blank for all: " service || true
   else
     printf '\n'
     log_info "Streaming logs for $service"
@@ -611,7 +688,23 @@ configure_secrets() {
     ensure_groq_key
   fi
 
+  if [[ -n "${THIRD_EYE_API_KEY:-}" ]]; then
+    log_success "Existing THIRD_EYE_API_KEY detected."
+    if prompt_yes_no "Do you want to update it?"; then
+      unset THIRD_EYE_API_KEY
+      ensure_platform_api_key
+    else
+      log_info "Keeping existing Third Eye API key."
+    fi
+  else
+    ensure_platform_api_key
+  fi
+
   log_hint "Credentials saved in $ENV_FILE."
+  ensure_portal_pref
+  if prompt_yes_no "Open the Overseer portal now?"; then
+    launch_portal_cli
+  fi
   pause
 }
 
@@ -929,6 +1022,13 @@ cli_dispatch() {
     cleanup)
       cleanup
       ;;
+    portal)
+      if [[ $# -gt 0 ]]; then
+        launch_portal_cli "$1"
+      else
+        launch_portal_cli
+      fi
+      ;;
     menu|interactive)
       main_menu
       ;;
@@ -947,13 +1047,16 @@ show_usage() {
 Usage: ./start.sh [command]
 
 Commands:
-  start [--rebuild]        Build (optional) and launch services
+  start [--rebuild] [--no-mcp]
+                           Build (optional) and launch services; skip MCP bridge with --no-mcp
   stop                     Stop running containers
-  restart                  Restart services
+  restart [--rebuild] [--no-mcp]
+                           Restart services; --no-mcp skips launching the MCP bridge
   status                   Show docker compose status
   logs                     Tail logs (interactive prompt)
   docker <args...>         Pass-through to docker compose
-  configure                Configure secrets (GROQ API key)
+  configure                Configure secrets (GROQ/OpenRouter API keys)
+  portal [session-id]      Open the Overseer portal (optionally targeting a session)
   doctor                   Run environment doctor
   integrations             Show the integration playbook
   cleanup                  Remove containers, networks, volumes
@@ -965,6 +1068,7 @@ USAGE
 
 main() {
   init_colors
+  load_portal_pref
   ensure_env_file
 
   if [[ $# -eq 0 ]]; then
