@@ -1,6 +1,7 @@
 """Rinnegan plan review implementation."""
 from __future__ import annotations
 
+import asyncio
 from typing import Dict, List
 
 from ...constants import (
@@ -19,13 +20,13 @@ from ...constants import (
 )
 from ...examples import EXAMPLE_PLAN_REVIEW
 from ...schemas import EyeResponse, PlanReviewRequest
-from .._shared import build_response, execute_eye
+from .._shared import build_response, execute_eye, execute_eye_async
 
 _EXAMPLE_REQUEST: Dict[str, object] = EXAMPLE_PLAN_REVIEW
 
 
-def plan_review(raw: Dict[str, object]) -> Dict[str, object]:
-    return execute_eye(
+async def plan_review_async(raw: Dict[str, object]) -> Dict[str, object]:
+    return await execute_eye_async(
         tag=EyeTag.RINNEGAN_PLAN_REVIEW,
         model=PlanReviewRequest,
         handler=_handle,
@@ -34,9 +35,31 @@ def plan_review(raw: Dict[str, object]) -> Dict[str, object]:
     )
 
 
+def plan_review(raw: Dict[str, object]) -> Dict[str, object]:
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(plan_review_async(raw))
+    raise RuntimeError(
+        "plan_review() cannot be called from an active event loop; use await plan_review_async() instead."
+    )
+
+def _require_rollback(request: PlanReviewRequest) -> bool:
+    context = getattr(request, "context", None)
+    settings = getattr(context, "settings", None) if context else None
+    if isinstance(settings, dict):
+        value = settings.get("require_rollback")
+        if isinstance(value, bool):
+            return value
+    return True
+
+
 def _handle(request: PlanReviewRequest) -> EyeResponse:
     plan_md = request.payload.submitted_plan_md
     missing_sections = _missing_sections(plan_md)
+    require_rollback = _require_rollback(request)
+    if not require_rollback and "Rollback Plan" in missing_sections:
+        missing_sections = [section for section in missing_sections if section != "Rollback Plan"]
     issues: List[str] = []
 
     if missing_sections:
@@ -111,4 +134,4 @@ def _fix_instructions_md(issues: List[str]) -> str:
     return f"{Heading.PLAN_FIX.value}{NEWLINE}{bullet_lines}"
 
 
-__all__ = ["plan_review"]
+__all__ = ["plan_review", "plan_review_async"]

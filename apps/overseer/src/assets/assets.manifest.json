@@ -1,0 +1,128 @@
+[
+  {
+    "name": "byakugan.png",
+    "path": "eyes/byakugan.png",
+    "format": "png",
+    "width": 256,
+    "height": 256,
+    "bytes": 2541,
+    "sha256": "298f8159190aeecee681e629e56a6ea0d0510ed188e7c1ab16c0e1a2a6c4db7a"
+  },
+  {
+    "name": "byakugan.webp",
+    "path": "eyes/byakugan.webp",
+    "format": "webp",
+    "width": 256,
+    "height": 256,
+    "bytes": 3882,
+    "sha256": "1967ba99161cc524a12a9c6d9a1e51cd265d0dab1312e4c243a68f1cd460e398"
+  },
+  {
+    "name": "jogan.png",
+    "path": "eyes/jogan.png",
+    "format": "png",
+    "width": 256,
+    "height": 256,
+    "bytes": 2539,
+    "sha256": "49894d454877feef543b6ebb704eda7e94d99a01266aafdeafbd1a7c246366b1"
+  },
+  {
+    "name": "jogan.webp",
+    "path": "eyes/jogan.webp",
+    "format": "webp",
+    "width": 256,
+    "height": 256,
+    "bytes": 4360,
+    "sha256": "ba3efecb94fa126d1cdc127d0043db9ad388951fb16c7a12075d236224bdf40e"
+  },
+  {
+    "name": "mangekyo.png",
+    "path": "eyes/mangekyo.png",
+    "format": "png",
+    "width": 256,
+    "height": 256,
+    "bytes": 2540,
+    "sha256": "97f42e25d3f9e77ab4ff2128ea1c6293d85203aaa782e59719c33bad8139f64a"
+  },
+  {
+    "name": "mangekyo.webp",
+    "path": "eyes/mangekyo.webp",
+    "format": "webp",
+    "width": 256,
+    "height": 256,
+    "bytes": 3868,
+    "sha256": "004f094ecb8ea2c85ee3ad1a5e6faa6300126d11601da91c8bcab8493053e138"
+  },
+  {
+    "name": "prompt-helper.png",
+    "path": "eyes/prompt-helper.png",
+    "format": "png",
+    "width": 256,
+    "height": 256,
+    "bytes": 2540,
+    "sha256": "e2901e9a775fcae9b5e3d73a6dea3d705c9c6c171da33ea2a3ca877f3828b4ec"
+  },
+  {
+    "name": "prompt-helper.webp",
+    "path": "eyes/prompt-helper.webp",
+    "format": "webp",
+    "width": 256,
+    "height": 256,
+    "bytes": 3402,
+    "sha256": "01646bb1b385efb5284c3d63db2205d9e2bd02e358505f24bd65a0d16893f5c3"
+  },
+  {
+    "name": "rinnegan.png",
+    "path": "eyes/rinnegan.png",
+    "format": "png",
+    "width": 256,
+    "height": 256,
+    "bytes": 2539,
+    "sha256": "4ed3dc96eaf9a0e9e6ba4272e1e151edd56594e6e2d4f4053688282f88b63ec9"
+  },
+  {
+    "name": "rinnegan.webp",
+    "path": "eyes/rinnegan.webp",
+    "format": "webp",
+    "width": 256,
+    "height": 256,
+    "bytes": 3576,
+    "sha256": "2da394b9e797bceb6bcf8c1f05b0dbf7fb63fb9a923d4ccc631abc5b18b55d9f"
+  },
+  {
+    "name": "sharingan.png",
+    "path": "eyes/sharingan.png",
+    "format": "png",
+    "width": 256,
+    "height": 256,
+    "bytes": 2532,
+    "sha256": "54e5b1939c23ed051de908627e25273662a2a9cff3d16c09980bdd931bbab0ee"
+  },
+  {
+    "name": "sharingan.webp",
+    "path": "eyes/sharingan.webp",
+    "format": "webp",
+    "width": 256,
+    "height": 256,
+    "bytes": 3550,
+    "sha256": "73b634a68cb61f31c4d509ef6c919233a4821b4f7ac7f306b529a2991b47479c"
+  },
+  {
+    "name": "tenseigan.png",
+    "path": "eyes/tenseigan.png",
+    "format": "png",
+    "width": 256,
+    "height": 256,
+    "bytes": 2539,
+    "sha256": "fd791c0b89603837df5ce5eef339bef70023083a6b11ca97d63d1da0cbe6878c"
+  },
+  {
+    "name": "tenseigan.webp",
+    "path": "eyes/tenseigan.webp",
+    "format": "webp",
+    "width": 256,
+    "height": 256,
+    "bytes": 3726,
+    "sha256": "9dbdbb09607f94af1e95a86fcbaeb955ef0b0a25bad82d29f060236b5fe4c6fa"
+  }
+]

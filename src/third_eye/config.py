@@ -99,12 +99,63 @@ class Thresholds(BaseModel):
     model_config = {"extra": "forbid"}
 
 
-class RedisCfg(BaseModel):
-    host: str
-    port: int
-    db: int = Field(ge=0)
+class RateLimitCfg(BaseModel):
+    per_minute: int = Field(ge=1, le=10_000)
+    burst: int = Field(ge=1, le=20_000)
+    window_seconds: int = Field(default=60, ge=1, le=3_600)
 
     model_config = {"extra": "forbid"}
+
+
+class BudgetCfg(BaseModel):
+    max_per_request: int = Field(ge=1, le=1_000_000)
+    daily: int = Field(ge=1, le=10_000_000)
+
+    model_config = {"extra": "forbid"}
+
+
+class PostgresCfg(BaseModel):
+    dsn_env: str = Field(default="DATABASE_URL", min_length=1)
+    pool_min_size: int = Field(default=1, ge=1, le=64)
+    pool_max_size: int = Field(default=8, ge=1, le=128)
+    pool_timeout_seconds: float = Field(default=5.0, gt=0.0, le=30.0)
+    connect_timeout_seconds: int = Field(default=5, ge=1, le=60)
+    statement_timeout_ms: int = Field(default=30_000, ge=1_000, le=600_000)
+    healthcheck_interval_seconds: int = Field(default=30, ge=5, le=300)
+    application_name: str = Field(default="third-eye-mcp", min_length=1)
+    require_ssl: bool = True
+
+    model_config = {"extra": "forbid"}
+
+    @model_validator(mode="after")
+    def _validate_pool_bounds(cls, values: "PostgresCfg") -> "PostgresCfg":
+        if values.pool_min_size > values.pool_max_size:
+            raise ValueError("postgres.pool_min_size cannot exceed pool_max_size")
+        return values
+
+
+class RedisCfg(BaseModel):
+    host: str | None = None
+    port: int | None = None
+    db: int = Field(default=0, ge=0)
+    url_env: str | None = None
+    username_env: str | None = None
+    password_env: str | None = None
+    require_auth: bool = False
+    use_tls: bool = False
+    healthcheck_seconds: int = Field(default=15, ge=5, le=300)
+    client_name: str = Field(default="third-eye-mcp", min_length=1)
+    encoding: str = Field(default="utf-8", min_length=1)
+
+    model_config = {"extra": "forbid"}
+
+    @model_validator(mode="after")
+    def _validate_endpoint(cls, values: "RedisCfg") -> "RedisCfg":
+        has_host = bool(values.host and values.port)
+        has_env_url = bool(values.url_env)
+        if not (has_host or has_env_url):
+            raise ValueError("redis configuration requires either host/port or url_env")
+        return values
 
 
 class SqliteCfg(BaseModel):
@@ -120,6 +171,15 @@ class LoggingCfg(BaseModel):
     model_config = {"extra": "forbid"}
 
 
+class ObservabilityCfg(BaseModel):
+    metrics_port: int = Field(default=9090, ge=1024, le=65535)
+    health_port: int = Field(default=8080, ge=1024, le=65535)
+    enable_tracing: bool = False
+    prometheus_base_url: str | None = None
+
+    model_config = {"extra": "forbid"}
+
+
 class McpCfg(BaseModel):
     host: str
     port: int
@@ -129,6 +189,23 @@ class McpCfg(BaseModel):
 
 class OrchestrationCfg(BaseModel):
     parallelize_consistency_and_evidence: bool = True
+
+    model_config = {"extra": "forbid"}
+
+
+class RetentionCfg(BaseModel):
+    runs_days: int = Field(ge=1, le=1825)
+    audit_days: int = Field(ge=1, le=1825)
+    tmp_hours: int = Field(ge=1, le=720)
+    retained_days: int = Field(ge=1, le=1825)
+
+    model_config = {"extra": "forbid"}
+
+
+class AdminBootstrapCfg(BaseModel):
+    email: str = Field(default="admin@third-eye.local", min_length=3)
+    display_name: str = Field(default="Third Eye Admin", min_length=3)
+    password_env: str = Field(default="ADMIN_BOOTSTRAP_PASSWORD", min_length=3)
 
     model_config = {"extra": "forbid"}
 
@@ -147,11 +224,17 @@ class AppConfig(BaseModel):
     timeouts: Timeouts
     retries: RetriesCfg
     thresholds: Thresholds
+    rate_limits: RateLimitCfg
+    budgets: BudgetCfg
+    postgres: PostgresCfg
     redis: RedisCfg
     sqlite: SqliteCfg
     logging: LoggingCfg
+    observability: ObservabilityCfg
     mcp: McpCfg
     orchestration: OrchestrationCfg
+    retention: RetentionCfg
+    admin: AdminBootstrapCfg = Field(default_factory=AdminBootstrapCfg)
 
     model_config = {"extra": "forbid"}
 
