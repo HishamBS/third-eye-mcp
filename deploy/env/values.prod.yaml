@@ -1,0 +1,3 @@
+# Helm values for production (placeholder)
+service:
+  type: ClusterIP

@@ -1,0 +1,14 @@
+[
+  {
+    "session_id": "wow-session-001",
+    "title": "Third Eye Overseer · Operation Wow",
+    "status": "approved",
+    "tenant": "demo-enterprise",
+    "created_at": "2025-02-14T09:12:00Z",
+    "last_event_at": "2025-02-14T09:32:45Z",
+    "eye_counts": {
+      "approvals": 9,
+      "rejections": 1
+    }
+  }
+]

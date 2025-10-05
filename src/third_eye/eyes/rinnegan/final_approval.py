@@ -1,6 +1,7 @@
 """Rinnegan final approval gate."""
 from __future__ import annotations
 
+import asyncio
 from typing import Dict
 
 from ...constants import (
@@ -14,7 +15,7 @@ from ...constants import (
 )
 from ...examples import EXAMPLE_FINAL_APPROVAL
 from ...schemas import EyeResponse, FinalApprovalRequest
-from .._shared import build_response, execute_eye
+from .._shared import build_response, execute_eye, execute_eye_async
 
 _EXAMPLE_REQUEST: Dict[str, object] = EXAMPLE_FINAL_APPROVAL
 
@@ -29,13 +30,23 @@ _PHASE_LABELS: Dict[str, str] = {
 }
 
 
-def final_approval(raw: Dict[str, object]) -> Dict[str, object]:
-    return execute_eye(
+async def final_approval_async(raw: Dict[str, object]) -> Dict[str, object]:
+    return await execute_eye_async(
         tag=EyeTag.RINNEGAN_FINAL,
         model=FinalApprovalRequest,
         handler=_handle,
         raw=raw,
         example=_EXAMPLE_REQUEST,
+    )
+
+
+def final_approval(raw: Dict[str, object]) -> Dict[str, object]:
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(final_approval_async(raw))
+    raise RuntimeError(
+        "final_approval() cannot be called from an active event loop; use await final_approval_async() instead."
     )
 
 
@@ -76,4 +87,4 @@ def _handle(request: FinalApprovalRequest) -> EyeResponse:
     )
 
 
-__all__ = ["final_approval"]
+__all__ = ["final_approval", "final_approval_async"]

@@ -1,6 +1,7 @@
 """Rinnegan plan schema emission."""
 from __future__ import annotations
 
+import asyncio
 from typing import Any, Dict
 
 from ...constants import (
@@ -13,7 +14,7 @@ from ...constants import (
 )
 from ...examples import EXAMPLE_PLAN_REQUIREMENTS
 from ...schemas import EyeResponse, PlanRequirementsRequest
-from .._shared import build_response, execute_eye
+from .._shared import build_response, execute_eye, execute_eye_async
 
 _EXAMPLE_REQUEST = EXAMPLE_PLAN_REQUIREMENTS
 
@@ -24,13 +25,23 @@ _EXAMPLE_PLAN = """### Example Plan\n1. High-Level Overview\n   - Add notificati
 _ACCEPTANCE_CRITERIA = """### Acceptance Criteria\n- Plan lists ALL files to be changed with reasons\n- Includes error handling/test strategy\n- Includes rollback""".strip()
 
 
-def plan_requirements(raw: Dict[str, Any]) -> Dict[str, Any]:
-    return execute_eye(
+async def plan_requirements_async(raw: Dict[str, Any]) -> Dict[str, Any]:
+    return await execute_eye_async(
         tag=EyeTag.RINNEGAN_PLAN_REQUIREMENTS,
         model=PlanRequirementsRequest,
         handler=_handle,
         raw=raw,
         example=_EXAMPLE_REQUEST,
+    )
+
+
+def plan_requirements(raw: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(plan_requirements_async(raw))
+    raise RuntimeError(
+        "plan_requirements() cannot be called from an active event loop; use await plan_requirements_async() instead."
     )
 
 
@@ -51,4 +62,4 @@ def _handle(request: PlanRequirementsRequest) -> EyeResponse:
     )
 
 
-__all__ = ["plan_requirements"]
+__all__ = ["plan_requirements", "plan_requirements_async"]
