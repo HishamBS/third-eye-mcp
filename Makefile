@@ -1,4 +1,4 @@
-.PHONY: install dev run api cli test lint format mcp docker-up docker-down
+.PHONY: install dev run api cli test lint format mcp docker-up docker-down terraform-validate
 
 install:
 	uv pip install -e .[test]
@@ -20,3 +20,6 @@ docker-up:
 
 docker-down:
 	docker compose down
+
+terraform-validate:
+	./scripts/terraform-validate.sh

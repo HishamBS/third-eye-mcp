@@ -1,7 +1,9 @@
 """Overseer navigator tool providing pipeline guidance."""
 from __future__ import annotations
 
+import asyncio
 import json
+import time
 from typing import Any, Dict
 
 from ..constants import (
@@ -12,17 +14,17 @@ from ..constants import (
     NextAction,
     StatusCode,
 )
-from ..schemas import EyeResponse, NavigatorRequest
+from ..schemas import EyeResponse, NavigatorRequest, RequestContext
 from ..examples import (
     EXAMPLE_CONTEXT,
     EXAMPLE_NAVIGATOR,
     EXAMPLE_SHARINGAN,
 )
-from ._shared import build_response, execute_eye
+from ._shared import build_response, execute_eye, execute_eye_async
 
 _OVERVIEW_MD = (
     f"{Heading.OVERSEER_INTRO.value}{NEWLINE}"
-    "Third Eye MCP is an Overseer. Host agents own all deliverables. This navigator establishes the contract for every session."
+    "Third Eye MCP is an Overseer. Host agents own all deliverables. This navigator is the required entry point; no other eye will respond until it runs." 
 )
 
 _REQUEST_ENVELOPE = {
@@ -38,13 +40,14 @@ _REQUEST_ENVELOPE = {
 
 _REQUEST_SCHEMA_MD = (
     f"{Heading.REQUEST_ENVELOPE.value}{NEWLINE}"
-    "Every tool call must use this JSON wrapper. Update `context` consistently across the session."
+    "Every tool call uses this JSON wrapper. The MCP bridge populates `context` automatically; clients only need to provide `payload` (and `reasoning_md` when required)."
     f"{NEWLINE}```json\n{json.dumps(_REQUEST_ENVELOPE, indent=2)}\n```"
 )
 
 _PIPELINE_MD = NEWLINE.join(
     [
         Heading.OVERSEER_NEXT_STEPS.value,
+        "- The MCP bridge auto-populates session context; clients only send payload (and reasoning when required).",
         "- Call `sharingan/clarify` to score ambiguity and gather questions.",
         "- Use `helper/rewrite_prompt` to engineer a ROLE/TASK/CONTEXT/REQUIREMENTS/OUTPUT brief.",
         "- Run `jogan/confirm_intent` to ensure scope and token budgets are approved.",
@@ -129,20 +132,14 @@ _CONTRACT = {
 }
 
 _EXAMPLE_REQUEST: Dict[str, Any] = {
-    "context": {
-        "session_id": "sess-123",
-        "user_id": "user-456",
-        "lang": "en",
-        "budget_tokens": 0,
-    },
     "payload": {
         "goal": "Generate a quarterly engineering report",
     },
 }
 
 
-def navigate(raw: Dict[str, Any]) -> Dict[str, Any]:
-    return execute_eye(
+async def navigate_async(raw: Dict[str, Any]) -> Dict[str, Any]:
+    return await execute_eye_async(
         tag=EyeTag.OVERSEER,
         model=NavigatorRequest,
         handler=_handle,
@@ -151,12 +148,29 @@ def navigate(raw: Dict[str, Any]) -> Dict[str, Any]:
     )
 
 
+def navigate(raw: Dict[str, Any]) -> Dict[str, Any]:
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(navigate_async(raw))
+    raise RuntimeError("navigate() cannot be called from an active event loop; use await navigate_async() instead.")
+
+
 def _handle(request: NavigatorRequest) -> EyeResponse:
     goal = request.payload.goal if request.payload else None
     summary_lines = [_OVERVIEW_MD]
     if goal:
         summary_lines.append(f"Goal noted: `{goal}`. Overseer will guide; host model must produce deliverables.")
     md = NEWLINE.join(summary_lines)
+    context = request.context
+    if context is None:
+        context = RequestContext(
+            session_id=f"sess-{int(time.time()*1000):x}",
+            user_id=None,
+            lang="auto",
+            budget_tokens=0,
+        )
+        request.context = context
     data = {
         DataKey.SUMMARY_MD.value: md,
         DataKey.INSTRUCTIONS_MD.value: _PIPELINE_MD,
@@ -164,6 +178,7 @@ def _handle(request: NavigatorRequest) -> EyeResponse:
         DataKey.EXAMPLE_MD.value: f"```json\n{json.dumps(_EXAMPLE_CLARIFY_CALL, indent=2)}\n```",
         DataKey.CONTRACT_JSON.value: _CONTRACT,
         DataKey.NEXT_ACTION_MD.value: f"{Heading.NEXT_ACTION.value}{NEWLINE}{NextAction.BEGIN_WITH_SHARINGAN.value}",
+        "session_context": context.model_dump(),
     }
     return build_response(
         tag=EyeTag.OVERSEER,
@@ -175,8 +190,7 @@ def _handle(request: NavigatorRequest) -> EyeResponse:
     )
 
 
-__all__ = ["navigate"]
+__all__ = ["navigate", "navigate_async"]
 _EXAMPLE_CLARIFY_CALL = {
-    "context": EXAMPLE_CONTEXT,
     "payload": EXAMPLE_SHARINGAN["payload"],
 }

@@ -5,6 +5,10 @@ from typing import Any, Dict, List
 
 import pytest
 
+os.environ.setdefault("GROQ_API_KEY", "test-key")
+os.environ.setdefault("REDIS_URL", "redis://:test-password@localhost:6379/0")
+os.environ.setdefault("THIRD_EYE_SECRET_KEY", "MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTE=")
+
 from third_eye.constants import (
     BULLET_PREFIX,
     CHECKBOX_TEMPLATE,
@@ -58,16 +62,16 @@ from third_eye.constants import (
 )
 from third_eye.eyes import sharingan as sharingan_eye
 
-os.environ.setdefault("GROQ_API_KEY", "test-key")
-
 
 @pytest.fixture()
 def base_context() -> Dict[str, object]:
     return {
         "session_id": "sess-test",
         "user_id": "user-test",
+        "tenant": "cli",
         "lang": "en",
         "budget_tokens": 0,
+        "request_id": None,
     }
 def _sharingan_response(payload: Dict[str, Any]) -> Dict[str, Any]:
     prompt = payload["payload"]["prompt"].strip()

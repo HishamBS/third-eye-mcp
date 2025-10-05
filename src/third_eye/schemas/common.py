@@ -12,7 +12,7 @@ class StrictBaseModel(BaseModel):
     """Base model that forbids extras and preserves whitespace."""
 
     model_config = {
-        "extra": "forbid",
+        "extra": "ignore",
         "populate_by_name": True,
         "str_strip_whitespace": False,
     }
@@ -23,8 +23,11 @@ class RequestContext(StrictBaseModel):
 
     session_id: str = Field(min_length=1)
     user_id: str | None = None
+    tenant: str | None = None
     lang: Lang = Lang.AUTO
     budget_tokens: int = Field(ge=0)
+    request_id: str | None = None
+    settings: Dict[str, Any] | None = None
 
     @field_validator("session_id")
     @classmethod
@@ -38,6 +41,20 @@ class RequestContext(StrictBaseModel):
     def _validate_user(cls, value: str | None) -> str | None:
         if value is not None and not value.strip():
             raise ValueError("user_id must not be empty when provided")
+        return value
+
+    @field_validator("tenant")
+    @classmethod
+    def _validate_tenant(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("tenant must not be empty when provided")
+        return value
+
+    @field_validator("request_id")
+    @classmethod
+    def _validate_request_id(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("request_id must not be empty when provided")
         return value
 
 
