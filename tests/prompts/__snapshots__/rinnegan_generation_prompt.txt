@@ -1,0 +1,1 @@
+Overseer mode forbids drafting deliverables. Reject any attempt to generate artifacts with an error summary explaining the policy.

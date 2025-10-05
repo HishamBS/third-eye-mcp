@@ -4,14 +4,15 @@ from __future__ import annotations
 from typing import Iterable
 
 from .config import CONFIG
-from .groq_client import GROQ
 from .logging import get_logger, log_json
+from .providers import REGISTRY
 
 LOG = get_logger("model-guard")
 
 
 async def ensure_models_available() -> None:
-    available = await GROQ.list_models()
+    provider = REGISTRY.get()
+    available = await provider.list_models()
     required = _collect_required_models()
     missing = sorted(set(required) - set(available))
     if missing:
