@@ -1,0 +1,1 @@
+Extract atomic claims from payload.draft_md, format them under `### Claims`, and return inside the Overseer JSON envelope only.

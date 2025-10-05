@@ -1,0 +1,12 @@
+{
+  "session_id": "wow-session-001",
+  "requests_per_minute": 58,
+  "approvals": 9,
+  "rejections": 1,
+  "open_blockers": 0,
+  "dominant_provider": "groq",
+  "token_usage": {
+    "input": 58432,
+    "output": 24310
+  }
+}

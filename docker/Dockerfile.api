@@ -6,11 +6,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN apt-get update && apt-get install -y --no-install-recommends build-essential curl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY pyproject.toml README.md config.yaml /app/
-RUN pip install --upgrade pip && pip install uv
+COPY pyproject.toml uv.lock README.md config.yaml /app/
+RUN pip install --upgrade pip && pip install --no-cache-dir uv
 COPY src /app/src
 COPY tests /app/tests
-RUN uv pip install --system -e .[test]
+RUN uv pip install --system -e .[test] \
+    && python -c "import prometheus_client"
 
 EXPOSE 8000
 CMD ["uvicorn", "third_eye.api.server:app", "--host", "0.0.0.0", "--port", "8000"]

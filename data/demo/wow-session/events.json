@@ -1,0 +1,41 @@
+[
+  {
+    "type": "eye_update",
+    "session_id": "wow-session-001",
+    "eye": "SHARINGAN",
+    "ok": true,
+    "tool_version": "1.3.0",
+    "md": "### Ambiguity cleared\nAll clarifications received within SLA.",
+    "ts": "2025-02-14T09:15:03Z"
+  },
+  {
+    "type": "eye_update",
+    "session_id": "wow-session-001",
+    "eye": "MANGEKYO_IMPL",
+    "ok": true,
+    "code": "OK_IMPL",
+    "tool_version": "2.0.1",
+    "md": "### Implementation Signed Off\nKey components instrumented with feature flags.",
+    "ts": "2025-02-14T09:23:19Z"
+  },
+  {
+    "type": "tenseigan_claims",
+    "session_id": "wow-session-001",
+    "md": null,
+    "data": {
+      "claims": [
+        {
+          "text": "All production regions currently healthy with p99 latency under 180ms.",
+          "citation": "https://status.third-eye.demo/regions",
+          "confidence": 0.94
+        },
+        {
+          "text": "Incident response playbooks copy to every tenant vault nightly.",
+          "citation": "https://confluence.third-eye.demo/playbooks",
+          "confidence": 0.87
+        }
+      ]
+    },
+    "ts": "2025-02-14T09:28:51Z"
+  }
+]
