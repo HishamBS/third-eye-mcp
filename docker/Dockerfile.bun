@@ -1,0 +1,26 @@
+# Third Eye MCP Server - Bun Runtime
+FROM oven/bun:1.0-alpine
+
+WORKDIR /app
+
+# Copy workspace configuration
+COPY package.json bun.lock* ./
+COPY pnpm-workspace.yaml ./
+
+# Copy all packages
+COPY packages/ ./packages/
+COPY apps/server/ ./apps/server/
+COPY cli/ ./cli/
+COPY scripts/ ./scripts/
+
+# Install dependencies
+RUN bun install --frozen-lockfile
+
+# Run database seeding
+RUN bun run scripts/seed-database.ts || true
+
+# Expose server port
+EXPOSE 7070
+
+# Start the server
+CMD ["bun", "run", "apps/server/src/start.ts"]

@@ -14,3 +14,10 @@ const server = new McpServer(
 buildEyes(server);
 const transport = new StdioServerTransport();
 server.connect(transport);
+
+// Export registry functions
+export { getAllTools, getTool, registerTool, getToolsJSON } from './registry';
+
+// Export middleware
+export { orderGuard, detectWorkflow, getRecommendedNextEye } from './middleware/orderGuard';
+export { autoRoute, extractExplicitEye } from './middleware/autoRoute';

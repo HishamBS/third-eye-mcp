@@ -1,7 +1,0 @@
-global:
-  scrape_interval: 15s
-
-scrape_configs:
-  - job_name: 'third-eye-api'
-    static_configs:
-      - targets: ['third-eye-api:8000']

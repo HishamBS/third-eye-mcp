@@ -1,0 +1,14 @@
+{
+  "name": "@third-eye/core",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.ts",
+  "dependencies": {
+    "@third-eye/eyes": "workspace:*",
+    "@third-eye/providers": "workspace:*",
+    "@third-eye/db": "workspace:*",
+    "drizzle-orm": "^0.36.4",
+    "zod": "^3.23.8",
+    "nanoid": "^5.0.9"
+  }
+}

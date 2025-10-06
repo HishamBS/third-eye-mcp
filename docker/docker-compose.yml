@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # Third Eye MCP Server (Bun)
+  server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.bun
+    container_name: third-eye-server
+    ports:
+      - "7070:7070"
+    environment:
+      - PORT=7070
+      - HOST=0.0.0.0
+      - OVERSEER_DB=/data/overseer.db
+      - AUTO_OPEN=false  # Don't auto-open in Docker
+    volumes:
+      - third-eye-data:/data
+    networks:
+      - third-eye-network
+    restart: unless-stopped
+
+  # Third Eye UI (Next.js)
+  ui:
+    build:
+      context: ../apps/ui
+      dockerfile: ../../docker/Dockerfile.ui
+    container_name: third-eye-ui
+    ports:
+      - "3300:3300"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://server:7070
+    depends_on:
+      - server
+    networks:
+      - third-eye-network
+    restart: unless-stopped
+
+  # Ollama (Optional - Local LLM)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: third-eye-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - third-eye-network
+    restart: unless-stopped
+    # Optional: Pre-pull models
+    # command: ["ollama", "pull", "llama3.1:8b"]
+
+volumes:
+  third-eye-data:
+    driver: local
+  ollama-data:
+    driver: local
+
+networks:
+  third-eye-network:
+    driver: bridge

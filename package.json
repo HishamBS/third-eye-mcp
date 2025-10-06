@@ -1,0 +1,103 @@
+{
+  "name": "third-eye-mcp",
+  "version": "1.0.0",
+  "description": "Third Eye MCP: Local-first AI orchestration layer for multi-provider LLM workflows",
+  "type": "module",
+  "main": "./cli/index.ts",
+  "bin": {
+    "third-eye-mcp": "./cli/index.ts",
+    "third-eye-mcp-server": "./bin/mcp-server.ts"
+  },
+  "files": [
+    "apps",
+    "packages",
+    "cli",
+    "bin",
+    "scripts",
+    "README.md",
+    "LICENSE",
+    "CONTRIBUTING.md"
+  ],
+  "scripts": {
+    "dev": "bun run apps/server/src/start.ts & bun run --cwd apps/ui dev --port 3300",
+    "start": "bun run apps/server/dist/index.js",
+    "build": "bun run build:packages && bun run build:server && bun run build:ui && bun run build:cli",
+    "build:packages": "bun run build:types && bun run build:config && bun run build:db && bun run build:providers && bun run build:core && bun run build:eyes && bun run build:mcp",
+    "build:types": "tsc --build packages/types",
+    "build:config": "tsc --build packages/config",
+    "build:db": "tsc --build packages/db",
+    "build:providers": "tsc --build packages/providers",
+    "build:core": "tsc --build packages/core",
+    "build:eyes": "tsc --build packages/eyes",
+    "build:mcp": "tsc --build packages/mcp",
+    "build:server": "bun run apps/server/src/build.ts",
+    "build:ui": "bun run --cwd apps/ui build",
+    "build:cli": "bun build cli/index.ts --target=bun --outfile=dist/cli.js && bun build bin/mcp-server.ts --target=bun --outfile=dist/mcp-server.js",
+    "clean": "bun run clean:packages && bun run clean:apps && rm -rf dist",
+    "clean:packages": "rm -rf packages/*/dist packages/*/*.tsbuildinfo",
+    "clean:apps": "rm -rf apps/server/dist apps/ui/.next apps/ui/out",
+    "setup": "bun run scripts/setup.ts",
+    "seed": "bun run scripts/seed-database.ts",
+    "backup": "bun run scripts/backup-db.ts",
+    "restore": "bun run scripts/restore-db.ts",
+    "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
+    "db:migrate": "bun run packages/db/migrate.ts",
+    "db:push": "drizzle-kit push:sqlite --config=drizzle.config.ts",
+    "db:studio": "drizzle-kit studio --config=drizzle.config.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "lint": "tsc --noEmit",
+    "lint:packages": "tsc --build --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "mcp": "bun run bin/mcp-server.ts",
+    "prepublishOnly": "bun run clean && bun run lint && bun run test && bun run build"
+  },
+  "keywords": [
+    "ai",
+    "mcp",
+    "model-context-protocol",
+    "orchestration",
+    "local-first",
+    "groq",
+    "ollama",
+    "openrouter",
+    "llm",
+    "multi-provider",
+    "bun",
+    "typescript"
+  ],
+  "author": "Third Eye Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/third-eye-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/third-eye-mcp/issues"
+  },
+  "homepage": "https://github.com/yourusername/third-eye-mcp#readme",
+  "engines": {
+    "bun": ">=1.0.0",
+    "node": ">=18.0.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "dependencies": {
+    "nanoid": "^5.0.4",
+    "zod": "^3.22.4",
+    "@inquirer/prompts": "^7.0.1"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.4",
+    "@playwright/test": "^1.50.1",
+    "typescript": "~5.9.3",
+    "bun-types": "^1.0.0"
+  }
+}

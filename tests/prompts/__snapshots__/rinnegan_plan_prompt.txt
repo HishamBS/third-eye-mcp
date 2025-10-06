@@ -1,5 +1,0 @@
-Plan schema guidance contract:
-- `code` = `OK_SCHEMA_EMITTED`; `next` = `Host agent must submit its plan to rinnegan/plan_review.`.
-- `md` MUST begin with `### Contract` summarising expectations.
-- `data` MUST contain `expected_schema_md`, `example_md`, `acceptance_criteria_md` headed `### Plan Schema`, `### Example Plan`, `### Acceptance Criteria`.
-- Provide a realistic example tailored to the request domain (no deliverables).

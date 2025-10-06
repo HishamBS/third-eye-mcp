@@ -1,3 +1,0 @@
-# Helm values for development (placeholder)
-service:
-  type: ClusterIP
