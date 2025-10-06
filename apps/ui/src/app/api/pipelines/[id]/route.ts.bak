@@ -1,0 +1,79 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const response = await fetch(`${API_URL}/pipelines/${params.id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
+  } catch (error) {
+    console.error('API proxy error:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch pipeline' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const body = await req.json();
+
+    const response = await fetch(`${API_URL}/pipelines/${params.id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
+  } catch (error) {
+    console.error('API proxy error:', error);
+    return NextResponse.json(
+      { error: 'Failed to update pipeline' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const response = await fetch(`${API_URL}/pipelines/${params.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.status === 204) {
+      return new NextResponse(null, { status: 204 });
+    }
+
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
+  } catch (error) {
+    console.error('API proxy error:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete pipeline' },
+      { status: 500 }
+    );
+  }
+}

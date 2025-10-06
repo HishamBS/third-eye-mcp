@@ -1,1 +1,0 @@
-Format provided claims and citations using `### Claims` and `### Citations` headings inside the Overseer JSON envelope only.

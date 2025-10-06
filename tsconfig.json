@@ -1,0 +1,47 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022"],
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "incremental": true,
+    "paths": {
+      "@third-eye/core": ["./packages/core/index.ts"],
+      "@third-eye/core/*": ["./packages/core/*"],
+      "@third-eye/providers": ["./packages/providers/index.ts"],
+      "@third-eye/providers/*": ["./packages/providers/*"],
+      "@third-eye/db": ["./packages/db/index.ts"],
+      "@third-eye/db/*": ["./packages/db/*"],
+      "@third-eye/config": ["./packages/config/index.ts"],
+      "@third-eye/config/*": ["./packages/config/*"],
+      "@third-eye/types": ["./packages/types/index.ts"],
+      "@third-eye/types/*": ["./packages/types/*"],
+      "@third-eye/eyes": ["./packages/eyes/index.ts"],
+      "@third-eye/eyes/*": ["./packages/eyes/*"],
+      "@third-eye/mcp": ["./packages/mcp/index.ts"],
+      "@third-eye/mcp/*": ["./packages/mcp/*"]
+    }
+  },
+  "references": [
+    { "path": "./packages/types" },
+    { "path": "./packages/config" },
+    { "path": "./packages/db" },
+    { "path": "./packages/providers" },
+    { "path": "./packages/core" },
+    { "path": "./packages/eyes" },
+    { "path": "./packages/mcp" },
+    { "path": "./apps/server" },
+    { "path": "./apps/ui" },
+    { "path": "./cli" }
+  ],
+  "exclude": ["node_modules", "dist", "build", ".next"]
+}

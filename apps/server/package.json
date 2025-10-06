@@ -1,0 +1,23 @@
+{
+  "name": "@third-eye/server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch src/start.ts",
+    "build": "bun build --target bun src/start.ts --outdir dist",
+    "start": "bun run src/start.ts"
+  },
+  "dependencies": {
+    "@third-eye/core": "workspace:*",
+    "@third-eye/config": "workspace:*",
+    "@third-eye/db": "workspace:*",
+    "@third-eye/types": "workspace:*",
+    "@third-eye/providers": "workspace:*",
+    "hono": "^4.6.0",
+    "nanoid": "^5.0.4"
+  },
+  "devDependencies": {
+    "bun-types": "^1.0.0",
+    "@types/node": "^24.6.0"
+  }
+}
