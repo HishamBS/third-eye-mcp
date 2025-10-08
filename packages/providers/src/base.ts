@@ -21,6 +21,7 @@ export interface CompletionRequest {
   max_tokens?: number;
   top_p?: number;
   stop?: string[];
+  response_format?: { type: 'json_object' | 'text' };
 }
 
 export interface CompletionResponse {
@@ -112,5 +113,12 @@ export abstract class BaseProvider {
       return error.message;
     }
     return String(error);
+  }
+
+  protected normalizeFinishReason(reason: string | undefined | null): CompletionResponse['finish_reason'] {
+    if (reason === 'length' || reason === 'content_filter' || reason === 'tool_calls') {
+      return reason;
+    }
+    return 'stop';
   }
 }

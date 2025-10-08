@@ -29,6 +29,10 @@ export default function DatabasePage() {
   const [filter, setFilter] = useState('');
   const [editingRow, setEditingRow] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Record<string, any>>({});
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(50);
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
 
   useEffect(() => {
     fetchData();
@@ -37,12 +41,13 @@ export default function DatabasePage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/database/tables');
+      const response = await fetch(`${API_URL}/api/database/tables`);
       if (response.ok) {
         const result = await response.json();
-        setData(result);
-        if (!selectedTable && Object.keys(result.tables).length > 0) {
-          setSelectedTable(Object.keys(result.tables)[0]);
+        const tables = result.data?.tables || result.tables || result;
+        setData({ tables });
+        if (!selectedTable && Object.keys(tables).length > 0) {
+          setSelectedTable(Object.keys(tables)[0]);
         }
       }
     } catch (error) {
@@ -114,7 +119,7 @@ export default function DatabasePage() {
     setEditValues({});
   };
 
-  const formatValue = (value: any, type: string): string => {
+  const formatValue = (value: unknown, type: string): string => {
     if (value === null || value === undefined) return 'null';
 
     switch (type) {
@@ -148,6 +153,7 @@ export default function DatabasePage() {
   };
 
   const filteredData = (table: TableInfo) => {
+    if (!table?.data) return [];
     if (!filter) return table.data;
     return table.data.filter(row =>
       Object.values(row).some(value =>
@@ -155,6 +161,22 @@ export default function DatabasePage() {
       )
     );
   };
+
+  const paginatedData = (table: TableInfo) => {
+    const filtered = filteredData(table);
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    return filtered.slice(start, end);
+  };
+
+  const totalPages = (table: TableInfo) => {
+    return Math.ceil(filteredData(table).length / rowsPerPage);
+  };
+
+  // Reset page when filter or table changes
+  useEffect(() => {
+    setPage(1);
+  }, [filter, selectedTable]);
 
   if (loading) {
     return (
@@ -228,7 +250,7 @@ export default function DatabasePage() {
                     <div>
                       <div className="font-medium">{table.name}</div>
                       <div className="text-sm opacity-80">
-                        {table.data.length} rows
+                        {table.data?.length || 0} rows
                         {!table.editable && ' (read-only)'}
                       </div>
                     </div>
@@ -260,13 +282,25 @@ export default function DatabasePage() {
                     </div>
                   </div>
 
-                  <input
-                    type="text"
-                    placeholder="Filter rows..."
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
+                  <div className="flex gap-4">
+                    <input
+                      type="text"
+                      placeholder="Filter rows..."
+                      value={filter}
+                      onChange={(e) => setFilter(e.target.value)}
+                      className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                    <select
+                      value={rowsPerPage}
+                      onChange={(e) => setRowsPerPage(Number(e.target.value))}
+                      className="px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value={25}>25 rows</option>
+                      <option value={50}>50 rows</option>
+                      <option value={100}>100 rows</option>
+                      <option value={500}>500 rows</option>
+                    </select>
+                  </div>
                 </div>
 
                 {/* Table Data */}
@@ -288,7 +322,7 @@ export default function DatabasePage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredData(currentTable).map((row) => {
+                      {paginatedData(currentTable).map((row) => {
                         const rowKey = getRowKey(row, currentTable.schema);
                         const isEditing = editingRow === rowKey;
 
@@ -373,6 +407,61 @@ export default function DatabasePage() {
                 {filteredData(currentTable).length === 0 && (
                   <div className="p-12 text-center text-slate-400">
                     {filter ? 'No rows match the filter' : 'No data available'}
+                  </div>
+                )}
+
+                {/* Pagination Controls */}
+                {filteredData(currentTable).length > rowsPerPage && (
+                  <div className="flex items-center justify-between border-t border-slate-700 p-4">
+                    <div className="text-sm text-slate-400">
+                      Showing {Math.min((page - 1) * rowsPerPage + 1, filteredData(currentTable).length)} to{' '}
+                      {Math.min(page * rowsPerPage, filteredData(currentTable).length)} of{' '}
+                      {filteredData(currentTable).length} rows
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setPage(Math.max(1, page - 1))}
+                        disabled={page === 1}
+                        className="px-3 py-1 bg-slate-700 text-white rounded hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Previous
+                      </button>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages(currentTable) }, (_, i) => i + 1)
+                          .filter(p => {
+                            // Show first page, last page, current page, and pages around current
+                            return (
+                              p === 1 ||
+                              p === totalPages(currentTable) ||
+                              (p >= page - 2 && p <= page + 2)
+                            );
+                          })
+                          .map((p, idx, arr) => (
+                            <div key={p} className="flex items-center">
+                              {idx > 0 && arr[idx - 1] !== p - 1 && (
+                                <span className="px-2 text-slate-400">...</span>
+                              )}
+                              <button
+                                onClick={() => setPage(p)}
+                                className={`px-3 py-1 rounded ${
+                                  page === p
+                                    ? 'bg-brand-accent text-white'
+                                    : 'bg-slate-700 text-white hover:bg-slate-600'
+                                }`}
+                              >
+                                {p}
+                              </button>
+                            </div>
+                          ))}
+                      </div>
+                      <button
+                        onClick={() => setPage(Math.min(totalPages(currentTable), page + 1))}
+                        disabled={page === totalPages(currentTable)}
+                        className="px-3 py-1 bg-slate-700 text-white rounded hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

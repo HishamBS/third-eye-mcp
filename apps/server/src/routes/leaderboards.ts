@@ -2,6 +2,15 @@ import { Hono } from 'hono';
 import { getDb } from '@third-eye/db';
 import { runs } from '@third-eye/db';
 import { sql, eq, and, gt, desc } from 'drizzle-orm';
+import {
+  validateBodyWithEnvelope,
+  createSuccessResponse,
+  createErrorResponse,
+  createInternalErrorResponse,
+  requestIdMiddleware,
+  errorHandler
+} from '../middleware/response';
+import { z } from 'zod';
 
 /**
  * Leaderboards API Routes
@@ -10,6 +19,9 @@ import { sql, eq, and, gt, desc } from 'drizzle-orm';
  */
 
 const app = new Hono();
+
+app.use('*', requestIdMiddleware());
+app.use('*', errorHandler());
 
 type LeaderboardCategory = 'fastest' | 'cheapest' | 'reliable' | 'popular' | 'quality';
 
@@ -53,7 +65,7 @@ app.get('/:category', async (c) => {
       .all();
 
     if (allRuns.length === 0) {
-      return c.json({
+      return createSuccessResponse(c, {
         category,
         eye: eye || 'all',
         timeRange: days,
@@ -169,7 +181,7 @@ app.get('/:category', async (c) => {
         break;
 
       default:
-        return c.json({ error: 'Invalid category' }, 400);
+        return createErrorResponse(c, { title: 'Invalid Category', status: 400, detail: 'Supported categories: fastest, cheapest, reliable, popular, quality' });
     }
 
     // Assign ranks and limit to top N
@@ -178,7 +190,7 @@ app.get('/:category', async (c) => {
       rank: index + 1,
     }));
 
-    return c.json({
+    return createSuccessResponse(c, {
       category,
       eye: eye || 'all',
       timeRange: days,
@@ -187,7 +199,7 @@ app.get('/:category', async (c) => {
     });
   } catch (error) {
     console.error('Failed to fetch leaderboard:', error);
-    return c.json({ error: 'Failed to fetch leaderboard' }, 500);
+    return createInternalErrorResponse(c, 'Failed to fetch leaderboard');
   }
 });
 
@@ -202,7 +214,7 @@ app.get('/', async (c) => {
     for (const category of categories) {
       // Fetch top 3 for each category
       const response = await fetch(
-        `http://localhost:${process.env.PORT || 3200}/api/leaderboards/${category}?days=${days}&limit=3`
+        `http://localhost:7070/api/leaderboards/${category}?days=${days}&limit=3`
       );
       const data = await response.json();
 
@@ -212,13 +224,13 @@ app.get('/', async (c) => {
       });
     }
 
-    return c.json({
+    return createSuccessResponse(c, {
       timeRange: days,
       categories: summaries,
     });
   } catch (error) {
     console.error('Failed to fetch leaderboard summary:', error);
-    return c.json({ error: 'Failed to fetch leaderboard summary' }, 500);
+    return createInternalErrorResponse(c, 'Failed to fetch leaderboard summary');
   }
 });
 
@@ -279,12 +291,12 @@ app.get('/trending/models', async (c) => {
     // Sort by absolute change
     const sorted = trending.sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent));
 
-    return c.json({
+    return createSuccessResponse(c, {
       trending: sorted.slice(0, 10),
     });
   } catch (error) {
     console.error('Failed to fetch trending models:', error);
-    return c.json({ error: 'Failed to fetch trending models' }, 500);
+    return createInternalErrorResponse(c, 'Failed to fetch trending models');
   }
 });
 

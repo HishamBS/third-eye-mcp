@@ -28,6 +28,11 @@ export default defineConfig({
     },
     include: ['**/__tests__/**/*.test.ts', '**/*.test.ts'],
     exclude: ['node_modules', 'dist', 'build', '.next'],
+    poolOptions: {
+      threads: {
+        singleThread: true, // Run E2E tests in single thread for MCP stdio
+      },
+    },
   },
   resolve: {
     alias: {
@@ -38,6 +43,8 @@ export default defineConfig({
       '@third-eye/types': resolve(__dirname, './packages/types'),
       '@third-eye/eyes': resolve(__dirname, './packages/eyes'),
       '@third-eye/mcp': resolve(__dirname, './packages/mcp'),
+      'bun:sqlite': resolve(__dirname, './packages/db/__mocks__/bun-sqlite.ts'),
     },
+    conditions: ['node', 'import', 'module', 'browser', 'default'],
   },
 });

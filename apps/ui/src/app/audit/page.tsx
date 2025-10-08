@@ -16,7 +16,7 @@ export default function AuditPage() {
   const [until, setUntil] = useState('');
   const [tenant, setTenant] = useState('');
 
-  const fetchAudit = async (filters?: any) => {
+  const fetchAudit = async (filters?: { limit?: number; since?: string; until?: string; tenant?: string }) => {
     setLoadingAudit(true);
     setError(null);
     try {

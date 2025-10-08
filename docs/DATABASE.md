@@ -1,6 +1,6 @@
 # Database Schema & Migrations
 
-Third Eye MCP uses **SQLite** with **Drizzle ORM** for data persistence. All data is stored locally in `~/.overseer/overseer.db` by default.
+Third Eye MCP uses **SQLite** with **Drizzle ORM** for data persistence. All data is stored locally in `~/.third-eye-mcp/mcp.db` by default.
 
 ---
 
@@ -138,12 +138,12 @@ Opens **Drizzle Studio** in browser for visual schema exploration and data brows
 
 ## Database Location
 
-Default location: `~/.overseer/overseer.db`
+Default location: `~/.third-eye-mcp/mcp.db`
 
 Override with environment variable:
 
 ```bash
-OVERSEER_DB=/custom/path/overseer.db
+MCP_DB=/custom/path/mcp.db
 ```
 
 ---
@@ -153,7 +153,7 @@ OVERSEER_DB=/custom/path/overseer.db
 ### Manual Backup
 
 ```bash
-cp ~/.overseer/overseer.db ~/.overseer/backup-$(date +%Y%m%d).db
+cp ~/.third-eye-mcp/mcp.db ~/.third-eye-mcp/backup-$(date +%Y%m%d).db
 ```
 
 ### Automated Backups
@@ -162,13 +162,13 @@ Set up a cron job:
 
 ```bash
 # Daily backup at 3 AM
-0 3 * * * cp ~/.overseer/overseer.db ~/.overseer/backup-$(date +\%Y\%m\%d).db
+0 3 * * * cp ~/.third-eye-mcp/mcp.db ~/.third-eye-mcp/backup-$(date +\%Y\%m\%d).db
 ```
 
 ### Restore from Backup
 
 ```bash
-cp ~/.overseer/backup-20250105.db ~/.overseer/overseer.db
+cp ~/.third-eye-mcp/backup-20250105.db ~/.third-eye-mcp/mcp.db
 ```
 
 ---
@@ -211,7 +211,7 @@ If you encounter migration conflicts:
 
 ```bash
 # Reset to clean state (⚠️ DELETES ALL DATA)
-rm -rf ~/.overseer/overseer.db
+rm -rf ~/.third-eye-mcp/mcp.db
 bun run setup
 ```
 
@@ -226,7 +226,7 @@ If you see `database is locked` errors:
 ### Corrupted Database
 
 ```bash
-sqlite3 ~/.overseer/overseer.db
+sqlite3 ~/.third-eye-mcp/mcp.db
 > PRAGMA integrity_check;
 ```
 

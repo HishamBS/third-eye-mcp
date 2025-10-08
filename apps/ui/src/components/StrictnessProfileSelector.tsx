@@ -55,7 +55,8 @@ export function StrictnessProfileSelector({
 
   useEffect(() => {
     // Load custom profiles from API
-    fetch('http://localhost:3200/api/strictness')
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+    fetch(`${API_URL}/api/strictness`)
       .then((res) => res.json())
       .then((data) => {
         if (data.profiles) {
@@ -74,7 +75,8 @@ export function StrictnessProfileSelector({
     } else {
       // Fetch full profile data from API
       try {
-        const res = await fetch(`http://localhost:3200/api/strictness/${profile.id}`);
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+        const res = await fetch(`${API_URL}/api/strictness/${profile.id}`);
         const data = await res.json();
         if (onProfileSelect) {
           onProfileSelect(data.profile);

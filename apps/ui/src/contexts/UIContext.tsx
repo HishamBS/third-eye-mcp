@@ -53,44 +53,64 @@ interface UIContextValue {
 
   showPersonaVoice: boolean;
   setShowPersonaVoice: (value: boolean) => void;
+
+  selectedSessionId: string | null;
+  setSelectedSession: (sessionId: string | null) => void;
 }
 
 const UIContext = createContext<UIContextValue | undefined>(undefined);
 
 export function UIProvider({ children }: { children: ReactNode }) {
-  // State with defaults
+  const [mounted, setMounted] = useState(false);
   const [viewMode, setViewModeState] = useState<ViewMode>('expert');
   const [theme, setThemeState] = useState<ThemeName>('overseer');
   const [darkMode, setDarkModeState] = useState(true);
   const [strictness, setStrictnessState] = useState<StrictnessSettings>(DEFAULT_STRICTNESS.enterprise);
   const [autoOpenSessions, setAutoOpenSessionsState] = useState(true);
   const [showPersonaVoice, setShowPersonaVoiceState] = useState(false);
+  const [selectedSessionId, setSelectedSessionIdState] = useState<string | null>(null);
 
-  // Load settings from localStorage on mount
   useEffect(() => {
-    const savedMode = localStorage.getItem('third-eye-view-mode') as ViewMode;
-    if (savedMode) setViewModeState(savedMode);
+    setMounted(true);
 
-    const savedTheme = localStorage.getItem('third-eye-theme') as ThemeName;
-    if (savedTheme) setThemeState(savedTheme);
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
 
-    const savedDarkMode = localStorage.getItem('third-eye-dark-mode');
-    if (savedDarkMode !== null) setDarkModeState(savedDarkMode === 'true');
+    fetch(`${API_URL}/api/app-settings`)
+      .then(res => res.json())
+      .then(response => {
+        const data = response.data || response;
+        if (data.theme) setThemeState(data.theme);
+        if (data.darkMode !== undefined) setDarkModeState(data.darkMode);
+        if (data.auto_open !== undefined) setAutoOpenSessionsState(data.auto_open);
+      })
+      .catch(() => {
+        const savedMode = localStorage.getItem('third-eye-view-mode') as ViewMode;
+        if (savedMode) setViewModeState(savedMode);
 
-    const savedStrictness = localStorage.getItem('third-eye-strictness');
-    if (savedStrictness) {
-      try {
-        setStrictnessState(JSON.parse(savedStrictness));
-      } catch (e) {
-        console.error('Failed to parse strictness settings', e);
-      }
-    }
+        const savedTheme = localStorage.getItem('third-eye-theme') as ThemeName;
+        if (savedTheme) setThemeState(savedTheme);
 
-    const savedAutoOpen = localStorage.getItem('third-eye-auto-open');
-    if (savedAutoOpen !== null) setAutoOpenSessionsState(savedAutoOpen === 'true');
+        const savedDarkMode = localStorage.getItem('third-eye-dark-mode');
+        if (savedDarkMode !== null) setDarkModeState(savedDarkMode === 'true');
 
-    const savedPersonaVoice = localStorage.getItem('third-eye-persona-voice');
-    if (savedPersonaVoice !== null) setShowPersonaVoiceState(savedPersonaVoice === 'true');
+        const savedStrictness = localStorage.getItem('third-eye-strictness');
+        if (savedStrictness) {
+          try {
+            setStrictnessState(JSON.parse(savedStrictness));
+          } catch (e) {
+            console.error('Failed to parse strictness settings', e);
+          }
+        }
+
+        const savedAutoOpen = localStorage.getItem('third-eye-auto-open');
+        if (savedAutoOpen !== null) setAutoOpenSessionsState(savedAutoOpen === 'true');
+
+        const savedPersonaVoice = localStorage.getItem('third-eye-persona-voice');
+        if (savedPersonaVoice !== null) setShowPersonaVoiceState(savedPersonaVoice === 'true');
+
+        const savedSessionId = localStorage.getItem('third-eye-selected-session');
+        if (savedSessionId) setSelectedSessionIdState(savedSessionId);
+      });
   }, []);
 
   const setViewMode = (mode: ViewMode) => {
@@ -104,21 +124,38 @@ export function UIProvider({ children }: { children: ReactNode }) {
   };
 
   const setTheme = (newTheme: ThemeName) => {
+    if (!mounted) return;
+
     setThemeState(newTheme);
     localStorage.setItem('third-eye-theme', newTheme);
-    // Apply theme to document root
     document.documentElement.setAttribute('data-theme', newTheme);
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+    fetch(`${API_URL}/api/app-settings/theme`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value: newTheme }),
+    }).catch(err => console.debug('Failed to persist theme:', err));
   };
 
   const setDarkMode = (enabled: boolean) => {
+    if (!mounted) return;
+
     setDarkModeState(enabled);
     localStorage.setItem('third-eye-dark-mode', enabled.toString());
-    // Apply dark mode class to document root
+
     if (enabled) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+    fetch(`${API_URL}/api/app-settings/darkMode`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value: enabled }),
+    }).catch(err => console.debug('Failed to persist dark mode:', err));
   };
 
   const setStrictness = (settings: StrictnessSettings) => {
@@ -140,15 +177,25 @@ export function UIProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('third-eye-persona-voice', value.toString());
   };
 
-  // Apply theme and dark mode on mount
+  const setSelectedSession = (sessionId: string | null) => {
+    setSelectedSessionIdState(sessionId);
+    if (sessionId) {
+      localStorage.setItem('third-eye-selected-session', sessionId);
+    } else {
+      localStorage.removeItem('third-eye-selected-session');
+    }
+  };
+
   useEffect(() => {
+    if (!mounted) return;
+
     document.documentElement.setAttribute('data-theme', theme);
     if (darkMode) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, [theme, darkMode]);
+  }, [mounted, theme, darkMode]);
 
   return (
     <UIContext.Provider
@@ -167,6 +214,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
         setAutoOpenSessions,
         showPersonaVoice,
         setShowPersonaVoice,
+        selectedSessionId,
+        setSelectedSession,
       }}
     >
       {children}

@@ -11,8 +11,7 @@ export const OverseerMetadata = z.object({
 
 // Overseer envelope extends base
 export const OverseerEnvelopeSchema = BaseEnvelopeSchema.extend({
-  eye: z.literal('overseer'),
-  metadata: OverseerMetadata.optional(),
+  tag: z.literal('overseer'),
 });
 
 export type OverseerEnvelope = z.infer<typeof OverseerEnvelopeSchema>;
@@ -38,46 +37,6 @@ export class OverseerEye implements BaseEye {
   readonly description = 'Navigator - Entry point that initializes sessions and guides workflow';
   readonly version = '1.0.0';
 
-  async process(input: string, context?: Record<string, any>): Promise<OverseerEnvelope> {
-    try {
-      const sessionId = context?.sessionId || `sess-${Date.now().toString(16)}`;
-
-      const summaryLines = [OVERSEER_INTRO];
-      if (input && input.trim()) {
-        summaryLines.push(`\nGoal noted: \`${input.substring(0, 200)}\`. Overseer will guide; host model must produce deliverables.`);
-      }
-
-      const summary = summaryLines.join('\n');
-
-      return {
-        eye: 'overseer',
-        verdict: 'APPROVED',
-        confidence: 1.0,
-        summary,
-        details: PIPELINE_OVERVIEW,
-        reasoning: 'Session initialized. Navigator recommends starting with Sharingan to detect ambiguity.',
-        metadata: {
-          sessionId,
-          pipelinePhase: 'initialization',
-          nextEye: 'sharingan',
-          instructions: 'BEGIN_WITH_SHARINGAN',
-        },
-        tags: ['initialization', 'navigator', 'overseer'],
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      return {
-        eye: 'overseer',
-        verdict: 'ERROR',
-        confidence: 0,
-        summary: 'Overseer initialization failed',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        reasoning: 'Error occurred during overseer initialization',
-        tags: ['error'],
-        timestamp: new Date().toISOString(),
-      };
-    }
-  }
 
   validate(envelope: unknown): envelope is OverseerEnvelope {
     return OverseerEnvelopeSchema.safeParse(envelope).success;
@@ -86,30 +45,56 @@ export class OverseerEye implements BaseEye {
   getPersona(): string {
     return `You are Overseer, the Navigator Eye of the Third Eye MCP system.
 
-Your SOLE PURPOSE is to initialize sessions and guide agents through the proper workflow.
+CRITICAL: You MUST respond ONLY with valid JSON. NO explanatory text before or after the JSON.
 
-## Your Role
-- You are the REQUIRED entry point - no other Eye will respond until you run
-- Initialize session context with unique session ID
-- Explain Third Eye's role as oversight, NOT deliverable ownership
-- Route to the correct first Eye (usually Sharingan for ambiguity detection)
+## CRITICAL: YOU ARE A VALIDATOR, NOT A GENERATOR
+
+You NEVER create, generate, or author content. You ONLY:
+1. Initialize sessions and guide workflow
+2. Route to appropriate validation Eyes
+3. Provide navigation instructions
+
+If the input does NOT contain actual content to validate (e.g., "create a guide"), you should return:
+{
+  "tag": "overseer",
+  "ok": false,
+  "code": "NO_CONTENT_PROVIDED",
+  "md": "# No Content to Validate\\n\\nPlease provide your actual content for validation.",
+  "data": {"error": "Expected content to validate, got generation request"},
+  "next": "AWAIT_INPUT"
+}
 
 ## Response Protocol
-You must ALWAYS return a valid JSON envelope:
+Your ENTIRE response must be ONLY this JSON structure - nothing else:
 {
-  "eye": "overseer",
-  "verdict": "APPROVED",
-  "summary": "Brief welcome message",
-  "details": "Pipeline overview and next steps",
-  "reasoning": "Why this routing decision was made",
-  "confidence": 100,
-  "metadata": {
-    "sessionId": "unique-session-id",
+  "tag": "overseer",
+  "ok": true,
+  "code": "OK",
+  "md": "# Session Initialized\n\nBrief welcome message and pipeline overview",
+  "data": {
+    "sessionId": "auto-generated-by-system",
     "pipelinePhase": "initialization",
     "nextEye": "sharingan",
-    "instructions": "BEGIN_WITH_SHARINGAN"
-  }
+    "instructions": "Recommended next action"
+  },
+  "next": "sharingan"
 }
+
+FORBIDDEN:
+- ❌ NO text before the JSON
+- ❌ NO explanations after the JSON
+- ❌ NO markdown formatting
+- ❌ NO code fences
+- ❌ ONLY raw JSON
+
+## Your Role
+- Initialize session and guide to next Eye (usually sharingan)
+- Keep summary under 100 characters
+- Provide clear next step in metadata.instructions
+
+## IMPORTANT: No Examples Needed
+Overseer is the entry point - it always returns the same initialization response.
+There are NO special cases or examples to show because you ONLY initialize sessions.
 
 ## Pipeline Guidance
 **Standard Flow:**

@@ -13,6 +13,7 @@ import routingRoutes from './routes/routing';
 import personasRoutes from './routes/personas';
 import sessionRoutes from './routes/session';
 import mcpRoutes from './routes/mcp';
+import overseerRoutes from './routes/overseer';
 import eyesRoutes from './routes/eyes';
 import guidanceRoutes from './routes/guidance';
 import promptsRoutes from './routes/prompts';
@@ -22,6 +23,9 @@ import leaderboardsRoutes from './routes/leaderboards';
 import duelRoutes from './routes/duel';
 import exportRoutes from './routes/export';
 import integrationsRoutes from './routes/integrations';
+import appSettingsRoutes from './routes/app-settings';
+import databaseOpsRoutes from './routes/database-ops';
+import modelsRoutes from './routes/models';
 
 /**
  * Third Eye MCP Bun Server
@@ -35,17 +39,41 @@ const orchestrator = new EyeOrchestrator();
 // CORS middleware - Allow UI to communicate with server
 const config = getConfig();
 const uiPort = config.ui?.port || 3300;
-const allowedOrigins = [
+const defaultOrigins = new Set([
   `http://127.0.0.1:${uiPort}`,
   `http://localhost:${uiPort}`,
-];
+  `http://${config.server.host}:${config.server.port}`,
+]);
+
+const extraOrigins = Array.isArray(config.security.allowedOrigins)
+  ? config.security.allowedOrigins.filter(Boolean)
+  : [];
+
+extraOrigins.forEach(origin => defaultOrigins.add(origin));
 
 app.use('*', cors({
-  origin: allowedOrigins,
+  origin: (origin) => {
+    if (!origin) {
+      return '*'; // Same-origin (curl, server-to-server)
+    }
+
+    if (origin.startsWith('mcp://')) {
+      return origin; // Return the origin for MCP clients
+    }
+
+    if (defaultOrigins.has(origin)) {
+      return origin; // Return the origin for allowed origins
+    }
+
+    return false; // Reject all other origins
+  },
+  allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'X-API-Key', 'X-Session-Id', 'Authorization'],
   credentials: true,
 }));
 
 // API Routes
+app.route('/api/database/ops', databaseOpsRoutes);
 app.route('/api/database', databaseRoutes);
 app.route('/api/provider-keys', providerKeysRoutes);
 app.route('/api/routing', routingRoutes);
@@ -56,15 +84,24 @@ app.route('/api/prompts', promptsRoutes);
 app.route('/api/pipelines', pipelinesRoutes);
 app.route('/api/strictness', strictnessRoutes);
 app.route('/api/leaderboards', leaderboardsRoutes);
+app.route('/api/metrics/leaderboards', leaderboardsRoutes); // Alias for /api/leaderboards
 app.route('/api/duel', duelRoutes);
 app.route('/api/export', exportRoutes);
 app.route('/api/integrations', integrationsRoutes);
+app.route('/api/app-settings', appSettingsRoutes);
+app.route('/api/models', modelsRoutes);
 
-// Eyes API Routes (called by MCP bridge + UI)
-app.route('/eyes', eyesRoutes);
+// Eyes API Routes - Read-only endpoints enabled for UI
+// Note: Direct Eye EXECUTION is blocked (violates Golden Rule #1)
+// But listing/browsing Eyes for UI is allowed
 app.route('/api/eyes', eyesRoutes);
 
-// MCP Routes
+// Overseer Route (Golden Rule #1 - ONLY public entry point)
+app.route('/overseer', overseerRoutes);
+
+// MCP Routes (legacy, prefer /overseer)
+// NOTE: These routes expose Eye registry and agent primers for MCP clients
+// Individual Eyes are NOT directly callable - only documentation/metadata is exposed
 app.route('/mcp', mcpRoutes);
 
 // Simple ping endpoint for testing routing
@@ -80,12 +117,26 @@ app.get('/health', async (c) => {
     const health = await getSystemHealth();
     const statusCode = health.status === 'healthy' ? 200 : health.status === 'degraded' ? 207 : 503;
 
-    return c.json(health, statusCode);
+    return c.json({
+      ok: health.status === 'healthy',
+      status: health.status,
+      version: health.version,
+      uptime_seconds: health.uptime_seconds,
+      host: health.host,
+      bindAddress: health.bindAddress,
+      timestamp: new Date().toISOString(),
+      checks: {
+        database: health.database,
+        providers: health.providers,
+      },
+    }, statusCode);
   } catch (error) {
     return c.json({
+      ok: false,
       status: 'down',
-      error: error instanceof Error ? error.message : 'Health check failed',
+      version: process.env.npm_package_version || 'unknown',
       timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Health check failed',
     }, 503);
   }
 });

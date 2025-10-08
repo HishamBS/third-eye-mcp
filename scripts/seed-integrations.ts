@@ -7,61 +7,47 @@ import { eq } from 'drizzle-orm';
 /**
  * Seed MCP Integrations
  *
- * Creates default integration configs for 6 major AI tools
+ * Creates default integration configs for 9 major AI tools
  */
 
 const { db } = getDb();
 
 const defaultIntegrations: Omit<NewMcpIntegration, 'id' | 'createdAt' | 'updatedAt'>[] = [
   {
-    name: 'Claude Desktop',
-    slug: 'claude-desktop',
+    name: 'Claude Code & Desktop',
+    slug: 'claude-suite',
     logoUrl: 'https://www.anthropic.com/images/icons/claude-app-icon.png',
-    description: 'Official Anthropic Claude Desktop app with native MCP support via stdio transport',
+    description: 'Register the bridge with Anthropic CLI once; both Claude Code and Claude Desktop read the shared MCP registry after you approve the trust prompt',
     status: 'official',
-    platforms: ['macos', 'windows'],
+    platforms: ['macos', 'windows', 'linux'],
     configType: 'json',
     configFiles: [
-      { platform: 'macos', path: '~/Library/Application Support/Claude/claude_desktop_config.json' },
-      { platform: 'windows', path: '%APPDATA%\\Claude\\claude_desktop_config.json' },
+      { platform: 'all', path: 'CLI command (see below)' },
     ],
-    configTemplate: `{
-  "mcpServers": {
-    "third-eye-mcp": {
-      "type": "stdio",
-      "command": "bun",
-      "args": ["run", "{{MCP_BIN}}"]
-    }
-  }
-}`,
+    configTemplate: `claude mcp add third-eye -- bun run --cwd "{{MCP_PATH}}/mcp-bridge" start`,
     setupSteps: [
       {
-        title: 'Open Claude Desktop Settings',
-        description: 'Click the Claude icon → Settings → Developer',
-        code: null,
-      },
-      {
-        title: 'Edit Configuration',
-        description: 'Click "Edit Config" button to open claude_desktop_config.json',
-        code: null,
-      },
-      {
-        title: 'Add Third Eye MCP Server',
-        description: 'Copy the configuration below and paste it into the file',
+        title: 'Run CLI Command',
+        description: 'Execute the command below to register Third Eye with Claude',
         code: 'config',
       },
       {
-        title: 'Restart Claude Desktop',
-        description: 'Close and reopen Claude Desktop to load the MCP server',
+        title: 'Approve Trust Prompt',
+        description: 'Approve the trust prompt when Claude Code or Desktop starts',
+        code: null,
+      },
+      {
+        title: 'Toggle Server On (Desktop)',
+        description: 'In Claude Desktop, go to Settings → Tools and toggle the server on',
         code: null,
       },
       {
         title: 'Verify Connection',
-        description: 'Look for the hammer/tools icon in the bottom-right corner of Claude Desktop',
+        description: 'Look for the hammer/tools icon confirming MCP server is active',
         code: null,
       },
     ],
-    docsUrl: 'https://modelcontextprotocol.io/clients#claude-desktop',
+    docsUrl: 'https://docs.anthropic.com/en/docs/build-with-claude/claude-desktop/model-context-protocol',
     enabled: true,
     displayOrder: 1,
   },
@@ -302,6 +288,133 @@ args:
     docsUrl: 'https://platform.openai.com/docs/mcp',
     enabled: true,
     displayOrder: 6,
+  },
+  {
+    name: 'Codex CLI',
+    slug: 'codex-cli',
+    logoUrl: null,
+    description: 'Update Codex CLI user config so the Third Eye bridge is available in /tools. Codex reads the ~/.codex/config.toml MCP table on launch',
+    status: 'official',
+    platforms: ['macos', 'windows', 'linux'],
+    configType: 'json',
+    configFiles: [
+      { platform: 'all', path: '~/.codex/config.toml' },
+    ],
+    configTemplate: `[mcp_servers.third-eye]
+command = "bun"
+args = ["run", "--cwd", "{{MCP_PATH}}/mcp-bridge", "start"]
+env = { }`,
+    setupSteps: [
+      {
+        title: 'Open Codex Config',
+        description: 'Edit ~/.codex/config.toml file',
+        code: null,
+      },
+      {
+        title: 'Add Third Eye Server',
+        description: 'Add the configuration below to the file',
+        code: 'config',
+      },
+      {
+        title: 'Restart Codex CLI',
+        description: 'Restart Codex CLI to load the MCP server',
+        code: null,
+      },
+      {
+        title: 'Verify in /tools',
+        description: 'Check that Third Eye tools appear in /tools command',
+        code: null,
+      },
+    ],
+    docsUrl: 'https://developers.openai.com/codex/cli',
+    enabled: true,
+    displayOrder: 7,
+  },
+  {
+    name: 'Gemini CLI',
+    slug: 'gemini-cli',
+    logoUrl: null,
+    description: 'Gemini CLI watches ~/.gemini/settings.json. Merge this block and restart gemini chat',
+    status: 'official',
+    platforms: ['macos', 'windows', 'linux'],
+    configType: 'json',
+    configFiles: [
+      { platform: 'all', path: '~/.gemini/settings.json' },
+    ],
+    configTemplate: `{
+  "mcpServers": {
+    "third-eye": {
+      "command": "bun",
+      "args": ["run", "--cwd", "{{MCP_PATH}}/mcp-bridge", "start"],
+      "env": {}
+    }
+  }
+}`,
+    setupSteps: [
+      {
+        title: 'Open Gemini Settings',
+        description: 'Edit ~/.gemini/settings.json file',
+        code: null,
+      },
+      {
+        title: 'Merge Configuration',
+        description: 'Add the mcpServers block to your settings.json',
+        code: 'config',
+      },
+      {
+        title: 'Restart Gemini Chat',
+        description: 'Restart gemini chat to load the MCP server',
+        code: null,
+      },
+      {
+        title: 'Verify Connection',
+        description: 'Check that Third Eye tools are available in Gemini',
+        code: null,
+      },
+    ],
+    docsUrl: 'https://ai.google.dev/gemini-cli/docs',
+    enabled: true,
+    displayOrder: 8,
+  },
+  {
+    name: 'OpenCode CLI',
+    slug: 'opencode',
+    logoUrl: null,
+    description: 'OpenCode ships as an MCP server. Pair it with Third Eye inside Claude/Cursor/etc. This sample wires both servers to Claude Code',
+    status: 'community',
+    platforms: ['macos', 'windows', 'linux'],
+    configType: 'json',
+    configFiles: [
+      { platform: 'all', path: 'CLI commands (see below)' },
+    ],
+    configTemplate: `npm install -g opencode
+claude mcp add opencode -- npx -y opencode-mcp-tool -- --model gemma2-9b-it
+claude mcp add third-eye -- bun run --cwd "{{MCP_PATH}}/mcp-bridge" start`,
+    setupSteps: [
+      {
+        title: 'Install OpenCode',
+        description: 'Install OpenCode globally via npm',
+        code: 'npm install -g opencode',
+      },
+      {
+        title: 'Register OpenCode Server',
+        description: 'Add OpenCode to Claude MCP registry',
+        code: 'claude mcp add opencode -- npx -y opencode-mcp-tool -- --model gemma2-9b-it',
+      },
+      {
+        title: 'Register Third Eye Server',
+        description: 'Add Third Eye to Claude MCP registry',
+        code: 'claude mcp add third-eye -- bun run --cwd "{{MCP_PATH}}/mcp-bridge" start',
+      },
+      {
+        title: 'Verify Both Servers',
+        description: 'Check that both OpenCode and Third Eye tools are available',
+        code: null,
+      },
+    ],
+    docsUrl: 'https://github.com/openai/opencode',
+    enabled: true,
+    displayOrder: 9,
   },
 ];
 

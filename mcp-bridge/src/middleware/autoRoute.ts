@@ -52,43 +52,20 @@ export async function autoRoute(input: AutoRouteInput): Promise<AutoRouteResult>
 
     if (needsPlanning) {
       return {
-        recommendedEye: 'rinnegan:requirements',
+        recommendedEye: 'rinnegan',
         reasoning: 'Task requires planning and requirements definition',
         confidence: 90,
         alternativeEyes: ['sharingan'],
       };
     }
 
-    // Check for implementation keywords
-    const implementKeywords = ['implement', 'build', 'create', 'add feature', 'develop'];
-    const needsImplementation = implementKeywords.some(keyword => taskLower.includes(keyword));
-
-    if (needsImplementation) {
-      return {
-        recommendedEye: 'rinnegan:requirements',
-        reasoning: 'Implementation tasks should start with requirements',
-        confidence: 85,
-        alternativeEyes: ['sharingan'],
-      };
-    }
-
-    // Check for fact-checking keywords
-    const factCheckKeywords = ['validate', 'verify', 'check', 'evidence', 'citation', 'fact'];
-    const needsFactCheck = factCheckKeywords.some(keyword => taskLower.includes(keyword));
-
-    if (needsFactCheck) {
-      return {
-        recommendedEye: 'tenseigan',
-        reasoning: 'Task requires fact-checking and evidence validation',
-        confidence: 80,
-      };
-    }
-
-    // Default to overseer for general routing
+    // For ALL new requests, start with Sharingan to gather context and ask clarifying questions
+    // This is how we GUIDE the agent through creating quality content
     return {
-      recommendedEye: 'overseer',
-      reasoning: 'Let Overseer determine best workflow for this task',
-      confidence: 70,
+      recommendedEye: 'sharingan',
+      reasoning: 'Starting with clarification to guide agent through quality content creation',
+      confidence: 95,
+      alternativeEyes: ['overseer'],
     };
   }
 
@@ -113,51 +90,19 @@ export async function autoRoute(input: AutoRouteInput): Promise<AutoRouteResult>
   }
 
   // Planning workflow
-  if (lastEye === 'rinnegan:requirements') {
+  if (lastEye === 'rinnegan') {
     return {
-      recommendedEye: 'rinnegan:review',
-      reasoning: 'Requirements defined, review and approve plan',
-      confidence: 95,
-    };
-  }
-
-  if (lastEye === 'rinnegan:review') {
-    return {
-      recommendedEye: 'mangekyo:scaffold',
-      reasoning: 'Plan approved, generate code scaffold',
+      recommendedEye: 'mangekyo',
+      reasoning: 'Plan approved, proceed to code generation',
       confidence: 90,
     };
   }
 
   // Implementation workflow
-  if (lastEye === 'mangekyo:scaffold') {
+  if (lastEye === 'mangekyo') {
     return {
-      recommendedEye: 'mangekyo:impl',
-      reasoning: 'Scaffold approved, implement core logic',
-      confidence: 95,
-    };
-  }
-
-  if (lastEye === 'mangekyo:impl') {
-    return {
-      recommendedEye: 'mangekyo:tests',
-      reasoning: 'Implementation complete, add tests',
-      confidence: 95,
-    };
-  }
-
-  if (lastEye === 'mangekyo:tests') {
-    return {
-      recommendedEye: 'mangekyo:docs',
-      reasoning: 'Tests complete, generate documentation',
-      confidence: 95,
-    };
-  }
-
-  if (lastEye === 'mangekyo:docs') {
-    return {
-      recommendedEye: 'rinnegan:approval',
-      reasoning: 'All artifacts complete, final approval check',
+      recommendedEye: 'tenseigan',
+      reasoning: 'Implementation complete, validate evidence in documentation',
       confidence: 95,
     };
   }

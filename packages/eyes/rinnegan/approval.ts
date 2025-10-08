@@ -8,16 +8,7 @@ import {
 } from "../constants";
 import { buildResponse } from "../shared";
 import type { EyeResponse } from "../constants";
-
-const PHASE_LABELS: Record<string, string> = {
-  plan_approved: "Plan",
-  scaffold_approved: "Scaffold",
-  impl_approved: "Implementation",
-  tests_approved: "Tests",
-  docs_approved: "Docs",
-  text_validated: "Evidence",
-  consistent: "Consistency"
-};
+import { MarkdownBuilder } from "../utils/markdown-builder";
 
 export interface FinalApprovalRequest {
   payload: {
@@ -31,27 +22,46 @@ export interface FinalApprovalRequest {
   };
 }
 
+type PhaseKey = keyof FinalApprovalRequest["payload"];
+
+const PHASES: Array<{ key: PhaseKey; label: string }> = [
+  { key: "plan_approved", label: "Plan" },
+  { key: "scaffold_approved", label: "Scaffold" },
+  { key: "impl_approved", label: "Implementation" },
+  { key: "tests_approved", label: "Tests" },
+  { key: "docs_approved", label: "Docs" },
+  { key: "text_validated", label: "Evidence" },
+  { key: "consistent", label: "Consistency" }
+];
+
 export function finalApproval(request: FinalApprovalRequest): EyeResponse {
-  const summaryLines = [Heading.SUMMARY];
+  const summaryBuilder = MarkdownBuilder.create().heading(Heading.SUMMARY);
   const missingLabels: string[] = [];
 
-  for (const [field, label] of Object.entries(PHASE_LABELS)) {
-    const approved = request.payload[field as keyof typeof request.payload];
+  for (const phase of PHASES) {
+    const approved = request.payload[phase.key];
     const status = approved ? "OK" : "Pending";
-    summaryLines.push(SUMMARY_BULLET_TEMPLATE.replace("{label}", label).replace("{status}", status));
+    summaryBuilder.bullet(
+      SUMMARY_BULLET_TEMPLATE.replace("{label}", phase.label).replace("{status}", status)
+    );
     if (!approved) {
-      missingLabels.push(label);
+      missingLabels.push(phase.label);
     }
   }
 
-  const summaryMarkdown = summaryLines.join("\n");
+  const summaryMarkdown = summaryBuilder.build();
 
   if (missingLabels.length > 0) {
+    const md = MarkdownBuilder.create()
+      .heading(Heading.FINAL_BLOCKED)
+      .text(`Outstanding phases: ${missingLabels.join(", ")}`)
+      .build();
+
     return buildResponse({
       tag: EyeTag.RINNEGAN,
       ok: false,
       code: StatusCode.E_PHASES_INCOMPLETE,
-      md: `${Heading.FINAL_BLOCKED}\nOutstanding phases: ${missingLabels.join(", ")}`,
+      md,
       data: {
         [DataKey.APPROVED]: false,
         [DataKey.SUMMARY_MD]: summaryMarkdown
@@ -64,7 +74,10 @@ export function finalApproval(request: FinalApprovalRequest): EyeResponse {
     tag: EyeTag.RINNEGAN,
     ok: true,
     code: StatusCode.OK_ALL_APPROVED,
-    md: `${Heading.FINAL_APPROVAL}\nAll phases approved. Host may deliver the final artifact.`,
+    md: MarkdownBuilder.create()
+      .heading(Heading.FINAL_APPROVAL)
+      .text("All phases approved. Host may deliver the final artifact.")
+      .build(),
     data: {
       [DataKey.APPROVED]: true,
       [DataKey.SUMMARY_MD]: summaryMarkdown

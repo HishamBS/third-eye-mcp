@@ -1,286 +1,180 @@
-# 🧿 Third Eye MCP
+# 🧿 Third Eye MCP ![Coverage](docs/badges/coverage.svg)
 
-**Local-first AI orchestration layer for multi-provider LLM workflows**
+Local-first AI orchestration layer for multi-provider LLM workflows.
 
-Third Eye MCP is a TypeScript-based Model Context Protocol (MCP) server that orchestrates specialized AI "Eyes" across multiple providers (Groq, OpenRouter, Ollama, LM Studio). Built with Bun, it provides real-time monitoring, intelligent routing with fallbacks, and persona versioning—all running locally with your own API keys.
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 [![Bun](https://img.shields.io/badge/Bun-1.0+-black)](https://bun.sh/)
 
 ---
 
-## ✨ Features
-
-- **🔀 Intelligent Routing**: Assign any model to any Eye tool with automatic fallback
-- **📝 Persona Versioning**: Edit, stage, and activate personas without restart
-- **📡 Real-time Monitoring**: WebSocket-powered live session updates
-- **🔐 Secure by Default**: AES-256-GCM encryption for API keys, local-first architecture
-- **🎨 Clean UI**: Next.js 15 dashboard with Overseer theme (Naruto-inspired palette)
-- **🚀 Multi-Provider**: Groq, OpenRouter, Ollama, LM Studio support out-of-the-box
-- **🧪 Envelope Validation**: Strict JSON schema validation with retry logic
-- **📊 Metrics & Telemetry**: Token tracking, latency monitoring (opt-in telemetry)
+Third Eye MCP is a Bun-powered Model Context Protocol (MCP) server that coordinates eight specialised "Eyes" across Groq, OpenRouter, Ollama, and LM Studio providers. It delivers intelligent routing with automatic fallbacks, persona versioning, strict envelope validation, and a real-time monitoring dashboard—while keeping all data on your machine.
 
 ---
 
-## 🚀 Quickstart
+## Table of Contents
 
-### Prerequisites
+- [Quick Start](#quick-start)
+- [Installation Options](#installation-options)
+- [Core Workflow](#core-workflow)
+- [Documentation Hub](#documentation-hub)
+- [Monorepo Layout](#monorepo-layout)
+- [Development](#development)
+- [Release & Publishing](#release--publishing)
+- [Support](#support)
+- [License](#license)
 
-- [Bun](https://bun.sh/) 1.0+
-- API keys for Groq/OpenRouter (optional: use Ollama/LM Studio locally)
+---
 
-### Installation
+## Quick Start
+
+> **Requirement:** Bun 1.0+ must be installed. Verify with `bun --version`.
 
 ```bash
-# Install from npm
-npx third-eye-mcp@latest
+# Launch without installing globally
+bunx third-eye-mcp up
 
-# Or clone and run locally
-git clone https://github.com/yourusername/third-eye-mcp.git
-cd third-eye-mcp
-bun install
-bun run setup    # Seeds database with default personas and routing
-bun run dev      # Starts server on :7070 and UI on :3300
+# MCP server → http://127.0.0.1:7070
+# Dashboard  → http://127.0.0.1:3300
 ```
 
-### First Run
+What happens on first run:
+- Seeds SQLite database at `~/.third-eye-mcp/mcp.db`
+- Activates all eight Eyes with default personas
+- Starts Next.js dashboard with live pipeline telemetry
+- Preloads intelligent routing and fallback chains
 
-1. **Seed the database**:
-   ```bash
-   bun run setup
-   ```
-
-2. **Start the stack**:
-   ```bash
-   npx third-eye-mcp up
-   # or: bun run dev
-   ```
-
-3. **Open the UI**: Navigate to [http://127.0.0.1:3300](http://127.0.0.1:3300)
-
-4. **Configure providers**:
-   - Go to **Models & Routing**
-   - Add your Groq/OpenRouter API keys
-   - Test model availability
-   - Assign models to Eyes (Sharingan, Rinnegan, Tenseigan)
-
-5. **Create a session**:
-   - Click **New Session**
-   - Run your first Eye
-   - Watch real-time updates via WebSocket
-
----
-
-## 📚 Documentation
-
-- [Architecture Overview](docs/ARCHITECTURE.md) - System design and data flow
-- [Providers Guide](docs/PROVIDERS.md) - Setup for Groq, OpenRouter, Ollama, LM Studio
-- [Routing Matrix](docs/ROUTING.md) - Configure Eye-to-Model mappings and fallbacks
-- [Personas Guide](docs/PERSONAS.md) - Edit, version, and activate Eye personas
-- [MCP API Reference](docs/MCP_API.md) - REST and WebSocket endpoints
-- [Database Schema](docs/DATABASE.md) - SQLite schema, migrations, backups
-- [Security](docs/SECURITY.md) - Encryption, privacy, and telemetry
-- [Extending](docs/EXTENDING.md) - Add new Eyes, providers, or features
-- [FAQ](docs/FAQ.md) - Common issues and troubleshooting
-
----
-
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                   Third Eye MCP Stack                   │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  CLI (npx third-eye-mcp)                               │
-│    ↓                                                    │
-│  ┌──────────────┐         ┌────────────────┐          │
-│  │ Bun Server   │◄───────►│ Next.js 15 UI  │          │
-│  │ (Hono)       │  WS     │ (App Router)   │          │
-│  │ :7070        │         │ :3300          │          │
-│  └──────┬───────┘         └────────────────┘          │
-│         │                                              │
-│         ↓                                              │
-│  ┌──────────────────────────────────────┐             │
-│  │     Eye Orchestrator (Core)          │             │
-│  │  - Routing resolver                  │             │
-│  │  - Persona loader                    │             │
-│  │  - Envelope validator                │             │
-│  │  - Fallback logic                    │             │
-│  └──────────────┬───────────────────────┘             │
-│                 │                                      │
-│                 ↓                                      │
-│  ┌──────────────────────────────────────┐             │
-│  │    Provider Factory                  │             │
-│  │  ┌─────────┬──────────┬──────────┐   │             │
-│  │  │  Groq   │OpenRouter│ Ollama   │   │             │
-│  │  └─────────┴──────────┴──────────┘   │             │
-│  └──────────────────────────────────────┘             │
-│                                                         │
-│  SQLite (~/.overseer/overseer.db)                      │
-│    - Sessions, Runs, Personas                          │
-│    - Routing configs                                   │
-│    - Encrypted API keys                                │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-```
-
----
-
-## 🔧 Configuration
-
-### Environment Variables
+Need the CLI on your PATH? Install globally after Bun is installed:
 
 ```bash
-# Database
-OVERSEER_DB=~/.overseer/overseer.db
-
-# Server
-OVERSEER_HOST=127.0.0.1
-OVERSEER_PORT=7070
-
-# UI
-OVERSEER_UI_PORT=3300
-AUTO_OPEN=true
-
-# Providers
-GROQ_API_KEY=your-groq-key
-OPENROUTER_API_KEY=your-openrouter-key
-
-# Security
-THIRD_EYE_SECURITY_ENCRYPTION_KEY=your-64-char-encryption-key
-
-# Telemetry (opt-in)
-TELEMETRY_ENABLED=false
-```
-
-### Config File (`~/.overseer/config.json`)
-
-```json
-{
-  "db": {
-    "path": "~/.overseer/overseer.db"
-  },
-  "server": {
-    "host": "127.0.0.1",
-    "port": 7070
-  },
-  "ui": {
-    "port": 3300,
-    "autoOpen": true
-  },
-  "providers": {
-    "groq": {
-      "baseUrl": "https://api.groq.com/openai/v1"
-    },
-    "ollama": {
-      "baseUrl": "http://127.0.0.1:11434"
-    }
-  },
-  "telemetry": {
-    "enabled": false
-  }
-}
+npm install -g third-eye-mcp           # or pnpm add -g / bun add -g
+third-eye-mcp up
 ```
 
 ---
 
-## 🎯 CLI Commands
+## Installation Options
+
+- **Zero-install (recommended)** – `bunx third-eye-mcp up`
+- **Global CLI** – `npm install -g third-eye-mcp` then run `third-eye-mcp up`
+- **From source**
+  ```bash
+  git clone https://github.com/HishamBS/third-eye-mcp.git
+  cd third-eye-mcp
+  bun install
+  bun run build:packages
+  bun run db:migrate
+  bun run dev
+  ```
+
+Hardware & accounts:
+- Groq and/or OpenRouter API keys (or local Ollama / LM Studio)
+- Claude Desktop, Cursor, Cline, Continue.dev, or Warp for MCP client integration
+
+---
+
+## Core Workflow
+
+1. **Start services** – `bunx third-eye-mcp up`
+2. **Open dashboard** – [http://127.0.0.1:3300](http://127.0.0.1:3300)
+3. **Configure providers** – Settings → Providers (Groq/OpenRouter keys) or local runtimes
+4. **Adjust routing** – Models & Routing tab (primary + fallback models per Eye)
+5. **Connect your MCP client** – follow [docs/integrations](docs/integrations/README.md)
+6. **Monitor sessions** – live pipeline telemetry, persona versioning, replay history
+
+For end-to-end usage scenarios, see [docs/usage.md](docs/usage.md).
+
+---
+
+## Documentation Hub
+
+| Topic | Docs |
+| ----- | ---- |
+| Getting started | [docs/getting-started.md](docs/getting-started.md) – prerequisites, installation, first run checklist |
+| Daily operations | [docs/usage.md](docs/usage.md) – connecting agents, workflows, troubleshooting |
+| CLI reference | [docs/cli.md](docs/cli.md) – commands, options, background process model |
+| Configuration | [docs/configuration.md](docs/configuration.md) – env vars, strictness profiles, security |
+| Providers | [docs/PROVIDERS.md](docs/PROVIDERS.md) – Groq/OpenRouter/Ollama/LM Studio setup |
+| API surface | [docs/API_REFERENCE.md](docs/API_REFERENCE.md) & [docs/MCP_API.md](docs/MCP_API.md) |
+| Architecture | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) – system design & components |
+| Database | [docs/DATABASE.md](docs/DATABASE.md) – schema diagrams, migrations, backups |
+| Integrations | [docs/integrations/README.md](docs/integrations/README.md) – Claude, Cursor, Cline, Warp, Continue.dev |
+| Workflows | [docs/workflows/README.md](docs/workflows/README.md) – reusable pipeline templates |
+| Publishing | [docs/publishing.md](docs/publishing.md) – release workflow & npm publishing checklist |
+| Troubleshooting | [docs/FAQ.md](docs/FAQ.md) – common fixes & FAQs |
+
+---
+
+## Monorepo Layout
+
+```
+apps/            Next.js dashboard + Bun server entrypoints
+packages/        Core orchestrator, providers, database, utilities
+cli/             TypeScript CLI source (bundled via Bun)
+dist/            Bundled CLI executables (generated)
+docs/            Documentation hub (this README links here)
+scripts/         Operational scripts (setup, seed, health checks)
+__tests__/       Unit test suites
+examples/        Sample configs and scenario playbooks
+```
+
+---
+
+## Development
 
 ```bash
-# Start server + UI
-npx third-eye-mcp up
+bun install                # install workspace dependencies
+bun run build              # build packages, server, UI, CLI (alias for release pipeline)
 
-# Open DB browser
-npx third-eye-mcp db open
+pnpm lint                  # type-check monorepo
+pnpm test:coverage         # run Vitest with coverage
+pnpm test:e2e              # Playwright end-to-end tests
 
-# Reset all data (with confirmation)
-npx third-eye-mcp reset
-
-# Run with Docker (optional)
-npx third-eye-mcp docker up
+third-eye-mcp reset        # wipe ~/.third-eye-mcp (destructive)
+third-eye-mcp logs --tail  # follow combined logs
 ```
+
+Key scripts:
+- `bun run health:full` – comprehensive diagnostics
+- `bun run ws:check` – WebSocket reconnect simulation
+- `bun run scripts/seed-database.ts` – reseed personas/routing
 
 ---
 
-## 🧪 Testing
+## Release & Publishing
+
+Third Eye MCP ships to npm as `third-eye-mcp`. For an end-to-end automated release (version prompt → gates → publish → tag), run:
 
 ```bash
-# Unit tests (Vitest)
-bun test
-
-# Integration tests
-bun run test:integration
-
-# E2E tests (Playwright)
-bun run e2e
-
-# Performance test
-bun run test:perf
+bunx third-eye-mcp release:ship
 ```
 
----
-
-## 🐳 Docker Deployment
+Prefer manual control? Follow the publishing checklist in [docs/publishing.md](docs/publishing.md):
 
 ```bash
-# Build and run with Docker Compose
-docker compose -f docker/docker-compose.yml up
-
-# Production build
-docker build -f docker/Dockerfile.bun -t third-eye-mcp .
-docker run -p 7070:7070 -p 3300:3300 -v ~/.overseer:/root/.overseer third-eye-mcp
+pnpm release:prepare       # clean → lint → test → build → pack
+pnpm release:prepare:dry   # add npm publish --dry-run
+npm publish --access public
 ```
 
----
-
-## 🤝 Contributing
-
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### Development Setup
-
-```bash
-# Clone repo
-git clone https://github.com/yourusername/third-eye-mcp.git
-cd third-eye-mcp
-
-# Install dependencies
-bun install
-
-# Seed database
-bun run setup
-
-# Start development
-bun run dev
-
-# Run tests
-bun test
-```
+Before publishing:
+- Ensure `dist/cli.js` and `dist/mcp-server.js` are rebuilt with `bun run build:cli`
+- Update version and changelog via `bunx third-eye-mcp release` or manual edits
+- Verify archive artefact (`third-eye-mcp-<version>.tgz`) and generated docs
 
 ---
 
-## 📜 License
+## Support
 
-MIT © Third Eye Team
-
----
-
-## 🙏 Acknowledgments
-
-- Inspired by Naruto's dōjutsu (eye techniques)
-- Built with [Bun](https://bun.sh/), [Hono](https://hono.dev/), and [Next.js](https://nextjs.org/)
-- Powered by Groq, OpenRouter, Ollama, and LM Studio
+- Dashboard: [http://127.0.0.1:3300](http://127.0.0.1:3300)
+- Health check: `bun run health:full`
+- Logs: `third-eye-mcp logs --tail`
+- Issues & feature requests: [github.com/HishamBS/third-eye-mcp/issues](https://github.com/HishamBS/third-eye-mcp/issues)
 
 ---
 
-## 📞 Support
+## License
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/third-eye-mcp/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/third-eye-mcp/discussions)
-- **Docs**: [Full Documentation](docs/)
+Released under the [MIT License](LICENSE).
 
----
-
-**Built with 🧿 by the Third Eye Team**
+Commercial support or enterprise features? File an issue or start a discussion—contributors welcome.

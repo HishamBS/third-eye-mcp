@@ -1,5 +1,6 @@
 import { Context, Next } from 'hono';
 import { getDb } from '@third-eye/db';
+import { getConfig } from '@third-eye/config';
 import { eq } from 'drizzle-orm';
 
 /**
@@ -150,10 +151,11 @@ export function securityHeaders() {
  * Localhost-only binding check
  */
 export function checkLocalhostBinding() {
-  const host = process.env.HOST || '127.0.0.1';
+  const { server, security } = getConfig();
+  const host = server.host;
 
-  if (host === '0.0.0.0') {
-    console.warn('⚠️  WARNING: Server binding to 0.0.0.0 (all network interfaces)');
+  if (security.bindWarning && (host === '0.0.0.0' || host === '::')) {
+    console.warn('⚠️  WARNING: Server binding to a public interface (all network interfaces)');
     console.warn('   This exposes the server to your local network.');
     console.warn('   For production, use REQUIRE_API_KEY=true or bind to 127.0.0.1');
   } else if (host === '127.0.0.1' || host === 'localhost') {

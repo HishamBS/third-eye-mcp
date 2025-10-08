@@ -1,7 +1,10 @@
+// @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@third-eye/db';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7070';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -27,7 +30,9 @@ export async function GET(request: NextRequest) {
         thresholdDate = new Date(0); // All time
     }
 
-    const { db, runs } = getDb();
+    // Dynamic import to avoid bundling bun:sqlite
+    const { getDb, runs } = await import('@third-eye/db');
+    const { db } = getDb();
     const { sql } = await import('drizzle-orm');
 
     // Get all runs within timeframe

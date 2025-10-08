@@ -7,6 +7,7 @@ import {
 } from "./constants";
 import { buildResponse } from "./shared";
 import type { EyeResponse } from "./constants";
+import { MarkdownBuilder } from "./utils/markdown-builder";
 
 function missingSections(markdown: string): string[] {
   const sections = ["ROLE:", "TASK:", "CONTEXT:", "REQUIREMENTS:", "OUTPUT:"];
@@ -34,30 +35,36 @@ export function confirmIntent(request: JoganRequest): EyeResponse {
   };
 
   if (missing.length > 0) {
-    const issues = `Missing sections: ${missing.join(", ")}.`;
-    data[DataKey.ISSUES_MD] = issues;
-    const md = `${Heading.INTENT_NOT_CONFIRMED}\n${issues}`;
+    const issuesMessage = `Missing sections: ${missing.join(", ")}.`;
+    const issueMarkdown = MarkdownBuilder.create()
+      .heading(Heading.INTENT_NOT_CONFIRMED)
+      .text(issuesMessage)
+      .build();
+    data[DataKey.ISSUES_MD] = issueMarkdown;
 
     return buildResponse({
       tag: EyeTag.JOGAN,
       ok: false,
       code: StatusCode.E_INTENT_UNCONFIRMED,
-      md,
+      md: issueMarkdown,
       data,
       next_action: NextAction.RERUN_JOGAN
     });
   }
 
   if (estimatedTokens <= 0) {
-    const issues = "Estimated token count must be greater than zero.";
-    data[DataKey.ISSUES_MD] = issues;
-    const md = `${Heading.INTENT_NOT_CONFIRMED}\n${issues}`;
+    const issuesMessage = "Estimated token count must be greater than zero.";
+    const issueMarkdown = MarkdownBuilder.create()
+      .heading(Heading.INTENT_NOT_CONFIRMED)
+      .text(issuesMessage)
+      .build();
+    data[DataKey.ISSUES_MD] = issueMarkdown;
 
     return buildResponse({
       tag: EyeTag.JOGAN,
       ok: false,
       code: StatusCode.E_INTENT_UNCONFIRMED,
-      md,
+      md: issueMarkdown,
       data,
       next_action: NextAction.RERUN_JOGAN
     });
@@ -65,7 +72,10 @@ export function confirmIntent(request: JoganRequest): EyeResponse {
 
   data[DataKey.INTENT_CONFIRMED] = true;
   data[DataKey.ISSUES_MD] = "";
-  const md = `${Heading.INTENT_CONFIRMED}\nPrompt structure looks complete.`;
+  const md = MarkdownBuilder.create()
+    .heading(Heading.INTENT_CONFIRMED)
+    .text("Prompt structure looks complete.")
+    .build();
 
   return buildResponse({
     tag: EyeTag.JOGAN,

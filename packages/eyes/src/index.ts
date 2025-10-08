@@ -56,6 +56,11 @@ export const DEFAULT_PIPELINE: EyeName[] = [
 
 // Eye descriptions for UI
 export const EYE_DESCRIPTIONS: Record<EyeName, { name: string; description: string; color: string }> = {
+  overseer: {
+    name: 'Overseer',
+    description: 'Pipeline Navigator - Guides the correct Eye sequence and enforces contracts',
+    color: '#FF6B6B',
+  },
   'sharingan': {
     name: 'Sharingan',
     description: 'Ambiguity Radar - Detects vague or underspecified requests',

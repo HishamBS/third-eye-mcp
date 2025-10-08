@@ -5,10 +5,12 @@
     "rootDir": ".",
     "composite": true,
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "skipLibCheck": true,
+    "types": ["bun-types"]
   },
   "include": ["*.ts", "**/*.ts"],
-  "exclude": ["dist", "node_modules", "migrations"],
+  "exclude": ["dist", "node_modules", "migrations", "__tests__", "import-personas.ts"],
   "references": [
     { "path": "../types" },
     { "path": "../config" }

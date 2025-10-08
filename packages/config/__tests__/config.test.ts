@@ -20,13 +20,13 @@ describe('Config Loading', () => {
     expect(config).toBeDefined();
     expect(config.server).toBeDefined();
     expect(config.ui).toBeDefined();
-    expect(config.database).toBeDefined();
+    expect(config.db).toBeDefined();
   });
 
   test('should use environment variables when available', () => {
-    process.env.OVERSEER_HOST = '0.0.0.0';
-    process.env.OVERSEER_PORT = '8080';
-    process.env.OVERSEER_UI_PORT = '4000';
+    process.env.MCP_HOST = '0.0.0.0';
+    process.env.MCP_PORT = '8080';
+    process.env.MCP_UI_PORT = '4000';
 
     const config = loadConfig();
 
@@ -36,7 +36,7 @@ describe('Config Loading', () => {
   });
 
   test('should use default host when not specified', () => {
-    delete process.env.OVERSEER_HOST;
+    delete process.env.MCP_HOST;
 
     const config = loadConfig();
 
@@ -44,7 +44,7 @@ describe('Config Loading', () => {
   });
 
   test('should use default port when not specified', () => {
-    delete process.env.OVERSEER_PORT;
+    delete process.env.MCP_PORT;
 
     const config = loadConfig();
 
@@ -52,39 +52,39 @@ describe('Config Loading', () => {
   });
 
   test('should parse boolean autoOpen correctly', () => {
-    process.env.AUTO_OPEN = 'true';
+    process.env.MCP_AUTO_OPEN = 'true';
     let config = loadConfig();
     expect(config.ui.autoOpen).toBe(true);
 
-    process.env.AUTO_OPEN = 'false';
+    process.env.MCP_AUTO_OPEN = 'false';
     config = loadConfig();
     expect(config.ui.autoOpen).toBe(false);
 
-    process.env.AUTO_OPEN = '1';
+    process.env.MCP_AUTO_OPEN = '1';
     config = loadConfig();
     expect(config.ui.autoOpen).toBe(true);
 
-    process.env.AUTO_OPEN = '0';
+    process.env.MCP_AUTO_OPEN = '0';
     config = loadConfig();
     expect(config.ui.autoOpen).toBe(false);
   });
 
   test('should handle database path configuration', () => {
     const testDbPath = '/tmp/test.db';
-    process.env.OVERSEER_DB = testDbPath;
+    process.env.MCP_DB = testDbPath;
 
     const config = loadConfig();
 
-    expect(config.database.path).toBe(testDbPath);
+    expect(config.db.path).toBe(testDbPath);
   });
 
   test('should provide default database path', () => {
-    delete process.env.OVERSEER_DB;
+    delete process.env.MCP_DB;
 
     const config = loadConfig();
 
-    expect(config.database.path).toContain('.overseer');
-    expect(config.database.path).toContain('overseer.db');
+    expect(config.db.path).toContain('.third-eye-mcp');
+    expect(config.db.path).toContain('mcp.db');
   });
 });
 
@@ -108,8 +108,8 @@ describe('Config Validation', () => {
   test('should have valid database config', () => {
     const config = getConfig();
 
-    expect(config.database.path).toBeTruthy();
-    expect(typeof config.database.path).toBe('string');
+    expect(config.db.path).toBeTruthy();
+    expect(typeof config.db.path).toBe('string');
   });
 });
 
@@ -166,8 +166,18 @@ describe('Security Configuration', () => {
 
     const config = loadConfig();
 
-    // Should either be undefined or have a default
-    expect(config.security?.encryptionKey).toBeDefined();
+    expect(config.security?.encryptionKey).toBeUndefined();
+  });
+
+  test('should parse allowed origins list', () => {
+    process.env.MCP_ALLOWED_ORIGINS = 'https://example.com, mcp://client';
+
+    const config = loadConfig();
+
+    expect(config.security?.allowedOrigins).toEqual([
+      'https://example.com',
+      'mcp://client'
+    ]);
   });
 });
 

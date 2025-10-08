@@ -39,13 +39,15 @@ export const eyesRouting = sqliteTable('eyes_routing', {
 
 // Personas with versioning
 export const personas = sqliteTable('personas', {
+  id: text('id').primaryKey(),
   eye: text('eye').notNull(),
+  name: text('name').notNull(),
   version: integer('version').notNull(),
   content: text('content').notNull(),
   active: integer('active', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 }, (table) => ({
-  pk: unique().on(table.eye, table.version),
+  eyeVersionUnique: unique().on(table.eye, table.version),
 }));
 
 // Sessions - auto-created when AI agents connect via MCP

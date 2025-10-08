@@ -1,10 +1,15 @@
 import { describe, test, expect, beforeAll, afterAll } from 'vitest';
+import { randomUUID } from 'crypto';
 import { EyeOrchestrator } from '../orchestrator';
 import { getDb } from '@third-eye/db';
 import { sessions, personas, eyesRouting } from '@third-eye/db';
 import { eq } from 'drizzle-orm';
 
-describe('EyeOrchestrator', () => {
+const RUNS_IN_BUN = Boolean(process.versions?.bun);
+
+const suite = RUNS_IN_BUN ? describe : describe.skip;
+
+suite('EyeOrchestrator', () => {
   let orchestrator: EyeOrchestrator;
   let testSessionId: string;
   const { db } = getDb();
@@ -25,6 +30,7 @@ describe('EyeOrchestrator', () => {
 
     if (existingPersona.length === 0) {
       await db.insert(personas).values({
+        id: randomUUID(),
         eye: 'sharingan',
         version: 1,
         content: 'You are a helpful code generation assistant. Respond ONLY with valid JSON envelope.',

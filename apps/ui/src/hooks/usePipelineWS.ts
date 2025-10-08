@@ -11,13 +11,44 @@ function parseClaims(payload: unknown): EvidenceClaim[] {
     .map((item) => {
       if (!item || typeof item !== 'object') return null;
       const candidate = item as Record<string, unknown>;
-      if (typeof candidate.text !== 'string') return null;
+
+      // Support both formats:
+      // - Tenseigan Eye format: { claim, startIndex, endIndex, hasEvidence, evidenceQuality, ... }
+      // - UI format: { text, start, end, citation, confidence }
+      const text = typeof candidate.text === 'string' ? candidate.text : (typeof candidate.claim === 'string' ? candidate.claim : null);
+      if (!text) return null;
+
+      // Map startIndex/endIndex to start/end
+      const start = Number(candidate.start ?? candidate.startIndex ?? 0);
+      const end = Number(candidate.end ?? candidate.endIndex ?? 0);
+
+      // Map citation from evidence metadata
+      let citation: string | null = null;
+      if (typeof candidate.citation === 'string') {
+        citation = candidate.citation;
+      } else if (candidate.hasEvidence && candidate.evidenceType) {
+        // Generate citation info from Tenseigan metadata
+        citation = `${candidate.evidenceType} (${candidate.evidenceQuality})`;
+      }
+
+      // Map confidence - if evidenceQuality exists, convert to numeric score
+      let confidence = Number(candidate.confidence ?? 0);
+      if (!confidence && typeof candidate.evidenceQuality === 'string') {
+        const qualityMap: Record<string, number> = {
+          'strong': 0.9,
+          'moderate': 0.7,
+          'weak': 0.4,
+          'missing': 0.1,
+        };
+        confidence = qualityMap[candidate.evidenceQuality] ?? 0;
+      }
+
       return {
-        text: candidate.text,
-        start: Number(candidate.start ?? 0),
-        end: Number(candidate.end ?? 0),
-        citation: typeof candidate.citation === 'string' ? candidate.citation : null,
-        confidence: Number(candidate.confidence ?? 0),
+        text,
+        start,
+        end,
+        citation,
+        confidence,
       } satisfies EvidenceClaim;
     })
     .filter(Boolean) as EvidenceClaim[];

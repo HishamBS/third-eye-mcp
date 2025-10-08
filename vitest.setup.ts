@@ -8,7 +8,7 @@ const TEST_DB_PATH = resolve(tmpdir(), 'third-eye-test.db');
 
 beforeAll(() => {
   // Set test environment variables
-  process.env.OVERSEER_DB = TEST_DB_PATH;
+  process.env.MCP_DB = TEST_DB_PATH;
   process.env.NODE_ENV = 'test';
 });
 
@@ -32,4 +32,5 @@ afterAll(() => {
       console.warn('Failed to clean up test database:', error);
     }
   }
+  delete process.env.MCP_DB;
 });
