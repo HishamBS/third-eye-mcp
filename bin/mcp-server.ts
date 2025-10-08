@@ -7,4 +7,6 @@
  * Usage: bun run bin/mcp-server.ts
  */
 
-import '../mcp-bridge/src/index.js';
+import { startMCPServer } from '../packages/mcp/server.js';
+
+await startMCPServer();

@@ -1,0 +1,12 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Sharingan (1-tomoe evolving to 3-tomoe) - Signature red with black tomoe -->
+  <circle cx="32" cy="32" r="28" fill="#FF0000"/>
+  <circle cx="32" cy="32" r="7" fill="#000000"/>
+
+  <!-- Three black tomoe at 120° intervals -->
+  <path d="M32,12 Q26,12 23,15.5 Q20,19 20,23 Q20,27 23,30.5 Q26,34 32,34 Q35,34 37.5,32 Q40,30 40,27 L32,12Z" fill="#000000"/>
+  <path transform="rotate(120 32 32)" d="M32,12 Q26,12 23,15.5 Q20,19 20,23 Q20,27 23,30.5 Q26,34 32,34 Q35,34 37.5,32 Q40,30 40,27 L32,12Z" fill="#000000"/>
+  <path transform="rotate(240 32 32)" d="M32,12 Q26,12 23,15.5 Q20,19 20,23 Q20,27 23,30.5 Q26,34 32,34 Q35,34 37.5,32 Q40,30 40,27 L32,12Z" fill="#000000"/>
+
+  <circle cx="30" cy="29" r="1.5" fill="#FFFFFF" opacity="0.6"/>
+</svg>

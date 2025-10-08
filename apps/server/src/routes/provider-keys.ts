@@ -4,6 +4,17 @@ import { providerKeys } from '@third-eye/db/schema';
 import { encryptForStorage, decryptFromStorage, testEncryption } from '@third-eye/core';
 import { eq, desc } from 'drizzle-orm';
 import { ProviderId } from '@third-eye/types';
+import { schemas } from '../middleware/validation';
+import {
+  validateBodyWithEnvelope,
+  createSuccessResponse,
+  createErrorResponse,
+  createNotFoundResponse,
+  createInternalErrorResponse,
+  createConflictResponse,
+  requestIdMiddleware,
+  errorHandler
+} from '../middleware/response';
 
 const app = new Hono();
 
@@ -12,6 +23,10 @@ const app = new Hono();
  *
  * Secure storage and retrieval of encrypted API keys
  */
+
+// Apply middleware
+app.use('*', requestIdMiddleware());
+app.use('*', errorHandler());
 
 // Get all provider keys (without decrypted values)
 app.get('/', async (c) => {
@@ -28,69 +43,59 @@ app.get('/', async (c) => {
       .from(providerKeys)
       .orderBy(desc(providerKeys.createdAt));
 
-    return c.json(keys);
+    return createSuccessResponse(c, keys);
   } catch (error) {
     console.error('Failed to get provider keys:', error);
-    return c.json({ error: 'Failed to get provider keys' }, 500);
+    return createInternalErrorResponse(c, 'Failed to retrieve provider keys');
   }
 });
 
 // Add new provider key
-app.post('/', async (c) => {
+app.post('/', validateBodyWithEnvelope(schemas.providerKeyCreate), async (c) => {
   try {
-    const body = await c.req.json();
-    const { provider, label, apiKey, metadata } = body;
+    const { provider, label, apiKey, metadata } = c.get('validatedBody');
 
-    // Validate required fields
-    if (!provider || !label || !apiKey) {
-      return c.json({
-        error: 'Missing required fields: provider, label, apiKey'
-      }, 400);
-    }
+    // Check for duplicate label for same provider
+    const { db } = getDb();
+    const existing = await db
+      .select()
+      .from(providerKeys)
+      .where(eq(providerKeys.label, label))
+      .limit(1);
 
-    // Validate provider ID
-    const validProviders: ProviderId[] = ['groq', 'openrouter', 'ollama', 'lmstudio'];
-    if (!validProviders.includes(provider)) {
-      return c.json({
-        error: `Invalid provider. Must be one of: ${validProviders.join(', ')}`
-      }, 400);
+    if (existing.length > 0) {
+      return createConflictResponse(c, `Provider key with label '${label}' already exists`);
     }
 
     // Encrypt the API key
     const encryptedKey = encryptForStorage(apiKey);
 
-    const { db } = getDb();
     const result = await db.insert(providerKeys).values({
       provider,
       label,
       encryptedKey,
       metadata: metadata || null,
       createdAt: new Date(),
-    }).returning({ id: providerKeys.id });
-
-    return c.json({
-      success: true,
-      id: result[0].id,
-      message: 'Provider key added successfully'
+    }).returning({
+      id: providerKeys.id,
+      provider: providerKeys.provider,
+      label: providerKeys.label,
+      metadata: providerKeys.metadata,
+      createdAt: providerKeys.createdAt,
     });
+
+    return createSuccessResponse(c, result[0], { status: 201 });
   } catch (error) {
     console.error('Failed to add provider key:', error);
-    return c.json({ error: 'Failed to add provider key' }, 500);
+    return createInternalErrorResponse(c, 'Failed to add provider key');
   }
 });
 
 // Update provider key
-app.put('/:id', async (c) => {
+app.put('/:id', validateBodyWithEnvelope(schemas.providerKeyUpdate), async (c) => {
   try {
     const id = parseInt(c.req.param('id'));
-    const body = await c.req.json();
-    const { label, apiKey, metadata } = body;
-
-    if (!label && !apiKey && !metadata) {
-      return c.json({
-        error: 'At least one field (label, apiKey, metadata) must be provided'
-      }, 400);
-    }
+    const { label, apiKey, metadata } = c.get('validatedBody');
 
     const { db } = getDb();
 
@@ -102,7 +107,7 @@ app.put('/:id', async (c) => {
       .limit(1);
 
     if (existing.length === 0) {
-      return c.json({ error: 'Provider key not found' }, 404);
+      return createNotFoundResponse(c, 'Provider key', id.toString());
     }
 
     // Build update object
@@ -120,13 +125,13 @@ app.put('/:id', async (c) => {
       .set(updateData)
       .where(eq(providerKeys.id, id));
 
-    return c.json({
-      success: true,
+    return createSuccessResponse(c, {
+      id,
       message: 'Provider key updated successfully'
     });
   } catch (error) {
     console.error('Failed to update provider key:', error);
-    return c.json({ error: 'Failed to update provider key' }, 500);
+    return createInternalErrorResponse(c, 'Failed to update provider key');
   }
 });
 
@@ -142,16 +147,16 @@ app.delete('/:id', async (c) => {
       .returning({ id: providerKeys.id });
 
     if (result.length === 0) {
-      return c.json({ error: 'Provider key not found' }, 404);
+      return createNotFoundResponse(c, 'Provider key', id.toString());
     }
 
-    return c.json({
-      success: true,
+    return createSuccessResponse(c, {
+      id: result[0].id,
       message: 'Provider key deleted successfully'
     });
   } catch (error) {
     console.error('Failed to delete provider key:', error);
-    return c.json({ error: 'Failed to delete provider key' }, 500);
+    return createInternalErrorResponse(c, 'Failed to delete provider key');
   }
 });
 
@@ -168,13 +173,13 @@ app.get('/:id/decrypt', async (c) => {
       .limit(1);
 
     if (result.length === 0) {
-      return c.json({ error: 'Provider key not found' }, 404);
+      return createNotFoundResponse(c, 'Provider key', id.toString());
     }
 
     const key = result[0];
     const decryptedKey = decryptFromStorage(key.encryptedKey);
 
-    return c.json({
+    return createSuccessResponse(c, {
       id: key.id,
       provider: key.provider,
       label: key.label,
@@ -184,7 +189,7 @@ app.get('/:id/decrypt', async (c) => {
     });
   } catch (error) {
     console.error('Failed to decrypt provider key:', error);
-    return c.json({ error: 'Failed to decrypt provider key' }, 500);
+    return createInternalErrorResponse(c, 'Failed to decrypt provider key');
   }
 });
 
@@ -193,7 +198,7 @@ app.get('/test/encryption', async (c) => {
   try {
     const isValid = testEncryption();
 
-    return c.json({
+    return createSuccessResponse(c, {
       encryption: {
         working: isValid,
         algorithm: 'AES-256-GCM',
@@ -203,10 +208,7 @@ app.get('/test/encryption', async (c) => {
     });
   } catch (error) {
     console.error('Encryption test failed:', error);
-    return c.json({
-      error: 'Encryption test failed',
-      encryption: { working: false }
-    }, 500);
+    return createInternalErrorResponse(c, 'Encryption test failed');
   }
 });
 
@@ -230,20 +232,53 @@ app.get('/by-provider/:provider', async (c) => {
       .limit(1);
 
     if (result.length === 0) {
-      return c.json({
-        error: `No API key found for provider: ${provider}`,
-        provider,
-        available: false
-      }, 404);
+      return createNotFoundResponse(c, `API key for provider: ${provider}`);
     }
 
-    return c.json({
+    return createSuccessResponse(c, {
       ...result[0],
       available: true
     });
   } catch (error) {
     console.error('Failed to get provider key:', error);
-    return c.json({ error: 'Failed to get provider key' }, 500);
+    return createInternalErrorResponse(c, 'Failed to get provider key');
+  }
+});
+
+// DELETE /api/provider-keys/:id - Delete provider key
+app.delete('/:id', async (c) => {
+  try {
+    const id = parseInt(c.req.param('id'));
+
+    if (isNaN(id)) {
+      return createErrorResponse(c, {
+        title: 'Invalid ID',
+        status: 400,
+        detail: 'Provider key ID must be a number'
+      });
+    }
+
+    const { db } = getDb();
+
+    const existing = await db
+      .select()
+      .from(providerKeys)
+      .where(eq(providerKeys.id, id))
+      .limit(1);
+
+    if (existing.length === 0) {
+      return createNotFoundResponse(c, `Provider key with ID: ${id}`);
+    }
+
+    await db
+      .delete(providerKeys)
+      .where(eq(providerKeys.id, id))
+      .run();
+
+    return createSuccessResponse(c, { message: 'Provider key deleted successfully' });
+  } catch (error) {
+    console.error('Failed to delete provider key:', error);
+    return createInternalErrorResponse(c, 'Failed to delete provider key');
   }
 });
 

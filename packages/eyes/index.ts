@@ -16,7 +16,8 @@ export { reviewImpl } from "./mangekyo/impl";
 export { reviewTests } from "./mangekyo/tests";
 export { reviewDocs } from "./mangekyo/docs";
 
-export type { EyeResponse } from "./constants";
+export type { BaseEnvelope, BaseEnvelope as EyeResponse } from "./src/schemas/base";
+export { isApproved, isRejected, needsInput } from "./src/schemas/base";
 export type { SharinganRequest } from "./sharingan";
 export type { JoganRequest } from "./jogan";
 export type { HelperRequest } from "./helper";
@@ -30,3 +31,11 @@ export type { ReviewScaffoldRequest } from "./mangekyo/scaffold";
 export type { ReviewImplRequest } from "./mangekyo/impl";
 export type { ReviewTestsRequest } from "./mangekyo/tests";
 export type { ReviewDocsRequest } from "./mangekyo/docs";
+
+export {
+  MarkdownBuilder,
+  type MarkdownHeading,
+  type MarkdownListSymbol,
+  type MarkdownAlignment,
+  type MarkdownTableOptions,
+} from "./utils/markdown-builder";

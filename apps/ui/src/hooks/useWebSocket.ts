@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 export interface WSMessage {
   type: string;
   sessionId?: string;
-  data?: any;
+  data?: Record<string, unknown>;
   timestamp: number;
 }
 
@@ -48,15 +48,17 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       return;
     }
 
+    // Build WebSocket URL - ensure we always have /ws/monitor path for session monitoring
     const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://127.0.0.1:7070';
-    const url = sessionId ? `${wsUrl}/ws/monitor?sessionId=${sessionId}` : `${wsUrl}/ws`;
+    const url = sessionId ? `${wsUrl}/ws/monitor?sessionId=${sessionId}` : `${wsUrl}/ws/monitor`;
 
     try {
       setConnectionStatus('reconnecting');
+      console.log(`[WebSocket] Connecting to ${url}...`);
       const ws = new WebSocket(url);
 
       ws.onopen = () => {
-        console.log('[WebSocket] Connected');
+        console.log(`[WebSocket] Connected to ${url}`);
         setIsConnected(true);
         setConnectionStatus('connected');
         reconnectAttemptsRef.current = 0;
@@ -105,12 +107,28 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       };
 
       ws.onerror = (error) => {
-        console.error('[WebSocket] Error:', error);
-        onError?.(error);
+        // Only log/report errors if we have a session ID
+        // If no session, connection errors are expected and should be silent
+        if (sessionId) {
+          // WebSocket errors don't contain useful error messages in the Event object
+          // Log connection details instead
+          console.error('[WebSocket] Connection error:', {
+            url,
+            readyState: ws.readyState,
+            readyStateText: ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][ws.readyState] || 'UNKNOWN',
+            timestamp: new Date().toISOString()
+          });
+
+          onError?.(error);
+        }
       };
 
-      ws.onclose = () => {
-        console.log('[WebSocket] Disconnected');
+      ws.onclose = (event) => {
+        console.log('[WebSocket] Disconnected', {
+          code: event.code,
+          reason: event.reason || 'No reason provided',
+          wasClean: event.wasClean
+        });
         setIsConnected(false);
         setConnectionStatus('disconnected');
         onClose?.();
@@ -129,7 +147,10 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
       wsRef.current = ws;
     } catch (error) {
-      console.error('[WebSocket] Failed to create connection:', error);
+      console.error('[WebSocket] Failed to create connection:', {
+        error: error instanceof Error ? error.message : String(error),
+        url
+      });
       setConnectionStatus('disconnected');
     }
   };
@@ -149,7 +170,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     reconnectAttemptsRef.current = 0;
   };
 
-  const send = (message: any) => {
+  const send = (message: Record<string, unknown>) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(message));
     } else {

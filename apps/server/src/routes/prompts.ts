@@ -3,8 +3,36 @@ import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
 import { prompts } from '@third-eye/db';
 import { eq, desc, and } from 'drizzle-orm';
+import {
+  validateBodyWithEnvelope,
+  createSuccessResponse,
+  createErrorResponse,
+  createInternalErrorResponse,
+  requestIdMiddleware,
+  errorHandler
+} from '../middleware/response';
+import { z } from 'zod';
 
 const app = new Hono();
+
+app.use('*', requestIdMiddleware());
+app.use('*', errorHandler());
+
+// Zod schemas for validation
+const createPromptSchema = z.object({
+  name: z.string().min(1),
+  content: z.string().min(1),
+  variables: z.any().optional(),
+  category: z.string().min(1),
+  tags: z.array(z.string()).optional(),
+});
+
+const updatePromptSchema = z.object({
+  content: z.string().min(1).optional(),
+  variables: z.any().optional(),
+  category: z.string().min(1).optional(),
+  tags: z.array(z.string()).optional(),
+});
 
 /**
  * GET /api/prompts - Get all prompts with optional filtering
@@ -33,14 +61,9 @@ app.get('/', async (c) => {
       });
     }
 
-    return c.json(filtered);
+    return createSuccessResponse(c, filtered);
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to fetch prompts: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to fetch prompts: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
@@ -60,17 +83,12 @@ app.get('/:id', async (c) => {
       .all();
 
     if (prompt.length === 0) {
-      return c.json({ error: 'Prompt not found' }, 404);
+      return createErrorResponse(c, { title: 'Prompt Not Found', status: 404, detail: 'The requested prompt could not be found' });
     }
 
-    return c.json(prompt[0]);
+    return createSuccessResponse(c, prompt[0]);
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to fetch prompt: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to fetch prompt: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
@@ -89,31 +107,18 @@ app.get('/name/:name/versions', async (c) => {
       .orderBy(desc(prompts.version))
       .all();
 
-    return c.json(versions);
+    return createSuccessResponse(c, versions);
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to fetch prompt versions: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to fetch prompt versions: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
 /**
  * POST /api/prompts - Create new prompt
  */
-app.post('/', async (c) => {
+app.post('/', validateBodyWithEnvelope(createPromptSchema), async (c) => {
   try {
-    const body = await c.req.json();
-    const { name, content, variables, category, tags } = body;
-
-    if (!name || !content || !category) {
-      return c.json(
-        { error: 'Missing required fields: name, content, category' },
-        400
-      );
-    }
+    const { name, content, variables, category, tags } = c.get('validatedBody');
 
     const { db } = getDb();
 
@@ -156,27 +161,23 @@ app.post('/', async (c) => {
       })
       .run();
 
-    return c.json(
-      { id, version: nextVersion, message: 'Prompt created successfully' },
-      201
-    );
+    return createSuccessResponse(c, {
+      id,
+      version: nextVersion,
+      message: 'Prompt created successfully',
+    }, { status: 201 });
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to create prompt: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to create prompt: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
 /**
  * PUT /api/prompts/:id - Update prompt (creates new version)
  */
-app.put('/:id', async (c) => {
+app.put('/:id', validateBodyWithEnvelope(updatePromptSchema), async (c) => {
   try {
     const id = c.req.param('id');
-    const body = await c.req.json();
+    const body = c.get('validatedBody');
 
     const { db } = getDb();
 
@@ -188,7 +189,7 @@ app.put('/:id', async (c) => {
       .all();
 
     if (existing.length === 0) {
-      return c.json({ error: 'Prompt not found' }, 404);
+      return createErrorResponse(c, { title: 'Prompt Not Found', status: 404, detail: 'The requested prompt could not be found' });
     }
 
     const currentPrompt = existing[0];
@@ -219,64 +220,13 @@ app.put('/:id', async (c) => {
       })
       .run();
 
-    return c.json({
+    return createSuccessResponse(c, {
       id: newId,
       version: nextVersion,
       message: 'Prompt updated (new version created)',
     });
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to update prompt: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
-  }
-});
-
-/**
- * POST /api/prompts/:id/activate - Activate specific version
- */
-app.post('/:id/activate', async (c) => {
-  try {
-    const id = c.req.param('id');
-    const { db } = getDb();
-
-    const prompt = await db
-      .select()
-      .from(prompts)
-      .where(eq(prompts.id, id))
-      .limit(1)
-      .all();
-
-    if (prompt.length === 0) {
-      return c.json({ error: 'Prompt not found' }, 404);
-    }
-
-    const targetPrompt = prompt[0];
-
-    // Deactivate all versions of this prompt
-    await db
-      .update(prompts)
-      .set({ active: false })
-      .where(eq(prompts.name, targetPrompt.name))
-      .run();
-
-    // Activate target version
-    await db
-      .update(prompts)
-      .set({ active: true })
-      .where(eq(prompts.id, id))
-      .run();
-
-    return c.json({ message: `Prompt version ${targetPrompt.version} activated` });
-  } catch (error) {
-    return c.json(
-      {
-        error: `Failed to activate prompt: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to update prompt: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
@@ -294,14 +244,9 @@ app.delete('/:id', async (c) => {
       .where(eq(prompts.id, id))
       .run();
 
-    return c.json({ message: 'Prompt deactivated' });
+    return createSuccessResponse(c, { message: 'Prompt deactivated' });
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to delete prompt: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to delete prompt: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
@@ -320,14 +265,9 @@ app.get('/meta/categories', async (c) => {
 
     const categories = [...new Set(allPrompts.map((p) => p.category))];
 
-    return c.json({ categories });
+    return createSuccessResponse(c, { categories });
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to fetch categories: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to fetch categories: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
@@ -352,14 +292,42 @@ app.get('/meta/tags', async (c) => {
       }
     });
 
-    return c.json({ tags: Array.from(tagsSet) });
+    return createSuccessResponse(c, { tags: Array.from(tagsSet) });
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to fetch tags: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to fetch tags: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+});
+
+/**
+ * POST /api/prompts/:id/activate - Activate/deactivate prompt
+ */
+app.post('/:id/activate', async (c) => {
+  try {
+    const id = c.req.param('id');
+    const { active } = await c.req.json();
+
+    const { db } = getDb();
+
+    const existingPrompt = await db
+      .select()
+      .from(prompts)
+      .where(eq(prompts.id, id))
+      .limit(1)
+      .all();
+
+    if (existingPrompt.length === 0) {
+      return createErrorResponse(c, { title: 'Prompt Not Found', status: 404, detail: 'The requested prompt could not be found' });
+    }
+
+    await db
+      .update(prompts)
+      .set({ active: active ?? true })
+      .where(eq(prompts.id, id))
+      .run();
+
+    return createSuccessResponse(c, { id, active: active ?? true, message: 'Prompt activation updated' });
+  } catch (error) {
+    return createInternalErrorResponse(c, `Failed to update prompt activation: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 

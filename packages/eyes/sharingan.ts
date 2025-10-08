@@ -24,6 +24,7 @@ import {
 } from "./constants";
 import { buildResponse } from "./shared";
 import type { EyeResponse } from "./constants";
+import { MarkdownBuilder } from "./utils/markdown-builder";
 
 const TOKEN_PATTERN = /[a-z0-9_./+-]+/gi;
 const IMPERATIVE_HINTS = new Set([
@@ -170,8 +171,15 @@ function detectCodeFeatures(prompt: string): { isCodeRelated: boolean; codeFeatu
 
 function buildQuestionsMarkdown(x: number): string {
   const questions = CLARIFYING_QUESTION_BANK.slice(0, x);
-  const bullets = questions.map(q => `- ${q}`).join("\n");
-  return `${Heading.CLARIFYING_QUESTIONS}\n${bullets}`;
+  const builder = MarkdownBuilder.create().heading(Heading.CLARIFYING_QUESTIONS);
+
+  if (questions.length > 0) {
+    builder.bullets(questions);
+  } else {
+    builder.blank();
+  }
+
+  return builder.build();
 }
 
 function buildReasoningMarkdown(params: {
@@ -180,32 +188,39 @@ function buildReasoningMarkdown(params: {
   isCodeRelated: boolean;
   codeFeatures: string[];
 }): string {
-  const lines = [Heading.REASONING];
-  lines.push(`- Ambiguity score ${params.score.toFixed(2)} (threshold ${AMBIGUITY_SCORE_THRESHOLD.toFixed(2)}).`);
+  const builder = MarkdownBuilder.create()
+    .heading(Heading.REASONING)
+    .bullet(`Ambiguity score ${params.score.toFixed(2)} (threshold ${AMBIGUITY_SCORE_THRESHOLD.toFixed(2)}).`);
 
   if (params.ambiguous) {
-    lines.push("- Prompt remains underspecified; clarification required before drafting.");
+    builder.bullet('Prompt remains underspecified; clarification required before drafting.');
   }
 
   if (params.isCodeRelated) {
     params.codeFeatures.forEach(feature => {
-      lines.push(`- Detected ${feature}.`);
+      builder.bullet(`Detected ${feature}.`);
     });
   } else {
-    lines.push("- No explicit code indicators detected; treating as text/analysis request.");
+    builder.bullet('No explicit code indicators detected; treating as text/analysis request.');
   }
 
-  return lines.join("\n");
+  return builder.build();
 }
 
 function summaryMarkdown(params: { ambiguous: boolean; isCodeRelated: boolean }): string {
   if (params.ambiguous) {
-    return `${Heading.AMBIGUITY}\n${SHARINGAN_AMBIGUITY_SUFFIX}`;
+    return MarkdownBuilder.create()
+      .heading(Heading.AMBIGUITY)
+      .text(SHARINGAN_AMBIGUITY_SUFFIX)
+      .build();
   }
   const classification = params.isCodeRelated
     ? "Code-related task detected."
     : "Non-code request detected.";
-  return `${Heading.CLASSIFICATION}\n${classification}`;
+  return MarkdownBuilder.create()
+    .heading(Heading.CLASSIFICATION)
+    .text(classification)
+    .build();
 }
 
 function nextAction(params: { ambiguous: boolean; isCodeRelated: boolean }): string {

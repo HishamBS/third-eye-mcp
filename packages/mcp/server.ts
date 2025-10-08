@@ -3,10 +3,12 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
+  InitializeRequestSchema,
   Tool,
 } from '@modelcontextprotocol/sdk/types.js';
 import { EyeOrchestrator } from '@third-eye/core';
-import { getRegisteredEyes, getEyeTool } from '@third-eye/core';
+import { autoRouter } from '../core/auto-router';
+import { sessionManager } from '../core/session-manager';
 import { z } from 'zod';
 
 /**
@@ -18,295 +20,105 @@ import { z } from 'zod';
 
 const orchestrator = new EyeOrchestrator();
 
-// Tool schemas for each Eye
-const EYE_TOOLS: Record<string, Tool> = {
-  guidance: {
-    name: 'third_eye_get_guidance',
-    description: '🎯 SMART MCP META-TOOL: Get intelligent workflow guidance. Use this when unsure which Eye to call next, or to understand optimal workflow paths. This tool analyzes your task and current state to recommend the best next Eye to use.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        task_description: {
-          type: 'string',
-          description: 'What you are trying to accomplish',
-        },
-        current_state: {
-          type: 'string',
-          description: 'Current workflow state (e.g., "clarified prompt", "plan approved")',
-        },
-        last_eye_response: {
-          type: 'object',
-          description: 'Response from the last Eye you called (optional)',
-        },
-        session_id: {
-          type: 'string',
-          description: 'Session ID for context tracking',
-        },
+// Track if browser has been opened for this MCP server instance
+let browserOpenedForSession = new Set<string>();
+
+// Store client metadata from initialize handshake
+let clientMetadata: {
+  name: string;
+  version: string;
+  displayName?: string;
+} = {
+  name: 'Unknown Agent',
+  version: 'unknown'
+};
+
+/**
+ * Get or create session - reuses existing session within 30 minutes
+ * Uses client metadata captured from MCP initialize handshake
+ */
+async function getOrCreateSession(agentModel?: string): Promise<string> {
+  try {
+    const agentName = clientMetadata.displayName || clientMetadata.name;
+
+    // Check for existing active session from the same agent within last 30 minutes
+    const sessions = await sessionManager.getActiveSessions();
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+
+    // Find matching session
+    const existingSession = sessions.find(session =>
+      session.agentName === agentName &&
+      session.status === 'active' &&
+      new Date(session.lastActivity) > thirtyMinutesAgo
+    );
+
+    if (existingSession) {
+      // Reuse existing session - update last activity
+      await sessionManager.updateSession(existingSession.id, {});
+      console.error(`♻️  Reusing session: ${existingSession.id} for agent: ${agentName}`);
+      return existingSession.id;
+    }
+
+    // Create new session with captured client metadata
+    const newSession = await sessionManager.createSession({
+      agentName,
+      model: agentModel,
+      displayName: `${agentName} Session`,
+      metadata: {
+        clientName: clientMetadata.name,
+        clientVersion: clientMetadata.version,
+        clientDisplayName: clientMetadata.displayName,
+      }
+    });
+    console.error(`✨ Created new session: ${newSession.id} for agent: ${agentName}`);
+    return newSession.id;
+  } catch (error) {
+    console.error('Failed to get or create session:', error);
+    // Fallback to generating a simple session ID
+    return `session_${Date.now()}`;
+  }
+}
+
+/**
+ * Open browser for a session (first tool call only)
+ */
+async function openBrowserForSession(sessionId: string) {
+  if (browserOpenedForSession.has(sessionId)) {
+    return; // Already opened
+  }
+
+  try {
+    const config = await import('@third-eye/config').then(m => m.getConfig());
+    const API_URL = `http://${config.server.host}:${config.server.port}`;
+
+    const response = await fetch(`${API_URL}/api/session/open`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId }),
+    });
+
+    if (response.ok) {
+      browserOpenedForSession.add(sessionId);
+      console.error(`🧿 Browser opened for session: ${sessionId}`);
+    }
+  } catch (error) {
+    console.error('Failed to open browser:', error);
+  }
+}
+
+// Tool schema - ONLY overseer (Golden Rule #1)
+const OVERSEER_TOOL: Tool = {
+  name: 'third_eye_overseer',
+  description: 'Send any task and get it processed through our intelligent pipeline. Just describe what you want - the system handles routing, validation, and execution automatically.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      task: {
+        type: 'string',
+        description: 'Describe what you want to accomplish',
       },
-      required: ['task_description', 'session_id'],
     },
-  },
-  navigator: {
-    name: 'third_eye_navigator',
-    description: '🧿 NAVIGATOR: Get overview of Third Eye pipeline and available Eyes. Call this first to understand the workflow.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        context: {
-          type: 'string',
-          description: 'Optional context about what you are trying to accomplish',
-        },
-      },
-    },
-  },
-  sharingan: {
-    name: 'third_eye_sharingan_clarify',
-    description: 'Ambiguity Radar & Classifier. Detects vague prompts and classifies as CODE or GENERAL. Use after navigator to validate input clarity. Automatically suggests calling prompt_helper if ambiguous.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        prompt: {
-          type: 'string',
-          description: 'The user prompt to analyze for ambiguity and classify',
-        },
-        sessionId: {
-          type: 'string',
-          description: 'Session ID for tracking (optional)',
-        },
-      },
-      required: ['prompt'],
-    },
-  },
-  helper: {
-    name: 'third_eye_prompt_helper',
-    description: 'Prompt Engineer. Restructures ambiguous prompts into ROLE/TASK/CONTEXT/REQUIREMENTS/OUTPUT format. Call this when Sharingan detects ambiguity.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        prompt: {
-          type: 'string',
-          description: 'The ambiguous prompt to restructure',
-        },
-        clarifications: {
-          type: 'object',
-          description: 'Answers to clarifying questions from Sharingan',
-        },
-        sessionId: {
-          type: 'string',
-          description: 'Session ID for tracking (optional)',
-        },
-      },
-      required: ['prompt'],
-    },
-  },
-  jogan: {
-    name: 'third_eye_jogan_confirm_intent',
-    description: 'Intent Validator. Confirms the restructured prompt contains all required sections. Call after prompt_helper to validate the refined prompt.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        prompt: {
-          type: 'string',
-          description: 'The restructured prompt to validate',
-        },
-        sessionId: {
-          type: 'string',
-          description: 'Session ID for tracking (optional)',
-        },
-      },
-      required: ['prompt'],
-    },
-  },
-  rinnegan_requirements: {
-    name: 'third_eye_rinnegan_plan_requirements',
-    description: 'Plan Requirements Schema. Provides the required plan structure and example. Call this before creating implementation plans for code tasks.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        task: {
-          type: 'string',
-          description: 'Brief description of the task to plan',
-        },
-        sessionId: {
-          type: 'string',
-          description: 'Session ID for tracking (optional)',
-        },
-      },
-      required: ['task'],
-    },
-  },
-  rinnegan_review: {
-    name: 'third_eye_rinnegan_plan_review',
-    description: 'Plan Reviewer. Validates submitted plans against required sections and file impact tables. Call this with your implementation plan before proceeding to code.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        plan: {
-          type: 'string',
-          description: 'The implementation plan in markdown format',
-        },
-        sessionId: {
-          type: 'string',
-          description: 'Session ID for tracking (optional)',
-        },
-      },
-      required: ['plan'],
-    },
-  },
-  rinnegan_approval: {
-    name: 'third_eye_rinnegan_final_approval',
-    description: 'Final Approval Gate. Aggregates all phase results (plan, scaffold, impl, tests, docs) and gives go/no-go. Call this at the end with all work products.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        plan: {
-          type: 'string',
-          description: 'The approved plan',
-        },
-        scaffold: {
-          type: 'string',
-          description: 'The scaffold review result',
-        },
-        implementation: {
-          type: 'string',
-          description: 'The implementation review result',
-        },
-        tests: {
-          type: 'string',
-          description: 'The tests review result',
-        },
-        docs: {
-          type: 'string',
-          description: 'The docs review result',
-        },
-        sessionId: {
-          type: 'string',
-          description: 'Session ID for tracking (optional)',
-        },
-      },
-      required: ['plan', 'scaffold', 'implementation', 'tests', 'docs'],
-    },
-  },
-  mangekyo_scaffold: {
-    name: 'third_eye_mangekyo_review_scaffold',
-    description: 'Scaffold Reviewer. Validates file structure and architecture decisions. Call this with your file/folder structure before writing code.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        scaffold: {
-          type: 'string',
-          description: 'The proposed file structure in markdown format',
-        },
-        sessionId: {
-          type: 'string',
-          description: 'Session ID for tracking (optional)',
-        },
-      },
-      required: ['scaffold'],
-    },
-  },
-  mangekyo_impl: {
-    name: 'third_eye_mangekyo_review_impl',
-    description: 'Implementation Reviewer. Validates code diffs and reasoning. Call this with your code changes in diff format.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        diffs: {
-          type: 'string',
-          description: 'Code diffs in markdown fence format',
-        },
-        reasoning: {
-          type: 'string',
-          description: 'Explanation of the implementation approach',
-        },
-        sessionId: {
-          type: 'string',
-          description: 'Session ID for tracking (optional)',
-        },
-      },
-      required: ['diffs', 'reasoning'],
-    },
-  },
-  mangekyo_tests: {
-    name: 'third_eye_mangekyo_review_tests',
-    description: 'Test Reviewer. Validates test coverage against thresholds. Call this with your test files and coverage data.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        tests: {
-          type: 'string',
-          description: 'Test code in markdown format',
-        },
-        coverage: {
-          type: 'object',
-          description: 'Coverage metrics (lines, branches, functions)',
-        },
-        sessionId: {
-          type: 'string',
-          description: 'Session ID for tracking (optional)',
-        },
-      },
-      required: ['tests'],
-    },
-  },
-  mangekyo_docs: {
-    name: 'third_eye_mangekyo_review_docs',
-    description: 'Documentation Reviewer. Validates documentation updates and completeness. Call this with your README/docs updates.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        docs: {
-          type: 'string',
-          description: 'Documentation in markdown format',
-        },
-        sessionId: {
-          type: 'string',
-          description: 'Session ID for tracking (optional)',
-        },
-      },
-      required: ['docs'],
-    },
-  },
-  tenseigan: {
-    name: 'third_eye_tenseigan_validate_claims',
-    description: 'Claims Validator. Validates factual claims with citations and confidence scores. Call this to verify factual accuracy of generated content.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        content: {
-          type: 'string',
-          description: 'Content with claims to validate',
-        },
-        sources: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Available sources for citation validation',
-        },
-        sessionId: {
-          type: 'string',
-          description: 'Session ID for tracking (optional)',
-        },
-      },
-      required: ['content'],
-    },
-  },
-  byakugan: {
-    name: 'third_eye_byakugan_consistency_check',
-    description: 'Consistency Checker. Detects contradictions against session history. Call this to ensure new outputs are consistent with previous work.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        content: {
-          type: 'string',
-          description: 'New content to check for consistency',
-        },
-        sessionId: {
-          type: 'string',
-          description: 'Session ID to check history against (required)',
-        },
-      },
-      required: ['content', 'sessionId'],
-    },
+    required: ['task'],
   },
 };
 
@@ -326,10 +138,37 @@ export function createMCPServer(): Server {
     }
   );
 
-  // List tools handler
+  // Handle initialize request to capture client metadata
+  server.setRequestHandler(InitializeRequestSchema, async (request) => {
+    const { clientInfo } = request.params;
+
+    // Store client metadata from MCP protocol
+    if (clientInfo) {
+      clientMetadata = {
+        name: clientInfo.name,
+        version: clientInfo.version,
+        displayName: (clientInfo as any).displayName || clientInfo.name
+      };
+
+      console.error(`🤝 MCP Client connected: ${clientMetadata.displayName || clientMetadata.name} v${clientMetadata.version}`);
+    }
+
+    // Return server capabilities
+    return {
+      protocolVersion: '2025-03-26',
+      capabilities: {
+        tools: {},
+      },
+      serverInfo: {
+        name: 'third-eye-mcp',
+        version: '1.0.0',
+      },
+    };
+  });
+
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     return {
-      tools: Object.values(EYE_TOOLS),
+      tools: [OVERSEER_TOOL],
     };
   });
 
@@ -337,114 +176,95 @@ export function createMCPServer(): Server {
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     const { name, arguments: args } = request.params;
 
-    // Handle guidance meta-tool separately
-    if (name === 'third_eye_get_guidance') {
-      const { getWorkflowGuidance } = await import('@third-eye/core/guidance');
+    // Handle overseer tool - main entry point
+    if (name === 'third_eye_overseer') {
+      const task = (args as any).task;
 
-      const guidance = getWorkflowGuidance({
-        taskDescription: (args as any).task_description,
-        currentState: (args as any).current_state,
-        lastEyeResponse: (args as any).last_eye_response,
-        sessionId: (args as any).session_id,
-      });
+      // Check if this is a generation request (REJECT IT)
+      const isGenerationRequest = /\b(create|generate|write|make|build|develop|implement|code|design|draft|compose)\b/i.test(task) &&
+        !/\b(here is|here's|review|validate|check|analyze)\b/i.test(task) &&
+        task.length < 150; // Short requests are usually asking for generation
 
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify({
-              ok: true,
-              guidance,
-              meta: {
-                tool: 'third_eye_get_guidance',
-                message: 'Use the recommended_tool for your next action',
-              },
-            }, null, 2),
-          },
-        ],
-      };
+      if (isGenerationRequest) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                status: 'guidance',
+                code: 'NEED_YOUR_WORK',
+                message: 'I help you refine and validate YOUR work - I don\'t create it for you.',
+                instructions: [
+                  'To get the most value from Third Eye:',
+                  '',
+                  '1. Create your initial draft, plan, or code',
+                  '2. Share it with me for review',
+                  '3. I\'ll provide detailed feedback and validation',
+                  '',
+                  'Example: "Here is my palm care guide: [your detailed content]. Please review for accuracy and completeness."'
+                ].join('\n'),
+                next_steps: 'Please provide your content and I will validate it for you.'
+              }, null, 2)
+            }
+          ]
+        };
+      }
+
+      // Internal parameters (not exposed in schema but can be passed)
+      const operation = (args as any).operation || 'execute';
+      const providedSessionId = (args as any).sessionId;
+      const config = (args as any).config || {};
+
+      // Get or create session (reuses existing session from same agent)
+      // agentModel can be passed in config or detected later
+      const agentModel = config.model;
+      const sessionId = providedSessionId || await getOrCreateSession(agentModel);
+
+      // Open browser for this session on first tool call
+      await openBrowserForSession(sessionId);
+
+      try {
+        // Always execute the full pipeline (simplified - no analyze mode for agents)
+        const result = await autoRouter.executeFlow(task, undefined, sessionId);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                status: 'success',
+                sessionId: result.sessionId,
+                verdict: result.completed ? 'APPROVED' : 'REJECTED',
+                summary: result.completed
+                  ? `Validation complete. Your content has been reviewed.`
+                  : `Review incomplete: ${result.error}`,
+                stepsExecuted: result.results.length,
+                finalResult: result.results[result.results.length - 1],
+                portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${result.sessionId}`
+              }, null, 2)
+            }
+          ]
+        };
+      } catch (error: any) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                status: 'error',
+                sessionId: sessionId,
+                verdict: 'REJECTED',
+                summary: 'Task execution failed',
+                error: error.message,
+                portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${sessionId}`
+              }, null, 2)
+            }
+          ],
+          isError: true
+        };
+      }
     }
 
-    // Map tool name to Eye
-    const eyeMap: Record<string, string> = {
-      third_eye_navigator: 'navigator',
-      third_eye_sharingan_clarify: 'sharingan',
-      third_eye_prompt_helper: 'helper',
-      third_eye_jogan_confirm_intent: 'jogan',
-      third_eye_rinnegan_plan_requirements: 'rinnegan_requirements',
-      third_eye_rinnegan_plan_review: 'rinnegan_review',
-      third_eye_rinnegan_final_approval: 'rinnegan_approval',
-      third_eye_mangekyo_review_scaffold: 'mangekyo_scaffold',
-      third_eye_mangekyo_review_impl: 'mangekyo_impl',
-      third_eye_mangekyo_review_tests: 'mangekyo_tests',
-      third_eye_mangekyo_review_docs: 'mangekyo_docs',
-      third_eye_tenseigan_validate_claims: 'tenseigan',
-      third_eye_byakugan_consistency_check: 'byakugan',
-    };
-
-    const eyeName = eyeMap[name];
-    if (!eyeName) {
-      throw new Error(`Unknown tool: ${name}`);
-    }
-
-    // Extract sessionId or generate one
-    const sessionId = (args as any).sessionId || `mcp_${Date.now()}`;
-
-    // Prepare input based on Eye type
-    let input: string;
-    if (eyeName === 'navigator') {
-      input = (args as any).context || 'General overview';
-    } else if (eyeName === 'sharingan') {
-      input = (args as any).prompt;
-    } else if (eyeName === 'helper') {
-      const clarifications = (args as any).clarifications || {};
-      input = `${(args as any).prompt}\n\nClarifications: ${JSON.stringify(clarifications)}`;
-    } else if (eyeName === 'jogan') {
-      input = (args as any).prompt;
-    } else if (eyeName.startsWith('rinnegan')) {
-      input = (args as any).plan || (args as any).task || JSON.stringify(args);
-    } else if (eyeName.startsWith('mangekyo')) {
-      input = JSON.stringify(args);
-    } else if (eyeName === 'tenseigan') {
-      input = (args as any).content;
-    } else if (eyeName === 'byakugan') {
-      input = (args as any).content;
-    } else {
-      input = JSON.stringify(args);
-    }
-
-    try {
-      // Call orchestrator to execute Eye with LLM
-      const result = await orchestrator.runEye(eyeName, input, sessionId);
-
-      // Return result as MCP tool response
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify(result, null, 2),
-          },
-        ],
-      };
-    } catch (error: any) {
-      // Return error as tool response
-      return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify({
-              tag: eyeName,
-              ok: false,
-              code: 'E_EXECUTION_FAILED',
-              md: `# Error\n\n${error.message}`,
-              data: { error: error.message },
-              next: 'RETRY',
-            }, null, 2),
-          },
-        ],
-        isError: true,
-      };
-    }
+    throw new Error(`Unknown tool: ${name}. Only 'third_eye_overseer' is available. Individual Eyes cannot be called directly - use overseer instead.`);
   });
 
   return server;
@@ -461,5 +281,6 @@ export async function startMCPServer() {
 
   console.error('🧿 Third Eye MCP Server running on stdio');
   console.error('📡 Ready for agent connections');
-  console.error(`🔧 Available tools: ${Object.keys(EYE_TOOLS).length}`);
+  console.error('🔧 Public tool: overseer (single entry point)');
+  console.error('⚡ Golden Rule #1: Agents call only overseer - Eyes are internal');
 }

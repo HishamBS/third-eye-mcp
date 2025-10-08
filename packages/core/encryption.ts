@@ -1,5 +1,8 @@
 import { createCipheriv, createDecipheriv, randomBytes, pbkdf2Sync } from 'crypto';
 import { getConfig } from '@third-eye/config';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, chmodSync } from 'fs';
+import { resolve, dirname } from 'path';
+import { homedir } from 'os';
 
 /**
  * Encryption Utility for Provider Keys
@@ -21,24 +24,86 @@ export interface EncryptedData {
   tag: Buffer;
 }
 
+// Cached master key to avoid regeneration
+let _masterKey: string | null = null;
+
 /**
- * Generate or get encryption key from config
+ * Get passphrase file path as specified in prompt.md
+ */
+function getPassphraseFilePath(): string {
+  return resolve(homedir(), '.third-eye-mcp/.passphrase');
+}
+
+/**
+ * Create passphrase file if it doesn't exist
+ */
+function ensurePassphraseFile(): void {
+  const passphraseFile = getPassphraseFilePath();
+
+  if (!existsSync(passphraseFile)) {
+    // Ensure directory exists
+    const mcpDir = dirname(passphraseFile);
+    if (!existsSync(mcpDir)) {
+      mkdirSync(mcpDir, { recursive: true, mode: 0o700 });
+    }
+
+    // Generate new passphrase
+    const passphrase = randomBytes(32).toString('hex');
+
+    // Write passphrase file with correct permissions
+    writeFileSync(passphraseFile, passphrase, { mode: 0o600 });
+
+    console.log('🔑 Created new passphrase file at:', passphraseFile);
+  }
+}
+
+/**
+ * Generate or get encryption key from config or passphrase file
+ * Following prompt.md spec: ~/.third-eye-mcp/.passphrase chmod 600
  */
 function getEncryptionKey(): string {
-  const config = getConfig();
-
-  if (config.security.encryptionKey) {
-    return config.security.encryptionKey;
+  if (_masterKey) {
+    return _masterKey;
   }
 
-  // Generate a secure random key if none exists
-  // In production, this should be provided via environment variable
-  const key = randomBytes(32).toString('hex');
+  const config = getConfig();
 
-  console.warn('⚠️  No encryption key configured. Generated temporary key.');
-  console.warn('🔐 Set THIRD_EYE_SECURITY_ENCRYPTION_KEY environment variable for production.');
+  // 1. Try environment variable first
+  if (config.security.encryptionKey) {
+    _masterKey = config.security.encryptionKey;
+    return _masterKey;
+  }
 
-  return key;
+  // 2. Ensure passphrase file exists and use it
+  ensurePassphraseFile();
+  const passphraseFile = getPassphraseFilePath();
+  try {
+    _masterKey = readFileSync(passphraseFile, 'utf8').trim();
+    console.log('🔐 Using passphrase from ~/.third-eye-mcp/.passphrase');
+    return _masterKey;
+  } catch (error) {
+    console.warn('⚠️  Failed to read passphrase file:', error);
+  }
+
+  // 3. Generate and save new passphrase
+  _masterKey = randomBytes(32).toString('hex');
+
+  try {
+    // Ensure directory exists
+    const dir = dirname(passphraseFile);
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true, mode: 0o700 });
+    }
+
+    // Write passphrase file with chmod 600
+    writeFileSync(passphraseFile, _masterKey, { mode: 0o600 });
+    console.log('🔐 Generated new passphrase at ~/.third-eye-mcp/.passphrase');
+  } catch (error) {
+    console.warn('⚠️  Failed to save passphrase file:', error);
+    console.warn('🔐 Set THIRD_EYE_SECURITY_ENCRYPTION_KEY environment variable for production.');
+  }
+
+  return _masterKey;
 }
 
 /**
@@ -223,4 +288,48 @@ export function validateEncryptionKey(key: string): { valid: boolean; issues: st
     valid: issues.length === 0,
     issues
   };
+}
+
+/**
+ * Rotate passphrase file as specified in prompt.md
+ * Generates new passphrase and updates the file
+ */
+export function rotatePassphrase(): string {
+  const passphraseFile = getPassphraseFilePath();
+
+  // Generate new passphrase
+  const newPassphrase = randomBytes(32).toString('hex');
+
+  try {
+    // Ensure directory exists
+    const dir = dirname(passphraseFile);
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true, mode: 0o700 });
+    }
+
+    // Backup old passphrase if it exists
+    if (existsSync(passphraseFile)) {
+      const backup = `${passphraseFile}.backup.${Date.now()}`;
+      writeFileSync(backup, readFileSync(passphraseFile), { mode: 0o600 });
+      console.log(`🔐 Backed up old passphrase to ${backup}`);
+    }
+
+    // Write new passphrase
+    writeFileSync(passphraseFile, newPassphrase, { mode: 0o600 });
+
+    // Clear cached key to force reload
+    _masterKey = null;
+
+    console.log('🔐 Passphrase rotated successfully at ~/.third-eye-mcp/.passphrase');
+    return newPassphrase;
+  } catch (error) {
+    throw new Error(`Failed to rotate passphrase: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
+ * Get passphrase file path for external utilities
+ */
+export function getPassphraseFile(): string {
+  return getPassphraseFilePath();
 }

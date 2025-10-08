@@ -1,9 +1,39 @@
 import type { ServerWebSocket } from 'bun';
+import { registerWebSocketBridge } from '@third-eye/core';
+
+type IntervalHandle = ReturnType<typeof setInterval>;
+type TimeoutHandle = ReturnType<typeof setTimeout>;
+
+interface WebSocketHandler {
+  fetch: (req: Request, server: { upgrade: (req: Request, options: { data: { sessionId: string; userId?: string } }) => boolean }) => Response | undefined;
+  websocket: {
+    open: (ws: ServerWebSocket<{ sessionId: string; userId?: string }>) => void;
+    message: (ws: ServerWebSocket<{ sessionId: string; userId?: string }>, message: string | ArrayBufferLike | ArrayBufferView) => void;
+    close: (ws: ServerWebSocket<{ sessionId: string; userId?: string }>) => void;
+    error: (ws: ServerWebSocket<{ sessionId: string; userId?: string }>, error: Error) => void;
+  };
+}
+
+const textDecoder = new TextDecoder();
+
+function decodeMessage(input: string | ArrayBufferLike | ArrayBufferView): string {
+  if (typeof input === 'string') {
+    return input;
+  }
+
+  if (ArrayBuffer.isView(input)) {
+    const bytes = new Uint8Array(input.buffer, input.byteOffset, input.byteLength);
+    return textDecoder.decode(bytes);
+  }
+
+  const bytes = new Uint8Array(input);
+  return textDecoder.decode(bytes);
+}
 
 export interface WSMessage {
   type: 'session_update' | 'run_started' | 'run_completed' | 'error' | 'ping' | 'pong' | 'routing_updated' | 'routing_deleted' | 'persona_activated' | 'session_created' | 'pipeline_event';
   sessionId?: string;
-  data?: any;
+  data?: unknown;
   timestamp: number;
 }
 
@@ -13,8 +43,9 @@ export interface ConnectionInfo {
   userId?: string;
   connectedAt: number;
   lastPong?: number;
-  pingInterval?: Timer;
-  pongTimeout?: Timer;
+  pingInterval?: IntervalHandle;
+  pongTimeout?: TimeoutHandle;
+  retryAttempt?: number;
 }
 
 /**
@@ -25,6 +56,16 @@ export interface ConnectionInfo {
 export class WSConnectionManager {
   private connections = new Map<string, ConnectionInfo>();
   private sessionConnections = new Map<string, Set<string>>();
+  private static readonly RETRY_BACKOFF_MS = [
+    1000,
+    2000,
+    4000,
+    8000,
+    12000,
+    16000,
+    20000,
+    24000,
+  ] as const;
 
   /**
    * Register new WebSocket connection
@@ -35,7 +76,8 @@ export class WSConnectionManager {
       sessionId,
       userId,
       connectedAt: Date.now(),
-      lastPong: Date.now()
+      lastPong: Date.now(),
+      retryAttempt: 0,
     };
 
     this.connections.set(connectionId, connection);
@@ -57,9 +99,37 @@ export class WSConnectionManager {
 
         // Set timeout to close if no pong received within 10 seconds
         connection.pongTimeout = setTimeout(() => {
-          console.log(`❌ No pong received from ${connectionId}, closing connection`);
+          const attempt = (connection.retryAttempt ?? 0) + 1;
+          connection.retryAttempt = attempt;
+          const backoff = WSConnectionManager.RETRY_BACKOFF_MS[Math.min(attempt - 1, WSConnectionManager.RETRY_BACKOFF_MS.length - 1)];
+          const jitter = Math.floor(Math.random() * 500);
+          const retryInMs = backoff + jitter;
+
+          console.log(`❌ No pong received from ${connectionId}, closing connection (retry in ${retryInMs}ms)`);
+
+          try {
+            const retryMessage: WSMessage = {
+              type: 'error',
+              sessionId: connection.sessionId,
+              data: {
+                reason: 'heartbeat_timeout',
+                retry_in_ms: retryInMs,
+                attempt,
+              },
+              timestamp: Date.now(),
+            };
+            ws.send(JSON.stringify(retryMessage));
+          } catch (sendError) {
+            console.error(`Failed to send retry hint for ${connectionId}:`, sendError);
+          }
+
+          try {
+            ws.close(4000, `retry=${retryInMs}`);
+          } catch (closeError) {
+            console.error(`Failed to close WebSocket ${connectionId}:`, closeError);
+          }
+
           this.removeConnection(connectionId);
-          ws.close();
         }, 10000);
       } catch (error) {
         console.error(`Failed to send ping to ${connectionId}:`, error);
@@ -171,7 +241,8 @@ export class WSConnectionManager {
       sessionBreakdown: Array.from(this.sessionConnections.entries()).map(([sessionId, connections]) => ({
         sessionId,
         connectionCount: connections.size
-      }))
+      })),
+      recommendedRetryDelaysMs: Array.from(WSConnectionManager.RETRY_BACKOFF_MS),
     };
   }
 
@@ -193,24 +264,26 @@ export class WSConnectionManager {
 
 // Global connection manager instance
 export const wsManager = new WSConnectionManager();
+registerWebSocketBridge(wsManager);
 
 /**
  * WebSocket upgrade handler for Bun
  */
-export function createWebSocketHandler() {
+export function createWebSocketHandler(): WebSocketHandler {
   return {
-    fetch(req: Request, server: any) {
+    fetch(
+      req: Request,
+      server: Parameters<WebSocketHandler['fetch']>[1]
+    ) {
       const url = new URL(req.url);
 
       if (url.pathname === '/ws/monitor') {
         const sessionId = url.searchParams.get('sessionId');
 
-        if (!sessionId) {
-          return new Response('Missing sessionId parameter', { status: 400 });
-        }
-
+        // Allow connections without sessionId - they'll receive global broadcasts
+        // This enables the Monitor page to connect before a session is selected
         const success = server.upgrade(req, {
-          data: { sessionId }
+          data: { sessionId: sessionId || 'global' }
         });
 
         if (success) {
@@ -241,9 +314,12 @@ export function createWebSocketHandler() {
         ws.send(JSON.stringify(welcomeMessage));
       },
 
-      message(ws: ServerWebSocket<{ sessionId: string; userId?: string }>, message: string | Buffer) {
+      message(
+        ws: ServerWebSocket<{ sessionId: string; userId?: string }>,
+        message: string | ArrayBufferLike | ArrayBufferView
+      ) {
         try {
-          const data = JSON.parse(message.toString()) as WSMessage;
+          const data = JSON.parse(decodeMessage(message)) as WSMessage;
 
           // Handle ping/pong for connection health
           if (data.type === 'ping') {
@@ -261,6 +337,7 @@ export function createWebSocketHandler() {
                   clearTimeout(connection.pongTimeout);
                   connection.pongTimeout = undefined;
                 }
+                connection.retryAttempt = 0;
                 break;
               }
             }

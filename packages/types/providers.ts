@@ -1,10 +1,9 @@
 import { z } from 'zod';
+import { ProviderId } from './enums';
 
 /**
  * Provider Types - Unified API for all AI providers
  */
-
-export type ProviderId = 'groq' | 'openrouter' | 'ollama' | 'lmstudio';
 
 export type Role = 'system' | 'user' | 'assistant';
 

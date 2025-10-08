@@ -4,6 +4,15 @@ import { nanoid } from 'nanoid';
 import { eq } from 'drizzle-orm';
 import { homedir } from 'os';
 import { resolve } from 'path';
+import {
+  validateBodyWithEnvelope,
+  createSuccessResponse,
+  createErrorResponse,
+  createInternalErrorResponse,
+  requestIdMiddleware,
+  errorHandler
+} from '../middleware/response';
+import { z } from 'zod';
 
 /**
  * MCP Integrations Routes
@@ -12,6 +21,9 @@ import { resolve } from 'path';
  */
 
 const app = new Hono();
+
+app.use('*', requestIdMiddleware());
+app.use('*', errorHandler());
 
 // Get installation paths for template rendering
 function getInstallationPaths() {
@@ -50,7 +62,7 @@ app.get('/', async (c) => {
 
   const integrations = await query.orderBy(mcpIntegrations.displayOrder);
 
-  return c.json({ integrations });
+  return createSuccessResponse(c, { integrations });
 });
 
 // GET /integrations/:id - Get single integration
@@ -64,10 +76,14 @@ app.get('/:id', async (c) => {
     .limit(1);
 
   if (!integration || integration.length === 0) {
-    return c.json({ error: 'Integration not found' }, 404);
+    return createErrorResponse(c, {
+      title: 'Integration Not Found',
+      status: 404,
+      detail: 'Integration not found'
+    });
   }
 
-  return c.json({ integration: integration[0] });
+  return createSuccessResponse(c, { integration: integration[0] });
 });
 
 // GET /integrations/:id/config - Get rendered config
@@ -81,13 +97,17 @@ app.get('/:id/config', async (c) => {
     .limit(1);
 
   if (!integration || integration.length === 0) {
-    return c.json({ error: 'Integration not found' }, 404);
+    return createErrorResponse(c, {
+      title: 'Integration Not Found',
+      status: 404,
+      detail: 'Integration not found'
+    });
   }
 
   const paths = getInstallationPaths();
   const renderedConfig = renderTemplate(integration[0].configTemplate, paths);
 
-  return c.json({
+  return createSuccessResponse(c, {
     config: renderedConfig,
     configType: integration[0].configType,
     configFiles: integration[0].configFiles,
@@ -121,7 +141,7 @@ app.post('/', async (c) => {
 
   await db.insert(mcpIntegrations).values(newIntegration);
 
-  return c.json({ integration: newIntegration }, 201);
+  return createSuccessResponse(c, { integration: newIntegration }, 201);
 });
 
 // PUT /integrations/:id - Update integration
@@ -136,7 +156,11 @@ app.put('/:id', async (c) => {
     .limit(1);
 
   if (!existing || existing.length === 0) {
-    return c.json({ error: 'Integration not found' }, 404);
+    return createErrorResponse(c, {
+      title: 'Integration Not Found',
+      status: 404,
+      detail: 'Integration not found'
+    });
   }
 
   const updated = {
@@ -149,7 +173,7 @@ app.put('/:id', async (c) => {
     .set(updated)
     .where(eq(mcpIntegrations.id, id));
 
-  return c.json({ integration: updated });
+  return createSuccessResponse(c, { integration: updated });
 });
 
 // DELETE /integrations/:id - Delete integration
@@ -163,19 +187,23 @@ app.delete('/:id', async (c) => {
     .limit(1);
 
   if (!existing || existing.length === 0) {
-    return c.json({ error: 'Integration not found' }, 404);
+    return createErrorResponse(c, {
+      title: 'Integration Not Found',
+      status: 404,
+      detail: 'Integration not found'
+    });
   }
 
   await db.delete(mcpIntegrations)
     .where(eq(mcpIntegrations.id, id));
 
-  return c.json({ success: true });
+  return createSuccessResponse(c, { success: true });
 });
 
 // GET /installation-path - Get MCP installation path
 app.get('/installation-path', async (c) => {
   const paths = getInstallationPaths();
-  return c.json(paths);
+  return createSuccessResponse(c, paths);
 });
 
 export default app;

@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const query = searchParams.toString();
-    const url = `${API_URL}/pipelines${query ? `?${query}` : ''}`;
+    const url = `${API_URL}/api/pipelines${query ? `?${query}` : ''}`;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const response = await fetch(`${API_URL}/pipelines`, {
+    const response = await fetch(`${API_URL}/api/pipelines`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

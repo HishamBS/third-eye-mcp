@@ -23,9 +23,10 @@ function log(message: string, color: keyof typeof COLORS = 'reset') {
   console.log(`${COLORS[color]}${message}${COLORS.reset}`);
 }
 
+const DEFAULT_DB_PATH = resolve(homedir(), '.third-eye-mcp/mcp.db');
+
 async function restoreDatabase() {
-  // Get database path
-  const DB_PATH = process.env.OVERSEER_DB || resolve(homedir(), '.overseer/overseer.db');
+  const DB_PATH = process.env.MCP_DB || DEFAULT_DB_PATH;
   const BACKUPS_DIR = resolve(dirname(DB_PATH), 'backups');
 
   // Check if backups directory exists
@@ -37,7 +38,7 @@ async function restoreDatabase() {
 
   // List available backups
   const backups = readdirSync(BACKUPS_DIR)
-    .filter(f => f.startsWith('overseer-backup-') && f.endsWith('.db'))
+    .filter(f => f.startsWith('third-eye-mcp-backup-') && f.endsWith('.db'))
     .sort()
     .reverse();
 
@@ -84,7 +85,7 @@ async function restoreDatabase() {
     log(`\n  Restoring from: ${selectedBackup}`, 'cyan');
 
     // Create a backup of current database before restoring
-    const preRestoreBackup = `overseer-pre-restore-${new Date().toISOString().replace(/[:.]/g, '-').split('T')[0]}_${new Date().toTimeString().split(' ')[0].replace(/:/g, '-')}.db`;
+    const preRestoreBackup = `third-eye-mcp-pre-restore-${new Date().toISOString().replace(/[:.]/g, '-').split('T')[0]}_${new Date().toTimeString().split(' ')[0].replace(/:/g, '-')}.db`;
     const preRestoreBackupPath = resolve(BACKUPS_DIR, preRestoreBackup);
 
     try {

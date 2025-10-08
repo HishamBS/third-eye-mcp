@@ -3,8 +3,38 @@ import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
 import { strictnessProfiles } from '@third-eye/db';
 import { eq, desc } from 'drizzle-orm';
+import {
+  validateBodyWithEnvelope,
+  createSuccessResponse,
+  createErrorResponse,
+  createInternalErrorResponse,
+  requestIdMiddleware,
+  errorHandler
+} from '../middleware/response';
+import { z } from 'zod';
 
 const app = new Hono();
+
+app.use('*', requestIdMiddleware());
+app.use('*', errorHandler());
+
+// Zod schemas for validation
+const createStrictnessProfileSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  ambiguityThreshold: z.number().min(0).max(100).optional(),
+  citationCutoff: z.number().min(0).max(100).optional(),
+  consistencyTolerance: z.number().min(0).max(100).optional(),
+  mangekyoStrictness: z.enum(['lenient', 'standard', 'strict']).optional(),
+});
+
+const updateStrictnessProfileSchema = z.object({
+  description: z.string().optional(),
+  ambiguityThreshold: z.number().min(0).max(100).optional(),
+  citationCutoff: z.number().min(0).max(100).optional(),
+  consistencyTolerance: z.number().min(0).max(100).optional(),
+  mangekyoStrictness: z.enum(['lenient', 'standard', 'strict']).optional(),
+});
 
 /**
  * GET /api/strictness - Get all strictness profiles
@@ -19,14 +49,9 @@ app.get('/', async (c) => {
       .orderBy(desc(strictnessProfiles.isBuiltIn), desc(strictnessProfiles.createdAt))
       .all();
 
-    return c.json(profiles);
+    return createSuccessResponse(c, profiles);
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to fetch strictness profiles: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to fetch strictness profiles: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
@@ -46,26 +71,20 @@ app.get('/:id', async (c) => {
       .all();
 
     if (profile.length === 0) {
-      return c.json({ error: 'Profile not found' }, 404);
+      return createErrorResponse(c, { title: 'Profile Not Found', status: 404, detail: 'The requested strictness profile could not be found' });
     }
 
-    return c.json(profile[0]);
+    return createSuccessResponse(c, profile[0]);
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to fetch profile: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to fetch profile: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
 /**
  * POST /api/strictness - Create new profile
  */
-app.post('/', async (c) => {
+app.post('/', validateBodyWithEnvelope(createStrictnessProfileSchema), async (c) => {
   try {
-    const body = await c.req.json();
     const {
       name,
       description,
@@ -73,11 +92,7 @@ app.post('/', async (c) => {
       citationCutoff,
       consistencyTolerance,
       mangekyoStrictness,
-    } = body;
-
-    if (!name) {
-      return c.json({ error: 'Missing required field: name' }, 400);
-    }
+    } = c.get('validatedBody');
 
     const { db } = getDb();
 
@@ -98,27 +113,22 @@ app.post('/', async (c) => {
       })
       .run();
 
-    return c.json(
-      { id, message: 'Strictness profile created successfully' },
-      201
-    );
+    return createSuccessResponse(c, {
+      id,
+      message: 'Strictness profile created successfully',
+    }, { status: 201 });
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to create profile: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to create profile: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
 /**
  * PUT /api/strictness/:id - Update profile
  */
-app.put('/:id', async (c) => {
+app.put('/:id', validateBodyWithEnvelope(updateStrictnessProfileSchema), async (c) => {
   try {
     const id = c.req.param('id');
-    const body = await c.req.json();
+    const body = c.get('validatedBody');
 
     const { db } = getDb();
 
@@ -130,12 +140,12 @@ app.put('/:id', async (c) => {
       .all();
 
     if (existing.length === 0) {
-      return c.json({ error: 'Profile not found' }, 404);
+      return createErrorResponse(c, { title: 'Profile Not Found', status: 404, detail: 'The requested strictness profile could not be found' });
     }
 
     // Don't allow editing built-in profiles
     if (existing[0].isBuiltIn) {
-      return c.json({ error: 'Cannot edit built-in profiles' }, 403);
+      return createErrorResponse(c, { title: 'Cannot Edit Built-in Profile', status: 403, detail: 'Built-in strictness profiles cannot be modified' });
     }
 
     await db
@@ -160,14 +170,9 @@ app.put('/:id', async (c) => {
       .where(eq(strictnessProfiles.id, id))
       .run();
 
-    return c.json({ message: 'Profile updated successfully' });
+    return createSuccessResponse(c, { message: 'Profile updated successfully' });
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to update profile: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to update profile: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
@@ -187,24 +192,19 @@ app.delete('/:id', async (c) => {
       .all();
 
     if (existing.length === 0) {
-      return c.json({ error: 'Profile not found' }, 404);
+      return createErrorResponse(c, { title: 'Profile Not Found', status: 404, detail: 'The requested strictness profile could not be found' });
     }
 
     // Don't allow deleting built-in profiles
     if (existing[0].isBuiltIn) {
-      return c.json({ error: 'Cannot delete built-in profiles' }, 403);
+      return createErrorResponse(c, { title: 'Cannot Delete Built-in Profile', status: 403, detail: 'Built-in strictness profiles cannot be deleted' });
     }
 
     await db.delete(strictnessProfiles).where(eq(strictnessProfiles.id, id)).run();
 
-    return c.json({ message: 'Profile deleted successfully' });
+    return createSuccessResponse(c, { message: 'Profile deleted successfully' });
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to delete profile: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to delete profile: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 

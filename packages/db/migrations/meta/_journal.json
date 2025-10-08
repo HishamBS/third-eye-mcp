@@ -4,23 +4,9 @@
   "entries": [
     {
       "idx": 0,
-      "version": "7",
-      "when": 1736095200000,
-      "tag": "0000_initial",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
       "version": "6",
-      "when": 1759679863715,
-      "tag": "0001_silent_preak",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1759698595359,
-      "tag": "0002_powerful_mac_gargan",
+      "when": 1759819374396,
+      "tag": "0000_tan_shockwave",
       "breakpoints": true
     }
   ]

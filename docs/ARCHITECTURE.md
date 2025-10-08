@@ -162,7 +162,7 @@ providerKeys (
 )
 ```
 
-**Encryption**: API keys encrypted with AES-256-GCM using PBKDF2-derived key from `ENCRYPTION_KEY` env var
+**Encryption**: API keys encrypted with AES-256-GCM using PBKDF2-derived key from `THIRD_EYE_SECURITY_ENCRYPTION_KEY` env var
 
 **File**: `packages/db/schema.ts`
 
@@ -288,7 +288,7 @@ POST /api/provider-keys         - Save encrypted API key
 1. User enters API key in UI
 2. UI sends key to `/api/provider-keys`
 3. Server generates random IV (12 bytes)
-4. Server derives key from `ENCRYPTION_KEY` env var using PBKDF2
+4. Server derives key from `THIRD_EYE_SECURITY_ENCRYPTION_KEY` env var using PBKDF2
 5. Server encrypts key with AES-256-GCM
 6. Server stores `{ encryptedKey, iv, tag }` in database
 7. On provider use, server decrypts key and injects into provider client
@@ -298,12 +298,13 @@ POST /api/provider-keys         - Save encrypted API key
 ### Environment Variables
 
 ```bash
-ENCRYPTION_KEY=your-secure-key-here  # Required for API key encryption
-PORT=7070                             # Server port (default: 7070)
-HOST=127.0.0.1                       # Server host
-AUTO_OPEN=true                       # Auto-open portal on start
-UI_PORT=3300                         # Next.js UI port
-DATABASE_PATH=./data/third-eye.db    # SQLite database path
+THIRD_EYE_SECURITY_ENCRYPTION_KEY=your-secure-key-here  # Required for API key encryption
+MCP_PORT=7070                                           # Server port (default: 7070)
+MCP_HOST=127.0.0.1                                      # Server host (bind 0.0.0.0 only when secured)
+MCP_ALLOWED_ORIGINS=http://localhost:3300               # Comma-separated CORS whitelist and MCP clients
+MCP_AUTO_OPEN=true                                      # Auto-open portal on start
+MCP_UI_PORT=3300                                        # Next.js UI port
+MCP_DB=~/.third-eye-mcp/mcp.db                          # SQLite database path
 ```
 
 ## Deployment
@@ -331,10 +332,10 @@ docker compose up -d
 ### Global Installation (npm)
 
 ```bash
-npx third-eye-mcp
+bunx third-eye-mcp up
 ```
 
-Installs globally and starts server with auto-open portal.
+Starts the MCP server and dashboard using the Bun runtime (Bun must be installed).
 
 ## Testing
 

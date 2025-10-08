@@ -164,23 +164,159 @@ setInterval(() => {
 }, 60000); // Run every minute
 
 /**
- * Common validation schemas
+ * Common validation schemas for all API endpoints
  */
 export const schemas = {
+  // MCP Operations
+  // GOLDEN RULE #1: Only accept 'task' - NO direct Eye execution allowed
+  // .strict() ensures unknown fields like 'eye' are REJECTED
   mcpRun: z.object({
-    eye: z.string().optional(),
-    input: z.any().optional(),
-    task: z.string().optional(),
+    task: z.string().min(1, 'Task is required'),
     sessionId: z.string().optional(),
-  }).refine(
-    (data) => (data.eye && data.input) || data.task,
-    'Either (eye + input) or task must be provided'
-  ),
+    context: z.record(z.unknown()).optional(), // Optional additional context
+  }).strict(),
 
+  // Session Management
   sessionCreate: z.object({
-    config: z.record(z.any()).optional(),
+    config: z.object({
+      agentName: z.string().optional(),
+      model: z.string().optional(),
+      displayName: z.string().optional(),
+      maxTokens: z.number().int().positive().optional(),
+      temperature: z.number().min(0).max(2).optional(),
+    }).optional(),
   }),
 
+  sessionUpdate: z.object({
+    status: z.enum(['active', 'paused', 'completed', 'failed']).optional(),
+    config: z.object({
+      agentName: z.string().optional(),
+      model: z.string().optional(),
+      displayName: z.string().optional(),
+    }).optional(),
+  }),
+
+  // Provider Keys
+  providerKeyCreate: z.object({
+    provider: z.enum(['groq', 'openrouter', 'ollama', 'lmstudio']),
+    label: z.string().min(1).max(100),
+    apiKey: z.string().min(1),
+    metadata: z.object({
+      baseUrl: z.string().url().optional(),
+      description: z.string().optional(),
+    }).optional(),
+  }),
+
+  providerKeyUpdate: z.object({
+    label: z.string().min(1).max(100).optional(),
+    apiKey: z.string().min(1).optional(),
+    metadata: z.object({
+      baseUrl: z.string().url().optional(),
+      description: z.string().optional(),
+    }).optional(),
+  }),
+
+  // Routing Configuration
+  routingCreate: z.object({
+    eye: z.enum(['overseer', 'sharingan', 'prompt-helper', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan']),
+    primaryProvider: z.enum(['groq', 'openrouter', 'ollama', 'lmstudio']),
+    primaryModel: z.string().min(1),
+    fallbackProvider: z.enum(['groq', 'openrouter', 'ollama', 'lmstudio']).optional(),
+    fallbackModel: z.string().optional(),
+    temperature: z.number().min(0).max(2).optional(),
+    maxTokens: z.number().int().positive().optional(),
+  }),
+
+  routingUpdate: z.object({
+    primaryProvider: z.enum(['groq', 'openrouter', 'ollama', 'lmstudio']).optional(),
+    primaryModel: z.string().min(1).optional(),
+    fallbackProvider: z.enum(['groq', 'openrouter', 'ollama', 'lmstudio']).optional(),
+    fallbackModel: z.string().optional(),
+    temperature: z.number().min(0).max(2).optional(),
+    maxTokens: z.number().int().positive().optional(),
+  }),
+
+  // Personas
+  personaCreate: z.object({
+    eye: z.enum(['overseer', 'sharingan', 'prompt-helper', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan']),
+    version: z.number().int().positive(),
+    content: z.string().min(10),
+    active: z.boolean().default(false),
+  }),
+
+  personaUpdate: z.object({
+    content: z.string().min(10).optional(),
+    active: z.boolean().optional(),
+  }),
+
+  // Pipelines
+  pipelineCreate: z.object({
+    name: z.string().min(1).max(100),
+    description: z.string().max(500).optional(),
+    eyeFlow: z.array(z.enum(['overseer', 'sharingan', 'prompt-helper', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan'])).min(1),
+    conditions: z.object({
+      taskType: z.enum(['code', 'text', 'analysis']).optional(),
+      complexity: z.enum(['simple', 'medium', 'complex']).optional(),
+    }).optional(),
+    active: z.boolean().default(true),
+  }),
+
+  pipelineUpdate: z.object({
+    name: z.string().min(1).max(100).optional(),
+    description: z.string().max(500).optional(),
+    eyeFlow: z.array(z.enum(['overseer', 'sharingan', 'prompt-helper', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan'])).min(1).optional(),
+    conditions: z.object({
+      taskType: z.enum(['code', 'text', 'analysis']).optional(),
+      complexity: z.enum(['simple', 'medium', 'complex']).optional(),
+    }).optional(),
+    active: z.boolean().optional(),
+  }),
+
+  // Prompts
+  promptCreate: z.object({
+    name: z.string().min(1).max(100),
+    description: z.string().max(500).optional(),
+    content: z.string().min(10),
+    tags: z.array(z.string()).optional(),
+    category: z.enum(['code', 'text', 'analysis', 'general']).optional(),
+    active: z.boolean().default(true),
+  }),
+
+  promptUpdate: z.object({
+    name: z.string().min(1).max(100).optional(),
+    description: z.string().max(500).optional(),
+    content: z.string().min(10).optional(),
+    tags: z.array(z.string()).optional(),
+    category: z.enum(['code', 'text', 'analysis', 'general']).optional(),
+    active: z.boolean().optional(),
+  }),
+
+  // Strictness Profiles
+  strictnessCreate: z.object({
+    name: z.string().min(1).max(100),
+    description: z.string().max(500).optional(),
+    rules: z.object({
+      requireAllEyes: z.boolean().default(false),
+      allowSkipSteps: z.boolean().default(true),
+      enforceOrder: z.boolean().default(true),
+      maxRetries: z.number().int().min(0).max(10).default(3),
+    }),
+    active: z.boolean().default(true),
+  }),
+
+  strictnessUpdate: z.object({
+    name: z.string().min(1).max(100).optional(),
+    description: z.string().max(500).optional(),
+    rules: z.object({
+      requireAllEyes: z.boolean().optional(),
+      allowSkipSteps: z.boolean().optional(),
+      enforceOrder: z.boolean().optional(),
+      maxRetries: z.number().int().min(0).max(10).optional(),
+    }).optional(),
+    active: z.boolean().optional(),
+  }),
+
+  // Legacy schemas
   contextAdd: z.object({
     source: z.enum(['user', 'eye']),
     key: z.string().min(1),

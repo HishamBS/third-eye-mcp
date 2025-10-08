@@ -17,8 +17,6 @@
     "paths": {
       "@third-eye/core": ["./packages/core/index.ts"],
       "@third-eye/core/*": ["./packages/core/*"],
-      "@third-eye/providers": ["./packages/providers/index.ts"],
-      "@third-eye/providers/*": ["./packages/providers/*"],
       "@third-eye/db": ["./packages/db/index.ts"],
       "@third-eye/db/*": ["./packages/db/*"],
       "@third-eye/config": ["./packages/config/index.ts"],
@@ -39,9 +37,7 @@
     { "path": "./packages/core" },
     { "path": "./packages/eyes" },
     { "path": "./packages/mcp" },
-    { "path": "./apps/server" },
-    { "path": "./apps/ui" },
-    { "path": "./cli" }
+    { "path": "./apps/server" }
   ],
   "exclude": ["node_modules", "dist", "build", ".next"]
 }

@@ -8,6 +8,15 @@ import { getConfig } from '@third-eye/config';
 import { eq } from 'drizzle-orm';
 import type { ProviderId } from '@third-eye/types';
 import { validateBody, schemas, rateLimit } from '../middleware/validation';
+import {
+  validateBodyWithEnvelope,
+  createSuccessResponse,
+  createErrorResponse,
+  createInternalErrorResponse,
+  requestIdMiddleware,
+  errorHandler
+} from '../middleware/response';
+import { z } from 'zod';
 
 /**
  * Duel Mode API
@@ -18,8 +27,47 @@ import { validateBody, schemas, rateLimit } from '../middleware/validation';
 
 const app = new Hono();
 
+app.use('*', requestIdMiddleware());
+app.use('*', errorHandler());
+
 // Apply rate limiting
 app.use('*', rateLimit({ maxRequests: 50 })); // Lower limit for expensive duels
+
+/**
+ * Calculate score for duel result
+ * Score is based on: verdict (50%), confidence (25%), latency (25%)
+ */
+function calculateScore(result: any, latencyMs: number): number {
+  let score = 0;
+
+  // Verdict score (0-50 points)
+  if (result.code === 'APPROVED') {
+    score += 50;
+  } else if (result.code === 'NEEDS_INPUT') {
+    score += 25;
+  }
+
+  // Confidence score (0-25 points)
+  if (result.confidence) {
+    score += (result.confidence / 100) * 25;
+  } else {
+    score += 12.5; // Default mid-range
+  }
+
+  // Latency score (0-25 points) - faster is better
+  // Under 1s = 25 points, 1-3s = 15 points, 3-5s = 10 points, 5s+ = 5 points
+  if (latencyMs < 1000) {
+    score += 25;
+  } else if (latencyMs < 3000) {
+    score += 15;
+  } else if (latencyMs < 5000) {
+    score += 10;
+  } else {
+    score += 5;
+  }
+
+  return Math.round(score);
+}
 
 interface DuelConfig {
   providers: Array<{
@@ -46,40 +94,47 @@ interface DuelResult {
 app.post('/', async (c) => {
   try {
     const body = await c.req.json();
-    const { eye, prompt, configs } = body as {
-      eye: string;
+    const { sessionId, prompt, configs, eye } = body as {
+      sessionId?: string;
       prompt: string;
       configs: DuelConfig['providers'];
+      eye?: string;
     };
 
-    if (!eye || !prompt || !configs || configs.length < 2) {
-      return c.json(
-        {
-          error: 'Missing required fields: eye, prompt, configs (minimum 2)',
-        },
-        400
-      );
+    // Use eye from body or default to 'overseer'
+    const eyeName = eye || 'overseer';
+
+    if (!prompt || !configs || configs.length < 2) {
+      return createErrorResponse(c, {
+        title: 'Validation Error',
+        status: 400,
+        detail: 'Missing required fields: prompt, configs (minimum 2)'
+      });
     }
 
     if (configs.length > 4) {
-      return c.json({ error: 'Maximum 4 provider/model combinations allowed' }, 400);
+      return createErrorResponse(c, {
+        title: 'Validation Error',
+        status: 400,
+        detail: 'Maximum 4 provider/model combinations allowed'
+      });
     }
 
     const { db } = getDb();
     const duelId = nanoid();
-    const sessionId = `duel-${duelId}`;
+    const finalSessionId = sessionId || `duel-${duelId}`;
 
     // Create session for this duel
     await db
       .insert(sessions)
       .values({
-        id: sessionId,
-        createdAt: new Date(),
+        id: finalSessionId,
+        createdAt: Date.now(),
         status: 'running',
         configJson: {
           type: 'duel',
           duelId,
-          eye,
+          eye: eyeName,
           prompt,
           configs,
         },
@@ -91,19 +146,20 @@ app.post('/', async (c) => {
       .insert(pipelineEvents)
       .values({
         id: nanoid(),
-        sessionId,
-        eye,
+        sessionId: finalSessionId,
+        eye: eyeName,
         type: 'duel_start',
         code: 'DUEL_STARTED',
         md: `Duel started with ${configs.length} competitors`,
         dataJson: { duelId, configs },
         nextAction: 'running',
-        createdAt: new Date(),
+        createdAt: Date.now(),
       })
       .run();
 
     const orchestrator = new EyeOrchestrator();
     const runResults: DuelResult['runs'] = [];
+    const duelResultsForFrontend: any[] = [];
 
     // Run each configuration in parallel
     const runPromises = configs.map(async (config, index) => {
@@ -124,11 +180,7 @@ app.post('/', async (c) => {
         const provider = ProviderFactory.create(config.provider, providerConfig);
 
         // Call the Eye through orchestrator
-        const result = await orchestrator.executeEye(eye, {
-          prompt,
-          provider: config.provider,
-          model: config.model,
-        });
+        const result = await orchestrator.runEye(eyeName, prompt, finalSessionId);
 
         const latencyMs = Date.now() - startTime;
 
@@ -137,16 +189,16 @@ app.post('/', async (c) => {
           .insert(runs)
           .values({
             id: runId,
-            sessionId,
-            eye,
+            sessionId: finalSessionId,
+            eye: eyeName,
             provider: config.provider,
             model: config.model,
             inputMd: prompt,
-            outputJson: result,
-            tokensIn: result.tokensIn || null,
-            tokensOut: result.tokensOut || null,
+            outputJson: result as any,
+            tokensIn: (result as any).tokensIn || null,
+            tokensOut: (result as any).tokensOut || null,
             latencyMs,
-            createdAt: new Date(),
+            createdAt: Date.now(),
           })
           .run();
 
@@ -155,8 +207,8 @@ app.post('/', async (c) => {
           .insert(pipelineEvents)
           .values({
             id: nanoid(),
-            sessionId,
-            eye,
+            sessionId: finalSessionId,
+            eye: eyeName,
             type: 'eye_call',
             code: result.code || 'OK',
             md: result.md || `${label} completed`,
@@ -168,11 +220,11 @@ app.post('/', async (c) => {
               label,
               agent: label,
               latencyMs,
-              tokensIn: result.tokensIn,
-              tokensOut: result.tokensOut,
+              tokensIn: (result as any).tokensIn,
+              tokensOut: (result as any).tokensOut,
             },
             nextAction: 'completed',
-            createdAt: new Date(),
+            createdAt: Date.now(),
           })
           .run();
 
@@ -182,6 +234,24 @@ app.post('/', async (c) => {
           model: config.model,
           label,
         });
+
+        // Build frontend result format
+        const verdict = result.code === 'APPROVED' ? 'APPROVED' : result.code === 'REJECTED' ? 'REJECTED' : 'NEEDS_INPUT';
+        const score = calculateScore(result, latencyMs);
+
+        duelResultsForFrontend.push({
+          provider: config.provider,
+          model: config.model,
+          output: result.md || (result as any).message || 'No output',
+          latency: latencyMs,
+          tokens: {
+            input: (result as any).tokensIn || 0,
+            output: (result as any).tokensOut || 0,
+          },
+          verdict,
+          confidence: (result as any).confidence,
+          score,
+        });
       } catch (error) {
         console.error(`Duel run ${runId} failed:`, error);
 
@@ -190,8 +260,8 @@ app.post('/', async (c) => {
           .insert(runs)
           .values({
             id: runId,
-            sessionId,
-            eye,
+            sessionId: finalSessionId,
+            eye: eyeName,
             provider: config.provider,
             model: config.model,
             inputMd: prompt,
@@ -201,7 +271,7 @@ app.post('/', async (c) => {
             tokensIn: null,
             tokensOut: null,
             latencyMs: null,
-            createdAt: new Date(),
+            createdAt: Date.now(),
           })
           .run();
 
@@ -210,8 +280,8 @@ app.post('/', async (c) => {
           .insert(pipelineEvents)
           .values({
             id: nanoid(),
-            sessionId,
-            eye,
+            sessionId: finalSessionId,
+            eye: eyeName,
             type: 'eye_call',
             code: 'ERROR',
             md: `${label} failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -225,9 +295,20 @@ app.post('/', async (c) => {
               error: error instanceof Error ? error.message : 'Unknown error',
             },
             nextAction: 'failed',
-            createdAt: new Date(),
+            createdAt: Date.now(),
           })
           .run();
+
+        // Add failed result for frontend
+        duelResultsForFrontend.push({
+          provider: config.provider,
+          model: config.model,
+          output: error instanceof Error ? error.message : 'Unknown error',
+          latency: 0,
+          tokens: { input: 0, output: 0 },
+          verdict: 'REJECTED',
+          score: 0,
+        });
       }
     });
 
@@ -237,7 +318,7 @@ app.post('/', async (c) => {
     await db
       .update(sessions)
       .set({ status: 'completed' })
-      .where(eq(sessions.id, sessionId))
+      .where(eq(sessions.id, finalSessionId))
       .run();
 
     // Create duel complete event
@@ -245,14 +326,14 @@ app.post('/', async (c) => {
       .insert(pipelineEvents)
       .values({
         id: nanoid(),
-        sessionId,
-        eye,
+        sessionId: finalSessionId,
+        eye: eyeName,
         type: 'duel_complete',
         code: 'DUEL_COMPLETED',
         md: `Duel completed with ${runResults.length} successful runs`,
         dataJson: { duelId, runs: runResults },
         nextAction: 'completed',
-        createdAt: new Date(),
+        createdAt: Date.now(),
       })
       .run();
 
@@ -261,19 +342,21 @@ app.post('/', async (c) => {
       const { wsManager } = await import('../websocket');
       wsManager.broadcast({
         type: 'duel_complete',
-        sessionId,
+        sessionId: finalSessionId,
         duelId,
         runs: runResults,
+        results: duelResultsForFrontend,
       });
     } catch (e) {
       console.debug('WebSocket broadcast skipped:', e);
     }
 
-    return c.json({
+    return createSuccessResponse(c, {
       success: true,
       duelId,
-      sessionId,
+      sessionId: finalSessionId,
       runs: runResults,
+      results: duelResultsForFrontend.sort((a, b) => b.score - a.score),
     });
   } catch (error) {
     console.error('Duel failed:', error);
@@ -305,7 +388,11 @@ app.get('/:duelId', async (c) => {
       .all();
 
     if (session.length === 0) {
-      return c.json({ error: 'Duel not found' }, 404);
+      return createErrorResponse(c, {
+        title: 'Duel Not Found',
+        status: 404,
+        detail: 'Duel not found'
+      });
     }
 
     // Get all runs for this duel
@@ -322,7 +409,7 @@ app.get('/:duelId', async (c) => {
       .where(eq(pipelineEvents.sessionId, sessionId))
       .all();
 
-    return c.json({
+    return createSuccessResponse(c, {
       duelId,
       sessionId,
       session: session[0],
@@ -363,7 +450,7 @@ app.get('/', async (c) => {
         config: s.configJson,
       }));
 
-    return c.json({ duels });
+    return createSuccessResponse(c, { duels });
   } catch (error) {
     console.error('Failed to list duels:', error);
     return c.json(
@@ -385,11 +472,11 @@ app.post('/v2', validateBody(schemas.duelCreate), async (c) => {
     const { eyeName, modelA, modelB, input, iterations = 5 } = body;
 
     if (!eyeName || !modelA || !modelB || !input) {
-      return c.json({
-        error: 'Missing required fields',
-        required: ['eyeName', 'modelA', 'modelB', 'input'],
-        optional: ['iterations'],
-      }, 400);
+      return createErrorResponse(c, {
+        title: 'Validation Error',
+        status: 400,
+        detail: 'Missing required fields: eyeName, modelA, modelB, input'
+      });
     }
 
     const duelId = nanoid();
@@ -415,16 +502,14 @@ app.post('/v2', validateBody(schemas.duelCreate), async (c) => {
       console.error(`Duel ${duelId} failed:`, error);
     });
 
-    return c.json({
+    return createSuccessResponse(c, {
       duelId,
       status: 'pending',
       message: 'Duel started',
     });
   } catch (error) {
     console.error('Failed to start duel:', error);
-    return c.json({
-      error: `Failed to start duel: ${error instanceof Error ? error.message : 'Unknown error'}`,
-    }, 500);
+    return createInternalErrorResponse(c, `Failed to start duel: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
@@ -443,10 +528,14 @@ app.get('/:id/status', async (c) => {
       .get();
 
     if (!duel) {
-      return c.json({ error: 'Duel not found' }, 404);
+      return createErrorResponse(c, {
+        title: 'Duel Not Found',
+        status: 404,
+        detail: 'Duel not found'
+      });
     }
 
-    return c.json({
+    return createSuccessResponse(c, {
       duelId: duel.id,
       status: duel.status,
       eyeName: duel.eyeName,
@@ -460,9 +549,7 @@ app.get('/:id/status', async (c) => {
     });
   } catch (error) {
     console.error('Failed to get duel status:', error);
-    return c.json({
-      error: `Failed to get duel status: ${error instanceof Error ? error.message : 'Unknown error'}`,
-    }, 500);
+    return createInternalErrorResponse(c, `Failed to get duel status: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
@@ -481,17 +568,22 @@ app.get('/:id/results', async (c) => {
       .get();
 
     if (!duel) {
-      return c.json({ error: 'Duel not found' }, 404);
+      return createErrorResponse(c, {
+        title: 'Duel Not Found',
+        status: 404,
+        detail: 'Duel not found'
+      });
     }
 
     if (duel.status !== 'completed') {
-      return c.json({
-        error: 'Duel not yet completed',
-        status: duel.status,
-      }, 400);
+      return createErrorResponse(c, {
+        title: 'Invalid Operation',
+        status: 400,
+        detail: `Duel not yet completed, current status: ${duel.status}`
+      });
     }
 
-    return c.json({
+    return createSuccessResponse(c, {
       duelId: duel.id,
       winner: duel.winner,
       results: duel.results,
@@ -504,9 +596,7 @@ app.get('/:id/results', async (c) => {
     });
   } catch (error) {
     console.error('Failed to get duel results:', error);
-    return c.json({
-      error: `Failed to get duel results: ${error instanceof Error ? error.message : 'Unknown error'}`,
-    }, 500);
+    return createInternalErrorResponse(c, `Failed to get duel results: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 

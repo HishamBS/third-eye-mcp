@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { useDialog } from '@/hooks/useDialog';
 
 interface Prompt {
   id: string;
@@ -18,12 +19,17 @@ interface Prompt {
 }
 
 export default function PromptsPage() {
+  const dialog = useDialog();
   const [prompts, setPrompts] = useState<Prompt[]>([]);
   const [filteredPrompts, setFilteredPrompts] = useState<Prompt[]>([]);
   const [selectedPrompt, setSelectedPrompt] = useState<Prompt | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [versions, setVersions] = useState<Prompt[]>([]);
+  const [showVersions, setShowVersions] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -128,7 +134,7 @@ export default function PromptsPage() {
 
   const savePrompt = async () => {
     if (!formData.name || !formData.content) {
-      alert('Name and content are required');
+      await dialog.alert('Validation Error', 'Name and content are required');
       return;
     }
 
@@ -164,8 +170,8 @@ export default function PromptsPage() {
     }
   };
 
-  const addVariable = () => {
-    const varName = prompt('Enter variable name (without {{ }}):');
+  const addVariable = async () => {
+    const varName = await dialog.prompt('Add Variable', 'Enter variable name (without {{ }}):');
     if (varName && !formData.variables.includes(varName)) {
       setFormData({
         ...formData,
@@ -181,8 +187,8 @@ export default function PromptsPage() {
     });
   };
 
-  const addTag = () => {
-    const tag = prompt('Enter tag:');
+  const addTag = async () => {
+    const tag = await dialog.prompt('Add Tag', 'Enter tag:');
     if (tag && !formData.tags.includes(tag)) {
       setFormData({
         ...formData,
@@ -197,6 +203,53 @@ export default function PromptsPage() {
       tags: formData.tags.filter((t) => t !== tag),
     });
   };
+
+  const viewVersions = async (promptName: string) => {
+    try {
+      const response = await fetch(`/api/prompts/name/${promptName}/versions`);
+      if (response.ok) {
+        const result = await response.json();
+        setVersions(result.data || []);
+        setShowVersions(true);
+      }
+    } catch (error) {
+      console.error('Failed to fetch versions:', error);
+      setError('Failed to load versions');
+    }
+  };
+
+  const toggleActivate = async (promptId: string, currentState: boolean) => {
+    try {
+      const response = await fetch(`/api/prompts/${promptId}/activate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: !currentState }),
+      });
+
+      if (response.ok) {
+        setSuccess(`Prompt ${!currentState ? 'activated' : 'deactivated'}`);
+        await fetchPrompts();
+      } else {
+        setError('Failed to update prompt status');
+      }
+    } catch (error) {
+      setError('Failed to update prompt status');
+    }
+  };
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   return (
     <div className="min-h-screen bg-brand-ink">
@@ -230,6 +283,22 @@ export default function PromptsPage() {
           </div>
         </div>
       </div>
+
+      {error && (
+        <div className="mx-auto max-w-7xl px-6 pt-4">
+          <div className="rounded-xl border border-red-500/50 bg-red-500/10 p-4 text-red-400">
+            {error}
+          </div>
+        </div>
+      )}
+
+      {success && (
+        <div className="mx-auto max-w-7xl px-6 pt-4">
+          <div className="rounded-xl border border-green-500/50 bg-green-500/10 p-4 text-green-400">
+            {success}
+          </div>
+        </div>
+      )}
 
       <div className="mx-auto max-w-7xl px-6 py-8">
         <div className="grid gap-8 lg:grid-cols-[280px,1fr]">
@@ -283,7 +352,57 @@ export default function PromptsPage() {
 
           {/* Main Content */}
           <div>
-            {isCreating || isEditing ? (
+            {showVersions ? (
+              /* Version History */
+              <GlassCard>
+                <div className="mb-6 flex items-center justify-between">
+                  <h2 className="text-xl font-semibold text-white">Version History</h2>
+                  <button
+                    onClick={() => setShowVersions(false)}
+                    className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                  >
+                    Back to Library
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {versions.map((ver) => (
+                    <div key={ver.id} className="rounded-xl border border-brand-outline/40 bg-brand-paper/50 p-5">
+                      <div className="mb-3 flex items-start justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold text-white">{ver.name} v{ver.version}</h3>
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className={`rounded-full px-2 py-0.5 text-xs ${
+                              ver.active ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
+                            }`}>
+                              {ver.active ? 'Active' : 'Inactive'}
+                            </span>
+                            <span className="text-xs text-slate-400">
+                              {new Date(ver.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => toggleActivate(ver.id, ver.active)}
+                          className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                            ver.active
+                              ? 'border border-red-500/50 text-red-400 hover:bg-red-500/10'
+                              : 'bg-green-600 text-white hover:bg-green-700'
+                          }`}
+                        >
+                          {ver.active ? 'Deactivate' : 'Activate'}
+                        </button>
+                      </div>
+                      <div className="rounded-xl bg-brand-ink/50 p-3">
+                        <pre className="whitespace-pre-wrap font-mono text-sm text-slate-300">
+                          {ver.content.length > 200 ? ver.content.substring(0, 200) + '...' : ver.content}
+                        </pre>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </GlassCard>
+            ) : isCreating || isEditing ? (
               /* Prompt Editor */
               <GlassCard>
                 <div className="mb-6 flex items-center justify-between">
@@ -435,6 +554,11 @@ export default function PromptsPage() {
                               <span className="text-sm text-slate-400">
                                 v{prompt.version}
                               </span>
+                              <span className={`rounded-full px-2 py-0.5 text-xs ${
+                                prompt.active ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
+                              }`}>
+                                {prompt.active ? 'Active' : 'Inactive'}
+                              </span>
                               <span className="rounded-full bg-brand-accent/20 px-2 py-0.5 text-xs text-brand-accent">
                                 {prompt.category}
                               </span>
@@ -445,12 +569,30 @@ export default function PromptsPage() {
                               )}
                             </div>
                           </div>
-                          <button
-                            onClick={() => startEditing(prompt)}
-                            className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
-                          >
-                            Edit
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => viewVersions(prompt.name)}
+                              className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                            >
+                              Versions
+                            </button>
+                            <button
+                              onClick={() => toggleActivate(prompt.id, prompt.active)}
+                              className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
+                                prompt.active
+                                  ? 'border border-red-500/50 text-red-400 hover:bg-red-500/10'
+                                  : 'bg-green-600 text-white hover:bg-green-700'
+                              }`}
+                            >
+                              {prompt.active ? 'Deactivate' : 'Activate'}
+                            </button>
+                            <button
+                              onClick={() => startEditing(prompt)}
+                              className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                            >
+                              Edit
+                            </button>
+                          </div>
                         </div>
 
                         <div className="mb-3 rounded-xl bg-brand-paper/70 p-4">
