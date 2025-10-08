@@ -2,6 +2,15 @@ import { Hono } from 'hono';
 import { getDb } from '@third-eye/db';
 import { sessions, runs, pipelineEvents } from '@third-eye/db';
 import { eq, desc } from 'drizzle-orm';
+import {
+  validateBodyWithEnvelope,
+  createSuccessResponse,
+  createErrorResponse,
+  createInternalErrorResponse,
+  requestIdMiddleware,
+  errorHandler
+} from '../middleware/response';
+import { z } from 'zod';
 
 /**
  * Export API
@@ -10,6 +19,9 @@ import { eq, desc } from 'drizzle-orm';
  */
 
 const app = new Hono();
+
+app.use('*', requestIdMiddleware());
+app.use('*', errorHandler());
 
 type ExportFormat = 'pdf' | 'html' | 'json' | 'md';
 
@@ -32,7 +44,7 @@ app.get('/:sessionId', async (c) => {
       .all();
 
     if (session.length === 0) {
-      return c.json({ error: 'Session not found' }, 404);
+      return createErrorResponse(c, { title: 'Session Not Found', status: 404, detail: 'The requested session could not be found' });
     }
 
     // Get all runs for this session
@@ -60,9 +72,8 @@ app.get('/:sessionId', async (c) => {
 
     switch (format) {
       case 'json':
-        return c.json(exportData, 200, {
-          'Content-Disposition': `attachment; filename="third-eye-session-${sessionId}.json"`,
-        });
+        c.header('Content-Disposition', `attachment; filename="third-eye-session-${sessionId}.json"`);
+        return createSuccessResponse(c, exportData);
 
       case 'md':
         const markdown = generateMarkdown(exportData);
@@ -86,16 +97,11 @@ app.get('/:sessionId', async (c) => {
         });
 
       default:
-        return c.json({ error: 'Invalid format. Supported: pdf, html, json, md' }, 400);
+        return createErrorResponse(c, { title: 'Invalid Format', status: 400, detail: 'Supported formats: pdf, html, json, md' });
     }
   } catch (error) {
     console.error('Export failed:', error);
-    return c.json(
-      {
-        error: `Failed to export session: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to export session: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 

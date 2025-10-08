@@ -1,0 +1,18 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Mangekyō Sharingan - Dark red with unique pinwheel pattern (Sasuke's design) -->
+  <circle cx="32" cy="32" r="28" fill="#CC0000"/>
+
+  <!-- Six-pointed pinwheel design (Sasuke's Mangekyō pattern) -->
+  <g fill="#000000">
+    <path d="M32,32 L32,4 Q38,10 38,18 Q38,24 34,28 Z"/>
+    <path d="M32,32 L57,13 Q54,20 48,24 Q42,28 36,28 Z"/>
+    <path d="M32,32 L60,40 Q52,42 46,40 Q40,38 36,34 Z"/>
+    <path d="M32,32 L42,60 Q36,54 32,48 Q28,42 28,36 Z"/>
+    <path d="M32,32 L7,51 Q10,44 16,40 Q22,36 28,36 Z"/>
+    <path d="M32,32 L4,24 Q12,22 18,24 Q24,26 28,30 Z"/>
+  </g>
+
+  <!-- Central black pupil -->
+  <circle cx="32" cy="32" r="6" fill="#000000"/>
+  <circle cx="30" cy="29" r="1.5" fill="#FF3333" opacity="0.7"/>
+</svg>

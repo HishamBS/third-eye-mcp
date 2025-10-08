@@ -43,7 +43,8 @@ export function Leaderboards({
       if (eye) params.set('eye', eye);
       params.set('days', days.toString());
 
-      const res = await fetch(`http://localhost:3200/api/leaderboards/${category}?${params}`);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+      const res = await fetch(`${API_URL}/api/leaderboards/${category}?${params}`);
       const data = await res.json();
       setRankings(data.rankings || []);
     } catch (err) {

@@ -3,8 +3,17 @@ import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
 import { sessions, runs, pipelineEvents } from '@third-eye/db';
 import { getConfig } from '@third-eye/config';
-import { eq, desc, count, sql } from 'drizzle-orm';
+import { eq, desc, count, sql, or, gte } from 'drizzle-orm';
 import { validateBody, schemas, rateLimit } from '../middleware/validation';
+import {
+  validateBodyWithEnvelope,
+  createSuccessResponse,
+  createErrorResponse,
+  createInternalErrorResponse,
+  requestIdMiddleware,
+  errorHandler
+} from '../middleware/response';
+import { z } from 'zod';
 
 /**
  * Session Management Routes
@@ -14,13 +23,40 @@ import { validateBody, schemas, rateLimit } from '../middleware/validation';
 
 const app = new Hono();
 
+app.use('*', requestIdMiddleware());
+app.use('*', errorHandler());
+
 // Apply rate limiting
 app.use('*', rateLimit({ maxRequests: 200 })); // Higher limit for session ops
+
+// Schemas for validation
+const createSessionSchema = z.object({
+  config: z.any().optional()
+});
+
+const updateStatusSchema = z.object({
+  status: z.enum(['active', 'completed', 'failed'])
+});
+
+const addContextSchema = z.object({
+  source: z.enum(['user', 'eye']),
+  key: z.string().min(1),
+  value: z.any()
+});
+
+const validateClarificationSchema = z.object({
+  answer: z.string().min(1)
+});
 
 // Create new session
 app.post('/', async (c) => {
   try {
-    const body = await c.req.json();
+    let body: any = {};
+    try {
+      body = await c.req.json();
+    } catch (e) {
+      // Empty body is ok
+    }
     const { config: sessionConfig } = body;
 
     const sessionId = nanoid(12);
@@ -29,6 +65,9 @@ app.post('/', async (c) => {
 
     const newSession = {
       id: sessionId,
+      agentName: sessionConfig?.agentName || 'Unknown Agent',
+      model: sessionConfig?.model || null,
+      displayName: sessionConfig?.displayName || sessionId,
       createdAt: new Date(),
       status: 'active',
       configJson: sessionConfig || null,
@@ -43,19 +82,7 @@ app.post('/', async (c) => {
       .get();
 
     // Generate portal URL
-    const portalUrl = `http://${config.server.host}:${config.ui.port}/session/${sessionId}`;
-
-    // Auto-open browser if configured
-    if (config.ui.autoOpen) {
-      try {
-        const { spawn } = await import('child_process');
-        const command = process.platform === 'darwin' ? 'open' :
-                       process.platform === 'win32' ? 'start' : 'xdg-open';
-        spawn(command, [portalUrl], { detached: true, stdio: 'ignore' });
-      } catch (e) {
-        console.warn('Failed to auto-open browser:', e);
-      }
-    }
+    const portalUrl = `http://${config.server.host}:${config.ui.port}/monitor?sessionId=${sessionId}`;
 
     // Broadcast session creation via WebSocket
     try {
@@ -69,18 +96,220 @@ app.post('/', async (c) => {
       console.debug('WebSocket broadcast skipped:', e);
     }
 
-    return c.json({
+    return createSuccessResponse(c, {
       sessionId,
       portalUrl,
       session: inserted,
     });
   } catch (error) {
     console.error('Failed to create session:', error);
-    return c.json({ error: 'Failed to create session' }, 500);
+    return createInternalErrorResponse(c, 'Failed to create session');
+  }
+});
+
+// Open browser for a session (called by MCP server when agent connects)
+app.post('/open', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { sessionId } = body;
+
+    if (!sessionId) {
+      return createErrorResponse(c, {
+        title: 'Validation Error',
+        status: 400,
+        detail: 'Missing required field: sessionId'
+      });
+    }
+
+    const { db } = getDb();
+    const config = getConfig();
+
+    // Verify session exists
+    const session = await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.id, sessionId))
+      .get();
+
+    if (!session) {
+      return createErrorResponse(c, {
+        title: 'Session Not Found',
+        status: 404,
+        detail: 'Session not found'
+      });
+    }
+
+    // Generate portal URL - use /session/:id for better UX (has session selector + theme preserved)
+    const portalUrl = `http://${config.server.host}:${config.ui.port}/session/${sessionId}`;
+
+    // Open browser if configured
+    if (config.ui.autoOpen) {
+      try {
+        const { spawn } = await import('child_process');
+        const command = process.platform === 'darwin' ? 'open' :
+                       process.platform === 'win32' ? 'start' : 'xdg-open';
+        spawn(command, [portalUrl], { detached: true, stdio: 'ignore' });
+        console.log(`🧿 Browser opened for session ${sessionId}: ${portalUrl}`);
+      } catch (e) {
+        console.warn('Failed to auto-open browser:', e);
+      }
+    }
+
+    return createSuccessResponse(c, {
+      sessionId,
+      portalUrl,
+      opened: config.ui.autoOpen,
+    });
+  } catch (error) {
+    console.error('Failed to open session:', error);
+    return createInternalErrorResponse(c, 'Failed to open session');
+  }
+});
+
+// Get active sessions (sessions with activity in last 10 minutes)
+// NOTE: This route MUST come before /:id to avoid treating 'active' as a session ID
+app.get('/active', async (c) => {
+  try {
+    const { db } = getDb();
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+
+    // Get sessions that are either:
+    // 1. Status is 'active'
+    // 2. Have recent events (within 10 minutes)
+    const activeSessions = await db
+      .select({
+        id: sessions.id,
+        status: sessions.status,
+        agentName: sessions.agentName,
+        model: sessions.model,
+        displayName: sessions.displayName,
+        createdAt: sessions.createdAt,
+        configJson: sessions.configJson,
+      })
+      .from(sessions)
+      .where(or(
+        eq(sessions.status, 'active'),
+        gte(sessions.createdAt, tenMinutesAgo)
+      ))
+      .orderBy(desc(sessions.createdAt))
+      .limit(20)
+      .all();
+
+    // Enrich with event counts and metadata
+    const enrichedSessions = await Promise.all(
+      activeSessions.map(async (session) => {
+        const eventCount = await db
+          .select({ count: count() })
+          .from(pipelineEvents)
+          .where(eq(pipelineEvents.sessionId, session.id))
+          .get();
+
+        const lastEvent = await db
+          .select()
+          .from(pipelineEvents)
+          .where(eq(pipelineEvents.sessionId, session.id))
+          .orderBy(desc(pipelineEvents.createdAt))
+          .limit(1)
+          .get();
+
+        const config = typeof session.configJson === 'string'
+          ? JSON.parse(session.configJson)
+          : session.configJson || {};
+
+        return {
+          sessionId: session.id,
+          status: session.status,
+          createdAt: session.createdAt,
+          eventCount: eventCount?.count || 0,
+          lastActivity: lastEvent?.createdAt || session.createdAt,
+          agentName: session.agentName || config.agentName || 'Unknown Agent',
+          model: session.model || config.model || 'Unknown Model',
+          displayName: session.displayName || config.displayName || session.id,
+        };
+      })
+    );
+
+    return createSuccessResponse(c, {
+      sessions: enrichedSessions,
+      total: enrichedSessions.length,
+    });
+  } catch (error) {
+    console.error('Failed to fetch active sessions:', error);
+    return createInternalErrorResponse(c, 'Failed to fetch active sessions');
+  }
+});
+
+// Get all sessions
+app.get('/', async (c) => {
+  try {
+    const { db } = getDb();
+    const limit = parseInt(c.req.query('limit') || '50');
+    const offset = parseInt(c.req.query('offset') || '0');
+    const includeStats = c.req.query('stats') === 'true';
+
+    const allSessions = await db
+      .select()
+      .from(sessions)
+      .orderBy(desc(sessions.createdAt))
+      .limit(limit)
+      .offset(offset)
+      .all();
+
+    let stats = null;
+    if (includeStats) {
+      const totalRuns = await db
+        .select({ count: count() })
+        .from(runs)
+        .get();
+
+      const runsWithLatency = await db
+        .select({
+          latencyMs: runs.latencyMs,
+          outputJson: runs.outputJson,
+        })
+        .from(runs)
+        .all();
+
+      const validRuns = runsWithLatency.filter(r => r.latencyMs != null && r.latencyMs > 0);
+      const avgLatency = validRuns.length > 0
+        ? Math.round(validRuns.reduce((sum, r) => sum + (r.latencyMs || 0), 0) / validRuns.length)
+        : 0;
+
+      const successfulRuns = runsWithLatency.filter(r => {
+        try {
+          const output = typeof r.outputJson === 'string' ? JSON.parse(r.outputJson) : r.outputJson;
+          return output?.ok === true || output?.code?.startsWith('OK_');
+        } catch {
+          return false;
+        }
+      });
+
+      const successRate = totalRuns?.count > 0
+        ? Math.round((successfulRuns.length / totalRuns.count) * 100)
+        : 0;
+
+      stats = {
+        totalSessions: allSessions.length,
+        totalRuns: totalRuns?.count || 0,
+        successRate,
+        avgLatency,
+      };
+    }
+
+    return createSuccessResponse(c, {
+      sessions: allSessions,
+      stats,
+      limit,
+      offset,
+    });
+  } catch (error) {
+    console.error('Failed to fetch sessions:', error);
+    return createInternalErrorResponse(c, 'Failed to fetch sessions');
   }
 });
 
 // Get session by ID
+// NOTE: This route MUST come after /active and other specific routes
 app.get('/:id', async (c) => {
   try {
     const sessionId = c.req.param('id');
@@ -93,13 +322,17 @@ app.get('/:id', async (c) => {
       .get();
 
     if (!session) {
-      return c.json({ error: 'Session not found' }, 404);
+      return createErrorResponse(c, {
+        title: 'Session Not Found',
+        status: 404,
+        detail: 'Session not found'
+      });
     }
 
-    return c.json(session);
+    return createSuccessResponse(c, session);
   } catch (error) {
     console.error('Failed to fetch session:', error);
-    return c.json({ error: 'Failed to fetch session' }, 500);
+    return createInternalErrorResponse(c, 'Failed to fetch session');
   }
 });
 
@@ -109,6 +342,7 @@ app.get('/', async (c) => {
     const { db } = getDb();
     const limit = parseInt(c.req.query('limit') || '50');
     const offset = parseInt(c.req.query('offset') || '0');
+    const includeStats = c.req.query('stats') === 'true';
 
     const allSessions = await db
       .select()
@@ -118,14 +352,56 @@ app.get('/', async (c) => {
       .offset(offset)
       .all();
 
-    return c.json({
+    let stats = null;
+    if (includeStats) {
+      const totalRuns = await db
+        .select({ count: count() })
+        .from(runs)
+        .get();
+
+      const runsWithLatency = await db
+        .select({
+          latencyMs: runs.latencyMs,
+          outputJson: runs.outputJson,
+        })
+        .from(runs)
+        .all();
+
+      const validRuns = runsWithLatency.filter(r => r.latencyMs != null && r.latencyMs > 0);
+      const avgLatency = validRuns.length > 0
+        ? Math.round(validRuns.reduce((sum, r) => sum + (r.latencyMs || 0), 0) / validRuns.length)
+        : 0;
+
+      const successfulRuns = runsWithLatency.filter(r => {
+        try {
+          const output = typeof r.outputJson === 'string' ? JSON.parse(r.outputJson) : r.outputJson;
+          return output?.ok === true || output?.code?.startsWith('OK_');
+        } catch {
+          return false;
+        }
+      });
+
+      const successRate = totalRuns?.count > 0
+        ? Math.round((successfulRuns.length / totalRuns.count) * 100)
+        : 0;
+
+      stats = {
+        totalSessions: allSessions.length,
+        totalRuns: totalRuns?.count || 0,
+        successRate,
+        avgLatency,
+      };
+    }
+
+    return createSuccessResponse(c, {
       sessions: allSessions,
+      stats,
       limit,
       offset,
     });
   } catch (error) {
     console.error('Failed to fetch sessions:', error);
-    return c.json({ error: 'Failed to fetch sessions' }, 500);
+    return createInternalErrorResponse(c, 'Failed to fetch sessions');
   }
 });
 
@@ -143,7 +419,11 @@ app.get('/:id/runs', async (c) => {
       .get();
 
     if (!session) {
-      return c.json({ error: 'Session not found' }, 404);
+      return createErrorResponse(c, {
+        title: 'Session Not Found',
+        status: 404,
+        detail: 'Session not found'
+      });
     }
 
     const limit = parseInt(c.req.query('limit') || '100');
@@ -158,7 +438,7 @@ app.get('/:id/runs', async (c) => {
       .offset(offset)
       .all();
 
-    return c.json({
+    return createSuccessResponse(c, {
       sessionId,
       runs: sessionRuns,
       limit,
@@ -167,7 +447,7 @@ app.get('/:id/runs', async (c) => {
     });
   } catch (error) {
     console.error('Failed to fetch session runs:', error);
-    return c.json({ error: 'Failed to fetch session runs' }, 500);
+    return createInternalErrorResponse(c, 'Failed to fetch session runs');
   }
 });
 
@@ -185,7 +465,11 @@ app.get('/:id/events', async (c) => {
       .get();
 
     if (!session) {
-      return c.json({ error: 'Session not found' }, 404);
+      return createErrorResponse(c, {
+        title: 'Session Not Found',
+        status: 404,
+        detail: 'Session not found'
+      });
     }
 
     const limit = parseInt(c.req.query('limit') || '500');
@@ -200,10 +484,10 @@ app.get('/:id/events', async (c) => {
       .offset(offset)
       .all();
 
-    return c.json(events);
+    return createSuccessResponse(c, events);
   } catch (error) {
     console.error('Failed to fetch pipeline events:', error);
-    return c.json({ error: 'Failed to fetch pipeline events' }, 500);
+    return createInternalErrorResponse(c, 'Failed to fetch pipeline events');
   }
 });
 
@@ -220,7 +504,11 @@ app.get('/:id/summary', async (c) => {
       .get();
 
     if (!session) {
-      return c.json({ error: 'Session not found' }, 404);
+      return createErrorResponse(c, {
+        title: 'Session Not Found',
+        status: 404,
+        detail: 'Session not found'
+      });
     }
 
     const eventCount = await db
@@ -236,7 +524,7 @@ app.get('/:id/summary', async (c) => {
       .groupBy(pipelineEvents.eye)
       .all();
 
-    return c.json({
+    return createSuccessResponse(c, {
       sessionId,
       status: session.status,
       eventCount: eventCount?.count || 0,
@@ -245,7 +533,7 @@ app.get('/:id/summary', async (c) => {
     });
   } catch (error) {
     console.error('Failed to fetch session summary:', error);
-    return c.json({ error: 'Failed to fetch session summary' }, 500);
+    return createInternalErrorResponse(c, 'Failed to fetch session summary');
   }
 });
 
@@ -257,7 +545,11 @@ app.patch('/:id/status', async (c) => {
     const { status } = body;
 
     if (!status || !['active', 'completed', 'failed'].includes(status)) {
-      return c.json({ error: 'Invalid status. Must be: active, completed, or failed' }, 400);
+      return createErrorResponse(c, {
+        title: 'Validation Error',
+        status: 400,
+        detail: 'Invalid status. Must be: active, completed, or failed'
+      });
     }
 
     const { db } = getDb();
@@ -275,7 +567,11 @@ app.patch('/:id/status', async (c) => {
       .get();
 
     if (!updated) {
-      return c.json({ error: 'Session not found' }, 404);
+      return createErrorResponse(c, {
+        title: 'Session Not Found',
+        status: 404,
+        detail: 'Session not found'
+      });
     }
 
     // Broadcast status change
@@ -290,10 +586,10 @@ app.patch('/:id/status', async (c) => {
       console.debug('WebSocket broadcast skipped:', e);
     }
 
-    return c.json(updated);
+    return createSuccessResponse(c, updated);
   } catch (error) {
     console.error('Failed to update session status:', error);
-    return c.json({ error: 'Failed to update session status' }, 500);
+    return createInternalErrorResponse(c, 'Failed to update session status');
   }
 });
 
@@ -311,12 +607,20 @@ app.post('/:id/kill', async (c) => {
       .get();
 
     if (!session) {
-      return c.json({ error: 'Session not found' }, 404);
+      return createErrorResponse(c, {
+        title: 'Session Not Found',
+        status: 404,
+        detail: 'Session not found'
+      });
     }
 
     // Check if already killed
     if (session.status === 'killed') {
-      return c.json({ error: 'Session already killed' }, 400);
+      return createErrorResponse(c, {
+        title: 'Invalid Operation',
+        status: 400,
+        detail: 'Session already killed'
+      });
     }
 
     // Get list of pending/running Eyes from runs table
@@ -360,7 +664,7 @@ app.post('/:id/kill', async (c) => {
 
     console.log(`🛑 Session ${sessionId} killed. Stopped ${stoppedEyes.length} Eyes: ${stoppedEyes.join(', ')}`);
 
-    return c.json({
+    return createSuccessResponse(c, {
       sessionId,
       status: 'killed',
       stoppedEyes,
@@ -368,7 +672,61 @@ app.post('/:id/kill', async (c) => {
     });
   } catch (error) {
     console.error('Failed to kill session:', error);
-    return c.json({ error: 'Failed to kill session' }, 500);
+    return createInternalErrorResponse(c, 'Failed to kill session');
+  }
+});
+
+// Rerun specific Eye for Kill Switch validation
+app.post('/:id/rerun/:eye', async (c) => {
+  try {
+    const sessionId = c.req.param('id');
+    const eyeName = c.req.param('eye');
+    const { input } = await c.req.json();
+
+    const { db } = getDb();
+
+    // Verify session exists
+    const session = await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.id, sessionId))
+      .get();
+
+    if (!session) {
+      return createErrorResponse(c, {
+        title: 'Session Not Found',
+        status: 404,
+        detail: 'Session not found'
+      });
+    }
+
+    // Import orchestrator
+    const { EyeOrchestrator } = await import('@third-eye/core');
+    const orchestrator = new EyeOrchestrator();
+
+    // Run Eye with provided input
+    const result = await orchestrator.runEye(eyeName, input, sessionId);
+
+    // Broadcast rerun event via WebSocket
+    try {
+      const { wsManager } = await import('../websocket');
+      wsManager.broadcastToSession(sessionId, {
+        type: 'eye_rerun',
+        sessionId,
+        eye: eyeName,
+        result,
+        timestamp: Date.now(),
+      });
+    } catch (e) {
+      console.debug('WebSocket broadcast skipped:', e);
+    }
+
+    console.log(`🔄 Reran ${eyeName} for session ${sessionId}`);
+
+    return createSuccessResponse(c, result);
+  } catch (error) {
+    console.error('Failed to rerun Eye:', error);
+    return createInternalErrorResponse(c, 'Failed to rerun Eye');
   }
 });
 
@@ -385,20 +743,24 @@ app.get('/:id/context', async (c) => {
       .get();
 
     if (!session) {
-      return c.json({ error: 'Session not found' }, 404);
+      return createErrorResponse(c, {
+        title: 'Session Not Found',
+        status: 404,
+        detail: 'Session not found'
+      });
     }
 
     const context = typeof session.configJson === 'string'
       ? JSON.parse(session.configJson)
       : session.configJson || {};
 
-    return c.json({
+    return createSuccessResponse(c, {
       sessionId,
       context,
     });
   } catch (error) {
     console.error('Failed to fetch session context:', error);
-    return c.json({ error: 'Failed to fetch session context' }, 500);
+    return createInternalErrorResponse(c, 'Failed to fetch session context');
   }
 });
 
@@ -410,14 +772,19 @@ app.post('/:id/context', async (c) => {
     const { source, key, value } = body;
 
     if (!source || !key || value === undefined) {
-      return c.json({
-        error: 'Missing required fields',
-        required: ['source', 'key', 'value'],
-      }, 400);
+      return createErrorResponse(c, {
+        title: 'Validation Error',
+        status: 400,
+        detail: 'Missing required fields: source, key, value'
+      });
     }
 
     if (!['user', 'eye'].includes(source)) {
-      return c.json({ error: 'Invalid source. Must be: user or eye' }, 400);
+      return createErrorResponse(c, {
+        title: 'Validation Error',
+        status: 400,
+        detail: 'Invalid source. Must be: user or eye'
+      });
     }
 
     const { db } = getDb();
@@ -429,7 +796,11 @@ app.post('/:id/context', async (c) => {
       .get();
 
     if (!session) {
-      return c.json({ error: 'Session not found' }, 404);
+      return createErrorResponse(c, {
+        title: 'Session Not Found',
+        status: 404,
+        detail: 'Session not found'
+      });
     }
 
     // Parse existing context
@@ -465,13 +836,13 @@ app.post('/:id/context', async (c) => {
       console.debug('WebSocket broadcast skipped:', e);
     }
 
-    return c.json({
+    return createSuccessResponse(c, {
       sessionId,
       context,
     });
   } catch (error) {
     console.error('Failed to add context:', error);
-    return c.json({ error: 'Failed to add context' }, 500);
+    return createInternalErrorResponse(c, 'Failed to add context');
   }
 });
 
@@ -489,7 +860,11 @@ app.delete('/:id/context/:key', async (c) => {
       .get();
 
     if (!session) {
-      return c.json({ error: 'Session not found' }, 404);
+      return createErrorResponse(c, {
+        title: 'Session Not Found',
+        status: 404,
+        detail: 'Session not found'
+      });
     }
 
     // Parse existing context
@@ -519,13 +894,13 @@ app.delete('/:id/context/:key', async (c) => {
       console.debug('WebSocket broadcast skipped:', e);
     }
 
-    return c.json({
+    return createSuccessResponse(c, {
       sessionId,
       context,
     });
   } catch (error) {
     console.error('Failed to remove context:', error);
-    return c.json({ error: 'Failed to remove context' }, 500);
+    return createInternalErrorResponse(c, 'Failed to remove context');
   }
 });
 
@@ -536,7 +911,11 @@ app.get('/:id/export', async (c) => {
     const format = c.req.query('format') || 'json';
 
     if (!['json', 'md', 'csv'].includes(format)) {
-      return c.json({ error: 'Invalid format. Must be: json, md, or csv' }, 400);
+      return createErrorResponse(c, {
+        title: 'Validation Error',
+        status: 400,
+        detail: 'Invalid format. Must be: json, md, or csv'
+      });
     }
 
     const { db } = getDb();
@@ -549,7 +928,11 @@ app.get('/:id/export', async (c) => {
       .get();
 
     if (!session) {
-      return c.json({ error: 'Session not found' }, 404);
+      return createErrorResponse(c, {
+        title: 'Session Not Found',
+        status: 404,
+        detail: 'Session not found'
+      });
     }
 
     // Get runs
@@ -647,10 +1030,14 @@ app.get('/:id/export', async (c) => {
       return c.text(csv);
     }
 
-    return c.json({ error: 'Invalid format' }, 400);
+    return createErrorResponse(c, {
+        title: 'Validation Error',
+        status: 400,
+        detail: 'Invalid format'
+      });
   } catch (error) {
     console.error('Failed to export session:', error);
-    return c.json({ error: 'Failed to export session' }, 500);
+    return createInternalErrorResponse(c, 'Failed to export session');
   }
 });
 
@@ -663,7 +1050,11 @@ app.post('/:id/clarifications/:clarificationId/validate', async (c) => {
     const { answer } = body;
 
     if (!answer) {
-      return c.json({ error: 'Missing required field: answer' }, 400);
+      return createErrorResponse(c, {
+        title: 'Validation Error',
+        status: 400,
+        detail: 'Missing required field: answer'
+      });
     }
 
     const { db } = getDb();
@@ -676,7 +1067,11 @@ app.post('/:id/clarifications/:clarificationId/validate', async (c) => {
       .get();
 
     if (!session) {
-      return c.json({ error: 'Session not found' }, 404);
+      return createErrorResponse(c, {
+        title: 'Session Not Found',
+        status: 404,
+        detail: 'Session not found'
+      });
     }
 
     // Parse session context
@@ -688,7 +1083,11 @@ app.post('/:id/clarifications/:clarificationId/validate', async (c) => {
     const existingClarification = clarifications[clarificationId];
 
     if (!existingClarification) {
-      return c.json({ error: 'Clarification not found' }, 404);
+      return createErrorResponse(c, {
+        title: 'Clarification Not Found',
+        status: 404,
+        detail: 'Clarification not found'
+      });
     }
 
     // Validate answer coherence using basic rules
@@ -736,7 +1135,7 @@ app.post('/:id/clarifications/:clarificationId/validate', async (c) => {
       }
     }
 
-    return c.json({
+    return createSuccessResponse(c, {
       valid,
       reason,
       suggestion,
@@ -745,7 +1144,66 @@ app.post('/:id/clarifications/:clarificationId/validate', async (c) => {
     });
   } catch (error) {
     console.error('Failed to validate clarification:', error);
-    return c.json({ error: 'Failed to validate clarification' }, 500);
+    return createInternalErrorResponse(c, 'Failed to validate clarification');
+  }
+});
+
+// Bulk delete sessions (cleanup old test sessions)
+app.delete('/bulk', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { sessionIds, olderThan } = body;
+
+    const { db } = getDb();
+
+    let deletedCount = 0;
+
+    if (sessionIds && Array.isArray(sessionIds)) {
+      // Delete specific sessions by ID
+      for (const id of sessionIds) {
+        try {
+          // Delete related records first
+          await db.delete(pipelineEvents).where(eq(pipelineEvents.sessionId, id)).run();
+          await db.delete(runs).where(eq(runs.sessionId, id)).run();
+          // Delete session last
+          await db.delete(sessions).where(eq(sessions.id, id)).run();
+          deletedCount++;
+        } catch (err) {
+          console.error(`Failed to delete session ${id}:`, err);
+          // Continue with next session
+        }
+      }
+    } else if (olderThan) {
+      // Delete sessions older than specified date
+      const cutoffDate = new Date(olderThan);
+
+      const oldSessions = await db
+        .select()
+        .from(sessions)
+        .where(sql`${sessions.createdAt} < ${cutoffDate}`)
+        .all();
+
+      for (const session of oldSessions) {
+        await db.delete(sessions).where(eq(sessions.id, session.id)).run();
+        await db.delete(runs).where(eq(runs.sessionId, session.id)).run();
+        await db.delete(pipelineEvents).where(eq(pipelineEvents.sessionId, session.id)).run();
+        deletedCount++;
+      }
+    } else {
+      return createErrorResponse(c, {
+        title: 'Validation Error',
+        status: 400,
+        detail: 'Provide either sessionIds (array) or olderThan (ISO date string)'
+      });
+    }
+
+    return createSuccessResponse(c, {
+      deleted: deletedCount,
+      message: `Deleted ${deletedCount} session(s) and associated data`
+    });
+  } catch (error) {
+    console.error('Failed to bulk delete sessions:', error);
+    return createInternalErrorResponse(c, 'Failed to bulk delete sessions');
   }
 });
 

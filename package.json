@@ -3,17 +3,19 @@
   "version": "1.0.0",
   "description": "Third Eye MCP: Local-first AI orchestration layer for multi-provider LLM workflows",
   "type": "module",
-  "main": "./cli/index.ts",
+  "main": "./dist/cli.js",
   "bin": {
-    "third-eye-mcp": "./cli/index.ts",
-    "third-eye-mcp-server": "./bin/mcp-server.ts"
+    "third-eye-mcp": "./dist/cli.js",
+    "third-eye-mcp-server": "./dist/mcp-server.js"
   },
   "files": [
     "apps",
     "packages",
+    "dist",
     "cli",
     "bin",
     "scripts",
+    "docs",
     "README.md",
     "LICENSE",
     "CONTRIBUTING.md"
@@ -40,6 +42,10 @@
     "seed": "bun run scripts/seed-database.ts",
     "backup": "bun run scripts/backup-db.ts",
     "restore": "bun run scripts/restore-db.ts",
+    "health:check": "bun run scripts/check-health.ts",
+    "health:full": "bun run scripts/health-check.ts",
+    "ws:check": "bun run scripts/ws-monitor-check.ts",
+    "capture:demo": "bun run scripts/capture-demo.ts",
     "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
     "db:migrate": "bun run packages/db/migrate.ts",
     "db:push": "drizzle-kit push:sqlite --config=drizzle.config.ts",
@@ -55,7 +61,13 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "mcp": "bun run bin/mcp-server.ts",
-    "prepublishOnly": "bun run clean && bun run lint && bun run test && bun run build"
+    "postinstall": "bun run scripts/postinstall.ts",
+    "coverage:report": "bun run test:coverage",
+    "coverage:badge": "bun run scripts/update-coverage-badge.ts",
+    "release:prepare": "pnpm clean && pnpm lint && pnpm test:coverage && pnpm build && pnpm pack",
+    "release:prepare:dry": "pnpm release:prepare && npm publish --dry-run",
+    "release:publish": "pnpm release:prepare && npm publish --access public",
+    "prepublishOnly": "pnpm release:prepare"
   },
   "keywords": [
     "ai",
@@ -75,12 +87,15 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/third-eye-mcp.git"
+    "url": "https://github.com/HishamBS/third-eye-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/third-eye-mcp/issues"
+    "url": "https://github.com/HishamBS/third-eye-mcp/issues"
   },
-  "homepage": "https://github.com/yourusername/third-eye-mcp#readme",
+  "homepage": "https://github.com/HishamBS/third-eye-mcp#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "bun": ">=1.0.0",
     "node": ">=18.0.0"
@@ -90,14 +105,19 @@
     "packages/*"
   ],
   "dependencies": {
-    "nanoid": "^5.0.4",
-    "zod": "^3.22.4",
-    "@inquirer/prompts": "^7.0.1"
+    "@inquirer/prompts": "^7.8.6",
+    "@modelcontextprotocol/sdk": "^1.19.1",
+    "kleur": "^4.1.5",
+    "ora": "^7.0.1",
+    "nanoid": "^5.1.6",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
-    "vitest": "^2.1.4",
-    "@playwright/test": "^1.50.1",
+    "@vitest/coverage-v8": "^2.1.4",
+    "@playwright/test": "^1.56.0",
+    "bun-types": "^1.2.23",
+    "drizzle-kit": "^0.31.5",
     "typescript": "~5.9.3",
-    "bun-types": "^1.0.0"
+    "vitest": "^2.1.9"
   }
 }

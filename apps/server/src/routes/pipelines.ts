@@ -3,8 +3,44 @@ import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
 import { pipelines, pipelineRuns } from '@third-eye/db';
 import { eq, desc } from 'drizzle-orm';
+import {
+  validateBodyWithEnvelope,
+  createSuccessResponse,
+  createErrorResponse,
+  createInternalErrorResponse,
+  requestIdMiddleware,
+  errorHandler
+} from '../middleware/response';
+import { z } from 'zod';
 
 const app = new Hono();
+
+app.use('*', requestIdMiddleware());
+app.use('*', errorHandler());
+
+// Zod schemas for validation
+const createPipelineSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().min(1),
+  workflow: z.any(),
+  category: z.string().optional(),
+});
+
+const updatePipelineSchema = z.object({
+  description: z.string().optional(),
+  workflow: z.any().optional(),
+  category: z.string().optional(),
+});
+
+const executePipelineSchema = z.object({
+  session_id: z.string().min(1),
+  input: z.any(),
+});
+
+const executePipelineV2Schema = z.object({
+  input: z.any(),
+  sessionId: z.string().optional(),
+});
 
 /**
  * GET /api/pipelines - Get all pipelines
@@ -18,17 +54,12 @@ app.get('/', async (c) => {
     const allPipelines = await query.orderBy(desc(pipelines.createdAt)).all();
 
     if (category) {
-      return c.json(allPipelines.filter((p) => p.category === category));
+      return createSuccessResponse(c, allPipelines.filter((p) => p.category === category));
     }
 
-    return c.json(allPipelines);
+    return createSuccessResponse(c, allPipelines);
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to fetch pipelines: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to fetch pipelines: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
@@ -48,17 +79,12 @@ app.get('/:id', async (c) => {
       .all();
 
     if (pipeline.length === 0) {
-      return c.json({ error: 'Pipeline not found' }, 404);
+      return createErrorResponse(c, { title: 'Pipeline Not Found', status: 404, detail: 'The requested pipeline could not be found' });
     }
 
-    return c.json(pipeline[0]);
+    return createSuccessResponse(c, pipeline[0]);
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to fetch pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to fetch pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
@@ -77,31 +103,18 @@ app.get('/name/:name/versions', async (c) => {
       .orderBy(desc(pipelines.version))
       .all();
 
-    return c.json(versions);
+    return createSuccessResponse(c, versions);
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to fetch pipeline versions: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to fetch pipeline versions: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
 /**
  * POST /api/pipelines - Create new pipeline
  */
-app.post('/', async (c) => {
+app.post('/', validateBodyWithEnvelope(createPipelineSchema), async (c) => {
   try {
-    const body = await c.req.json();
-    const { name, description, workflow, category } = body;
-
-    if (!name || !description || !workflow) {
-      return c.json(
-        { error: 'Missing required fields: name, description, workflow' },
-        400
-      );
-    }
+    const { name, description, workflow, category } = c.get('validatedBody');
 
     const { db } = getDb();
 
@@ -143,27 +156,19 @@ app.post('/', async (c) => {
       })
       .run();
 
-    return c.json(
-      { id, version: nextVersion, message: 'Pipeline created successfully' },
-      201
-    );
+    return createSuccessResponse(c, { id, version: nextVersion, message: 'Pipeline created successfully' }, { status: 201 });
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to create pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to create pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
 /**
  * PUT /api/pipelines/:id - Update pipeline (creates new version)
  */
-app.put('/:id', async (c) => {
+app.put('/:id', validateBodyWithEnvelope(updatePipelineSchema), async (c) => {
   try {
     const id = c.req.param('id');
-    const body = await c.req.json();
+    const body = c.get('validatedBody');
 
     const { db } = getDb();
 
@@ -175,7 +180,7 @@ app.put('/:id', async (c) => {
       .all();
 
     if (existing.length === 0) {
-      return c.json({ error: 'Pipeline not found' }, 404);
+      return createErrorResponse(c, { title: 'Pipeline Not Found', status: 404, detail: 'The requested pipeline could not be found' });
     }
 
     const currentPipeline = existing[0];
@@ -205,18 +210,13 @@ app.put('/:id', async (c) => {
       })
       .run();
 
-    return c.json({
+    return createSuccessResponse(c, {
       id: newId,
       version: nextVersion,
       message: 'Pipeline updated (new version created)',
     });
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to update pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to update pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
@@ -236,7 +236,7 @@ app.post('/:id/activate', async (c) => {
       .all();
 
     if (pipeline.length === 0) {
-      return c.json({ error: 'Pipeline not found' }, 404);
+      return createErrorResponse(c, { title: 'Pipeline Not Found', status: 404, detail: 'The requested pipeline could not be found' });
     }
 
     const targetPipeline = pipeline[0];
@@ -255,14 +255,9 @@ app.post('/:id/activate', async (c) => {
       .where(eq(pipelines.id, id))
       .run();
 
-    return c.json({ message: `Pipeline version ${targetPipeline.version} activated` });
+    return createSuccessResponse(c, { message: `Pipeline version ${targetPipeline.version} activated` });
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to activate pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to activate pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
@@ -280,14 +275,9 @@ app.delete('/:id', async (c) => {
       .where(eq(pipelines.id, id))
       .run();
 
-    return c.json({ message: 'Pipeline deactivated' });
+    return createSuccessResponse(c, { message: 'Pipeline deactivated' });
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to delete pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to delete pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
@@ -305,15 +295,10 @@ app.delete('/:id', async (c) => {
  *
  * Future enhancement: Implement server-side async pipeline engine with worker queues.
  */
-app.post('/:id/execute', async (c) => {
+app.post('/:id/execute', validateBodyWithEnvelope(executePipelineSchema), async (c) => {
   try {
     const id = c.req.param('id');
-    const body = await c.req.json();
-    const { session_id, input } = body;
-
-    if (!session_id || !input) {
-      return c.json({ error: 'Missing required fields: session_id, input' }, 400);
-    }
+    const { session_id, input } = c.get('validatedBody');
 
     const { db } = getDb();
 
@@ -326,7 +311,7 @@ app.post('/:id/execute', async (c) => {
       .all();
 
     if (pipeline.length === 0) {
-      return c.json({ error: 'Pipeline not found' }, 404);
+      return createErrorResponse(c, { title: 'Pipeline Not Found', status: 404, detail: 'The requested pipeline could not be found' });
     }
 
     // Create pipeline run record for tracking
@@ -345,7 +330,7 @@ app.post('/:id/execute', async (c) => {
       .run();
 
     // Return run info for client-side execution
-    return c.json({
+    return createSuccessResponse(c, {
       runId,
       pipelineId: id,
       sessionId: session_id,
@@ -354,12 +339,7 @@ app.post('/:id/execute', async (c) => {
       message: 'Pipeline run created. Execute workflow steps via Eye endpoints.',
     });
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to execute pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
+    return createInternalErrorResponse(c, `Failed to execute pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
@@ -378,87 +358,9 @@ app.get('/:id/runs', async (c) => {
       .orderBy(desc(pipelineRuns.createdAt))
       .all();
 
-    return c.json(runs);
+    return createSuccessResponse(c, runs);
   } catch (error) {
-    return c.json(
-      {
-        error: `Failed to fetch pipeline runs: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      },
-      500
-    );
-  }
-});
-
-/**
- * POST /api/pipelines/:id/execute - Execute pipeline with input
- */
-app.post('/:id/execute', async (c) => {
-  try {
-    const id = c.req.param('id');
-    const body = await c.req.json();
-    const { input, sessionId } = body;
-
-    if (!input) {
-      return c.json({ error: 'Missing required field: input' }, 400);
-    }
-
-    const { db } = getDb();
-
-    // Get pipeline definition
-    const pipeline = await db
-      .select()
-      .from(pipelines)
-      .where(eq(pipelines.id, id))
-      .get();
-
-    if (!pipeline) {
-      return c.json({ error: 'Pipeline not found' }, 404);
-    }
-
-    // Parse workflow (steps)
-    const workflow = typeof pipeline.workflow === 'string'
-      ? JSON.parse(pipeline.workflow)
-      : pipeline.workflow;
-
-    // Create pipeline executor
-    const { PipelineExecutor } = await import('../lib/pipelineExecutor');
-    const executor = new PipelineExecutor();
-
-    // Execute pipeline
-    const result = await executor.execute(
-      {
-        id: pipeline.id,
-        name: pipeline.name,
-        description: pipeline.description,
-        steps: workflow,
-      },
-      input,
-      sessionId
-    );
-
-    // Save run to database
-    const runId = nanoid();
-    await db
-      .insert(pipelineRuns)
-      .values({
-        id: runId,
-        pipelineId: id,
-        inputJson: input,
-        outputJson: result.combinedOutput,
-        status: result.success ? 'success' : 'failed',
-        createdAt: new Date(),
-      })
-      .run();
-
-    return c.json({
-      runId,
-      result,
-    });
-  } catch (error) {
-    console.error('Pipeline execution failed:', error);
-    return c.json({
-      error: `Pipeline execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-    }, 500);
+    return createInternalErrorResponse(c, `Failed to fetch pipeline runs: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 

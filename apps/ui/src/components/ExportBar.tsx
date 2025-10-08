@@ -1,4 +1,7 @@
+'use client';
+
 import clsx from 'clsx';
+import { useDialog } from '@/hooks/useDialog';
 
 type ExportFormat = 'pdf' | 'html' | 'json' | 'md';
 
@@ -25,6 +28,7 @@ export interface ExportBarProps {
 }
 
 export function ExportBar({ sessionId }: ExportBarProps) {
+  const dialog = useDialog();
   const disabled = !sessionId;
 
   const triggerDownload = async (format: ExportFormat) => {
@@ -39,7 +43,7 @@ export function ExportBar({ sessionId }: ExportBarProps) {
       link.remove();
       URL.revokeObjectURL(url);
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Export failed');
+      await dialog.alert('Export Failed', error instanceof Error ? error.message : 'Export failed');
     }
   };
 

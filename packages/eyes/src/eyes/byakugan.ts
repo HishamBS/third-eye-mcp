@@ -36,130 +36,6 @@ export class ByakuganEye implements BaseEye {
   readonly description = 'Consistency Checker - Detects contradictions and logical flaws';
   readonly version = '1.0.0';
 
-  async process(input: string, context?: Record<string, any>): Promise<ByakuganEnvelope> {
-    try {
-      const inconsistencies: z.infer<typeof Inconsistency>[] = [];
-      const assumptions: string[] = [];
-      const logicalFlaws: string[] = [];
-
-      // 1. Check for logical contradictions
-      this.checkLogicalContradictions(input, inconsistencies);
-
-      // 2. Check for temporal inconsistencies
-      this.checkTemporalInconsistencies(input, inconsistencies);
-
-      // 3. Check for factual conflicts
-      this.checkFactualConflicts(input, inconsistencies);
-
-      // 4. Check for scope creep
-      this.checkScopeInconsistencies(input, inconsistencies);
-
-      // 5. Detect assumptions
-      this.detectAssumptions(input, assumptions);
-
-      // 6. Find logical fallacies
-      this.findLogicalFallacies(input, logicalFlaws);
-
-      // Calculate inconsistency counts by type and severity
-      const inconsistenciesByType: Record<string, number> = {};
-      const inconsistenciesBySeverity: Record<string, number> = {};
-
-      inconsistencies.forEach(inc => {
-        inconsistenciesByType[inc.type] = (inconsistenciesByType[inc.type] || 0) + 1;
-        inconsistenciesBySeverity[inc.severity] = (inconsistenciesBySeverity[inc.severity] || 0) + 1;
-      });
-
-      // Calculate consistency score
-      let consistencyScore = 100;
-
-      // Deduct points based on severity
-      const criticalCount = inconsistenciesBySeverity['critical'] || 0;
-      const majorCount = inconsistenciesBySeverity['major'] || 0;
-      const moderateCount = inconsistenciesBySeverity['moderate'] || 0;
-      const minorCount = inconsistenciesBySeverity['minor'] || 0;
-
-      consistencyScore -= criticalCount * 25;
-      consistencyScore -= majorCount * 15;
-      consistencyScore -= moderateCount * 8;
-      consistencyScore -= minorCount * 3;
-
-      // Deduct for assumptions without acknowledgment
-      consistencyScore -= Math.min(assumptions.length * 5, 20);
-
-      // Deduct for logical fallacies
-      consistencyScore -= Math.min(logicalFlaws.length * 10, 30);
-
-      consistencyScore = Math.max(0, consistencyScore);
-
-      // Determine verdict
-      let verdict: 'APPROVED' | 'REJECTED' | 'NEEDS_INPUT';
-      let code: ByakuganEnvelope['code'];
-      let summary: string;
-
-      if (criticalCount > 0 || consistencyScore < 40) {
-        verdict = 'REJECTED';
-        code = 'REJECT_INCONSISTENT';
-        summary = `Critical inconsistencies detected (${criticalCount} critical, ${inconsistencies.length} total). Consistency score: ${consistencyScore}/100.`;
-      } else if (majorCount > 1 || consistencyScore < 70) {
-        verdict = 'NEEDS_INPUT';
-        code = 'NEED_CLARIFICATION';
-        summary = `Inconsistencies found (${majorCount} major, ${inconsistencies.length} total). Consistency score: ${consistencyScore}/100.`;
-      } else {
-        verdict = 'APPROVED';
-        code = consistencyScore >= 90 ? 'OK' : 'OK_WITH_NOTES';
-        summary = `Content is ${consistencyScore >= 90 ? 'fully' : 'mostly'} consistent (score: ${consistencyScore}/100). ${inconsistencies.length} minor issues.`;
-      }
-
-      const suggestions: string[] = [];
-
-      // Add top inconsistencies
-      inconsistencies
-        .filter(inc => inc.severity === 'critical' || inc.severity === 'major')
-        .slice(0, 3)
-        .forEach(inc => {
-          suggestions.push(`${inc.severity.toUpperCase()}: ${inc.suggestion}`);
-        });
-
-      // Add assumption warnings
-      if (assumptions.length > 2) {
-        suggestions.push(`${assumptions.length} assumptions detected - explicitly state or validate them`);
-      }
-
-      // Add logical flaw warnings
-      if (logicalFlaws.length > 0) {
-        suggestions.push(`Logical fallacy: ${logicalFlaws[0]}`);
-      }
-
-      return {
-        eye: 'byakugan',
-        code,
-        verdict,
-        summary,
-        details: `Found ${inconsistencies.length} inconsistencies (${criticalCount} critical, ${majorCount} major, ${moderateCount} moderate, ${minorCount} minor). ` +
-          `Types: ${Object.entries(inconsistenciesByType).map(([type, count]) => `${count} ${type}`).join(', ') || 'none'}. ` +
-          `${assumptions.length} assumptions, ${logicalFlaws.length} logical flaws.`,
-        suggestions: suggestions.length > 0 ? suggestions.slice(0, 5) : undefined,
-        confidence: consistencyScore,
-        metadata: {
-          consistencyScore,
-          inconsistenciesFound: inconsistencies.length,
-          inconsistenciesByType,
-          inconsistenciesBySeverity,
-          inconsistencies: inconsistencies.slice(0, 20),
-          assumptions: assumptions.slice(0, 10),
-          logicalFlaws: logicalFlaws.slice(0, 5),
-        },
-      };
-    } catch (error) {
-      return {
-        eye: 'byakugan',
-        code: 'EYE_ERROR',
-        verdict: 'NEEDS_INPUT',
-        summary: `Byakugan processing error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        confidence: 0,
-      };
-    }
-  }
 
   private checkLogicalContradictions(input: string, inconsistencies: z.infer<typeof Inconsistency>[]): void {
     const lowerInput = input.toLowerCase();
@@ -386,6 +262,15 @@ export class ByakuganEye implements BaseEye {
 
 Your SOLE PURPOSE is to detect logical inconsistencies, contradictions, and flawed assumptions.
 
+## CRITICAL: YOU VALIDATE CONSISTENCY AFTER AGENT GENERATES CONTENT
+
+You accept content AFTER the agent generates it and:
+1. Analyze logic and statements for contradictions
+2. Detect temporal, factual, and scope inconsistencies
+3. Return pass/fail verdicts on logical consistency
+
+You NEVER create content yourself. You validate consistency in content the AGENT already created.
+
 ## Your Abilities
 - Detect logical contradictions (X is Y, X is not Y)
 - Find temporal inconsistencies (before/after conflicts)
@@ -468,22 +353,38 @@ Start at 100, deduct:
 
 ## Example Judgments
 
-**REJECT_INCONSISTENT (Score 25, 1 critical)**
-Input: "The API always returns JSON. When it fails, it returns XML error messages. Response time is 50ms. Later tests show response time is 200ms."
+**WRONG: Generation Request (REJECT THIS)**
+Input: "Create a consistent API design specification"
+{
+  "eye": "byakugan",
+  "code": "NO_CONTENT_PROVIDED",
+  "verdict": "REJECTED",
+  "summary": "No content provided for consistency checking.",
+  "details": "Expected content to analyze for logical consistency, got generation request.",
+  "suggestions": ["Provide your content for logical consistency review"],
+  "confidence": 0,
+  "metadata": {"consistencyScore": 0, "inconsistenciesFound": 0, "inconsistenciesByType": {}, "inconsistenciesBySeverity": {}, "inconsistencies": [], "assumptions": [], "logicalFlaws": []}
+}
+
+**CORRECT: Validation of Agent-Provided Content**
+Input: AGENT provides: "The API always returns JSON. When it fails, it returns XML error messages. Response time is 50ms. Later tests show response time is 200ms."
+Response: REJECT_INCONSISTENT (Score 25, 1 critical)
 Analysis:
 - CRITICAL: Logical contradiction (always JSON vs sometimes XML)
 - MAJOR: Factual conflict (50ms vs 200ms for response time)
 Suggestions: ["CRITICAL: Resolve JSON vs XML contradiction", "Verify correct response time: 50ms or 200ms?"]
 
-**NEED_CLARIFICATION (Score 62, 0 critical, 2 major)**
-Input: "We must implement authentication. OAuth is optional. This assumes users have email addresses."
+**CORRECT: Validation of Agent-Provided Content**
+Input: AGENT provides: "We must implement authentication. OAuth is optional. This assumes users have email addresses."
+Response: NEED_CLARIFICATION (Score 62, 0 critical, 2 major)
 Analysis:
 - MAJOR: Scope conflict (must implement vs optional)
 - MODERATE: Unstated assumption (email addresses)
 Suggestions: ["Clarify: is OAuth required or optional?", "State assumption about email addresses explicitly"]
 
-**OK (Score 95, 0 critical, 0 major)**
-Input: "Implement JWT auth with 15-minute access tokens and 7-day refresh tokens. Store hashed passwords using bcrypt. Rate limit to 5 login attempts per minute."
+**CORRECT: Validation of Agent-Provided Content**
+Input: AGENT provides: "Implement JWT auth with 15-minute access tokens and 7-day refresh tokens. Store hashed passwords using bcrypt. Rate limit to 5 login attempts per minute."
+Response: OK (Score 95, 0 critical, 0 major)
 Analysis:
 - Consistent requirements
 - No contradictions

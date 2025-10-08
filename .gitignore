@@ -62,9 +62,9 @@ next-env.d.ts
 dist/
 build/
 
-# Database files (outside project)
-~/.overseer/*.db-shm
-~/.overseer/*.db-wal
+# Database files in project directory (should not exist, but ignore if created accidentally)
+~/.overseer/
+~/.third-eye-mcp/
 
 # OS / Editor noise
 .DS_Store

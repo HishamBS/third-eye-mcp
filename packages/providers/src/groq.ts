@@ -1,13 +1,33 @@
+import { z } from 'zod';
 import { BaseProvider, type CompletionRequest, type CompletionResponse, type HealthStatus, type ModelInfo, type ProviderConfig } from './base.js';
 
-interface GroqModel {
-  id: string;
-  object: string;
-  created: number;
-  owned_by: string;
-  active: boolean;
-  context_window: number;
-}
+const GroqModelSchema = z.object({
+  id: z.string(),
+  active: z.boolean().optional(),
+  context_window: z.number().optional(),
+});
+
+const GroqModelsResponseSchema = z.object({
+  data: z.array(GroqModelSchema),
+});
+
+const GroqChoiceSchema = z.object({
+  message: z.object({ content: z.string() }),
+  finish_reason: z.string().optional().nullable(),
+});
+
+const GroqUsageSchema = z.object({
+  prompt_tokens: z.number().optional(),
+  completion_tokens: z.number().optional(),
+  total_tokens: z.number().optional(),
+}).optional();
+
+const GroqCompletionResponseSchema = z.object({
+  id: z.string(),
+  model: z.string(),
+  choices: z.array(GroqChoiceSchema).min(1),
+  usage: GroqUsageSchema,
+});
 
 export class GroqProvider extends BaseProvider {
   private readonly baseUrl = 'https://api.groq.com/openai/v1';
@@ -47,15 +67,15 @@ export class GroqProvider extends BaseProvider {
         throw new Error(`Groq API error: ${response.status}`);
       }
 
-      const data = await response.json() as { data: GroqModel[] };
+      const data = GroqModelsResponseSchema.parse(await response.json());
 
       return data.data
-        .filter(m => m.active)
-        .map(m => ({
-          id: m.id,
-          name: m.id,
-          context_window: m.context_window,
-          pricing: this.getPricing(m.id)
+        .filter(model => model.active !== false)
+        .map(model => ({
+          id: model.id,
+          name: model.id,
+          context_window: model.context_window ?? 32768,
+          pricing: this.getPricing(model.id)
         }));
     } catch (error) {
       throw new Error(`Failed to list Groq models: ${this.normalizeError(error)}`);
@@ -82,7 +102,8 @@ export class GroqProvider extends BaseProvider {
             temperature: request.temperature ?? 0.7,
             max_tokens: request.max_tokens,
             top_p: request.top_p,
-            stop: request.stop
+            stop: request.stop,
+            response_format: request.response_format
           })
         }
       );
@@ -92,18 +113,20 @@ export class GroqProvider extends BaseProvider {
         throw new Error(`Groq completion failed: ${error}`);
       }
 
-      const data = await response.json();
+      const data = GroqCompletionResponseSchema.parse(await response.json());
+      const usage = data.usage ?? {};
+      const primaryChoice = data.choices[0];
 
       return {
         id: data.id,
         model: data.model,
-        content: data.choices[0].message.content,
+        content: primaryChoice.message.content,
         usage: {
-          prompt_tokens: data.usage.prompt_tokens,
-          completion_tokens: data.usage.completion_tokens,
-          total_tokens: data.usage.total_tokens
+          prompt_tokens: usage.prompt_tokens ?? 0,
+          completion_tokens: usage.completion_tokens ?? 0,
+          total_tokens: usage.total_tokens ?? 0,
         },
-        finish_reason: data.choices[0].finish_reason
+        finish_reason: this.normalizeFinishReason(primaryChoice.finish_reason),
       };
     } catch (error) {
       throw new Error(`Groq completion error: ${this.normalizeError(error)}`);

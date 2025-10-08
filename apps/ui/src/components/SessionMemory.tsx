@@ -9,7 +9,7 @@ interface PriorRun {
   id: string;
   eye: string;
   inputMd: string;
-  outputJson: any;
+  outputJson: Record<string, unknown>;
   verdict: string;
   createdAt: string;
   relevanceScore?: number;
@@ -33,7 +33,8 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
   const fetchPriorRuns = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/sessions/${sessionId}/runs?limit=${maxResults}`);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+      const response = await fetch(`${API_URL}/api/session/${sessionId}/runs?limit=${maxResults}`);
       if (response.ok) {
         const data = await response.json();
         // Calculate relevance if current input is provided

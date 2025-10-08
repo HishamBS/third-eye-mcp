@@ -8,12 +8,11 @@
     "declarationMap": true
   },
   "include": ["*.ts", "**/*.ts"],
-  "exclude": ["dist", "node_modules"],
+  "exclude": ["dist", "node_modules", "**/__tests__/**/*", "**/*.test.ts"],
   "references": [
     { "path": "../types" },
     { "path": "../config" },
     { "path": "../db" },
-    { "path": "../providers" },
-    { "path": "../core" }
+    { "path": "../providers" }
   ]
 }

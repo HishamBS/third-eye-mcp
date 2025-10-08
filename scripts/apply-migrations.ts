@@ -3,7 +3,8 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { homedir } from 'os';
 
-const dbPath = resolve(homedir(), '.overseer/overseer.db');
+const defaultDbPath = resolve(homedir(), '.third-eye-mcp/mcp.db');
+const dbPath = process.env.MCP_DB || defaultDbPath;
 const db = new Database(dbPath);
 
 // Enable WAL

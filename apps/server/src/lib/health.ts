@@ -39,10 +39,9 @@ export async function checkDatabaseHealth(): Promise<HealthCheckResult> {
   const startTime = Date.now();
 
   try {
-    const { db } = getDb();
+    const { sqlite } = getDb();
 
-    // Simple query to test database connection
-    await db.execute('SELECT 1');
+    sqlite.query('SELECT 1').get();
 
     const latency = Date.now() - startTime;
     const result = { ok: true, latency_ms: latency };
@@ -121,6 +120,8 @@ export async function getSystemHealth(): Promise<{
   providers: ProviderHealth;
   uptime_seconds: number;
   version: string;
+  bindAddress: string;
+  host: string;
 }> {
   const [dbHealth, providersHealth] = await Promise.all([
     checkDatabaseHealth(),
@@ -151,11 +152,17 @@ export async function getSystemHealth(): Promise<{
   // Get version from package.json or environment
   const version = process.env.npm_package_version || '1.0.0';
 
+  const { server } = getConfig();
+  const host = server.host;
+  const bindAddress = host;
+
   return {
     status,
     database: dbHealth,
     providers: providersHealth,
     uptime_seconds,
     version,
+    bindAddress,
+    host,
   };
 }

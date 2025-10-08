@@ -6,12 +6,40 @@ const nextConfig = {
   // Production build settings
   output: 'standalone',
 
+  // Skip type checking during build (types are checked separately in build:packages)
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
+  // Skip ESLint during build
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   // Compiler optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? {
       exclude: ['error', 'warn'],
     } : false,
   },
+
+  // Webpack configuration to exclude server-only packages
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Don't resolve these on client-side
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        'bun:sqlite': false,
+        fs: false,
+        path: false,
+        os: false,
+      };
+    }
+    return config;
+  },
+
+  // Transpile workspace packages
+  transpilePackages: ['@third-eye/db', '@third-eye/core', '@third-eye/types'],
 
   // Image optimization
   images: {
@@ -49,7 +77,6 @@ const nextConfig = {
 
   // Experimental features for performance
   experimental: {
-    optimizeCss: true,
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
 

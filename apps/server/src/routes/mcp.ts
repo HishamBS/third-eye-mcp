@@ -1,6 +1,15 @@
 import { Hono } from 'hono';
 import { EyeOrchestrator } from '@third-eye/core';
-import { validateBody, schemas, rateLimit } from '../middleware/validation';
+import { schemas, rateLimit } from '../middleware/validation';
+import { validateBodyWithEnvelope } from '../middleware/response';
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  createNotFoundResponse,
+  createInternalErrorResponse,
+  requestIdMiddleware,
+  errorHandler
+} from '../middleware/response';
 
 /**
  * MCP Orchestration Routes
@@ -11,156 +20,127 @@ import { validateBody, schemas, rateLimit } from '../middleware/validation';
 const app = new Hono();
 const orchestrator = new EyeOrchestrator();
 
-// Apply rate limiting to all MCP routes
+// Apply middleware
+app.use('*', requestIdMiddleware());
+app.use('*', errorHandler());
 app.use('*', rateLimit());
 
 // Run an Eye with input and session context
-app.post('/run', validateBody(schemas.mcpRun), async (c) => {
+// GOLDEN RULE #1: ONLY task-based auto-routing allowed - NO direct Eye execution
+app.post('/run', validateBodyWithEnvelope(schemas.mcpRun), async (c) => {
   try {
-    const body = await c.req.json();
-    const { eye: explicitEye, input, task, sessionId } = body;
+    const { task, sessionId: providedSessionId, context } = c.get('validatedBody');
 
-    // Support two modes:
-    // 1. Explicit Eye: { eye, input, sessionId? }
-    // 2. Auto-routing: { task, sessionId? }
+    // Import dependencies
+    const { autoRoute } = await import('../../../../mcp-bridge/src/middleware/autoRoute');
+    const { orderGuard } = await import('../../../../mcp-bridge/src/middleware/orderGuard');
+    const { getDb } = await import('@third-eye/db');
+    const { nanoid } = await import('nanoid');
+    const { db } = getDb();
+    const { runs, sessions } = await import('@third-eye/db/schema');
+    const { eq } = await import('drizzle-orm');
 
-    let eyeToRun: string;
-    let eyeInput: any;
+    // Auto-generate sessionId if not provided (MANDATORY for order guard)
+    const sessionId = providedSessionId || nanoid();
 
-    if (task && !explicitEye) {
-      // Auto-routing mode: Use autoRoute to determine Eye
-      const { autoRoute } = await import('../../../../mcp-bridge/src/middleware/autoRoute');
-      const { getDb } = await import('@third-eye/db');
+    // Get session history and context
+    let executedEyes: string[] = [];
+    let sessionContext: Record<string, any> = context || {};
 
-      // Get session history if sessionId provided
-      let executedEyes: string[] = [];
-      let sessionContext: Record<string, any> = {};
+    if (providedSessionId) {
+      // Existing session - load history
+      const session = await db.select().from(sessions).where(eq(sessions.id, providedSessionId)).get();
 
-      if (sessionId) {
-        const { db } = getDb();
-        const { runs, sessions } = await import('@third-eye/db/schema');
-        const { eq } = await import('drizzle-orm');
-
-        // Get session
-        const session = await db.select().from(sessions).where(eq(sessions.id, sessionId)).get();
-
-        if (session) {
-          sessionContext = typeof session.configJson === 'string'
-            ? JSON.parse(session.configJson)
-            : session.configJson || {};
-        }
-
-        // Get execution history
-        const sessionRuns = await db
-          .select()
-          .from(runs)
-          .where(eq(runs.sessionId, sessionId))
-          .orderBy(runs.createdAt)
-          .all();
-
-        executedEyes = sessionRuns.map((run) => run.eye);
+      if (session) {
+        sessionContext = {
+          ...sessionContext,
+          ...(typeof session.configJson === 'string' ? JSON.parse(session.configJson) : session.configJson || {}),
+        };
       }
-
-      // Auto-route to determine next Eye
-      const routingResult = await autoRoute({
-        task,
-        currentState: {
-          executedEyes,
-          sessionContext,
-        },
-      });
-
-      eyeToRun = routingResult.recommendedEye;
-      eyeInput = { task }; // Pass task as input
-
-      console.log(`🔀 Auto-routed task to ${eyeToRun}: ${routingResult.reasoning}`);
-    } else if (explicitEye && input) {
-      // Explicit Eye mode
-      eyeToRun = explicitEye;
-      eyeInput = input;
-    } else {
-      return c.json({
-        error: 'Invalid request format',
-        message: 'Either provide { eye, input } for explicit routing or { task } for auto-routing',
-      }, 400);
-    }
-
-    // Apply order guard if sessionId provided
-    if (sessionId) {
-      const { orderGuard } = await import('../../../../mcp-bridge/src/middleware/orderGuard');
-      const { getDb } = await import('@third-eye/db');
-      const { db } = getDb();
-      const { runs } = await import('@third-eye/db/schema');
-      const { eq } = await import('drizzle-orm');
 
       // Get execution history
       const sessionRuns = await db
         .select()
         .from(runs)
-        .where(eq(runs.sessionId, sessionId))
+        .where(eq(runs.sessionId, providedSessionId))
         .orderBy(runs.createdAt)
         .all();
 
-      const executedEyes = sessionRuns.map((run) => run.eye);
-
-      // Check order guard
-      const guardResult = orderGuard(eyeToRun, { executedEyes });
-
-      if (!guardResult.allowed) {
-        return c.json({
-          error: 'Order guard violation',
-          eye: eyeToRun,
-          reason: guardResult.reason,
-          missingPrerequisites: guardResult.missingPrerequisites,
-          suggestion: guardResult.suggestion,
-        }, 400);
-      }
+      executedEyes = sessionRuns.map((run) => run.eye);
+    } else {
+      // New session - create it in database
+      await db.insert(sessions).values({
+        id: sessionId,
+        createdAt: new Date(),
+        status: 'active',
+        configJson: sessionContext, // Drizzle handles JSON conversion
+      });
+      console.log(`📝 Created new session: ${sessionId}`);
     }
 
-    // Execute Eye via orchestrator
-    const result = await orchestrator.runEye(eyeToRun, eyeInput, sessionId);
+    // Auto-route to determine next Eye (ONLY routing method - no backdoors)
+    const routingResult = await autoRoute({
+      task,
+      currentState: {
+        executedEyes,
+        sessionContext,
+      },
+    });
 
-    return c.json(result);
+    const eyeToRun = routingResult.recommendedEye;
+
+    console.log(`🔀 Auto-routed task to ${eyeToRun}: ${routingResult.reasoning}`);
+
+    // MANDATORY Order Guard - ALWAYS enforced
+    const guardResult = orderGuard(eyeToRun, { executedEyes });
+
+    if (!guardResult.allowed) {
+      console.error(`🚫 Order guard violation: ${guardResult.reason}`);
+      return createErrorResponse(c, {
+        title: 'Pipeline Order Violation',
+        status: 400,
+        detail: guardResult.reason,
+        code: 'E_PIPELINE_ORDER',
+      });
+    }
+
+    // Execute Eye via orchestrator (pass task as string input)
+    const result = await orchestrator.runEye(eyeToRun, task, sessionId);
+
+    return createSuccessResponse(c, result);
   } catch (error: any) {
     console.error('MCP run failed:', error);
-
-    // Return error envelope
-    return c.json({
-      tag: 'error',
-      ok: false,
-      code: 'E_INTERNAL',
-      md: `# Error\n\n${error.message || 'Internal server error'}`,
-      data: {
-        error: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
-      },
-      next: 'RETRY',
-    }, 500);
+    return createInternalErrorResponse(c, error.message || 'MCP execution failed');
   }
 });
 
 // Health check for MCP service
 app.get('/health', (c) => {
-  return c.json({
-    ok: true,
+  return createSuccessResponse(c, {
     service: 'third-eye-mcp',
     timestamp: new Date().toISOString(),
   });
 });
 
 // GET /mcp/tools - List all registered Eyes
+// GOLDEN RULE #1: Only overseer is publicly callable - filter out individual Eyes
 app.get('/tools', async (c) => {
   const { getToolsJSON } = await import('../../../../mcp-bridge/src/registry');
 
-  return c.json({
-    tools: getToolsJSON(),
-    count: getToolsJSON().length,
+  const allTools = getToolsJSON();
+  // Only expose overseer - individual Eyes are internal implementation details
+  const publicTools = allTools.filter(tool => tool.name === 'overseer');
+
+  return createSuccessResponse(c, {
+    tools: publicTools,
+    count: publicTools.length,
+    _internal_note: 'Individual Eyes (sharingan, jogan, etc.) are internal - only overseer is public',
   });
 });
 
 // GET /mcp/quickstart - Agent primers and examples
 app.get('/quickstart', (c) => {
-  return c.json({
+  return createSuccessResponse(c, {
     quickstart: {
       workflows: {
         clarification: {
@@ -222,7 +202,7 @@ app.get('/schemas', (c) => {
     error: ['EYE_ERROR', 'EYE_TIMEOUT', 'INVALID_ENVELOPE'],
   };
 
-  return c.json({
+  return createSuccessResponse(c, {
     envelope: envelopeSchema,
     errorCodes,
   });
@@ -264,10 +244,10 @@ app.get('/examples/:eye', (c) => {
   const eyeExamples = examples[eyeName];
 
   if (!eyeExamples) {
-    return c.json({ error: `No examples found for Eye: ${eyeName}` }, 404);
+    return createNotFoundResponse(c, `Examples for Eye: ${eyeName}`);
   }
 
-  return c.json({
+  return createSuccessResponse(c, {
     eye: eyeName,
     examples: eyeExamples,
   });

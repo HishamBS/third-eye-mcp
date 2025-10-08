@@ -1,64 +1,77 @@
-name: Release
+name: Release Gate
 
 on:
+  workflow_dispatch:
   push:
-    tags:
-      - 'v*'
-
-permissions:
-  contents: write
-  id-token: write
+    branches:
+      - release/go-live
+  pull_request:
+    branches:
+      - release/go-live
 
 jobs:
-  release:
+  release-gate:
+    name: Validate Release Artifact
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Setup Bun
+      - name: Set up Bun
         uses: oven-sh/setup-bun@v1
         with:
-          bun-version: latest
+          bun-version: 'latest'
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
+      - name: Enable pnpm
+        run: corepack enable
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Type check
-        run: bun run lint || tsc --noEmit
+      - name: Lint
+        run: pnpm lint
 
-      - name: Run tests
-        run: bun test
+      - name: Unit tests with coverage
+        run: pnpm test:coverage
 
-      - name: Build all packages
-        run: bun run build
+      - name: Build packages
+        run: pnpm build
 
-      - name: Build CLI
-        run: bun run build:cli
+      - name: Generate package tarball
+        run: pnpm pack --pack-destination dist
 
-      - name: Publish to npm
-        run: npm publish --access public --provenance
+      - name: Dry-run publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -n "$NPM_TOKEN" ]; then
+            echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+            npm publish --dry-run --access public
+          else
+            echo "NPM_TOKEN missing; skipping npm publish --dry-run"
+          fi
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
         with:
-          generate_release_notes: true
-          files: |
-            dist/*.js
-            VISION_100_COMPLETE.md
-            README.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: release-artifacts
+          path: |
+            dist/
+            third-eye-mcp-*.tgz
+            coverage/
 
-      - name: Notify success
-        run: echo "✅ Released ${{ github.ref_name }} to npm and GitHub!"
+      - name: Update coverage badge
+        run: |
+          pnpm coverage:badge
+          git diff --stat
+
+      - name: Emit summary
+        run: |
+          echo "## Release Gate Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Lint ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Build ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Package ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Dry publish (if token) ✅" >> $GITHUB_STEP_SUMMARY

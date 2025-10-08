@@ -29,7 +29,7 @@ export async function fetchEvents(options: {
 }): Promise<PipelineEvent[]> {
   const { sessionId, apiKey, limit = 200, signal } = options;
   const base = buildBaseUrl();
-  const url = `${base}/session/${encodeURIComponent(sessionId)}/events?limit=${limit}`;
+  const url = `${base}/api/session/${encodeURIComponent(sessionId)}/events?limit=${limit}`;
   const response = await fetch(url, {
     method: 'GET',
     headers: buildHeaders(apiKey),
@@ -50,7 +50,7 @@ export async function submitClarifications(options: {
 }): Promise<void> {
   const { sessionId, apiKey, answersMd, context } = options;
   const base = buildBaseUrl();
-  const response = await fetch(`${base}/session/${encodeURIComponent(sessionId)}/clarifications`, {
+  const response = await fetch(`${base}/api/session/${encodeURIComponent(sessionId)}/clarifications`, {
     method: 'POST',
     headers: buildHeaders(apiKey),
     body: JSON.stringify({ answers_md: answersMd, context }),
@@ -67,7 +67,7 @@ export async function updateSessionSettings(options: {
 }): Promise<SessionSettingsPayload> {
   const { sessionId, apiKey, settings } = options;
   const base = buildBaseUrl();
-  const response = await fetch(`${base}/session/${encodeURIComponent(sessionId)}/settings`, {
+  const response = await fetch(`${base}/api/session/${encodeURIComponent(sessionId)}/settings`, {
     method: 'PUT',
     headers: buildHeaders(apiKey),
     body: JSON.stringify(settings),
@@ -88,7 +88,7 @@ export async function postKillSwitch(options: {
 }): Promise<{ tenseigan: unknown; byakugan: unknown }> {
   const { sessionId, apiKey, draftMd, topic, context } = options;
   const base = buildBaseUrl();
-  const response = await fetch(`${base}/session/${encodeURIComponent(sessionId)}/revalidate`, {
+  const response = await fetch(`${base}/api/session/${encodeURIComponent(sessionId)}/revalidate`, {
     method: 'POST',
     headers: buildHeaders(apiKey),
     body: JSON.stringify({ draft_md: draftMd, topic, context }),
@@ -109,7 +109,7 @@ export function buildWebSocketUrl(sessionId: string, apiKey?: string): string {
   } else {
     wsBase = `ws://${base.replace(/^\/+/, '')}`;
   }
-  const url = new URL(`${wsBase}/ws/pipeline/${encodeURIComponent(sessionId)}`);
+  const url = new URL(`${wsBase}/ws/monitor?sessionId=${encodeURIComponent(sessionId)}`);
   if (apiKey) {
     url.searchParams.set('api_key', apiKey);
   }
@@ -125,7 +125,7 @@ export async function postResubmitRequest(options: {
 }): Promise<void> {
   const { sessionId, apiKey, eye, context, notes } = options;
   const base = buildBaseUrl();
-  const response = await fetch(`${base}/session/${encodeURIComponent(sessionId)}/resubmit`, {
+  const response = await fetch(`${base}/api/session/${encodeURIComponent(sessionId)}/resubmit`, {
     method: 'POST',
     headers: buildHeaders(apiKey),
     body: JSON.stringify({ eye, context, notes }),
@@ -143,7 +143,7 @@ export interface LeaderboardSummary {
 export async function fetchLeaderboard(options: { sessionId: string; apiKey: string }): Promise<LeaderboardSummary> {
   const { sessionId, apiKey } = options;
   const base = buildBaseUrl();
-  const response = await fetch(`${base}/session/${encodeURIComponent(sessionId)}/leaderboard`, {
+  const response = await fetch(`${base}/api/session/${encodeURIComponent(sessionId)}/leaderboard`, {
     method: 'GET',
     headers: buildHeaders(apiKey),
   });
@@ -160,7 +160,7 @@ export async function fetchSessions(options: {
 }): Promise<SessionOverview[]> {
   const { apiKey, limit = 20, signal } = options;
   const base = buildBaseUrl();
-  const response = await fetch(`${base}/sessions?limit=${limit}`, {
+  const response = await fetch(`${base}/api/session?limit=${limit}`, {
     method: 'GET',
     headers: buildHeaders(apiKey),
     signal,
@@ -182,7 +182,7 @@ export async function fetchSessionDetail(options: {
 }): Promise<SessionDetail> {
   const { apiKey, sessionId, signal } = options;
   const base = buildBaseUrl();
-  const response = await fetch(`${base}/sessions/${encodeURIComponent(sessionId)}`, {
+  const response = await fetch(`${base}/api/session/${encodeURIComponent(sessionId)}`, {
     method: 'GET',
     headers: buildHeaders(apiKey),
     signal,
@@ -200,7 +200,7 @@ export async function fetchSessionSummary(options: {
 }): Promise<SessionSummary> {
   const { apiKey, sessionId, signal } = options;
   const base = buildBaseUrl();
-  const response = await fetch(`${base}/session/${encodeURIComponent(sessionId)}/summary`, {
+  const response = await fetch(`${base}/api/session/${encodeURIComponent(sessionId)}/summary`, {
     method: 'GET',
     headers: buildHeaders(apiKey),
     signal,

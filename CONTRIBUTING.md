@@ -6,7 +6,7 @@ Thank you for your interest in contributing to Third Eye MCP! This document prov
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/third-eye-mcp.git
+git clone https://github.com/HishamBS/third-eye-mcp.git
 cd third-eye-mcp
 
 # Install dependencies
@@ -34,7 +34,7 @@ third-eye-mcp/
 │   ├── db/              # SQLite schema, migrations
 │   ├── config/          # Configuration loader
 │   └── types/           # Shared TypeScript types
-├── cli/                 # npx third-eye-mcp entrypoint
+├── cli/                 # bunx third-eye-mcp entrypoint
 ├── docker/              # Docker Compose setup
 └── scripts/             # Build and seed scripts
 ```
