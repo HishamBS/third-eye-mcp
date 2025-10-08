@@ -6,47 +6,56 @@ import {
   DataKey,
   SCHEMA_SECTION_LABELS,
   SCHEMA_TABLE_HEADER,
-  SCHEMA_TABLE_DIVIDER,
-  CHECKBOX_TEMPLATE,
-  ISSUE_BULLET_TEMPLATE,
-  NO_ACTION_NEEDED
+  SCHEMA_TABLE_DIVIDER
 } from "../constants";
 import { buildResponse } from "../shared";
 import type { EyeResponse } from "../constants";
+import { MarkdownBuilder } from "../utils/markdown-builder";
 
 function missingSections(markdown: string): string[] {
   return SCHEMA_SECTION_LABELS.filter(section => !markdown.includes(section));
 }
 
 function checklistMarkdown(missingSections: string[], markdown: string): string {
-  const lines = [Heading.PLAN_CHECKLIST];
+  const builder = MarkdownBuilder.create().heading(Heading.PLAN_CHECKLIST);
 
   for (const section of SCHEMA_SECTION_LABELS) {
-    const mark = missingSections.includes(section) ? " " : "x";
-    lines.push(CHECKBOX_TEMPLATE.replace("{mark}", mark).replace("{label}", section));
+    const checked = !missingSections.includes(section);
+    builder.checklist(section, checked);
   }
 
   const tablePresent = markdown.includes(SCHEMA_TABLE_HEADER) && markdown.includes(SCHEMA_TABLE_DIVIDER);
-  const tableMark = tablePresent ? "x" : " ";
-  lines.push(CHECKBOX_TEMPLATE.replace("{mark}", tableMark).replace("{label}", "File impact table uses Markdown columns"));
+  builder.checklist("File impact table uses Markdown columns", tablePresent);
 
-  return lines.join("\n");
+  return builder.build();
 }
 
 function issuesMarkdown(issues: string[]): string {
   if (issues.length === 0) {
-    return `${Heading.PLAN_ISSUES}\n- None`;
+    return MarkdownBuilder.create()
+      .heading(Heading.PLAN_ISSUES)
+      .bullet("None")
+      .build();
   }
-  const bullets = issues.map(item => ISSUE_BULLET_TEMPLATE.replace("{item}", item)).join("\n");
-  return `${Heading.PLAN_ISSUES}\n${bullets}`;
+  const builder = MarkdownBuilder.create().heading(Heading.PLAN_ISSUES);
+  for (const issue of issues) {
+    builder.bullet(issue);
+  }
+  return builder.build();
 }
 
 function fixInstructionsMarkdown(issues: string[]): string {
   if (issues.length === 0) {
-    return NO_ACTION_NEEDED;
+    return MarkdownBuilder.create()
+      .heading(Heading.PLAN_FIX)
+      .bullet("No action needed")
+      .build();
   }
-  const bullets = issues.map(item => ISSUE_BULLET_TEMPLATE.replace("{item}", item)).join("\n");
-  return `${Heading.PLAN_FIX}\n${bullets}`;
+  const builder = MarkdownBuilder.create().heading(Heading.PLAN_FIX);
+  for (const issue of issues) {
+    builder.bullet(issue);
+  }
+  return builder.build();
 }
 
 export interface PlanReviewRequest {
@@ -84,11 +93,15 @@ export function planReview(request: PlanReviewRequest): EyeResponse {
   const fixInstructionsMd = fixInstructionsMarkdown(issues);
 
   if (issues.length > 0) {
+    const md = MarkdownBuilder.create()
+      .heading(Heading.PLAN_REJECTED)
+      .text("Resolve the issues listed before resubmitting.")
+      .build();
     return buildResponse({
       tag: EyeTag.RINNEGAN,
       ok: false,
       code: StatusCode.E_PLAN_INCOMPLETE,
-      md: `${Heading.PLAN_REJECTED}\nResolve the issues listed before resubmitting.`,
+      md,
       data: {
         [DataKey.APPROVED]: false,
         [DataKey.CHECKLIST_MD]: checklistMd,
@@ -103,7 +116,10 @@ export function planReview(request: PlanReviewRequest): EyeResponse {
     tag: EyeTag.RINNEGAN,
     ok: true,
     code: StatusCode.OK_PLAN_APPROVED,
-    md: `${Heading.PLAN_APPROVED}\nAll acceptance criteria satisfied.`,
+    md: MarkdownBuilder.create()
+      .heading(Heading.PLAN_APPROVED)
+      .text("All acceptance criteria satisfied.")
+      .build(),
     data: {
       [DataKey.APPROVED]: true,
       [DataKey.CHECKLIST_MD]: checklistMd,

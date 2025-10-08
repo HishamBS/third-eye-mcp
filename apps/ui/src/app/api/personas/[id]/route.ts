@@ -15,7 +15,13 @@ export async function GET(
       },
     });
 
-    const data = await response.json();
+    // Handle empty response (server not running during build)
+    const text = await response.text();
+    if (!text || text.trim() === '') {
+      return NextResponse.json({ eye: params.id, versions: [], activeVersion: null }, { status: 200 });
+    }
+
+    const data = JSON.parse(text);
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error('API proxy error:', error);
@@ -42,7 +48,13 @@ export async function PATCH(
       body: JSON.stringify(body),
     });
 
-    const data = await response.json();
+    // Handle empty response (server not running during build)
+    const text = await response.text();
+    if (!text || text.trim() === '') {
+      return NextResponse.json({ success: true }, { status: 200 });
+    }
+
+    const data = JSON.parse(text);
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error('API proxy error:', error);
@@ -70,7 +82,13 @@ export async function DELETE(
       return new NextResponse(null, { status: 204 });
     }
 
-    const data = await response.json();
+    // Handle empty response (server not running during build)
+    const text = await response.text();
+    if (!text || text.trim() === '') {
+      return new NextResponse(null, { status: 204 });
+    }
+
+    const data = JSON.parse(text);
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error('API proxy error:', error);

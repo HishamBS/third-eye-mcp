@@ -10,19 +10,19 @@ import { dirname } from 'path';
 
 export * from './schema.js';
 
-// Default database path: ~/.overseer/overseer.db
+// Default database path: ~/.third-eye-mcp/mcp.db (following prompt.md spec)
 export function getDbPath(): string {
-  const overrideDb = process.env.OVERSEER_DB;
+  const overrideDb = process.env.MCP_DB;
   if (overrideDb) {
     return overrideDb;
   }
 
-  const overseerDir = resolve(homedir(), '.overseer');
-  if (!existsSync(overseerDir)) {
-    mkdirSync(overseerDir, { recursive: true, mode: 0o700 });
+  const mcpDir = resolve(homedir(), '.third-eye-mcp');
+  if (!existsSync(mcpDir)) {
+    mkdirSync(mcpDir, { recursive: true, mode: 0o700 });
   }
 
-  return resolve(overseerDir, 'overseer.db');
+  return resolve(mcpDir, 'mcp.db');
 }
 
 export function createDb(dbPath?: string) {
@@ -59,11 +59,20 @@ export function runMigrations(db: ReturnType<typeof createDb>['db'], sqlite: Dat
       // Drizzle-kit tracks migrations in __drizzle_migrations table
       // Just run the migrate command - it will handle which ones to apply
       migrate(db, { migrationsFolder });
+
+      // Verify migrations ran
+      const tables = sqlite.query("SELECT name FROM sqlite_master WHERE type='table'").all();
+      if (tables.length === 0) {
+        throw new Error('Migrations ran but no tables created - migration files may be empty');
+      }
+    } else {
+      console.warn(`⚠️  Migrations folder not found: ${migrationsFolder}`);
     }
   } catch (err: any) {
     // Ignore "table already exists" errors during migration
     if (!err.message?.includes('already exists')) {
-      console.warn('Migration warning:', err.message);
+      console.error('❌ Migration error:', err.message);
+      throw err;
     }
   }
 }
@@ -76,7 +85,7 @@ export function getDb() {
     _dbInstance = createDb();
     runMigrations(_dbInstance.db, _dbInstance.sqlite);
   }
-  return _dbInstance;
+  return { ...(_dbInstance as NonNullable<typeof _dbInstance>), dbPath: getDbPath() };
 }
 
 export function closeDb() {

@@ -15,7 +15,7 @@ interface Run {
   provider: string;
   model: string;
   inputMd: string;
-  outputJson: any;
+  outputJson: Record<string, unknown>;
   tokensIn?: number;
   tokensOut?: number;
   latencyMs?: number;
@@ -279,6 +279,7 @@ export default function SessionPage() {
             <AdaptiveClarification
               ambiguityScore={ambiguityScore}
               ambiguousTerms={[]}
+              missingContext={[]}
               clarifyingQuestions={clarifyingQuestions}
               onAnswerSubmit={handleClarificationAnswer}
               onSkip={() => {
@@ -320,13 +321,37 @@ export default function SessionPage() {
             <h2 className="mb-6 text-xl font-semibold text-white">Timeline</h2>
             <div className="space-y-4">
               {runs.length === 0 ? (
-                <div className="rounded-lg border border-brand-outline/50 bg-brand-paper/50 py-12 text-center">
-                  <p className="mb-2 text-lg text-slate-400">No runs yet</p>
-                  <p className="text-slate-500">
-                    {viewMode === 'novice'
-                      ? 'Select an Eye to validate your input'
-                      : 'Use an Eye to get started'}
-                  </p>
+                <div className="rounded-lg border border-brand-accent/30 bg-gradient-to-br from-brand-paperElev/50 to-brand-paper/50 p-8">
+                  <div className="mb-6 text-center">
+                    <div className="mb-4 text-6xl">👁️</div>
+                    <h3 className="mb-2 text-xl font-semibold text-white">Welcome to Your Session</h3>
+                    <p className="text-brand-accent">Session ID: {session?.id}</p>
+                    <p className="mt-1 text-sm text-slate-400">
+                      Created {session?.createdAt ? new Date(session.createdAt).toLocaleString() : 'just now'}
+                    </p>
+                  </div>
+
+                  <div className="mb-6 rounded-lg border border-brand-accent/20 bg-brand-ink/30 p-6">
+                    <h4 className="mb-3 font-semibold text-brand-accent">Getting Started</h4>
+                    <ol className="space-y-3 text-sm text-slate-300">
+                      <li className="flex items-start gap-3">
+                        <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-brand-accent/20 text-brand-accent">1</span>
+                        <span>Select an Eye from the left sidebar to validate your prompt or code</span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-brand-accent/20 text-brand-accent">2</span>
+                        <span>Each Eye specializes in different validation tasks (ambiguity detection, planning, testing, etc.)</span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-brand-accent/20 text-brand-accent">3</span>
+                        <span>View validation results here in the timeline as they complete</span>
+                      </li>
+                    </ol>
+                  </div>
+
+                  <div className="text-center text-sm text-slate-500">
+                    💡 Tip: Use <Link href="/pipelines" className="text-brand-accent hover:underline">Pipelines</Link> to run multiple Eyes in sequence
+                  </div>
                 </div>
               ) : (
                 runs.map((run) => (
@@ -392,8 +417,7 @@ export default function SessionPage() {
               {viewMode === 'novice' ? 'Related History' : 'Session Memory'}
             </h2>
             <SessionMemoryPanel
-              sessionId={sessionId}
-              currentInput={currentInput}
+              byakuganEvents={[]}
             />
           </div>
         </div>

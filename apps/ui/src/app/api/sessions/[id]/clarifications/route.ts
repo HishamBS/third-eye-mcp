@@ -1,26 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@third-eye/db';
-import { sessions } from '@third-eye/db';
-import { eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const sessionId = params.id;
+  const { id: sessionId } = await params;
 
   try {
     const body = await request.json();
     const { questionId, answer, allAnswers } = body;
 
+    // Dynamic import to avoid bundling bun:sqlite
+    const { getDb, sessions } = await import('@third-eye/db');
     const { db } = getDb();
 
-    // Get current session
-    const session = await db
+    // Get current session - use sql template to avoid type conflicts
+    const sessionResults = await db
       .select()
       .from(sessions)
-      .where(eq(sessions.id, sessionId))
-      .get();
+      .where(sql`${sessions.id} = ${sessionId}`)
+      .limit(1);
+
+    const session = sessionResults[0];
 
     if (!session) {
       return NextResponse.json(
@@ -50,9 +55,8 @@ export async function POST(
       .set({
         configJson: updatedConfig,
         lastActivity: new Date(),
-      })
-      .where(eq(sessions.id, sessionId))
-      .run();
+      } as any)
+      .where(sql`${sessions.id} = ${sessionId}`)
 
     return NextResponse.json({
       success: true,

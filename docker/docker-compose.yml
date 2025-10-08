@@ -12,8 +12,8 @@ services:
     environment:
       - PORT=7070
       - HOST=0.0.0.0
-      - OVERSEER_DB=/data/overseer.db
-      - AUTO_OPEN=false  # Don't auto-open in Docker
+      - MCP_DB=/data/mcp.db
+      - MCP_AUTO_OPEN=false  # Don't auto-open in Docker
     volumes:
       - third-eye-data:/data
     networks:

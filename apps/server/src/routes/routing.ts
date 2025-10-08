@@ -1,8 +1,18 @@
 import { Hono } from 'hono';
 import { getDb } from '@third-eye/db';
 import { eyesRouting } from '@third-eye/db';
-import { getRegisteredEyes, getDefaultRouting } from '@third-eye/core';
+import { getAllEyeNames } from '@third-eye/eyes';
 import { eq } from 'drizzle-orm';
+import { schemas } from '../middleware/validation';
+import {
+  validateBodyWithEnvelope,
+  createSuccessResponse,
+  createErrorResponse,
+  createNotFoundResponse,
+  createInternalErrorResponse,
+  requestIdMiddleware,
+  errorHandler
+} from '../middleware/response';
 
 /**
  * Routing Configuration Routes
@@ -12,6 +22,10 @@ import { eq } from 'drizzle-orm';
 
 const app = new Hono();
 
+// Apply middleware
+app.use('*', requestIdMiddleware());
+app.use('*', errorHandler());
+
 // Get all routing configurations
 app.get('/', async (c) => {
   try {
@@ -19,28 +33,31 @@ app.get('/', async (c) => {
     const routings = await db.select().from(eyesRouting).all();
 
     // Return routing configs with registered eyes info
-    const registeredEyes = getRegisteredEyes();
-    const result = registeredEyes.map(eye => {
+    const eyeNames = getAllEyeNames();
+    const defaultRouting = {
+      primaryProvider: 'groq',
+      primaryModel: 'llama-3.3-70b-versatile',
+      fallbackProvider: 'openrouter',
+      fallbackModel: 'anthropic/claude-3.5-sonnet',
+    };
+
+    const result = eyeNames.map(eye => {
       const routing = routings.find(r => r.eye === eye);
       if (routing) {
         return routing;
       }
 
       // Return default routing if not configured
-      const defaults = getDefaultRouting(eye);
       return {
         eye,
-        primaryProvider: defaults?.primaryProvider || null,
-        primaryModel: defaults?.primaryModel || null,
-        fallbackProvider: defaults?.fallbackProvider || null,
-        fallbackModel: defaults?.fallbackModel || null,
+        ...defaultRouting,
       };
     });
 
-    return c.json({ routings: result });
+    return createSuccessResponse(c, { routings: result });
   } catch (error) {
     console.error('Failed to fetch routing configs:', error);
-    return c.json({ error: 'Failed to fetch routing configurations' }, 500);
+    return createInternalErrorResponse(c, 'Failed to fetch routing configurations');
   }
 });
 
@@ -57,37 +74,24 @@ app.get('/:eye', async (c) => {
       .get();
 
     if (routing) {
-      return c.json(routing);
+      return createSuccessResponse(c, routing);
     }
 
     // Return default if not configured
-    const defaults = getDefaultRouting(eye);
-    if (defaults) {
-      return c.json({
-        eye,
-        primaryProvider: defaults.primaryProvider,
-        primaryModel: defaults.primaryModel,
-        fallbackProvider: defaults.fallbackProvider || null,
-        fallbackModel: defaults.fallbackModel || null,
-      });
-    }
-
-    return c.json({ error: 'Eye not found' }, 404);
+    return createSuccessResponse(c, {
+      eye,
+      ...defaultRouting,
+    });
   } catch (error) {
     console.error('Failed to fetch routing:', error);
-    return c.json({ error: 'Failed to fetch routing' }, 500);
+    return createInternalErrorResponse(c, 'Failed to fetch routing');
   }
 });
 
 // Create or update routing configuration
-app.post('/', async (c) => {
+app.post('/', validateBodyWithEnvelope(schemas.routingCreate), async (c) => {
   try {
-    const body = await c.req.json();
-    const { eye, primaryProvider, primaryModel, fallbackProvider, fallbackModel } = body;
-
-    if (!eye || !primaryProvider || !primaryModel) {
-      return c.json({ error: 'Missing required fields: eye, primaryProvider, primaryModel' }, 400);
-    }
+    const { eye, primaryProvider, primaryModel, fallbackProvider, fallbackModel } = c.get('validatedBody');
 
     const { db } = getDb();
 
@@ -139,10 +143,10 @@ app.post('/', async (c) => {
       console.debug('WebSocket broadcast skipped:', e);
     }
 
-    return c.json(updated);
+    return createSuccessResponse(c, updated);
   } catch (error) {
     console.error('Failed to update routing:', error);
-    return c.json({ error: 'Failed to update routing' }, 500);
+    return createInternalErrorResponse(c, 'Failed to update routing');
   }
 });
 
@@ -165,10 +169,10 @@ app.delete('/:eye', async (c) => {
       console.debug('WebSocket broadcast skipped:', e);
     }
 
-    return c.json({ success: true, message: 'Routing configuration deleted (reverted to defaults)' });
+    return createSuccessResponse(c, { message: 'Routing configuration deleted (reverted to defaults)' });
   } catch (error) {
     console.error('Failed to delete routing:', error);
-    return c.json({ error: 'Failed to delete routing' }, 500);
+    return createInternalErrorResponse(c, 'Failed to delete routing');
   }
 });
 

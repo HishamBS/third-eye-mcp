@@ -1,0 +1,31 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Tenseigan - Golden/yellow with flower/sun pattern -->
+  <defs>
+    <radialGradient id="tenseiganGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FFEB99;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFD700;stop-opacity:1" />
+    </radialGradient>
+  </defs>
+
+  <!-- Golden iris -->
+  <circle cx="32" cy="32" r="28" fill="url(#tenseiganGrad)"/>
+
+  <!-- Eight-petaled flower/sun pattern (Tenseigan signature) -->
+  <g fill="#DAA520" opacity="0.7">
+    <ellipse cx="32" cy="10" rx="4" ry="10"/>
+    <ellipse cx="32" cy="54" rx="4" ry="10"/>
+    <ellipse cx="10" cy="32" rx="10" ry="4"/>
+    <ellipse cx="54" cy="32" rx="10" ry="4"/>
+    <ellipse transform="rotate(45 32 32)" cx="32" cy="10" rx="4" ry="10"/>
+    <ellipse transform="rotate(45 32 32)" cx="32" cy="54" rx="4" ry="10"/>
+    <ellipse transform="rotate(-45 32 32)" cx="32" cy="10" rx="4" ry="10"/>
+    <ellipse transform="rotate(-45 32 32)" cx="32" cy="54" rx="4" ry="10"/>
+  </g>
+
+  <!-- Inner circle -->
+  <circle cx="32" cy="32" r="14" fill="none" stroke="#B8860B" stroke-width="1.5" opacity="0.6"/>
+
+  <!-- Central pupil -->
+  <circle cx="32" cy="32" r="7" fill="#000000"/>
+  <circle cx="30" cy="29" r="2" fill="#FFFFE0" opacity="0.8"/>
+</svg>

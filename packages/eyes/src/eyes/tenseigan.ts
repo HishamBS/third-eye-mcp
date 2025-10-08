@@ -37,136 +37,6 @@ export class TenseiganEye implements BaseEye {
   readonly description = 'Evidence Validator - Ensures all claims are backed by evidence';
   readonly version = '1.0.0';
 
-  async process(input: string, context?: Record<string, any>): Promise<TenseiganEnvelope> {
-    try {
-      const claims: z.infer<typeof Claim>[] = [];
-      const unsupportedClaims: string[] = [];
-
-      // Extract claims (statements that assert something)
-      const claimPatterns = [
-        // Definitive statements
-        /\b(is|are|was|were|will be|has|have|had)\s+([^.!?]{10,100})/gi,
-        // Comparative statements
-        /\b(better|worse|faster|slower|more|less|higher|lower)\s+than\s+([^.!?]{5,100})/gi,
-        // Causal statements
-        /\b(because|since|therefore|thus|hence|consequently)\s+([^.!?]{10,100})/gi,
-        // Statistical statements
-        /\b(\d+%|\d+\s*(?:percent|times|x))\s+([^.!?]{10,100})/gi,
-      ];
-
-      let claimIndex = 0;
-
-      claimPatterns.forEach(pattern => {
-        let match;
-        while ((match = pattern.exec(input)) !== null) {
-          const claimText = match[0].trim();
-          const startIndex = match.index;
-          const endIndex = match.index + claimText.length;
-
-          // Check for evidence near the claim (within 200 chars before/after)
-          const contextStart = Math.max(0, startIndex - 200);
-          const contextEnd = Math.min(input.length, endIndex + 200);
-          const surroundingContext = input.substring(contextStart, contextEnd);
-
-          const evidenceCheck = this.checkEvidence(claimText, surroundingContext);
-
-          claims.push({
-            claim: claimText,
-            startIndex,
-            endIndex,
-            hasEvidence: evidenceCheck.hasEvidence,
-            evidenceType: evidenceCheck.evidenceType,
-            evidenceQuality: evidenceCheck.quality,
-            suggestion: evidenceCheck.suggestion,
-          });
-
-          if (!evidenceCheck.hasEvidence) {
-            unsupportedClaims.push(claimText);
-          }
-
-          claimIndex++;
-        }
-      });
-
-      // Remove duplicate claims
-      const uniqueClaims = claims.filter((claim, index, self) =>
-        index === self.findIndex(c => c.claim === claim.claim)
-      );
-
-      const totalClaims = uniqueClaims.length;
-      const claimsWithEvidence = uniqueClaims.filter(c => c.hasEvidence).length;
-      const claimsWithoutEvidence = totalClaims - claimsWithEvidence;
-
-      // Calculate evidence score
-      const evidenceScore = totalClaims > 0
-        ? Math.round((claimsWithEvidence / totalClaims) * 100)
-        : 100; // If no claims, assume OK
-
-      // Determine verdict
-      let verdict: 'APPROVED' | 'REJECTED' | 'NEEDS_INPUT';
-      let code: TenseiganEnvelope['code'];
-      let summary: string;
-
-      if (claimsWithoutEvidence > 3 || evidenceScore < 40) {
-        verdict = 'REJECTED';
-        code = 'REJECT_NO_EVIDENCE';
-        summary = `Too many unsupported claims (${claimsWithoutEvidence}/${totalClaims}). Evidence score: ${evidenceScore}/100.`;
-      } else if (claimsWithoutEvidence > 0 || evidenceScore < 70) {
-        verdict = 'NEEDS_INPUT';
-        code = 'NEED_MORE_CONTEXT';
-        summary = `Some claims lack evidence (${claimsWithoutEvidence}/${totalClaims}). Evidence score: ${evidenceScore}/100.`;
-      } else {
-        verdict = 'APPROVED';
-        code = evidenceScore >= 90 ? 'OK' : 'OK_WITH_NOTES';
-        summary = `Claims are well-supported (${claimsWithEvidence}/${totalClaims}). Evidence score: ${evidenceScore}/100.`;
-      }
-
-      const suggestions: string[] = [];
-
-      // Add suggestions for unsupported claims
-      unsupportedClaims.slice(0, 3).forEach(claim => {
-        const trimmedClaim = claim.length > 80 ? claim.substring(0, 80) + '...' : claim;
-        suggestions.push(`Provide evidence for: "${trimmedClaim}"`);
-      });
-
-      // Add suggestions based on evidence quality
-      const weakClaims = uniqueClaims.filter(c => c.evidenceQuality === 'weak' && c.suggestion);
-      weakClaims.slice(0, 2).forEach(claim => {
-        if (claim.suggestion) {
-          suggestions.push(claim.suggestion);
-        }
-      });
-
-      return {
-        eye: 'tenseigan',
-        code,
-        verdict,
-        summary,
-        details: totalClaims > 0
-          ? `Analyzed ${totalClaims} claims. ${claimsWithEvidence} have evidence (${claimsWithoutEvidence} missing). ` +
-            `Evidence types: ${this.summarizeEvidenceTypes(uniqueClaims)}`
-          : 'No factual claims detected',
-        suggestions: suggestions.length > 0 ? suggestions.slice(0, 5) : undefined,
-        confidence: evidenceScore,
-        metadata: {
-          evidenceScore,
-          totalClaims,
-          claimsWithEvidence,
-          claimsWithoutEvidence,
-          claims: uniqueClaims,
-          unsupportedClaims: unsupportedClaims.slice(0, 10),
-        },
-      };
-    } catch (error) {
-      return {
-        eye: 'tenseigan',
-        code: 'EYE_ERROR',
-        verdict: 'NEEDS_INPUT',
-        summary: `Tenseigan processing error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        confidence: 0,
-      };
-    }
-  }
 
   private checkEvidence(claim: string, context: string): {
     hasEvidence: boolean;
@@ -272,6 +142,15 @@ export class TenseiganEye implements BaseEye {
 
 Your SOLE PURPOSE is to ensure all factual claims are supported by evidence.
 
+## CRITICAL: YOU VALIDATE EVIDENCE AFTER AGENT GENERATES CONTENT
+
+You accept content AFTER the agent generates it and:
+1. Extract factual claims from the agent's generated content
+2. Verify each claim has proper evidence (citations, data, examples)
+3. Return pass/fail verdicts on evidence quality
+
+You NEVER create content yourself. You validate evidence in content the AGENT already created.
+
 ## Your Abilities
 - Extract factual claims from text
 - Detect evidence types: data/statistics, citations, examples, reasoning
@@ -349,8 +228,22 @@ Score = (Claims with Evidence / Total Claims) × 100
 
 ## Example Judgments
 
-**REJECT_NO_EVIDENCE (Score 25, 3/12 claims supported)**
-Input: "Our API is faster and more reliable than competitors. Users love it. The new caching system improves performance significantly. It's the best solution available."
+**WRONG: Generation Request (REJECT THIS)**
+Input: "Create an API performance report"
+{
+  "eye": "tenseigan",
+  "code": "NO_CONTENT_PROVIDED",
+  "verdict": "REJECTED",
+  "summary": "No content provided for evidence validation.",
+  "details": "Expected content with claims to validate, got generation request.",
+  "suggestions": ["Provide your content with factual claims for evidence review"],
+  "confidence": 0,
+  "metadata": {"evidenceScore": 0, "totalClaims": 0, "claimsWithEvidence": 0, "claimsWithoutEvidence": 0, "claims": [], "unsupportedClaims": []}
+}
+
+**CORRECT: Validation of Agent-Provided Content**
+Input: AGENT provides: "Our API is faster and more reliable than competitors. Users love it. The new caching system improves performance significantly. It's the best solution available."
+Response: REJECT_NO_EVIDENCE (Score 25, 3/12 claims supported)
 Analysis:
 - "faster and more reliable" - NO EVIDENCE
 - "Users love it" - NO EVIDENCE
@@ -358,8 +251,9 @@ Analysis:
 - "best solution available" - NO EVIDENCE
 Suggestions: ["Add benchmark data", "Provide user satisfaction metrics", "Quantify 'significantly'"]
 
-**OK_WITH_NOTES (Score 75, 6/8 claims supported)**
-Input: "According to our tests, the new algorithm reduced latency from 200ms to 50ms (75% improvement). For example, in the checkout flow, users complete purchases 3x faster. However, it might use more memory."
+**CORRECT: Validation of Agent-Provided Content**
+Input: AGENT provides: "According to our tests, the new algorithm reduced latency from 200ms to 50ms (75% improvement). For example, in the checkout flow, users complete purchases 3x faster. However, it might use more memory."
+Response: OK_WITH_NOTES (Score 75, 6/8 claims supported)
 Analysis:
 - "reduced latency 200ms to 50ms" - STRONG (data)
 - "75% improvement" - STRONG (data)
@@ -368,8 +262,9 @@ Analysis:
 - "might use more memory" - WEAK (hedging without data)
 Suggestions: ["Measure actual memory usage instead of 'might'"]
 
-**OK (Score 100, 4/4 claims supported)**
-Input: "The optimization reduced database queries by 80% (from 100 to 20 per request) as shown in our APM metrics. This improvement is due to batch loading, which consolidates N queries into 1. Similar to how Facebook's DataLoader works, we cache within a single request lifecycle."
+**CORRECT: Validation of Agent-Provided Content**
+Input: AGENT provides: "The optimization reduced database queries by 80% (from 100 to 20 per request) as shown in our APM metrics. This improvement is due to batch loading, which consolidates N queries into 1. Similar to how Facebook's DataLoader works, we cache within a single request lifecycle."
+Response: OK (Score 100, 4/4 claims supported)
 Analysis:
 - "reduced by 80%" - STRONG (data with numbers)
 - "from 100 to 20" - STRONG (data)

@@ -9,8 +9,28 @@ import {
   mcpIntegrations
 } from '@third-eye/db/schema';
 import { eq, desc } from 'drizzle-orm';
+import {
+  validateBodyWithEnvelope,
+  createSuccessResponse,
+  createErrorResponse,
+  createInternalErrorResponse,
+  requestIdMiddleware,
+  errorHandler
+} from '../middleware/response';
+import { z } from 'zod';
 
 const app = new Hono();
+
+app.use('*', requestIdMiddleware());
+app.use('*', errorHandler());
+
+// Schemas for validation
+const updateEyeRoutingSchema = z.object({
+  primaryProvider: z.string().optional(),
+  primaryModel: z.string().optional(),
+  fallbackProvider: z.string().optional(),
+  fallbackModel: z.string().optional()
+});
 
 // Get all tables with their data
 app.get('/tables', async (c) => {
@@ -33,7 +53,7 @@ app.get('/tables', async (c) => {
       db.select().from(mcpIntegrations).orderBy(mcpIntegrations.displayOrder)
     ]);
 
-    return c.json({
+    return createSuccessResponse(c, {
       tables: {
         provider_keys: {
           name: 'Provider Keys',
@@ -120,7 +140,7 @@ app.get('/tables', async (c) => {
     });
   } catch (error) {
     console.error('Database tables error:', error);
-    return c.json({ error: 'Failed to fetch tables' }, 500);
+    return createInternalErrorResponse(c, 'Failed to fetch tables');
   }
 });
 
@@ -139,10 +159,10 @@ app.put('/eyes-routing/:eye', async (c) => {
         set: data
       });
 
-    return c.json({ success: true });
+    return createSuccessResponse(c, { success: true });
   } catch (error) {
     console.error('Update eyes routing error:', error);
-    return c.json({ error: 'Failed to update routing' }, 500);
+    return createInternalErrorResponse(c, 'Failed to update routing');
   }
 });
 
@@ -153,16 +173,16 @@ app.delete('/eyes-routing/:eye', async (c) => {
 
   try {
     await db.delete(eyesRouting).where(eq(eyesRouting.eye, eye));
-    return c.json({ success: true });
+    return createSuccessResponse(c, { success: true });
   } catch (error) {
     console.error('Delete eyes routing error:', error);
-    return c.json({ error: 'Failed to delete routing' }, 500);
+    return createInternalErrorResponse(c, 'Failed to delete routing');
   }
 });
 
 // Get table schema information
 app.get('/schema', async (c) => {
-  return c.json({
+  return createSuccessResponse(c, {
     tables: [
       'provider_keys',
       'eyes_routing',

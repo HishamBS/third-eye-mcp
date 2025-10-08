@@ -1,0 +1,38 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Overseer - Combination of all eye powers with multi-colored spectrum -->
+  <defs>
+    <radialGradient id="overseerGrad">
+      <stop offset="0%" style="stop-color:#F5F3FF;stop-opacity:1" />
+      <stop offset="20%" style="stop-color:#FFD700;stop-opacity:0.8" />
+      <stop offset="40%" style="stop-color:#B8E6F5;stop-opacity:0.8" />
+      <stop offset="60%" style="stop-color:#C8A2D0;stop-opacity:0.8" />
+      <stop offset="80%" style="stop-color:#FF0000;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#CC0000;stop-opacity:1" />
+    </radialGradient>
+  </defs>
+
+  <!-- Multi-spectrum iris -->
+  <circle cx="32" cy="32" r="28" fill="url(#overseerGrad)"/>
+
+  <!-- Combined patterns from all eyes -->
+  <!-- Rinnegan ripples -->
+  <circle cx="32" cy="32" r="24" fill="none" stroke="#7B4B8A" stroke-width="0.8" opacity="0.4"/>
+  <circle cx="32" cy="32" r="20" fill="none" stroke="#7B4B8A" stroke-width="0.8" opacity="0.4"/>
+  <circle cx="32" cy="32" r="16" fill="none" stroke="#7B4B8A" stroke-width="0.8" opacity="0.4"/>
+
+  <!-- Tenseigan petals (subtle) -->
+  <g fill="#DAA520" opacity="0.2">
+    <ellipse cx="32" cy="8" rx="3" ry="8"/>
+    <ellipse cx="32" cy="56" rx="3" ry="8"/>
+    <ellipse cx="8" cy="32" rx="8" ry="3"/>
+    <ellipse cx="56" cy="32" rx="8" ry="3"/>
+  </g>
+
+  <!-- Sharingan tomoe (one, symbolizing unity) -->
+  <path d="M32,14 Q26,14 24,18 Q22,22 24,26 Q26,30 32,30 Q34,30 36,28 L32,14Z" fill="#000000" opacity="0.5"/>
+
+  <!-- Central all-seeing pupil -->
+  <circle cx="32" cy="32" r="8" fill="#000000"/>
+  <circle cx="30" cy="29" r="2.5" fill="#FFFFFF" opacity="0.9"/>
+  <circle cx="30" cy="29" r="1" fill="#00FFFF"/>
+</svg>

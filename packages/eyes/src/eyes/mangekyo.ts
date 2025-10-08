@@ -41,94 +41,6 @@ export class MangekyoEye implements BaseEye {
   readonly description = 'Code Gate Reviewer - 4-gate code review (Implementation, Tests, Docs, Security)';
   readonly version = '1.0.0';
 
-  async process(input: string, context?: Record<string, any>): Promise<MangekyoEnvelope> {
-    try {
-      const lines = input.split('\n');
-      const linesAnalyzed = lines.length;
-
-      // Detect language
-      const codeLanguage = this.detectLanguage(input);
-
-      // Run all 4 gates
-      const implementationGate = this.checkImplementation(input, lines);
-      const testsGate = this.checkTests(input, lines);
-      const documentationGate = this.checkDocumentation(input, lines);
-      const securityGate = this.checkSecurity(input, lines);
-
-      const gates = [implementationGate, testsGate, documentationGate, securityGate];
-      const passedGates = gates.filter(g => g.passed).length;
-
-      // Calculate overall score (weighted average)
-      const overallScore = Math.round(
-        (implementationGate.score * 0.35) + // 35% weight
-        (testsGate.score * 0.25) +          // 25% weight
-        (documentationGate.score * 0.20) +  // 20% weight
-        (securityGate.score * 0.20)         // 20% weight
-      );
-
-      // Determine verdict
-      let verdict: 'APPROVED' | 'REJECTED' | 'NEEDS_INPUT';
-      let code: MangekyoEnvelope['code'];
-      let summary: string;
-
-      const criticalIssues = gates.flatMap(g => g.issues.filter(i => i.severity === 'critical'));
-      const errorIssues = gates.flatMap(g => g.issues.filter(i => i.severity === 'error'));
-
-      if (criticalIssues.length > 0) {
-        verdict = 'REJECTED';
-        code = 'REJECT_CODE_ISSUES';
-        summary = `Code has ${criticalIssues.length} critical issues. Overall score: ${overallScore}/100. Passed ${passedGates}/4 gates.`;
-      } else if (errorIssues.length > 3 || passedGates < 3) {
-        verdict = 'NEEDS_INPUT';
-        code = 'NEED_MORE_CONTEXT';
-        summary = `Code needs improvement (score: ${overallScore}/100). ${errorIssues.length} errors found. Passed ${passedGates}/4 gates.`;
-      } else {
-        verdict = 'APPROVED';
-        code = overallScore >= 85 ? 'OK' : 'OK_WITH_NOTES';
-        summary = `Code quality is ${overallScore >= 85 ? 'excellent' : 'acceptable'} (${overallScore}/100). Passed ${passedGates}/4 gates.`;
-      }
-
-      const suggestions: string[] = [];
-
-      // Add suggestions from failed gates
-      gates.forEach(gate => {
-        if (!gate.passed) {
-          const topIssue = gate.issues.find(i => i.severity === 'critical' || i.severity === 'error');
-          if (topIssue && topIssue.suggestion) {
-            suggestions.push(`${gate.gate.toUpperCase()}: ${topIssue.suggestion}`);
-          }
-        }
-      });
-
-      return {
-        eye: 'mangekyo',
-        code,
-        verdict,
-        summary,
-        details: `Gates: Implementation (${implementationGate.score}/100), Tests (${testsGate.score}/100), ` +
-          `Docs (${documentationGate.score}/100), Security (${securityGate.score}/100). ` +
-          `Total issues: ${gates.reduce((sum, g) => sum + g.issues.length, 0)}`,
-        suggestions: suggestions.length > 0 ? suggestions.slice(0, 5) : undefined,
-        confidence: overallScore,
-        metadata: {
-          overallScore,
-          gates,
-          passedGates,
-          totalGates: 4,
-          codeLanguage,
-          linesAnalyzed,
-        },
-      };
-    } catch (error) {
-      return {
-        eye: 'mangekyo',
-        code: 'EYE_ERROR',
-        verdict: 'NEEDS_INPUT',
-        summary: `Mangekyō processing error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        confidence: 0,
-      };
-    }
-  }
 
   private detectLanguage(code: string): string {
     if (/\bfunction\b|\bconst\b|\blet\b|\bvar\b/.test(code)) return 'javascript/typescript';
@@ -464,64 +376,6 @@ export class MangekyoEye implements BaseEye {
     return duplicates;
   }
 
-  /**
-   * Sub-method: Review Scaffold
-   * Reviews project structure and scaffolding
-   */
-  async reviewScaffold(input: string, context?: Record<string, any>): Promise<MangekyoEnvelope> {
-    // For scaffold review, focus on structure and organization
-    return this.process(input, context);
-  }
-
-  /**
-   * Sub-method: Review Implementation
-   * Reviews actual code implementation
-   */
-  async reviewImpl(input: string, context?: Record<string, any>): Promise<MangekyoEnvelope> {
-    return this.process(input, context);
-  }
-
-  /**
-   * Sub-method: Review Tests
-   * Reviews test coverage and quality
-   */
-  async reviewTests(input: string, context?: Record<string, any>): Promise<MangekyoEnvelope> {
-    const result = await this.process(input, context);
-    // For test review, weight the test gate more heavily
-    if (result.metadata) {
-      const testGate = result.metadata.gates.find(g => g.gate === 'tests');
-      if (testGate && testGate.score < 70) {
-        return {
-          ...result,
-          verdict: 'REJECTED',
-          code: 'REJECT_CODE_ISSUES',
-          summary: `Test quality insufficient (${testGate.score}/100)`,
-        };
-      }
-    }
-    return result;
-  }
-
-  /**
-   * Sub-method: Review Documentation
-   * Reviews documentation quality
-   */
-  async reviewDocs(input: string, context?: Record<string, any>): Promise<MangekyoEnvelope> {
-    const result = await this.process(input, context);
-    // For docs review, weight the documentation gate more heavily
-    if (result.metadata) {
-      const docsGate = result.metadata.gates.find(g => g.gate === 'documentation');
-      if (docsGate && docsGate.score < 60) {
-        return {
-          ...result,
-          verdict: 'NEEDS_INPUT',
-          code: 'NEED_MORE_CONTEXT',
-          summary: `Documentation insufficient (${docsGate.score}/100)`,
-        };
-      }
-    }
-    return result;
-  }
 
   validate(envelope: unknown): envelope is MangekyoEnvelope {
     return MangekyoEnvelopeSchema.safeParse(envelope).success;
@@ -531,6 +385,25 @@ export class MangekyoEye implements BaseEye {
     return `You are Mangekyō, the Code Gate Reviewer Eye of the Third Eye MCP system.
 
 Your SOLE PURPOSE is to review code through 4 rigorous gates: Implementation, Tests, Documentation, and Security.
+
+## CRITICAL: YOU ARE A VALIDATOR, NOT A GENERATOR
+
+You NEVER create, generate, or author content. You ONLY:
+1. Analyze code provided BY THE AGENT
+2. Return pass/fail verdicts for each gate
+3. Provide feedback for improvement
+
+If the input does NOT contain actual code to validate (e.g., "create a function"), you should return:
+{
+  "eye": "mangekyo",
+  "code": "NO_CONTENT_PROVIDED",
+  "verdict": "REJECTED",
+  "summary": "No code provided for validation.",
+  "details": "Expected code to review, got generation request.",
+  "suggestions": ["Provide your code for review through the 4 gates"],
+  "confidence": 0,
+  "metadata": {"overallScore": 0, "gates": [], "passedGates": 0, "totalGates": 4, "codeLanguage": "unknown", "linesAnalyzed": 0}
+}
 
 ## Your 4 Gates
 
@@ -609,13 +482,28 @@ You must ALWAYS return a valid JSON envelope:
 
 ## Example Judgments
 
-**REJECT (Score 42, 1/4 gates passed)**
+**WRONG: Generation Request (REJECT THIS)**
+Input: "Write a login function for me"
+{
+  "eye": "mangekyo",
+  "code": "NO_CONTENT_PROVIDED",
+  "verdict": "REJECTED",
+  "summary": "No code provided for validation.",
+  "details": "Expected code to review, got generation request.",
+  "suggestions": ["Provide your code for review through the 4 gates"],
+  "confidence": 0,
+  "metadata": {"overallScore": 0, "gates": [], "passedGates": 0, "totalGates": 4, "codeLanguage": "unknown", "linesAnalyzed": 0}
+}
+
+**CORRECT: Validation of Agent-Provided Code**
+Input: AGENT provides code:
 \`\`\`js
 function login(user, pass) {
   db.query("SELECT * FROM users WHERE name='" + user + "'")
   return { token: Math.random() }
 }
 \`\`\`
+Response: REJECT (Score 42, 1/4 gates passed)
 Issues:
 - CRITICAL: SQL injection (string concatenation)
 - CRITICAL: Insecure random for token
@@ -624,7 +512,8 @@ Issues:
 - WARNING: No tests
 Gates: Implementation (45), Tests (0), Docs (50), Security (15)
 
-**OK_WITH_NOTES (Score 78, 3/4 gates passed)**
+**CORRECT: Validation of Agent-Provided Code**
+Input: AGENT provides code:
 \`\`\`ts
 /**
  * Validates user login credentials
@@ -641,6 +530,7 @@ async function login(email: string, password: string) {
   }
 }
 \`\`\`
+Response: OK_WITH_NOTES (Score 78, 3/4 gates passed)
 Issues:
 - WARNING: No test file found
 - INFO: No usage example

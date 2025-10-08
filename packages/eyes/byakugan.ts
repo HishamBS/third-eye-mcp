@@ -8,6 +8,7 @@ import {
 } from "./constants";
 import { buildResponse } from "./shared";
 import type { EyeResponse } from "./constants";
+import { MarkdownBuilder } from "./utils/markdown-builder";
 
 const DEFAULT_TOLERANCE = 0.85;
 
@@ -57,12 +58,21 @@ export interface ByakuganRequest {
 
 export function consistencyCheck(request: ByakuganRequest): EyeResponse {
   if (!request.reasoning_md || !request.reasoning_md.trim()) {
+    const md = MarkdownBuilder.create()
+      .heading(Heading.REASONING)
+      .text("Describe how the draft was validated for contradictions.")
+      .build();
     return buildResponse({
       tag: EyeTag.BYAKUGAN,
       ok: false,
       code: StatusCode.E_REASONING_MISSING,
-      md: `${Heading.REASONING}\nDescribe how the draft was validated for contradictions.`,
-      data: { [DataKey.ISSUES_MD]: "Reasoning required." },
+      md,
+      data: {
+        [DataKey.ISSUES_MD]: MarkdownBuilder.create()
+          .heading(Heading.REASONING)
+          .text("Reasoning required.")
+          .build()
+      },
       next_action: NextAction.FIX_CONTRADICTIONS
     });
   }
@@ -72,12 +82,19 @@ export function consistencyCheck(request: ByakuganRequest): EyeResponse {
   const { score, issues } = consistencyScore(draftMarkdown);
 
   if (issues.length > 0 && score < tolerance) {
-    const issuesMarkdown = `${Heading.CONSISTENCY}\n${issues.map(i => `- ${i}`).join("\n")}`;
+    const issuesMarkdown = MarkdownBuilder.create()
+      .heading(Heading.CONSISTENCY)
+      .bullets(issues)
+      .build();
+    const md = MarkdownBuilder.create()
+      .heading(Heading.CONSISTENCY)
+      .text(`Consistency score ${score.toFixed(2)} below tolerance ${tolerance.toFixed(2)}.`)
+      .build();
     return buildResponse({
       tag: EyeTag.BYAKUGAN,
       ok: false,
       code: StatusCode.E_CONTRADICTION_DETECTED,
-      md: `${Heading.CONSISTENCY}\nConsistency score ${score.toFixed(2)} below tolerance ${tolerance.toFixed(2)}.`,
+      md,
       data: {
         [DataKey.ISSUES_MD]: issuesMarkdown,
         consistency_score: score
@@ -86,7 +103,10 @@ export function consistencyCheck(request: ByakuganRequest): EyeResponse {
     });
   }
 
-  const md = `${Heading.CONSISTENCY}\nNo contradictions detected for topic \`${request.payload.topic}\`.`;
+  const md = MarkdownBuilder.create()
+    .heading(Heading.CONSISTENCY)
+    .text(`No contradictions detected for topic \`${request.payload.topic}\`.`)
+    .build();
   return buildResponse({
     tag: EyeTag.BYAKUGAN,
     ok: true,

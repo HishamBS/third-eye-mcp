@@ -7,6 +7,7 @@ import {
 } from "./constants";
 import { buildResponse } from "./shared";
 import type { EyeResponse } from "./constants";
+import { MarkdownBuilder } from "./utils/markdown-builder";
 
 const DEFAULT_CUTOFF = 0.80;
 
@@ -41,24 +42,41 @@ export function validateClaims(request: TenseiganRequest): EyeResponse {
   const draftMarkdown = request.payload.draft_md || "";
 
   if (!request.reasoning_md || !request.reasoning_md.trim()) {
+    const md = MarkdownBuilder.create()
+      .heading(Heading.REASONING)
+      .text("Explain how the evidence was reviewed before submitting.")
+      .build();
     return buildResponse({
       tag: EyeTag.TENSEIGAN,
       ok: false,
       code: StatusCode.E_REASONING_MISSING,
-      md: `${Heading.REASONING}\nExplain how the evidence was reviewed before submitting.`,
-      data: { [DataKey.ISSUES_MD]: "Reasoning required." },
+      md,
+      data: {
+        [DataKey.ISSUES_MD]: MarkdownBuilder.create()
+          .heading(Heading.REASONING)
+          .text("Reasoning required.")
+          .build()
+      },
       next_action: NextAction.ADD_CITATIONS
     });
   }
 
   if (!hasCitations(draftMarkdown)) {
-    const md = `${Heading.CITATIONS}\nProvide a citations table for each factual claim.`;
+    const md = MarkdownBuilder.create()
+      .heading(Heading.CITATIONS)
+      .text("Provide a citations table for each factual claim.")
+      .build();
     return buildResponse({
       tag: EyeTag.TENSEIGAN,
       ok: false,
       code: StatusCode.E_CITATIONS_MISSING,
       md,
-      data: { [DataKey.ISSUES_MD]: "Citations table missing or incomplete." },
+      data: {
+        [DataKey.ISSUES_MD]: MarkdownBuilder.create()
+          .heading(Heading.CITATIONS)
+          .text("Citations table missing or incomplete.")
+          .build()
+      },
       next_action: NextAction.ADD_CITATIONS
     });
   }
@@ -77,18 +95,28 @@ export function validateClaims(request: TenseiganRequest): EyeResponse {
   }
 
   if (weakCitations.length > 0) {
-    const issuesMarkdown = `${Heading.CITATIONS}\n${weakCitations.map(w => `- ${w}`).join("\n")}`;
+    const issuesMarkdown = MarkdownBuilder.create()
+      .heading(Heading.CITATIONS)
+      .bullets(weakCitations)
+      .build();
+    const md = MarkdownBuilder.create()
+      .heading(Heading.CITATIONS)
+      .text(`Citations fall below confidence threshold (${cutoff.toFixed(2)}).`)
+      .build();
     return buildResponse({
       tag: EyeTag.TENSEIGAN,
       ok: false,
       code: StatusCode.E_CITATIONS_MISSING,
-      md: `${Heading.CITATIONS}\nCitations fall below confidence threshold (${cutoff.toFixed(2)}).`,
+      md,
       data: { [DataKey.ISSUES_MD]: issuesMarkdown },
       next_action: NextAction.ADD_CITATIONS
     });
   }
 
-  const md = `${Heading.CLAIMS_VALIDATED}\nCitations present for each claim.`;
+  const md = MarkdownBuilder.create()
+    .heading(Heading.CLAIMS_VALIDATED)
+    .text("Citations present for each claim.")
+    .build();
   const data = {
     [DataKey.ISSUES_MD]: "",
     [DataKey.CLAIMS_MD]: draftMarkdown

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { useDialog } from '@/hooks/useDialog';
 
 interface StrictnessProfile {
   id: string;
@@ -18,6 +19,7 @@ interface StrictnessProfile {
 }
 
 export default function StrictnessPage() {
+  const dialog = useDialog();
   const [profiles, setProfiles] = useState<StrictnessProfile[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<StrictnessProfile | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -63,9 +65,9 @@ export default function StrictnessPage() {
     });
   };
 
-  const handleEdit = (profile: StrictnessProfile) => {
+  const handleEdit = async (profile: StrictnessProfile) => {
     if (profile.isBuiltIn) {
-      alert('Built-in profiles cannot be edited');
+      await dialog.alert('Cannot Edit', 'Built-in profiles cannot be edited');
       return;
     }
 
@@ -98,7 +100,7 @@ export default function StrictnessPage() {
 
   const handleSubmit = async () => {
     if (!formData.name) {
-      alert('Please provide a profile name');
+      await dialog.alert('Validation Error', 'Please provide a profile name');
       return;
     }
 
@@ -118,7 +120,7 @@ export default function StrictnessPage() {
           handleCancel();
         } else {
           const error = await response.json();
-          alert(`Failed to create profile: ${error.error || 'Unknown error'}`);
+          await dialog.alert('Create Failed', `Failed to create profile: ${error.error || 'Unknown error'}`);
         }
       } else if (isEditing && selectedProfile) {
         const response = await fetch(`/api/strictness/${selectedProfile.id}`, {
@@ -134,12 +136,12 @@ export default function StrictnessPage() {
           handleCancel();
         } else {
           const error = await response.json();
-          alert(`Failed to update profile: ${error.error || 'Unknown error'}`);
+          await dialog.alert('Update Failed', `Failed to update profile: ${error.error || 'Unknown error'}`);
         }
       }
     } catch (error) {
       console.error('Failed to save profile:', error);
-      alert('Failed to save profile');
+      await dialog.alert('Error', 'Failed to save profile');
     } finally {
       setLoading(false);
     }
@@ -147,11 +149,18 @@ export default function StrictnessPage() {
 
   const handleDelete = async (profile: StrictnessProfile) => {
     if (profile.isBuiltIn) {
-      alert('Built-in profiles cannot be deleted');
+      await dialog.alert('Cannot Delete', 'Built-in profiles cannot be deleted');
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete the profile "${profile.name}"?`)) {
+    const confirmed = await dialog.confirm(
+      'Delete Profile',
+      `Are you sure you want to delete the profile "${profile.name}"? This action cannot be undone.`,
+      'Delete',
+      'Cancel'
+    );
+
+    if (!confirmed) {
       return;
     }
 
@@ -167,11 +176,11 @@ export default function StrictnessPage() {
         }
       } else {
         const error = await response.json();
-        alert(`Failed to delete profile: ${error.error || 'Unknown error'}`);
+        await dialog.alert('Delete Failed', `Failed to delete profile: ${error.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Failed to delete profile:', error);
-      alert('Failed to delete profile');
+      await dialog.alert('Error', 'Failed to delete profile');
     }
   };
 

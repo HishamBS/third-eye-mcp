@@ -2,8 +2,17 @@ import { Hono } from 'hono';
 import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
 import { personas, personaVersions } from '@third-eye/db';
-import { getRegisteredEyes, getEyeTool } from '@third-eye/core';
+import { ALL_EYES } from '@third-eye/eyes';
 import { eq, and, desc } from 'drizzle-orm';
+import {
+  validateBodyWithEnvelope,
+  createSuccessResponse,
+  createErrorResponse,
+  createInternalErrorResponse,
+  requestIdMiddleware,
+  errorHandler
+} from '../middleware/response';
+import { z } from 'zod';
 
 /**
  * Personas Management Routes
@@ -13,7 +22,15 @@ import { eq, and, desc } from 'drizzle-orm';
 
 const app = new Hono();
 
-// Get all personas for all Eyes
+app.use('*', requestIdMiddleware());
+app.use('*', errorHandler());
+
+// Zod schemas for validation
+const createPersonaSchema = z.object({
+  content: z.string().min(1),
+});
+
+// Get all personas for all Eyes - returns flat array with name field
 app.get('/', async (c) => {
   try {
     const { db } = getDb();
@@ -23,17 +40,10 @@ app.get('/', async (c) => {
       .orderBy(desc(personas.createdAt))
       .all();
 
-    // Group by eye
-    const grouped = allPersonas.reduce((acc, p) => {
-      if (!acc[p.eye]) acc[p.eye] = [];
-      acc[p.eye].push(p);
-      return acc;
-    }, {} as Record<string, typeof allPersonas>);
-
-    return c.json({ personas: grouped });
+    return createSuccessResponse(c, allPersonas);
   } catch (error) {
     console.error('Failed to fetch personas:', error);
-    return c.json({ error: 'Failed to fetch personas' }, 500);
+    return createInternalErrorResponse(c, 'Failed to fetch personas');
   }
 });
 
@@ -52,28 +62,28 @@ app.get('/:eye', async (c) => {
 
     if (eyePersonas.length === 0) {
       // Return default persona template if none exist
-      const eyeTool = getEyeTool(eye);
-      if (eyeTool) {
-        return c.json({
+      const eyeInstance = ALL_EYES[eye];
+      if (eyeInstance) {
+        return createSuccessResponse(c, {
           eye,
           versions: [],
           activeVersion: null,
-          defaultTemplate: eyeTool.personaTemplate,
+          defaultTemplate: eyeInstance.getPersona(),
         });
       }
-      return c.json({ error: 'Eye not found' }, 404);
+      return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
     }
 
     const active = eyePersonas.find(p => p.active);
 
-    return c.json({
+    return createSuccessResponse(c, {
       eye,
       versions: eyePersonas,
       activeVersion: active?.version || null,
     });
   } catch (error) {
     console.error('Failed to fetch personas:', error);
-    return c.json({ error: 'Failed to fetch personas' }, 500);
+    return createInternalErrorResponse(c, 'Failed to fetch personas');
   }
 });
 
@@ -90,39 +100,34 @@ app.get('/:eye/active', async (c) => {
       .get();
 
     if (active) {
-      return c.json(active);
+      return createSuccessResponse(c, active);
     }
 
     // Return default persona template
-    const eyeTool = getEyeTool(eye);
-    if (eyeTool) {
-      return c.json({
+    const eyeInstance = ALL_EYES[eye];
+    if (eyeInstance) {
+      return createSuccessResponse(c, {
         eye,
         version: 0,
-        content: eyeTool.personaTemplate,
+        content: eyeInstance.getPersona(),
         active: false,
         createdAt: new Date(),
         isDefault: true,
       });
     }
 
-    return c.json({ error: 'Eye not found' }, 404);
+    return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
   } catch (error) {
     console.error('Failed to fetch active persona:', error);
-    return c.json({ error: 'Failed to fetch active persona' }, 500);
+    return createInternalErrorResponse(c, 'Failed to fetch active persona');
   }
 });
 
 // Create new persona version (staged, not active)
-app.post('/:eye', async (c) => {
+app.post('/:eye', validateBodyWithEnvelope(createPersonaSchema), async (c) => {
   try {
     const eye = c.req.param('eye');
-    const body = await c.req.json();
-    const { content } = body;
-
-    if (!content) {
-      return c.json({ error: 'Missing required field: content' }, 400);
-    }
+    const { content } = c.get('validatedBody');
 
     const { db } = getDb();
 
@@ -153,14 +158,14 @@ app.post('/:eye', async (c) => {
       .where(and(eq(personas.eye, eye), eq(personas.version, newVersion)))
       .get();
 
-    return c.json({
+    return createSuccessResponse(c, {
       success: true,
       message: `Persona version ${newVersion} created (staged, not active)`,
       persona: inserted,
     });
   } catch (error) {
     console.error('Failed to create persona:', error);
-    return c.json({ error: 'Failed to create persona' }, 500);
+    return createInternalErrorResponse(c, 'Failed to create persona');
   }
 });
 
@@ -180,7 +185,7 @@ app.patch('/:eye/activate/:version', async (c) => {
       .get();
 
     if (!targetPersona) {
-      return c.json({ error: 'Persona version not found' }, 404);
+      return createErrorResponse(c, { title: 'Persona Version Not Found', status: 404, detail: 'The requested persona version could not be found' });
     }
 
     // Deactivate all versions for this Eye
@@ -216,14 +221,14 @@ app.patch('/:eye/activate/:version', async (c) => {
       console.debug('WebSocket broadcast skipped:', e);
     }
 
-    return c.json({
+    return createSuccessResponse(c, {
       success: true,
       message: `Persona version ${version} activated for ${eye}`,
       persona: activated,
     });
   } catch (error) {
     console.error('Failed to activate persona:', error);
-    return c.json({ error: 'Failed to activate persona' }, 500);
+    return createInternalErrorResponse(c, 'Failed to activate persona');
   }
 });
 
@@ -242,11 +247,11 @@ app.delete('/:eye/:version', async (c) => {
       .get();
 
     if (!targetPersona) {
-      return c.json({ error: 'Persona version not found' }, 404);
+      return createErrorResponse(c, { title: 'Persona Version Not Found', status: 404, detail: 'The requested persona version could not be found' });
     }
 
     if (targetPersona.active) {
-      return c.json({ error: 'Cannot delete active persona version' }, 400);
+      return createErrorResponse(c, { title: 'Cannot Delete Active Version', status: 400, detail: 'Cannot delete the currently active persona version' });
     }
 
     await db
@@ -254,13 +259,13 @@ app.delete('/:eye/:version', async (c) => {
       .where(and(eq(personas.eye, eye), eq(personas.version, version)))
       .run();
 
-    return c.json({
+    return createSuccessResponse(c, {
       success: true,
       message: `Persona version ${version} deleted`,
     });
   } catch (error) {
     console.error('Failed to delete persona:', error);
-    return c.json({ error: 'Failed to delete persona' }, 500);
+    return createInternalErrorResponse(c, 'Failed to delete persona');
   }
 });
 
@@ -279,10 +284,10 @@ app.get('/:id/versions', async (c) => {
       .orderBy(desc(personaVersions.versionNumber))
       .all();
 
-    return c.json({ versions });
+    return createSuccessResponse(c, { versions });
   } catch (error) {
     console.error('Failed to get persona versions:', error);
-    return c.json({ error: 'Failed to get persona versions' }, 500);
+    return createInternalErrorResponse(c, 'Failed to get persona versions');
   }
 });
 
@@ -300,7 +305,7 @@ app.post('/:id/versions', async (c) => {
       .get();
 
     if (!persona) {
-      return c.json({ error: 'Persona not found' }, 404);
+      return createErrorResponse(c, { title: 'Persona Not Found', status: 404, detail: 'The requested persona could not be found' });
     }
 
     // Get latest version number
@@ -331,10 +336,10 @@ app.post('/:id/versions', async (c) => {
 
     await db.insert(personaVersions).values(newVersion).run();
 
-    return c.json({ version: newVersion });
+    return createSuccessResponse(c, { version: newVersion });
   } catch (error) {
     console.error('Failed to create persona version:', error);
-    return c.json({ error: 'Failed to create persona version' }, 500);
+    return createInternalErrorResponse(c, 'Failed to create persona version');
   }
 });
 
@@ -353,11 +358,11 @@ app.post('/:id/restore/:versionId', async (c) => {
       .get();
 
     if (!version) {
-      return c.json({ error: 'Version not found' }, 404);
+      return createErrorResponse(c, { title: 'Version Not Found', status: 404, detail: 'The requested version could not be found' });
     }
 
     if (version.personaId !== personaId) {
-      return c.json({ error: 'Version does not belong to this persona' }, 400);
+      return createErrorResponse(c, { title: 'Version Mismatch', status: 400, detail: 'Version does not belong to this persona' });
     }
 
     // Update persona with version data
@@ -376,13 +381,13 @@ app.post('/:id/restore/:versionId', async (c) => {
       .where(eq(personas.id, personaId))
       .run();
 
-    return c.json({
+    return createSuccessResponse(c, {
       success: true,
       message: `Restored to version ${version.versionNumber}`,
     });
   } catch (error) {
     console.error('Failed to restore persona version:', error);
-    return c.json({ error: 'Failed to restore persona version' }, 500);
+    return createInternalErrorResponse(c, 'Failed to restore persona version');
   }
 });
 
@@ -407,7 +412,7 @@ app.get('/:id/diff/:v1/:v2', async (c) => {
       .get();
 
     if (!version1 || !version2) {
-      return c.json({ error: 'One or both versions not found' }, 404);
+      return createErrorResponse(c, { title: 'Versions Not Found', status: 404, detail: 'One or both versions could not be found' });
     }
 
     // Simple diff
@@ -428,10 +433,10 @@ app.get('/:id/diff/:v1/:v2', async (c) => {
       },
     };
 
-    return c.json({ diff });
+    return createSuccessResponse(c, { diff });
   } catch (error) {
     console.error('Failed to generate diff:', error);
-    return c.json({ error: 'Failed to generate diff' }, 500);
+    return createInternalErrorResponse(c, 'Failed to generate diff');
   }
 });
 
