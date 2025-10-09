@@ -108,8 +108,8 @@ async function openBrowserForSession(sessionId: string) {
 
 // Tool schema - ONLY overseer (Golden Rule #1)
 const OVERSEER_TOOL: Tool = {
-  name: 'third_eye_overseer',
-  description: 'Send any task and get it processed through our intelligent pipeline. Just describe what you want - the system handles routing, validation, and execution automatically.',
+  name: 'oversee',
+  description: 'Third Eye MCP overseer helps AI agents understand what humans really want. Send vague requests and get clarifying questions, or send completed work for validation. We guide, discourage, enforce citations, and gatekeep quality - we never generate content ourselves.',
   inputSchema: {
     type: 'object',
     properties: {
@@ -177,38 +177,10 @@ export function createMCPServer(): Server {
     const { name, arguments: args } = request.params;
 
     // Handle overseer tool - main entry point
-    if (name === 'third_eye_overseer') {
+    if (name === 'oversee') {
       const task = (args as any).task;
 
-      // Check if this is a generation request (REJECT IT)
-      const isGenerationRequest = /\b(create|generate|write|make|build|develop|implement|code|design|draft|compose)\b/i.test(task) &&
-        !/\b(here is|here's|review|validate|check|analyze)\b/i.test(task) &&
-        task.length < 150; // Short requests are usually asking for generation
-
-      if (isGenerationRequest) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify({
-                status: 'guidance',
-                code: 'NEED_YOUR_WORK',
-                message: 'I help you refine and validate YOUR work - I don\'t create it for you.',
-                instructions: [
-                  'To get the most value from Third Eye:',
-                  '',
-                  '1. Create your initial draft, plan, or code',
-                  '2. Share it with me for review',
-                  '3. I\'ll provide detailed feedback and validation',
-                  '',
-                  'Example: "Here is my palm care guide: [your detailed content]. Please review for accuracy and completeness."'
-                ].join('\n'),
-                next_steps: 'Please provide your content and I will validate it for you.'
-              }, null, 2)
-            }
-          ]
-        };
-      }
+      // NO rejection logic - let Overseer LLM decide everything
 
       // Internal parameters (not exposed in schema but can be passed)
       const operation = (args as any).operation || 'execute';
@@ -264,7 +236,7 @@ export function createMCPServer(): Server {
       }
     }
 
-    throw new Error(`Unknown tool: ${name}. Only 'third_eye_overseer' is available. Individual Eyes cannot be called directly - use overseer instead.`);
+    throw new Error(`Unknown tool: ${name}. Only 'oversee' is available. Individual Eyes cannot be called directly - all requests go through the overseer.`);
   });
 
   return server;
