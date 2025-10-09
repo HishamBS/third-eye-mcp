@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "Bash(npm:*)",
+      "Bash(bun:*)",
+      "Bash(bunx:*)",
+      "Bash(git:*)",
+      "Bash(node:*)",
+      "Bash(sqlite3:*)",
+      "Bash(lsof:*)",
+      "Bash(kill:*)",
+      "Bash(chmod:*)",
+      "Bash(curl:*)",
+      "Bash(test:*)",
+      "Bash(vitest:*)",
+      "Bash(timeout:*)",
+      "Bash(./migrate.ts:*)",
+      "Bash(packages/db/migrate.ts:*)",
+      "Bash(echo:*)",
+      "Bash(cat:*)",
+      "Bash(awk:*)",
+      "Bash(find:*)",
+      "Bash(xargs:*)",
+      "Bash(printf:*)",
+      "Bash(printenv:*)",
+      "Bash(wc:*)",
+      "Glob(*)",
+      "Grep(*)",
+      "TodoWrite(*)",
+      "Task(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "mcp__*",
+      "NotebookEdit(*)",
+      "SlashCommand(*)",
+      "KillShell(*)",
+      "BashOutput(*)"
+    ],
+    "ask": [
+      "Bash(rm:*)",
+      "Bash(sudo:*)",
+      "Bash(git push:*)",
+      "Bash(git push --force:*)"
+    ]
+  }
+}
