@@ -5,15 +5,15 @@
  * Applies all pending migrations to the database
  */
 
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
-import Database from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/bun-sqlite';
+import { migrate } from 'drizzle-orm/bun-sqlite/migrator';
+import { Database } from 'bun:sqlite';
 import { resolve } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { homedir } from 'os';
 
-// Resolve database path
-const DB_PATH = process.env.OVERSEER_DB || resolve(homedir(), '.overseer/overseer.db');
+// Resolve database path - following prompt.md spec
+const DB_PATH = process.env.MCP_DB || resolve(homedir(), '.third-eye-mcp/mcp.db');
 const DB_DIR = DB_PATH.substring(0, DB_PATH.lastIndexOf('/'));
 const MIGRATIONS_DIR = resolve(import.meta.dir, 'migrations');
 
@@ -39,8 +39,16 @@ try {
   const sqlite = new Database(DB_PATH);
   const db = drizzle(sqlite);
 
-  // Run migrations
-  migrate(db, { migrationsFolder: MIGRATIONS_DIR });
+  console.log('📦 Applying migrations...');
+
+  // Run migrations with explicit logging
+  migrate(db, {
+    migrationsFolder: MIGRATIONS_DIR,
+  });
+
+  // Verify migrations ran by checking for tables
+  const tables = sqlite.query("SELECT name FROM sqlite_master WHERE type='table'").all();
+  console.log(`   ✓ Found ${tables.length} tables in database`);
 
   console.log('✅ Migrations completed successfully!');
 

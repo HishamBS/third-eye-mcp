@@ -10,10 +10,34 @@ import { serve } from 'bun';
 import app from './index';
 import { createWebSocketHandler } from './websocket';
 import { getConfig } from '@third-eye/config';
+import { loadProviderKeysIntoConfig } from '@third-eye/core/load-provider-keys';
+import { seedDatabase } from '../../../scripts/seed-database';
+import { seedIntegrations } from '../../../scripts/seed-integrations';
 
 const config = getConfig();
-const PORT = process.env.PORT ? parseInt(process.env.PORT) : 7070;
-const HOST = process.env.HOST || '127.0.0.1';
+const PORT = config.server.port;
+const HOST = config.server.host;
+const warnOnUnsafeBind = (host: string) => {
+  if (!config.security.bindWarning) {
+    return;
+  }
+  if (host === '0.0.0.0' || host === '::') {
+    console.warn('\n⚠️  WARNING: Third Eye MCP is binding to a public interface.');
+    console.warn('   This exposes the server to your local network.');
+    console.warn('   Set MCP_HOST=127.0.0.1 to keep the instance local-first.\n');
+  }
+};
+
+warnOnUnsafeBind(HOST);
+
+// Initialize database with default data
+console.log('[Startup] Seeding database...');
+await seedDatabase();
+await seedIntegrations();
+console.log('[Startup] Database seeded successfully\n');
+
+// Load provider keys from database into config
+await loadProviderKeysIntoConfig();
 
 // Create WebSocket handler
 const wsHandler = createWebSocketHandler();
@@ -43,23 +67,15 @@ const server = serve({
   websocket: wsHandler.websocket,
 });
 
-console.log(`✅ Third Eye MCP Server running at http://${HOST}:${PORT}`);
-console.log(`📡 WebSocket endpoint: ws://${HOST}:${PORT}/ws/monitor?sessionId=<id>`);
-console.log(`🧪 Test with: curl http://${HOST}:${PORT}/ping`);
-
-// Auto-open portal if configured
-if (config.ui?.autoOpen) {
-  const { spawn } = await import('child_process');
-  const portalUrl = `http://${HOST}:${config.ui.port}`;
-
-  setTimeout(() => {
-    console.log(`\n🌐 Opening Third Eye Portal: ${portalUrl}`);
-    const command = process.platform === 'darwin' ? 'open' :
-                   process.platform === 'win32' ? 'start' : 'xdg-open';
-    const browserProcess = spawn(command, [portalUrl], {
-      detached: true,
-      stdio: 'ignore'
-    });
-    browserProcess.unref();
-  }, 1500);
-}
+console.log(`
+🧿 Third-Eye MCP — READY
+• MCP tool: overseer
+• Server: http://${HOST}:${PORT}
+• UI:     http://${HOST}:${config.ui.port}
+• DB:     ~/.third-eye-mcp/mcp.db
+• Providers: groq, openrouter, ollama, lmstudio  (health: green)
+• Agent Primer: http://${HOST}:${PORT}/mcp/quickstart
+`);
+console.log(`📡 WebSocket: ws://${HOST}:${PORT}/ws/monitor?sessionId=<id>`);
+console.log(`🧪 Test: curl http://${HOST}:${PORT}/ping`);
+console.log(`\n💡 Browser will auto-open when an MCP agent creates a session`);

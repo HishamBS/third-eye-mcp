@@ -213,11 +213,5 @@ export enum DataKey {
 export const SHARINGAN_AMBIGUITY_SUFFIX = "The prompt is too vague. Please answer the clarifying questions above.";
 export const SHARINGAN_POLICY_TEMPLATE = "### Policy\nAlways clarify ambiguous prompts before proceeding with implementation.";
 
-export interface EyeResponse {
-  tag: EyeTag;
-  ok: boolean;
-  code: StatusCode;
-  md: string;
-  data: Record<string, any>;
-  next_action: string;
-}
+// Re-export BaseEnvelope as EyeResponse for backward compatibility
+export type { BaseEnvelope as EyeResponse } from './src/schemas/base';

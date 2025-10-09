@@ -11,8 +11,14 @@ import { getConfig } from '@third-eye/config';
  */
 
 const config = getConfig();
-const PORT = process.env.PORT ? parseInt(process.env.PORT) : 7070;
-const HOST = process.env.HOST || '127.0.0.1';
+const PORT = config.server.port;
+const HOST = config.server.host;
+
+if (config.security.bindWarning && (HOST === '0.0.0.0' || HOST === '::')) {
+  console.warn('\n⚠️  WARNING: Third Eye MCP is binding to a public interface.');
+  console.warn('   This exposes the server to your local network.');
+  console.warn('   Set MCP_HOST=127.0.0.1 to keep the instance local-first.\n');
+}
 
 // Create WebSocket handler
 const wsHandler = createWebSocketHandler();

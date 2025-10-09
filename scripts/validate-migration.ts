@@ -102,7 +102,7 @@ function validateImplementation() {
   // Section 8: CLI
   validate('8. CLI', 'NPX entrypoint implementation',
     checkFileExists('cli/index.ts') && checkFileExists('package.json') ? 'PASS' : 'FAIL',
-    'CLI with npx third-eye-mcp up, db open, reset commands'
+    'CLI with bunx third-eye-mcp up, db open, reset commands'
   );
 
   // Section 9: Security & Privacy
@@ -142,7 +142,7 @@ function validateImplementation() {
   console.log(`\n🎯 Overall Progress: ${completionPercentage}%`);
 
   if (completionPercentage >= 70) {
-    console.log('\n🚀 Ready for testing with "npx third-eye-mcp up"');
+    console.log('\n🚀 Ready for testing with "bunx third-eye-mcp up"');
   } else {
     console.log('\n⏳ Continue implementation to reach testing readiness');
   }

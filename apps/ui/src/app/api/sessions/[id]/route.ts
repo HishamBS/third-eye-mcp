@@ -8,7 +8,7 @@ export async function GET(
 ) {
   const params = await props.params;
   try {
-    const response = await fetch(`${API_URL}/sessions/${params.id}`, {
+    const response = await fetch(`${API_URL}/api/session/${params.id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -34,7 +34,7 @@ export async function PATCH(
   try {
     const body = await req.json();
 
-    const response = await fetch(`${API_URL}/sessions/${params.id}`, {
+    const response = await fetch(`${API_URL}/api/session/${params.id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ export async function DELETE(
 ) {
   const params = await props.params;
   try {
-    const response = await fetch(`${API_URL}/sessions/${params.id}`, {
+    const response = await fetch(`${API_URL}/api/session/${params.id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

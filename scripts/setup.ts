@@ -192,7 +192,7 @@ function printNextSteps(overseerDir: string) {
   log('   1. Start the server:', 'yellow');
   log('      bun run dev', 'cyan');
   log('         OR', 'reset');
-  log('      npx third-eye-mcp up', 'cyan');
+  log('      bunx third-eye-mcp up', 'cyan');
   console.log('');
 
   log('   2. Open the UI:', 'yellow');

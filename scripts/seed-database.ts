@@ -11,78 +11,87 @@
 
 import { getDb } from '../packages/db';
 import { personas, eyesRouting, appSettings, strictnessProfiles } from '../packages/db';
-import { EYES_REGISTRY, getRegisteredEyes, getDefaultRouting } from '../packages/core';
+import { ALL_EYES, getAllEyeNames } from '../packages/eyes';
 import { eq, and } from 'drizzle-orm';
+
+/**
+ * Generate a persona ID from eye name and version
+ * Format: {eyeName}_v{version}
+ * This creates a stable, predictable ID for each persona version
+ */
+function generatePersonaId(eyeName: string, version: number): string {
+  return `${eyeName}_v${version}`;
+}
 
 async function seedDatabase() {
   console.log('🌱 Starting database seeding...\n');
 
   const { db } = getDb();
 
-  // 1. Seed Personas from Registry
-  console.log('📝 Seeding personas from registry...');
-  const eyes = getRegisteredEyes();
+  // 1. Seed Personas from ALL_EYES
+  console.log('📝 Seeding personas from ALL_EYES...');
+  const eyeNames = getAllEyeNames();
 
-  for (const eye of eyes) {
-    const eyeTool = EYES_REGISTRY[eye];
+  for (const eyeName of eyeNames) {
+    const eye = ALL_EYES[eyeName];
 
     // Check if persona already exists
     const existing = await db
       .select()
       .from(personas)
-      .where(and(eq(personas.eye, eye), eq(personas.active, true)))
+      .where(and(eq(personas.eye, eyeName), eq(personas.active, true)))
       .limit(1);
 
     if (existing.length > 0) {
-      console.log(`  ✓ ${eye}: Active persona already exists (version ${existing[0].version})`);
+      console.log(`  ✓ ${eyeName}: Active persona already exists (version ${existing[0].version})`);
       continue;
     }
 
-    // Create version 1 with default template
+    // Create version 1 using Eye's getPersona() method
     await db.insert(personas).values({
-      eye,
+      id: generatePersonaId(eyeName, 1),
+      eye: eyeName,
       version: 1,
-      content: eyeTool.personaTemplate,
+      content: eye.getPersona(),
       active: true,
       createdAt: new Date(),
     });
 
-    console.log(`  ✅ ${eye}: Created version 1 (active) from template`);
+    console.log(`  ✅ ${eyeName}: Created version 1 (active) from Eye class`);
   }
 
   // 2. Seed Routing Configurations
   console.log('\n🔀 Seeding default routing configurations...');
 
-  for (const eye of eyes) {
+  // Default routing: Groq (fast) primary, OpenRouter (Claude) fallback
+  const defaultRouting = {
+    primaryProvider: 'groq',
+    primaryModel: 'llama-3.3-70b-versatile',
+    fallbackProvider: 'openrouter',
+    fallbackModel: 'anthropic/claude-3.5-sonnet',
+  };
+
+  for (const eyeName of eyeNames) {
     const existingRouting = await db
       .select()
       .from(eyesRouting)
-      .where(eq(eyesRouting.eye, eye))
+      .where(eq(eyesRouting.eye, eyeName))
       .limit(1);
 
     if (existingRouting.length > 0) {
-      console.log(`  ✓ ${eye}: Routing already configured (${existingRouting[0].primaryProvider}/${existingRouting[0].primaryModel})`);
-      continue;
-    }
-
-    const defaults = getDefaultRouting(eye);
-    if (!defaults) {
-      console.log(`  ⚠️  ${eye}: No default routing defined in registry`);
+      console.log(`  ✓ ${eyeName}: Routing already configured (${existingRouting[0].primaryProvider}/${existingRouting[0].primaryModel})`);
       continue;
     }
 
     await db.insert(eyesRouting).values({
-      eye,
-      primaryProvider: defaults.primaryProvider,
-      primaryModel: defaults.primaryModel,
-      fallbackProvider: defaults.fallbackProvider || null,
-      fallbackModel: defaults.fallbackModel || null,
+      eye: eyeName,
+      primaryProvider: defaultRouting.primaryProvider,
+      primaryModel: defaultRouting.primaryModel,
+      fallbackProvider: defaultRouting.fallbackProvider,
+      fallbackModel: defaultRouting.fallbackModel,
     });
 
-    console.log(`  ✅ ${eye}: Created routing (${defaults.primaryProvider}/${defaults.primaryModel})`);
-    if (defaults.fallbackProvider) {
-      console.log(`      Fallback: ${defaults.fallbackProvider}/${defaults.fallbackModel}`);
-    }
+    console.log(`  ✅ ${eyeName}: Created routing (${defaultRouting.primaryProvider}/${defaultRouting.primaryModel})`);
   }
 
   // 3. Seed Strictness Profiles
@@ -90,39 +99,36 @@ async function seedDatabase() {
 
   const builtInProfiles = [
     {
+      id: 'casual',
       name: 'Casual',
-      sharinganMinScore: 50,
-      rinneganRequireTests: false,
-      tenseiganMinConfidence: 0.6,
-      byakuganAllowPartial: true,
+      description: 'Relaxed validation for quick iterations',
+      ambiguityThreshold: 50, // Allow more ambiguity (sharingan)
+      citationCutoff: 60, // Lower evidence requirement (tenseigan)
+      consistencyTolerance: 80, // More forgiving consistency checks (byakugan)
       mangekyoStrictness: 'lenient',
-      joganRequireEvidence: false,
-      overseerMinApprovals: 3,
-      custom: false,
+      isBuiltIn: true,
       createdAt: new Date(),
     },
     {
+      id: 'enterprise',
       name: 'Enterprise',
-      sharinganMinScore: 30,
-      rinneganRequireTests: true,
-      tenseiganMinConfidence: 0.8,
-      byakuganAllowPartial: false,
+      description: 'Balanced validation for production work',
+      ambiguityThreshold: 30, // Standard ambiguity detection
+      citationCutoff: 70, // Standard evidence requirement
+      consistencyTolerance: 85, // Standard consistency checks
       mangekyoStrictness: 'standard',
-      joganRequireEvidence: true,
-      overseerMinApprovals: 5,
-      custom: false,
+      isBuiltIn: true,
       createdAt: new Date(),
     },
     {
+      id: 'security',
       name: 'Security',
-      sharinganMinScore: 10,
-      rinneganRequireTests: true,
-      tenseiganMinConfidence: 0.95,
-      byakuganAllowPartial: false,
+      description: 'Strict validation for high-assurance systems',
+      ambiguityThreshold: 10, // Very sensitive to ambiguity
+      citationCutoff: 95, // High evidence requirement
+      consistencyTolerance: 95, // Strict consistency checks
       mangekyoStrictness: 'strict',
-      joganRequireEvidence: true,
-      overseerMinApprovals: 6,
-      custom: false,
+      isBuiltIn: true,
       createdAt: new Date(),
     },
   ];
@@ -170,8 +176,8 @@ async function seedDatabase() {
 
   console.log('\n✨ Database seeding complete!\n');
   console.log('Summary:');
-  console.log(`  - ${eyes.length} Eyes configured with personas`);
-  console.log(`  - ${eyes.length} default routing configurations`);
+  console.log(`  - ${eyeNames.length} Eyes configured with personas (from ALL_EYES)`);
+  console.log(`  - ${eyeNames.length} default routing configurations`);
   console.log(`  - ${builtInProfiles.length} strictness profiles (Casual, Enterprise, Security)`);
   console.log(`  - ${defaultSettings.length} app settings initialized`);
   console.log('\n💡 Run "bun run apps/server/src/start.ts" to start the server');

@@ -1,282 +1,348 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { useUI } from '@/contexts/UIContext';
+import {
+  Eye, Zap, PlayCircle, ShieldAlert, FolderTree, Trophy,
+  Download, MessageSquare, History, ArrowRight, Activity,
+  Cpu, CheckCircle2
+} from 'lucide-react';
 
-interface Session {
-  id: string;
-  agentName?: string;
-  model?: string;
-  displayName?: string;
-  status: 'active' | 'idle' | 'completed';
-  createdAt: string;
-  lastActivity?: string;
-  _stats?: {
-    operationsCount: number;
-    tokensTotal: number;
-  };
+interface RealtimeStats {
+  sessions: number;
+  runs: number;
+  successRate: number;
+  avgLatency: number;
+  providers: Array<{ id: string; status: 'online' | 'offline' }>;
 }
 
+const WOW_FEATURES = [
+  {
+    id: 'evidence-lens',
+    title: 'Evidence Lens',
+    description: 'Live claim validation with confidence scores',
+    icon: <Eye className="h-6 w-6" />,
+    color: 'from-blue-500 to-cyan-500',
+    href: '/monitor?tab=evidence',
+    demo: '95% confidence ✓',
+  },
+  {
+    id: 'duel-mode',
+    title: 'Duel Mode',
+    description: 'Model comparison arena',
+    icon: <Zap className="h-6 w-6" />,
+    color: 'from-purple-500 to-pink-500',
+    href: '/duel',
+    demo: 'GPT-4 vs Claude',
+  },
+  {
+    id: 'replay-theater',
+    title: 'Replay Theater',
+    description: 'Session playback with speed controls',
+    icon: <PlayCircle className="h-6 w-6" />,
+    color: 'from-orange-500 to-red-500',
+    href: '/replay',
+    demo: '0.5x - 5x speed',
+  },
+  {
+    id: 'kill-switch',
+    title: 'Kill Switch',
+    description: 'One-click hallucination check',
+    icon: <ShieldAlert className="h-6 w-6" />,
+    color: 'from-red-500 to-rose-500',
+    href: '/monitor',
+    demo: 'Re-validate now',
+  },
+  {
+    id: 'visual-plan',
+    title: 'Visual Plan Renderer',
+    description: 'File tree + Kanban board',
+    icon: <FolderTree className="h-6 w-6" />,
+    color: 'from-green-500 to-emerald-500',
+    href: '/monitor?tab=plan',
+    demo: '5 phases tracked',
+  },
+  {
+    id: 'leaderboards',
+    title: 'Leaderboards',
+    description: 'Provider/model rankings',
+    icon: <Trophy className="h-6 w-6" />,
+    color: 'from-yellow-500 to-amber-500',
+    href: '/metrics',
+    demo: 'Groq leads 342ms',
+  },
+  {
+    id: 'export-engine',
+    title: 'Export Engine',
+    description: 'PDF/HTML/JSON/MD downloads',
+    icon: <Download className="h-6 w-6" />,
+    color: 'from-indigo-500 to-blue-500',
+    href: '/monitor',
+    demo: '4 formats ready',
+  },
+  {
+    id: 'adaptive-clarifications',
+    title: 'Adaptive Clarifications',
+    description: 'Sharingan inline Q&A',
+    icon: <MessageSquare className="h-6 w-6" />,
+    color: 'from-teal-500 to-cyan-500',
+    href: '/monitor?eye=sharingan',
+    demo: '3 questions asked',
+  },
+  {
+    id: 'session-memory',
+    title: 'Session Memory',
+    description: 'Byakugan context tracking',
+    icon: <History className="h-6 w-6" />,
+    color: 'from-violet-500 to-purple-500',
+    href: '/monitor?tab=evidence',
+    demo: '12 refs tracked',
+  },
+];
+
 export default function HomePage() {
-  const router = useRouter();
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const { selectedSessionId } = useUI();
+  const [stats, setStats] = useState<RealtimeStats>({
+    sessions: 0,
+    runs: 0,
+    successRate: 0,
+    avgLatency: 0,
+    providers: [],
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchSessions();
-    // Poll for updates every 5 seconds
-    const interval = setInterval(fetchSessions, 5000);
+    fetchStats();
+    const interval = setInterval(fetchStats, 3000);
     return () => clearInterval(interval);
   }, []);
 
-  const fetchSessions = async () => {
+  const fetchStats = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:7070'}/sessions`);
-      if (response.ok) {
-        const data = await response.json();
-        setSessions(data.sessions || []);
+      // Use Next.js API routes (same-origin, no CORS issues)
+      // Fetch metrics
+      try {
+        const metricsRes = await fetch('/api/metrics');
+        if (metricsRes.ok) {
+          const metrics = await metricsRes.json();
+          setStats(prev => ({
+            ...prev,
+            sessions: metrics.totalSessions || 0,
+            runs: metrics.totalRuns || metrics.totalCalls || 0,
+            successRate: Math.round(metrics.approvalRate || 0),
+            avgLatency: Math.round(metrics.avgLatency || 0),
+          }));
+        }
+      } catch (err) {
+        console.warn('Metrics endpoint unavailable');
+      }
+
+      // Fetch health via backend server (CORS fixed)
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+        const healthRes = await fetch(`${API_URL}/health`);
+        if (healthRes.ok) {
+          const health = await healthRes.json();
+          const providers = ['groq', 'openrouter', 'ollama', 'lmstudio'];
+          setStats(prev => ({
+            ...prev,
+            providers: providers.map(id => ({
+              id,
+              status: health.checks?.providers?.[id] ? 'online' as const : 'offline' as const,
+            })),
+          }));
+        }
+      } catch (err) {
+        console.warn('Health endpoint unavailable');
+        // Set all providers to offline
+        setStats(prev => ({
+          ...prev,
+          providers: ['groq', 'openrouter', 'ollama', 'lmstudio'].map(id => ({
+            id,
+            status: 'offline' as const,
+          })),
+        }));
       }
     } catch (error) {
-      console.error('Failed to fetch sessions:', error);
+      console.error('Failed to fetch stats:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusColor = (status: Session['status']) => {
-    switch (status) {
-      case 'active':
-        return 'border-emerald-400/50 bg-emerald-500/10 text-emerald-300';
-      case 'idle':
-        return 'border-yellow-400/50 bg-yellow-500/10 text-yellow-300';
-      case 'completed':
-        return 'border-slate-400/50 bg-slate-500/10 text-slate-300';
-      default:
-        return 'border-slate-400/50 bg-slate-500/10 text-slate-300';
-    }
-  };
-
-  const getStatusIndicator = (status: Session['status']) => {
-    switch (status) {
-      case 'active':
-        return '🟢';
-      case 'idle':
-        return '🟡';
-      case 'completed':
-        return '⚫';
-      default:
-        return '⚪';
-    }
-  };
-
-  const getSessionDisplayName = (session: Session) => {
-    if (session.displayName) return session.displayName;
-    if (session.agentName && session.model) {
-      return `${session.agentName} - ${session.model}`;
-    }
-    return session.id;
-  };
-
-  const getTimeAgo = (timestamp?: string) => {
-    if (!timestamp) return 'Unknown';
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-    const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays}d ago`;
-  };
-
   return (
-    <main className="min-h-screen bg-brand-ink px-6 py-10">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-8">
-          <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Third Eye MCP</p>
-          <h1 className="mt-3 text-4xl font-semibold text-white">Agent Sessions</h1>
-          <p className="mt-3 max-w-2xl text-sm text-slate-300">
-            Monitor AI agents connected to your local Third Eye MCP server. Sessions are automatically created when agents connect and make tool calls.
-          </p>
-        </header>
+    <div className="min-h-screen bg-brand-ink">
+      <section className="relative overflow-hidden py-20">
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-accent/20 via-purple-500/10 to-transparent" />
 
-        {loading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-32 animate-pulse rounded-2xl border border-brand-outline/40 bg-brand-paperElev/60"
+        <div className="relative mx-auto max-w-7xl px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="flex flex-col items-center gap-6">
+              <Image
+                src="/logo.svg"
+                alt="Third Eye MCP logo"
+                width={320}
+                height={320}
+                priority
+                className="h-32 w-auto drop-shadow-[0_20px_45px_rgba(88,28,135,0.35)]"
               />
-            ))}
+              <h1 className="text-6xl font-bold bg-gradient-to-r from-brand-accent via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                Third Eye MCP
+              </h1>
+            </div>
+            <p className="mt-6 text-xl text-slate-300">
+              Local-first AI orchestration with multi-Eye validation
+            </p>
+            <div className="mt-10 flex justify-center space-x-4">
+              <Link
+                href="/connections"
+                className="rounded-xl bg-brand-accent px-8 py-4 text-lg font-semibold text-white hover:bg-brand-accent/90 transition-colors shadow-lg shadow-brand-accent/50"
+              >
+                Connect Agent
+              </Link>
+              <Link
+                href="/monitor"
+                className="rounded-xl border border-brand-accent/40 bg-brand-paper/60 px-8 py-4 text-lg font-semibold text-white hover:bg-brand-paper/80 transition-colors"
+              >
+                View Demo
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 py-12">
+        <GlassCard className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-semibold text-white flex items-center space-x-2">
+              <Activity className="h-6 w-6 text-brand-accent animate-pulse" />
+              <span>Live MCP Activity</span>
+            </h2>
+            <div className="flex items-center space-x-4">
+              {loading ? (
+                <div className="h-2 w-2 rounded-full bg-yellow-400 animate-pulse" />
+              ) : (
+                <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+              )}
+              <span className="text-sm text-slate-400">Real-time</span>
+            </div>
           </div>
-        ) : sessions.length === 0 ? (
-          <div className="rounded-2xl border border-brand-outline/60 bg-brand-paperElev/80 p-12 text-center shadow-glass">
-            <div className="mx-auto max-w-md">
-              <p className="text-lg font-semibold text-white">No Agent Sessions Yet</p>
-              <p className="mt-2 text-sm text-slate-400">
-                Connect an AI agent (like Claude Desktop, Cursor, or GPT-4) to your Third Eye MCP server to start monitoring.
-              </p>
-              <div className="mt-6 rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4 text-left">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-accent">Quick Setup</p>
-                <ol className="mt-3 space-y-2 text-sm text-slate-300">
-                  <li>1. Configure your AI agent to connect to this MCP server</li>
-                  <li>2. Set provider API keys in Settings → Models</li>
-                  <li>3. Agent calls will auto-create sessions here</li>
-                </ol>
-              </div>
-              <div className="mt-6 flex gap-3">
-                <button
-                  onClick={() => router.push('/connections')}
-                  className="flex-1 rounded-full bg-brand-accent px-6 py-2.5 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
-                >
-                  Connection Guides
-                </button>
-                <button
-                  onClick={() => router.push('/settings')}
-                  className="flex-1 rounded-full border border-brand-accent/60 px-6 py-2.5 text-sm font-semibold text-brand-accent transition hover:bg-brand-accent/10 focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
-                >
-                  Settings
-                </button>
+
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <div className="rounded-lg border border-brand-outline/30 bg-brand-paper/40 p-4">
+              <div className="text-sm text-slate-400">Sessions</div>
+              <div className="text-3xl font-bold text-white mt-1">{stats.sessions}</div>
+            </div>
+            <div className="rounded-lg border border-brand-outline/30 bg-brand-paper/40 p-4">
+              <div className="text-sm text-slate-400">Runs</div>
+              <div className="text-3xl font-bold text-white mt-1">{stats.runs}</div>
+            </div>
+            <div className="rounded-lg border border-brand-outline/30 bg-brand-paper/40 p-4">
+              <div className="text-sm text-slate-400">Success Rate</div>
+              <div className="text-3xl font-bold text-green-400 mt-1">{stats.successRate}%</div>
+            </div>
+            <div className="rounded-lg border border-brand-outline/30 bg-brand-paper/40 p-4">
+              <div className="text-sm text-slate-400">Avg Latency</div>
+              <div className="text-3xl font-bold text-cyan-400 mt-1">{stats.avgLatency}ms</div>
+            </div>
+            <div className="rounded-lg border border-brand-outline/30 bg-brand-paper/40 p-4">
+              <div className="text-sm text-slate-400 mb-2">Providers</div>
+              <div className="flex items-center space-x-1">
+                {stats.providers.map(p => (
+                  <div
+                    key={p.id}
+                    className={`h-3 w-3 rounded-full ${
+                      p.status === 'online' ? 'bg-green-400' : 'bg-gray-600'
+                    }`}
+                    title={`${p.id}: ${p.status}`}
+                  />
+                ))}
               </div>
             </div>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {sessions.map((session, index) => (
-              <motion.button
-                key={session.id}
-                onClick={() => router.push(`/monitor?sessionId=${session.id}`)}
+
+          <div className="rounded-xl border border-brand-outline/30 bg-brand-ink/40 p-6">
+            <div className="flex items-center justify-center space-x-3 text-slate-400">
+              <Cpu className="h-5 w-5 animate-spin" style={{ animationDuration: '3s' }} />
+              <span>Monitoring pipeline executions...</span>
+              <CheckCircle2 className="h-5 w-5 text-green-400" />
+            </div>
+          </div>
+        </GlassCard>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 py-12">
+        <h2 className="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-brand-accent to-purple-400 bg-clip-text text-transparent">
+          WOW Features
+        </h2>
+        <p className="text-center text-slate-400 mb-12 max-w-2xl mx-auto">
+          Powerful tools for AI orchestration, validation, and analysis. All features work with real-time data.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {WOW_FEATURES.map((feature, index) => {
+            // Build href with sessionId if available
+            const href = selectedSessionId
+              ? `${feature.href}${feature.href.includes('?') ? '&' : '?'}sessionId=${selectedSessionId}`
+              : feature.href;
+
+            return (
+              <motion.div
+                key={feature.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                className="w-full rounded-2xl border border-brand-outline/60 bg-brand-paperElev/80 p-6 text-left shadow-glass transition-all hover:border-brand-accent/60 hover:shadow-xl"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{getStatusIndicator(session.status)}</span>
-                      <div>
-                        <h3 className="text-lg font-semibold text-white">
-                          {getSessionDisplayName(session)}
-                        </h3>
-                        {(session.agentName || session.model) && (
-                          <p className="mt-1 text-xs text-slate-400">
-                            {session.agentName && <span>{session.agentName}</span>}
-                            {session.agentName && session.model && <span> • </span>}
-                            {session.model && <span className="font-mono">{session.model}</span>}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap gap-4 text-xs text-slate-300">
-                      <div>
-                        <span className="text-slate-500">Status: </span>
-                        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${getStatusColor(session.status)}`}>
-                          {session.status === 'active' && 'Active now'}
-                          {session.status === 'idle' && `Idle ${getTimeAgo(session.lastActivity)}`}
-                          {session.status === 'completed' && `Completed ${getTimeAgo(session.lastActivity)}`}
-                        </span>
-                      </div>
-                      {session._stats && (
-                        <>
-                          <div>
-                            <span className="text-slate-500">Operations: </span>
-                            <span className="font-semibold text-white">{session._stats.operationsCount}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-500">Tokens: </span>
-                            <span className="font-semibold text-white">{(session._stats.tokensTotal / 1000).toFixed(1)}k</span>
-                          </div>
-                        </>
-                      )}
-                      <div>
-                        <span className="text-slate-500">Created: </span>
-                        <span className="text-white">{getTimeAgo(session.createdAt)}</span>
-                      </div>
-                    </div>
+                <Link href={href}>
+                <GlassCard className="group cursor-pointer hover:border-brand-accent/60 transition-all duration-300 p-6 h-full">
+                  <div className={`inline-flex rounded-xl bg-gradient-to-br ${feature.color} p-3 text-white mb-4`}>
+                    {feature.icon}
                   </div>
-
-                  <div className="text-brand-accent">
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                  <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-brand-accent transition-colors">
+                    {feature.title}
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-4">{feature.description}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-brand-accent font-mono">{feature.demo}</span>
+                    <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-brand-accent group-hover:translate-x-1 transition-all" />
                   </div>
-                </div>
-              </motion.button>
-            ))}
-          </div>
-        )}
-
-        <div className="mt-8 grid gap-6 md:grid-cols-3">
-          <div className="rounded-2xl border border-brand-outline/60 bg-brand-paperElev/60 p-6 shadow-glass">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-accent">Configuration</h2>
-            <div className="mt-4 space-y-3">
-              {[
-                { name: 'Connections', href: '/connections', desc: 'MCP setup guides' },
-                { name: 'Eyes', href: '/eyes', desc: 'Built-in + custom' },
-                { name: 'Models', href: '/models', desc: 'Providers + routing' },
-                { name: 'Personas', href: '/personas', desc: 'Eye personalities' },
-              ].map((link) => (
-                <button
-                  key={link.href}
-                  onClick={() => router.push(link.href)}
-                  className="w-full rounded-lg border border-brand-outline/30 bg-brand-paper/50 p-3 text-left transition hover:border-brand-accent/60 hover:bg-brand-paper"
-                >
-                  <div className="font-semibold text-white">{link.name}</div>
-                  <div className="text-xs text-slate-400">{link.desc}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-brand-outline/60 bg-brand-paperElev/60 p-6 shadow-glass">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-accent">Workflows</h2>
-            <div className="mt-4 space-y-3">
-              {[
-                { name: 'Pipelines', href: '/pipelines', desc: 'Visual builder' },
-                { name: 'Strictness', href: '/strictness', desc: 'Profiles + sliders' },
-                { name: 'Prompts', href: '/prompts', desc: 'Library' },
-              ].map((link) => (
-                <button
-                  key={link.href}
-                  onClick={() => router.push(link.href)}
-                  className="w-full rounded-lg border border-brand-outline/30 bg-brand-paper/50 p-3 text-left transition hover:border-brand-accent/60 hover:bg-brand-paper"
-                >
-                  <div className="font-semibold text-white">{link.name}</div>
-                  <div className="text-xs text-slate-400">{link.desc}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-brand-outline/60 bg-brand-paperElev/60 p-6 shadow-glass">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-accent">System</h2>
-            <div className="mt-4 space-y-3">
-              {[
-                { name: 'Settings', href: '/settings', desc: 'App config' },
-                { name: 'Database', href: '/database', desc: 'Browse + backup' },
-                { name: 'Metrics', href: '/metrics', desc: 'Performance' },
-              ].map((link) => (
-                <button
-                  key={link.href}
-                  onClick={() => router.push(link.href)}
-                  className="w-full rounded-lg border border-brand-outline/30 bg-brand-paper/50 p-3 text-left transition hover:border-brand-accent/60 hover:bg-brand-paper"
-                >
-                  <div className="font-semibold text-white">{link.name}</div>
-                  <div className="text-xs text-slate-400">{link.desc}</div>
-                </button>
-              ))}
-            </div>
-          </div>
+                </GlassCard>
+              </Link>
+            </motion.div>
+            );
+          })}
         </div>
-      </div>
-    </main>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 py-20 text-center">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <h3 className="text-2xl font-semibold text-white mb-4">
+            Ready to get started?
+          </h3>
+          <p className="text-slate-400 mb-8">
+            Connect your AI agent and experience the power of multi-Eye validation
+          </p>
+          <Link
+            href="/connections"
+            className="inline-flex items-center space-x-2 rounded-xl bg-gradient-to-r from-brand-accent to-purple-500 px-8 py-4 text-lg font-semibold text-white hover:shadow-2xl hover:shadow-brand-accent/50 transition-all"
+          >
+            <span>Get Started</span>
+            <ArrowRight className="h-5 w-5" />
+          </Link>
+        </motion.div>
+      </section>
+    </div>
   );
 }

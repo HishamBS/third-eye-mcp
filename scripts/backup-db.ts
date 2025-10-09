@@ -22,9 +22,10 @@ function log(message: string, color: keyof typeof COLORS = 'reset') {
   console.log(`${COLORS[color]}${message}${COLORS.reset}`);
 }
 
+const DEFAULT_DB_PATH = resolve(homedir(), '.third-eye-mcp/mcp.db');
+
 async function backupDatabase() {
-  // Get database path
-  const DB_PATH = process.env.OVERSEER_DB || resolve(homedir(), '.overseer/overseer.db');
+  const DB_PATH = process.env.MCP_DB || DEFAULT_DB_PATH;
 
   // Check if database exists
   if (!existsSync(DB_PATH)) {
@@ -43,7 +44,7 @@ async function backupDatabase() {
   // Create timestamped backup filename
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0] + '_' +
                     new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
-  const backupFilename = `overseer-backup-${timestamp}.db`;
+  const backupFilename = `third-eye-mcp-backup-${timestamp}.db`;
   const backupPath = resolve(BACKUPS_DIR, backupFilename);
 
   try {
@@ -63,7 +64,7 @@ async function backupDatabase() {
     // List recent backups
     const { readdirSync } = await import('fs');
     const backups = readdirSync(BACKUPS_DIR)
-      .filter(f => f.startsWith('overseer-backup-') && f.endsWith('.db'))
+      .filter(f => f.startsWith('third-eye-mcp-backup-') && f.endsWith('.db'))
       .sort()
       .reverse()
       .slice(0, 5);

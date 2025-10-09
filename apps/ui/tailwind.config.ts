@@ -10,15 +10,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Overseer theme (default - Naruto palette)
         brand: {
-          primary: '#D9463B',
-          primaryDark: '#B3362D',
-          accent: '#F7B500',
-          ink: '#0F0F12',
-          paper: '#0B0B0D',
-          paperElev: '#15161A',
-          outline: '#2A2B32',
+          primary: 'rgb(var(--color-primary) / <alpha-value>)',
+          accent: 'rgb(var(--color-accent) / <alpha-value>)',
+          ink: 'rgb(var(--color-ink) / <alpha-value>)',
+          paper: 'rgb(var(--color-paper) / <alpha-value>)',
+          paperElev: 'rgb(var(--color-paper-elev) / <alpha-value>)',
+          outline: 'rgb(var(--color-outline) / <alpha-value>)',
         },
 
         // Eye colors (consistent across all themes)
@@ -106,72 +104,65 @@ const config: Config = {
     // Custom plugin for theme switching
     function({ addBase, theme }) {
       addBase({
-        // Overseer theme (default)
         ':root[data-theme="overseer"]': {
-          '--color-primary': '#D9463B',
-          '--color-accent': '#F7B500',
-          '--color-ink': '#0F0F12',
-          '--color-paper': '#0B0B0D',
-          '--color-paper-elev': '#15161A',
-          '--color-outline': '#2A2B32',
+          '--color-primary': '217 70 59',
+          '--color-accent': '247 181 0',
+          '--color-ink': '15 15 18',
+          '--color-paper': '11 11 13',
+          '--color-paper-elev': '21 22 26',
+          '--color-outline': '42 43 50',
         },
 
-        // Midnight theme
         ':root[data-theme="midnight"]': {
-          '--color-primary': '#4F46E5',
-          '--color-accent': '#8B5CF6',
-          '--color-ink': '#0A0A14',
-          '--color-paper': '#111827',
-          '--color-paper-elev': '#1F2937',
-          '--color-outline': '#374151',
+          '--color-primary': '79 70 229',
+          '--color-accent': '139 92 246',
+          '--color-ink': '10 10 20',
+          '--color-paper': '17 24 39',
+          '--color-paper-elev': '31 41 55',
+          '--color-outline': '55 65 81',
         },
 
-        // Ocean theme
         ':root[data-theme="ocean"]': {
-          '--color-primary': '#06B6D4',
-          '--color-accent': '#14B8A6',
-          '--color-ink': '#0C1821',
-          '--color-paper': '#0F172A',
-          '--color-paper-elev': '#1E293B',
-          '--color-outline': '#334155',
+          '--color-primary': '6 182 212',
+          '--color-accent': '20 184 166',
+          '--color-ink': '12 24 33',
+          '--color-paper': '15 23 42',
+          '--color-paper-elev': '30 41 59',
+          '--color-outline': '51 65 85',
         },
 
-        // Forest theme
         ':root[data-theme="forest"]': {
-          '--color-primary': '#10B981',
-          '--color-accent': '#84CC16',
-          '--color-ink': '#0A1F15',
-          '--color-paper': '#0F1F16',
-          '--color-paper-elev': '#1A2E23',
-          '--color-outline': '#2D4A3A',
+          '--color-primary': '16 185 129',
+          '--color-accent': '132 204 22',
+          '--color-ink': '10 31 21',
+          '--color-paper': '15 31 22',
+          '--color-paper-elev': '26 46 35',
+          '--color-outline': '45 74 58',
         },
 
-        // Sunset theme
         ':root[data-theme="sunset"]': {
-          '--color-primary': '#F97316',
-          '--color-accent': '#FBBF24',
-          '--color-ink': '#1A0F0A',
-          '--color-paper': '#1F1410',
-          '--color-paper-elev': '#2A1F1A',
-          '--color-outline': '#3D2E24',
+          '--color-primary': '249 115 22',
+          '--color-accent': '251 191 36',
+          '--color-ink': '26 15 10',
+          '--color-paper': '31 20 16',
+          '--color-paper-elev': '42 31 26',
+          '--color-outline': '61 46 36',
         },
 
-        // Monochrome theme
         ':root[data-theme="monochrome"]': {
-          '--color-primary': '#6B7280',
-          '--color-accent': '#9CA3AF',
-          '--color-ink': '#000000',
-          '--color-paper': '#111111',
-          '--color-paper-elev': '#1A1A1A',
-          '--color-outline': '#333333',
+          '--color-primary': '107 114 128',
+          '--color-accent': '156 163 175',
+          '--color-ink': '0 0 0',
+          '--color-paper': '17 17 17',
+          '--color-paper-elev': '26 26 26',
+          '--color-outline': '51 51 51',
         },
 
-        // Light mode overrides (when dark mode is disabled)
         ':root:not(.dark)': {
-          '--color-ink': '#FFFFFF',
-          '--color-paper': '#F9FAFB',
-          '--color-paper-elev': '#F3F4F6',
-          '--color-outline': '#E5E7EB',
+          '--color-ink': '255 255 255',
+          '--color-paper': '249 250 251',
+          '--color-paper-elev': '243 244 246',
+          '--color-outline': '229 231 235',
         },
       })
     }

@@ -9,7 +9,7 @@ import { homedir } from 'os';
 export const ConfigSchema = z.object({
   // Database
   db: z.object({
-    path: z.string().default('~/.overseer/overseer.db'),
+    path: z.string().default('~/.third-eye-mcp/mcp.db'),
   }).default({}),
 
   // Server
@@ -46,6 +46,7 @@ export const ConfigSchema = z.object({
   security: z.object({
     bindWarning: z.boolean().default(true),
     encryptionKey: z.string().optional(),
+    allowedOrigins: z.array(z.string()).optional(),
   }).default({}),
 
   // Telemetry
@@ -54,9 +55,14 @@ export const ConfigSchema = z.object({
     endpoint: z.string().optional(),
   }).default({}),
 
+  rateLimits: z.object({
+    userRps: z.number().default(2),
+    sessionRps: z.number().default(2),
+  }).default({}),
+
   // Theme and UI preferences
   theme: z.object({
-    name: z.enum(['overseer']).default('overseer'),
+    name: z.enum(['third-eye']).default('third-eye'),
     darkMode: z.boolean().default(true),
   }).default({}),
 }).default({});
@@ -68,7 +74,7 @@ export type Config = z.infer<typeof ConfigSchema>;
  */
 export const defaultConfig: Config = {
   db: {
-    path: '~/.overseer/overseer.db',
+    path: '~/.third-eye-mcp/mcp.db',
   },
   server: {
     host: '127.0.0.1',
@@ -81,12 +87,17 @@ export const defaultConfig: Config = {
   providers: {},
   security: {
     bindWarning: true,
+    allowedOrigins: [],
   },
   telemetry: {
     enabled: false,
   },
+  rateLimits: {
+    userRps: 2,
+    sessionRps: 2,
+  },
   theme: {
-    name: 'overseer',
+    name: 'third-eye',
     darkMode: true,
   },
 };
@@ -95,7 +106,7 @@ export const defaultConfig: Config = {
  * Get configuration directory path
  */
 export function getConfigDir(): string {
-  const configDir = resolve(homedir(), '.overseer');
+  const configDir = resolve(homedir(), '.third-eye-mcp');
   if (!existsSync(configDir)) {
     mkdirSync(configDir, { recursive: true, mode: 0o700 });
   }
@@ -109,40 +120,58 @@ export function getConfigPath(): string {
   return resolve(getConfigDir(), 'config.json');
 }
 
+function parseOptionalBoolean(value?: string | null): boolean | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+
+  if (value === 'true' || value === '1') {
+    return true;
+  }
+
+  if (value === 'false' || value === '0') {
+    return false;
+  }
+
+  return undefined;
+}
+
 /**
  * Validate environment variables
  */
 export function validateEnvironment(): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
-  // Check port conflicts
-  const serverPort = process.env.OVERSEER_PORT ? parseInt(process.env.OVERSEER_PORT) : 7070;
-  const uiPort = process.env.OVERSEER_UI_PORT ? parseInt(process.env.OVERSEER_UI_PORT) : 3300;
+  // Check port conflicts using MCP_* env vars
+  const rawServerPort = process.env.MCP_PORT || process.env.PORT;
+  const parsedServerPort = rawServerPort ? parseInt(rawServerPort, 10) : undefined;
+  const serverPort = Number.isFinite(parsedServerPort) ? parsedServerPort as number : 7070;
+  const uiPort = process.env.MCP_UI_PORT ? parseInt(process.env.MCP_UI_PORT, 10) : 3300;
 
   if (serverPort === uiPort) {
-    errors.push(`Port conflict: OVERSEER_PORT and OVERSEER_UI_PORT cannot be the same (${serverPort})`);
+    errors.push(`Port conflict: MCP_PORT and MCP_UI_PORT cannot be the same (${serverPort})`);
   }
 
   if (serverPort < 1024 || serverPort > 65535) {
-    errors.push(`Invalid OVERSEER_PORT: ${serverPort} (must be between 1024 and 65535)`);
+    errors.push(`Invalid MCP_PORT: ${serverPort} (must be between 1024 and 65535)`);
   }
 
   if (uiPort < 1024 || uiPort > 65535) {
-    errors.push(`Invalid OVERSEER_UI_PORT: ${uiPort} (must be between 1024 and 65535)`);
+    errors.push(`Invalid MCP_UI_PORT: ${uiPort} (must be between 1024 and 65535)`);
   }
 
   // Check host binding
-  const host = process.env.OVERSEER_HOST || '127.0.0.1';
+  const host = process.env.MCP_HOST || process.env.HOST || '127.0.0.1';
   if (host === '0.0.0.0') {
     console.warn('\n⚠️  WARNING: Server is binding to 0.0.0.0 (all interfaces)');
-    console.warn('   This exposes your Third Eye instance to the network.');
+    console.warn('   This exposes your Third Eye MCP instance to the network.');
     console.warn('   Use 127.0.0.1 (localhost) for local-only access.\n');
   }
 
   // Check database path is writable
-  const dbPath = process.env.OVERSEER_DB || '~/.overseer/overseer.db';
+  const dbPath = process.env.MCP_DB || '~/.third-eye-mcp/mcp.db';
   if (dbPath.includes('..')) {
-    errors.push(`Invalid OVERSEER_DB path: ${dbPath} (path traversal not allowed)`);
+    errors.push(`Invalid MCP_DB path: ${dbPath} (path traversal not allowed)`);
   }
 
   // Validate provider API keys format (if provided)
@@ -164,7 +193,7 @@ export function validateEnvironment(): { valid: boolean; errors: string[] } {
  * Load configuration from file and environment
  */
 export function loadConfig(): Config {
-  let fileConfig = {};
+  let fileConfig: any = {};
 
   // Load from config file if exists
   const configPath = getConfigPath();
@@ -178,28 +207,51 @@ export function loadConfig(): Config {
   }
 
   // Merge with environment variables
+  const envServerPort = process.env.MCP_PORT || process.env.PORT;
+  const parsedEnvServerPort = envServerPort ? parseInt(envServerPort, 10) : undefined;
+  const normalizedServerPort = Number.isFinite(parsedEnvServerPort) ? parsedEnvServerPort : undefined;
+
   const envConfig = {
     db: {
-      path: process.env.OVERSEER_DB || fileConfig.db?.path,
+      path: process.env.MCP_DB || fileConfig.db?.path,
     },
     server: {
-      host: process.env.OVERSEER_HOST || fileConfig.server?.host,
-      port: process.env.OVERSEER_PORT ? parseInt(process.env.OVERSEER_PORT) : fileConfig.server?.port,
+      host: process.env.MCP_HOST || process.env.HOST || fileConfig.server?.host,
+      port: normalizedServerPort ?? fileConfig.server?.port,
     },
     ui: {
-      port: process.env.OVERSEER_UI_PORT ? parseInt(process.env.OVERSEER_UI_PORT) : fileConfig.ui?.port,
-      autoOpen: process.env.AUTO_OPEN ? process.env.AUTO_OPEN === 'true' : fileConfig.ui?.autoOpen,
+      port: process.env.MCP_UI_PORT ? parseInt(process.env.MCP_UI_PORT, 10) : fileConfig.ui?.port,
+      autoOpen: parseOptionalBoolean(process.env.MCP_AUTO_OPEN) ?? fileConfig.ui?.autoOpen,
     },
     providers: {
       groq: {
-        apiKey: process.env.GROQ_API_KEY || fileConfig.providers?.groq?.apiKey,
+        apiKey: process.env.GROQ_API_KEY ?? fileConfig.providers?.groq?.apiKey,
+        baseUrl: process.env.GROQ_BASE_URL ?? fileConfig.providers?.groq?.baseUrl,
       },
       openrouter: {
-        apiKey: process.env.OPENROUTER_API_KEY || fileConfig.providers?.openrouter?.apiKey,
+        apiKey: process.env.OPENROUTER_API_KEY ?? fileConfig.providers?.openrouter?.apiKey,
+        baseUrl: process.env.OPENROUTER_BASE_URL ?? fileConfig.providers?.openrouter?.baseUrl,
+      },
+      ollama: {
+        baseUrl: process.env.OLLAMA_BASE_URL ?? fileConfig.providers?.ollama?.baseUrl,
+      },
+      lmstudio: {
+        baseUrl: process.env.LMSTUDIO_BASE_URL ?? fileConfig.providers?.lmstudio?.baseUrl,
       },
     },
     telemetry: {
-      enabled: process.env.TELEMETRY_ENABLED ? process.env.TELEMETRY_ENABLED === 'true' : fileConfig.telemetry?.enabled,
+      enabled: parseOptionalBoolean(process.env.TELEMETRY_ENABLED) ?? fileConfig.telemetry?.enabled,
+    },
+    rateLimits: {
+      userRps: process.env.RATE_LIMIT_USER_RPS ? parseInt(process.env.RATE_LIMIT_USER_RPS, 10) : fileConfig.rateLimits?.userRps,
+      sessionRps: process.env.RATE_LIMIT_SESSION_RPS ? parseInt(process.env.RATE_LIMIT_SESSION_RPS, 10) : fileConfig.rateLimits?.sessionRps,
+    },
+    security: {
+      encryptionKey: process.env.THIRD_EYE_SECURITY_ENCRYPTION_KEY || fileConfig.security?.encryptionKey,
+      bindWarning: parseOptionalBoolean(process.env.MCP_BIND_WARNING) ?? fileConfig.security?.bindWarning,
+      allowedOrigins: process.env.MCP_ALLOWED_ORIGINS
+        ? process.env.MCP_ALLOWED_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean)
+        : fileConfig.security?.allowedOrigins,
     },
   };
 

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { AlertCircle, RotateCw, Eye } from 'lucide-react';
 import type { BaseEnvelope } from '@third-eye/eyes';
 
@@ -57,10 +56,10 @@ export function KillSwitch({
           </div>
         </div>
 
-        <Button
+        <button
           onClick={handleRerun}
           disabled={isRerunning}
-          className="bg-red-500/20 hover:bg-red-500/30 border-red-500/40 text-red-100"
+          className="flex items-center rounded-lg border bg-red-500/20 hover:bg-red-500/30 border-red-500/40 text-red-100 px-4 py-2 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isRerunning ? (
             <>
@@ -73,7 +72,7 @@ export function KillSwitch({
               Re-run {eye}
             </>
           )}
-        </Button>
+        </button>
       </div>
 
       {error && (
