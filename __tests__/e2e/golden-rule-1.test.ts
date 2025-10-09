@@ -95,7 +95,7 @@ describe('Golden Rule #1 Enforcement', () => {
     expect(data1.data).toBeTruthy();
   });
 
-  it('should only expose overseer tool via MCP /tools endpoint', async () => {
+  it('should only expose third_eye_overseer tool via MCP /tools endpoint', async () => {
     const response = await fetch(`${API_URL}/mcp/tools`, {
       method: 'GET',
       headers: {
@@ -108,10 +108,10 @@ describe('Golden Rule #1 Enforcement', () => {
     const data = await response.json();
     const tools = data.data.tools;
 
-    // Should only have overseer tool
+    // Should only have third_eye_overseer tool
     expect(Array.isArray(tools)).toBe(true);
     expect(tools.length).toBe(1);
-    expect(tools[0].name).toBe('overseer');
+    expect(tools[0].name).toBe('third_eye_overseer');
 
     // Should NOT expose individual Eyes
     const eyeNames = ['sharingan', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan'];

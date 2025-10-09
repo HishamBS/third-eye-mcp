@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Hono } from 'hono';
 import { getDb } from '@third-eye/db';
+import { TOOL_NAME } from '@third-eye/types';
 
 describe('Server Routes Integration', () => {
   let db: ReturnType<typeof getDb>['db'];
@@ -88,21 +89,23 @@ describe('Server Routes Integration', () => {
     it('should validate required fields', () => {
       const payload = {
         sessionId: 'test-session',
-        messages: [{ role: 'user', content: 'test' }]
+        task: 'test request',
+        strictness: {
+          ambiguityThreshold: 60,
+          citationCutoff: 50
+        }
       };
 
       expect(payload).toHaveProperty('sessionId');
-      expect(payload).toHaveProperty('messages');
-      expect(payload.messages).toBeInstanceOf(Array);
-      expect(payload.messages[0]).toHaveProperty('role');
-      expect(payload.messages[0]).toHaveProperty('content');
+      expect(payload).toHaveProperty('task');
+      expect(typeof payload.task).toBe('string');
+      expect(payload.task.length).toBeGreaterThan(0);
     });
 
-    it('should reject invalid message roles', () => {
-      const validRoles = ['user', 'assistant', 'system'];
-      const invalidRole = 'invalid';
-
-      expect(validRoles).not.toContain(invalidRole);
+    it('should reject empty task strings', () => {
+      const payload = { task: '' };
+      const isValid = typeof payload.task === 'string' && payload.task.trim().length > 0;
+      expect(isValid).toBe(false);
     });
   });
 });
@@ -266,20 +269,21 @@ describe('Persona Management', () => {
 
 describe('MCP Integration', () => {
   describe('MCP server configuration', () => {
-    it('should have overseer tool configured', () => {
+    it(`should have ${TOOL_NAME} tool configured`, () => {
       const tool = {
-        name: 'overseer',
+        name: TOOL_NAME,
         description: 'Multi-Eye orchestrator',
         inputSchema: {
           type: 'object',
           properties: {
-            messages: { type: 'array' },
-            sessionId: { type: 'string' }
+            task: { type: 'string' },
+            sessionId: { type: 'string' },
+            strictness: { type: 'object' }
           }
         }
       };
 
-      expect(tool.name).toBe('overseer');
+      expect(tool.name).toBe(TOOL_NAME);
       expect(tool.inputSchema).toHaveProperty('properties');
     });
   });
@@ -289,22 +293,15 @@ describe('MCP Integration', () => {
       const schema = {
         type: 'object',
         properties: {
-          messages: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                role: { type: 'string' },
-                content: { type: 'string' }
-              }
-            }
-          }
+          task: { type: 'string' },
+          sessionId: { type: 'string' },
+          strictness: { type: 'object' }
         },
-        required: ['messages']
+        required: ['task']
       };
 
       expect(schema.type).toBe('object');
-      expect(schema.required).toContain('messages');
+      expect(schema.required).toContain('task');
     });
   });
 });

@@ -15,19 +15,14 @@ export type ProviderId = typeof PROVIDERS[number];
  * Eye Names - All Eyes in the pipeline
  */
 export const EYES = [
+  'overseer',
   'sharingan',
-  'prompt_helper',
+  'prompt-helper',
   'jogan',
-  'rinnegan_plan',
-  'rinnegan_review',
-  'rinnegan_final',
-  'mangekyo_scaffold',
-  'mangekyo_impl',
-  'mangekyo_tests',
-  'mangekyo_docs',
+  'rinnegan',
+  'mangekyo',
   'tenseigan',
   'byakugan',
-  'overseer',
 ] as const;
 export type EyeName = typeof EYES[number];
 

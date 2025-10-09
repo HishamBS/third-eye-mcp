@@ -22,7 +22,8 @@ export { ModelDiscoveryService, modelDiscovery } from './model-discovery';
 export type { ModelCacheEntry } from './model-discovery';
 
 // WebSocket bridge registration
-export { registerWebSocketBridge, clearWebSocketBridge } from './websocket-registry';
+export { registerWebSocketBridge, clearWebSocketBridge, getWebSocketBridge } from './websocket-registry';
+export type { WebSocketBridge } from './websocket-registry';
 
 // Guidance functions
 export { getWorkflowGuidance, shouldDelegate } from './guidance';

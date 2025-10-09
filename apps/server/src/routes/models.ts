@@ -60,6 +60,13 @@ app.get('/:provider', async (c) => {
     return createSuccessResponse(c, models);
   } catch (error) {
     console.error(`Failed to list models for ${providerId}:`, error);
+    if (error instanceof Error && /401/.test(error.message)) {
+      return createErrorResponse(c, {
+        title: 'Provider Authentication Failed',
+        status: 401,
+        detail: error.message,
+      });
+    }
     return createInternalErrorResponse(c, `Failed to list models: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
@@ -122,6 +129,13 @@ app.post('/:provider/refresh', async (c) => {
     });
   } catch (error) {
     console.error(`Failed to refresh models for ${providerId}:`, error);
+    if (error instanceof Error && /401/.test(error.message)) {
+      return createErrorResponse(c, {
+        title: 'Provider Authentication Failed',
+        status: 401,
+        detail: error.message,
+      });
+    }
     return createInternalErrorResponse(c, `Failed to refresh models: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });

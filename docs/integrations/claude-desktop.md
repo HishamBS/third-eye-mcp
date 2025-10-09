@@ -148,7 +148,7 @@ Use the third_eye_overseer tool to analyze this text: "Hello world"
 ```
 
 Expected response:
-- Claude will call the `overseer` tool
+- Claude will call the `third_eye_overseer` tool
 - Third Eye will process through its Eye pipeline
 - You'll receive structured analysis
 - Check the dashboard at http://127.0.0.1:3300 to see the session
@@ -166,7 +166,7 @@ Expected response:
 ### Code Review with Sharingan
 
 ```
-Use the overseer tool to review this code:
+Use the `third_eye_overseer` tool to review this code:
 
 function add(a, b) {
   return a - b;  // Bug: should be +
@@ -178,7 +178,7 @@ Third Eye will route through Sharingan (code analysis) and Mangekyo (code review
 ### Requirements Analysis
 
 ```
-Use the overseer tool to analyze requirements for a user authentication system.
+Use the `third_eye_overseer` tool to analyze requirements for a user authentication system.
 ```
 
 Third Eye will use Jogan (intent detection) and Rinnegan (plan validation).
@@ -186,7 +186,7 @@ Third Eye will use Jogan (intent detection) and Rinnegan (plan validation).
 ### Translation with Byakugan
 
 ```
-Use the overseer tool to translate "Hello, how are you?" to Spanish.
+Use the `third_eye_overseer` tool to translate "Hello, how are you?" to Spanish.
 ```
 
 Third Eye will route to Byakugan (clarity and translation).

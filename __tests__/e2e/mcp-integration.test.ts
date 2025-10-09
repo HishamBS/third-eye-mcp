@@ -4,12 +4,13 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { spawn, type ChildProcess } from 'child_process';
 import { resolve } from 'path';
 import { ListToolsResultSchema, CallToolResultSchema } from '@modelcontextprotocol/sdk/types.js';
+import { TOOL_NAME } from '@third-eye/types';
 
 /**
  * E2E MCP Integration Test
  *
  * Tests real MCP server communication via stdio transport
- * Verifies Golden Rule #1: Only "third_eye_overseer" tool is exposed
+ * Verifies Golden Rule #1: Only the overseer tool is exposed
  */
 describe('MCP Integration E2E', () => {
   let mcpProcess: ChildProcess;
@@ -80,7 +81,7 @@ describe('MCP Integration E2E', () => {
   });
 
   describe('Tool Discovery - Golden Rule #1', () => {
-    it('should list tools and expose ONLY third_eye_overseer', async () => {
+    it(`should list tools and expose ONLY ${TOOL_NAME}`, async () => {
       const result = await client.request(
         { method: 'tools/list' },
         ListToolsResultSchema
@@ -88,7 +89,7 @@ describe('MCP Integration E2E', () => {
 
       expect(result.tools).toBeDefined();
       expect(result.tools).toHaveLength(1);
-      expect(result.tools[0].name).toBe('third_eye_overseer');
+      expect(result.tools[0].name).toBe(TOOL_NAME);
     });
 
     it('should NOT expose individual Eye tools', async () => {
@@ -105,7 +106,7 @@ describe('MCP Integration E2E', () => {
         'tenseigan',
         'byakugan',
         'prompt-helper',
-        'prompt_helper',
+        'prompt-helper',
       ];
 
       const toolNames = result.tools.map(t => t.name.toLowerCase());
@@ -159,7 +160,7 @@ describe('MCP Integration E2E', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'Analyze this test message',
             },
@@ -179,7 +180,7 @@ describe('MCP Integration E2E', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'Review this simple function',
             },
@@ -204,7 +205,7 @@ describe('MCP Integration E2E', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: '', // Empty task might trigger validation
             },
@@ -233,7 +234,7 @@ describe('MCP Integration E2E', () => {
 
       // Should only mention "overseer" if any tool name is mentioned
       if (lowerResponse.includes('eye')) {
-        expect(lowerResponse).toContain('overseer');
+        expect(lowerResponse).toContain(TOOL_NAME);
       }
     });
 
@@ -259,7 +260,7 @@ describe('MCP Integration E2E', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'Test session tracking',
             },
@@ -285,7 +286,7 @@ describe('MCP Integration E2E', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'Invalid pipeline sequence test',
             },
@@ -318,7 +319,7 @@ describe('MCP Integration E2E', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'Test response structure',
             },
@@ -349,7 +350,7 @@ describe('MCP Integration E2E', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'Session auto-generation test',
             },
@@ -370,7 +371,7 @@ describe('MCP Integration E2E', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'First task in session',
             },
@@ -389,7 +390,7 @@ describe('MCP Integration E2E', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'Second task in same session',
             },

@@ -1,7 +1,7 @@
 import type { PipelineEvent } from '../types/pipeline';
 
 export interface SessionMemoryPanelProps {
-  byakuganEvents: PipelineEvent[];
+  byakuganEvents?: PipelineEvent[];
 }
 
 type MemoryReference = {
@@ -35,7 +35,7 @@ function formatSimilarity(value?: number) {
   return `${Math.round(value * 100)}%`;
 }
 
-export function SessionMemoryPanel({ byakuganEvents }: SessionMemoryPanelProps) {
+export function SessionMemoryPanel({ byakuganEvents = [] }: SessionMemoryPanelProps) {
   if (!byakuganEvents.length) {
     return (
       <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-slate-300">

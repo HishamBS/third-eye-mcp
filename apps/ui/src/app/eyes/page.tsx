@@ -93,16 +93,47 @@ export default function EyesPage() {
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
       const response = await fetch(`${API_URL}/api/eyes/all`);
-      if (response.ok) {
-        const result = await response.json();
-        const allEyesData = result.data || [];
-
-        setEyes(allEyesData);
-        setBuiltInEyes(allEyesData.filter((e: Eye) => e.source === 'built-in'));
-        setCustomEyes(allEyesData.filter((e: Eye) => e.source === 'custom'));
+      if (!response.ok) {
+        throw new Error(`Failed to load eyes (status ${response.status})`);
       }
+
+      const payload = await response.json();
+      let allEyesData: Eye[] = Array.isArray(payload?.data)
+        ? payload.data
+        : Array.isArray(payload)
+          ? payload
+          : [];
+
+      if (allEyesData.length === 0) {
+        // Fallback: pull built-in registry so UI never renders empty during outages
+        const registryResponse = await fetch(`${API_URL}/api/eyes/registry`);
+        if (registryResponse.ok) {
+          const registryPayload = await registryResponse.json();
+          const registryEyes: Eye[] = Array.isArray(registryPayload?.data)
+            ? registryPayload.data
+            : [];
+          allEyesData = registryEyes.map((eye) => ({
+            ...eye,
+            source: eye.source ?? 'built-in',
+          }));
+        }
+      }
+
+      if (allEyesData.length === 0) {
+        setError('No Eyes available. Verify registry seeding.');
+      } else {
+        setError(null);
+      }
+
+      setEyes(allEyesData);
+      setBuiltInEyes(allEyesData.filter((e: Eye) => (e.source ?? 'built-in') === 'built-in'));
+      setCustomEyes(allEyesData.filter((e: Eye) => e.source === 'custom'));
     } catch (error) {
       console.error('Failed to fetch eyes:', error);
+      setError('Failed to load Eyes from MCP server');
+      setEyes([]);
+      setBuiltInEyes([]);
+      setCustomEyes([]);
     }
   };
 
@@ -680,45 +711,45 @@ export default function EyesPage() {
             {/* Eyes Grid */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {getFilteredEyes().map((eye, index) => (
-                <motion.button
-                  key={eye.id}
-                  onClick={() => viewEye(eye)}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`rounded-2xl border p-6 text-left shadow-lg transition-all hover:shadow-xl ${getEyeColor(eye.id)}`}
-                >
-                  <div className="mb-4 text-center">
-                    <div className="mb-3 text-5xl">{getEyeIcon(eye.id)}</div>
-                    <h3 className="mb-1 text-xl font-bold text-white">{eye.name}</h3>
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="text-sm text-white/80">v{eye.version}</span>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs ${
-                          eye.source === 'built-in'
-                            ? 'bg-white/20 text-white'
-                            : 'bg-green-500/30 text-green-100'
-                        }`}
-                      >
-                        {eye.source}
-                      </span>
+                <Link key={eye.id} href={`/eyes/${eye.id}`}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`cursor-pointer rounded-2xl border p-6 text-left shadow-lg transition-all hover:shadow-xl ${getEyeColor(eye.id)}`}
+                  >
+                    <div className="mb-4 text-center">
+                      <div className="mb-3 text-5xl">{getEyeIcon(eye.id)}</div>
+                      <h3 className="mb-1 text-xl font-bold text-white">{eye.name}</h3>
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-sm text-white/80">v{eye.version}</span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs ${
+                            eye.source === 'built-in'
+                              ? 'bg-white/20 text-white'
+                              : 'bg-green-500/30 text-green-100'
+                          }`}
+                        >
+                          {eye.source}
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
-                  <p className="line-clamp-3 text-center text-sm text-white/90">
-                    {eye.description}
-                  </p>
+                    <p className="line-clamp-3 text-center text-sm text-white/90">
+                      {eye.description}
+                    </p>
 
-                  {eye.source === 'custom' && (
-                    <div className="mt-4 border-t border-white/20 pt-4 text-center">
-                      <span className="text-xs text-white/70">
-                        Created {new Date(eye.createdAt!).toLocaleDateString()}
-                      </span>
-                    </div>
-                  )}
-                </motion.button>
+                    {eye.source === 'custom' && (
+                      <div className="mt-4 border-t border-white/20 pt-4 text-center">
+                        <span className="text-xs text-white/70">
+                          Created {new Date(eye.createdAt!).toLocaleDateString()}
+                        </span>
+                      </div>
+                    )}
+                  </motion.div>
+                </Link>
               ))}
             </div>
 

@@ -1,37 +1,15 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  STRICTNESS_PRESETS,
+  DEFAULT_STRICTNESS_PRESET,
+  type StrictnessSettings,
+  type StrictnessPresetId,
+} from '@third-eye/types';
 
 export type ViewMode = 'novice' | 'expert';
 export type ThemeName = 'overseer' | 'midnight' | 'ocean' | 'forest' | 'sunset' | 'monochrome';
-
-export interface StrictnessSettings {
-  ambiguityThreshold: number; // 0-100
-  citationCutoff: number; // 0-1
-  consistencyTolerance: number; // 0-100
-  mangekyoStrictness: number; // 0-100
-}
-
-export const DEFAULT_STRICTNESS: Record<'casual' | 'enterprise' | 'security', StrictnessSettings> = {
-  casual: {
-    ambiguityThreshold: 60,
-    citationCutoff: 0.5,
-    consistencyTolerance: 70,
-    mangekyoStrictness: 50,
-  },
-  enterprise: {
-    ambiguityThreshold: 40,
-    citationCutoff: 0.7,
-    consistencyTolerance: 50,
-    mangekyoStrictness: 70,
-  },
-  security: {
-    ambiguityThreshold: 20,
-    citationCutoff: 0.9,
-    consistencyTolerance: 30,
-    mangekyoStrictness: 90,
-  },
-};
 
 interface UIContextValue {
   viewMode: ViewMode;
@@ -46,7 +24,7 @@ interface UIContextValue {
 
   strictness: StrictnessSettings;
   setStrictness: (settings: StrictnessSettings) => void;
-  applyStrictnessProfile: (profile: 'casual' | 'enterprise' | 'security') => void;
+  applyStrictnessProfile: (profile: StrictnessPresetId) => void;
 
   autoOpenSessions: boolean;
   setAutoOpenSessions: (value: boolean) => void;
@@ -65,7 +43,9 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [viewMode, setViewModeState] = useState<ViewMode>('expert');
   const [theme, setThemeState] = useState<ThemeName>('overseer');
   const [darkMode, setDarkModeState] = useState(true);
-  const [strictness, setStrictnessState] = useState<StrictnessSettings>(DEFAULT_STRICTNESS.enterprise);
+  const [strictness, setStrictnessState] = useState<StrictnessSettings>(
+    STRICTNESS_PRESETS[DEFAULT_STRICTNESS_PRESET].settings
+  );
   const [autoOpenSessions, setAutoOpenSessionsState] = useState(true);
   const [showPersonaVoice, setShowPersonaVoiceState] = useState(false);
   const [selectedSessionId, setSelectedSessionIdState] = useState<string | null>(null);
@@ -163,8 +143,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('third-eye-strictness', JSON.stringify(settings));
   };
 
-  const applyStrictnessProfile = (profile: 'casual' | 'enterprise' | 'security') => {
-    setStrictness(DEFAULT_STRICTNESS[profile]);
+  const applyStrictnessProfile = (profile: StrictnessPresetId) => {
+    setStrictness(STRICTNESS_PRESETS[profile].settings);
   };
 
   const setAutoOpenSessions = (value: boolean) => {

@@ -117,20 +117,25 @@ Add to `~/.cursor/mcp_settings.json`:
 
 ```json
 {
-  "userMessage": "Review this pull request for security issues",
+  "task": "Review this pull request for security issues",
   "context": {
     "repo": "https://github.com/HishamBS/third-eye-mcp",
     "branch": "feature/pipeline"
   },
   "sessionId": "optional-session-id",
-  "strictness": "enterprise"
+  "strictness": {
+    "ambiguityThreshold": 40,
+    "citationCutoff": 70,
+    "consistencyTolerance": 50,
+    "mangekyoStrictness": 70
+  }
 }
 ```
 
-- **`userMessage`**: Required request text.
+- **`task`**: Required natural-language instruction.
 - **`context`**: Optional metadata (files, history, URLs).
 - **`sessionId`**: Provide to resume an existing session; otherwise generated.
-- **`strictness`**: One of `casual`, `standard`, `enterprise`, or `security`.
+- **`strictness`**: Either a preset from the UI (see [Configuration](./configuration.md#strictness-profiles)) or an explicit object with numeric thresholds (0-100) as shown above. Presets returned by `GET /api/strictness` expose the Mangekyō level as the enum (`lenient`, `standard`, `strict`); when sending a request, pass the slider percentage.
 
 ### Response envelope
 
@@ -172,7 +177,7 @@ Third Eye MCP ships with eight built-in lenses, each with its own persona and ro
 | Byakugan | Consistency enforcement | `openrouter/meta-llama/llama-3.3-70b` |
 
 - Routing and fallback chains are editable in the dashboard under **Models & Routing**.
-- Personas are versioned and stored in SQLite; edit from **Personas** tab or via `bun run scripts/seed-database.ts`.
+- Personas are versioned and stored in SQLite; edit from **Personas** tab or via `bun run scripts/seed-defaults.ts`.
 - Strictness profiles adjust acceptance thresholds—see [Configuration](./configuration.md#strictness-profiles).
 
 ---
@@ -218,4 +223,3 @@ More workflow templates are available in [docs/workflows](./workflows) (coming s
 - [CLI Reference](./cli.md)
 - [Architecture Overview](./ARCHITECTURE.md)
 - [Publishing Checklist](./publishing.md)
-

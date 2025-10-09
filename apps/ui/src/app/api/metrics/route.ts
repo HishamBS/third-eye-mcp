@@ -28,7 +28,12 @@ export async function GET() {
         const runsResponse = await fetch(`${API_URL}/api/session/${session.sessionId || session.id}/runs`);
         if (runsResponse.ok) {
           const runsData = await runsResponse.json();
-          const runs = runsData.data?.runs || [];
+          const runsPayload = runsData?.data ?? runsData;
+          const runs = Array.isArray(runsPayload)
+            ? runsPayload
+            : Array.isArray(runsPayload?.runs)
+              ? runsPayload.runs
+              : [];
           allRuns = allRuns.concat(runs);
 
           // Aggregate provider stats

@@ -58,14 +58,16 @@ app.get('/tables', async (c) => {
         provider_keys: {
           name: 'Provider Keys',
           data: providerKeysData.map(row => ({
-            ...row,
-            keyValue: row.keyValue ? '***' + row.keyValue.slice(-4) : null // Mask keys for security
+            provider: row.provider,
+            label: row.label,
+            metadata: row.metadata,
+            createdAt: row.createdAt,
           })),
           editable: false,
           schema: [
             { name: 'provider', type: 'text', primary: true },
-            { name: 'keyValue', type: 'text' },
-            { name: 'baseUrl', type: 'text' },
+            { name: 'label', type: 'text' },
+            { name: 'metadata', type: 'json' },
             { name: 'createdAt', type: 'timestamp' }
           ]
         },

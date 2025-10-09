@@ -22,6 +22,13 @@ import {
 
 const app = new Hono();
 
+const defaultRouting = {
+  primaryProvider: 'groq',
+  primaryModel: 'llama-3.3-70b-versatile',
+  fallbackProvider: 'openrouter',
+  fallbackModel: 'anthropic/claude-3.5-sonnet',
+};
+
 // Apply middleware
 app.use('*', requestIdMiddleware());
 app.use('*', errorHandler());
@@ -34,12 +41,6 @@ app.get('/', async (c) => {
 
     // Return routing configs with registered eyes info
     const eyeNames = getAllEyeNames();
-    const defaultRouting = {
-      primaryProvider: 'groq',
-      primaryModel: 'llama-3.3-70b-versatile',
-      fallbackProvider: 'openrouter',
-      fallbackModel: 'anthropic/claude-3.5-sonnet',
-    };
 
     const result = eyeNames.map(eye => {
       const routing = routings.find(r => r.eye === eye);
@@ -134,7 +135,7 @@ app.post('/', validateBodyWithEnvelope(schemas.routingCreate), async (c) => {
     // Broadcast routing change via WebSocket
     try {
       const { wsManager } = await import('../websocket');
-      wsManager.broadcast({
+      wsManager.broadcastToAll({
         type: 'routing_updated',
         eye,
         routing: updated,
@@ -161,7 +162,7 @@ app.delete('/:eye', async (c) => {
     // Broadcast routing change via WebSocket
     try {
       const { wsManager } = await import('../websocket');
-      wsManager.broadcast({
+      wsManager.broadcastToAll({
         type: 'routing_deleted',
         eye,
       });

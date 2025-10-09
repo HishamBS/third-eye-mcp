@@ -123,7 +123,7 @@ Use the third_eye_overseer tool to test the connection.
 ```
 
 Expected:
-- Tool call to `overseer`
+- Tool call to `third_eye_overseer`
 - Response from Third Eye
 - Session visible at http://127.0.0.1:3300
 
@@ -134,31 +134,31 @@ Expected:
 Select code in editor, then in Continue:
 
 ```
-Use the overseer tool to review this code for bugs and improvements.
+Use the `third_eye_overseer` tool to review this code for bugs and improvements.
 ```
 
 ### Generate Tests
 
 ```
-Use the overseer tool to generate comprehensive unit tests for this function.
+Use the `third_eye_overseer` tool to generate comprehensive unit tests for this function.
 ```
 
 ### Documentation
 
 ```
-Use the overseer tool to generate detailed documentation for this module.
+Use the `third_eye_overseer` tool to generate detailed documentation for this module.
 ```
 
 ### Refactoring
 
 ```
-Use the overseer tool to suggest refactoring improvements for better code quality.
+Use the `third_eye_overseer` tool to suggest refactoring improvements for better code quality.
 ```
 
 ### Debug Analysis
 
 ```
-Use the overseer tool to analyze this error and suggest fixes:
+Use the `third_eye_overseer` tool to analyze this error and suggest fixes:
 
 [paste error]
 ```
@@ -169,22 +169,22 @@ Use the overseer tool to analyze this error and suggest fixes:
 
 1. Select code
 2. Cmd+I (Ctrl+I) for inline edit
-3. Request: "Use overseer to improve this code"
+3. Request: "Use `third_eye_overseer` to improve this code"
 
 ### Context Menu Integration
 
 Right-click in editor:
 - "Continue: Ask About This Code"
-- Then: "Use overseer tool to analyze"
+- Then: "Use the `third_eye_overseer` tool to analyze"
 
 ### Slash Commands
 
 Continue supports slash commands. Create custom ones:
 
 ```
-/review - Use overseer to review selected code
-/test - Use overseer to generate tests
-/docs - Use overseer to generate documentation
+/review - Use `third_eye_overseer` to review selected code
+/test - Use `third_eye_overseer` to generate tests
+/docs - Use `third_eye_overseer` to generate documentation
 ```
 
 Add to `config.json`:
@@ -414,7 +414,7 @@ Step 5: "/docs" - Update documentation
 
 ```
 Step 1: Identify code smell
-Step 2: "Use overseer to analyze and suggest refactoring"
+Step 2: "Use `third_eye_overseer` to analyze and suggest refactoring"
 Step 3: Apply changes
 Step 4: "/review" - Verify improvements
 Step 5: "/test" - Ensure tests pass
@@ -424,7 +424,7 @@ Step 5: "/test" - Ensure tests pass
 
 ```
 Step 1: Reproduce bug
-Step 2: "Use overseer to analyze root cause"
+Step 2: "Use `third_eye_overseer` to analyze root cause"
 Step 3: Implement fix
 Step 4: "/review" - Verify fix
 Step 5: "/test" - Add regression test
@@ -458,11 +458,11 @@ Create custom actions:
   "customCommands": [
     {
       "name": "Review PR",
-      "prompt": "Use overseer to review all changes in this PR for: security, performance, maintainability"
+      "prompt": "Use `third_eye_overseer` to review all changes in this PR for: security, performance, maintainability"
     },
     {
       "name": "Generate Docs",
-      "prompt": "Use overseer to generate comprehensive documentation for all public APIs"
+      "prompt": "Use `third_eye_overseer` to generate comprehensive documentation for all public APIs"
     }
   ]
 }
@@ -492,17 +492,17 @@ Add to VS Code `keybindings.json`:
   {
     "key": "ctrl+shift+r",
     "command": "continue.sendMessage",
-    "args": "Use overseer tool to review selected code"
+    "args": "Use the `third_eye_overseer` tool to review selected code"
   },
   {
     "key": "ctrl+shift+t",
     "command": "continue.sendMessage",
-    "args": "Use overseer tool to generate tests"
+    "args": "Use the `third_eye_overseer` tool to generate tests"
   },
   {
     "key": "ctrl+shift+d",
     "command": "continue.sendMessage",
-    "args": "Use overseer tool to generate documentation"
+    "args": "Use the `third_eye_overseer` tool to generate documentation"
   }
 ]
 ```

@@ -216,15 +216,47 @@ app.get('/active', async (c) => {
           ? JSON.parse(session.configJson)
           : session.configJson || {};
 
+        const metadata = config.metadata || {};
+        const clientInfo = metadata.client || {};
+        const clientDisplay =
+          metadata.clientDisplayName ||
+          clientInfo.displayName ||
+          clientInfo.title ||
+          metadata.clientName ||
+          clientInfo.name;
+        const clientVersion = metadata.clientVersion || clientInfo.version;
+
+        const agentName =
+          session.agentName ||
+          config.agentName ||
+          clientDisplay ||
+          'Unknown Agent';
+
+        const displayBase =
+          session.displayName ||
+          config.displayName ||
+          clientDisplay ||
+          agentName ||
+          session.id;
+
+        const displayName =
+          clientVersion &&
+          typeof displayBase === 'string' &&
+          typeof clientVersion === 'string' &&
+          clientVersion.trim().length > 0 &&
+          !displayBase.includes(clientVersion)
+            ? `${displayBase} (${clientVersion})`
+            : displayBase;
+
         return {
           sessionId: session.id,
           status: session.status,
           createdAt: session.createdAt,
           eventCount: eventCount?.count || 0,
           lastActivity: lastEvent?.createdAt || session.createdAt,
-          agentName: session.agentName || config.agentName || 'Unknown Agent',
-          model: session.model || config.model || 'Unknown Model',
-          displayName: session.displayName || config.displayName || session.id,
+          agentName,
+          model: session.model || config.model || metadata.model || 'Unknown Model',
+          displayName,
         };
       })
     );
@@ -438,13 +470,8 @@ app.get('/:id/runs', async (c) => {
       .offset(offset)
       .all();
 
-    return createSuccessResponse(c, {
-      sessionId,
-      runs: sessionRuns,
-      limit,
-      offset,
-      total: sessionRuns.length,
-    });
+    // Return runs array directly (frontend expects flat array, not wrapped)
+    return createSuccessResponse(c, sessionRuns);
   } catch (error) {
     console.error('Failed to fetch session runs:', error);
     return createInternalErrorResponse(c, 'Failed to fetch session runs');

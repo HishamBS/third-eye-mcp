@@ -1,12 +1,16 @@
 'use client';
 
-import { useUI, DEFAULT_STRICTNESS } from '@/contexts/UIContext';
+import { useUI } from '@/contexts/UIContext';
 import { Sliders, Shield, AlertTriangle, Sparkles } from 'lucide-react';
 import { useState } from 'react';
+import { STRICTNESS_PRESETS } from '@third-eye/types';
 
 export function StrictnessControls() {
   const { strictness, setStrictness, applyStrictnessProfile } = useUI();
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const casual = STRICTNESS_PRESETS.casual.settings;
+  const enterprise = STRICTNESS_PRESETS.enterprise.settings;
+  const security = STRICTNESS_PRESETS.security.settings;
 
   const handleSliderChange = (key: keyof typeof strictness, value: number) => {
     setStrictness({
@@ -38,9 +42,9 @@ export function StrictnessControls() {
               Relaxed validation for quick iterations and brainstorming.
             </p>
             <div className="space-y-1 text-xs text-slate-400">
-              <p>• Ambiguity: 60/100</p>
-              <p>• Citation: 0.5</p>
-              <p>• Code Review: 50%</p>
+              <p>• Ambiguity: {casual.ambiguityThreshold}/100</p>
+              <p>• Citation: {casual.citationCutoff}%</p>
+              <p>• Code Review: {casual.mangekyoStrictness}%</p>
             </div>
           </button>
 
@@ -57,9 +61,9 @@ export function StrictnessControls() {
               Balanced validation for production-grade work.
             </p>
             <div className="space-y-1 text-xs text-slate-400">
-              <p>• Ambiguity: 40/100</p>
-              <p>• Citation: 0.7</p>
-              <p>• Code Review: 70%</p>
+              <p>• Ambiguity: {enterprise.ambiguityThreshold}/100</p>
+              <p>• Citation: {enterprise.citationCutoff}%</p>
+              <p>• Code Review: {enterprise.mangekyoStrictness}%</p>
             </div>
           </button>
 
@@ -76,9 +80,9 @@ export function StrictnessControls() {
               Maximum validation for security-critical code.
             </p>
             <div className="space-y-1 text-xs text-slate-400">
-              <p>• Ambiguity: 20/100</p>
-              <p>• Citation: 0.9</p>
-              <p>• Code Review: 90%</p>
+              <p>• Ambiguity: {security.ambiguityThreshold}/100</p>
+              <p>• Citation: {security.citationCutoff}%</p>
+              <p>• Code Review: {security.mangekyoStrictness}%</p>
             </div>
           </button>
         </div>
@@ -132,16 +136,16 @@ export function StrictnessControls() {
                   Citation Confidence Cutoff
                 </label>
                 <span className="text-sm font-bold text-brand-accent">
-                  {(strictness.citationCutoff * 100).toFixed(0)}%
+                  {strictness.citationCutoff}%
                 </span>
               </div>
               <input
                 type="range"
                 min="0"
-                max="1"
-                step="0.05"
+                max="100"
+                step="5"
                 value={strictness.citationCutoff}
-                onChange={(e) => handleSliderChange('citationCutoff', parseFloat(e.target.value))}
+                onChange={(e) => handleSliderChange('citationCutoff', parseInt(e.target.value))}
                 className="w-full accent-brand-accent"
               />
               <p className="mt-1 text-xs text-slate-400">

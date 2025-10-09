@@ -1,9 +1,9 @@
 import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
-import { runs, sessions, eyesRouting, providerKeys } from '@third-eye/db';
+import { runs, sessions, eyesRouting, providerKeys, personas } from '@third-eye/db';
 import { ProviderFactory } from '@third-eye/providers';
 import { getEye } from '@third-eye/eyes';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import { orderGuard } from './order-guard';
 let wsManager = null;
 // Lazy load WebSocket manager to avoid circular imports
@@ -48,11 +48,23 @@ export class EyeOrchestrator {
         let actualSessionId = sessionId;
         if (!actualSessionId) {
             actualSessionId = nanoid();
+            const createdAt = new Date();
+            const agentLabel = 'Third Eye Pipeline';
+            const displayLabel = `Manual Session (${eyeName})`;
             await this.db.insert(sessions).values({
                 id: actualSessionId,
-                createdAt: new Date(),
+                createdAt,
                 status: 'active',
-                configJson: {},
+                configJson: JSON.stringify({
+                    agentName: agentLabel,
+                    displayName: displayLabel,
+                    origin: 'orchestrator',
+                    firstEye: eyeName,
+                }),
+                agentName: agentLabel,
+                model: null,
+                displayName: displayLabel,
+                lastActivity: createdAt,
             });
         }
         // Emit run started event
@@ -98,7 +110,7 @@ export class EyeOrchestrator {
                 baseUrl: providerKey?.baseUrl || undefined,
             });
             // 6. Call provider with Eye's persona as system prompt
-            const persona = eye.getPersona();
+            const persona = await this.getActivePersona(eyeName);
             const response = await provider.complete({
                 model: routing.primaryModel,
                 messages: [
@@ -294,6 +306,29 @@ export class EyeOrchestrator {
         }
     }
     /**
+     * Fetch active persona from database and fall back to catalog defaults
+     */
+    async getActivePersona(eyeName) {
+        const result = await this.db
+            .select()
+            .from(personas)
+            .where(and(eq(personas.eye, eyeName), eq(personas.active, true)))
+            .limit(1);
+        const record = result[0];
+        if (!record) {
+            const { seedDefaults, DEFAULT_PERSONA_MAP } = await import('@third-eye/db/defaults');
+            await seedDefaults({ subsets: { personas: true }, log: () => { } });
+            const fallback = DEFAULT_PERSONA_MAP[eyeName];
+            if (fallback) {
+                console.warn(`⚠️ No active persona found for ${eyeName}. Loaded default from persona catalog.`);
+                return fallback.content;
+            }
+            throw new Error(`No active persona found for Eye: ${eyeName}. Run 'bun run scripts/seed-defaults.ts --force --only=personas' to restore defaults.`);
+        }
+        console.log(`📖 Loaded persona from database for Eye: ${eyeName} (v${record.version})`);
+        return record.content;
+    }
+    /**
      * Create a new session
      */
     async createSession(config = {}) {
@@ -310,7 +345,7 @@ export class EyeOrchestrator {
         // Build portal URL
         const host = process.env.SERVER_HOST || '127.0.0.1';
         const uiPort = parseInt(process.env.UI_PORT || '3300', 10);
-        const portalUrl = `http://${host}:${uiPort}/monitor?session=${sessionId}`;
+        const portalUrl = `http://${host}:${uiPort}/monitor?sessionId=${sessionId}`;
         // Emit session created event
         const ws = await getWSManager();
         if (ws) {

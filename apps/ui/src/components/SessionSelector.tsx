@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useUI } from '@/contexts/UIContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 interface ActiveSession {
   sessionId: string;
@@ -27,6 +28,10 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const fetchActiveSessions = async () => {
     try {
@@ -37,7 +42,25 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
       if (response.ok) {
         const result = await response.json();
         const data = result.data || result;
-        setSessions(data.sessions || []);
+        const normalized: ActiveSession[] = (data.sessions || [])
+          .map((session: any) => {
+            const createdAt = new Date(session.createdAt);
+            const lastActivity = session.lastActivity ? new Date(session.lastActivity) : createdAt;
+            const displayName =
+              session.displayName ||
+              session.agentName ||
+              session.sessionId;
+            return {
+              ...session,
+              createdAt,
+              lastActivity,
+              displayName,
+              agentName: session.agentName || displayName,
+            };
+          })
+          .sort((a: ActiveSession, b: ActiveSession) => b.createdAt.getTime() - a.createdAt.getTime());
+
+        setSessions(normalized);
       }
     } catch (error) {
       console.error('Failed to fetch active sessions:', error);
@@ -53,6 +76,12 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
     const interval = setInterval(fetchActiveSessions, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!selectedSessionId && sessions.length > 0 && !hasUserInteracted) {
+      setSelectedSession(sessions[0].sessionId);
+    }
+  }, [selectedSessionId, sessions, hasUserInteracted, setSelectedSession]);
 
   const selectedSession = sessions.find(s => s.sessionId === selectedSessionId);
 
@@ -74,6 +103,13 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
         setSessions(prev => prev.filter(s => s.sessionId !== sessionId));
         if (selectedSessionId === sessionId) {
           setSelectedSession(null);
+          setHasUserInteracted(true);
+          if (pathname === '/monitor') {
+            const params = new URLSearchParams(searchParams ? Array.from(searchParams.entries()) : []);
+            params.delete('sessionId');
+            const next = params.toString();
+            router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+          }
         }
         // Refresh to confirm
         setTimeout(() => fetchActiveSessions(), 300);
@@ -113,7 +149,14 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
         // Force clear UI immediately
         setSessions([]);
         setSelectedSession(null);
+        setHasUserInteracted(true);
         setShowDeleteConfirm(false);
+        if (pathname === '/monitor') {
+          const params = new URLSearchParams(searchParams ? Array.from(searchParams.entries()) : []);
+          params.delete('sessionId');
+          const next = params.toString();
+          router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+        }
 
         // Show success only if we actually deleted something
         if (deletedCount > 0) {
@@ -145,7 +188,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
           <div className={`h-2 w-2 rounded-full ${selectedSession ? 'bg-green-400 animate-pulse' : 'bg-slate-500'}`} />
           <span className="font-medium text-white">
             {selectedSession
-              ? `${selectedSession.agentName.substring(0, 20)}${selectedSession.agentName.length > 20 ? '...' : ''}`
+              ? `${selectedSession.displayName.substring(0, 24)}${selectedSession.displayName.length > 24 ? '…' : ''}`
               : 'No Session Selected'}
           </span>
         </div>
@@ -211,12 +254,18 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                     const isRecent = timeSinceActivity < 60000; // Less than 1 minute
 
                     return (
-                      <div
-                        key={session.sessionId}
-                        onClick={() => {
-                          setSelectedSession(session.sessionId);
-                          setIsOpen(false);
-                        }}
+                    <div
+                      key={session.sessionId}
+                      onClick={() => {
+                        setHasUserInteracted(true);
+                        setSelectedSession(session.sessionId);
+                        setIsOpen(false);
+                        if (pathname === '/monitor') {
+                          const params = new URLSearchParams(searchParams ? Array.from(searchParams.entries()) : []);
+                          params.set('sessionId', session.sessionId);
+                          router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+                        }
+                      }}
                         className={`w-full rounded-lg border p-3 cursor-pointer transition-all ${
                           isSelected
                             ? 'border-brand-accent/60 bg-brand-accent/10'
@@ -228,9 +277,12 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                             <div className="flex items-center gap-2">
                               <div className={`h-2 w-2 rounded-full ${isRecent ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`} />
                               <span className="truncate text-sm font-medium text-white">
-                                {session.agentName}
+                                {session.displayName}
                               </span>
                             </div>
+                            {session.agentName && session.agentName !== session.displayName && (
+                              <p className="mt-1 text-xs text-slate-400 truncate">{session.agentName}</p>
+                            )}
                             <div className="mt-1 flex items-center gap-2 text-xs text-slate-400">
                               <span className="truncate">{session.model}</span>
                               <span>•</span>
@@ -272,6 +324,13 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                   onClick={() => {
                     setSelectedSession(null);
                     setIsOpen(false);
+                    setHasUserInteracted(true);
+                    if (pathname === '/monitor') {
+                      const params = new URLSearchParams(searchParams ? Array.from(searchParams.entries()) : []);
+                      params.delete('sessionId');
+                      const next = params.toString();
+                      router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+                    }
                   }}
                   className="w-full rounded-lg px-3 py-2 text-sm text-slate-400 transition-colors hover:bg-brand-paper hover:text-white"
                 >

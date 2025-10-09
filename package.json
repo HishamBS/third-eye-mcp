@@ -39,7 +39,7 @@
     "clean:packages": "rm -rf packages/*/dist packages/*/*.tsbuildinfo",
     "clean:apps": "rm -rf apps/server/dist apps/ui/.next apps/ui/out",
     "setup": "bun run scripts/setup.ts",
-    "seed": "bun run scripts/seed-database.ts",
+    "seed": "bun run scripts/seed-defaults.ts",
     "backup": "bun run scripts/backup-db.ts",
     "restore": "bun run scripts/restore-db.ts",
     "health:check": "bun run scripts/check-health.ts",
@@ -64,10 +64,10 @@
     "postinstall": "bun run scripts/postinstall.ts",
     "coverage:report": "bun run test:coverage",
     "coverage:badge": "bun run scripts/update-coverage-badge.ts",
-    "release:prepare": "pnpm clean && pnpm lint && pnpm test:coverage && pnpm build && pnpm pack",
-    "release:prepare:dry": "pnpm release:prepare && npm publish --dry-run",
-    "release:publish": "pnpm release:prepare && npm publish --access public",
-    "prepublishOnly": "pnpm release:prepare"
+    "release:prepare": "npm run clean && npm run lint && npm run test:coverage && npm run build && npm pack",
+    "release:prepare:dry": "npm run release:prepare && npm publish --dry-run",
+    "release:publish": "npm run release:prepare && npm publish --access public",
+    "prepublishOnly": "npm run release:prepare"
   },
   "keywords": [
     "ai",

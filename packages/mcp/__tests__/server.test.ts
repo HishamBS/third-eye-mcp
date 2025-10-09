@@ -12,17 +12,17 @@ describe('MCP Server', () => {
       expect(serverInfo.version).toBeDefined();
     });
 
-    it('should expose overseer tool only', () => {
+    it('should expose third_eye_overseer tool only', () => {
       const tools = [
-        { name: 'overseer' }
+        { name: 'third_eye_overseer' }
       ];
 
       expect(tools).toHaveLength(1);
-      expect(tools[0].name).toBe('overseer');
+      expect(tools[0].name).toBe('third_eye_overseer');
     });
 
     it('should not expose navigator tool', () => {
-      const tools = [{ name: 'overseer' }];
+      const tools = [{ name: 'third_eye_overseer' }];
       const hasNavigator = tools.some(t => t.name === 'navigator');
 
       expect(hasNavigator).toBe(false);
@@ -34,42 +34,24 @@ describe('MCP Server', () => {
       const schema = {
         type: 'object',
         properties: {
-          messages: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                role: { type: 'string', enum: ['user', 'assistant', 'system'] },
-                content: { type: 'string' }
-              },
-              required: ['role', 'content']
-            }
-          },
+          task: { type: 'string' },
           sessionId: { type: 'string' },
-          strictnessLevel: { type: 'number', minimum: 0, maximum: 10 }
+          strictness: { type: 'object' },
+          context: { type: 'object' }
         },
-        required: ['messages']
+        required: ['task'],
+        additionalProperties: true,
       };
 
       expect(schema.type).toBe('object');
-      expect(schema.required).toContain('messages');
-      expect(schema.properties.messages.type).toBe('array');
-    });
-
-    it('should validate message format', () => {
-      const message = {
-        role: 'user',
-        content: 'Hello'
-      };
-
-      expect(message.role).toMatch(/^(user|assistant|system)$/);
-      expect(message.content).toBeDefined();
+      expect(schema.required).toContain('task');
+      expect(schema.properties.task.type).toBe('string');
     });
 
     it('should have optional sessionId', () => {
-      const request1 = { messages: [{ role: 'user', content: 'test' }] };
+      const request1 = { task: 'test' };
       const request2 = {
-        messages: [{ role: 'user', content: 'test' }],
+        task: 'test',
         sessionId: 'session-123'
       };
 
@@ -77,34 +59,31 @@ describe('MCP Server', () => {
       expect(request2).toHaveProperty('sessionId');
     });
 
-    it('should have optional strictness level', () => {
+    it('should accept strictness object', () => {
       const request = {
-        messages: [{ role: 'user', content: 'test' }],
-        strictnessLevel: 5
+        task: 'test',
+        strictness: { ambiguityThreshold: 40, citationCutoff: 70 }
       };
 
-      expect(request.strictnessLevel).toBe(5);
-      expect(request.strictnessLevel).toBeGreaterThanOrEqual(0);
-      expect(request.strictnessLevel).toBeLessThanOrEqual(10);
+      expect(request.strictness).toBeDefined();
+      expect(request.strictness.ambiguityThreshold).toBe(0.4);
     });
   });
 
   describe('Tool execution', () => {
     it('should process valid requests', () => {
       const request = {
-        messages: [
-          { role: 'user', content: 'Please analyze this code' }
-        ],
+        task: 'Please analyze this code',
         sessionId: crypto.randomUUID()
       };
 
-      expect(request.messages).toBeInstanceOf(Array);
+      expect(request.task).toBeTruthy();
       expect(request.sessionId).toMatch(/^[0-9a-f-]{36}$/);
     });
 
     it('should create session if not provided', () => {
-      const request: { messages: { role: string; content: string }[]; sessionId?: string } = {
-        messages: [{ role: 'user', content: 'test' }]
+      const request: { task: string; sessionId?: string } = {
+        task: 'test'
       };
 
       // Server should auto-generate sessionId
@@ -116,7 +95,7 @@ describe('MCP Server', () => {
 
     it('should route to appropriate eye', () => {
       const routing = {
-        userIntent: 'code review',
+        task: 'code review',
         selectedEye: 'sharingan',
         reasoning: 'Code quality analysis task'
       };
@@ -126,26 +105,10 @@ describe('MCP Server', () => {
   });
 
   describe('Error handling', () => {
-    it('should reject invalid message format', () => {
-      const invalidMessage = { role: 'invalid', content: 'test' };
-      const validRoles = ['user', 'assistant', 'system'];
-
-      const isValid = validRoles.includes(invalidMessage.role);
+    it('should reject empty task', () => {
+      const request = { task: '' };
+      const isValid = typeof request.task === 'string' && request.task.length > 0;
       expect(isValid).toBe(false);
-    });
-
-    it('should reject empty messages array', () => {
-      const request = { messages: [] };
-
-      expect(request.messages).toHaveLength(0);
-      // Should return validation error
-    });
-
-    it('should reject messages without content', () => {
-      const invalidMessage = { role: 'user' };
-
-      expect(invalidMessage).not.toHaveProperty('content');
-      // Should fail validation
     });
 
     it('should handle server errors gracefully', () => {

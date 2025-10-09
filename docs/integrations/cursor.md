@@ -90,7 +90,7 @@ Use the third_eye_overseer tool to check if this is working.
 ```
 
 You should see:
-- Tool call to `overseer`
+- Tool call to `third_eye_overseer`
 - Response from Third Eye pipeline
 - Session visible in dashboard (http://127.0.0.1:3300)
 
@@ -99,7 +99,7 @@ You should see:
 ### Code Review in Active File
 
 ```
-Use the overseer tool to review the code in the current file for potential bugs.
+Use the `third_eye_overseer` tool to review the code in the current file for potential bugs.
 ```
 
 Third Eye will:
@@ -110,7 +110,7 @@ Third Eye will:
 ### Generate Tests
 
 ```
-Use the overseer tool to analyze this function and suggest comprehensive tests:
+Use the `third_eye_overseer` tool to analyze this function and suggest comprehensive tests:
 
 function calculateDiscount(price, discountPercent) {
   return price * (discountPercent / 100);
@@ -120,13 +120,13 @@ function calculateDiscount(price, discountPercent) {
 ### Refactor Suggestions
 
 ```
-Use the overseer tool to suggest refactoring improvements for this component.
+Use the `third_eye_overseer` tool to suggest refactoring improvements for this component.
 ```
 
 ### Documentation Generation
 
 ```
-Use the overseer tool to generate comprehensive documentation for this module.
+Use the `third_eye_overseer` tool to generate comprehensive documentation for this module.
 ```
 
 ## Cursor-Specific Features
@@ -137,7 +137,7 @@ Use the overseer tool to generate comprehensive documentation for this module.
 2. **Open Cursor AI** (Cmd+K / Ctrl+K)
 3. Use command:
    ```
-   Use overseer tool to analyze selected code
+   Use the `third_eye_overseer` tool to analyze selected code
    ```
 
 ### Terminal Integration
@@ -160,7 +160,7 @@ bunx third-eye-mcp logs --tail
 Third Eye can access your entire workspace via Cursor:
 
 ```
-Use the overseer tool to review the architecture of this project and suggest improvements.
+Use the `third_eye_overseer` tool to review the architecture of this project and suggest improvements.
 ```
 
 ## Troubleshooting
@@ -313,7 +313,7 @@ Enable verbose logging:
 ```
 1. Write code in Cursor
 2. Select code block
-3. Cmd+K → "Use overseer to review"
+3. Cmd+K → "Use `third_eye_overseer` to review"
 4. View detailed analysis in chat
 5. Check dashboard for evidence trail
 ```
@@ -322,7 +322,7 @@ Enable verbose logging:
 
 ```
 1. Write function
-2. Request: "Use overseer to generate tests"
+2. Request: "Use `third_eye_overseer` to generate tests"
 3. Third Eye routes: Jogan (intent) → Mangekyo (generation)
 4. Insert generated tests
 5. Run tests in terminal
@@ -332,7 +332,7 @@ Enable verbose logging:
 
 ```
 1. Complete module
-2. Request: "Use overseer to generate docs"
+2. Request: "Use `third_eye_overseer` to generate docs"
 3. Review in dashboard (Evidence tab)
 4. Approve and insert
 ```
@@ -341,10 +341,10 @@ Enable verbose logging:
 
 ```
 1. Identify code smell
-2. Request: "Use overseer to suggest refactoring"
+2. Request: "Use `third_eye_overseer` to suggest refactoring"
 3. Review suggestions
 4. Apply iteratively
-5. Use overseer to verify improvements
+5. Use `third_eye_overseer` to verify improvements
 ```
 
 ## Integration with Cursor Features
@@ -355,7 +355,7 @@ Cursor Composer can orchestrate Third Eye:
 
 ```
 Use Composer to create a user authentication system.
-During each step, use the overseer tool to validate the design.
+During each step, use the `third_eye_overseer` tool to validate the design.
 ```
 
 ### Cursor Rules + Third Eye
@@ -374,7 +374,7 @@ When reviewing code, always use the third_eye_overseer tool for comprehensive an
 Use Third Eye for commit reviews:
 
 ```
-Use the overseer tool to review changes in this commit before I push.
+Use the `third_eye_overseer` tool to review changes in this commit before I push.
 ```
 
 ## Best Practices

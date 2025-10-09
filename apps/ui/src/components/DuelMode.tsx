@@ -1,9 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Trophy, Clock, Zap } from 'lucide-react';
 import { useDialog } from '@/hooks/useDialog';
+
+const ALLOWED_PROVIDERS = ['groq', 'ollama', 'lmstudio'] as const;
+
+const PROVIDER_LABELS: Record<string, string> = {
+  groq: 'Groq',
+  ollama: 'Ollama',
+  lmstudio: 'LM Studio',
+};
+
+const FALLBACK_PROVIDER_MODELS: Record<string, string[]> = {
+  groq: ['llama-3.3-70b-versatile', 'mixtral-8x7b-32768'],
+  ollama: ['llama3.1:8b', 'qwen2.5:14b'],
+  lmstudio: ['local-model'],
+};
 
 interface DuelConfig {
   provider: string;
@@ -12,6 +26,7 @@ interface DuelConfig {
 
 interface DuelResult {
   provider: string;
+  providerLabel?: string;
   model: string;
   output: string;
   latency: number;
@@ -28,19 +43,89 @@ export interface DuelModeProps {
   onComplete?: (results: DuelResult[]) => void;
 }
 
-const PROVIDERS = [
-  { id: 'groq', name: 'Groq', models: ['llama-3.3-70b-versatile', 'mixtral-8x7b-32768'] },
-  { id: 'openrouter', name: 'OpenRouter', models: ['anthropic/claude-3.5-sonnet', 'google/gemini-pro'] },
-  { id: 'ollama', name: 'Ollama', models: ['llama3.1:8b', 'qwen2.5:14b'] },
-  { id: 'lmstudio', name: 'LM Studio', models: ['local-model'] },
-];
-
 export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
   const dialog = useDialog();
   const [selectedConfigs, setSelectedConfigs] = useState<DuelConfig[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<DuelResult[]>([]);
   const [winner, setWinner] = useState<string | null>(null);
+  const [availableProviders, setAvailableProviders] = useState<Record<string, string[]>>(FALLBACK_PROVIDER_MODELS);
+  const [loadingProviders, setLoadingProviders] = useState(false);
+  const [stagedProvider, setStagedProvider] = useState<string>('');
+  const [stagedModel, setStagedModel] = useState<string>('');
+
+  useEffect(() => {
+    const fetchProviders = async () => {
+      try {
+        setLoadingProviders(true);
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+        const response = await fetch(`${API_URL}/api/models`);
+        if (!response.ok) {
+          setAvailableProviders(FALLBACK_PROVIDER_MODELS);
+          return;
+        }
+
+        const payload = await response.json();
+        const modelsByProvider = payload?.modelsByProvider ?? {};
+
+        const mapped: Record<string, string[]> = {};
+        for (const provider of ALLOWED_PROVIDERS) {
+          const entries = Array.isArray(modelsByProvider?.[provider])
+            ? modelsByProvider[provider]
+            : [];
+          const names = entries
+            .map((model: any) => {
+              if (typeof model === 'string') return model;
+              if (model?.name) return model.name;
+              if (model?.displayName) return model.displayName;
+              return '';
+            })
+            .filter((name): name is string => typeof name === 'string' && name.trim().length > 0)
+            .filter((name) => !/claude|chatgpt|gpt/i.test(name));
+
+          if (names.length > 0) {
+            mapped[provider] = names;
+          }
+        }
+
+        setAvailableProviders(Object.keys(mapped).length > 0 ? mapped : FALLBACK_PROVIDER_MODELS);
+      } catch (error) {
+        console.error('Failed to load provider models for duel mode:', error);
+        setAvailableProviders(FALLBACK_PROVIDER_MODELS);
+      } finally {
+        setLoadingProviders(false);
+      }
+    };
+
+    fetchProviders();
+  }, []);
+
+  useEffect(() => {
+    const providers = Object.keys(availableProviders);
+    if (providers.length === 0) {
+      setStagedProvider('');
+      setStagedModel('');
+      return;
+    }
+
+    if (!stagedProvider || !availableProviders[stagedProvider]) {
+      const firstProvider = providers[0];
+      setStagedProvider(firstProvider);
+      const models = availableProviders[firstProvider] || [];
+      setStagedModel(models[0] ?? '');
+    }
+  }, [availableProviders, stagedProvider]);
+
+  useEffect(() => {
+    if (!stagedProvider) return;
+    const models = availableProviders[stagedProvider] || [];
+    if (!models.includes(stagedModel)) {
+      setStagedModel(models[0] ?? '');
+    }
+  }, [stagedProvider, availableProviders]);
+
+  const formatProviderName = (provider: string) =>
+    PROVIDER_LABELS[provider] || provider.replace(/[_-]/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 
   const addConfig = async (provider: string, model: string) => {
     if (selectedConfigs.length >= 4) {
@@ -52,6 +137,14 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
       return;
     }
     setSelectedConfigs([...selectedConfigs, { provider, model }]);
+  };
+
+  const handleAddCurrentConfig = async () => {
+    if (!stagedProvider || !stagedModel) {
+      await dialog.alert('Selection Required', 'Choose both a provider and a model before adding a competitor.');
+      return;
+    }
+    await addConfig(stagedProvider, stagedModel);
   };
 
   const removeConfig = (index: number) => {
@@ -91,7 +184,8 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
       setResults(sortedResults);
 
       if (sortedResults.length > 0) {
-        setWinner(`${sortedResults[0].provider}/${sortedResults[0].model}`);
+        const top = sortedResults[0];
+        setWinner(`${top.providerLabel ?? formatProviderName(top.provider)}/${top.model}`);
       }
 
       if (onComplete) {
@@ -167,7 +261,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
               className="flex items-center justify-between rounded-lg border border-brand-outline/40 bg-brand-ink/60 p-3"
             >
               <div>
-                <p className="text-sm font-medium text-slate-200">{config.provider}</p>
+                <p className="text-sm font-medium text-slate-200">{formatProviderName(config.provider)}</p>
                 <p className="text-xs text-slate-400">{config.model}</p>
               </div>
               <button
@@ -181,28 +275,62 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
         </div>
 
         {selectedConfigs.length < 4 && (
-          <div className="mt-4">
-            <h4 className="mb-2 text-xs font-semibold uppercase text-slate-500">Add Model</h4>
-            <div className="space-y-2">
-              {PROVIDERS.map(provider => (
-                <details key={provider.id} className="rounded-lg border border-brand-outline/40 bg-brand-ink/40">
-                  <summary className="cursor-pointer p-2 text-sm font-medium text-slate-300 hover:bg-brand-ink/60">
-                    {provider.name}
-                  </summary>
-                  <div className="space-y-1 p-2">
-                    {provider.models.map(model => (
-                      <button
-                        key={model}
-                        onClick={() => addConfig(provider.id, model)}
-                        className="w-full rounded px-2 py-1 text-left text-xs text-slate-400 hover:bg-brand-accent/20 hover:text-slate-200"
-                      >
-                        {model}
-                      </button>
-                    ))}
-                  </div>
-                </details>
-              ))}
+          <div className="mt-4 space-y-3">
+            <h4 className="text-xs font-semibold uppercase text-slate-500">Configure competitor</h4>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-400">Provider</label>
+                <select
+                  className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-sm text-slate-200 focus:border-brand-accent focus:outline-none"
+                  value={stagedProvider}
+                  onChange={(e) => setStagedProvider(e.target.value)}
+                  disabled={loadingProviders || Object.keys(availableProviders).length === 0 || isRunning}
+                >
+                  {Object.keys(availableProviders).length === 0 && <option value="">No providers</option>}
+                  {Object.keys(availableProviders).map((provider) => (
+                    <option key={provider} value={provider}>
+                      {formatProviderName(provider)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-400">Model</label>
+                <select
+                  className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-sm text-slate-200 focus:border-brand-accent focus:outline-none"
+                  value={stagedModel}
+                  onChange={(e) => setStagedModel(e.target.value)}
+                  disabled={
+                    loadingProviders ||
+                    !stagedProvider ||
+                    (availableProviders[stagedProvider]?.length ?? 0) === 0 ||
+                    isRunning
+                  }
+                >
+                  {(availableProviders[stagedProvider] || []).map((model) => (
+                    <option key={model} value={model}>
+                      {model}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
+            {loadingProviders && (
+              <p className="text-xs text-slate-500">Loading provider models...</p>
+            )}
+            <button
+              type="button"
+              onClick={handleAddCurrentConfig}
+              disabled={
+                !stagedProvider ||
+                !stagedModel ||
+                isRunning ||
+                (availableProviders[stagedProvider]?.length ?? 0) === 0
+              }
+              className="inline-flex items-center justify-center rounded-lg bg-brand-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-accent/90 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300"
+            >
+              Add Competitor
+            </button>
           </div>
         )}
       </div>
@@ -234,7 +362,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
                     {index === 0 && <Trophy className="h-5 w-5 text-yellow-400" />}
                     <div>
                       <p className="font-semibold text-slate-100">
-                        #{index + 1} {result.provider} / {result.model}
+                        #{index + 1} {(result.providerLabel ?? formatProviderName(result.provider))} / {result.model}
                       </p>
                       <div className="mt-1 flex items-center space-x-2">
                         {getVerdictBadge(result.verdict)}

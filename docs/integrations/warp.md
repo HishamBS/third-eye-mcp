@@ -105,7 +105,7 @@ Use the third_eye_overseer tool to check connection status.
 ```
 
 Expected response:
-- Warp AI calls `overseer` tool
+- Warp AI calls `third_eye_overseer` tool
 - Third Eye processes request
 - Dashboard shows session at http://127.0.0.1:3300
 - Response appears in Warp AI panel
@@ -117,14 +117,14 @@ Expected response:
 Before running risky commands:
 
 ```
-Use the overseer tool to review this command for potential issues:
+Use the `third_eye_overseer` tool to review this command for potential issues:
 rm -rf /path/to/directory
 ```
 
 ### Script Analysis
 
 ```
-Use the overseer tool to analyze this bash script for bugs:
+Use the `third_eye_overseer` tool to analyze this bash script for bugs:
 
 #!/bin/bash
 for file in *.txt; do
@@ -137,7 +137,7 @@ done
 When you get an error:
 
 ```
-Use the overseer tool to analyze this error and suggest fixes:
+Use the `third_eye_overseer` tool to analyze this error and suggest fixes:
 
 [paste error output]
 ```
@@ -145,7 +145,7 @@ Use the overseer tool to analyze this error and suggest fixes:
 ### Command History Review
 
 ```
-Use the overseer tool to review my last 10 commands for security issues.
+Use the `third_eye_overseer` tool to review my last 10 commands for security issues.
 ```
 
 ## Warp-Specific Features
@@ -157,7 +157,7 @@ Create Warp workflows that use Third Eye:
 1. Open Workflows (Cmd+Shift+W)
 2. Create new workflow
 3. Add step: "AI Review"
-4. Command: `echo "$INPUT" | warp ai "Use overseer to review"`
+4. Command: `echo "$INPUT" | warp ai "Use `third_eye_overseer` to review"`
 
 ### Blocks with Third Eye
 
@@ -166,14 +166,14 @@ Analyze command blocks:
 1. Run a command block
 2. Select output
 3. Right-click → "Ask Warp AI"
-4. Request: "Use overseer tool to analyze this output"
+4. Request: "Use the `third_eye_overseer` tool to analyze this output"
 
 ### Terminal Context
 
 Third Eye can analyze terminal context:
 
 ```
-Use the overseer tool to suggest commands for deploying this app based on my directory structure.
+Use the `third_eye_overseer` tool to suggest commands for deploying this app based on my directory structure.
 ```
 
 ## Troubleshooting
@@ -332,7 +332,7 @@ Create different configs for different projects:
 git add .
 
 # Review with Third Eye
-warp ai "Use overseer to review my staged git changes"
+warp ai "Use `third_eye_overseer` to review my staged git changes"
 
 # Commit if approved
 git commit -m "feat: add feature"
@@ -350,7 +350,7 @@ git push
 EOF
 
 # Validate with Third Eye
-warp ai "Use overseer to review deploy.sh for issues"
+warp ai "Use `third_eye_overseer` to review deploy.sh for issues"
 
 # Run if approved
 chmod +x deploy.sh
@@ -364,17 +364,17 @@ chmod +x deploy.sh
 npm run build
 
 # Ask Third Eye for help
-warp ai "Use overseer to analyze the error above and suggest fixes"
+warp ai "Use `third_eye_overseer` to analyze the error above and suggest fixes"
 ```
 
 ### 4. Infrastructure Review
 
 ```bash
 # Review Kubernetes config
-warp ai "Use overseer to review deployment.yaml for best practices"
+warp ai "Use `third_eye_overseer` to review deployment.yaml for best practices"
 
 # Review Terraform
-warp ai "Use overseer to review main.tf for security issues"
+warp ai "Use `third_eye_overseer` to review main.tf for security issues"
 ```
 
 ## Integration with Warp Features
@@ -394,7 +394,7 @@ Create reusable command blocks:
 ```bash
 # Block: Review with Third Eye
 echo "Reviewing: $1"
-warp ai "Use overseer to analyze: $1"
+warp ai "Use `third_eye_overseer` to analyze: $1"
 ```
 
 ### Warp AI + Third Eye Chaining
@@ -406,7 +406,7 @@ Chain multiple AI calls:
 warp ai "Generate a bash script to backup database"
 
 # Second: Review generated code
-warp ai "Use overseer to review the script above"
+warp ai "Use `third_eye_overseer` to review the script above"
 ```
 
 ## Best Practices

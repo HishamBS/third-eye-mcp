@@ -23,7 +23,7 @@ const ROUTE_LABELS: Record<string, string> = {
   monitor: 'Monitor',
   replay: 'Replay',
   duel: 'Duel',
-  session: 'Session',
+  playground: 'Playground',
   audit: 'Audit',
 };
 

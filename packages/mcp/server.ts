@@ -6,9 +6,8 @@ import {
   InitializeRequestSchema,
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
-import { EyeOrchestrator } from "@third-eye/core";
 import { autoRouter } from "../core/auto-router";
-import { sessionManager } from "../core/session-manager";
+import { TOOL_NAME } from "@third-eye/types";
 import { z } from "zod";
 
 /**
@@ -18,70 +17,47 @@ import { z } from "zod";
  * Exposes Eyes as MCP tools with intelligent guidance
  */
 
-const orchestrator = new EyeOrchestrator();
-
 // Track if browser has been opened for this MCP server instance
 let browserOpenedForSession = new Set<string>();
 
-// Store client metadata from initialize handshake
-let clientMetadata: {
+// Store client metadata & handshake context from initialize handshake
+interface ClientMetadata {
   name: string;
   version: string;
-  displayName?: string;
-} = {
+  title?: string;
+  displayName: string;
+  icons?: Array<Record<string, any>>;
+  raw?: Record<string, any>;
+}
+
+interface HandshakeContext {
+  capabilities?: Record<string, any>;
+  meta?: Record<string, any>;
+  timestamp?: number;
+}
+
+let clientMetadata: ClientMetadata = {
   name: "Unknown Agent",
   version: "unknown",
+  displayName: "Unknown Agent",
 };
 
-/**
- * Get or create session - reuses existing session within 30 minutes
- * Uses client metadata captured from MCP initialize handshake
- */
-async function getOrCreateSession(agentModel?: string): Promise<string> {
-  try {
-    const agentName = clientMetadata.displayName || clientMetadata.name;
+let lastHandshake: HandshakeContext = {};
 
-    // Check for existing active session from the same agent within last 30 minutes
-    const sessions = await sessionManager.getActiveSessions();
-    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+type PlainObject = Record<string, unknown>;
 
-    // Find matching session
-    const existingSession = sessions.find(
-      (session) =>
-        session.agentName === agentName &&
-        session.status === "active" &&
-        new Date(session.lastActivity) > thirtyMinutesAgo
-    );
+function isPlainObject(value: unknown): value is PlainObject {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
-    if (existingSession) {
-      // Reuse existing session - update last activity
-      await sessionManager.updateSession(existingSession.id, {});
-      console.error(
-        `♻️  Reusing session: ${existingSession.id} for agent: ${agentName}`
-      );
-      return existingSession.id;
-    }
-
-    // Create new session with captured client metadata
-    const newSession = await sessionManager.createSession({
-      agentName,
-      model: agentModel,
-      displayName: `${agentName} Session`,
-      metadata: {
-        clientName: clientMetadata.name,
-        clientVersion: clientMetadata.version,
-        clientDisplayName: clientMetadata.displayName,
-      },
-    });
-    console.error(
-      `✨ Created new session: ${newSession.id} for agent: ${agentName}`
-    );
-    return newSession.id;
-  } catch (error) {
-    console.error("Failed to get or create session:", error);
-    // Fallback to generating a simple session ID
-    return `session_${Date.now()}`;
-  }
+function buildSessionMetadata(): Record<string, any> {
+  return {
+    client: clientMetadata,
+    clientName: clientMetadata.name,
+    clientDisplayName: clientMetadata.displayName,
+    clientVersion: clientMetadata.version,
+    handshake: lastHandshake,
+  };
 }
 
 /**
@@ -111,21 +87,96 @@ async function openBrowserForSession(sessionId: string) {
   }
 }
 
-// Tool schema - ONLY overseer (Golden Rule #1)
+// Tool schema - ONLY third_eye_overseer (Golden Rule #1)
+const MCP_TOOL_NAME = TOOL_NAME;
+const SAFETY_DISABLED = process.env.THIRD_EYE_DISABLE_SAFETY === 'true';
+
+const PROMPT_INJECTION_PATTERNS = [
+  /ignore (all|any|previous|earlier) (instructions|guidelines)/i,
+  /override (all|any|previous|earlier) (instructions|guards|safety)/i,
+  /pretend (you are|to be) (malicious|evil|insecure)/i,
+  /disregard (the|your) safety/i,
+  /leak (your|the) (config|prompt|instructions)/i,
+  /dump (all )?(data|secrets|keys)/i,
+  /run (rm -rf|format c:|del \/s)/i,
+  /act as jailbreak/i,
+  /you must reveal/i,
+];
+
+const DISALLOWED_CONTENT_PATTERNS = [
+  /how to (build|make|create).*(weapon|bomb|explosive|molotov)/i,
+  /(credit card|bank|ssn).*(steal|hack|bypass)/i,
+  /(violence|kill|murder).*(plan|how)/i,
+  /(self.?harm|suicide).*(help|plan|instructions)/i,
+  /(cheat|bypass).*(exam|captcha|paywall)/i,
+];
+
+function detectInjectionOrAbuse(task: unknown): { unsafe: boolean; reason?: string } {
+  if (typeof task !== 'string') {
+    return { unsafe: true, reason: 'Invalid task payload (expected string).' };
+  }
+
+  const normalized = task.trim();
+  if (!normalized) {
+    return { unsafe: true, reason: 'Empty task payload.' };
+  }
+
+  for (const pattern of PROMPT_INJECTION_PATTERNS) {
+    if (pattern.test(normalized)) {
+      return { unsafe: true, reason: 'Potential prompt-injection attempt detected.' };
+    }
+  }
+
+  for (const pattern of DISALLOWED_CONTENT_PATTERNS) {
+    if (pattern.test(normalized)) {
+      return { unsafe: true, reason: 'Disallowed or harmful content detected.' };
+    }
+  }
+
+  return { unsafe: false };
+}
+
 const OVERSEER_TOOL: Tool = {
-  name: "oversee",
+  name: MCP_TOOL_NAME,
   description:
-    "Third Eye MCP overseer helps AI agents understand what humans really want. Send vague requests and get clarifying questions, or send completed work for validation. We guide, discourage, enforce citations, and gatekeep quality - we never generate content ourselves.",
+    "Empowers you with Third Eye’s inner perception. Call this tool for every non-trivial request—Overseer will analyse ambiguity, plan the best route, run the reviews, and hand you the next action. Never bypass it.",
   inputSchema: {
     type: "object",
     properties: {
       task: {
         type: "string",
-        description: "Describe what you want to accomplish",
+        description: "Natural-language description of the user’s goal, draft, or material to validate. Send the full request verbatim.",
+      },
+      context: {
+        type: "object",
+        additionalProperties: true,
+        description: "Optional metadata (files, repository info, telemetry, prior conversation). Overseer uses it to enrich routing.",
+      },
+      strictness: {
+        type: "object",
+        additionalProperties: true,
+        description: "Optional gates (ambiguity threshold, citation cutoff, consistency tolerance, mangekyoStrictness). Defaults map to Enterprise strictness.",
       },
     },
     required: ["task"],
   },
+  examples: [
+    {
+      input: {
+        task: "Refactor the payment service controller for clarity and add missing edge-case tests.",
+      },
+      description: "Code refinement task that requires full guidance + validation pipeline.",
+    },
+    {
+      input: {
+        task: "Validate this incident report for contradictions and missing follow-up actions.",
+        context: {
+          reportUrl: "https://intranet.example.com/incidents/2025-04-17",
+        },
+      },
+      description: "Text/ops validation task that triggers evidence + consistency checks.",
+    },
+  ],
 };
 
 /**
@@ -146,14 +197,37 @@ export function createMCPServer(): Server {
 
   // Handle initialize request to capture client metadata
   server.setRequestHandler(InitializeRequestSchema, async (request) => {
-    const { clientInfo } = request.params;
+    const { clientInfo, clientCapabilities } = request.params as any;
+    const handshakeMeta = (request.params as any)?._meta;
 
     // Store client metadata from MCP protocol
     if (clientInfo) {
+      const name = (clientInfo.name || "Unknown Agent").trim();
+      const version = (clientInfo.version || "unknown").trim();
+      const title =
+        typeof clientInfo.title === "string" && clientInfo.title.trim().length > 0
+          ? clientInfo.title.trim()
+          : undefined;
+      const displayName =
+        title ||
+        (typeof clientInfo.displayName === "string" && clientInfo.displayName.trim().length > 0
+          ? clientInfo.displayName.trim()
+          : name);
+      const icons = Array.isArray(clientInfo.icons) ? clientInfo.icons : undefined;
+
       clientMetadata = {
-        name: clientInfo.name,
-        version: clientInfo.version,
-        displayName: (clientInfo as any).displayName || clientInfo.name,
+        name,
+        version,
+        title,
+        displayName,
+        icons,
+        raw: clientInfo,
+      };
+
+      lastHandshake = {
+        capabilities: clientCapabilities,
+        meta: handshakeMeta,
+        timestamp: Date.now(),
       };
 
       console.error(
@@ -187,28 +261,106 @@ export function createMCPServer(): Server {
     const { name, arguments: args } = request.params;
 
     // Handle overseer tool - main entry point
-    if (name === "oversee") {
+    if (name === MCP_TOOL_NAME) {
       const task = (args as any).task;
 
       // NO rejection logic - let Overseer LLM decide everything
 
       // Internal parameters (not exposed in schema but can be passed)
-      const operation = (args as any).operation || "execute";
       const providedSessionId = (args as any).sessionId;
-      const config = (args as any).config || {};
+      const rawStrictness = (args as any).strictness;
+      const rawContext = (args as any).context;
 
-      // Get or create session (reuses existing session from same agent)
-      // agentModel can be passed in config or detected later
-      const agentModel = config.model;
-      const sessionId =
-        providedSessionId || (await getOrCreateSession(agentModel));
+      const strictnessOptions = isPlainObject(rawStrictness) ? rawStrictness : undefined;
+      const contextOptions: PlainObject | undefined = (() => {
+        if (!rawContext) {
+          return { mcpClient: buildSessionMetadata() };
+        }
 
-      // Open browser for this session on first tool call
-      await openBrowserForSession(sessionId);
+        if (isPlainObject(rawContext)) {
+          return {
+            ...rawContext,
+            mcpClient: buildSessionMetadata(),
+          };
+        }
+
+        return { mcpClient: buildSessionMetadata() };
+      })();
+
+      const safety = SAFETY_DISABLED ? { unsafe: false } : detectInjectionOrAbuse(task);
+      if (safety.unsafe) {
+        console.warn(`[Safety] Blocked request for ${MCP_TOOL_NAME}: ${safety.reason ?? 'unknown reason'}`);
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                {
+                  status: "rejected",
+                  code: "E_SAFETY_BLOCKED",
+                  verdict: "REJECTED",
+                  summary: safety.reason ?? 'Request blocked by Third Eye safety layer.',
+                  metadata: {
+                    sessionId: providedSessionId ?? null,
+                    portalUrl: null,
+                    stepsExecuted: 0,
+                  },
+                  tool: MCP_TOOL_NAME,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+          isError: true,
+        };
+      }
 
       try {
         // Always execute the full pipeline (simplified - no analyze mode for agents)
-        const result = await autoRouter.executeFlow(task, undefined, sessionId);
+        const result = await autoRouter.executeFlow(task, undefined, providedSessionId, {
+          strictness: strictnessOptions,
+          context: contextOptions,
+        });
+
+        // Open browser for this session on first successful tool call
+        await openBrowserForSession(result.sessionId);
+
+        const finalResult = result.results[result.results.length - 1] as Record<string, unknown> | undefined;
+        const code = (() => {
+          if (result.completed) {
+            return typeof finalResult?.code === 'string' ? (finalResult.code as string) : 'OK';
+          }
+          if (finalResult && typeof finalResult.code === 'string') {
+            return 'E_EXECUTION_FAILED';
+          }
+          return 'E_PIPELINE_FAILED';
+        })();
+
+        const verdict = typeof finalResult?.verdict === 'string'
+          ? (finalResult.verdict as string)
+          : result.completed
+            ? 'APPROVED'
+            : 'REJECTED';
+
+        let summary = typeof finalResult?.summary === 'string'
+          ? (finalResult.summary as string)
+          : result.completed
+            ? 'Validation complete. Your content has been reviewed.'
+            : result.error
+              ? `third_eye_overseer could not finish the task: ${result.error}`
+              : 'third_eye_overseer could not finish the task.';
+
+        if (!result.completed && !summary.toLowerCase().includes(MCP_TOOL_NAME)) {
+          summary = `${summary} \nTool: ${MCP_TOOL_NAME}`;
+        }
+
+        const metadata = {
+          sessionId: result.sessionId,
+          portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${result.sessionId}`,
+          stepsExecuted: result.results.length,
+        };
+
         return {
           content: [
             {
@@ -216,14 +368,12 @@ export function createMCPServer(): Server {
               text: JSON.stringify(
                 {
                   status: "success",
-                  sessionId: result.sessionId,
-                  verdict: result.completed ? "APPROVED" : "REJECTED",
-                  summary: result.completed
-                    ? `Validation complete. Your content has been reviewed.`
-                    : `Review incomplete: ${result.error}`,
-                  stepsExecuted: result.results.length,
-                  finalResult: result.results[result.results.length - 1],
-                  portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${result.sessionId}`,
+                  code,
+                  verdict,
+                  summary,
+                  metadata,
+                  data: finalResult,
+                  history: result.results,
                 },
                 null,
                 2
@@ -232,6 +382,13 @@ export function createMCPServer(): Server {
           ],
         };
       } catch (error: any) {
+        const failureSessionId = providedSessionId ?? (typeof error?.sessionId === 'string' ? error.sessionId : undefined) ?? 'unknown';
+        const metadata = {
+          sessionId: failureSessionId,
+          portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${failureSessionId}`,
+          stepsExecuted: 0,
+        };
+
         return {
           content: [
             {
@@ -239,11 +396,14 @@ export function createMCPServer(): Server {
               text: JSON.stringify(
                 {
                   status: "error",
-                  sessionId: sessionId,
+                  code: "ERROR",
                   verdict: "REJECTED",
-                  summary: "Task execution failed",
-                  error: error.message,
-                  portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${sessionId}`,
+                  summary: `third_eye_overseer encountered an error: ${error.message}`,
+                  metadata,
+                  tool: MCP_TOOL_NAME,
+                  data: {
+                    message: error.message,
+                  },
                 },
                 null,
                 2
@@ -256,7 +416,7 @@ export function createMCPServer(): Server {
     }
 
     throw new Error(
-      `Unknown tool: ${name}. Only 'oversee' is available. Individual Eyes cannot be called directly - all requests go through the overseer.`
+      `Unknown tool: ${name}. Only '${MCP_TOOL_NAME}' is available. Individual Eyes cannot be called directly—route everything through ${MCP_TOOL_NAME}.`
     );
   });
 
@@ -274,8 +434,10 @@ export async function startMCPServer() {
 
   console.error("🧿 Third Eye MCP Server running on stdio");
   console.error("📡 Ready for agent connections");
-  console.error("🔧 Public tool: overseer (single entry point)");
   console.error(
-    "⚡ Golden Rule #1: Agents call only overseer - Eyes are internal"
+    `🔧 Public tool: ${MCP_TOOL_NAME} (single entry point)`
+  );
+  console.error(
+    "⚡ Golden Rule #1: Agents call only third_eye_overseer - Eyes are internal"
   );
 }

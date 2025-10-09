@@ -8,6 +8,7 @@ import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { existsSync } from 'fs';
+import { CLI_BIN } from '@third-eye/types';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -15,7 +16,7 @@ const __dirname = dirname(__filename);
 const program = new Command();
 
 program
-  .name('third-eye-mcp')
+  .name(CLI_BIN)
   .description('🧿 Third Eye MCP - AI Agent Validation Server')
   .version('1.0.0');
 

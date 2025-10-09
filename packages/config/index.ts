@@ -69,6 +69,12 @@ export const ConfigSchema = z.object({
 
 export type Config = z.infer<typeof ConfigSchema>;
 
+type DeepPartial<T> = {
+  [K in keyof T]?: T[K] extends Record<string, unknown>
+    ? DeepPartial<T[K]>
+    : T[K];
+};
+
 /**
  * Default configuration
  */
@@ -193,14 +199,14 @@ export function validateEnvironment(): { valid: boolean; errors: string[] } {
  * Load configuration from file and environment
  */
 export function loadConfig(): Config {
-  let fileConfig: any = {};
+  let fileConfig: DeepPartial<Config> = {};
 
   // Load from config file if exists
   const configPath = getConfigPath();
   if (existsSync(configPath)) {
     try {
       const fileContent = readFileSync(configPath, 'utf-8');
-      fileConfig = JSON.parse(fileContent);
+      fileConfig = ConfigSchema.deepPartial().parse(JSON.parse(fileContent)) as DeepPartial<Config>;
     } catch (error) {
       console.warn('Failed to parse config file:', error);
     }
@@ -211,13 +217,13 @@ export function loadConfig(): Config {
   const parsedEnvServerPort = envServerPort ? parseInt(envServerPort, 10) : undefined;
   const normalizedServerPort = Number.isFinite(parsedEnvServerPort) ? parsedEnvServerPort : undefined;
 
-  const envConfig = {
+  const envConfig: DeepPartial<Config> = {
     db: {
-      path: process.env.MCP_DB || fileConfig.db?.path,
+      path: process.env.MCP_DB ?? fileConfig.db?.path,
     },
     server: {
-      host: process.env.MCP_HOST || process.env.HOST || fileConfig.server?.host,
-      port: normalizedServerPort ?? fileConfig.server?.port,
+      host: process.env.MCP_HOST ?? process.env.HOST ?? fileConfig.server?.host,
+      port: normalizedServerPort ?? fileConfig.server?.port ?? undefined,
     },
     ui: {
       port: process.env.MCP_UI_PORT ? parseInt(process.env.MCP_UI_PORT, 10) : fileConfig.ui?.port,
