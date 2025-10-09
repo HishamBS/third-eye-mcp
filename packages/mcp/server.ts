@@ -1,15 +1,15 @@
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
   InitializeRequestSchema,
   Tool,
-} from '@modelcontextprotocol/sdk/types.js';
-import { EyeOrchestrator } from '@third-eye/core';
-import { autoRouter } from '../core/auto-router';
-import { sessionManager } from '../core/session-manager';
-import { z } from 'zod';
+} from "@modelcontextprotocol/sdk/types.js";
+import { EyeOrchestrator } from "@third-eye/core";
+import { autoRouter } from "../core/auto-router";
+import { sessionManager } from "../core/session-manager";
+import { z } from "zod";
 
 /**
  * Third Eye MCP Server
@@ -29,8 +29,8 @@ let clientMetadata: {
   version: string;
   displayName?: string;
 } = {
-  name: 'Unknown Agent',
-  version: 'unknown'
+  name: "Unknown Agent",
+  version: "unknown",
 };
 
 /**
@@ -46,16 +46,19 @@ async function getOrCreateSession(agentModel?: string): Promise<string> {
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
     // Find matching session
-    const existingSession = sessions.find(session =>
-      session.agentName === agentName &&
-      session.status === 'active' &&
-      new Date(session.lastActivity) > thirtyMinutesAgo
+    const existingSession = sessions.find(
+      (session) =>
+        session.agentName === agentName &&
+        session.status === "active" &&
+        new Date(session.lastActivity) > thirtyMinutesAgo
     );
 
     if (existingSession) {
       // Reuse existing session - update last activity
       await sessionManager.updateSession(existingSession.id, {});
-      console.error(`♻️  Reusing session: ${existingSession.id} for agent: ${agentName}`);
+      console.error(
+        `♻️  Reusing session: ${existingSession.id} for agent: ${agentName}`
+      );
       return existingSession.id;
     }
 
@@ -68,12 +71,14 @@ async function getOrCreateSession(agentModel?: string): Promise<string> {
         clientName: clientMetadata.name,
         clientVersion: clientMetadata.version,
         clientDisplayName: clientMetadata.displayName,
-      }
+      },
     });
-    console.error(`✨ Created new session: ${newSession.id} for agent: ${agentName}`);
+    console.error(
+      `✨ Created new session: ${newSession.id} for agent: ${agentName}`
+    );
     return newSession.id;
   } catch (error) {
-    console.error('Failed to get or create session:', error);
+    console.error("Failed to get or create session:", error);
     // Fallback to generating a simple session ID
     return `session_${Date.now()}`;
   }
@@ -88,12 +93,12 @@ async function openBrowserForSession(sessionId: string) {
   }
 
   try {
-    const config = await import('@third-eye/config').then(m => m.getConfig());
+    const config = await import("@third-eye/config").then((m) => m.getConfig());
     const API_URL = `http://${config.server.host}:${config.server.port}`;
 
     const response = await fetch(`${API_URL}/api/session/open`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sessionId }),
     });
 
@@ -102,23 +107,24 @@ async function openBrowserForSession(sessionId: string) {
       console.error(`🧿 Browser opened for session: ${sessionId}`);
     }
   } catch (error) {
-    console.error('Failed to open browser:', error);
+    console.error("Failed to open browser:", error);
   }
 }
 
 // Tool schema - ONLY overseer (Golden Rule #1)
 const OVERSEER_TOOL: Tool = {
-  name: 'oversee',
-  description: 'Third Eye MCP overseer helps AI agents understand what humans really want. Send vague requests and get clarifying questions, or send completed work for validation. We guide, discourage, enforce citations, and gatekeep quality - we never generate content ourselves.',
+  name: "oversee",
+  description:
+    "Third Eye MCP overseer helps AI agents understand what humans really want. Send vague requests and get clarifying questions, or send completed work for validation. We guide, discourage, enforce citations, and gatekeep quality - we never generate content ourselves.",
   inputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
       task: {
-        type: 'string',
-        description: 'Describe what you want to accomplish',
+        type: "string",
+        description: "Describe what you want to accomplish",
       },
     },
-    required: ['task'],
+    required: ["task"],
   },
 };
 
@@ -128,8 +134,8 @@ const OVERSEER_TOOL: Tool = {
 export function createMCPServer(): Server {
   const server = new Server(
     {
-      name: 'third-eye-mcp',
-      version: '1.0.0',
+      name: "third-eye-mcp",
+      version: "1.0.0",
     },
     {
       capabilities: {
@@ -147,21 +153,25 @@ export function createMCPServer(): Server {
       clientMetadata = {
         name: clientInfo.name,
         version: clientInfo.version,
-        displayName: (clientInfo as any).displayName || clientInfo.name
+        displayName: (clientInfo as any).displayName || clientInfo.name,
       };
 
-      console.error(`🤝 MCP Client connected: ${clientMetadata.displayName || clientMetadata.name} v${clientMetadata.version}`);
+      console.error(
+        `🤝 MCP Client connected: ${
+          clientMetadata.displayName || clientMetadata.name
+        } v${clientMetadata.version}`
+      );
     }
 
     // Return server capabilities
     return {
-      protocolVersion: '2025-03-26',
+      protocolVersion: "2025-03-26",
       capabilities: {
         tools: {},
       },
       serverInfo: {
-        name: 'third-eye-mcp',
-        version: '1.0.0',
+        name: "third-eye-mcp",
+        version: "1.0.0",
       },
     };
   });
@@ -177,20 +187,21 @@ export function createMCPServer(): Server {
     const { name, arguments: args } = request.params;
 
     // Handle overseer tool - main entry point
-    if (name === 'oversee') {
+    if (name === "oversee") {
       const task = (args as any).task;
 
       // NO rejection logic - let Overseer LLM decide everything
 
       // Internal parameters (not exposed in schema but can be passed)
-      const operation = (args as any).operation || 'execute';
+      const operation = (args as any).operation || "execute";
       const providedSessionId = (args as any).sessionId;
       const config = (args as any).config || {};
 
       // Get or create session (reuses existing session from same agent)
       // agentModel can be passed in config or detected later
       const agentModel = config.model;
-      const sessionId = providedSessionId || await getOrCreateSession(agentModel);
+      const sessionId =
+        providedSessionId || (await getOrCreateSession(agentModel));
 
       // Open browser for this session on first tool call
       await openBrowserForSession(sessionId);
@@ -201,42 +212,52 @@ export function createMCPServer(): Server {
         return {
           content: [
             {
-              type: 'text',
-              text: JSON.stringify({
-                status: 'success',
-                sessionId: result.sessionId,
-                verdict: result.completed ? 'APPROVED' : 'REJECTED',
-                summary: result.completed
-                  ? `Validation complete. Your content has been reviewed.`
-                  : `Review incomplete: ${result.error}`,
-                stepsExecuted: result.results.length,
-                finalResult: result.results[result.results.length - 1],
-                portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${result.sessionId}`
-              }, null, 2)
-            }
-          ]
+              type: "text",
+              text: JSON.stringify(
+                {
+                  status: "success",
+                  sessionId: result.sessionId,
+                  verdict: result.completed ? "APPROVED" : "REJECTED",
+                  summary: result.completed
+                    ? `Validation complete. Your content has been reviewed.`
+                    : `Review incomplete: ${result.error}`,
+                  stepsExecuted: result.results.length,
+                  finalResult: result.results[result.results.length - 1],
+                  portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${result.sessionId}`,
+                },
+                null,
+                2
+              ),
+            },
+          ],
         };
       } catch (error: any) {
         return {
           content: [
             {
-              type: 'text',
-              text: JSON.stringify({
-                status: 'error',
-                sessionId: sessionId,
-                verdict: 'REJECTED',
-                summary: 'Task execution failed',
-                error: error.message,
-                portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${sessionId}`
-              }, null, 2)
-            }
+              type: "text",
+              text: JSON.stringify(
+                {
+                  status: "error",
+                  sessionId: sessionId,
+                  verdict: "REJECTED",
+                  summary: "Task execution failed",
+                  error: error.message,
+                  portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${sessionId}`,
+                },
+                null,
+                2
+              ),
+            },
           ],
-          isError: true
+          isError: true,
         };
       }
     }
 
-    throw new Error(`Unknown tool: ${name}. Only 'oversee' is available. Individual Eyes cannot be called directly - all requests go through the overseer.`);
+    throw new Error(
+      `Unknown tool: ${name}. Only 'oversee' is available. Individual Eyes cannot be called directly - all requests go through the overseer.`
+    );
   });
 
   return server;
@@ -251,8 +272,10 @@ export async function startMCPServer() {
 
   await server.connect(transport);
 
-  console.error('🧿 Third Eye MCP Server running on stdio');
-  console.error('📡 Ready for agent connections');
-  console.error('🔧 Public tool: overseer (single entry point)');
-  console.error('⚡ Golden Rule #1: Agents call only overseer - Eyes are internal');
+  console.error("🧿 Third Eye MCP Server running on stdio");
+  console.error("📡 Ready for agent connections");
+  console.error("🔧 Public tool: overseer (single entry point)");
+  console.error(
+    "⚡ Golden Rule #1: Agents call only overseer - Eyes are internal"
+  );
 }
