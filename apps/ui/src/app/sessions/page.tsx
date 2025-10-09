@@ -213,7 +213,7 @@ export default function SessionsPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <Link
-                        href={`/session/${session.id}`}
+                        href={`/playground/${session.id}`}
                         className="inline-flex items-center px-4 py-2 rounded-lg border border-brand-accent/40 text-brand-accent hover:bg-brand-accent/10 transition-colors text-sm font-medium"
                       >
                         View

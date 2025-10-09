@@ -10,6 +10,7 @@ import { sessions, runs } from '@third-eye/db';
 import { eq, desc, and } from 'drizzle-orm';
 import type { EyeName } from '@third-eye/eyes';
 import { orderGuard, type PipelineState } from './order-guard';
+import { TOOL_NAME } from '@third-eye/types';
 
 export interface SessionConfig {
   agentName?: string;
@@ -18,6 +19,50 @@ export interface SessionConfig {
   maxTokens?: number;
   temperature?: number;
   metadata?: Record<string, any>;
+}
+
+interface SessionIdentity {
+  agentName: string;
+  displayName: string;
+}
+
+function deriveSessionIdentity(config: SessionConfig = {}): SessionIdentity {
+  const metadata = config.metadata ?? {};
+  const client =
+    metadata.client ||
+    metadata.clientInfo ||
+    {};
+
+  const title: string | undefined =
+    config.displayName ||
+    metadata.clientDisplayName ||
+    client.displayName ||
+    client.title;
+
+  const rawAgentName: string | undefined =
+    config.agentName ||
+    metadata.clientName ||
+    client.name ||
+    title;
+
+  const agentName = (rawAgentName && rawAgentName.trim()) || 'Unknown Agent';
+
+  const version: string | undefined =
+    metadata.clientVersion ||
+    client.version;
+
+  const baseDisplay = (title && title.trim()) || agentName;
+  const versionLabel = version && version.trim().length > 0 ? version.trim() : null;
+
+  const displayName =
+    versionLabel && !baseDisplay.includes(versionLabel)
+      ? `${baseDisplay} (${versionLabel})`
+      : baseDisplay;
+
+  return {
+    agentName,
+    displayName,
+  };
 }
 
 export interface SessionInfo {
@@ -55,22 +100,87 @@ export class SessionManager {
     this.db = db;
   }
 
+  private slugify(value: string): string {
+    return value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+/, '')
+      .replace(/-+$/, '') || 'unknown';
+  }
+
+  private async nextSessionSequence(toolSlug: string, agentName: string): Promise<number> {
+    const agentSessions = await this.db
+      .select({ displayName: sessions.displayName })
+      .from(sessions)
+      .where(eq(sessions.agentName, agentName));
+
+    const agentSlug = this.slugify(agentName);
+    const prefix = `${toolSlug}-${agentSlug}-`;
+
+    let maxSequence = 0;
+    for (const session of agentSessions) {
+      const displayName = typeof session.displayName === 'string' ? session.displayName : '';
+      if (!displayName.startsWith(prefix)) {
+        continue;
+      }
+
+      const suffix = displayName.slice(prefix.length);
+      const parsed = parseInt(suffix, 10);
+      if (!Number.isNaN(parsed) && parsed > maxSequence) {
+        maxSequence = parsed;
+      }
+    }
+
+    return maxSequence + 1;
+  }
+
   /**
    * Create new session with configuration
    */
   async createSession(config: SessionConfig = {}): Promise<SessionInfo> {
     const sessionId = nanoid();
     const now = new Date();
+    const identity = deriveSessionIdentity(config);
+
+    const persistedConfig: SessionConfig = {
+      ...config,
+      agentName: config.agentName ?? identity.agentName,
+      displayName: config.displayName ?? identity.displayName,
+    };
+
+    const metadata = persistedConfig.metadata ?? {};
+    const rawToolName =
+      (typeof metadata.entryTool === 'string' && metadata.entryTool.trim().length > 0
+        ? metadata.entryTool
+        : typeof (persistedConfig as Record<string, unknown>).entryTool === 'string'
+          ? ((persistedConfig as Record<string, unknown>).entryTool as string)
+          : null) || TOOL_NAME;
+
+    const toolSlug = this.slugify(rawToolName);
+    const agentSlug = this.slugify(identity.agentName);
+    const sequence = await this.nextSessionSequence(toolSlug, identity.agentName);
+    const generatedDisplayName = `${toolSlug}-${agentSlug}-${sequence.toString().padStart(2, '0')}`;
+
+    const finalDisplayName =
+      typeof config.displayName === 'string' && config.displayName.trim().length > 0
+        ? config.displayName.trim()
+        : generatedDisplayName;
+
+    persistedConfig.displayName = finalDisplayName;
+    if (!metadata.entryTool) {
+      metadata.entryTool = rawToolName;
+      persistedConfig.metadata = { ...metadata };
+    }
 
     // Insert session into database
     await this.db.insert(sessions).values({
       id: sessionId,
       createdAt: now,
       status: 'active',
-      configJson: JSON.stringify(config),
-      agentName: config.agentName || 'Unknown Agent',
-      model: config.model || null,
-      displayName: config.displayName || null,
+      configJson: JSON.stringify(persistedConfig),
+      agentName: identity.agentName,
+      model: persistedConfig.model || null,
+      displayName: finalDisplayName,
       lastActivity: now,
     });
 
@@ -80,17 +190,17 @@ export class SessionManager {
     // Build portal URL
     const host = process.env.SERVER_HOST || '127.0.0.1';
     const uiPort = parseInt(process.env.UI_PORT || '3300', 10);
-    const portalUrl = `http://${host}:${uiPort}/monitor?session=${sessionId}`;
+    const portalUrl = `http://${host}:${uiPort}/monitor?sessionId=${sessionId}`;
 
     return {
       id: sessionId,
       status: 'active',
-      agentName: config.agentName || 'Unknown Agent',
-      displayName: config.displayName,
+      agentName: identity.agentName,
+      displayName: identity.displayName,
       portalUrl,
       createdAt: now,
       updatedAt: now,
-      config,
+      config: persistedConfig,
       pipelineState: null,
       runCount: 0,
       lastActivity: now,
@@ -112,6 +222,11 @@ export class SessionManager {
     }
 
     const session = dbSession[0];
+    const parsedConfig =
+      typeof session.configJson === 'string'
+        ? JSON.parse(session.configJson)
+        : session.configJson || {};
+    const identity = deriveSessionIdentity(parsedConfig);
 
     // Get pipeline state from order guard
     const pipelineState = orderGuard.getState(sessionId);
@@ -133,17 +248,17 @@ export class SessionManager {
     // Build portal URL
     const host = process.env.SERVER_HOST || '127.0.0.1';
     const uiPort = parseInt(process.env.UI_PORT || '3300', 10);
-    const portalUrl = `http://${host}:${uiPort}/monitor?session=${sessionId}`;
+    const portalUrl = `http://${host}:${uiPort}/monitor?sessionId=${sessionId}`;
 
     return {
       id: session.id,
       status: session.status as 'active' | 'paused' | 'completed' | 'failed',
-      agentName: session.agentName || 'Unknown Agent',
-      displayName: session.displayName || undefined,
+      agentName: session.agentName || identity.agentName,
+      displayName: session.displayName || identity.displayName,
       portalUrl,
       createdAt: session.createdAt,
       updatedAt: session.lastActivity || session.createdAt,
-      config: typeof session.configJson === 'string' ? JSON.parse(session.configJson) : session.configJson,
+      config: parsedConfig,
       pipelineState,
       runCount,
       lastActivity,
@@ -169,7 +284,20 @@ export class SessionManager {
       // Merge with existing config
       const existing = await this.getSession(sessionId);
       if (existing) {
-        updateData.configJson = JSON.stringify({ ...existing.config, ...config });
+        const mergedConfig = { ...existing.config, ...config };
+        const identity = deriveSessionIdentity(mergedConfig);
+        const providedDisplayName =
+          typeof config.displayName === 'string' && config.displayName.trim().length > 0
+            ? config.displayName.trim()
+            : existing.displayName;
+        mergedConfig.displayName = providedDisplayName ?? mergedConfig.displayName;
+
+        updateData.configJson = JSON.stringify(mergedConfig);
+        updateData.agentName = identity.agentName;
+        updateData.displayName = providedDisplayName ?? existing.displayName ?? identity.displayName;
+        if ('model' in mergedConfig) {
+          updateData.model = mergedConfig.model ?? null;
+        }
       }
     }
 

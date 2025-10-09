@@ -31,7 +31,5 @@ Authoritative reference for the Third Eye MCP project documentation.
 ## Operations & Releases
 
 - [Publishing Checklist](./publishing.md)
-- [Demo Guide](./DEMO.md)
 
 Looking for something else? Open an issue at [github.com/HishamBS/third-eye-mcp/issues](https://github.com/HishamBS/third-eye-mcp/issues).
-

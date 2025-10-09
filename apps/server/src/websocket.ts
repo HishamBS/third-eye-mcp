@@ -91,13 +91,19 @@ export class WSConnectionManager {
     // Start heartbeat ping interval (every 30 seconds)
     connection.pingInterval = setInterval(() => {
       try {
+        // Clear any existing pong timeout before sending new ping
+        if (connection.pongTimeout) {
+          clearTimeout(connection.pongTimeout);
+          connection.pongTimeout = undefined;
+        }
+
         const pingMessage: WSMessage = {
           type: 'ping',
           timestamp: Date.now()
         };
         ws.send(JSON.stringify(pingMessage));
 
-        // Set timeout to close if no pong received within 10 seconds
+        // Set timeout to close if no pong received within 45 seconds (increased from 10s)
         connection.pongTimeout = setTimeout(() => {
           const attempt = (connection.retryAttempt ?? 0) + 1;
           connection.retryAttempt = attempt;
@@ -130,7 +136,7 @@ export class WSConnectionManager {
           }
 
           this.removeConnection(connectionId);
-        }, 10000);
+        }, 45000); // 45 second timeout - enough for network delays
       } catch (error) {
         console.error(`Failed to send ping to ${connectionId}:`, error);
         this.removeConnection(connectionId);
@@ -229,6 +235,80 @@ export class WSConnectionManager {
    */
   broadcastToAll(message: WSMessage) {
     this.broadcast(message);
+  }
+
+  /**
+   * Emit eye_started event (fine-grained Eye tracking)
+   */
+  emitEyeStarted(sessionId: string, eye: string, ui: { title: string; summary: string; details: string; icon: string; color: string }) {
+    this.broadcastToSession(sessionId, {
+      type: 'pipeline_event',
+      sessionId,
+      data: {
+        eventType: 'eye_started',
+        eye,
+        ui,
+        timestamp: Date.now(),
+      },
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
+   * Emit eye_analyzing event (Eye is processing)
+   */
+  emitEyeAnalyzing(sessionId: string, eye: string, ui: { title: string; summary: string; details: string; icon: string; color: string }) {
+    this.broadcastToSession(sessionId, {
+      type: 'pipeline_event',
+      sessionId,
+      data: {
+        eventType: 'eye_analyzing',
+        eye,
+        ui,
+        timestamp: Date.now(),
+      },
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
+   * Emit eye_complete event (Eye finished processing)
+   */
+  emitEyeComplete(
+    sessionId: string,
+    eye: string,
+    result: { tag: string; ok: boolean; code: string; md?: string; data?: any; ui?: any },
+    metrics?: { tokensIn: number; tokensOut: number; latencyMs: number; provider: string; model: string }
+  ) {
+    this.broadcastToSession(sessionId, {
+      type: 'pipeline_event',
+      sessionId,
+      data: {
+        eventType: 'eye_complete',
+        eye,
+        result,
+        metrics,
+        timestamp: Date.now(),
+      },
+      timestamp: Date.now(),
+    });
+  }
+
+  /**
+   * Emit eye_error event (Eye encountered an error)
+   */
+  emitEyeError(sessionId: string, eye: string, error: { message: string; code?: string; details?: any }) {
+    this.broadcastToSession(sessionId, {
+      type: 'pipeline_event',
+      sessionId,
+      data: {
+        eventType: 'eye_error',
+        eye,
+        error,
+        timestamp: Date.now(),
+      },
+      timestamp: Date.now(),
+    });
   }
 
   /**

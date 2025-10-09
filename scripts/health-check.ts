@@ -20,6 +20,7 @@
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { Database } from 'bun:sqlite';
+import { DEFAULT_PERSONAS } from '../packages/db/defaults/personas';
 
 // Configuration
 const MCP_HOST = process.env.MCP_HOST || '127.0.0.1';
@@ -187,7 +188,7 @@ function checkEyeRouting(db: Database): boolean {
       return false;
     }
 
-    const expectedEyes = 8;
+    const expectedEyes = DEFAULT_PERSONAS.length;
     if (routes.count < expectedEyes) {
       addResult('Eye routing seeded', false, `Only ${routes.count}/${expectedEyes} eyes configured`);
       return false;
@@ -212,7 +213,7 @@ function checkPersonas(db: Database): boolean {
       return false;
     }
 
-    const expectedPersonas = 8;
+    const expectedPersonas = DEFAULT_PERSONAS.length;
     if (personas.count < expectedPersonas) {
       addResult('Personas seeded', false, `Only ${personas.count}/${expectedPersonas} personas`);
       return false;

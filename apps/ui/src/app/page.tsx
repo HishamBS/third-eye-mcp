@@ -5,11 +5,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { useUI } from '@/contexts/UIContext';
 import {
   Eye, Zap, PlayCircle, ShieldAlert, FolderTree, Trophy,
   Download, MessageSquare, History, ArrowRight, Activity,
-  Cpu, CheckCircle2
+  Cpu, CheckCircle2, Beaker, Monitor
 } from 'lucide-react';
 
 interface RealtimeStats {
@@ -105,7 +104,6 @@ const WOW_FEATURES = [
 ];
 
 export default function HomePage() {
-  const { selectedSessionId } = useUI();
   const [stats, setStats] = useState<RealtimeStats>({
     sessions: 0,
     runs: 0,
@@ -203,16 +201,24 @@ export default function HomePage() {
             </p>
             <div className="mt-10 flex justify-center space-x-4">
               <Link
-                href="/connections"
-                className="rounded-xl bg-brand-accent px-8 py-4 text-lg font-semibold text-white hover:bg-brand-accent/90 transition-colors shadow-lg shadow-brand-accent/50"
+                href="/playground"
+                className="rounded-xl bg-brand-accent px-8 py-4 text-lg font-semibold text-white hover:bg-brand-accent/90 transition-colors shadow-lg shadow-brand-accent/50 inline-flex items-center space-x-2"
               >
-                Connect Agent
+                <Beaker className="h-5 w-5" />
+                <span>Test Eyes</span>
               </Link>
               <Link
                 href="/monitor"
+                className="rounded-xl border border-brand-accent/40 bg-brand-paper/60 px-8 py-4 text-lg font-semibold text-white hover:bg-brand-paper/80 transition-colors inline-flex items-center space-x-2"
+              >
+                <Monitor className="h-5 w-5" />
+                <span>Watch Monitor</span>
+              </Link>
+              <Link
+                href="/connections"
                 className="rounded-xl border border-brand-accent/40 bg-brand-paper/60 px-8 py-4 text-lg font-semibold text-white hover:bg-brand-paper/80 transition-colors"
               >
-                View Demo
+                Connect Agent
               </Link>
             </div>
           </motion.div>
@@ -288,20 +294,14 @@ export default function HomePage() {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {WOW_FEATURES.map((feature, index) => {
-            // Build href with sessionId if available
-            const href = selectedSessionId
-              ? `${feature.href}${feature.href.includes('?') ? '&' : '?'}sessionId=${selectedSessionId}`
-              : feature.href;
-
-            return (
-              <motion.div
-                key={feature.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Link href={href}>
+          {WOW_FEATURES.map((feature, index) => (
+            <motion.div
+              key={feature.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <Link href={feature.href}>
                 <GlassCard className="group cursor-pointer hover:border-brand-accent/60 transition-all duration-300 p-6 h-full">
                   <div className={`inline-flex rounded-xl bg-gradient-to-br ${feature.color} p-3 text-white mb-4`}>
                     {feature.icon}
@@ -317,31 +317,72 @@ export default function HomePage() {
                 </GlassCard>
               </Link>
             </motion.div>
-            );
-          })}
+          ))}
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-20 text-center">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          <h3 className="text-2xl font-semibold text-white mb-4">
-            Ready to get started?
-          </h3>
-          <p className="text-slate-400 mb-8">
-            Connect your AI agent and experience the power of multi-Eye validation
-          </p>
-          <Link
-            href="/connections"
-            className="inline-flex items-center space-x-2 rounded-xl bg-gradient-to-r from-brand-accent to-purple-500 px-8 py-4 text-lg font-semibold text-white hover:shadow-2xl hover:shadow-brand-accent/50 transition-all"
+      <section className="mx-auto max-w-7xl px-6 py-20">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
           >
-            <span>Get Started</span>
-            <ArrowRight className="h-5 w-5" />
-          </Link>
-        </motion.div>
+            <Link href="/playground">
+              <GlassCard className="group cursor-pointer hover:border-brand-accent/60 transition-all p-8 text-center h-full">
+                <Beaker className="h-12 w-12 mx-auto mb-4 text-brand-accent group-hover:scale-110 transition-transform" />
+                <h3 className="text-xl font-semibold text-white mb-2">Playground</h3>
+                <p className="text-sm text-slate-400 mb-4">
+                  Test individual Eyes with custom inputs
+                </p>
+                <div className="inline-flex items-center space-x-2 text-brand-accent text-sm font-medium">
+                  <span>Try it now</span>
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-all" />
+                </div>
+              </GlassCard>
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+          >
+            <Link href="/monitor">
+              <GlassCard className="group cursor-pointer hover:border-brand-accent/60 transition-all p-8 text-center h-full">
+                <Monitor className="h-12 w-12 mx-auto mb-4 text-brand-accent group-hover:scale-110 transition-transform" />
+                <h3 className="text-xl font-semibold text-white mb-2">Monitor</h3>
+                <p className="text-sm text-slate-400 mb-4">
+                  Watch real-time agent conversations
+                </p>
+                <div className="inline-flex items-center space-x-2 text-brand-accent text-sm font-medium">
+                  <span>View sessions</span>
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-all" />
+                </div>
+              </GlassCard>
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
+            <Link href="/connections">
+              <GlassCard className="group cursor-pointer hover:border-brand-accent/60 transition-all p-8 text-center h-full">
+                <Activity className="h-12 w-12 mx-auto mb-4 text-brand-accent group-hover:scale-110 transition-transform" />
+                <h3 className="text-xl font-semibold text-white mb-2">Connect</h3>
+                <p className="text-sm text-slate-400 mb-4">
+                  Link your AI agent via MCP
+                </p>
+                <div className="inline-flex items-center space-x-2 text-brand-accent text-sm font-medium">
+                  <span>Get started</span>
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-all" />
+                </div>
+              </GlassCard>
+            </Link>
+          </motion.div>
+        </div>
       </section>
     </div>
   );

@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   Cable, Eye, Cpu, Users, GitBranch, Shield, FileText,
-  Settings, Database, BarChart, Bell, ChevronDown, Swords
+  Settings, Database, BarChart, Bell, ChevronDown, Swords, FlaskConical
 } from 'lucide-react';
 import { SessionSelector } from './SessionSelector';
 
@@ -39,6 +39,7 @@ const NAVIGATION_SECTIONS: DropdownSection[] = [
       { href: '/strictness', label: 'Strictness', icon: <Shield className="h-4 w-4" />, description: 'Profiles + sliders' },
       { href: '/prompts', label: 'Prompts', icon: <FileText className="h-4 w-4" />, description: 'Library' },
       { href: '/duel', label: 'Duel Mode', icon: <Swords className="h-4 w-4" />, description: 'Compare models' },
+      { href: '/playground', label: 'Playground', icon: <FlaskConical className="h-4 w-4" />, description: 'Test Eyes manually' },
     ],
   },
   {

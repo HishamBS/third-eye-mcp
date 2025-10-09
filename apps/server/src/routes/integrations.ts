@@ -3,7 +3,6 @@ import { getDb, mcpIntegrations, type McpIntegration, type NewMcpIntegration } f
 import { nanoid } from 'nanoid';
 import { eq } from 'drizzle-orm';
 import { homedir } from 'os';
-import { resolve } from 'path';
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
@@ -13,6 +12,7 @@ import {
   errorHandler
 } from '../middleware/response';
 import { z } from 'zod';
+import { CLI_BIN, CLI_EXEC } from '@third-eye/types';
 
 /**
  * MCP Integrations Routes
@@ -29,12 +29,13 @@ app.use('*', errorHandler());
 function getInstallationPaths() {
   const home = homedir();
   const cwd = process.cwd();
-  const mcpBin = resolve(cwd, 'bin/mcp-server.ts');
 
   return {
     HOME: home,
     MCP_PATH: cwd,
-    MCP_BIN: mcpBin,
+    CLI_BIN,
+    CLI_EXEC,
+    CLI_SERVER: `${CLI_EXEC} server`,
     PLATFORM: process.platform === 'darwin' ? 'macos' : process.platform === 'win32' ? 'windows' : 'linux',
     USER: process.env.USER || process.env.USERNAME || 'user',
   };
@@ -141,10 +142,10 @@ app.post('/', async (c) => {
 
   await db.insert(mcpIntegrations).values(newIntegration);
 
-  return createSuccessResponse(c, { integration: newIntegration }, 201);
+  return createSuccessResponse(c, { integration: newIntegration }, { status: 201 });
 });
 
-// PUT /integrations/:id - Update integration
+// PUT /integrations/:id - Update integration (full replace)
 app.put('/:id', async (c) => {
   const { db } = getDb();
   const id = c.req.param('id');
@@ -174,6 +175,50 @@ app.put('/:id', async (c) => {
     .where(eq(mcpIntegrations.id, id));
 
   return createSuccessResponse(c, { integration: updated });
+});
+
+// PATCH /integrations/:id - Partially update integration
+app.patch('/:id', async (c) => {
+  const { db } = getDb();
+  const id = c.req.param('id');
+  const body = await c.req.json();
+
+  const existing = await db.select()
+    .from(mcpIntegrations)
+    .where(eq(mcpIntegrations.id, id))
+    .limit(1);
+
+  if (!existing || existing.length === 0) {
+    return createErrorResponse(c, {
+      title: 'Integration Not Found',
+      status: 404,
+      detail: 'Integration not found'
+    });
+  }
+
+  // Only update provided fields
+  const updates = {
+    ...body,
+    updatedAt: new Date(),
+  };
+
+  // Remove undefined/null values to preserve existing data
+  Object.keys(updates).forEach(key => {
+    if (updates[key] === undefined) {
+      delete updates[key];
+    }
+  });
+
+  await db.update(mcpIntegrations)
+    .set(updates)
+    .where(eq(mcpIntegrations.id, id));
+
+  const updated = await db.select()
+    .from(mcpIntegrations)
+    .where(eq(mcpIntegrations.id, id))
+    .limit(1);
+
+  return createSuccessResponse(c, { integration: updated[0] });
 });
 
 // DELETE /integrations/:id - Delete integration

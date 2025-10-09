@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
 import { personas, personaVersions } from '@third-eye/db';
-import { ALL_EYES } from '@third-eye/eyes';
+import { DEFAULT_PERSONA_MAP } from '@third-eye/db/defaults';
 import { eq, and, desc } from 'drizzle-orm';
 import {
   validateBodyWithEnvelope,
@@ -40,7 +40,13 @@ app.get('/', async (c) => {
       .orderBy(desc(personas.createdAt))
       .all();
 
-    return createSuccessResponse(c, allPersonas);
+    // Ensure all personas have the name field populated
+    const personasWithNames = allPersonas.map((persona) => ({
+      ...persona,
+      name: persona.name || DEFAULT_PERSONA_MAP[persona.eye]?.name || persona.eye,
+    }));
+
+    return createSuccessResponse(c, personasWithNames);
   } catch (error) {
     console.error('Failed to fetch personas:', error);
     return createInternalErrorResponse(c, 'Failed to fetch personas');
@@ -62,13 +68,13 @@ app.get('/:eye', async (c) => {
 
     if (eyePersonas.length === 0) {
       // Return default persona template if none exist
-      const eyeInstance = ALL_EYES[eye];
-      if (eyeInstance) {
+      const definition = DEFAULT_PERSONA_MAP[eye];
+      if (definition) {
         return createSuccessResponse(c, {
           eye,
           versions: [],
           activeVersion: null,
-          defaultTemplate: eyeInstance.getPersona(),
+          defaultTemplate: definition.content,
         });
       }
       return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
@@ -104,12 +110,12 @@ app.get('/:eye/active', async (c) => {
     }
 
     // Return default persona template
-    const eyeInstance = ALL_EYES[eye];
-    if (eyeInstance) {
+    const definition = DEFAULT_PERSONA_MAP[eye];
+    if (definition) {
       return createSuccessResponse(c, {
         eye,
-        version: 0,
-        content: eyeInstance.getPersona(),
+        version: definition.version,
+        content: definition.content,
         active: false,
         createdAt: new Date(),
         isDefault: true,
@@ -141,9 +147,18 @@ app.post('/:eye', validateBodyWithEnvelope(createPersonaSchema), async (c) => {
 
     const newVersion = (latest?.version || 0) + 1;
 
+    // Get Eye name for persona
+    const definition = DEFAULT_PERSONA_MAP[eye];
+    const eyeName = definition?.name || eye;
+
+    // Generate persona ID
+    const personaId = `${eye}_v${newVersion}`;
+
     // Insert new persona version (inactive by default)
     const newPersona = {
+      id: personaId,
       eye,
+      name: eyeName,
       version: newVersion,
       content,
       active: false,

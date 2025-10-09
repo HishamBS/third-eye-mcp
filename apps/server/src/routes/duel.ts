@@ -3,10 +3,9 @@ import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
 import { sessions, runs, pipelineEvents, duels } from '@third-eye/db';
 import { EyeOrchestrator } from '@third-eye/core';
-import { ProviderFactory } from '@third-eye/providers';
-import { getConfig } from '@third-eye/config';
 import { eq } from 'drizzle-orm';
-import type { ProviderId } from '@third-eye/types';
+import type { ProviderType } from '@third-eye/providers';
+import { PROVIDERS, type ProviderId } from '@third-eye/types';
 import { validateBody, schemas, rateLimit } from '../middleware/validation';
 import {
   validateBodyWithEnvelope,
@@ -26,6 +25,34 @@ import { z } from 'zod';
  */
 
 const app = new Hono();
+
+const SUPPORTED_PROVIDERS = new Set<string>(PROVIDERS as readonly string[]);
+const DEFAULT_DUEL_PROVIDER = 'groq' as ProviderType;
+const DEFAULT_DUEL_MODEL = 'llama-3.3-70b-versatile';
+
+function parseModelIdentifier(identifier: string): { provider: ProviderType; model: string } {
+  if (!identifier || typeof identifier !== 'string') {
+    return { provider: DEFAULT_DUEL_PROVIDER, model: '' };
+  }
+
+  const separators = [':', '/', '|'];
+  for (const separator of separators) {
+    if (identifier.includes(separator)) {
+      const [providerPart, modelPart] = identifier.split(separator, 2);
+      const provider = SUPPORTED_PROVIDERS.has(providerPart)
+        ? (providerPart as ProviderType)
+        : DEFAULT_DUEL_PROVIDER;
+      return { provider, model: (modelPart || identifier) || DEFAULT_DUEL_MODEL };
+    }
+  }
+
+  return {
+    provider: SUPPORTED_PROVIDERS.has(identifier)
+      ? (identifier as ProviderType)
+      : DEFAULT_DUEL_PROVIDER,
+    model: SUPPORTED_PROVIDERS.has(identifier) ? DEFAULT_DUEL_MODEL : identifier,
+  };
+}
 
 app.use('*', requestIdMiddleware());
 app.use('*', errorHandler());
@@ -169,18 +196,13 @@ app.post('/', async (c) => {
       try {
         const startTime = Date.now();
 
-        // Execute the Eye with this specific provider/model
-        const appConfig = getConfig();
-        const providerConfig = appConfig.providers[config.provider];
-
-        if (!providerConfig) {
-          throw new Error(`Provider ${config.provider} not configured`);
-        }
-
-        const provider = ProviderFactory.create(config.provider, providerConfig);
-
-        // Call the Eye through orchestrator
-        const result = await orchestrator.runEye(eyeName, prompt, finalSessionId);
+        const result = await orchestrator.runEye(eyeName, prompt, finalSessionId, {
+          providerOverride: {
+            provider: config.provider as ProviderType,
+            model: config.model,
+            label,
+          },
+        });
 
         const latencyMs = Date.now() - startTime;
 
@@ -241,6 +263,7 @@ app.post('/', async (c) => {
 
         duelResultsForFrontend.push({
           provider: config.provider,
+          providerLabel: label,
           model: config.model,
           output: result.md || (result as any).message || 'No output',
           latency: latencyMs,
@@ -302,6 +325,7 @@ app.post('/', async (c) => {
         // Add failed result for frontend
         duelResultsForFrontend.push({
           provider: config.provider,
+          providerLabel: label,
           model: config.model,
           output: error instanceof Error ? error.message : 'Unknown error',
           latency: 0,
@@ -612,6 +636,8 @@ async function executeDuel(
   iterations: number
 ) {
   const { db } = getDb();
+  const modelAConfig = parseModelIdentifier(modelA);
+  const modelBConfig = parseModelIdentifier(modelB);
 
   try {
     // Update status to running
@@ -622,19 +648,25 @@ async function executeDuel(
       .run();
 
     const orchestrator = new EyeOrchestrator();
-    const resultsA: any[] = [];
-    const resultsB: any[] = [];
+    const resultsA: Array<{ verdict?: string; latencyMs: number }> = [];
+    const resultsB: Array<{ verdict?: string; latencyMs: number }> = [];
 
     // Run iterations
     for (let i = 0; i < iterations; i++) {
       try {
         // Run model A
-        const resultA = await orchestrator.runEye(eyeName, { prompt: input, model: modelA });
-        resultsA.push(resultA);
+        const startedA = Date.now();
+        const resultA = await orchestrator.runEye(eyeName, input, undefined, {
+          providerOverride: modelAConfig,
+        });
+        resultsA.push({ verdict: resultA.verdict, latencyMs: Date.now() - startedA });
 
         // Run model B
-        const resultB = await orchestrator.runEye(eyeName, { prompt: input, model: modelB });
-        resultsB.push(resultB);
+        const startedB = Date.now();
+        const resultB = await orchestrator.runEye(eyeName, input, undefined, {
+          providerOverride: modelBConfig,
+        });
+        resultsB.push({ verdict: resultB.verdict, latencyMs: Date.now() - startedB });
       } catch (error) {
         console.error(`Duel iteration ${i + 1} failed:`, error);
       }

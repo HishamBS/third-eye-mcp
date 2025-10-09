@@ -99,10 +99,10 @@ app.route('/api/eyes', eyesRoutes);
 // Overseer Route (Golden Rule #1 - ONLY public entry point)
 app.route('/overseer', overseerRoutes);
 
-// MCP Routes (legacy, prefer /overseer)
-// NOTE: These routes expose Eye registry and agent primers for MCP clients
-// Individual Eyes are NOT directly callable - only documentation/metadata is exposed
-app.route('/mcp', mcpRoutes);
+// MCP Routes - Primary API for task execution
+// NOTE: Only Overseer-driven pipeline execution is exposed (Golden Rule #1)
+app.route('/api/mcp', mcpRoutes); // Primary route for UI
+app.route('/mcp', mcpRoutes);      // Legacy route for backward compatibility
 
 // Simple ping endpoint for testing routing
 app.get('/ping', (c) => {

@@ -96,7 +96,7 @@ Use the third_eye_overseer tool to analyze this text: "Hello world"
 ```
 
 Expected behavior:
-- Cline calls `overseer` tool
+- Cline calls `third_eye_overseer` tool
 - Third Eye processes request
 - Dashboard shows session at http://127.0.0.1:3300
 - Response appears in Cline chat
@@ -108,25 +108,25 @@ Expected behavior:
 Select code in editor, then in Cline:
 
 ```
-Use the overseer tool to analyze the selected code for potential issues.
+Use the `third_eye_overseer` tool to analyze the selected code for potential issues.
 ```
 
 ### Generate Documentation
 
 ```
-Use the overseer tool to generate comprehensive JSDoc comments for this function.
+Use the `third_eye_overseer` tool to generate comprehensive JSDoc comments for this function.
 ```
 
 ### Refactoring Suggestions
 
 ```
-Use the overseer tool to suggest refactoring improvements for better maintainability.
+Use the `third_eye_overseer` tool to suggest refactoring improvements for better maintainability.
 ```
 
 ### Test Generation
 
 ```
-Use the overseer tool to generate unit tests for the selected function.
+Use the `third_eye_overseer` tool to generate unit tests for the selected function.
 ```
 
 ## Cline-Specific Features
@@ -136,13 +136,13 @@ Use the overseer tool to generate unit tests for the selected function.
 Cline automatically provides file context to Third Eye:
 
 ```
-Use the overseer tool to review the architecture of the current file.
+Use the `third_eye_overseer` tool to review the architecture of the current file.
 ```
 
 ### Multi-File Operations
 
 ```
-Use the overseer tool to analyze consistency across all TypeScript files in the src/ directory.
+Use the `third_eye_overseer` tool to analyze consistency across all TypeScript files in the src/ directory.
 ```
 
 ### Terminal Integration
@@ -330,10 +330,10 @@ If ports conflict:
 ### 1. Feature Development
 
 ```
-Step 1: "Use overseer to analyze requirements for user authentication"
+Step 1: "Use `third_eye_overseer` to analyze requirements for user authentication"
 Step 2: Code implementation
-Step 3: "Use overseer to review implementation for security issues"
-Step 4: "Use overseer to generate tests"
+Step 3: "Use `third_eye_overseer` to review implementation for security issues"
+Step 4: "Use `third_eye_overseer` to generate tests"
 Step 5: Run tests
 ```
 
@@ -341,26 +341,26 @@ Step 5: Run tests
 
 ```
 Step 1: Open PR diff
-Step 2: "Use overseer to review all changes in this PR"
+Step 2: "Use `third_eye_overseer` to review all changes in this PR"
 Step 3: Review feedback in dashboard Evidence tab
 Step 4: Address issues
-Step 5: "Use overseer to verify fixes"
+Step 5: "Use `third_eye_overseer` to verify fixes"
 ```
 
 ### 3. Refactoring
 
 ```
 Step 1: Identify code smell
-Step 2: "Use overseer to suggest refactoring strategies"
+Step 2: "Use `third_eye_overseer` to suggest refactoring strategies"
 Step 3: Apply refactoring
-Step 4: "Use overseer to validate improvements"
+Step 4: "Use `third_eye_overseer` to validate improvements"
 ```
 
 ### 4. Documentation
 
 ```
 Step 1: Complete module
-Step 2: "Use overseer to generate comprehensive documentation"
+Step 2: "Use `third_eye_overseer` to generate comprehensive documentation"
 Step 3: Review in dashboard
 Step 4: Commit documentation
 ```
@@ -380,7 +380,7 @@ Create snippets that invoke Third Eye:
     "body": [
       "// @third-eye-review",
       "$TM_SELECTED_TEXT",
-      "// Review: Use overseer tool to analyze this code"
+      "// Review: Use the `third_eye_overseer` tool to analyze this code"
     ]
   }
 }
@@ -394,7 +394,7 @@ Automate workflows:
 {
   "label": "Review Changes",
   "type": "shell",
-  "command": "git diff | cline 'Use overseer to review these changes'"
+  "command": "git diff | cline 'Use `third_eye_overseer` to review these changes'"
 }
 ```
 
@@ -409,7 +409,7 @@ Add shortcuts for Third Eye commands:
   {
     "key": "ctrl+shift+r",
     "command": "cline.sendMessage",
-    "args": "Use overseer tool to review selected code"
+    "args": "Use the `third_eye_overseer` tool to review selected code"
   }
 ]
 ```

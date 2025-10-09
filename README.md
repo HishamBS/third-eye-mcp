@@ -137,7 +137,7 @@ third-eye-mcp logs --tail  # follow combined logs
 Key scripts:
 - `bun run health:full` – comprehensive diagnostics
 - `bun run ws:check` – WebSocket reconnect simulation
-- `bun run scripts/seed-database.ts` – reseed personas/routing
+- `bun run scripts/seed-defaults.ts` – reseed personas, routing, strictness, app defaults, integrations
 
 ---
 

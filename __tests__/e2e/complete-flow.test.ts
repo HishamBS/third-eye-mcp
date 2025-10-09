@@ -7,6 +7,7 @@ import { homedir } from 'os';
 import { existsSync } from 'fs';
 import { getDb, providerKeys, personas, eyesRouting, sessions, runs } from '@third-eye/db';
 import { eq, sql } from 'drizzle-orm';
+import { TOOL_NAME } from '@third-eye/types';
 
 /**
  * W0-VERIFY: Comprehensive E2E Test Suite
@@ -128,8 +129,8 @@ describe('E2E Complete Flow Test Suite', () => {
       // MUST be exactly 1 tool
       expect(tools).toHaveLength(1);
 
-      // MUST be named 'third_eye_overseer'
-      expect(tools[0].name).toBe('third_eye_overseer');
+      // MUST be named third_eye_overseer
+      expect(tools[0].name).toBe(TOOL_NAME);
     });
 
     it('should NOT expose individual Eye tools', async () => {
@@ -150,7 +151,6 @@ describe('E2E Complete Flow Test Suite', () => {
         'tenseigan',
         'byakugan',
         'prompt-helper',
-        'prompt_helper',
       ];
 
       for (const forbidden of forbiddenNames) {
@@ -169,7 +169,7 @@ describe('E2E Complete Flow Test Suite', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'Write a hello world function in Python',
             },
@@ -188,7 +188,7 @@ describe('E2E Complete Flow Test Suite', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'Create a simple add function',
             },
@@ -213,7 +213,7 @@ describe('E2E Complete Flow Test Suite', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'Review this code: function add(a, b) { return a + b; }',
             },
@@ -234,7 +234,7 @@ describe('E2E Complete Flow Test Suite', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'Validate this JSON: {"name": "test"}',
             },
@@ -283,7 +283,7 @@ describe('E2E Complete Flow Test Suite', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'Analyze this code snippet: const x = 10;',
             },
@@ -316,7 +316,7 @@ describe('E2E Complete Flow Test Suite', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'Review this function: def greet(name): return f"Hello {name}"',
             },
@@ -410,7 +410,7 @@ describe('E2E Complete Flow Test Suite', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'Session test task 1',
               config: {
@@ -434,7 +434,7 @@ describe('E2E Complete Flow Test Suite', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'Multi-task test 1',
               config: {
@@ -457,7 +457,7 @@ describe('E2E Complete Flow Test Suite', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'Multi-task test 2',
               config: {
@@ -488,7 +488,7 @@ describe('E2E Complete Flow Test Suite', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'Activity tracking test',
               config: {
@@ -594,7 +594,7 @@ describe('E2E Complete Flow Test Suite', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: 'Order guard test: auto-router should work',
             },
@@ -635,7 +635,7 @@ describe('E2E Complete Flow Test Suite', () => {
         {
           method: 'tools/call',
           params: {
-            name: 'third_eye_overseer',
+            name: TOOL_NAME,
             arguments: {
               task: '', // Empty task to potentially trigger error
             },

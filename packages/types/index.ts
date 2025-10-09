@@ -52,6 +52,21 @@ export {
   isStatusCode,
 } from './enums';
 
+export {
+  TOOL_NAME,
+  CLI_BIN,
+  CLI_EXEC,
+  DATA_DIRECTORY,
+  STRICTNESS_PRESETS,
+  DEFAULT_STRICTNESS_PRESET,
+} from './constants';
+
+export type {
+  StrictnessSettings,
+  StrictnessPresetId,
+  StrictnessPreset,
+} from './constants';
+
 export type {
   OverseerEnvelope,
   SessionConfig,

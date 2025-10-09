@@ -3,7 +3,7 @@ groq:
   base_url: "https://api.groq.com/openai/v1"
   models:
     tools:
-      "overseer/navigator":
+      "third_eye_overseer":
         primary: llama-3.1-8b-instant
       "sharingan/clarify":
         primary: meta-llama/llama-4-scout-17b-16e-instruct

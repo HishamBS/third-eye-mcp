@@ -134,9 +134,9 @@ For each claim:
             type: 'condition',
             condition: 'data.ambiguous === false',
             true: 'jogan',
-            false: 'prompt_helper',
+            false: 'prompt-helper',
           },
-          { id: 'prompt_helper', eye: 'helper', next: 'jogan' },
+          { id: 'prompt-helper', eye: 'prompt-helper', next: 'jogan' },
           { id: 'jogan', eye: 'jogan', next: 'end' },
           { id: 'end', type: 'terminal' },
         ],
@@ -153,8 +153,8 @@ For each claim:
       workflowJson: {
         steps: [
           { id: 'start', eye: 'navigator', next: 'sharingan' },
-          { id: 'sharingan', eye: 'sharingan', next: 'prompt_helper' },
-          { id: 'prompt_helper', eye: 'helper', next: 'jogan' },
+          { id: 'sharingan', eye: 'sharingan', next: 'prompt-helper' },
+          { id: 'prompt-helper', eye: 'prompt-helper', next: 'jogan' },
           { id: 'jogan', eye: 'jogan', next: 'rinnegan_requirements' },
           { id: 'rinnegan_requirements', eye: 'rinnegan', next: 'user_approval_1' },
           { id: 'user_approval_1', type: 'user_input', prompt: 'Review and approve requirements', next: 'conditional_2' },

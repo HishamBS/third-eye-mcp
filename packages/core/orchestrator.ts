@@ -44,6 +44,18 @@ interface ProviderCredentials {
   baseUrl?: string;
 }
 
+interface EyeRunProviderOverride {
+  provider: ProviderType;
+  model: string;
+  label?: string;
+}
+
+interface EyeRunOptions {
+  providerOverride?: EyeRunProviderOverride;
+  temperature?: number;
+  maxTokens?: number;
+}
+
 /**
  * Eye Orchestrator
  *
@@ -70,7 +82,8 @@ export class EyeOrchestrator {
   async runEye(
     eyeName: string,
     input: string,
-    sessionId?: string
+    sessionId?: string,
+    options: EyeRunOptions = {}
   ): Promise<EyeResponse> {
     const startTime = Date.now();
     const runId = nanoid();
@@ -78,11 +91,23 @@ export class EyeOrchestrator {
 
     if (!actualSessionId) {
       actualSessionId = nanoid();
+      const createdAt = new Date();
+      const agentLabel = 'Third Eye Pipeline';
+      const displayLabel = `Manual Session (${eyeName})`;
       await this.db.insert(sessions).values({
         id: actualSessionId,
-        createdAt: new Date(),
+        createdAt,
         status: 'active',
-        configJson: {},
+        configJson: JSON.stringify({
+          agentName: agentLabel,
+          displayName: displayLabel,
+          origin: 'orchestrator',
+          firstEye: eyeName,
+        }),
+        agentName: agentLabel,
+        model: null,
+        displayName: displayLabel,
+        lastActivity: createdAt,
       });
     }
 
@@ -153,8 +178,36 @@ export class EyeOrchestrator {
         );
       }
 
-      // 3. Load routing configuration
-      const routing = await this.getEyeRouting(eyeName);
+      // Emit eye_started event
+      try {
+        const wsManager = getWebSocketBridge();
+        if (wsManager && 'emitEyeStarted' in wsManager) {
+          const eyeIcon = this.getEyeIcon(eyeName);
+          (wsManager as any).emitEyeStarted(actualSessionId, eyeName, {
+            title: `${eye.name} Started`,
+            summary: `Analyzing request...`,
+            details: `Eye ${eyeName} is processing the input`,
+            icon: eyeIcon,
+            color: 'info'
+          });
+        }
+      } catch (e) {
+        console.debug('WebSocket broadcast skipped:', e);
+      }
+
+      const providerOverride = options.providerOverride;
+
+      // 3. Load routing configuration (with optional override)
+      const routing = providerOverride
+        ? {
+            eye: eyeName,
+            primaryProvider: providerOverride.provider,
+            primaryModel: providerOverride.model,
+            fallbackProvider: null,
+            fallbackModel: null,
+          }
+        : await this.getEyeRouting(eyeName);
+
       if (!routing || !routing.primaryProvider || !routing.primaryModel) {
         return this.createErrorEnvelope(
           eyeName,
@@ -166,11 +219,14 @@ export class EyeOrchestrator {
       }
 
       // 4. Get provider API key
-      const providerType = this.resolveProviderType(routing.primaryProvider);
+      const targetProvider = routing.primaryProvider;
+      const targetModel = routing.primaryModel;
+
+      const providerType = this.resolveProviderType(targetProvider);
       if (!providerType) {
         return this.createErrorEnvelope(
           eyeName,
-          `Unsupported provider configured: ${routing.primaryProvider}`,
+          `Unsupported provider configured: ${targetProvider}`,
           runId,
           actualSessionId,
           startTime
@@ -189,22 +245,26 @@ export class EyeOrchestrator {
         );
       }
 
+      const providerLabel = providerOverride?.label ?? providerType;
+
       // 5. Create provider instance
       const provider = ProviderFactory.createProvider(providerType, {
         apiKey: apiKey ?? undefined,
         baseUrl: providerCredentials?.baseUrl,
       });
 
-      // 6. Call provider with Eye's persona as system prompt
-      const persona = eye.getPersona();
+      // 6. Load active persona from database (single source of truth)
+      const persona = await this.getActivePersona(eyeName);
+
+      // 7. Call provider with persona as system prompt
       const completion = await provider.complete({
-        model: routing.primaryModel,
+        model: targetModel,
         messages: [
           { role: 'system', content: persona },
           { role: 'user', content: input }
         ],
-        temperature: 0.7,
-        max_tokens: 4096,
+        temperature: options.temperature ?? 0.7,
+        max_tokens: options.maxTokens ?? 4096,
         response_format: { type: 'json_object' }, // Force JSON-only responses
       });
 
@@ -262,12 +322,45 @@ export class EyeOrchestrator {
         sessionId: actualSessionId,
         eye: eyeName,
         provider: providerType,
-        model: routing.primaryModel,
+        model: targetModel,
         inputMd: input,
         outputJson: envelope,
         tokensIn: completion.usage.prompt_tokens ?? 0,
         tokensOut: completion.usage.completion_tokens ?? 0,
         latencyMs,
+        createdAt: new Date(),
+      });
+
+      // 11. Persist pipeline event for Monitor page
+      const { nanoid } = await import('nanoid');
+      const { pipelineEvents } = await import('@third-eye/db');
+
+      // Extract next action (can be string or array from Overseer)
+      const nextAction = envelope.next || envelope.next_action;
+      const nextActionStr = Array.isArray(nextAction) ? nextAction[0] : nextAction;
+
+      const eventData = envelope.data && typeof envelope.data === 'object'
+        ? {
+            ...envelope.data,
+            provider: providerType,
+            providerLabel,
+            model: targetModel,
+          }
+        : {
+            provider: providerType,
+            providerLabel,
+            model: targetModel,
+          };
+
+      await this.db.insert(pipelineEvents).values({
+        id: nanoid(),
+        sessionId: actualSessionId,
+        eye: eyeName,
+        type: 'eye_call',
+        code: envelope.code,
+        md: envelope.md,
+        dataJson: eventData,
+        nextAction: nextActionStr,
         createdAt: new Date(),
       });
 
@@ -287,7 +380,8 @@ export class EyeOrchestrator {
               tokensOut: completion.usage.completion_tokens ?? 0,
               latencyMs,
               provider: providerType,
-              model: routing.primaryModel
+              providerLabel,
+              model: targetModel
             },
             timestamp: Date.now()
           },
@@ -299,18 +393,17 @@ export class EyeOrchestrator {
           type: 'pipeline_event',
           sessionId,
           data: {
+            ...envelope,
             runId,
             eye: eyeName,
             status: 'completed',
-            code: envelope.code,
-            md: envelope.md,
-            ...envelope,
             metrics: {
               tokensIn: completion.usage.prompt_tokens ?? 0,
               tokensOut: completion.usage.completion_tokens ?? 0,
               latencyMs,
               provider: providerType,
-              model: routing.primaryModel
+              providerLabel,
+              model: targetModel
             },
             timestamp: Date.now()
           },
@@ -503,6 +596,23 @@ export class EyeOrchestrator {
   }
 
   /**
+   * Get Eye icon for UI display
+   */
+  private getEyeIcon(eyeName: string): string {
+    const iconMap: Record<string, string> = {
+      overseer: '🧿',
+      sharingan: '👁️',
+      'prompt-helper': '✨',
+      jogan: '🔮',
+      rinnegan: '🌀',
+      mangekyo: '⚡',
+      tenseigan: '💫',
+      byakugan: '👀',
+    };
+    return iconMap[eyeName] || '👁️';
+  }
+
+  /**
    * Create error envelope
    */
   private async createErrorEnvelope(
@@ -561,6 +671,41 @@ export class EyeOrchestrator {
   }
 
   /**
+   * Fetch active persona from database (single source of truth)
+   */
+  private async getActivePersona(eyeName: string): Promise<string> {
+    const { personas } = await import('@third-eye/db/schema');
+    const { eq, and } = await import('drizzle-orm');
+
+    const persona = await this.db
+      .select()
+      .from(personas)
+      .where(and(
+        eq(personas.eye, eyeName),
+        eq(personas.active, true)
+      ))
+      .get();
+
+    if (!persona) {
+      const { seedDefaults, DEFAULT_PERSONA_MAP } = await import('@third-eye/db/defaults');
+      await seedDefaults({ subsets: { personas: true }, log: () => {} });
+
+      const fallback = DEFAULT_PERSONA_MAP[eyeName];
+      if (fallback) {
+        console.warn(`⚠️ No active persona found for ${eyeName}. Loaded default from persona catalog.`);
+        return fallback.content;
+      }
+
+      throw new Error(
+        `No active persona found for Eye: ${eyeName}. Run 'bun run scripts/seed-defaults.ts --force --only=personas' to restore defaults.`
+      );
+    }
+
+    console.log(`📖 Loaded persona from database for Eye: ${eyeName} (v${persona.version})`);
+    return persona.content;
+  }
+
+  /**
    * Create a new session
    */
   async createSession(config: SessionBootstrapConfig = {}): Promise<{ sessionId: string; portalUrl: string }> {
@@ -579,7 +724,7 @@ export class EyeOrchestrator {
     // Build portal URL
     const host = process.env.SERVER_HOST || '127.0.0.1';
     const uiPort = parseInt(process.env.UI_PORT || '3300', 10);
-    const portalUrl = `http://${host}:${uiPort}/monitor?session=${sessionId}`;
+    const portalUrl = `http://${host}:${uiPort}/monitor?sessionId=${sessionId}`;
 
     // Emit session created event
     const ws = getWebSocketBridge();
