@@ -362,7 +362,8 @@ export default function PersonasPage() {
           <div>
             <h2 className="mb-6 text-sm font-semibold uppercase tracking-[0.2em] text-brand-accent">Eyes</h2>
             <div className="space-y-4">
-              {allEyes.map((eye, index) => {
+              {personas.map((persona, index) => {
+                const eye = persona.id;
                 const activePersona = getActivePersona(eye);
                 const isSelected = selectedEye === eye;
                 const isEditing = editingPersona === eye;
@@ -383,11 +384,10 @@ export default function PersonasPage() {
                         <span className="text-2xl">{getEyeIcon(eye)}</span>
                         <div>
                           <h3 className="font-bold capitalize">
-                            {activePersona?.name || eye}
+                            {persona.name}
                           </h3>
                           <p className="text-xs opacity-80">
-                            Version {activePersona?.version || 'Default'}
-                            {activePersona?.active && ' (Active)'}
+                            {persona.description}
                           </p>
                         </div>
                       </div>
