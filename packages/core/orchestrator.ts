@@ -257,19 +257,33 @@ export class EyeOrchestrator {
         baseUrl: providerCredentials?.baseUrl,
       });
 
-      // 6. Load active persona from database (single source of truth)
-      const persona = await this.getActivePersona(eyeName);
+      // 6. Build persona prompt using blueprint renderer
+      const blueprint = getPersonaBlueprint(eyeName);
+      if (!blueprint) {
+        return this.createErrorEnvelope(
+          eyeName,
+          `No blueprint found for Eye: ${eyeName}`,
+          runId,
+          actualSessionId,
+          startTime
+        );
+      }
+
+      // Determine stage based on pipeline state
+      const stage = EyeStageToken.GUIDANCE; // TODO: Get actual stage from context
+      
+      const personaPrompt = renderPersonaPrompt(blueprint, stage, input);
 
       // 7. Call provider with persona as system prompt
       const completion = await provider.complete({
         model: targetModel,
         messages: [
-          { role: 'system', content: persona },
-          { role: 'user', content: input }
+          { role: 'system', content: personaPrompt.systemPrompt },
+          { role: 'user', content: personaPrompt.userMessage }
         ],
-        temperature: options.temperature ?? 0.7,
+        temperature: options.temperature ?? personaPrompt.config.temperature,
         max_tokens: options.maxTokens ?? 4096,
-        response_format: { type: 'json_object' }, // Force JSON-only responses
+        response_format: personaPrompt.config.response_format,
       });
 
       const latencyMs = Date.now() - startTime;
