@@ -5,7 +5,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { BLUEPRINT_REGISTRY } from '@third-eye/eyes';
+import { BLUEPRINT_REGISTRY } from '@third-eye/eyes/blueprint-client';
 import { EyeId } from '@third-eye/constants';
 import { getEyeIconPath } from '@third-eye/constants';
 
