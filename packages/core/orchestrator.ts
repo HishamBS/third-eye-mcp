@@ -14,6 +14,7 @@ import { ensureEyeBehavior, EyeBehaviorError } from './persona-guards';
 import { renderPersonaPrompt, getPersonaBlueprint } from '@third-eye/eyes';
 import { getStageTemplate } from '@third-eye/constants';
 import { EyeStageToken } from '@third-eye/constants';
+import { capabilityProgress } from './capability-progress';
 
 function isSupportedProvider(value: unknown): value is ProviderType {
   if (typeof value !== 'string') {
