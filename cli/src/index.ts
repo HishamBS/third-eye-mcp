@@ -45,7 +45,7 @@ program
       }
 
       // Start server
-      const server = spawn('pnpm', ['--filter', '@third-eye/server', 'dev'], {
+      const server = spawn('bun', ['run', '--cwd', 'apps/server', 'dev'], {
         cwd: projectRoot,
         stdio: 'pipe',
         shell: true,
@@ -65,7 +65,7 @@ program
       // Start UI
       const uiSpinner = ora('Starting UI...').start();
 
-      const ui = spawn('pnpm', ['--filter', '@third-eye/ui', 'dev'], {
+      const ui = spawn('bun', ['run', '--cwd', 'apps/ui', 'dev'], {
         cwd: projectRoot,
         stdio: 'pipe',
         shell: true,

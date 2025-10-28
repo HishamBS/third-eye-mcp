@@ -71,9 +71,9 @@ Detailed configuration reference is available in [Configuration](./configuration
 Maintainers can execute:
 
 ```bash
-pnpm release:prepare        # Clean, lint, test, build, pack
-pnpm release:prepare:dry    # Prepare and run `npm publish --dry-run`
-pnpm release:publish        # Full gate + npm publish
+bun run release:prepare      # Clean, lint, test, build, pack
+bun run release:prepare:dry  # Prepare and run `npm publish --dry-run`
+bun run release:publish      # Full gate + npm publish
 ```
 
 The CLI `release` command walks through semantic versioning and changelog updates interactively. See [Publishing](./publishing.md) for the complete checklist.

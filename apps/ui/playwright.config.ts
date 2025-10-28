@@ -16,7 +16,7 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   webServer: {
-    command: 'pnpm --filter overseer-dashboard run build && pnpm --filter overseer-dashboard run preview --host 127.0.0.1 --port 4173',
+    command: 'bun run --cwd ../../ apps/ui build && bun run --cwd ../../ apps/ui preview --host 127.0.0.1 --port 4173',
     port: 4173,
     reuseExistingServer: !process.env.CI,
   },

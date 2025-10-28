@@ -5,7 +5,6 @@ WORKDIR /app
 
 # Copy workspace configuration
 COPY package.json bun.lock* ./
-COPY pnpm-workspace.yaml ./
 
 # Copy all packages
 COPY packages/ ./packages/

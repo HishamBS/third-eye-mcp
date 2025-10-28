@@ -57,3 +57,11 @@ export const CLARIFICATION_FALLBACKS: Readonly<Record<ClarificationField, string
   [ClarificationFieldTokens.SUCCESS_CRITERIA]: 'Success criteria not specified',
   [ClarificationFieldTokens.REFERENCES]: 'No references provided',
 });
+
+/**
+ * Type guard to check if a value is a valid clarification field token
+ * @param value - The value to check
+ * @returns true if value is a valid ClarificationField
+ */
+export const isClarificationFieldToken = (value: unknown): value is ClarificationField =>
+  isClarificationField(value);

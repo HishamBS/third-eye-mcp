@@ -6,12 +6,12 @@
  */
 
 type TokenRecord = Record<string, string>;
-type TokenLiteral<TTokens extends TokenRecord> = TTokens[keyof TTokens];
+export type TokenLiteral<TTokens extends TokenRecord> = TTokens[keyof TTokens];
 
-const freezeTokens = <T extends Record<string, string>>(tokens: T): Readonly<T> =>
+export const freezeTokens = <T extends Record<string, string>>(tokens: T): Readonly<T> =>
   Object.freeze(tokens);
 
-const tokenValues = <T extends Record<string, string>>(
+export const tokenValues = <T extends Record<string, string>>(
   tokens: Readonly<T>,
 ): readonly TokenLiteral<T>[] => Object.freeze(Object.values(tokens));
 
@@ -438,4 +438,115 @@ export const ContentDomain = freezeTokens({
 
 export type ContentDomain = TokenLiteral<typeof ContentDomain>;
 export const ALL_CONTENT_DOMAINS = tokenValues(ContentDomain);
+
+export const NextAction = freezeTokens({
+  PROCEED: 'PROCEED',
+  AWAIT_INPUT: 'AWAIT_INPUT',
+  AWAIT_DRAFT: 'AWAIT_DRAFT',
+  AWAIT_CONFIRMATION: 'AWAIT_CONFIRMATION',
+  COMPLETE: 'COMPLETE',
+});
+
+export type NextAction = TokenLiteral<typeof NextAction>;
+export const ALL_NEXT_ACTIONS = tokenValues(NextAction);
+
+export const UiTextToken = freezeTokens({
+  // Next Actions
+  PROCEED: 'PROCEED',
+  AWAIT_INPUT: 'AWAIT_INPUT',
+  AWAIT_DRAFT: 'AWAIT_DRAFT',
+  AWAIT_CONFIRMATION: 'AWAIT_CONFIRMATION',
+  COMPLETE: 'COMPLETE',
+  // Status Messages
+  LOADING: 'Loading...',
+  NO_DATA: 'No data available',
+  ERROR: 'An error occurred',
+  SUCCESS: 'Success',
+  PENDING: 'Pending',
+  RUNNING: 'Running',
+  COMPLETED: 'Completed',
+  FAILED: 'Failed',
+  CANCELLED: 'Cancelled',
+  // Eye Descriptions
+  AMBIGUITY_DETECTION: 'Ambiguity detection & clarification',
+  REQUIREMENTS_APPROVAL: 'Requirements & approval gating',
+  CONSISTENCY_CHECK: 'Consistency & memory checks',
+  EVIDENCE_VALIDATION: 'Evidence & citation validation',
+  CODE_REVIEW: 'Code review across 4 phases',
+  AUTO_ROUTING: 'Auto-routing & orchestration',
+  MASTER_COORDINATOR: 'Master coordinator',
+  // Wow Features
+  EVIDENCE_LENS: 'Evidence Lens',
+  DUEL_MODE: 'Duel Mode',
+  REPLAY_THEATER: 'Replay Theater',
+  KILL_SWITCH: 'Kill Switch',
+  VISUAL_PLAN: 'Visual Plan Renderer',
+  LEADERBOARDS: 'Leaderboards',
+  EXPORT_ENGINE: 'Export Engine',
+  ADAPTIVE_CLARIFICATIONS: 'Adaptive Clarifications',
+});
+
+export type UiTextToken = TokenLiteral<typeof UiTextToken>;
+export const ALL_UI_TEXT_TOKENS = tokenValues(UiTextToken);
+
+export const UiIconToken = freezeTokens({
+  EYE: 'eye',
+  SHIELD: 'shield',
+  SEARCH: 'search',
+  SPARKLES: 'sparkles',
+  CODE: 'code-2',
+  GIT_BRANCH: 'git-branch',
+  CROWN: 'crown',
+  EYE_OFF: 'eye-off',
+  CHECK_CIRCLE: 'check-circle-2',
+  X_CIRCLE: 'x-circle',
+  ALERT_CIRCLE: 'alert-circle',
+  LOADER: 'loader',
+  PLAY_CIRCLE: 'play-circle',
+  DOWNLOAD: 'download',
+  UPLOAD: 'upload',
+  SETTINGS: 'settings',
+  USERS: 'users',
+  FOLDER: 'folder',
+  FILE: 'file',
+  EDIT: 'edit',
+  TRASH: 'trash',
+  PLUS: 'plus',
+  MINUS: 'minus',
+  ZAP: 'zap',
+  SHIELD_ALERT: 'shield-alert',
+  TROPHY: 'trophy',
+  FOLDER_TREE: 'folder-tree',
+  EYE_EXAMINATION: 'eye',
+});
+
+export type UiIconToken = TokenLiteral<typeof UiIconToken>;
+export const ALL_UI_ICON_TOKENS = tokenValues(UiIconToken);
+
+export const UiColorToken = freezeTokens({
+  // Brand Colors
+  BRAND_PRIMARY: 'brand-primary',
+  BRAND_ACCENT: 'brand-accent',
+  BRAND_INK: 'brand-ink',
+  BRAND_PAPER: 'brand-paper',
+  BRAND_PAPER_ELEV: 'brand-paper-elev',
+  BRAND_OUTLINE: 'brand-outline',
+  // Eye Colors
+  EYE_SHARINGAN: 'eye-sharingan',
+  EYE_PROMPT: 'eye-prompt',
+  EYE_JOGAN: 'eye-jogan',
+  EYE_RINNEGAN: 'eye-rinnegan',
+  EYE_MANGEKYO: 'eye-mangekyo',
+  EYE_TENSEIGAN: 'eye-tenseigan',
+  EYE_BYAKUGAN: 'eye-byakugan',
+  // Semantic Colors
+  SUCCESS: 'success',
+  WARNING: 'warning',
+  ERROR: 'error',
+  INFO: 'info',
+  MUTED: 'muted',
+});
+
+export type UiColorToken = TokenLiteral<typeof UiColorToken>;
+export const ALL_UI_COLOR_TOKENS = tokenValues(UiColorToken);
 

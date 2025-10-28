@@ -1,0 +1,14 @@
+{
+  "name": "@third-eye/theme",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "dependencies": {
+    "@third-eye/constants": "workspace:*",
+    "@third-eye/types": "workspace:*"
+  }
+}

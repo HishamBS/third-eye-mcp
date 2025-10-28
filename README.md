@@ -47,7 +47,7 @@ What happens on first run:
 Need the CLI on your PATH? Install globally after Bun is installed:
 
 ```bash
-npm install -g third-eye-mcp           # or pnpm add -g / bun add -g
+npm install -g third-eye-mcp           # or bun add -g
 third-eye-mcp up
 ```
 
@@ -126,9 +126,9 @@ examples/        Sample configs and scenario playbooks
 bun install                # install workspace dependencies
 bun run build              # build packages, server, UI, CLI (alias for release pipeline)
 
-pnpm lint                  # type-check monorepo
-pnpm test:coverage         # run Vitest with coverage
-pnpm test:e2e              # Playwright end-to-end tests
+bun run lint               # type-check monorepo
+bun run test:coverage      # run Vitest with coverage
+bun run test:e2e           # Playwright end-to-end tests
 
 third-eye-mcp reset        # wipe ~/.third-eye-mcp (destructive)
 third-eye-mcp logs --tail  # follow combined logs
@@ -152,8 +152,8 @@ bunx third-eye-mcp release:ship
 Prefer manual control? Follow the publishing checklist in [docs/publishing.md](docs/publishing.md):
 
 ```bash
-pnpm release:prepare       # clean → lint → test → build → pack
-pnpm release:prepare:dry   # add npm publish --dry-run
+bun run release:prepare    # clean → lint → test → build → pack
+bun run release:prepare:dry  # add npm publish --dry-run
 npm publish --access public
 ```
 

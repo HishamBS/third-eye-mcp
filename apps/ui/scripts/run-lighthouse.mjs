@@ -24,7 +24,7 @@ async function run() {
     console.log(`Lighthouse report written to ${OUTPUT_PATH}`);
   } catch (error) {
     if (error.code === 'ENOENT') {
-      console.error('Unable to locate the `lighthouse` binary. Run `pnpm --filter overseer-dashboard install` to ensure devDependencies are installed.');
+      console.error('Unable to locate the `lighthouse` binary. Run `bun install` to ensure devDependencies are installed.');
     } else {
       console.error('Lighthouse audit failed:', error.message ?? error);
     }

@@ -49,7 +49,7 @@ Duel mode now offers a model-agnostic comparison harness fully driven by backend
 
 ## Quality Signals
 
-- Automated suites run through `pnpm test` / `pnpm test:coverage` (Vitest) and `pnpm test:e2e` (Playwright). Coverage spans MCP tool discovery, strictness/context propagation, envelope validation, duel scoring, and UI smoke paths.
+- Automated suites run through `bun test` / `bun run test:coverage` (Vitest) and `bun run test:e2e` (Playwright). Coverage spans MCP tool discovery, strictness/context propagation, envelope validation, duel scoring, and UI smoke paths.
 - Manual validation through the playground, monitor (including kill switch + reruns), and duel UI confirms session synchronisation, preset alignment, provider/model overrides, and clear error surfacing for provider authentication misconfiguration.
 
 

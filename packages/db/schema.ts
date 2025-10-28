@@ -256,6 +256,39 @@ export const personaVersions = sqliteTable('persona_versions', {
 export type PersonaVersion = typeof personaVersions.$inferSelect;
 export type NewPersonaVersion = typeof personaVersions.$inferInsert;
 
+// Clarifications storage
+export const clarifications = sqliteTable('clarifications', {
+  id: text('id').primaryKey(),
+  sessionId: text('session_id').notNull().references(() => sessions.id),
+  field: text('field').notNull(), // clarification field token
+  question: text('question').notNull(),
+  answer: text('answer'),
+  status: text('status').notNull().default('pending'), // 'pending', 'answered'
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  answeredAt: integer('answered_at', { mode: 'timestamp' }),
+}, (table) => ({
+  sessionFieldUnique: unique().on(table.sessionId, table.field),
+}));
+
+export type Clarification = typeof clarifications.$inferSelect;
+export type NewClarification = typeof clarifications.$inferInsert;
+
+// Intent confirmations storage
+export const intentConfirmations = sqliteTable('intent_confirmations', {
+  id: text('id').primaryKey(),
+  sessionId: text('session_id').notNull().references(() => sessions.id),
+  intentAnalysis: text('intent_analysis', { mode: 'json' }),
+  confirmationPrompt: text('confirmation_prompt').notNull(),
+  response: text('response'), // 'approved', 'rejected', 'modified'
+  userIdentity: text('user_identity'),
+  status: text('status').notNull().default('pending'), // 'pending', 'answered'
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  respondedAt: integer('responded_at', { mode: 'timestamp' }),
+});
+
+export type IntentConfirmation = typeof intentConfirmations.$inferSelect;
+export type NewIntentConfirmation = typeof intentConfirmations.$inferInsert;
+
 // MCP Integrations - AI tool connection configurations
 export const mcpIntegrations = sqliteTable('mcp_integrations', {
   id: text('id').primaryKey(),

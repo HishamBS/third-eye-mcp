@@ -11,7 +11,7 @@ Comprehensive installation and onboarding instructions for running Third Eye MCP
   - Verify with `bun --version`
 - **Node.js 20+** (optional, required for certain development tooling)
 - **git 2.40+** for cloning the repository
-- **npm** or **pnpm** for dependency management if you prefer a global install
+- **npm** for dependency management if you prefer a global install
 
 > **Why Bun?** The published CLI binaries (`third-eye-mcp` and `third-eye-mcp-server`) are bundled as Bun executables and depend on the Bun runtime even when invoked from npm.
 
@@ -40,9 +40,6 @@ Install the CLI globally. Bun, npm, and pnpm are supported:
 ```bash
 # Using npm
 npm install -g third-eye-mcp
-
-# Using pnpm
-pnpm add -g third-eye-mcp
 
 # Using Bun
 bun add -g third-eye-mcp

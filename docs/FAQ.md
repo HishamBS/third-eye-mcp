@@ -11,8 +11,6 @@ Practical fixes for common issues plus quick-reference answers for operating Thi
 ```bash
 npm install -g third-eye-mcp
 # or
-pnpm add -g third-eye-mcp
-# or
 bun add -g third-eye-mcp
 ```
 

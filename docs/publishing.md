@@ -17,7 +17,7 @@ The sections below document each step if you need manual control.
 ## 1. Prerequisites
 
 - Clean `release/go-live` branch checked out (`git status` should be clean).
-- All tests and linting pass locally (`pnpm release:prepare --dry-run`).
+- All tests and linting pass locally (`bun run release:prepare:dry`).
 - npm credentials configured (`npm whoami`).
 - Two-factor authentication enabled on the npm account.
 
@@ -41,18 +41,18 @@ This flow will:
 ## 3. Validate Release Artifacts
 
 ```bash
-bun run build:cli       # refresh dist/ binaries before packing
-pnpm release:prepare --dry-run
-pnpm health:check       # capture JSON response for release notes
-pnpm ws:check           # capture reconnect transcript
+bun run build:cli            # refresh dist/ binaries before packing
+bun run release:prepare:dry # prepare and dry-run publish
+bun run health:check        # capture JSON response for release notes
+bun run ws:check            # capture reconnect transcript
 ```
 
 This command executes the release gate pipeline locally:
 
-- Linting (`pnpm lint`)
-- Tests with coverage (`pnpm test:coverage`)
+- Linting (`bun run lint`)
+- Tests with coverage (`bun run test:coverage`)
 - Build (packages, server, UI, CLI)
-- `pnpm pack` artifact generation
+- `npm pack` artifact generation
 - `npm publish --dry-run`
 
 Artifacts are written to `dist/` and `third-eye-mcp-<version>.tgz`.
@@ -60,7 +60,7 @@ Artifacts are written to `dist/` and `third-eye-mcp-<version>.tgz`.
 ## 4. Commit & Tag
 
 ```bash
-git add package.json pnpm-lock.yaml CHANGELOG.md
+git add package.json bun.lockb CHANGELOG.md
 # Include other versioned files if present
 
 git commit -m "chore(release): vX.Y.Z"
@@ -70,7 +70,7 @@ git tag -s vX.Y.Z -m "Third Eye MCP vX.Y.Z"
 ## 5. Publish
 
 ```bash
-pnpm release:publish
+bun run release:publish
 ```
 
 This runs `release:prepare` (non-dry) and calls `npm publish --access public`.
@@ -84,13 +84,13 @@ Verify the release:
 
 ## 6. Post-Publish Checklist
 
-- Run `pnpm health:check` against the deployed instance.
-- Execute `pnpm ws:check` for WebSocket verification.
+- Run `bun run health:check` against the deployed instance.
+- Execute `bun run ws:check` for WebSocket verification.
 - Update documentation screenshots and badges if coverage changed.
 - Announce release with changelog summary.
 
 ## Automation Notes
 
 - GitHub Actions workflow `release.yml` enforces the same gates as `release:prepare`.
-- Coverage badge can be refreshed via `pnpm coverage:badge` once coverage data exists.
+- Coverage badge can be refreshed via `bun run coverage:badge` once coverage data exists.
 - All release commands require Bun to be installed locally.

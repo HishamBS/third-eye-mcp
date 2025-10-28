@@ -216,11 +216,10 @@ async function installWithFallback(cwd: string, label: string, verbose: boolean)
   const strategies: Array<{ cmd: string; args: string[]; display: string }> = [];
 
   if (commandExists('bun')) strategies.push({ cmd: 'bun', args: ['install'], display: 'bun install' });
-  if (commandExists('pnpm')) strategies.push({ cmd: 'pnpm', args: ['install'], display: 'pnpm install' });
   if (commandExists('npm')) strategies.push({ cmd: 'npm', args: ['install'], display: 'npm install' });
 
   if (strategies.length === 0) {
-    throw new Error('No package manager found (bun/pnpm/npm). Install one before running the CLI.');
+    throw new Error('No package manager found (bun/npm). Install bun for the best experience.');
   }
 
   const labelPrefix = `Installing ${label}`;
@@ -473,9 +472,9 @@ async function runReleasePipeline() {
 
   console.log(`\n🎯 Target version: v${targetVersion}`);
 
-  console.log('\n🛡️  Running release gate (pnpm release:prepare --dry-run)…');
+  console.log('\n🛡️  Running release gate (bun run release:prepare:dry)…');
   try {
-    runStep('pnpm release:prepare --dry-run', projectRoot, 'pnpm');
+    runStep('bun run release:prepare:dry', projectRoot, 'bun');
   } catch (error) {
     console.error('\n❌ Release gate failed. Fix the reported issues and rerun the pipeline.');
     throw error;
@@ -523,7 +522,7 @@ async function runReleasePipeline() {
     return;
   }
 
-  runStep('pnpm release:publish', projectRoot, 'pnpm');
+  runStep('bun run release:publish', projectRoot, 'bun');
 
   const tagConfirmed = await confirm({
     message: `Create git tag v${targetVersion}?`,
@@ -943,9 +942,9 @@ async function runReleaseAssistant() {
 
   console.log('\nNext steps:');
   console.log('  1. Review git diff and stage files.');
-  console.log('  2. Run `pnpm release:prepare:dry` to verify artifacts.');
+  console.log('  2. Run `bun run release:prepare:dry` to verify artifacts.');
   console.log('  3. Commit & tag release.');
-  console.log('  4. Publish with `pnpm release:publish`.');
+  console.log('  4. Publish with `bun run release:publish`.');
 }
 
 async function resetData() {

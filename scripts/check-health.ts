@@ -45,7 +45,7 @@ Status : ${response.status} ${response.statusText}`);
     console.log('\n✅ Health check passed.');
   } catch (error) {
     console.error('\n❌ Failed to fetch health endpoint:', error instanceof Error ? error.message : error);
-    console.error('   Ensure the server is running (pnpm dev) before executing this script.');
+    console.error('   Ensure the server is running (bun run dev) before executing this script.');
     process.exit(1);
   }
 }

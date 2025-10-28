@@ -9,7 +9,7 @@ const BADGE_PATH = resolve(PROJECT_ROOT, 'docs', 'badges', 'coverage.svg');
 
 function readCoverage(): number {
   if (!existsSync(COVERAGE_FILE)) {
-    throw new Error(`Coverage summary not found at ${COVERAGE_FILE}. Run pnpm test:coverage first.`);
+    throw new Error(`Coverage summary not found at ${COVERAGE_FILE}. Run bun run test:coverage first.`);
   }
 
   const summary = JSON.parse(readFileSync(COVERAGE_FILE, 'utf-8'));

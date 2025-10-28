@@ -11,6 +11,9 @@ export * from './eyes/mangekyo';
 export * from './eyes/tenseigan';
 export * from './eyes/byakugan';
 
+// Clarification management
+export * from './clarification';
+
 // Eye Registry
 import { overseer } from './eyes/overseer';
 import { sharingan } from './eyes/sharingan';

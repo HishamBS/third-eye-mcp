@@ -10,7 +10,7 @@
 ## 2. Preflight Checklist (run before touching code)
 1. `cd /Users/hbinseddeq/Documents/tuwaiq-ml-bootcamp/week_09_10_capstone_project/third-eye-mcp`
 2. Ensure `.bmad-core/` exists (already restored); if missing, rerun `npx bmad-method install`.
-3. Verify env: `node -v`, `pnpm -v`, `bun -v` (document in chat if versions differ).
+3. Verify env: `node -v`, `bun -v` (document in chat if versions differ).
 4. Load reference docs into Cursor (in order):
    - `THIRD_EYE_VISION.md`
    - `docs/prd.md`
@@ -60,17 +60,17 @@
 - ✅ Use enums/consts from SSOT modules (no literal status strings, colors, etc.).
 - ✅ Extend TypeScript types when modifying schema or constants.
 - ✅ Update seeds/tests when persona envelopes or capability plans change.
-- ✅ Record raw test output in chat (`pnpm test ...`, `npx playwright test`).
-- ✅ Capture scenario verification via `bun run scripts/run-mcp-scenarios.ts` when relevant.
-- ❌ Don’t edit generated artifacts (`packages/**/dist`, `.next/`).
-- ❌ Don’t invent clarifications or capability codes; align with restored templates.
-- ❌ Don’t bypass lint/build/test even for “docs-only” changes (still run `pnpm lint`).
+   - ✅ Record raw test output in chat (`bun test ...`, `npx playwright test`).
+   - ✅ Capture scenario verification via `bun run scripts/run-mcp-scenarios.ts` when relevant.
+   - ❌ Don't edit generated artifacts (`packages/**/dist`, `.next/`).
+   - ❌ Don't invent clarifications or capability codes; align with restored templates.
+   - ❌ Don't bypass lint/build/test even for "docs-only" changes (still run `bun run lint`).
 
 ## 6. Required Commands (per story)
 ```
-pnpm lint
+bun run lint
 bun run build:packages
-pnpm test --filter core
+bun test --filter core
 npx playwright test --project=ui --reporter=list
 bun run scripts/run-mcp-scenarios.ts  # when story touches routing/persona flow
 ```
