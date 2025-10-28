@@ -1,4 +1,0 @@
-packages:
-  - apps/ui
-  - apps/server
-  - packages/*

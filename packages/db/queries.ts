@@ -175,7 +175,7 @@ export async function updateEyeLeaderboard(eyeName: string): Promise<void> {
     }).length;
 
     trendData.push({
-      day: dayStart.toISOString().split('T')[0],
+      day: dayStart.toISOString().split('T')[0]??"",
       runs: dayRuns.length,
       approvals: dayApprovals,
     });
