@@ -120,22 +120,22 @@ export class OrderGuard {
         };
       }
 
-      if (eyeName === 'prompt-helper') {
+      if (eyeName === 'kyuubi') {
         return null; // Always allowed after Sharingan
       }
 
-      if (eyeName === 'jogan' && state.completedEyes.includes('prompt-helper')) {
+      if (eyeName === 'jogan' && state.completedEyes.includes('kyuubi')) {
         return null; // Allowed after Prompt Helper
       }
 
-      if (eyeName === 'jogan' && !state.completedEyes.includes('prompt-helper')) {
+      if (eyeName === 'jogan' && !state.completedEyes.includes('kyuubi')) {
         return {
           code: 'E_PIPELINE_ORDER',
           violation: 'Jōgan called before Prompt Helper',
-          expectedNext: ['prompt-helper'],
+          expectedNext: ['kyuubi'],
           fixInstructions: 'Use Prompt Helper to optimize clarity before intent confirmation',
           examplePayload: {
-            eye: 'prompt-helper',
+            eye: 'kyuubi',
             input: {
               ambiguous_prompt: 'make it better',
               clarifying_questions: ['What specifically needs improvement?', 'What are your success criteria?'],
@@ -148,7 +148,7 @@ export class OrderGuard {
       return {
         code: 'E_PIPELINE_ORDER',
         violation: `${eyeName} not allowed in clarification phase`,
-        expectedNext: state.completedEyes.includes('prompt-helper') ? ['jogan'] : ['prompt-helper'],
+        expectedNext: state.completedEyes.includes('kyuubi') ? ['jogan'] : ['kyuubi'],
         fixInstructions: 'Follow clarification sequence: Sharingan → Prompt Helper → Jōgan',
       };
     }
@@ -321,8 +321,8 @@ export class OrderGuard {
         return ['sharingan'];
 
       case 'clarification':
-        if (!state.completedEyes.includes('prompt-helper')) {
-          return ['prompt-helper'];
+        if (!state.completedEyes.includes('kyuubi')) {
+          return ['kyuubi'];
         }
         if (!state.completedEyes.includes('jogan')) {
           return ['jogan'];

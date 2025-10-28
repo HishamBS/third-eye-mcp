@@ -112,11 +112,11 @@ const DEFAULT_PIPELINES: PipelineDefinition[] = [
         condition: 'always',
         branches: {
           approved: ['jogan'],
-          rejected: ['prompt-helper'],
-          needs_input: ['prompt-helper']
+          rejected: ['kyuubi'],
+          needs_input: ['kyuubi']
         }
       },
-      { eye: 'prompt-helper', condition: 'if_rejected' },
+      { eye: 'kyuubi', condition: 'if_rejected' },
       { eye: 'jogan', condition: 'always' },
       { eye: 'rinnegan', condition: 'if_approved' },
       { eye: 'mangekyo', condition: 'if_approved' },
@@ -137,10 +137,10 @@ const DEFAULT_PIPELINES: PipelineDefinition[] = [
         condition: 'always',
         branches: {
           approved: ['jogan'],
-          rejected: ['prompt-helper']
+          rejected: ['kyuubi']
         }
       },
-      { eye: 'prompt-helper', condition: 'if_rejected' },
+      { eye: 'kyuubi', condition: 'if_rejected' },
       { eye: 'jogan', condition: 'always' },
       { eye: 'rinnegan', condition: 'if_approved' },
       { eye: 'tenseigan', condition: 'if_approved' },
@@ -530,8 +530,8 @@ export class PipelineOrchestrator {
       case 'sharingan': {
         if (responseVerdict(lastResult) === 'REJECTED') {
           return {
-            eyes: ['prompt-helper'],
-            reasoning: 'Sharingan detected ambiguity. Use prompt-helper to clarify.',
+            eyes: ['kyuubi'],
+            reasoning: 'Sharingan detected ambiguity. Use kyuubi to clarify.',
             canAutoRoute: true
           };
         }
@@ -542,7 +542,7 @@ export class PipelineOrchestrator {
         };
       }
 
-      case 'prompt-helper':
+      case 'kyuubi':
         return {
           eyes: ['jogan', 'sharingan'],
           reasoning: 'Prompt optimized. Confirm intent or re-check ambiguity.',

@@ -622,7 +622,7 @@ export class EyeOrchestrator {
     const iconMap: Record<string, string> = {
       overseer: '🧿',
       sharingan: '👁️',
-      'prompt-helper': '✨',
+      'kyuubi': '✨',
       jogan: '🔮',
       rinnegan: '🌀',
       mangekyo: '⚡',

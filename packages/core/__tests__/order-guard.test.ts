@@ -73,7 +73,7 @@ describe('OrderGuard', () => {
     });
 
     it('should allow Prompt Helper after Sharingan', () => {
-      const violation = orderGuard.validateOrder(testSessionId, 'prompt-helper');
+      const violation = orderGuard.validateOrder(testSessionId, 'kyuubi');
       expect(violation).toBeNull();
     });
 
@@ -83,18 +83,18 @@ describe('OrderGuard', () => {
       expect(violation).not.toBeNull();
       expect(violation?.code).toBe('E_PIPELINE_ORDER');
       expect(violation?.violation).toContain('Jōgan called before Prompt Helper');
-      expect(violation?.expectedNext).toContain('prompt-helper');
+      expect(violation?.expectedNext).toContain('kyuubi');
       expect(violation?.fixInstructions).toBeDefined();
       // Example payload is optional in some violations
       if (violation?.examplePayload) {
-        expect(violation.examplePayload.eye).toBe('prompt-helper');
+        expect(violation.examplePayload.eye).toBe('kyuubi');
       }
     });
 
     it('should allow Jogan after Prompt Helper', () => {
       // Complete Prompt Helper
-      orderGuard.validateOrder(testSessionId, 'prompt-helper');
-      orderGuard.recordEyeCompletion(testSessionId, 'prompt-helper', {
+      orderGuard.validateOrder(testSessionId, 'kyuubi');
+      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
         code: 'OK_PROMPT_OPTIMIZED',
       });
 
@@ -122,9 +122,9 @@ describe('OrderGuard', () => {
       });
 
       // 2. Prompt Helper
-      violation = orderGuard.validateOrder(testSessionId, 'prompt-helper');
+      violation = orderGuard.validateOrder(testSessionId, 'kyuubi');
       expect(violation).toBeNull();
-      orderGuard.recordEyeCompletion(testSessionId, 'prompt-helper', {
+      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
         code: 'OK_PROMPT_OPTIMIZED',
       });
 
@@ -140,7 +140,7 @@ describe('OrderGuard', () => {
       expect(state?.currentPhase).toBe('planning');
       expect(state?.isCodeRelated).toBe(true);
       expect(state?.completedEyes).toContain('sharingan');
-      expect(state?.completedEyes).toContain('prompt-helper');
+      expect(state?.completedEyes).toContain('kyuubi');
       expect(state?.completedEyes).toContain('jogan');
     });
 
@@ -152,8 +152,8 @@ describe('OrderGuard', () => {
         metadata: { isCodeRelated: true },
       });
 
-      orderGuard.validateOrder(testSessionId, 'prompt-helper');
-      orderGuard.recordEyeCompletion(testSessionId, 'prompt-helper', {
+      orderGuard.validateOrder(testSessionId, 'kyuubi');
+      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
         code: 'OK_PROMPT_OPTIMIZED',
       });
 
@@ -175,8 +175,8 @@ describe('OrderGuard', () => {
         metadata: { isCodeRelated: true },
       });
 
-      orderGuard.validateOrder(testSessionId, 'prompt-helper');
-      orderGuard.recordEyeCompletion(testSessionId, 'prompt-helper', {
+      orderGuard.validateOrder(testSessionId, 'kyuubi');
+      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
         code: 'OK_PROMPT_OPTIMIZED',
       });
 
@@ -207,8 +207,8 @@ describe('OrderGuard', () => {
         metadata: { isCodeRelated: true },
       });
 
-      orderGuard.validateOrder(testSessionId, 'prompt-helper');
-      orderGuard.recordEyeCompletion(testSessionId, 'prompt-helper', {
+      orderGuard.validateOrder(testSessionId, 'kyuubi');
+      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
         code: 'OK_PROMPT_OPTIMIZED',
       });
 
@@ -252,8 +252,8 @@ describe('OrderGuard', () => {
       });
 
       // 2. Prompt Helper
-      orderGuard.validateOrder(testSessionId, 'prompt-helper');
-      orderGuard.recordEyeCompletion(testSessionId, 'prompt-helper', {
+      orderGuard.validateOrder(testSessionId, 'kyuubi');
+      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
         code: 'OK_PROMPT_OPTIMIZED',
       });
 
@@ -276,8 +276,8 @@ describe('OrderGuard', () => {
         metadata: { isCodeRelated: false },
       });
 
-      orderGuard.validateOrder(testSessionId, 'prompt-helper');
-      orderGuard.recordEyeCompletion(testSessionId, 'prompt-helper', {
+      orderGuard.validateOrder(testSessionId, 'kyuubi');
+      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
         code: 'OK_PROMPT_OPTIMIZED',
       });
 
@@ -304,8 +304,8 @@ describe('OrderGuard', () => {
         metadata: { isCodeRelated: false },
       });
 
-      orderGuard.validateOrder(testSessionId, 'prompt-helper');
-      orderGuard.recordEyeCompletion(testSessionId, 'prompt-helper', {
+      orderGuard.validateOrder(testSessionId, 'kyuubi');
+      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
         code: 'OK_PROMPT_OPTIMIZED',
       });
 
@@ -327,8 +327,8 @@ describe('OrderGuard', () => {
         metadata: { isCodeRelated: true },
       });
 
-      orderGuard.validateOrder(testSessionId, 'prompt-helper');
-      orderGuard.recordEyeCompletion(testSessionId, 'prompt-helper', {
+      orderGuard.validateOrder(testSessionId, 'kyuubi');
+      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
         code: 'OK_PROMPT_OPTIMIZED',
       });
 
@@ -378,8 +378,8 @@ describe('OrderGuard', () => {
       expect(state?.currentPhase).toBe('clarification');
 
       // Move to planning
-      orderGuard.validateOrder(testSessionId, 'prompt-helper');
-      orderGuard.recordEyeCompletion(testSessionId, 'prompt-helper', { code: 'OK' });
+      orderGuard.validateOrder(testSessionId, 'kyuubi');
+      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', { code: 'OK' });
       orderGuard.validateOrder(testSessionId, 'jogan');
       orderGuard.recordEyeCompletion(testSessionId, 'jogan', { code: 'OK' });
       state = orderGuard.getState(testSessionId);
@@ -437,7 +437,7 @@ describe('OrderGuard', () => {
       });
 
       const expectedNext = orderGuard.getExpectedNext(testSessionId);
-      expect(expectedNext).toContain('prompt-helper');
+      expect(expectedNext).toContain('kyuubi');
     });
 
     it('should return correct next Eyes after Prompt Helper', () => {
@@ -447,8 +447,8 @@ describe('OrderGuard', () => {
         metadata: { isCodeRelated: true },
       });
 
-      orderGuard.validateOrder(testSessionId, 'prompt-helper');
-      orderGuard.recordEyeCompletion(testSessionId, 'prompt-helper', { code: 'OK' });
+      orderGuard.validateOrder(testSessionId, 'kyuubi');
+      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', { code: 'OK' });
 
       const expectedNext = orderGuard.getExpectedNext(testSessionId);
       expect(expectedNext).toContain('jogan');
@@ -462,8 +462,8 @@ describe('OrderGuard', () => {
         metadata: { isCodeRelated: true },
       });
 
-      orderGuard.validateOrder(testSessionId, 'prompt-helper');
-      orderGuard.recordEyeCompletion(testSessionId, 'prompt-helper', { code: 'OK' });
+      orderGuard.validateOrder(testSessionId, 'kyuubi');
+      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', { code: 'OK' });
 
       orderGuard.validateOrder(testSessionId, 'jogan');
       orderGuard.recordEyeCompletion(testSessionId, 'jogan', { code: 'OK' });
@@ -490,8 +490,8 @@ describe('OrderGuard', () => {
         metadata: { isCodeRelated: false },
       });
 
-      orderGuard.validateOrder(testSessionId, 'prompt-helper');
-      orderGuard.recordEyeCompletion(testSessionId, 'prompt-helper', { code: 'OK' });
+      orderGuard.validateOrder(testSessionId, 'kyuubi');
+      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', { code: 'OK' });
 
       orderGuard.validateOrder(testSessionId, 'jogan');
       orderGuard.recordEyeCompletion(testSessionId, 'jogan', { code: 'OK' });
@@ -559,7 +559,7 @@ describe('OrderGuard', () => {
       expect(violation).not.toBeNull();
       // Check if examplePayload exists (it's optional)
       if (violation?.examplePayload) {
-        expect(violation.examplePayload.eye).toBe('prompt-helper');
+        expect(violation.examplePayload.eye).toBe('kyuubi');
         expect(violation.examplePayload.input).toBeDefined();
         expect(violation.examplePayload.description).toBeDefined();
       }
@@ -601,8 +601,8 @@ describe('OrderGuard', () => {
         metadata: { isCodeRelated: true },
       });
 
-      orderGuard.validateOrder(testSessionId, 'prompt-helper');
-      orderGuard.recordEyeCompletion(testSessionId, 'prompt-helper', { code: 'OK' });
+      orderGuard.validateOrder(testSessionId, 'kyuubi');
+      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', { code: 'OK' });
 
       orderGuard.validateOrder(testSessionId, 'jogan');
       orderGuard.recordEyeCompletion(testSessionId, 'jogan', { code: 'OK' });

@@ -158,7 +158,7 @@ export class ProblemJsonFormatter {
       detail: `Eye implementation not found: ${eyeName}`,
       extensions: {
         eyeName,
-        availableEyes: ['overseer', 'sharingan', 'prompt-helper', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan'],
+        availableEyes: ['overseer', 'sharingan', 'kyuubi', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan'],
       },
     });
   }

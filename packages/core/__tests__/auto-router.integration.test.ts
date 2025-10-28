@@ -45,7 +45,7 @@ describe('AutoRouter - Dynamic Routing Integration', () => {
           requestType: 'new_task',
           contentDomain: 'text',
           complexity: 'moderate',
-          pipelineRoute: ['sharingan', 'prompt-helper', 'jogan', 'tenseigan', 'byakugan'],
+          pipelineRoute: ['sharingan', 'kyuubi', 'jogan', 'tenseigan', 'byakugan'],
           routingReasoning: 'Vague request needs clarification and refinement',
           skipReasons: {
             rinnegan: 'Not a planning task',
@@ -78,7 +78,7 @@ describe('AutoRouter - Dynamic Routing Integration', () => {
 
       // Verify Eyes were called in correct order
       const eyeCalls = (mockOrchestrator.runEye as any).mock.calls.map((call: any[]) => call[0]);
-      expect(eyeCalls).toEqual(['overseer', 'sharingan', 'prompt-helper', 'jogan', 'tenseigan', 'byakugan']);
+      expect(eyeCalls).toEqual(['overseer', 'sharingan', 'kyuubi', 'jogan', 'tenseigan', 'byakugan']);
     });
   });
 
@@ -99,7 +99,7 @@ describe('AutoRouter - Dynamic Routing Integration', () => {
           routingReasoning: 'Clear and specific request, only needs intent confirmation and validation',
           skipReasons: {
             sharingan: 'Request is already clear',
-            'prompt-helper': 'Requirements well-structured'
+            'kyuubi': 'Requirements well-structured'
           }
         },
         next: 'jogan'
