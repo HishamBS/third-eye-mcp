@@ -634,10 +634,10 @@ export default function PersonasPage() {
                   <p>• Previous versions are preserved for rollback</p>
                   <p>• Click "Edit" on any Eye to create or modify its persona</p>
                 </div>
-                {allEyes.length === 0 && (
+                {personas.length === 0 && (
                   <div className="mt-8 rounded-xl border border-yellow-500/40 bg-yellow-500/10 p-4">
                     <p className="text-yellow-400 text-sm">
-                      No Eyes detected. Make sure the server is running and Eyes are properly configured.
+                      No personas detected. Make sure the server is running and personas are properly configured.
                     </p>
                   </div>
                 )}
