@@ -5,8 +5,8 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getPersonaBlueprint, getAllEyeNames, BLUEPRINT_REGISTRY } from '@third-eye/eyes';
-import { EyeId, EyeCapability } from '@third-eye/constants';
+import { BLUEPRINT_REGISTRY } from '@third-eye/eyes';
+import { EyeId } from '@third-eye/constants';
 import { getEyeIconPath } from '@third-eye/constants';
 
 export interface PersonaBlueprintUI {
@@ -26,14 +26,14 @@ export interface PersonaBlueprintUI {
   };
   mission: string;
   phases: {
-    guidance: {
+    guidance?: {
       stage: string;
       mission: string;
       check: string;
       reminders: readonly string[];
       example: string;
     };
-    validation: {
+    validation?: {
       stage: string;
       mission: string;
       check: string;
@@ -50,7 +50,7 @@ export interface PersonaBlueprintUI {
   notes?: string;
 }
 
-export async function GET() {
+export function GET() {
   try {
     const blueprints = Object.entries(BLUEPRINT_REGISTRY).map(([eyeId, blueprint]) => {
       return {
@@ -84,43 +84,4 @@ export async function GET() {
   }
 }
 
-export async function GET_ID(eyeId: string) {
-  try {
-    const blueprint = BLUEPRINT_REGISTRY[eyeId];
-    
-    if (!blueprint) {
-      return NextResponse.json(
-        { success: false, error: 'Blueprint not found' },
-        { status: 404 }
-      );
-    }
-
-    const personaBlueprint: PersonaBlueprintUI = {
-      id: eyeId,
-      eyeId: eyeId as EyeId,
-      name: blueprint.metadata.name,
-      description: blueprint.metadata.description,
-      version: blueprint.metadata.version,
-      capabilities: blueprint.metadata.capabilities as string[],
-      iconPath: getEyeIconPath(eyeId as EyeId),
-      metadata: blueprint.metadata,
-      mission: blueprint.mission,
-      phases: blueprint.phases,
-      envelopeContract: blueprint.envelopeContract,
-      reminders: blueprint.reminders,
-      notes: blueprint.notes,
-    };
-
-    return NextResponse.json({
-      success: true,
-      data: personaBlueprint,
-    });
-  } catch (error) {
-    console.error(`Failed to fetch persona blueprint for ${eyeId}:`, error);
-    return NextResponse.json(
-      { success: false, error: `Failed to fetch blueprint for ${eyeId}` },
-      { status: 500 }
-    );
-  }
-}
 

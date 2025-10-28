@@ -4,8 +4,7 @@
  * Manages clarification questions, answers, and resolved facts for sessions.
  */
 
-import type { Clarification, NewClarification, IntentConfirmation, NewIntentConfirmation } from '@third-eye/db';
-import { clarifications, intentConfirmations } from '@third-eye/db';
+import { clarifications, intentConfirmations, type Clarification, type NewClarification, type IntentConfirmation, type NewIntentConfirmation } from '@third-eye/db/schema';
 import { getDb } from '@third-eye/db';
 import { eq, and } from 'drizzle-orm';
 

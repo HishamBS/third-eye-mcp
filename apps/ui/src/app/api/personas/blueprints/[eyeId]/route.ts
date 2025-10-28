@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPersonaBlueprint } from '@third-eye/eyes';
+import { BLUEPRINT_REGISTRY } from '@third-eye/eyes';
 import { EyeId } from '@third-eye/constants';
 import { getEyeIconPath } from '@third-eye/constants';
 
-export async function GET(
-  request: NextRequest,
+export function GET(
+  _request: NextRequest,
   { params }: { params: { eyeId: string } }
 ) {
   try {
     const eyeId = params.eyeId;
-    const blueprint = getPersonaBlueprint(eyeId);
+    const blueprint = BLUEPRINT_REGISTRY[eyeId];
     
     if (!blueprint) {
       return NextResponse.json(

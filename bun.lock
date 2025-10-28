@@ -89,6 +89,10 @@
         "zod": "^3.22.4",
       },
     },
+    "packages/constants": {
+      "name": "@third-eye/constants",
+      "version": "1.0.0",
+    },
     "packages/core": {
       "name": "@third-eye/core",
       "version": "1.0.0",
@@ -105,6 +109,7 @@
       "name": "@third-eye/db",
       "version": "1.0.0",
       "dependencies": {
+        "@third-eye/types": "workspace:*",
         "drizzle-orm": "^0.36.4",
       },
       "devDependencies": {
@@ -118,6 +123,7 @@
         "zod": "^3.23.8",
       },
       "devDependencies": {
+        "@third-eye/db": "workspace:*",
         "@types/node": "^22.10.2",
         "typescript": "^5.7.3",
       },
@@ -128,6 +134,14 @@
       "dependencies": {
         "@third-eye/types": "workspace:*",
         "zod": "^3.22.4",
+      },
+    },
+    "packages/theme": {
+      "name": "@third-eye/theme",
+      "version": "1.0.0",
+      "dependencies": {
+        "@third-eye/constants": "workspace:*",
+        "@third-eye/types": "workspace:*",
       },
     },
     "packages/types": {
@@ -557,6 +571,8 @@
 
     "@third-eye/config": ["@third-eye/config@workspace:packages/config"],
 
+    "@third-eye/constants": ["@third-eye/constants@workspace:packages/constants"],
+
     "@third-eye/core": ["@third-eye/core@workspace:packages/core"],
 
     "@third-eye/db": ["@third-eye/db@workspace:packages/db"],
@@ -566,6 +582,8 @@
     "@third-eye/providers": ["@third-eye/providers@workspace:packages/providers"],
 
     "@third-eye/server": ["@third-eye/server@workspace:apps/server"],
+
+    "@third-eye/theme": ["@third-eye/theme@workspace:packages/theme"],
 
     "@third-eye/types": ["@third-eye/types@workspace:packages/types"],
 

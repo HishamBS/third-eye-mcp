@@ -70,7 +70,7 @@ export function runMigrations(db: ReturnType<typeof createDb>['db'], sqlite: Dat
     }
   } catch (err: any) {
     // Ignore "table already exists" errors during migration
-    if (!err.message?.includes('already exists')) {
+    if (!err.message?.includes('already exists') && !err.cause?.message?.includes('already exists')) {
       console.error('❌ Migration error:', err.message);
       throw err;
     }
