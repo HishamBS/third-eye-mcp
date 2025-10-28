@@ -11,6 +11,9 @@ import { orderGuard, type OrderViolation } from './order-guard';
 import { getWebSocketBridge } from './websocket-registry';
 import { decryptFromStorage } from './encryption';
 import { ensureEyeBehavior, EyeBehaviorError } from './persona-guards';
+import { renderPersonaPrompt, getPersonaBlueprint } from '@third-eye/eyes';
+import { getStageTemplate } from '@third-eye/constants';
+import { EyeStageToken } from '@third-eye/constants';
 
 function isSupportedProvider(value: unknown): value is ProviderType {
   if (typeof value !== 'string') {

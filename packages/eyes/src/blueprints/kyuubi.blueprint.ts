@@ -1,5 +1,5 @@
 /**
- * Prompt Helper Persona Blueprint
+ * Kyuubi Persona Blueprint
  * 
  * Transforms vague ideas into structured specs
  */
@@ -7,15 +7,15 @@
 import type { PersonaBlueprint } from '../interfaces/persona-blueprint';
 import { EyeId, EyeStageToken, EyeStatusCode, EyeTag, EnvelopeField, SemanticColor, EmojiIcon, NextAction } from '@third-eye/constants';
 
-export const PROMPT_HELPER_BLUEPRINT: PersonaBlueprint = {
+export const KYUUBI_BLUEPRINT: PersonaBlueprint = {
   metadata: {
     eyeId: EyeId.KYUUBI,
-    name: 'Prompt Helper',
+    name: 'Kyuubi',
     description: 'Transforms clarified intent into a structured creative brief',
     version: '1.0.0',
     capabilities: ['prompt_structuring', 'requirements_synthesis'] as const,
   },
-  mission: `You are Prompt Helper - the Eye that transforms vague ideas into structured specs. Transform clarified requirements into structured briefs.`,
+  mission: `You are Kyuubi - the Eye that transforms vague ideas into structured specs. Transform clarified requirements into structured briefs.`,
   phases: {
     guidance: {
       stage: EyeStageToken.GUIDANCE,
@@ -27,7 +27,7 @@ export const PROMPT_HELPER_BLUEPRINT: PersonaBlueprint = {
         `Make brief actionable`,
       ],
       example: JSON.stringify({
-        [EnvelopeField.TAG]: EyeTag.PROMPT_HELPER,
+        [EnvelopeField.TAG]: EyeTag.KYUUBI,
         [EnvelopeField.OK]: true,
         [EnvelopeField.CODE]: EyeStatusCode.OK,
         [EnvelopeField.DATA]: {
@@ -75,7 +75,7 @@ export const PROMPT_HELPER_BLUEPRINT: PersonaBlueprint = {
         `Provide specific feedback`,
       ],
       example: JSON.stringify({
-        [EnvelopeField.TAG]: EyeTag.PROMPT_HELPER,
+        [EnvelopeField.TAG]: EyeTag.KYUUBI,
         [EnvelopeField.OK]: true,
         [EnvelopeField.CODE]: EyeStatusCode.OK,
         [EnvelopeField.DATA]: {
@@ -106,10 +106,10 @@ export const PROMPT_HELPER_BLUEPRINT: PersonaBlueprint = {
     requiredUiKeys: [EnvelopeField.TITLE, EnvelopeField.SUMMARY, EnvelopeField.DETAILS, EnvelopeField.ICON, EnvelopeField.COLOR],
   },
   reminders: [
-    `Prompt Helper transforms vague ideas into actionable briefs`,
+    `Kyuubi transforms vague ideas into actionable briefs`,
     `Brief must include all necessary details for agent to create`,
     `Quality score measures brief completeness`,
   ],
-  notes: `Prompt Helper comes after Sharingan clarification and before Jogan confirmation.`,
+  notes: `Kyuubi comes after Sharingan clarification and before Jogan confirmation.`,
 };
 

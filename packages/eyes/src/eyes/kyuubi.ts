@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { BaseEnvelope, BaseEnvelopeSchema, BaseEye } from '../schemas/base';
 
-// Prompt Helper metadata
-export const PromptHelperMetadata = z.object({
+// Kyuubi metadata
+export const KyuubiMetadata = z.object({
   originalLength: z.number(),
   optimizedLength: z.number(),
   clarityScore: z.number().min(0).max(100),
@@ -15,8 +15,8 @@ export const PromptHelperMetadata = z.object({
   rewrittenPrompt: z.string().optional(),
 });
 
-export const PromptHelperEnvelopeSchema = BaseEnvelopeSchema.extend({
-  tag: z.literal('prompt-helper'),
+export const KyuubiEnvelopeSchema = BaseEnvelopeSchema.extend({
+  tag: z.literal('kyuubi'),
   data: z.object({
     structuredBrief: z.record(z.unknown()).optional(),
     briefAlignment: z.record(z.unknown()).optional(),
@@ -24,25 +24,25 @@ export const PromptHelperEnvelopeSchema = BaseEnvelopeSchema.extend({
   }).passthrough(),
 });
 
-export type PromptHelperEnvelope = z.infer<typeof PromptHelperEnvelopeSchema>;
+export type KyuubiEnvelope = z.infer<typeof KyuubiEnvelopeSchema>;
 
 /**
- * Prompt Helper Eye - Prompt Optimization
+ * Kyuubi Eye - Prompt Optimization
  * Rewrites prompts for clarity, specificity, and effectiveness
  */
 /**
- * PromptHelperEye
+ * KyuubiEye
  *
  * NOTE: Persona content is stored in database (personas table).
  * This class only provides schema validation.
  */
-export class PromptHelperEye implements BaseEye {
-  readonly name = 'prompt-helper';
+export class KyuubiEye implements BaseEye {
+  readonly name = 'kyuubi';
 
-  validate(envelope: unknown): envelope is PromptHelperEnvelope {
-    return PromptHelperEnvelopeSchema.safeParse(envelope).success;
+  validate(envelope: unknown): envelope is KyuubiEnvelope {
+    return KyuubiEnvelopeSchema.safeParse(envelope).success;
   }
 }
 
 // Export singleton instance
-export const promptHelper = new PromptHelperEye();
+export const kyuubi = new KyuubiEye();

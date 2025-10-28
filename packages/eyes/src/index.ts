@@ -4,7 +4,7 @@ export * from './schemas/base';
 // Individual Eyes
 export * from './eyes/overseer';
 export * from './eyes/sharingan';
-export * from './eyes/prompt-helper';
+export * from './eyes/kyuubi';
 export * from './eyes/jogan';
 export * from './eyes/rinnegan';
 export * from './eyes/mangekyo';
@@ -14,10 +14,16 @@ export * from './eyes/byakugan';
 // Clarification management
 export * from './clarification';
 
+// Persona renderer
+export * from './renderer';
+
+// Blueprints
+export * from './blueprints';
+
 // Eye Registry
 import { overseer } from './eyes/overseer';
 import { sharingan } from './eyes/sharingan';
-import { promptHelper } from './eyes/prompt-helper';
+import { kyuubi } from './eyes/kyuubi';
 import { jogan } from './eyes/jogan';
 import { rinnegan } from './eyes/rinnegan';
 import { mangekyo } from './eyes/mangekyo';
@@ -28,7 +34,7 @@ import type { BaseEye } from './schemas/base';
 export const ALL_EYES = {
   overseer,
   sharingan,
-  'prompt-helper': promptHelper,
+  kyuubi,
   jogan,
   rinnegan,
   mangekyo,

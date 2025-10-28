@@ -25,3 +25,4 @@ export {
 export * from './envelope-constants';
 export * from './prompt-texts';
 export * from './response-constants';
+export * from './eye-icons';
