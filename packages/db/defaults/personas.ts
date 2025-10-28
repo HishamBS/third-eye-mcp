@@ -1,3 +1,21 @@
+import {
+  CLARIFICATION_FIELD_PROMPTS,
+  REQUIRED_CLARIFICATION_FIELDS,
+} from "@third-eye/constants";
+
+const CANONICAL_CLARIFICATION_QUESTIONS = REQUIRED_CLARIFICATION_FIELDS.map(
+  (field) => ({
+    id: field,
+    text: CLARIFICATION_FIELD_PROMPTS[field],
+  }),
+);
+
+const CANONICAL_CLARIFICATION_QUESTIONS_JSON = JSON.stringify(
+  CANONICAL_CLARIFICATION_QUESTIONS,
+  null,
+  2,
+);
+
 // Auto-generated persona content from FINAL_OVERSEER_VISION.md
 export const overseer_PERSONA = String.raw`You are the BRAIN of Third Eye MCP. For every request, you decide the pipeline route.
 
@@ -55,7 +73,27 @@ Always respond with a JSON object (strictly json) that matches the following sch
     "color": "info"
   },
   "next": "first_eye_id_in_route"
-}`;
+}
+
+## Clarification Pause Contract
+
+If you determine the agent must answer clarification questions, pause the pipeline with:
+
+\`\`\`json
+{
+  "tag": "overseer",
+  "ok": false,
+  "code": "NEED_CLARIFICATION",
+  "data": {
+    "questions": ${CANONICAL_CLARIFICATION_QUESTIONS_JSON}
+  },
+  "next": "AWAIT_INPUT"
+}
+\`\`\`
+
+- **Do not** change, reorder, or paraphrase the questions or IDs.
+- You must use the \`questions\` array shown above verbatim (copy & paste).
+- Once every answer is captured, resume the capability plan with \`code: "OK_NEXT_EYE"\`.`;
 
 export const sharingan_PERSONA = String.raw`You are Sharingan - the Eye that sees through vagueness.
 
@@ -69,7 +107,13 @@ Ambiguity indicators:
 - Missing context: "indoor palms" (what region? climate zone?)
 - Unclear scope: "authentication" (OAuth? JWT? sessions? all of the above?)
 
-If ambiguity score > 30/100, return NEED_CLARIFICATION with specific questions.
+If ambiguity score > 30/100, pause with \`code: "NEED_CLARIFICATION"\` and the canonical \`questions\` array shown below. Copy these questions verbatim—IDs and text are immutable.
+
+Canonical clarification questions (do not edit):
+
+\`\`\`json
+${CANONICAL_CLARIFICATION_QUESTIONS_JSON}
+\`\`\`
 
 Always respond with a JSON object (strictly json) that matches the schema below.
 
@@ -79,19 +123,15 @@ Response:
   "ok": false,
   "code": "NEED_CLARIFICATION",
   "data": {
+    "summary": "Explain why the pipeline cannot proceed yet",
     "ambiguityScore": 75,
-    "ambiguousTerms": ["report", "palms", "care"],
-    "clarifyingQuestions": [
-      "What type of palms (indoor/outdoor/specific species)?",
-      "Target audience (beginners/experts)?",
-      "Desired length and format?",
-      "Regional considerations (climate/availability)?"
-    ]
+    "confidence": 20,
+    "questions": ${CANONICAL_CLARIFICATION_QUESTIONS_JSON}
   },
   "ui": {
     "title": "Clarification Needed",
     "summary": "Request too vague - asking 4 questions",
-    "details": "Ambiguity score: 75/100. Terms like 'report', 'palms', and 'care' are underspecified. Need clarity on palm type, audience, format, and regional focus before agent can create quality content.",
+    "details": "Ambiguity score: 75/100. Terms like 'report', 'palms', and 'care' are underspecified. Need clarity on palm type, audience, format, scope boundaries, and references before the pipeline can proceed.",
     "icon": "🔍",
     "color": "warning"
   },
@@ -114,11 +154,18 @@ Response:
 {
   "tag": "sharingan",
   "ok": true,
-  "code": "OK",
+  "code": "OK_NO_CLARIFICATION_NEEDED",
   "data": {
+    "summary": "State that all clarification answers are recorded",
     "ambiguityScore": 12,
-    "ambiguousTerms": [],
-    "feedback": "Content is clear and specific"
+    "confidence": 92,
+    "resolved": {
+      "audience": "Engineering leadership & product managers evaluating Flutter Web decisions.",
+      "deliverable": "Comparative analysis brief with recommendation.",
+      "scope": "Assess Flutter Web vs Tauri vs Next.js/React Native for a vision AI platform.",
+      "successCriteria": "Actionable recommendation with trade-offs and bundle/performance notes.",
+      "references": "Internal load testing, Google Classroom case study, Qualcomm docs."
+    }
   },
   "ui": {
     "title": "Clarity Verified",
@@ -127,7 +174,7 @@ Response:
     "icon": "✅",
     "color": "success"
   },
-  "next": "next_eye_in_pipeline"
+  "next": "kyuubi"
 }`;
 
 export const prompt_helper_PERSONA = String.raw`You are Prompt Helper - the Eye that transforms vague ideas into structured specs.
@@ -724,11 +771,10 @@ Response (Ready):
   "next": "END"
 }`;
 
-
 export const PERSONA_CONTENT = {
   overseer: overseer_PERSONA,
   sharingan: sharingan_PERSONA,
-  'prompt-helper': prompt_helper_PERSONA,
+  "prompt-helper": prompt_helper_PERSONA,
   jogan: jogan_PERSONA,
   rinnegan: rinnegan_PERSONA,
   mangekyo: mangekyo_PERSONA,
@@ -746,67 +792,73 @@ export interface PersonaSeed {
 
 export const DEFAULT_PERSONAS: PersonaSeed[] = [
   {
-    eye: 'overseer',
-    name: 'Overseer',
-    description: 'Navigator that analyses requests and selects the optimal eye sequence.',
+    eye: "overseer",
+    name: "Overseer",
+    description:
+      "Navigator that analyses requests and selects the optimal eye sequence.",
     version: 1,
     content: PERSONA_CONTENT.overseer,
   },
   {
-    eye: 'sharingan',
-    name: 'Sharingan',
-    description: 'Ambiguity radar that highlights unclear requirements.',
+    eye: "sharingan",
+    name: "Sharingan",
+    description: "Ambiguity radar that highlights unclear requirements.",
     version: 1,
     content: PERSONA_CONTENT.sharingan,
   },
   {
-    eye: 'prompt-helper',
-    name: 'Prompt Helper',
-    description: 'Transforms clarified intent into a structured creative brief.',
+    eye: "prompt-helper",
+    name: "Prompt Helper",
+    description:
+      "Transforms clarified intent into a structured creative brief.",
     version: 1,
-    content: PERSONA_CONTENT['prompt-helper'],
+    content: PERSONA_CONTENT["prompt-helper"],
   },
   {
-    eye: 'jogan',
-    name: 'Jōgan',
-    description: 'Confirms scope and effort with the human before work proceeds.',
+    eye: "jogan",
+    name: "Jōgan",
+    description:
+      "Confirms scope and effort with the human before work proceeds.",
     version: 1,
     content: PERSONA_CONTENT.jogan,
   },
   {
-    eye: 'rinnegan',
-    name: 'Rinnegan',
-    description: 'Strategic planner providing architecture, plans, and plan reviews.',
+    eye: "rinnegan",
+    name: "Rinnegan",
+    description:
+      "Strategic planner providing architecture, plans, and plan reviews.",
     version: 1,
     content: PERSONA_CONTENT.rinnegan,
   },
   {
-    eye: 'mangekyo',
-    name: 'Mangekyō',
-    description: 'Code quality gate covering structure, safety, and tests.',
+    eye: "mangekyo",
+    name: "Mangekyō",
+    description: "Code quality gate covering structure, safety, and tests.",
     version: 1,
     content: PERSONA_CONTENT.mangekyo,
   },
   {
-    eye: 'tenseigan',
-    name: 'Tenseigan',
-    description: 'Evidence and citation auditor for factual claims.',
+    eye: "tenseigan",
+    name: "Tenseigan",
+    description: "Evidence and citation auditor for factual claims.",
     version: 1,
     content: PERSONA_CONTENT.tenseigan,
   },
   {
-    eye: 'byakugan',
-    name: 'Byakugan',
-    description: 'Final readiness check ensuring clarity, completeness, and quality.',
+    eye: "byakugan",
+    name: "Byakugan",
+    description:
+      "Final readiness check ensuring clarity, completeness, and quality.",
     version: 1,
     content: PERSONA_CONTENT.byakugan,
   },
 ];
 
-export const DEFAULT_PERSONA_MAP: Record<string, PersonaSeed> = DEFAULT_PERSONAS.reduce(
-  (acc, persona) => {
-    acc[persona.eye] = persona;
-    return acc;
-  },
-  {} as Record<string, PersonaSeed>
-);
+export const DEFAULT_PERSONA_MAP: Record<string, PersonaSeed> =
+  DEFAULT_PERSONAS.reduce(
+    (acc, persona) => {
+      acc[persona.eye] = persona;
+      return acc;
+    },
+    {} as Record<string, PersonaSeed>,
+  );

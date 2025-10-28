@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { ProviderId } from './enums';
 
 /**
  * Provider Types - Unified API for all AI providers
@@ -85,10 +84,10 @@ export const ProviderConfigSchema = z.object({
     apiKey: z.string().optional(),
   }).optional(),
   ollama: z.object({
-    baseUrl: z.string().default('http://127.0.0.1:11434'),
+    baseUrl: z.string().default('http://127.0.0.1:11434'), // Standard Ollama default port
   }).optional(),
   lmstudio: z.object({
-    baseUrl: z.string().default('http://127.0.0.1:1234'),
+    baseUrl: z.string().default('http://127.0.0.1:1234/v1'), // Standard LM Studio default port
   }).optional(),
 });
 

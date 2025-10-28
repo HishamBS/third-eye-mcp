@@ -1,0 +1,130 @@
+# Third Eye MCP - npm Package Exclusions
+# Only include what consumers need to run the package
+
+# Development and Test Files
+__tests__/
+**/__tests__/
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+test-*.ts
+**/test-*.ts
+coverage/
+.coverage
+test-results/
+playwright-report/
+.playwright/
+.playwright-mcp/
+
+# Documentation (keep README, CHANGELOG, CONTRIBUTING, LICENSE)
+*.md
+!README.md
+!CHANGELOG.md
+!CONTRIBUTING.md
+!LICENSE.md
+AGENTS.md
+USER_GUIDE.md
+FINAL_OVERSEER_VISION.md
+
+# Build artifacts (exclude source, keep dist)
+*.tsbuildinfo
+.next/
+.turbo/
+out/
+apps/ui/.next/
+apps/ui/out/
+apps/server/src/
+apps/ui/src/
+
+# Keep only built artifacts, exclude sources
+packages/*/src/
+!packages/*/dist/
+
+# Configuration and tooling
+.github/
+.husky/
+.vscode/
+.idea/
+.editorconfig
+.eslintrc*
+.prettierrc*
+.prettierignore
+lefthook.yml
+dangerfile.ts
+tsconfig*.json
+!tsconfig.json
+vitest.config.ts
+vitest.setup.ts
+playwright.config.ts
+eslint.config.js
+drizzle.config.ts
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Data and runtime artifacts
+data/
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+logs/
+*.log
+
+# Documentation site (users access via GitHub Pages)
+docs-site/
+
+# Scripts (exclude test/dev scripts, keep essential ones)
+scripts/test-*.ts
+scripts/inject-*.ts
+scripts/generate-*.ts
+scripts/verify-*.ts
+scripts/check-*.ts
+scripts/capture-*.ts
+scripts/resync-*.ts
+scripts/tokenize-*.ts
+scripts/add-*.ts
+scripts/migrate-*.ts
+scripts/cleanup-*.ts
+scripts/audit/
+
+# Package manager files
+.npmrc
+bun.lockb
+pnpm-lock.yaml
+pnpm-workspace.yaml
+yarn.lock
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Keep these essential directories and files:
+# ✓ dist/ (all compiled packages)
+# ✓ cli/ (CLI source)
+# ✓ bin/ (executables)
+# ✓ packages/*/dist/ (compiled packages)
+# ✓ apps/server/dist/ (compiled server)
+# ✓ apps/ui/.next/ is excluded, static build would be in dist if needed
+# ✓ scripts/ (essential runtime scripts like setup, postinstall, seed)
+# ✓ docs/ (API reference documentation)
+# ✓ README.md, CHANGELOG.md, CONTRIBUTING.md, LICENSE
+# ✓ package.json, bun.lockb (for resolution)
