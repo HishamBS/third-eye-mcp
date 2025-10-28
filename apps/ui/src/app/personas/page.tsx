@@ -8,12 +8,36 @@ import { useDialog } from '@/hooks/useDialog';
 
 interface Persona {
   id: string;
-  eye: string;
-  name?: string;
-  version: number;
-  content: string;
-  active: boolean;
-  createdAt: string;
+  eyeId: string;
+  name: string;
+  description: string;
+  version: string;
+  capabilities: string[];
+  iconPath: string;
+  mission: string;
+  phases: {
+    guidance: {
+      stage: string;
+      mission: string;
+      check: string;
+      reminders: readonly string[];
+      example: string;
+    };
+    validation: {
+      stage: string;
+      mission: string;
+      check: string;
+      reminders: readonly string[];
+      example: string;
+    };
+  };
+  envelopeContract: {
+    requiredKeys: readonly string[];
+    requiredDataKeys: readonly string[];
+    requiredUiKeys: readonly string[];
+  };
+  reminders: readonly string[];
+  notes?: string;
 }
 
 interface PersonaVersion {
