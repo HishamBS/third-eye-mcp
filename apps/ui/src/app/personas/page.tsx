@@ -114,16 +114,17 @@ export default function PersonasPage() {
 
   useEffect(() => {
     if (selectedEye) {
-      const versions = personas
-        .filter(p => p.eye === selectedEye)
-        .map(p => ({
-          version: p.version,
-          content: p.content,
-          active: p.active,
-          createdAt: p.createdAt,
-        }))
-        .sort((a, b) => b.version - a.version);
-      setEyeVersions(versions);
+      const persona = personas.find(p => p.id === selectedEye);
+      if (persona) {
+        setEyeVersions([{
+          version: 1,
+          content: `${persona.name}\n\n${persona.mission}`,
+          active: true,
+          createdAt: new Date().toISOString(),
+        }]);
+      } else {
+        setEyeVersions([]);
+      }
     } else {
       setEyeVersions([]);
     }
@@ -131,11 +132,9 @@ export default function PersonasPage() {
 
   const fetchPersonas = async () => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/personas`);
+      const response = await fetch('/api/personas/blueprints');
       if (response.ok) {
         const result = await response.json();
-        // API returns data as an array of personas directly
         const personasArray = Array.isArray(result.data) ? result.data : [];
         setPersonas(personasArray as Persona[]);
       }
@@ -145,14 +144,16 @@ export default function PersonasPage() {
     }
   };
 
-  const getActivePersona = (eye: string): Persona | undefined => {
-    return personas.find(p => p.eye === eye && p.active);
+  const getPersonaById = (eyeId: string): Persona | undefined => {
+    return personas.find(p => p.id === eyeId);
   };
 
-  const startEditing = (eye: string) => {
-    const activePersona = getActivePersona(eye);
-    setEditingPersona(eye);
-    setPersonaContent(activePersona?.content || '');
+  const startEditing = (eyeId: string) => {
+    const persona = getPersonaById(eyeId);
+    setEditingPersona(eyeId);
+    if (persona) {
+      setPersonaContent(JSON.stringify(persona, null, 2));
+    }
   };
 
   const cancelEditing = () => {
