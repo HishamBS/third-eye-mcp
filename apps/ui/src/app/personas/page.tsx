@@ -364,7 +364,6 @@ export default function PersonasPage() {
             <div className="space-y-4">
               {personas.map((persona, index) => {
                 const eye = persona.id;
-                const activePersona = getActivePersona(eye);
                 const isSelected = selectedEye === eye;
                 const isEditing = editingPersona === eye;
 
