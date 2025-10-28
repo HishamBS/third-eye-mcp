@@ -296,6 +296,140 @@ export class AutoRouter {
   getExpectedNext(sessionId: string): EyeName[] {
     return orderGuard.getExpectedNext(sessionId);
   }
+
+  /**
+   * Resume flow after clarification or intent confirmation
+   */
+  async resumeFlow(
+    sessionId: string,
+    input?: string,
+    options: AutoRouterOptions = {}
+  ): Promise<AutoRoutingResult> {
+    try {
+      const { getResolvedFacts } = await import('@third-eye/eyes');
+      const { canResumeAfterConfirmation } = await import('@third-eye/eyes');
+      const { getIntentConfirmationStatus } = await import('@third-eye/eyes');
+
+      // Check if there's a pending intent confirmation
+      const confirmation = await getIntentConfirmationStatus(sessionId);
+      if (confirmation) {
+        const resumeStatus = canResumeAfterConfirmation(confirmation);
+        if (!resumeStatus.canResume) {
+          return {
+            sessionId,
+            results: [],
+            completed: false,
+            error: `Awaiting confirmation: ${resumeStatus.statusCode}`
+          };
+        }
+      }
+
+      // Get resolved facts from clarifications
+      const resolvedFacts = await getResolvedFacts(sessionId);
+      const factsSummary = Object.entries(resolvedFacts)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join('\n');
+
+      // Get state to determine what Eyes still need to run
+      const state = orderGuard.getState(sessionId);
+      if (!state) {
+        return {
+          sessionId,
+          results: [],
+          completed: true,
+          error: 'No state found to resume'
+        };
+      }
+
+      // Determine which Eyes still need to run based on phase and completed eyes
+      const nextEyes = orderGuard.getExpectedNext(sessionId);
+      if (!nextEyes || nextEyes.length === 0) {
+        return {
+          sessionId,
+          results: [],
+          completed: true,
+          error: 'No pending Eyes to resume'
+        };
+      }
+
+      // Build enriched input with clarifications
+      const enrichedInput = input 
+        ? `${input}\n\nResolved Context:\n${factsSummary}`
+        : `Resuming pipeline with resolved context:\n${factsSummary}`;
+
+      // Execute remaining Eyes
+      const remainingEyes = nextEyes;
+      const results: BaseEnvelope[] = [];
+      
+      // Mark as auto-router controlled
+      orderGuard.markAsAutoRouterSession(sessionId);
+
+      // Import WebSocket bridge for real-time updates
+      const { getWebSocketBridge } = await import('./websocket-registry');
+      const ws = getWebSocketBridge();
+
+      for (let i = 0; i < remainingEyes.length; i++) {
+        const eyeName = remainingEyes[i];
+
+        // Emit eye_started event
+        if (ws) {
+          ws.broadcastToSession(sessionId, {
+            type: 'eye_started',
+            eye: eyeName,
+            step: state.completedEyes.length + i + 1,
+            totalSteps: state.completedEyes.length + remainingEyes.length,
+            timestamp: Date.now(),
+          });
+        }
+
+        const result = await this.orchestrator.runEye(eyeName, enrichedInput, sessionId);
+        results.push(result);
+
+        // Emit eye_complete event
+        if (ws) {
+          ws.broadcastToSession(sessionId, {
+            type: 'eye_complete',
+            eye: eyeName,
+            step: state.completedEyes.length + i + 1,
+            totalSteps: state.completedEyes.length + remainingEyes.length,
+            result: {
+              ok: result.ok,
+              code: result.code,
+              md: result.md?.substring(0, 200),
+            },
+            timestamp: Date.now(),
+          });
+        }
+
+        if (isRejected(result)) {
+          orderGuard.unmarkAsAutoRouterSession(sessionId);
+          return {
+            sessionId,
+            results,
+            completed: false,
+            error: `Pipeline stopped: ${eyeName} rejected with ${result.code}`
+          };
+        }
+      }
+
+      // Unmark session after completion
+      orderGuard.unmarkAsAutoRouterSession(sessionId);
+
+      return {
+        sessionId,
+        results,
+        completed: true
+      };
+
+    } catch (error) {
+      return {
+        sessionId,
+        results: [],
+        completed: false,
+        error: `Resume failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      };
+    }
+  }
 }
 
 // Export singleton instance
