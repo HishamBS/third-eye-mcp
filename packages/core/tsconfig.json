@@ -8,8 +8,9 @@
     "declarationMap": true
   },
   "include": ["*.ts", "**/*.ts"],
-  "exclude": ["dist", "node_modules", "**/__tests__/**/*", "**/*.test.ts"] ,
+  "exclude": ["dist", "node_modules", "**/__tests__/**/*", "**/*.test.ts"],
   "references": [
+    { "path": "../constants" },
     { "path": "../types" },
     { "path": "../config" },
     { "path": "../db" },

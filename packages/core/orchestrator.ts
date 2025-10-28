@@ -10,6 +10,7 @@ import { eq, and, desc } from 'drizzle-orm';
 import { orderGuard, type OrderViolation } from './order-guard';
 import { getWebSocketBridge } from './websocket-registry';
 import { decryptFromStorage } from './encryption';
+import { ensureEyeBehavior, EyeBehaviorError } from './persona-guards';
 
 function isSupportedProvider(value: unknown): value is ProviderType {
   if (typeof value !== 'string') {
@@ -308,6 +309,22 @@ export class EyeOrchestrator {
           actualSessionId,
           startTime
         );
+      }
+
+      try {
+        ensureEyeBehavior(eyeName, envelope);
+      } catch (guardError) {
+        if (guardError instanceof EyeBehaviorError) {
+          console.error(`❌ ${eyeName} persona contract violated: ${guardError.reason}. Envelope:`, JSON.stringify(envelope, null, 2));
+          return this.createErrorEnvelope(
+            eyeName,
+            `Persona contract violated: ${guardError.reason}`,
+            runId,
+            actualSessionId,
+            startTime
+          );
+        }
+        throw guardError;
       }
 
       // 9. Record successful completion in order guard

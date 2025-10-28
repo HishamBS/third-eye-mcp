@@ -17,6 +17,8 @@
     "paths": {
       "@third-eye/core": ["./packages/core/index.ts"],
       "@third-eye/core/*": ["./packages/core/*"],
+      "@third-eye/constants": ["./packages/constants/index.ts"],
+      "@third-eye/constants/*": ["./packages/constants/*"],
       "@third-eye/db": ["./packages/db/index.ts"],
       "@third-eye/db/*": ["./packages/db/*"],
       "@third-eye/config": ["./packages/config/index.ts"],
@@ -30,6 +32,7 @@
     }
   },
   "references": [
+    { "path": "./packages/constants" },
     { "path": "./packages/types" },
     { "path": "./packages/config" },
     { "path": "./packages/db" },

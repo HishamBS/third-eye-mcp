@@ -10,8 +10,15 @@
     "types": ["bun-types"]
   },
   "include": ["*.ts", "**/*.ts"],
-  "exclude": ["dist", "node_modules", "migrations", "__tests__", "import-personas.ts"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "migrations",
+    "__tests__",
+    "import-personas.ts"
+  ],
   "references": [
+    { "path": "../constants" },
     { "path": "../types" },
     { "path": "../config" }
   ]
