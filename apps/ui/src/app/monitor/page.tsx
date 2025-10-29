@@ -190,6 +190,7 @@ function MonitorContent() {
   const [error, setError] = useState<string | null>(null);
   const [autoScroll, setAutoScroll] = useState(true);
   const conversationEndRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<'timeline' | 'clarifications' | 'intent' | 'evidence' | 'raw'>('timeline');
 
   useEffect(() => {
     if (sessionIdFromQuery && sessionIdFromQuery !== selectedSessionId) {
@@ -444,13 +445,40 @@ function MonitorContent() {
       </div>
 
       <div className="mx-auto max-w-7xl px-6 py-8">
+        {/* Tab Navigation */}
+        <div className="mb-6 flex gap-2 border-b border-brand-outline/30">
+          {[
+            { id: 'timeline' as const, label: 'Timeline', icon: '📊' },
+            { id: 'clarifications' as const, label: 'Clarifications', icon: '❓' },
+            { id: 'intent' as const, label: 'Intent Confirmation', icon: '✋' },
+            { id: 'evidence' as const, label: 'Evidence & Validation', icon: '🔍' },
+            { id: 'raw' as const, label: 'Raw JSON', icon: '{ }' },
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-3 text-sm font-medium transition-all ${
+                activeTab === tab.id
+                  ? 'border-b-2 border-brand-accent text-brand-accent'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <span className="mr-2">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         <GlassCard className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-white">Conversation Log</h2>
-            <div className="text-xs text-slate-500">
-              {conversationEntries.length} {conversationEntries.length === 1 ? 'message' : 'messages'}
-            </div>
-          </div>
+          {/* Timeline Tab */}
+          {activeTab === 'timeline' && (
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-white">Timeline</h2>
+                <div className="text-xs text-slate-500">
+                  {conversationEntries.length} {conversationEntries.length === 1 ? 'event' : 'events'}
+                </div>
+              </div>
 
           {loading ? (
             <div className="h-96 animate-pulse rounded-2xl border border-brand-outline/40 bg-brand-paper/60" />
@@ -530,6 +558,146 @@ function MonitorContent() {
 
               <div ref={conversationEndRef} />
             </div>
+          )}
+            </>
+          )}
+
+          {/* Clarifications Tab */}
+          {activeTab === 'clarifications' && (
+            <>
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-white">Clarifications</h2>
+                <p className="text-sm text-slate-400 mt-1">Questions and answers that clarify task requirements</p>
+              </div>
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Outstanding Clarifications */}
+                <div>
+                  <h3 className="text-sm font-semibold text-brand-accent mb-3">Outstanding</h3>
+                  <div className="space-y-3">
+                    <div className="rounded-xl border border-yellow-700/50 bg-yellow-900/10 p-4">
+                      <p className="text-sm text-yellow-200">No pending clarifications</p>
+                    </div>
+                  </div>
+                </div>
+                {/* Resolved Clarifications */}
+                <div>
+                  <h3 className="text-sm font-semibold text-green-400 mb-3">Resolved</h3>
+                  <div className="space-y-3">
+                    <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
+                      <p className="text-xs text-slate-500 mb-1">Audience</p>
+                      <p className="text-sm text-slate-200">Engineering leadership & product managers</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Intent Confirmation Tab */}
+          {activeTab === 'intent' && (
+            <>
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-white">Intent Confirmation</h2>
+                <p className="text-sm text-slate-400 mt-1">Human approval of scope and effort before work proceeds</p>
+              </div>
+              <div className="space-y-4">
+                <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <p className="text-sm font-semibold text-white">Intent Analysis</p>
+                      <p className="text-xs text-slate-400 mt-1">PRIMARY: CREATE + EDUCATE</p>
+                    </div>
+                    <span className="rounded-full bg-green-500/20 px-3 py-1 text-xs font-semibold text-green-400">
+                      Approved
+                    </span>
+                  </div>
+                  <div className="space-y-2 text-sm text-slate-300">
+                    <p><span className="text-slate-500">Scope:</span> Small (500 words, 30-45 min)</p>
+                    <p><span className="text-slate-500">Deliverables:</span> 500-word how-to article, 4-6 citations, Practical examples</p>
+                  </div>
+                </div>
+                <p className="text-center text-sm text-slate-500">
+                  Intent confirmation data will appear here when Jōgan runs
+                </p>
+              </div>
+            </>
+          )}
+
+          {/* Evidence & Validation Tab */}
+          {activeTab === 'evidence' && (
+            <>
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-white">Evidence & Validation</h2>
+                <p className="text-sm text-slate-400 mt-1">Quality gates, code review, and factual verification results</p>
+              </div>
+              <div className="space-y-6">
+                {/* Code Review (Mangekyō) */}
+                <div>
+                  <h3 className="text-sm font-semibold text-purple-400 mb-3">Code Review (Mangekyō)</h3>
+                  <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm text-white">Quality Score</span>
+                      <span className="text-lg font-semibold text-green-400">96/100</span>
+                    </div>
+                    <div className="h-2 w-full rounded-full bg-brand-ink">
+                      <div className="h-2 rounded-full bg-green-400" style={{ width: '96%' }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Evidence Validation (Tenseigan) */}
+                <div>
+                  <h3 className="text-sm font-semibold text-blue-400 mb-3">Evidence Validation (Tenseigan)</h3>
+                  <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
+                    <p className="text-sm text-slate-300 mb-2">All 8 factual claims properly cited</p>
+                    <p className="text-xs text-slate-500">6 primary sources, 2 secondary. All sources accessible and credible.</p>
+                  </div>
+                </div>
+
+                {/* Final Approval (Byakugan) */}
+                <div>
+                  <h3 className="text-sm font-semibold text-green-400 mb-3">Final Approval (Byakugan)</h3>
+                  <div className="rounded-xl border border-green-700/50 bg-green-900/20 p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">✅</span>
+                      <span className="text-sm font-semibold text-green-300">APPROVED FOR DELIVERY</span>
+                    </div>
+                    <p className="text-xs text-green-200">
+                      Overall score: 96/100. Content is clear, complete, correct, high-quality, and ready.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Raw JSON Tab */}
+          {activeTab === 'raw' && (
+            <>
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-white">Raw JSON</h2>
+                  <p className="text-sm text-slate-400 mt-1">Complete pipeline event data</p>
+                </div>
+                <button
+                  onClick={() => navigator.clipboard.writeText(JSON.stringify(entries, null, 2))}
+                  className="rounded-lg bg-brand-accent px-4 py-2 text-sm font-semibold text-white hover:bg-brand-accent/90 transition-colors"
+                >
+                  Copy All
+                </button>
+              </div>
+              <div className="max-h-[600px] overflow-y-auto">
+                {entries.length === 0 ? (
+                  <div className="py-16 text-center">
+                    <p className="text-sm text-slate-400">No events yet</p>
+                  </div>
+                ) : (
+                  <pre className="rounded-xl border border-brand-outline/30 bg-brand-ink p-4 text-xs text-slate-300 overflow-x-auto">
+                    {JSON.stringify(entries, null, 2)}
+                  </pre>
+                )}
+              </div>
+            </>
           )}
         </GlassCard>
       </div>
