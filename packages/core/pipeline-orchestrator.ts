@@ -10,10 +10,17 @@
 
 import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
-import { pipelines, pipelineRuns, sessions, runs } from '@third-eye/db/schema';
+import { pipelines, pipelineRuns, sessions, runs, type PipelineRun } from '@third-eye/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { EyeOrchestrator } from './orchestrator';
 import type { EyeName, EyeResponse, BaseEnvelope } from '@third-eye/eyes';
+
+// Workflow JSON structure stored in database
+interface WorkflowJson {
+  steps?: PipelineStep[];
+  taskTypes?: ('code' | 'text' | 'general')[];
+  isDefault?: boolean;
+}
 
 export interface PipelineStep {
   eye: EyeName;
@@ -23,7 +30,7 @@ export interface PipelineStep {
     rejected?: EyeName[];
     needs_input?: EyeName[];
   };
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PipelineDefinition {
@@ -395,15 +402,18 @@ export class PipelineOrchestrator {
       .where(eq(pipelines.active, true));
 
     const dbPipelines: PipelineDefinition[] = customPipelines
-      .map(p => ({
-        id: p.id,
-        name: p.name,
-        description: p.description,
-        steps: (p.workflowJson as any)?.steps || [],
-        taskTypes: (p.workflowJson as any)?.taskTypes || [],
-        isDefault: (p.workflowJson as any)?.isDefault || false,
-        version: p.version
-      }))
+      .map(p => {
+        const workflow = p.workflowJson as WorkflowJson;
+        return {
+          id: p.id,
+          name: p.name,
+          description: p.description,
+          steps: workflow?.steps || [],
+          taskTypes: workflow?.taskTypes || [],
+          isDefault: workflow?.isDefault || false,
+          version: p.version
+        };
+      })
       .filter(p => p.taskTypes.includes(taskType));
 
     // Combine with default pipelines
@@ -438,12 +448,13 @@ export class PipelineOrchestrator {
 
       if (dbPipeline.length > 0) {
         const p = dbPipeline[0];
+        const workflow = p.workflowJson as WorkflowJson;
         return {
           id: p.id,
           name: p.name,
           description: p.description,
-          steps: (p.workflowJson as any)?.steps || [],
-          taskTypes: (p.workflowJson as any)?.taskTypes || [],
+          steps: workflow?.steps || [],
+          taskTypes: workflow?.taskTypes || [],
           isDefault: false,
           version: p.version
         };
@@ -516,7 +527,7 @@ export class PipelineOrchestrator {
   private getIntelligentSuggestions(
     lastEye: EyeName,
     lastResult: BaseEnvelope,
-    history: any[]
+    history: BaseEnvelope[]
   ): { eyes: EyeName[]; reasoning: string; canAutoRoute: boolean } {
     // Smart suggestions based on Eye responses and context
     switch (lastEye) {
@@ -603,7 +614,7 @@ export class PipelineOrchestrator {
     });
   }
 
-  private async updatePipelineRun(runId: string, updates: Partial<any>) {
+  private async updatePipelineRun(runId: string, updates: Partial<PipelineRun>) {
     await this.db
       .update(pipelineRuns)
       .set(updates)
