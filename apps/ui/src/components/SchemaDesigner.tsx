@@ -61,7 +61,7 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
   const generateJSONSchema = () => {
     const schema = {
       type: 'object',
-      properties: {} as Record<string, any>,
+      properties: {} as Record<string, unknown>,
       required: [] as string[],
     };
 
@@ -166,7 +166,7 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
                       <label className="mb-2 block text-xs text-slate-400">Type</label>
                       <select
                         value={field.type}
-                        onChange={(e) => updateField(name, { type: e.target.value as any })}
+                        onChange={(e) => updateField(name, { type: e.target.value as SchemaField['type'] })}
                         className="w-full rounded-lg border border-brand-outline/50 bg-brand-ink px-3 py-2 text-sm text-white focus:border-brand-accent focus:outline-none"
                       >
                         {typeOptions.map((type) => (
