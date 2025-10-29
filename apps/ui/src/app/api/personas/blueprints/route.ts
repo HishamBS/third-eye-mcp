@@ -5,13 +5,10 @@
  */
 
 import { NextResponse } from 'next/server';
-import { personaBlueprints } from '@third-eye/db/schema';
-import { EyeId } from '@third-eye/constants';
-import { getEyeIconPath } from '@third-eye/constants';
 
 export interface PersonaBlueprintUI {
   id: string;
-  eyeId: EyeId;
+  eyeId: string;
   name: string;
   description: string;
   version: string;
@@ -52,38 +49,16 @@ export interface PersonaBlueprintUI {
 
 export async function GET() {
   try {
-    const { getDb } = await import('@third-eye/db');
-    const { db } = getDb();
+    // Proxy to server API to avoid bun:sqlite import issues in Next.js
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+    const serverResponse = await fetch(`${API_URL}/api/personas/blueprints`);
     
-    const dbBlueprints = await db.select().from(personaBlueprints);
+    if (!serverResponse.ok) {
+      throw new Error(`Server API returned ${serverResponse.status}`);
+    }
     
-    const blueprints = dbBlueprints.map(blueprint => ({
-      id: blueprint.eyeId,
-      eyeId: blueprint.eyeId as EyeId,
-      name: blueprint.name,
-      description: blueprint.description,
-      version: blueprint.version,
-      capabilities: JSON.parse(blueprint.capabilities) as string[],
-      iconPath: getEyeIconPath(blueprint.eyeId as EyeId),
-      metadata: {
-        eyeId: blueprint.eyeId as EyeId,
-        name: blueprint.name,
-        description: blueprint.description,
-        version: blueprint.version,
-        capabilities: JSON.parse(blueprint.capabilities),
-      },
-      mission: blueprint.mission,
-      phases: JSON.parse(blueprint.phases),
-      envelopeContract: JSON.parse(blueprint.envelopeContract),
-      reminders: JSON.parse(blueprint.reminders || '[]'),
-      notes: blueprint.notes || undefined,
-    } as PersonaBlueprintUI));
-
-    return NextResponse.json({
-      success: true,
-      data: blueprints,
-      count: blueprints.length,
-    });
+    const serverData = await serverResponse.json();
+    return NextResponse.json(serverData);
   } catch (error) {
     console.error('Failed to fetch persona blueprints:', error);
     return NextResponse.json(

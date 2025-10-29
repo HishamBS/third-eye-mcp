@@ -1,8 +1,9 @@
 import { Hono } from 'hono';
 import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
-import { personas, personaVersions } from '@third-eye/db';
+import { personas, personaVersions, personaBlueprints } from '@third-eye/db';
 import { DEFAULT_PERSONA_MAP } from '@third-eye/db/defaults';
+import { getEyeIconPath, EyeId } from '@third-eye/constants';
 import { eq, and, desc } from 'drizzle-orm';
 import {
   validateBodyWithEnvelope,
@@ -24,6 +25,135 @@ const app = new Hono();
 
 app.use('*', requestIdMiddleware());
 app.use('*', errorHandler());
+
+// Get all persona blueprints
+app.get('/blueprints', async (c) => {
+  try {
+    const { db } = getDb();
+    const dbBlueprints = await db.select().from(personaBlueprints);
+    
+    const blueprints = dbBlueprints.map(blueprint => {
+      const capabilities = JSON.parse(blueprint.capabilities as string) as string[];
+      const phases = JSON.parse(blueprint.phases as string);
+      const envelopeContract = JSON.parse(blueprint.envelopeContract as string);
+      const reminders = JSON.parse((blueprint.reminders || '[]') as string) as string[];
+      
+      return {
+        id: blueprint.eyeId,
+        eyeId: blueprint.eyeId as EyeId,
+        name: blueprint.name,
+        description: blueprint.description,
+        version: blueprint.version,
+        capabilities,
+        iconPath: getEyeIconPath(blueprint.eyeId as EyeId),
+        metadata: {
+          eyeId: blueprint.eyeId as EyeId,
+          name: blueprint.name,
+          description: blueprint.description,
+          version: blueprint.version,
+          capabilities,
+        },
+        mission: blueprint.mission,
+        phases,
+        envelopeContract,
+        reminders,
+        notes: blueprint.notes || undefined,
+      };
+    });
+
+    return createSuccessResponse(c, blueprints);
+  } catch (error) {
+    console.error('Failed to fetch persona blueprints:', error);
+    return createInternalErrorResponse(c, 'Failed to fetch persona blueprints');
+  }
+});
+
+// Get single blueprint by eyeId
+app.get('/blueprints/:eyeId', async (c) => {
+  try {
+    const eyeId = c.req.param('eyeId');
+    const { db } = getDb();
+    
+    const blueprint = await db
+      .select()
+      .from(personaBlueprints)
+      .where(eq(personaBlueprints.eyeId, eyeId))
+      .get();
+    
+    if (!blueprint) {
+      return createErrorResponse(c, { title: 'Blueprint Not Found', status: 404, detail: 'Blueprint not found' });
+    }
+    
+    const capabilities = JSON.parse(blueprint.capabilities as string) as string[];
+    const phases = JSON.parse(blueprint.phases as string);
+    const envelopeContract = JSON.parse(blueprint.envelopeContract as string);
+    const reminders = JSON.parse((blueprint.reminders || '[]') as string) as string[];
+    
+    const result = {
+      id: blueprint.eyeId,
+      eyeId: blueprint.eyeId as EyeId,
+      name: blueprint.name,
+      description: blueprint.description,
+      version: blueprint.version,
+      capabilities,
+      iconPath: getEyeIconPath(blueprint.eyeId as EyeId),
+      metadata: {
+        eyeId: blueprint.eyeId as EyeId,
+        name: blueprint.name,
+        description: blueprint.description,
+        version: blueprint.version,
+        capabilities,
+      },
+      mission: blueprint.mission,
+      phases,
+      envelopeContract,
+      reminders,
+      notes: blueprint.notes || undefined,
+    };
+
+    return createSuccessResponse(c, result);
+  } catch (error) {
+    console.error('Failed to fetch blueprint:', error);
+    return createInternalErrorResponse(c, 'Failed to fetch blueprint');
+  }
+});
+
+// Update blueprint
+app.put('/blueprints/:eyeId', async (c) => {
+  try {
+    const eyeId = c.req.param('eyeId');
+    const body = await c.req.json();
+    const { db } = getDb();
+    const now = new Date();
+
+    const updatedBlueprint = {
+      eyeId,
+      name: body.name,
+      description: body.description,
+      version: body.version,
+      capabilities: JSON.stringify(body.capabilities),
+      mission: body.mission,
+      phases: JSON.stringify(body.phases),
+      envelopeContract: JSON.stringify(body.envelopeContract),
+      reminders: JSON.stringify(body.reminders || []),
+      notes: body.notes || null,
+      createdAt: body.createdAt || now,
+      updatedAt: now,
+    };
+
+    await db.insert(personaBlueprints)
+      .values(updatedBlueprint)
+      .onConflictDoUpdate({
+        target: personaBlueprints.eyeId,
+        set: updatedBlueprint,
+      });
+
+    return createSuccessResponse(c, { message: 'Blueprint updated successfully' });
+  } catch (error) {
+    console.error('Failed to update blueprint:', error);
+    return createInternalErrorResponse(c, 'Failed to update blueprint');
+  }
+});
 
 // Zod schemas for validation
 const createPersonaSchema = z.object({
