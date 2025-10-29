@@ -56,13 +56,15 @@ export default function PersonasPage() {
   };
 
   const getEyeColor = (eye: string) => {
-    if (eye.includes('sharingan')) return 'border-red-500/40 bg-red-500/10';
-    if (eye.includes('rinnegan')) return 'border-purple-500/40 bg-purple-500/10';
-    if (eye.includes('tenseigan')) return 'border-cyan-500/40 bg-cyan-500/10';
-    if (eye.includes('jogan')) return 'border-blue-500/40 bg-blue-500/10';
-    if (eye.includes('byakugan')) return 'border-white/40 bg-white/10';
-    if (eye.includes('mangekyo')) return 'border-red-600/40 bg-red-600/10';
-    return 'border-yellow-500/40 bg-yellow-500/10';
+    // All cards use the same Byakugan color scheme
+    return 'border-white/40 bg-white/10';
+  };
+
+  const toHumanReadable = (text: string) => {
+    return text
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
 
   return (
@@ -165,10 +167,10 @@ export default function PersonasPage() {
                           key={idx} 
                           className="rounded-full bg-brand-accent/20 px-2 py-1 text-xs text-brand-accent"
                         >
-                          {cap}
-                                </span>
-                    ))}
-                  </div>
+                          {toHumanReadable(cap)}
+                        </span>
+                      ))}
+                    </div>
                   )}
                 </div>
               </motion.div>
