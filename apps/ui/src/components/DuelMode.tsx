@@ -68,13 +68,16 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
         const payload = await response.json();
         const modelsByProvider = payload?.modelsByProvider ?? {};
 
+        // Model can be a string or object with name/displayName
+        type ModelEntry = string | { name?: string; displayName?: string };
+
         const mapped: Record<string, string[]> = {};
         for (const provider of ALLOWED_PROVIDERS) {
           const entries = Array.isArray(modelsByProvider?.[provider])
             ? modelsByProvider[provider]
             : [];
           const names = entries
-            .map((model: any) => {
+            .map((model: ModelEntry) => {
               if (typeof model === 'string') return model;
               if (model?.name) return model.name;
               if (model?.displayName) return model.displayName;

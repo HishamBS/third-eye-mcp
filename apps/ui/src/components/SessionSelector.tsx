@@ -5,6 +5,20 @@ import { useUI } from '@/contexts/UIContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
+// API response session (before normalization)
+interface RawSession {
+  sessionId: string;
+  status: string;
+  createdAt: string;
+  eventCount: number;
+  lastActivity?: string;
+  agentName?: string;
+  model?: string;
+  displayName?: string;
+  [key: string]: unknown;
+}
+
+// Normalized session (after date parsing)
 interface ActiveSession {
   sessionId: string;
   status: string;
@@ -43,7 +57,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
         const result = await response.json();
         const data = result.data || result;
         const normalized: ActiveSession[] = (data.sessions || [])
-          .map((session: any) => {
+          .map((session: RawSession) => {
             const createdAt = new Date(session.createdAt);
             const lastActivity = session.lastActivity ? new Date(session.lastActivity) : createdAt;
             const displayName =
@@ -56,7 +70,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
               lastActivity,
               displayName,
               agentName: session.agentName || displayName,
-            };
+            } as ActiveSession;
           })
           .sort((a: ActiveSession, b: ActiveSession) => b.createdAt.getTime() - a.createdAt.getTime());
 
