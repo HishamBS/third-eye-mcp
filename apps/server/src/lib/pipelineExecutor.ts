@@ -1,4 +1,5 @@
 import { EyeOrchestrator } from '@third-eye/core';
+import type { BaseEnvelope } from '@third-eye/eyes';
 
 /**
  * Pipeline Executor
@@ -8,13 +9,13 @@ import { EyeOrchestrator } from '@third-eye/core';
 
 export interface PipelineStep {
   eye: string;
-  config?: Record<string, any>;
+  config?: Record<string, unknown>;
   conditions?: {
     skipIf?: {
       previousEye?: string;
       field?: string;
       operator?: 'eq' | 'neq' | 'gt' | 'lt' | 'gte' | 'lte';
-      value?: any;
+      value?: unknown;
     };
     continueOnFailure?: boolean;
   };
@@ -27,6 +28,13 @@ export interface PipelineDefinition {
   steps: PipelineStep[];
 }
 
+export interface PipelineCombinedOutput {
+  pipeline: string;
+  steps: number;
+  success: boolean;
+  outputs: Record<string, BaseEnvelope | { error: string }>;
+}
+
 export interface PipelineResult {
   pipelineId: string;
   success: boolean;
@@ -34,11 +42,11 @@ export interface PipelineResult {
     eye: string;
     skipped: boolean;
     error?: string;
-    result?: any;
+    result?: BaseEnvelope;
     latencyMs?: number;
   }>;
   totalLatency: number;
-  combinedOutput: any;
+  combinedOutput: PipelineCombinedOutput;
 }
 
 export class PipelineExecutor {
@@ -53,12 +61,12 @@ export class PipelineExecutor {
    */
   async execute(
     pipeline: PipelineDefinition,
-    input: any,
+    input: unknown,
     sessionId?: string
   ): Promise<PipelineResult> {
     const startTime = Date.now();
     const stepResults: PipelineResult['steps'] = [];
-    const outputs: Record<string, any> = {};
+    const outputs: Record<string, BaseEnvelope | { error: string }> = {};
 
     for (const step of pipeline.steps) {
       const stepStartTime = Date.now();
@@ -148,7 +156,7 @@ export class PipelineExecutor {
    */
   private evaluateCondition(
     condition: NonNullable<PipelineStep['conditions']>['skipIf'],
-    outputs: Record<string, any>
+    outputs: Record<string, BaseEnvelope | { error: string }>
   ): boolean {
     if (!condition) return false;
 
@@ -184,13 +192,13 @@ export class PipelineExecutor {
   /**
    * Get field value from object (supports dot notation)
    */
-  private getFieldValue(obj: any, field: string): any {
+  private getFieldValue(obj: unknown, field: string): unknown {
     const parts = field.split('.');
-    let value = obj;
+    let value: unknown = obj;
 
     for (const part of parts) {
-      if (value && typeof value === 'object' && part in value) {
-        value = value[part];
+      if (value && typeof value === 'object' && value !== null && part in value) {
+        value = (value as Record<string, unknown>)[part];
       } else {
         return undefined;
       }
