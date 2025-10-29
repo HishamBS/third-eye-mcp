@@ -16,6 +16,7 @@ import {
   errorHandler
 } from '../middleware/response';
 import { z } from 'zod';
+import type { BaseEnvelope } from '@third-eye/eyes';
 
 /**
  * Duel Mode API
@@ -29,6 +30,23 @@ const app = new Hono();
 const SUPPORTED_PROVIDERS = new Set<string>(PROVIDERS as readonly string[]);
 const DEFAULT_DUEL_PROVIDER = 'groq' as ProviderType;
 const DEFAULT_DUEL_MODEL = 'llama-3.3-70b-versatile';
+
+// Helper to safely extract numeric values from BaseEnvelope
+function getNumericValue(result: BaseEnvelope, key: string): number {
+  if (typeof result.data === 'object' && result.data !== null && key in result.data) {
+    const value = (result.data as Record<string, unknown>)[key];
+    return typeof value === 'number' ? value : 0;
+  }
+  return 0;
+}
+
+function getStringValue(result: BaseEnvelope, key: string): string | undefined {
+  if (typeof result.data === 'object' && result.data !== null && key in result.data) {
+    const value = (result.data as Record<string, unknown>)[key];
+    return typeof value === 'string' ? value : undefined;
+  }
+  return undefined;
+}
 
 function parseModelIdentifier(identifier: string): { provider: ProviderType; model: string } {
   if (!identifier || typeof identifier !== 'string') {
@@ -64,7 +82,7 @@ app.use('*', rateLimit({ maxRequests: 50 })); // Lower limit for expensive duels
  * Calculate score for duel result
  * Score is based on: verdict (50%), confidence (25%), latency (25%)
  */
-function calculateScore(result: any, latencyMs: number): number {
+function calculateScore(result: BaseEnvelope, latencyMs: number): number {
   let score = 0;
 
   // Verdict score (0-50 points)
@@ -75,8 +93,11 @@ function calculateScore(result: any, latencyMs: number): number {
   }
 
   // Confidence score (0-25 points)
-  if (result.confidence) {
-    score += (result.confidence / 100) * 25;
+  const confidence = typeof result.data === 'object' && result.data !== null && 'confidence' in result.data && typeof result.data.confidence === 'number'
+    ? result.data.confidence
+    : undefined;
+  if (confidence) {
+    score += (confidence / 100) * 25;
   } else {
     score += 12.5; // Default mid-range
   }
@@ -113,6 +134,21 @@ interface DuelResult {
     model: string;
     label: string;
   }>;
+}
+
+interface DuelFrontendResult {
+  provider: ProviderId;
+  providerLabel: string;
+  model: string;
+  output: string;
+  latency: number;
+  tokens: {
+    input: number;
+    output: number;
+  };
+  verdict: 'APPROVED' | 'REJECTED' | 'NEEDS_INPUT';
+  confidence?: number;
+  score: number;
 }
 
 /**
@@ -186,7 +222,7 @@ app.post('/', async (c) => {
 
     const orchestrator = new EyeOrchestrator();
     const runResults: DuelResult['runs'] = [];
-    const duelResultsForFrontend: any[] = [];
+    const duelResultsForFrontend: DuelFrontendResult[] = [];
 
     // Run each configuration in parallel
     const runPromises = configs.map(async (config, index) => {
@@ -216,9 +252,9 @@ app.post('/', async (c) => {
             provider: config.provider,
             model: config.model,
             inputMd: prompt,
-            outputJson: result as any,
-            tokensIn: (result as any).tokensIn || null,
-            tokensOut: (result as any).tokensOut || null,
+            outputJson: result,
+            tokensIn: getNumericValue(result, 'tokensIn') || null,
+            tokensOut: getNumericValue(result, 'tokensOut') || null,
             latencyMs,
             createdAt: Date.now(),
           })
@@ -242,8 +278,8 @@ app.post('/', async (c) => {
               label,
               agent: label,
               latencyMs,
-              tokensIn: (result as any).tokensIn,
-              tokensOut: (result as any).tokensOut,
+              tokensIn: getNumericValue(result, 'tokensIn'),
+              tokensOut: getNumericValue(result, 'tokensOut'),
             },
             nextAction: 'completed',
             createdAt: Date.now(),
@@ -258,21 +294,24 @@ app.post('/', async (c) => {
         });
 
         // Build frontend result format
-        const verdict = result.code === 'APPROVED' ? 'APPROVED' : result.code === 'REJECTED' ? 'REJECTED' : 'NEEDS_INPUT';
+        const verdict: 'APPROVED' | 'REJECTED' | 'NEEDS_INPUT' =
+          result.code === 'APPROVED' ? 'APPROVED' :
+          result.code === 'REJECTED' ? 'REJECTED' :
+          'NEEDS_INPUT';
         const score = calculateScore(result, latencyMs);
 
         duelResultsForFrontend.push({
           provider: config.provider,
           providerLabel: label,
           model: config.model,
-          output: result.md || (result as any).message || 'No output',
+          output: result.md || getStringValue(result, 'message') || 'No output',
           latency: latencyMs,
           tokens: {
-            input: (result as any).tokensIn || 0,
-            output: (result as any).tokensOut || 0,
+            input: getNumericValue(result, 'tokensIn'),
+            output: getNumericValue(result, 'tokensOut'),
           },
           verdict,
-          confidence: (result as any).confidence,
+          confidence: getNumericValue(result, 'confidence') || undefined,
           score,
         });
       } catch (error) {
