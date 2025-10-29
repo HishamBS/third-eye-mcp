@@ -18,6 +18,12 @@ import {
  * Main entrypoint for Eye execution via MCP protocol
  */
 
+interface EyeExample {
+  input: unknown;
+  output: unknown;
+  description: string;
+}
+
 const app = new Hono();
 const orchestrator = new EyeOrchestrator();
 
@@ -163,9 +169,9 @@ app.post('/run', validateBodyWithEnvelope(schemas.mcpRun), async (c) => {
       finalResult,
       totalSteps: result.results.length,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('MCP run failed:', error);
-    return createInternalErrorResponse(c, error.message || 'MCP execution failed');
+    return createInternalErrorResponse(c, error instanceof Error ? error.message : 'MCP execution failed');
   }
 });
 
@@ -267,7 +273,7 @@ app.get('/schemas', (c) => {
 app.get('/examples/:eye', (c) => {
   const eyeName = c.req.param('eye');
 
-  const examples: Record<string, any[]> = {
+  const examples: Record<string, EyeExample[]> = {
     sharingan: [
       {
         input: 'make it better',
