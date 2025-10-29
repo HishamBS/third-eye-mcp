@@ -10,6 +10,7 @@ import {
   Download, MessageSquare, History, ArrowRight, Activity,
   Cpu, CheckCircle2, Beaker, Monitor
 } from 'lucide-react';
+import { PROVIDERS } from '@third-eye/types/enums';
 
 interface RealtimeStats {
   sessions: number;
@@ -27,7 +28,7 @@ const WOW_FEATURES = [
     icon: <Eye className="h-6 w-6" />,
     color: 'from-blue-500 to-cyan-500',
     href: '/monitor?tab=evidence',
-    demo: '95% confidence ✓',
+    demo: '95% confidence',
   },
   {
     id: 'duel-mode',
@@ -145,7 +146,7 @@ export default function HomePage() {
         const healthRes = await fetch(`${API_URL}/health`);
         if (healthRes.ok) {
           const health = await healthRes.json();
-          const providers = ['groq', 'openrouter', 'ollama', 'lmstudio'];
+          const providers = [...PROVIDERS]; // Use SSOT constant from @third-eye/types
           setStats(prev => ({
             ...prev,
             providers: providers.map(id => ({
