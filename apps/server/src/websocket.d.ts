@@ -32,7 +32,7 @@ interface WebSocketHandler {
 export interface WSMessage {
     type: 'session_update' | 'run_started' | 'run_completed' | 'error' | 'ping' | 'pong' | 'routing_updated' | 'routing_deleted' | 'persona_activated' | 'session_created' | 'pipeline_event';
     sessionId?: string;
-    data?: any;
+    data?: unknown;
     timestamp: number;
 }
 export interface ConnectionInfo {
@@ -73,7 +73,7 @@ export declare class WSConnectionManager {
     /**
      * Broadcast to all connections
      */
-    broadcast(message: any): void;
+    broadcast(message: Partial<WSMessage> & { type: WSMessage['type'] }): void;
     /**
      * Broadcast to all connections (alias)
      */
