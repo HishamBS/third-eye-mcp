@@ -70,7 +70,7 @@ describe('Persona Blueprints', () => {
   });
 
   describe('Example JSON Parsing', () => {
-    const testBlueprintExamples = (blueprint: any) => {
+    const testBlueprintExamples = (blueprint: typeof OVERSEER_BLUEPRINT) => {
       for (const phase of [blueprint.phases.guidance, blueprint.phases.validation].filter(Boolean)) {
         expect(phase.example).toBeDefined();
         expect(typeof phase.example).toBe('string');

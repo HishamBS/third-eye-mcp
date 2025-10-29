@@ -106,7 +106,7 @@ describe('Golden Rule #1 Enforcement', () => {
     expect(response.ok).toBe(true);
 
     const data = await response.json();
-    const tools = data.data.tools;
+    const tools = data.data.tools as Array<{ name: string }>;
 
     // Should only have third_eye_overseer tool
     expect(Array.isArray(tools)).toBe(true);
@@ -116,7 +116,7 @@ describe('Golden Rule #1 Enforcement', () => {
     // Should NOT expose individual Eyes
     const eyeNames = ['sharingan', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan'];
     for (const eyeName of eyeNames) {
-      const hasEye = tools.some((t: any) => t.name === eyeName);
+      const hasEye = tools.some(t => t.name === eyeName);
       expect(hasEye).toBe(false);
     }
   });

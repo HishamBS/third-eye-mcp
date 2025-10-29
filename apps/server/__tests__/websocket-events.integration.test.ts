@@ -31,7 +31,7 @@ describe('Phase 4: WebSocket Fine-Grained Events', () => {
     orchestrator = new EyeOrchestrator();
 
     // Intercept broadcasts
-    vi.spyOn(wsManager, 'broadcastToSession').mockImplementation((sessionId: string, event: any) => {
+    vi.spyOn(wsManager, 'broadcastToSession').mockImplementation((sessionId: string, event: WebSocketEvent) => {
       capturedEvents.push(event);
       return originalBroadcast(sessionId, event);
     });
