@@ -38,7 +38,7 @@ describe('MCP Endpoints Integration Tests', () => {
       const res = await app.request('/mcp/tools');
       const data = await res.json();
 
-      const eyeNames = data.tools.map((t: any) => t.name);
+      const eyeNames = (data.tools as Array<{ name: string }>).map(t => t.name);
       expect(eyeNames).toContain('sharingan');
       expect(eyeNames).toContain('kyuubi');
       expect(eyeNames).toContain('jogan');
