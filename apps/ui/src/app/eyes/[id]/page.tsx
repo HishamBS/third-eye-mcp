@@ -11,6 +11,7 @@ interface Eye {
   version: string;
   description: string;
   source: 'built-in' | 'custom';
+  capabilities?: string[];
   personaTemplate?: string;
 }
 
@@ -169,30 +170,15 @@ export default function EyeDetailPage() {
     }
   };
 
-  const getEyeIcon = (id: string) => {
-    const iconMap: Record<string, string> = {
-      overseer: '🧿',
-      sharingan: '👁️',
-      'prompt-helper': '✨',
-      jogan: '🔮',
-      rinnegan: '🌀',
-      mangekyo: '⚡',
-      tenseigan: '💫',
-      byakugan: '👀',
-    };
-    return iconMap[id] || '👁️';
+  const getEyeIconPath = (id: string) => {
+    return `/eyes/${id}.svg`;
   };
 
-  const getEyeColor = (id: string) => {
-    if (id.includes('sharingan')) return 'border-eye-sharingan/40 bg-eye-sharingan/5';
-    if (id.includes('rinnegan')) return 'border-eye-rinnegan/40 bg-eye-rinnegan/5';
-    if (id.includes('tenseigan')) return 'border-eye-tenseigan/40 bg-eye-tenseigan/5';
-    if (id.includes('jogan')) return 'border-eye-jogan/40 bg-eye-jogan/5';
-    if (id.includes('byakugan')) return 'border-eye-byakugan/40 bg-eye-byakugan/5';
-    if (id.includes('mangekyo')) return 'border-eye-mangekyo/40 bg-eye-mangekyo/5';
-    if (id === 'overseer') return 'border-brand-accent/40 bg-brand-accent/5';
-    if (id === 'prompt-helper') return 'border-eye-prompt/40 bg-eye-prompt/5';
-    return 'border-slate-500/40 bg-slate-500/5';
+  const toHumanReadable = (text: string) => {
+    return text
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
 
   if (loading) {
@@ -225,11 +211,34 @@ export default function EyeDetailPage() {
                 ← Back to Eyes
               </Link>
               <div className="flex items-center gap-4">
-                <div className="text-5xl">{getEyeIcon(eye.id)}</div>
+                <img 
+                  src={getEyeIconPath(eye.id)} 
+                  alt={`${eye.name} icon`}
+                  className="h-16 w-16"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">{eye.source}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">{eye.source}</p>
+                    <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs text-white">
+                      v{eye.version}
+                    </span>
+                  </div>
                   <h1 className="mt-1 text-2xl font-semibold text-white capitalize">{eye.name}</h1>
-                  <p className="text-sm text-slate-400">v{eye.version}</p>
+                  {eye.capabilities && eye.capabilities.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {eye.capabilities.map((cap, idx) => (
+                        <span 
+                          key={idx} 
+                          className="rounded-full bg-brand-accent/20 px-2 py-1 text-xs text-brand-accent"
+                        >
+                          {toHumanReadable(cap)}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -321,6 +330,21 @@ export default function EyeDetailPage() {
                 <label className="block text-sm font-medium text-slate-300 mb-2">Description</label>
                 <p className="text-white">{eye.description}</p>
               </div>
+              {eye.capabilities && eye.capabilities.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Capabilities</label>
+                  <div className="flex flex-wrap gap-2">
+                    {eye.capabilities.map((cap, idx) => (
+                      <span 
+                        key={idx} 
+                        className="rounded-full bg-brand-accent/20 px-3 py-1 text-sm text-brand-accent"
+                      >
+                        {toHumanReadable(cap)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">Source</label>
                 <span className={`inline-block rounded-full px-3 py-1 text-sm ${

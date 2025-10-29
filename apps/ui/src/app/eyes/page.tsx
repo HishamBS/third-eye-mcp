@@ -12,6 +12,7 @@ interface Eye {
   version: string;
   description: string;
   source: 'built-in' | 'custom';
+  capabilities?: string[];
   personaTemplate?: string;
   inputSchema?: Record<string, unknown>;
   outputSchema?: Record<string, unknown>;
@@ -376,35 +377,20 @@ export default function EyesPage() {
     }
   };
 
-  const getEyeIcon = (eyeId: string) => {
-    const iconMap: Record<string, string> = {
-      overseer: '🧿',
-      sharingan: '👁️',
-      helper: '✨',
-      jogan: '🔮',
-      rinnegan_requirements: '🌀',
-      rinnegan_review: '🌀',
-      rinnegan_approval: '🌀',
-      mangekyo_scaffold: '⚡',
-      mangekyo_impl: '⚡',
-      mangekyo_tests: '⚡',
-      mangekyo_docs: '⚡',
-      tenseigan: '💫',
-      byakugan: '👀',
-    };
-    return iconMap[eyeId] || '👁️';
+  const getEyeIconPath = (eyeId: string) => {
+    return `/eyes/${eyeId}.svg`;
   };
 
   const getEyeColor = (eyeId: string) => {
-    if (eyeId.includes('sharingan')) return 'border-eye-sharingan/40 bg-eye-sharingan/5';
-    if (eyeId.includes('rinnegan')) return 'border-eye-rinnegan/40 bg-eye-rinnegan/5';
-    if (eyeId.includes('tenseigan')) return 'border-eye-tenseigan/40 bg-eye-tenseigan/5';
-    if (eyeId.includes('byakugan')) return 'border-eye-byakugan/40 bg-eye-byakugan/5';
-    if (eyeId.includes('mangekyo')) return 'border-eye-mangekyo/40 bg-eye-mangekyo/5';
-    if (eyeId.includes('jogan')) return 'border-eye-jogan/40 bg-eye-jogan/5';
-    if (eyeId === 'overseer') return 'border-brand-accent/40 bg-brand-accent/5';
-    if (eyeId === 'helper') return 'border-eye-prompt/40 bg-eye-prompt/5';
-    return 'border-slate-500/40 bg-slate-500/5';
+    // All cards use the same Byakugan color scheme
+    return 'border-white/40 bg-white/10';
+  };
+
+  const toHumanReadable = (text: string) => {
+    return text
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
 
   return (
@@ -721,9 +707,18 @@ export default function EyesPage() {
                     className={`cursor-pointer rounded-2xl border p-6 text-left shadow-lg transition-all hover:shadow-xl ${getEyeColor(eye.id)}`}
                   >
                     <div className="mb-4 text-center">
-                      <div className="mb-3 text-5xl">{getEyeIcon(eye.id)}</div>
+                      <div className="mb-3 flex justify-center">
+                        <img 
+                          src={getEyeIconPath(eye.id)} 
+                          alt={`${eye.name} icon`}
+                          className="h-16 w-16"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
                       <h3 className="mb-1 text-xl font-bold text-white">{eye.name}</h3>
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="mb-2 flex items-center justify-center gap-2">
                         <span className="text-sm text-white/80">v{eye.version}</span>
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs ${
@@ -735,6 +730,20 @@ export default function EyesPage() {
                           {eye.source}
                         </span>
                       </div>
+                      
+                      {/* Capabilities pills if available */}
+                      {eye.capabilities && eye.capabilities.length > 0 && (
+                        <div className="mb-3 flex flex-wrap justify-center gap-2">
+                          {eye.capabilities.map((cap, idx) => (
+                            <span 
+                              key={idx} 
+                              className="rounded-full bg-brand-accent/20 px-2 py-1 text-xs text-brand-accent"
+                            >
+                              {toHumanReadable(cap)}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <p className="line-clamp-3 text-center text-sm text-white/90">
