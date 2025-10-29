@@ -38,10 +38,8 @@ const seedReport = await seedDefaults({
 });
 console.log('[Startup] Default seeding complete:', seedReport, '\n');
 
-// Seed blueprints (separate from defaults due to cross-package imports)
-console.log('[Startup] Seeding blueprints...');
+// Seed blueprints if not already seeded by CLI (silent if already exists)
 await seedBlueprints();
-console.log('[Startup] Blueprint seeding complete.\n');
 
 // Load provider keys from database into config
 await loadProviderKeysIntoConfig();

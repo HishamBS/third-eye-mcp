@@ -258,6 +258,16 @@ async function prepareDatabase(verbose: boolean) {
     const scopedLog = verbose ? (message: string) => console.log(`   ${message}`) : () => {};
     const report = await seedDefaults({ log: scopedLog });
 
+    // Seed blueprints after defaults (separate due to cross-package imports)
+    if (verbose) {
+      scopedLog('Seeding blueprints...');
+    }
+    const { seedBlueprintsCLI } = await import('./seed-blueprints.ts');
+    const blueprintsSeeded = await seedBlueprintsCLI();
+    if (verbose && blueprintsSeeded) {
+      scopedLog('✓ Blueprints seeded');
+    }
+
     const personaCounts = await db
       .select({ value: count() })
       .from(personas)
@@ -275,6 +285,7 @@ async function prepareDatabase(verbose: boolean) {
       console.log('\n🗄  Database ready');
       console.log(`   Path: ${dbPath}`);
       console.log(`   Personas: ${report.personas ? 'seeded defaults' : personaCount}`);
+      console.log(`   Blueprints: ${blueprintsSeeded ? 'seeded' : 'already exists'}`);
       console.log(`   Integrations: ${report.integrations ? 'seeded defaults' : integrationCount}`);
       console.log(`   Prep time: ${duration}s\n`);
     }

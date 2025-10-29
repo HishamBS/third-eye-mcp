@@ -1,34 +1,36 @@
 /**
- * Blueprint Seeding Utility
+ * CLI Blueprint Seeding
  * 
  * Seeds persona blueprints into the database from the TypeScript registry.
- * This is separate from packages/db/defaults to avoid cross-package TypeScript import issues.
+ * Can be called from CLI without cross-package TypeScript compilation issues.
  */
 
-import { getDb } from '@third-eye/db';
-import { personaBlueprints } from '@third-eye/db/schema';
-import { BLUEPRINT_REGISTRY } from '@third-eye/eyes';
-import { count } from 'drizzle-orm';
-
-export async function seedBlueprints(force = false): Promise<boolean> {
-  const { db } = getDb();
-  
+export async function seedBlueprintsCLI(): Promise<boolean> {
   try {
-    // Check if blueprints already exist (CLI may have already seeded them)
+    // Dynamic imports avoid TypeScript compilation issues
+    const [{ getDb }, { personaBlueprints }, { count }, { BLUEPRINT_REGISTRY }] = await Promise.all([
+      import('@third-eye/db'),
+      import('@third-eye/db/schema'),
+      import('drizzle-orm'),
+      import('@third-eye/eyes'),
+    ]);
+
+    const { db } = getDb();
+
+    // Check if blueprints already exist
     const existingCount = await db
       .select({ value: count() })
       .from(personaBlueprints)
       .limit(1);
-    
-    if (existingCount[0]?.value && existingCount[0].value > 0 && !force) {
-      // Silently skip - blueprints already exist from CLI
-      return false;
+
+    if (existingCount[0]?.value && existingCount[0].value > 0) {
+      return false; // Already seeded
     }
 
     // Seed from TypeScript registry
     const now = new Date();
     let seeded = 0;
-    
+
     for (const [eyeId, blueprint] of Object.entries(BLUEPRINT_REGISTRY)) {
       try {
         await db
@@ -48,16 +50,14 @@ export async function seedBlueprints(force = false): Promise<boolean> {
             updatedAt: now,
           })
           .onConflictDoNothing();
-        
+
         seeded++;
       } catch (error) {
         // Ignore duplicates
-        console.debug(`Skip duplicate blueprint: ${eyeId}`);
       }
     }
-    
-    console.log(`   ✓ Seeded ${seeded} blueprints`);
-    return true;
+
+    return seeded > 0;
   } catch (error) {
     console.error(`   ✗ Failed to seed blueprints: ${error}`);
     return false;
