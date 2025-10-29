@@ -256,6 +256,25 @@ export const personaVersions = sqliteTable('persona_versions', {
 export type PersonaVersion = typeof personaVersions.$inferSelect;
 export type NewPersonaVersion = typeof personaVersions.$inferInsert;
 
+// Persona Blueprints - structured blueprint storage for full editability
+export const personaBlueprints = sqliteTable('persona_blueprints', {
+  eyeId: text('eye_id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description').notNull(),
+  version: text('version').notNull(),
+  capabilities: text('capabilities', { mode: 'json' }).notNull(), // string[]
+  mission: text('mission').notNull(),
+  phases: text('phases', { mode: 'json' }).notNull(), // { guidance, validation }
+  envelopeContract: text('envelope_contract', { mode: 'json' }).notNull(),
+  reminders: text('reminders', { mode: 'json' }), // string[]
+  notes: text('notes'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export type PersonaBlueprint = typeof personaBlueprints.$inferSelect;
+export type NewPersonaBlueprint = typeof personaBlueprints.$inferInsert;
+
 // Clarifications storage
 export const clarifications = sqliteTable('clarifications', {
   id: text('id').primaryKey(),

@@ -15,6 +15,13 @@
       "when": 1761681373000,
       "tag": "0001_romantic_madrox",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1761719582744,
+      "tag": "0002_windy_typhoid_mary",
+      "breakpoints": true
     }
   ]
 }
