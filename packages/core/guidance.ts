@@ -5,10 +5,12 @@
  * Makes Third Eye MCP a "must-use" server by guiding agents through optimal Eye workflows
  */
 
+import type { EyeResponse } from '@third-eye/eyes';
+
 interface GuidanceRequest {
   taskDescription: string;
   currentState?: string;
-  lastEyeResponse?: any;
+  lastEyeResponse?: EyeResponse;
   sessionId: string;
 }
 
@@ -189,7 +191,7 @@ function detectCodeTask(description: string): boolean {
 /**
  * Detect if task has ambiguity
  */
-function detectAmbiguity(description: string, lastResponse?: any): boolean {
+function detectAmbiguity(description: string, lastResponse?: EyeResponse): boolean {
   // Check Sharingan response for ambiguity flag
   if (lastResponse?.data?.ambiguous === true) {
     return true;
@@ -239,7 +241,7 @@ function detectValidationTask(description: string): boolean {
 /**
  * Determine current workflow stage
  */
-function determineWorkflowStage(currentState?: string, lastResponse?: any): string {
+function determineWorkflowStage(currentState?: string, lastResponse?: EyeResponse): string {
   if (lastResponse?.code === 'APPROVED' || lastResponse?.data?.approved) {
     return WorkflowStage.APPROVAL;
   }
@@ -336,7 +338,7 @@ function suggestAlternatives(tool: string, isCode: boolean, stage: string): stri
 /**
  * Generate actionable next steps
  */
-function generateNextSteps(tool: string, stage: string, lastResponse?: any): string[] {
+function generateNextSteps(tool: string, stage: string, lastResponse?: EyeResponse): string[] {
   const steps: string[] = [];
 
   if (tool === 'third_eye_sharingan_clarify') {
@@ -383,7 +385,7 @@ function generateNextSteps(tool: string, stage: string, lastResponse?: any): str
 /**
  * Auto-delegation: Given an Eye response, determine if delegation is needed
  */
-export function shouldDelegate(eyeResponse: any): { delegate: boolean; toEye?: string } {
+export function shouldDelegate(eyeResponse: EyeResponse): { delegate: boolean; toEye?: string } {
   // Check if response has "next" field suggesting delegation
   if (eyeResponse.next && eyeResponse.next !== 'COMPLETE') {
     return { delegate: true, toEye: eyeResponse.next };
