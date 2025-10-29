@@ -126,9 +126,29 @@ export default function EyesPage() {
         setError(null);
       }
 
-      setEyes(allEyesData);
-      setBuiltInEyes(allEyesData.filter((e: Eye) => (e.source ?? 'built-in') === 'built-in'));
-      setCustomEyes(allEyesData.filter((e: Eye) => e.source === 'custom'));
+      // Enrich with capabilities from blueprints
+      const enrichedEyesData = await Promise.all(
+        allEyesData.map(async (eye: Eye) => {
+          if (!eye.capabilities) {
+            try {
+              const blueprintRes = await fetch(`/api/personas/blueprints/${eye.id}`);
+              if (blueprintRes.ok) {
+                const blueprint = await blueprintRes.json();
+                if (blueprint.data && blueprint.data.capabilities) {
+                  return { ...eye, capabilities: blueprint.data.capabilities };
+                }
+              }
+            } catch (e) {
+              console.debug(`Could not fetch capabilities for ${eye.id}:`, e);
+            }
+          }
+          return eye;
+        })
+      );
+
+      setEyes(enrichedEyesData);
+      setBuiltInEyes(enrichedEyesData.filter((e: Eye) => (e.source ?? 'built-in') === 'built-in'));
+      setCustomEyes(enrichedEyesData.filter((e: Eye) => e.source === 'custom'));
     } catch (error) {
       console.error('Failed to fetch eyes:', error);
       setError('Failed to load Eyes from MCP server');

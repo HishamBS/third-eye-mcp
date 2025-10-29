@@ -64,29 +64,62 @@ export default function EyeDetailPage() {
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
 
-      // Fetch Eye details
-      const eyesRes = await fetch(`${API_URL}/api/eyes/all`);
-      if (eyesRes.ok) {
-        const result = await eyesRes.json();
-        const foundEye = result.data?.find((e: Eye) => e.id === eyeId);
+      // Fetch Eye details from direct eye endpoint
+      const eyeRes = await fetch(`/api/eyes/${eyeId}`);
+      if (eyeRes.ok) {
+        const result = await eyeRes.json();
+        const foundEye = result.data || result;
+        
+        // If eye doesn't have capabilities, fetch from blueprint
+        if (foundEye && !foundEye.capabilities) {
+          try {
+            const blueprintRes = await fetch(`/api/personas/blueprints/${eyeId}`);
+            if (blueprintRes.ok) {
+              const blueprint = await blueprintRes.json();
+              if (blueprint.data && blueprint.data.capabilities) {
+                foundEye.capabilities = blueprint.data.capabilities;
+              }
+            }
+          } catch (e) {
+            console.debug('Could not fetch blueprint for capabilities:', e);
+          }
+        }
+        
         setEye(foundEye || null);
+      } else if (eyeRes.status === 404) {
+        // Fall back to fetching from eyes/all
+        const eyesRes = await fetch(`${API_URL}/api/eyes/all`);
+        if (eyesRes.ok) {
+          const result = await eyesRes.json();
+          const foundEye = result.data?.find((e: Eye) => e.id === eyeId);
+          setEye(foundEye || null);
+        }
       }
 
       // Fetch personas for this Eye
-      const personasRes = await fetch(`${API_URL}/api/personas/${eyeId}`);
-      if (personasRes.ok) {
-        const result = await personasRes.json();
-        setPersonas(result.data?.versions || []);
+      try {
+        const personasRes = await fetch(`${API_URL}/api/personas/${eyeId}`);
+        if (personasRes.ok) {
+          const result = await personasRes.json();
+          setPersonas(result.data?.versions || []);
+        }
+      } catch (e) {
+        console.debug('Could not fetch personas:', e);
       }
 
       // Fetch routing configuration
-      const routingRes = await fetch(`${API_URL}/api/routing`);
-      if (routingRes.ok) {
-        const result = await routingRes.json();
-        const eyeRouting = result.data?.find((r: EyeRouting) => r.eye === eyeId);
-        setRouting(eyeRouting || null);
+      try {
+        const routingRes = await fetch(`${API_URL}/api/routing`);
+        if (routingRes.ok) {
+          const result = await routingRes.json();
+          const eyeRouting = result.data?.find((r: EyeRouting) => r.eye === eyeId);
+          setRouting(eyeRouting || null);
+        }
+      } catch (e) {
+        console.debug('Could not fetch routing:', e);
       }
     } catch (err) {
+      console.error('Failed to load Eye details:', err);
       setError('Failed to load Eye details');
     } finally {
       setLoading(false);
