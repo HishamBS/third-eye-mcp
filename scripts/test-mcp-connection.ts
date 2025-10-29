@@ -29,8 +29,9 @@ mcpProcess.stdout.on('data', (data) => {
         const msg = JSON.parse(line);
         if (msg.result && msg.result.tools) {
           console.log(`✅ MCP Server responded with ${msg.result.tools.length} tools:`);
-          msg.result.tools.forEach((tool: any) => {
-            console.log(`   - ${tool.name}`);
+          msg.result.tools.forEach((tool: unknown) => {
+            const name = typeof tool === 'object' && tool !== null && 'name' in tool ? (tool as { name: string }).name : 'unknown';
+            console.log(`   - ${name}`);
           });
           hasResponse = true;
           mcpProcess.kill();

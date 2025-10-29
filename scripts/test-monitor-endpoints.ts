@@ -11,13 +11,13 @@ interface TestResult {
   endpoint: string;
   status: 'PASS' | 'FAIL';
   statusCode?: number;
-  data?: any;
+  data?: unknown;
   error?: string;
 }
 
 const results: TestResult[] = [];
 
-async function testEndpoint(name: string, url: string, method: string = 'GET', body?: any): Promise<TestResult> {
+async function testEndpoint(name: string, url: string, method: string = 'GET', body?: unknown): Promise<TestResult> {
   try {
     const options: RequestInit = {
       method,

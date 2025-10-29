@@ -10,6 +10,7 @@
 
 import { getDb } from '@third-eye/db';
 import { pipelines } from '@third-eye/db';
+import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 const SYSTEM_PIPELINE = {
@@ -162,7 +163,7 @@ async function seedSystemPipeline() {
     const existing = await db
       .select()
       .from(pipelines)
-      .where((p: any) => p.name === SYSTEM_PIPELINE.name)
+      .where(eq(pipelines.name, SYSTEM_PIPELINE.name))
       .all();
 
     if (existing.length > 0) {
@@ -171,7 +172,7 @@ async function seedSystemPipeline() {
       await db
         .update(pipelines)
         .set({ active: false })
-        .where((p: any) => p.name === SYSTEM_PIPELINE.name)
+        .where(eq(pipelines.name, SYSTEM_PIPELINE.name))
         .run();
     }
 

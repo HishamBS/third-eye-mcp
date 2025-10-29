@@ -131,8 +131,8 @@ function checkDatabase(): { exists: boolean; db?: Database } {
 // Check 4: Schema version
 function checkSchemaVersion(db: Database): boolean {
   try {
-    const tables = db.query("SELECT name FROM sqlite_master WHERE type='table'").all();
-    const tableNames = tables.map((t: any) => t.name);
+    const tables = db.query("SELECT name FROM sqlite_master WHERE type='table'").all() as Array<{ name: string }>;
+    const tableNames = tables.map((t) => t.name);
 
     const requiredTables = [
       'sessions',

@@ -30,9 +30,10 @@ for (const migFile of migrations) {
     if (trimmed && !trimmed.startsWith('--')) {
       try {
         db.exec(trimmed);
-      } catch (err: any) {
-        if (!err.message?.includes('already exists')) {
-          console.error('❌ Error:', err.message);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        if (!message.includes('already exists')) {
+          console.error('❌ Error:', message);
         }
       }
     }
