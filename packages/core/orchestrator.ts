@@ -329,11 +329,22 @@ export class EyeOrchestrator {
         );
       }
 
+      // Persona guard validation (with retry logic)
       try {
         ensureEyeBehavior(eyeName, envelope);
       } catch (guardError) {
         if (guardError instanceof EyeBehaviorError) {
           console.error(`❌ ${eyeName} persona contract violated: ${guardError.reason}. Envelope:`, JSON.stringify(envelope, null, 2));
+          
+          // TODO: Implement retry logic
+          // For now, fail immediately (matching current behavior)
+          // Full implementation requires:
+          // 1. Track attempt counter (1-3)
+          // 2. Build targeted reminder from guardError.reason
+          // 3. Re-prompt LLM with enriched input: original + reminder
+          // 4. Only fail after MAX_PERSONA_RETRIES (3) exhausted
+          // See: RESTORATION_PLAN.md Section 6.2 (Orchestrator behavior)
+          
           return this.createErrorEnvelope(
             eyeName,
             `Persona contract violated: ${guardError.reason}`,
