@@ -53,13 +53,13 @@ export declare class EyeOrchestrator {
     /**
      * Create a new session
      */
-    createSession(config?: any): Promise<{
+    createSession(config?: unknown): Promise<{
         sessionId: string;
         portalUrl: string;
     }>;
     /**
      * Get session runs with pagination
      */
-    getSessionRuns(sessionId: string, limit?: number, offset?: number): Promise<any>;
+    getSessionRuns(sessionId: string, limit?: number, offset?: number): Promise<unknown>;
 }
 //# sourceMappingURL=orchestrator.d.ts.map

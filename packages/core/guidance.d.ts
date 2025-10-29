@@ -7,7 +7,7 @@
 interface GuidanceRequest {
     taskDescription: string;
     currentState?: string;
-    lastEyeResponse?: any;
+    lastEyeResponse?: unknown;
     sessionId: string;
 }
 interface GuidanceResponse {
@@ -25,7 +25,7 @@ export declare function getWorkflowGuidance(request: GuidanceRequest): GuidanceR
 /**
  * Auto-delegation: Given an Eye response, determine if delegation is needed
  */
-export declare function shouldDelegate(eyeResponse: any): {
+export declare function shouldDelegate(eyeResponse: unknown): {
     delegate: boolean;
     toEye?: string;
 };

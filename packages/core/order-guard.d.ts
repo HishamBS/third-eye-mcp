@@ -40,7 +40,7 @@ export declare class OrderGuard {
      */
     recordEyeCompletion(sessionId: string, eyeName: EyeName, result: {
         code: string;
-        metadata?: any;
+        metadata?: unknown;
     }): void;
     /**
      * Get current pipeline state for a session
