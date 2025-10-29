@@ -18,7 +18,7 @@ export interface SessionConfig {
   displayName?: string;
   maxTokens?: number;
   temperature?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 interface SessionIdentity {
@@ -272,7 +272,7 @@ export class SessionManager {
     const { status, ...config } = updates;
     const now = new Date();
 
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       lastActivity: now,
     };
 
