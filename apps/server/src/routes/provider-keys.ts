@@ -111,7 +111,11 @@ app.put('/:id', validateBodyWithEnvelope(schemas.providerKeyUpdate), async (c) =
     }
 
     // Build update object
-    const updateData: any = {};
+    const updateData: Partial<{
+      label: string;
+      metadata: string | null;
+      encryptedKey: string;
+    }> = {};
 
     if (label) updateData.label = label;
     if (metadata !== undefined) updateData.metadata = metadata;
