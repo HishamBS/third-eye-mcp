@@ -14,7 +14,7 @@ interface ProviderHealth {
 }
 
 // Cache health check results for 5 seconds
-const healthCache = new Map<string, { result: any; timestamp: number }>();
+const healthCache = new Map<string, { result: unknown; timestamp: number }>();
 const CACHE_TTL = 5000; // 5 seconds
 
 function getCached<T>(key: string): T | null {
@@ -25,7 +25,7 @@ function getCached<T>(key: string): T | null {
   return null;
 }
 
-function setCache(key: string, result: any) {
+function setCache(key: string, result: unknown) {
   healthCache.set(key, { result, timestamp: Date.now() });
 }
 
