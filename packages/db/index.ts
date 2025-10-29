@@ -49,22 +49,11 @@ export function createDb(dbPath?: string) {
 }
 
 export function runMigrations(db: ReturnType<typeof createDb>['db'], sqlite: Database) {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
+  // Always resolve from project root for migrations
+  const projectRoot = resolve(process.cwd());
+  const migrationsFolder = resolve(projectRoot, 'packages/db/migrations');
   
-  // Determine migrations path - could be in src or dist
-  let migrationsFolder = resolve(__dirname, 'migrations');
-  if (__dirname.includes('/dist/')) {
-    // If running from compiled code, go to packages/db/migrations
-    const rootPath = __dirname.replace('/dist/packages/db', '');
-    migrationsFolder = resolve(rootPath, 'packages/db/migrations');
-  } else if (__dirname.includes('/node_modules/')) {
-    // Running from node_modules, find workspace root
-    const parts = __dirname.split('/node_modules/');
-    if (parts.length > 0) {
-      migrationsFolder = resolve(parts[0], 'packages/db/migrations');
-    }
-  }
+  console.log(`🔍 Migration path: ${migrationsFolder}`);
 
   try {
     // Only run migrations if folder exists
