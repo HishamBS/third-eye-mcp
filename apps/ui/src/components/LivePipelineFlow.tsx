@@ -49,20 +49,20 @@ function normalizeApiPipelineEvent(event: Record<string, unknown>): NormalizedEv
   const result = asRecord(event.result);
 
   const code = getString(event.code)
-    || (dataJson ? getString((dataJson as any).code) : undefined)
-    || (result ? getString((result as any).code) : undefined);
+    || (dataJson ? getString(dataJson.code) : undefined)
+    || (result ? getString(result.code) : undefined);
 
   const md = firstString([
     event.md,
     dataJson?.md,
     result?.md,
-    (dataJson as any)?.details,
-    (dataJson as any)?.summary,
+    dataJson?.details,
+    dataJson?.summary,
   ]);
 
   const eye = getString(event.eye)
-    || (dataJson ? getString((dataJson as any).eye) : undefined)
-    || (result ? getString((result as any).eye) : undefined);
+    || (dataJson ? getString(dataJson.eye) : undefined)
+    || (result ? getString(result.eye) : undefined);
 
   return {
     id,
