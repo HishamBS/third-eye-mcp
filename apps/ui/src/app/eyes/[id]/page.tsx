@@ -70,13 +70,13 @@ export default function EyeDetailPage() {
         const result = await eyeRes.json();
         const foundEye = result.data || result;
         
-        // If eye doesn't have capabilities, fetch from blueprint
+        // If eye doesn't have capabilities, fetch from blueprint (server API directly)
         if (foundEye && !foundEye.capabilities) {
           try {
-            const blueprintRes = await fetch(`/api/personas/blueprints/${eyeId}`);
+            const blueprintRes = await fetch(`${API_URL}/api/personas/blueprints/${eyeId}`);
             if (blueprintRes.ok) {
               const blueprint = await blueprintRes.json();
-              if (blueprint.data && blueprint.data.capabilities) {
+              if (blueprint.success && blueprint.data && blueprint.data.capabilities) {
                 foundEye.capabilities = blueprint.data.capabilities;
               }
             }

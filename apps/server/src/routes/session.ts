@@ -1175,6 +1175,77 @@ app.post('/:id/clarifications/:clarificationId/validate', async (c) => {
   }
 });
 
+// Get clarifications for a session
+app.get('/:sessionId/clarifications', async (c) => {
+  try {
+    const { sessionId } = c.req.param();
+    const { db } = getDb();
+    const { clarifications } = await import('@third-eye/db/schema');
+
+    // Verify session exists
+    const session = await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.id, sessionId))
+      .get();
+
+    if (!session) {
+      return createErrorResponse(c, {
+        title: 'Session Not Found',
+        status: 404,
+        detail: 'Session not found'
+      });
+    }
+
+    const results = await db
+      .select()
+      .from(clarifications)
+      .where(eq(clarifications.sessionId, sessionId))
+      .all();
+
+    return createSuccessResponse(c, results);
+  } catch (error) {
+    console.error('Failed to fetch clarifications:', error);
+    return createInternalErrorResponse(c, 'Failed to fetch clarifications');
+  }
+});
+
+// Get intent confirmations for a session
+app.get('/:sessionId/intent-confirmations', async (c) => {
+  try {
+    const { sessionId } = c.req.param();
+    const { db } = getDb();
+    const { intentConfirmations } = await import('@third-eye/db/schema');
+
+    // Verify session exists
+    const session = await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.id, sessionId))
+      .get();
+
+    if (!session) {
+      return createErrorResponse(c, {
+        title: 'Session Not Found',
+        status: 404,
+        detail: 'Session not found'
+      });
+    }
+
+    const result = await db
+      .select()
+      .from(intentConfirmations)
+      .where(eq(intentConfirmations.sessionId, sessionId))
+      .limit(1)
+      .get();
+
+    return createSuccessResponse(c, result || null);
+  } catch (error) {
+    console.error('Failed to fetch intent confirmations:', error);
+    return createInternalErrorResponse(c, 'Failed to fetch intent confirmations');
+  }
+});
+
 // Bulk delete sessions (cleanup old test sessions)
 app.delete('/bulk', async (c) => {
   try {

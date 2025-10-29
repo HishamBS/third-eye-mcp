@@ -2,64 +2,64 @@
 
 import { useCallback, useState, useEffect } from 'react';
 import ReactFlow, {
-  Node,
-  Edge,
   Controls,
   Background,
+  MiniMap,
   applyNodeChanges,
   applyEdgeChanges,
   addEdge,
+  MarkerType,
+  Panel,
+  useReactFlow,
+  ReactFlowProvider,
+} from 'reactflow';
+import type {
+  Node,
+  Edge,
   NodeChange,
   EdgeChange,
   Connection,
-  MarkerType,
   NodeTypes,
-  Panel,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Trash2, Plus } from 'lucide-react';
-
-// Custom Node Component
-function EyeNode({ data }: { data: { label: string; eye?: string; type?: string } }) {
-  const getNodeColor = () => {
-    if (data.type === 'terminal') return 'bg-slate-600 border-slate-400';
-    if (data.type === 'condition') return 'bg-yellow-600 border-yellow-400';
-    if (data.type === 'user_input') return 'bg-purple-600 border-purple-400';
-    if (data.eye) return 'bg-blue-600 border-blue-400';
-    return 'bg-gray-600 border-gray-400';
-  };
-
-  const getIcon = () => {
-    if (data.type === 'terminal') return '⏹️';
-    if (data.type === 'condition') return '🔀';
-    if (data.type === 'user_input') return '💬';
-    if (data.eye === 'sharingan') return '👁️';
-    if (data.eye === 'rinnegan') return '🔮';
-    if (data.eye === 'byakugan') return '👀';
-    if (data.eye === 'jogan') return '⚡';
-    if (data.eye === 'tenseigan') return '✨';
-    if (data.eye === 'mangekyo') return '🌀';
-    return '📦';
-  };
-
-  return (
-    <div className={`rounded-xl border-2 px-4 py-3 shadow-lg ${getNodeColor()}`}>
-      <div className="flex items-center gap-2">
-        <span className="text-lg">{getIcon()}</span>
-        <div className="text-white">
-          <div className="text-xs font-semibold uppercase tracking-wide opacity-80">
-            {data.eye || data.type || 'Step'}
-          </div>
-          <div className="text-sm font-medium">{data.label}</div>
-        </div>
-      </div>
-    </div>
-  );
-}
+import { Trash2, Plus, Layout, AlertCircle, Copy, Maximize } from 'lucide-react';
+import CustomNode from './pipeline/CustomNode';
+import { EyeStageToken } from '@third-eye/constants';
 
 const nodeTypes: NodeTypes = {
-  eyeNode: EyeNode,
+  custom: CustomNode,
 };
+
+// SSOT: Node type constants
+const NODE_TYPE_CUSTOM = 'custom';
+const NODE_TYPE_TERMINAL = 'terminal';
+const NODE_TYPE_START = 'start';
+const NODE_TYPE_END = 'end';
+const NODE_TYPE_CONDITION = 'condition';
+
+// SSOT: Pipeline validation messages
+const VALIDATION_ERROR_NO_START = 'Pipeline must have a start node';
+const VALIDATION_ERROR_NO_END = 'Pipeline must have a terminal node';
+const VALIDATION_ERROR_NODE_DISCONNECTED = 'is disconnected';
+const VALIDATION_ERROR_CYCLES = 'Pipeline contains cycles';
+const VALIDATION_ERROR_VALIDATION_BEFORE_GUIDANCE = 'Validation node cannot come before guidance node';
+
+// SSOT: Edge styles
+const EDGE_TYPE_SMOOTHSTEP = 'smoothstep';
+const EDGE_LABEL_TRUE = 'true';
+const EDGE_LABEL_FALSE = 'false';
+const EDGE_COLOR_SUCCESS = '#10b981';
+const EDGE_COLOR_ERROR = '#ef4444';
+const EDGE_STROKE_WIDTH = 2;
+
+// SSOT: Grid settings
+const SNAP_GRID_SIZE = 15;
+
+// SSOT: Minimap colors
+const MINIMAP_COLOR_GUIDANCE = '#3b82f6';
+const MINIMAP_COLOR_VALIDATION = '#10b981';
+const MINIMAP_COLOR_CONDITION = '#eab308';
+const MINIMAP_COLOR_DEFAULT = '#64748b';
 
 interface PipelineFlowBuilderProps {
   workflowJson: {
@@ -67,453 +67,597 @@ interface PipelineFlowBuilderProps {
       id: string;
       eye?: string;
       type?: string;
+      stage?: 'guidance' | 'validation';
       next?: string;
       condition?: string;
       true?: string;
       false?: string;
       prompt?: string;
+      capabilities?: string[];
     }>;
   };
-  onChange?: (workflow: any) => void;
+  onChange?: (workflow: Record<string, unknown>) => void;
   readOnly?: boolean;
 }
 
-export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }: PipelineFlowBuilderProps) {
+// Professional auto-layout with topological sort (n8n-style)
+const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
+  // Build adjacency map to determine levels
+  const adjacency = new Map<string, string[]>();
+  const inDegree = new Map<string, number>();
+
+  nodes.forEach(node => {
+    adjacency.set(node.id, []);
+    inDegree.set(node.id, 0);
+  });
+
+  edges.forEach(edge => {
+    const sources = adjacency.get(edge.source) || [];
+    sources.push(edge.target);
+    adjacency.set(edge.source, sources);
+    inDegree.set(edge.target, (inDegree.get(edge.target) || 0) + 1);
+  });
+
+  // Topological sort to determine levels
+  const levels = new Map<string, number>();
+  const queue: string[] = [];
+
+  nodes.forEach(node => {
+    if ((inDegree.get(node.id) || 0) === 0) {
+      queue.push(node.id);
+      levels.set(node.id, 0);
+    }
+  });
+
+  while (queue.length > 0) {
+    const nodeId = queue.shift()!;
+    const currentLevel = levels.get(nodeId) || 0;
+    const neighbors = adjacency.get(nodeId) || [];
+
+    neighbors.forEach(neighbor => {
+      const degree = (inDegree.get(neighbor) || 1) - 1;
+      inDegree.set(neighbor, degree);
+
+      if (degree === 0) {
+        queue.push(neighbor);
+        levels.set(neighbor, currentLevel + 1);
+      }
+    });
+  }
+
+  // Nodes that weren't reached (disconnected) get level 0
+  nodes.forEach(node => {
+    if (!levels.has(node.id)) {
+      levels.set(node.id, 0);
+    }
+  });
+
+  // Group nodes by level and separate guidance/validation into lanes
+  const nodesByLevel = new Map<number, { guidance: Node[], validation: Node[], other: Node[] }>();
+  
+  nodes.forEach(node => {
+    const level = levels.get(node.id) || 0;
+    if (!nodesByLevel.has(level)) {
+      nodesByLevel.set(level, { guidance: [], validation: [], other: [] });
+    }
+    
+    const stage = node.data?.stage;
+    if (stage === EyeStageToken.GUIDANCE) {
+      nodesByLevel.get(level)!.guidance.push(node);
+    } else if (stage === EyeStageToken.VALIDATION) {
+      nodesByLevel.get(level)!.validation.push(node);
+    } else {
+      nodesByLevel.get(level)!.other.push(node);
+    }
+  });
+
+  // Position nodes with two-lane layout (guidance left, validation right)
+  const nodeHeight = 120;
+  const horizontalSpacing = 100;
+  const verticalSpacing = 120;
+  const laneWidth = 400;
+
+  const layoutedNodes = nodes.map(node => {
+    const level = levels.get(node.id) || 0;
+    const levelNodes = nodesByLevel.get(level)!;
+    const stage = node.data?.stage;
+
+    let x = 0;
+    let indexInLane = 0;
+
+    if (stage === EyeStageToken.GUIDANCE) {
+      indexInLane = levelNodes.guidance.indexOf(node);
+      x = laneWidth * 0 + (indexInLane * horizontalSpacing);
+    } else if (stage === EyeStageToken.VALIDATION) {
+      indexInLane = levelNodes.validation.indexOf(node);
+      x = laneWidth * 2 + (indexInLane * horizontalSpacing);
+    } else {
+      indexInLane = levelNodes.other.indexOf(node);
+      x = laneWidth * 1 + (indexInLane * horizontalSpacing);
+    }
+
+    const y = level * (nodeHeight + verticalSpacing) + 50;
+
+    return {
+      ...node,
+      position: { x, y },
+    };
+  });
+
+  return { nodes: layoutedNodes, edges };
+};
+
+function PipelineFlowBuilderInner({
+  workflowJson,
+  readOnly = false,
+}: PipelineFlowBuilderProps) {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
-  const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
-  const [showEyeMenu, setShowEyeMenu] = useState(false);
-  const selectedNode = selectedNodes[0] ?? null;
-  const selectedStep = selectedNode
-    ? workflowJson.steps.find((step) => step.id === selectedNode.id) ?? null
-    : null;
-  const selectedStepType = selectedStep?.type ?? 'eye';
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    nodeId: string;
+  } | null>(null);
+  const [clipboard, setClipboard] = useState<Node[]>([]);
+  
+  const reactFlowInstance = useReactFlow();
 
-  const availableEyes = [
-    'sharingan',
-    'rinnegan',
-    'byakugan',
-    'jogan',
-    'tenseigan',
-    'mangekyo',
-    'overseer',
-    'helper',
-  ];
-
-  // Convert workflow JSON to React Flow nodes and edges
+  // Convert workflow JSON to React Flow nodes/edges
   useEffect(() => {
-    const newNodes: Node[] = [];
-    const newEdges: Edge[] = [];
-    const stepMap = new Map(workflowJson.steps.map((step) => [step.id, step]));
+    if (!workflowJson?.steps) return;
 
-    workflowJson.steps.forEach((step, index) => {
-      // Create node
-      newNodes.push({
+    const newNodes: Node[] = workflowJson.steps.map((step, index) => ({
         id: step.id,
-        type: 'eyeNode',
-        position: { x: 250, y: index * 120 + 50 },
+      type: NODE_TYPE_CUSTOM,
+      position: { x: 100 + index * 300, y: 100 },
         data: {
-          label: step.id,
+        label: step.eye || step.type || step.id,
           eye: step.eye,
           type: step.type,
+        stage: step.stage,
+        capabilities: step.capabilities || [],
         },
-      });
+    }));
 
-      // Create edges
+    const newEdges: Edge[] = [];
+    workflowJson.steps.forEach(step => {
       if (step.next) {
         newEdges.push({
           id: `${step.id}-${step.next}`,
           source: step.id,
           target: step.next,
+          type: EDGE_TYPE_SMOOTHSTEP,
           animated: true,
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            width: 20,
-            height: 20,
-          },
-          style: { stroke: '#64b5f6', strokeWidth: 2 },
+          markerEnd: { type: MarkerType.ArrowClosed },
+          style: { strokeWidth: EDGE_STROKE_WIDTH },
         });
       }
-
-      // Handle conditional edges
-      if (step.type === 'condition' && step.true && step.false) {
-        newEdges.push({
-          id: `${step.id}-true`,
+      if (step.condition && step.true && step.false) {
+        newEdges.push(
+          {
+            id: `${step.id}-true-${step.true}`,
           source: step.id,
           target: step.true,
-          label: 'true',
+            label: EDGE_LABEL_TRUE,
+            type: EDGE_TYPE_SMOOTHSTEP,
           animated: true,
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            width: 20,
-            height: 20,
+            markerEnd: { type: MarkerType.ArrowClosed },
+            style: { stroke: EDGE_COLOR_SUCCESS, strokeWidth: EDGE_STROKE_WIDTH },
           },
-          style: { stroke: '#66bb6a', strokeWidth: 2 },
-        });
-        newEdges.push({
-          id: `${step.id}-false`,
+          {
+            id: `${step.id}-false-${step.false}`,
           source: step.id,
           target: step.false,
-          label: 'false',
+            label: EDGE_LABEL_FALSE,
+            type: EDGE_TYPE_SMOOTHSTEP,
           animated: true,
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            width: 20,
-            height: 20,
-          },
-          style: { stroke: '#ef5350', strokeWidth: 2 },
-        });
+            markerEnd: { type: MarkerType.ArrowClosed },
+            style: { stroke: EDGE_COLOR_ERROR, strokeWidth: EDGE_STROKE_WIDTH },
+          }
+        );
       }
     });
 
-    setNodes(newNodes);
-    setEdges(newEdges);
+    // Apply auto-layout
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(newNodes, newEdges);
+    setNodes(layoutedNodes);
+    setEdges(layoutedEdges);
+
+    // Run validation
+    validatePipeline(layoutedNodes, layoutedEdges);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workflowJson]);
 
-  const addNode = useCallback(
-    (type: 'eye' | 'condition' | 'user_input' | 'terminal', eyeName?: string) => {
-      if (readOnly) return;
+  // Validation logic
+  const validatePipeline = useCallback((nodes: Node[], edges: Edge[]) => {
+    const errors: string[] = [];
 
-      const newId = `step_${Date.now()}`;
-      const maxY = nodes.length > 0 ? Math.max(...nodes.map(n => n.position.y)) : 0;
-
-      const newNode: Node = {
-        id: newId,
-        type: 'eyeNode',
-        position: { x: 250, y: maxY + 120 },
-        data: {
-          label: newId,
-          ...(type === 'eye' && eyeName ? { eye: eyeName } : {}),
-          ...(type !== 'eye' ? { type } : {}),
-        },
-      };
-
-      const newNodes = [...nodes, newNode];
-      setNodes(newNodes);
-
-      // Update workflow JSON
-      if (onChange) {
-        const newStep: any = {
-          id: newId,
-          ...(type === 'eye' && eyeName ? { eye: eyeName } : {}),
-          ...(type !== 'eye' ? { type } : {}),
-        };
-
-        onChange({ steps: [...workflowJson.steps, newStep] });
-      }
-    },
-    [nodes, onChange, workflowJson, readOnly]
-  );
-
-  const updateWorkflowStep = useCallback(
-    (stepId: string, updates: Record<string, unknown>) => {
-      if (!onChange) return;
-
-      const updatedSteps = workflowJson.steps.map((step) =>
-        step.id === stepId ? { ...step, ...updates } : step
-      );
-
-      onChange({ steps: updatedSteps });
-
-      if ('eye' in updates || 'type' in updates) {
-        setNodes((prev) =>
-          prev.map((node) =>
-            node.id === stepId
-              ? {
-                  ...node,
-                  data: {
-                    ...node.data,
-                    ...(updates.eye !== undefined ? { eye: updates.eye as string | undefined } : {}),
-                    ...(updates.type !== undefined ? { type: updates.type as string | undefined } : {}),
-                  },
-                }
-              : node
-          )
-        );
-      }
-    },
-    [onChange, workflowJson.steps]
-  );
-
-  const deleteSelectedNodes = useCallback(() => {
-    if (readOnly || selectedNodes.length === 0) return;
-
-    const selectedIds = selectedNodes.map(n => n.id);
-    const newNodes = nodes.filter(n => !selectedIds.includes(n.id));
-    const newEdges = edges.filter(e => !selectedIds.includes(e.source) && !selectedIds.includes(e.target));
-
-    setNodes(newNodes);
-    setEdges(newEdges);
-    setSelectedNodes([]);
-
-    // Update workflow JSON
-    if (onChange) {
-      const newSteps = workflowJson.steps.filter(step => !selectedIds.includes(step.id));
-      onChange({ steps: newSteps });
+    // Check for start node
+    const hasStart = nodes.some(n => n.data.type === NODE_TYPE_START || n.id === NODE_TYPE_START);
+    if (!hasStart) {
+      errors.push(VALIDATION_ERROR_NO_START);
     }
-  }, [nodes, edges, selectedNodes, onChange, workflowJson, readOnly]);
+
+    // Check for end/terminal node
+    const hasEnd = nodes.some(n => n.data.type === NODE_TYPE_TERMINAL || n.id === NODE_TYPE_END);
+    if (!hasEnd) {
+      errors.push(VALIDATION_ERROR_NO_END);
+    }
+
+    // Check for orphan nodes (no incoming or outgoing edges)
+    nodes.forEach(node => {
+      const hasIncoming = edges.some(e => e.target === node.id);
+      const hasOutgoing = edges.some(e => e.source === node.id);
+      
+      if (!hasIncoming && !hasOutgoing && node.data.type !== NODE_TYPE_TERMINAL && node.id !== NODE_TYPE_START) {
+        errors.push(`Node "${node.data.label}" ${VALIDATION_ERROR_NODE_DISCONNECTED}`);
+      }
+    });
+
+    // Check for cycles
+    const visited = new Set<string>();
+    const recStack = new Set<string>();
+    
+    const hasCycle = (nodeId: string): boolean => {
+      visited.add(nodeId);
+      recStack.add(nodeId);
+
+      const outgoingEdges = edges.filter(e => e.source === nodeId);
+      for (const edge of outgoingEdges) {
+        if (!visited.has(edge.target)) {
+          if (hasCycle(edge.target)) return true;
+        } else if (recStack.has(edge.target)) {
+          return true;
+        }
+      }
+
+      recStack.delete(nodeId);
+      return false;
+    };
+
+    if (nodes.some(n => !visited.has(n.id) && hasCycle(n.id))) {
+      errors.push(VALIDATION_ERROR_CYCLES);
+    }
+
+    // Check guidance before validation rule
+    const guidanceNodes = nodes.filter(n => n.data.stage === EyeStageToken.GUIDANCE);
+    const validationNodes = nodes.filter(n => n.data.stage === EyeStageToken.VALIDATION);
+    
+    guidanceNodes.forEach(gNode => {
+      validationNodes.forEach(vNode => {
+        // Check if validation comes before guidance
+        const pathExists = edges.some(e => e.source === vNode.id && e.target === gNode.id);
+        if (pathExists) {
+          errors.push(`${VALIDATION_ERROR_VALIDATION_BEFORE_GUIDANCE.replace('Validation node', `Validation node "${vNode.data.label}"`).replace('guidance node', `guidance node "${gNode.data.label}"`)}`);
+        }
+      });
+    });
+
+    setValidationErrors(errors);
+  }, []);
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
-      if (readOnly) return;
-      setNodes((nds) => applyNodeChanges(changes, nds));
+      setNodes((nds) => {
+        const updated = applyNodeChanges(changes, nds);
+        validatePipeline(updated, edges);
+        return updated;
+      });
     },
-    [readOnly]
-  );
-
-  const onSelectionChange = useCallback(
-    ({ nodes: selectedNodes }: { nodes: Node[] }) => {
-      setSelectedNodes(selectedNodes);
-    },
-    []
+    [edges, validatePipeline]
   );
 
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
-      if (readOnly) return;
-      setEdges((eds) => applyEdgeChanges(changes, eds));
+      setEdges((eds) => {
+        const updated = applyEdgeChanges(changes, eds);
+        validatePipeline(nodes, updated);
+        return updated;
+      });
     },
-    [readOnly]
+    [nodes, validatePipeline]
   );
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      if (readOnly) return;
-      setEdges((eds) =>
-        addEdge(
-          {
+      setEdges((eds) => {
+        const newEdge = {
             ...connection,
+          type: EDGE_TYPE_SMOOTHSTEP,
             animated: true,
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              width: 20,
-              height: 20,
-            },
-            style: { stroke: '#64b5f6', strokeWidth: 2 },
-          },
-          eds
-        )
-      );
-
-      // Update workflow JSON if onChange provided
-      if (onChange && connection.source && connection.target) {
-        const updatedSteps = workflowJson.steps.map((step) => {
-          if (step.id === connection.source) {
-            return { ...step, next: connection.target as string };
-          }
-          return step;
-        });
-        onChange({ steps: updatedSteps });
-      }
+          markerEnd: { type: MarkerType.ArrowClosed },
+          style: { strokeWidth: EDGE_STROKE_WIDTH },
+        };
+        const updated = addEdge(newEdge, eds);
+        validatePipeline(nodes, updated);
+        return updated;
+      });
     },
-    [readOnly, onChange, workflowJson]
+    [nodes, validatePipeline]
   );
 
+  // Context menu handlers
+  const onNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
+    if (readOnly) return;
+    event.preventDefault();
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      nodeId: node.id,
+    });
+  }, [readOnly]);
+
+  const closeContextMenu = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
+  // Keyboard shortcuts
+  const deleteSelectedNodes = useCallback(() => {
+    if (readOnly) return;
+    setNodes((nds) => {
+      const selected = nds.filter(n => n.selected);
+      const selectedIds = new Set(selected.map(n => n.id));
+      return nds.filter(n => !selectedIds.has(n.id));
+    });
+    setEdges((eds) => {
+      const selected = nodes.filter(n => n.selected);
+      const selectedIds = new Set(selected.map(n => n.id));
+      return eds.filter(e => !selectedIds.has(e.source) && !selectedIds.has(e.target));
+    });
+  }, [nodes, readOnly]);
+
+  const duplicateSelectedNodes = useCallback(() => {
+    if (readOnly) return;
+    setNodes((nds) => {
+      const selected = nds.filter(n => n.selected);
+      const duplicated = selected.map(node => ({
+        ...node,
+        id: `${node.id}-copy-${Date.now()}`,
+        position: {
+          x: node.position.x + 50,
+          y: node.position.y + 50,
+        },
+        selected: false,
+      }));
+      return [...nds.map(n => ({ ...n, selected: false })), ...duplicated];
+    });
+  }, [readOnly]);
+
+  const copyNodes = useCallback(() => {
+    const selected = nodes.filter(n => n.selected);
+    setClipboard(selected);
+  }, [nodes]);
+
+  const pasteNodes = useCallback(() => {
+    if (readOnly || clipboard.length === 0) return;
+    setNodes((nds) => {
+      const pasted = clipboard.map(node => ({
+        ...node,
+        id: `${node.id}-paste-${Date.now()}`,
+        position: {
+          x: node.position.x + 100,
+          y: node.position.y + 100,
+        },
+        selected: true,
+      }));
+      return [...nds.map(n => ({ ...n, selected: false })), ...pasted];
+    });
+  }, [clipboard, readOnly]);
+
+  const deselectAll = useCallback(() => {
+    setNodes((nds) => nds.map(n => ({ ...n, selected: false })));
+    setEdges((eds) => eds.map(e => ({ ...e, selected: false })));
+  }, []);
+
+  const autoLayout = useCallback(() => {
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges);
+    setNodes(layoutedNodes);
+    setEdges(layoutedEdges);
+    setTimeout(() => reactFlowInstance.fitView({ padding: 0.2 }), 0);
+  }, [nodes, edges, reactFlowInstance]);
+
+  useEffect(() => {
+    if (readOnly) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Prevent if typing in input/textarea
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      if ((e.metaKey || e.ctrlKey) && e.key === '=') {
+        e.preventDefault();
+        reactFlowInstance.zoomIn();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === '-') {
+        e.preventDefault();
+        reactFlowInstance.zoomOut();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === '0') {
+        e.preventDefault();
+        reactFlowInstance.fitView({ padding: 0.2 });
+      }
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        deleteSelectedNodes();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'd') {
+        e.preventDefault();
+        duplicateSelectedNodes();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'c') {
+        e.preventDefault();
+        copyNodes();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'v') {
+        e.preventDefault();
+        pasteNodes();
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        deselectAll();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly, nodes, edges, clipboard]);
+
+  // Click outside to close context menu
+  useEffect(() => {
+    if (contextMenu) {
+      const handleClick = () => closeContextMenu();
+      document.addEventListener('click', handleClick);
+      return () => document.removeEventListener('click', handleClick);
+    }
+  }, [contextMenu, closeContextMenu]);
+
   return (
-    <div className="rounded-xl border border-brand-outline/50 bg-brand-ink/50">
-      <div className="h-[520px] w-full">
+    <div className="relative h-[600px] w-full rounded-xl border border-brand-outline/50 bg-brand-ink overflow-hidden">
         <ReactFlow
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          onSelectionChange={onSelectionChange}
+        onNodeContextMenu={onNodeContextMenu}
           nodeTypes={nodeTypes}
+        snapToGrid={true}
+        snapGrid={[SNAP_GRID_SIZE, SNAP_GRID_SIZE]}
           fitView
-          attributionPosition="bottom-right"
-          nodesDraggable={!readOnly}
-          nodesConnectable={!readOnly}
-          elementsSelectable={!readOnly}
-        >
-          <Background color="#374151" gap={16} />
-          <Controls />
+        fitViewOptions={{ padding: 0.2 }}
+        minZoom={0.2}
+        maxZoom={2}
+        defaultEdgeOptions={{
+          type: EDGE_TYPE_SMOOTHSTEP,
+          animated: true,
+          markerEnd: { type: MarkerType.ArrowClosed },
+        }}
+      >
+        <Background color="#475569" gap={15} />
+        <Controls className="!border-brand-outline/50 !bg-brand-paper" />
+        <MiniMap
+          nodeColor={(node) => {
+            if (node.data.stage === EyeStageToken.GUIDANCE) return MINIMAP_COLOR_GUIDANCE;
+            if (node.data.stage === EyeStageToken.VALIDATION) return MINIMAP_COLOR_VALIDATION;
+            if (node.data.type === NODE_TYPE_CONDITION) return MINIMAP_COLOR_CONDITION;
+            return MINIMAP_COLOR_DEFAULT;
+          }}
+          className="!border-brand-outline/50 !bg-brand-paper"
+          position="bottom-right"
+        />
 
-          {/* Toolbar Panel */}
+        {/* Keyboard Shortcuts Panel */}
+        {!readOnly && (
+          <Panel position="top-left" className="bg-brand-paper/90 backdrop-blur-sm border border-brand-outline/50 rounded-lg p-3 text-xs">
+            <div className="text-white font-semibold mb-2">Keyboard Shortcuts</div>
+            <div className="space-y-1 text-slate-400">
+              <div><kbd className="text-brand-accent">⌘/Ctrl + Plus</kbd> Zoom in</div>
+              <div><kbd className="text-brand-accent">⌘/Ctrl + Minus</kbd> Zoom out</div>
+              <div><kbd className="text-brand-accent">⌘/Ctrl + 0</kbd> Reset view</div>
+              <div><kbd className="text-brand-accent">Delete</kbd> Remove node</div>
+              <div><kbd className="text-brand-accent">⌘/Ctrl + D</kbd> Duplicate</div>
+              <div><kbd className="text-brand-accent">⌘/Ctrl + C/V</kbd> Copy/Paste</div>
+              <div><kbd className="text-brand-accent">Esc</kbd> Deselect</div>
+              <div><kbd className="text-brand-accent">Right Click</kbd> Context menu</div>
+            </div>
+          </Panel>
+        )}
+
+        {/* Validation Errors Panel */}
+        {validationErrors.length > 0 && (
+          <Panel position="top-right" className="bg-red-500/10 backdrop-blur-sm border border-red-500/50 rounded-lg p-3 max-w-xs">
+            <div className="flex items-center gap-2 text-red-400 font-semibold mb-2">
+              <AlertCircle className="h-4 w-4" />
+              <span>Validation Errors</span>
+            </div>
+            <ul className="space-y-1 text-xs text-red-300">
+              {validationErrors.map((error, idx) => (
+                <li key={idx}>• {error}</li>
+              ))}
+            </ul>
+          </Panel>
+        )}
+
+        {/* Action Buttons */}
           {!readOnly && (
-            <Panel position="top-left" className="flex flex-col gap-2 p-2 bg-brand-paper/90 rounded-xl border border-brand-outline/40">
-              {/* Add Eye Button */}
-              <div className="relative">
+          <Panel position="bottom-left" className="flex gap-2">
                 <button
-                  onClick={() => setShowEyeMenu(!showEyeMenu)}
-                  className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+              onClick={autoLayout}
+              className="flex items-center gap-2 rounded-lg bg-brand-accent px-3 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-brand-primary"
                 >
-                  <Plus className="h-4 w-4" />
-                  Add Eye
+              <Layout className="h-4 w-4" />
+              Auto Layout
                 </button>
-                {showEyeMenu && (
-                  <div className="absolute left-0 top-full mt-1 z-10 w-48 rounded-lg border border-brand-outline/40 bg-brand-paper shadow-xl">
-                    {availableEyes.map(eye => (
                       <button
-                        key={eye}
-                        onClick={() => {
-                          addNode('eye', eye);
-                          setShowEyeMenu(false);
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm text-white transition hover:bg-brand-paperElev capitalize"
-                      >
-                        {eye}
+              onClick={() => reactFlowInstance.fitView({ padding: 0.2 })}
+              className="flex items-center gap-2 rounded-lg bg-brand-paper px-3 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-brand-paperElev"
+            >
+              <Maximize className="h-4 w-4" />
+              Fit View
                       </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+          </Panel>
+        )}
+      </ReactFlow>
 
-              {/* Add Condition Button */}
+      {/* Context Menu */}
+      {contextMenu && !readOnly && (
+        <div
+          className="fixed z-50 rounded-lg border border-brand-outline/50 bg-brand-paper shadow-xl"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onClick={(e) => e.stopPropagation()}
+        >
               <button
-                onClick={() => addNode('condition')}
-                className="flex items-center gap-2 rounded-lg bg-yellow-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-yellow-700"
+            onClick={() => {
+              const node = nodes.find(n => n.id === contextMenu.nodeId);
+              if (node) {
+                console.log('Edit node:', node);
+              }
+              closeContextMenu();
+            }}
+            className="flex w-full items-center gap-2 px-4 py-2 text-sm text-white hover:bg-brand-accent rounded-t-lg"
               >
                 <Plus className="h-4 w-4" />
-                Condition
+            Edit Node
               </button>
-
-              {/* Add User Input Button */}
               <button
-                onClick={() => addNode('user_input')}
-                className="flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-purple-700"
-              >
-                <Plus className="h-4 w-4" />
-                User Input
+            onClick={() => {
+              setNodes((nds) => nds.map(n => 
+                n.id === contextMenu.nodeId ? { ...n, selected: true } : n
+              ));
+              duplicateSelectedNodes();
+              closeContextMenu();
+            }}
+            className="flex w-full items-center gap-2 px-4 py-2 text-sm text-white hover:bg-brand-accent"
+          >
+            <Copy className="h-4 w-4" />
+            Duplicate
               </button>
-
-              {/* Add Terminal Button */}
-              <button
-                onClick={() => addNode('terminal')}
-                className="flex items-center gap-2 rounded-lg bg-slate-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
-              >
-                <Plus className="h-4 w-4" />
-                Terminal
-              </button>
-
-              {/* Delete Selected Button */}
-              {selectedNodes.length > 0 && (
                 <button
-                  onClick={deleteSelectedNodes}
-                  className="flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+            onClick={() => {
+              setNodes((nds) => nds.filter(n => n.id !== contextMenu.nodeId));
+              setEdges((eds) => eds.filter(e => 
+                e.source !== contextMenu.nodeId && e.target !== contextMenu.nodeId
+              ));
+              closeContextMenu();
+            }}
+            className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-red-500/20 rounded-b-lg"
                 >
                   <Trash2 className="h-4 w-4" />
-                  Delete ({selectedNodes.length})
+            Delete
                 </button>
-              )}
-            </Panel>
-          )}
-        </ReactFlow>
-      </div>
-
-      {!readOnly && selectedStep && (
-        <div className="mt-4 rounded-xl border border-brand-outline/40 bg-brand-paper/80 p-4 text-sm">
-          <h4 className="mb-3 text-sm font-semibold text-slate-100">Step Configuration</h4>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-400">Step ID</label>
-              <input
-                value={selectedStep.id}
-                disabled
-                className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-400">Type</label>
-              <select
-                value={selectedStepType}
-                onChange={(e) => {
-                  const value = e.target.value as 'eye' | 'condition' | 'user_input' | 'terminal';
-                  const updates: Record<string, unknown> = {};
-                  if (value === 'eye') {
-                    updates.type = undefined;
-                    updates['true'] = undefined;
-                    updates['false'] = undefined;
-                  } else {
-                    updates.type = value;
-                    if (value !== 'condition') {
-                      updates['true'] = undefined;
-                      updates['false'] = undefined;
-                    }
-                  }
-                  updateWorkflowStep(selectedStep.id, updates);
-                }}
-                className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200 focus:border-brand-accent focus:outline-none"
-              >
-                <option value="eye">Eye</option>
-                <option value="condition">Condition</option>
-                <option value="user_input">User Input</option>
-                <option value="terminal">Terminal</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-400">Eye</label>
-              <input
-                value={selectedStep.eye ?? ''}
-                onChange={(e) =>
-                  updateWorkflowStep(selectedStep.id, { eye: e.target.value.trim() || undefined })
-                }
-                placeholder="e.g., sharingan"
-                className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200 focus:border-brand-accent focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-400">Next Step</label>
-              <input
-                value={selectedStep.next ?? ''}
-                onChange={(e) =>
-                  updateWorkflowStep(selectedStep.id, { next: e.target.value.trim() || undefined })
-                }
-                placeholder="step identifier"
-                className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200 focus:border-brand-accent focus:outline-none"
-              />
-            </div>
-            <div className="md:col-span-2">
-              <label className="mb-1 block text-xs font-medium text-slate-400">Prompt / Notes</label>
-              <textarea
-                value={selectedStep.prompt ?? ''}
-                onChange={(e) =>
-                  updateWorkflowStep(selectedStep.id, { prompt: e.target.value || undefined })
-                }
-                rows={3}
-                className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200 focus:border-brand-accent focus:outline-none"
-              />
-            </div>
-            {selectedStepType === 'condition' && (
-              <>
-                <div className="md:col-span-2">
-                  <label className="mb-1 block text-xs font-medium text-slate-400">Condition</label>
-                  <textarea
-                    value={selectedStep.condition ?? ''}
-                    onChange={(e) =>
-                      updateWorkflowStep(selectedStep.id, { condition: e.target.value || undefined })
-                    }
-                    rows={2}
-                    className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200 focus:border-brand-accent focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-400">True Branch</label>
-                  <input
-                    value={selectedStep.true ?? ''}
-                    onChange={(e) =>
-                      updateWorkflowStep(selectedStep.id, { ['true']: e.target.value.trim() || undefined })
-                    }
-                    placeholder="next step when true"
-                    className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200 focus:border-brand-accent focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-400">False Branch</label>
-                  <input
-                    value={selectedStep.false ?? ''}
-                    onChange={(e) =>
-                      updateWorkflowStep(selectedStep.id, { ['false']: e.target.value.trim() || undefined })
-                    }
-                    placeholder="next step when false"
-                    className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200 focus:border-brand-accent focus:outline-none"
-                  />
-                </div>
-              </>
-            )}
-          </div>
         </div>
       )}
     </div>
+  );
+}
+
+export function PipelineFlowBuilder(props: PipelineFlowBuilderProps) {
+  return (
+    <ReactFlowProvider>
+      <PipelineFlowBuilderInner {...props} />
+    </ReactFlowProvider>
   );
 }

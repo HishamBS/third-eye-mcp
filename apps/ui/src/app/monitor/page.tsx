@@ -1,44 +1,77 @@
 'use client';
 
+/**
+ * Monitor Page - The Crown Jewel
+ *
+ * Real-time session monitoring with 5-tab structure.
+ * Professional implementation with SSOT constants, strict typing, and no hardcoded values.
+ */
+
 import { Suspense, useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { Eye } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useWebSocket, type WSMessage } from '@/hooks/useWebSocket';
-import type { EyeName } from '@third-eye/types';
-import { EYE_DISPLAY_NAMES, EYE_COLORS } from '@third-eye/config/constants';
-import { Clock, User, Bot, Eye } from 'lucide-react';
 import { useUI } from '@/contexts/UIContext';
+import { ConversationEntry, type ConversationEntryData } from '@/components/monitor/ConversationEntry';
+import { TabButton } from '@/components/monitor/TabButton';
+import { StatusBadge } from '@/components/monitor/StatusBadge';
+import type { EyeName } from '@third-eye/types';
+import { EYE_DISPLAY_NAMES } from '@third-eye/config/constants';
+import {
+  MONITOR_TABS,
+  MonitorTabId,
+  SpeakerType,
+  type Speaker,
+  ApprovalStatus,
+} from '@third-eye/constants';
+
+export const dynamic = 'force-dynamic';
 
 interface SessionSummary {
-  sessionId: string;
-  status: string;
-  eventCount: number;
-  eyes: string[];
-  createdAt: Date;
-}
-
-interface ConversationEntry {
-  id: string;
-  timestamp: Date;
-  speaker: 'overseer' | 'agent' | 'human' | EyeName;
-  message: string;
-  metadata?: {
-    code?: string;
-    dataJson?: any;
-  };
+  readonly sessionId: string;
+  readonly status: string;
+  readonly eventCount: number;
+  readonly eyes: readonly string[];
+  readonly createdAt: Date;
 }
 
 interface ApiPipelineEvent {
-  id: string;
-  sessionId: string;
-  type: string;
-  eye?: string | null;
-  code?: string | null;
-  md?: string | null;
-  dataJson?: Record<string, unknown> | null;
-  createdAt: string;
+  readonly id: string;
+  readonly sessionId: string;
+  readonly type: string;
+  readonly eye?: string | null;
+  readonly code?: string | null;
+  readonly md?: string | null;
+  readonly dataJson?: Record<string, unknown> | null;
+  readonly createdAt: string;
+}
+
+interface ClarificationItem {
+  readonly id: string;
+  readonly field: string;
+  readonly question: string;
+  readonly status: string;
+}
+
+interface ResolvedClarificationItem extends ClarificationItem {
+  readonly answer: string;
+  readonly answeredAt: Date;
+}
+
+interface IntentData {
+  readonly intentAnalysis?: Record<string, unknown>;
+  readonly confirmationPrompt?: string;
+  readonly response?: string;
+  readonly userIdentity?: string;
+}
+
+interface EvidenceData {
+  readonly mangekyo: Record<string, unknown> | null;
+  readonly tenseigan: Record<string, unknown> | null;
+  readonly byakugan: Record<string, unknown> | null;
 }
 
 const KNOWN_EYES = new Set(Object.keys(EYE_DISPLAY_NAMES));
@@ -64,7 +97,7 @@ function getString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
 }
 
-function firstString(values: Array<unknown>): string | undefined {
+function firstString(values: ReadonlyArray<unknown>): string | undefined {
   for (const value of values) {
     const str = getString(value);
     if (str) return str;
@@ -72,31 +105,37 @@ function firstString(values: Array<unknown>): string | undefined {
   return undefined;
 }
 
-function deriveSpeaker(params: { type?: string; eye?: string; data?: Record<string, unknown>; speaker?: string }): ConversationEntry['speaker'] {
-  const candidateSpeaker = params.speaker || (params.data ? getString((params.data as any).speaker) : undefined);
-  if (candidateSpeaker === 'agent') return 'agent';
-  if (candidateSpeaker === 'human') return 'human';
+function deriveSpeaker(params: {
+  readonly type?: string;
+  readonly eye?: string;
+  readonly data?: Record<string, unknown>;
+  readonly speaker?: string;
+}): Speaker {
+  const candidateSpeaker = params.speaker || (params.data ? getString(params.data.speaker) : undefined);
+
+  if (candidateSpeaker === SpeakerType.AGENT) return SpeakerType.AGENT;
+  if (candidateSpeaker === SpeakerType.HUMAN) return SpeakerType.HUMAN;
 
   const resolvedEye = normalizeEyeName(candidateSpeaker)
     || normalizeEyeName(params.eye)
-    || (params.data ? normalizeEyeName(getString((params.data as any).eye)) : undefined);
+    || (params.data ? normalizeEyeName(getString(params.data.eye)) : undefined);
 
   if (resolvedEye) {
     return resolvedEye;
   }
 
   if (params.type === 'agent_message' || params.type === 'agent_response') {
-    return 'agent';
+    return SpeakerType.AGENT;
   }
 
   if (params.type === 'user_input' || params.type === 'user_input_request' || params.type === 'user_input_received') {
-    return 'human';
+    return SpeakerType.HUMAN;
   }
 
-  return 'overseer';
+  return SpeakerType.OVERSEER;
 }
 
-function normalizeApiEvent(event: ApiPipelineEvent): ConversationEntry {
+function normalizeApiEvent(event: ApiPipelineEvent): ConversationEntryData {
   const data = asRecord(event.dataJson);
   const message = firstString([
     event.md,
@@ -117,7 +156,7 @@ function normalizeApiEvent(event: ApiPipelineEvent): ConversationEntry {
   };
 }
 
-function normalizeWebSocketPipelineMessage(message: WSMessage): ConversationEntry | null {
+function normalizeWebSocketMessage(message: WSMessage): ConversationEntryData | null {
   const payload = asRecord(message.data);
   if (!payload) return null;
 
@@ -165,32 +204,33 @@ function normalizeWebSocketPipelineMessage(message: WSMessage): ConversationEntr
   };
 }
 
-function getSpeakerColor(speaker: string): string {
-  if (speaker === 'overseer') return '#6366f1'; // indigo
-  if (speaker === 'agent') return '#10b981'; // green
-  if (speaker === 'human') return '#f59e0b'; // amber
-  return EYE_COLORS[speaker as EyeName] || '#8b5cf6'; // purple default
-}
-
-function getSpeakerIcon(speaker: string) {
-  if (speaker === 'agent') return <Bot className="h-4 w-4" />;
-  if (speaker === 'human') return <User className="h-4 w-4" />;
-  return <Eye className="h-4 w-4" />;
-}
-
 function MonitorContent() {
   const searchParams = useSearchParams();
   const { selectedSessionId, setSelectedSession } = useUI();
   const sessionIdFromQuery = searchParams.get('sessionId');
   const sessionId = sessionIdFromQuery ?? selectedSessionId ?? null;
 
-  const [entries, setEntries] = useState<ConversationEntry[]>([]);
+  const [entries, setEntries] = useState<readonly ConversationEntryData[]>([]);
   const [summary, setSummary] = useState<SessionSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [autoScroll, setAutoScroll] = useState(true);
   const conversationEndRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<'timeline' | 'clarifications' | 'intent' | 'evidence' | 'raw'>('timeline');
+  const [activeTab, setActiveTab] = useState<MonitorTabId>(MonitorTabId.TIMELINE);
+
+  const [clarifications, setClarifications] = useState<{
+    readonly outstanding: readonly ClarificationItem[];
+    readonly resolved: readonly ResolvedClarificationItem[];
+  }>({ outstanding: [], resolved: [] });
+
+  const [intentData, setIntentData] = useState<IntentData | null>(null);
+  const [evidenceData, setEvidenceData] = useState<EvidenceData>({
+    mangekyo: null,
+    tenseigan: null,
+    byakugan: null,
+  });
+
+  const { connectionStatus, subscribe } = useWebSocket();
 
   useEffect(() => {
     if (sessionIdFromQuery && sessionIdFromQuery !== selectedSessionId) {
@@ -198,139 +238,149 @@ function MonitorContent() {
     }
   }, [sessionIdFromQuery, selectedSessionId, setSelectedSession]);
 
-  // Auto-scroll effect
+  useEffect(() => {
+    if (!sessionId) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const [summaryRes, eventsRes] = await Promise.all([
+          fetch(`/api/sessions/${sessionId}`),
+          fetch(`/api/sessions/${sessionId}/events`),
+        ]);
+
+        if (!summaryRes.ok || !eventsRes.ok) {
+          throw new Error('Failed to load session data');
+        }
+
+        const summaryData = await summaryRes.json();
+        const eventsData = await eventsRes.json();
+
+        setSummary({
+          sessionId: summaryData.id || sessionId,
+          status: summaryData.status || 'unknown',
+          eventCount: eventsData.length || 0,
+          eyes: Array.isArray(summaryData.eyes) ? summaryData.eyes : [],
+          createdAt: new Date(summaryData.createdAt || Date.now()),
+        });
+
+        const normalizedEntries = Array.isArray(eventsData)
+          ? eventsData.map((event: ApiPipelineEvent) => normalizeApiEvent(event))
+          : [];
+
+        setEntries(normalizedEntries);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const unsubscribe = subscribe((message) => {
+      if (message.type === 'pipeline_event') {
+        const entry = normalizeWebSocketMessage(message);
+        if (entry) {
+          setEntries((prev) => [...prev, entry]);
+        }
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [sessionId, subscribe]);
+
   useEffect(() => {
     if (autoScroll && conversationEndRef.current) {
       conversationEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [entries, autoScroll]);
 
-  const upsertEntry = (entry: ConversationEntry) => {
-    setEntries((prev) => {
-      const existingIndex = prev.findIndex((item) => item.id === entry.id);
-      if (existingIndex >= 0) {
-        const updated = [...prev];
-        updated[existingIndex] = entry;
-        return updated;
-      }
-
-      const next = [...prev, entry];
-      next.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-      return next;
-    });
-  };
-
-  // WebSocket connection
-  const { connectionStatus } = useWebSocket({
-    sessionId: sessionId || undefined,
-    onMessage: (message: WSMessage) => {
-      console.log('[Monitor] Received WebSocket message:', message.type, message);
-
-      // Handle real-time updates
-      if (message.type === 'pipeline_event') {
-        const entry = normalizeWebSocketPipelineMessage(message);
-        if (entry) {
-          upsertEntry(entry);
-        }
-      } else if (message.type === 'session_update' && message.data) {
-        // Refresh summary on session updates
-        fetchSummary();
-      }
-    },
-    onError: (error) => {
-      const errorDetails = {
-        type: error.type,
-        message: error instanceof ErrorEvent ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
-      };
-      console.error('[Monitor] WebSocket error:', errorDetails);
-    },
-    onOpen: () => {
-      console.log('[Monitor] WebSocket connected successfully');
-    },
-    onClose: () => {
-      console.log('[Monitor] WebSocket disconnected');
-    }
-  });
-
-  // Fetch initial data once
-  useEffect(() => {
-    if (!sessionId) {
-      setLoading(false);
-      setEntries([]);
-      return;
-    }
-
-    const fetchInitialData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-
-        console.log(`[Monitor] Fetching session data for ${sessionId} from ${API_URL}`);
-
-        const [eventsRes, summaryRes] = await Promise.all([
-          fetch(`${API_URL}/api/session/${sessionId}/events`),
-          fetch(`${API_URL}/api/session/${sessionId}/summary`)
-        ]);
-
-        console.log('[Monitor] Fetch responses:', {
-          events: { ok: eventsRes.ok, status: eventsRes.status },
-          summary: { ok: summaryRes.ok, status: summaryRes.status }
-        });
-
-        if (!eventsRes.ok || !summaryRes.ok) {
-          const eventsError = !eventsRes.ok ? await eventsRes.text() : null;
-          const summaryError = !summaryRes.ok ? await summaryRes.text() : null;
-          console.error('[Monitor] Fetch errors:', { eventsError, summaryError });
-          throw new Error(`Failed to fetch session data (Events: ${eventsRes.status}, Summary: ${summaryRes.status})`);
-        }
-
-        const eventsData = await eventsRes.json();
-        const summaryData = await summaryRes.json();
-
-        console.log('[Monitor] Fetched data:', {
-          eventsCount: eventsData?.length || (eventsData?.data?.length || 0),
-          summaryStatus: summaryData?.status || summaryData?.data?.status
-        });
-
-        // Backend returns envelope format: {success: true, data: [...]}
-        const initialEntries = Array.isArray(eventsData.data)
-          ? (eventsData.data as ApiPipelineEvent[]).map(normalizeApiEvent)
-          : [];
-
-        initialEntries.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-
-        setEntries(initialEntries);
-        setSummary(summaryData.data);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'An error occurred';
-        console.error('[Monitor] Failed to fetch initial data:', err);
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInitialData();
-  }, [sessionId]);
-
-  // Fetch summary helper
-  const fetchSummary = async () => {
+  const fetchClarifications = async () => {
     if (!sessionId) return;
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/session/${sessionId}/summary`);
-      if (response.ok) {
-        const summaryData = await response.json();
-        setSummary(summaryData.data);
+      const res = await fetch(`/api/sessions/${sessionId}/clarifications`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.questions && Array.isArray(data.questions)) {
+          const outstanding: ClarificationItem[] = [];
+          const resolved: ResolvedClarificationItem[] = [];
+
+          for (const q of data.questions) {
+            if (q.answer) {
+              resolved.push({
+                id: q.id || crypto.randomUUID(),
+                field: q.field || 'unknown',
+                question: q.text || '',
+                answer: q.answer,
+                answeredAt: new Date(q.answeredAt || Date.now()),
+                status: 'resolved',
+              });
+            } else {
+              outstanding.push({
+                id: q.id || crypto.randomUUID(),
+                field: q.field || 'unknown',
+                question: q.text || '',
+                status: 'pending',
+              });
+            }
+          }
+
+          setClarifications({ outstanding, resolved });
+        }
       }
     } catch (err) {
-      console.error('Failed to fetch summary:', err);
+      console.error('Failed to fetch clarifications:', err);
     }
   };
 
-  const conversationEntries = entries;
+  const fetchIntentConfirmations = async () => {
+    if (!sessionId) return;
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}/intent`);
+      if (res.ok) {
+        const data = await res.json();
+        setIntentData({
+          intentAnalysis: data.intentAnalysis,
+          confirmationPrompt: data.confirmationPrompt,
+          response: data.response,
+          userIdentity: data.userIdentity,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch intent confirmations:', err);
+    }
+  };
+
+  useEffect(() => {
+    const mangekyoEvent = entries.find((e) => e.speaker === 'mangekyo');
+    const tenseiganEvent = entries.find((e) => e.speaker === 'tenseigan');
+    const byakuganEvent = entries.find((e) => e.speaker === 'byakugan');
+
+    setEvidenceData({
+      mangekyo: mangekyoEvent?.metadata?.dataJson || null,
+      tenseigan: tenseiganEvent?.metadata?.dataJson || null,
+      byakugan: byakuganEvent?.metadata?.dataJson || null,
+    });
+  }, [entries]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    fetchClarifications();
+    fetchIntentConfirmations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId]);
 
   if (!sessionId) {
     return (
@@ -445,234 +495,251 @@ function MonitorContent() {
       </div>
 
       <div className="mx-auto max-w-7xl px-6 py-8">
-        {/* Tab Navigation */}
-        <div className="mb-6 flex gap-2 border-b border-brand-outline/30">
-          {[
-            { id: 'timeline' as const, label: 'Timeline', icon: '📊' },
-            { id: 'clarifications' as const, label: 'Clarifications', icon: '❓' },
-            { id: 'intent' as const, label: 'Intent Confirmation', icon: '✋' },
-            { id: 'evidence' as const, label: 'Evidence & Validation', icon: '🔍' },
-            { id: 'raw' as const, label: 'Raw JSON', icon: '{ }' },
-          ].map(tab => (
-            <button
+        <div className="mb-6 flex gap-2 border-b border-brand-outline/30" role="tablist">
+          {MONITOR_TABS.map((tab) => (
+            <TabButton
               key={tab.id}
+              tab={tab}
+              isActive={activeTab === tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-3 text-sm font-medium transition-all ${
-                activeTab === tab.id
-                  ? 'border-b-2 border-brand-accent text-brand-accent'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <span className="mr-2">{tab.icon}</span>
-              {tab.label}
-            </button>
+            />
           ))}
         </div>
 
         <GlassCard className="p-6">
-          {/* Timeline Tab */}
-          {activeTab === 'timeline' && (
+          {activeTab === MonitorTabId.TIMELINE && (
             <>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-white">Timeline</h2>
                 <div className="text-xs text-slate-500">
-                  {conversationEntries.length} {conversationEntries.length === 1 ? 'event' : 'events'}
+                  {entries.length} {entries.length === 1 ? 'event' : 'events'}
                 </div>
               </div>
 
-          {loading ? (
-            <div className="h-96 animate-pulse rounded-2xl border border-brand-outline/40 bg-brand-paper/60" />
-          ) : conversationEntries.length === 0 ? (
-            <div className="py-16 text-center">
-              <Eye className="h-12 w-12 mx-auto mb-4 text-slate-600" />
-              <p className="text-lg text-white mb-2">No Conversation Yet</p>
-              <p className="text-sm text-slate-400">
-                Waiting for agent to start communicating...
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-              {conversationEntries.map((entry, index) => {
-                const speakerColor = getSpeakerColor(entry.speaker);
-                const speakerName = entry.speaker === 'overseer' ? 'Overseer' :
-                                   entry.speaker === 'agent' ? 'Agent' :
-                                   entry.speaker === 'human' ? 'Human' :
-                                   EYE_DISPLAY_NAMES[entry.speaker as EyeName] || entry.speaker;
-
-                return (
-                  <motion.div
-                    key={entry.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.02 }}
-                    className="group"
-                  >
-                    <div className="flex gap-3">
-                      <div
-                        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white"
-                        style={{ backgroundColor: speakerColor }}
-                      >
-                        {getSpeakerIcon(entry.speaker)}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span
-                            className="font-semibold text-sm"
-                            style={{ color: speakerColor }}
-                          >
-                            {speakerName}
-                          </span>
-                          <span className="text-xs text-slate-500 flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {entry.timestamp.toLocaleTimeString()}
-                          </span>
-                          {entry.metadata?.code && (
-                            <span className="text-xs px-2 py-0.5 rounded bg-brand-paper text-slate-400 font-mono">
-                              {entry.metadata.code}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="rounded-lg bg-brand-paper/60 border border-brand-outline/30 p-3">
-                          <p className="text-sm text-slate-300 whitespace-pre-wrap break-words">
-                            {entry.message}
-                          </p>
-
-                          {entry.metadata?.dataJson && Object.keys(entry.metadata.dataJson).length > 0 && (
-                            <details className="mt-2 text-xs">
-                              <summary className="cursor-pointer text-slate-500 hover:text-slate-400">
-                                Technical Data
-                              </summary>
-                              <pre className="mt-2 p-2 rounded bg-brand-ink/50 text-slate-400 overflow-x-auto">
-                                {JSON.stringify(entry.metadata.dataJson, null, 2)}
-                              </pre>
-                            </details>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-
-              <div ref={conversationEndRef} />
-            </div>
-          )}
+              {loading ? (
+                <div className="h-96 animate-pulse rounded-2xl border border-brand-outline/40 bg-brand-paper/60" />
+              ) : entries.length === 0 ? (
+                <div className="py-16 text-center">
+                  <Eye className="h-12 w-12 mx-auto mb-4 text-slate-600" />
+                  <p className="text-lg text-white mb-2">No Conversation Yet</p>
+                  <p className="text-sm text-slate-400">
+                    Waiting for agent to start communicating...
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+                  {entries.map((entry, index) => (
+                    <ConversationEntry key={entry.id} entry={entry} index={index} />
+                  ))}
+                  <div ref={conversationEndRef} />
+                </div>
+              )}
             </>
           )}
 
-          {/* Clarifications Tab */}
-          {activeTab === 'clarifications' && (
+          {activeTab === MonitorTabId.CLARIFICATIONS && (
             <>
               <div className="mb-6">
                 <h2 className="text-xl font-semibold text-white">Clarifications</h2>
                 <p className="text-sm text-slate-400 mt-1">Questions and answers that clarify task requirements</p>
               </div>
               <div className="grid md:grid-cols-2 gap-6">
-                {/* Outstanding Clarifications */}
                 <div>
                   <h3 className="text-sm font-semibold text-brand-accent mb-3">Outstanding</h3>
                   <div className="space-y-3">
-                    <div className="rounded-xl border border-yellow-700/50 bg-yellow-900/10 p-4">
-                      <p className="text-sm text-yellow-200">No pending clarifications</p>
-                    </div>
+                    {clarifications.outstanding.length === 0 ? (
+                      <div className="rounded-xl border border-yellow-700/50 bg-yellow-900/10 p-4">
+                        <p className="text-sm text-yellow-200">No pending clarifications</p>
+                      </div>
+                    ) : (
+                      clarifications.outstanding.map((c) => (
+                        <div key={c.id} className="rounded-xl border border-yellow-700/50 bg-yellow-900/10 p-4">
+                          <p className="text-xs text-yellow-400 mb-1 font-semibold uppercase">{c.field}</p>
+                          <p className="text-sm text-yellow-200">{c.question}</p>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
-                {/* Resolved Clarifications */}
                 <div>
                   <h3 className="text-sm font-semibold text-green-400 mb-3">Resolved</h3>
                   <div className="space-y-3">
-                    <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
-                      <p className="text-xs text-slate-500 mb-1">Audience</p>
-                      <p className="text-sm text-slate-200">Engineering leadership & product managers</p>
-                    </div>
+                    {clarifications.resolved.length === 0 ? (
+                      <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
+                        <p className="text-sm text-slate-400">No resolved clarifications yet</p>
+                      </div>
+                    ) : (
+                      clarifications.resolved.map((c) => (
+                        <div key={c.id} className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
+                          <p className="text-xs text-slate-500 mb-1 font-semibold uppercase">{c.field}</p>
+                          <p className="text-sm text-slate-200 font-medium mb-1">{c.question}</p>
+                          <p className="text-sm text-green-300">{c.answer}</p>
+                          <p className="text-xs text-slate-500 mt-2">Answered: {new Date(c.answeredAt).toLocaleString()}</p>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
             </>
           )}
 
-          {/* Intent Confirmation Tab */}
-          {activeTab === 'intent' && (
+          {activeTab === MonitorTabId.INTENT && (
             <>
               <div className="mb-6">
                 <h2 className="text-xl font-semibold text-white">Intent Confirmation</h2>
                 <p className="text-sm text-slate-400 mt-1">Human approval of scope and effort before work proceeds</p>
               </div>
               <div className="space-y-4">
-                <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <p className="text-sm font-semibold text-white">Intent Analysis</p>
-                      <p className="text-xs text-slate-400 mt-1">PRIMARY: CREATE + EDUCATE</p>
+                {intentData ? (
+                  <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <p className="text-sm font-semibold text-white">Intent Analysis</p>
+                        {intentData.intentAnalysis && (
+                          <div className="mt-2 space-y-1 text-xs text-slate-400">
+                            {Object.entries(intentData.intentAnalysis).map(([key, value]) => (
+                              <p key={key}>
+                                <span className="font-semibold uppercase">{key}:</span> {
+                                  Array.isArray(value) ? value.join(', ') : String(value)
+                                }
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <StatusBadge
+                        status={
+                          intentData.response === 'approved' ? ApprovalStatus.APPROVED :
+                          intentData.response === 'rejected' ? ApprovalStatus.REJECTED :
+                          ApprovalStatus.PENDING
+                        }
+                        size="sm"
+                      />
                     </div>
-                    <span className="rounded-full bg-green-500/20 px-3 py-1 text-xs font-semibold text-green-400">
-                      Approved
-                    </span>
+                    {intentData.confirmationPrompt && (
+                      <div className="mt-4 rounded-lg border border-brand-outline/30 bg-brand-ink/50 p-3">
+                        <p className="text-xs text-slate-500 mb-1">Confirmation Prompt:</p>
+                        <p className="text-sm text-slate-300">{intentData.confirmationPrompt}</p>
+                      </div>
+                    )}
+                    {intentData.response === 'approved' && intentData.userIdentity && (
+                      <div className="mt-3 flex items-center gap-2">
+                        <StatusBadge status={ApprovalStatus.APPROVED} size="sm" />
+                        <span className="text-sm font-semibold text-green-300">Approved by {intentData.userIdentity}</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="space-y-2 text-sm text-slate-300">
-                    <p><span className="text-slate-500">Scope:</span> Small (500 words, 30-45 min)</p>
-                    <p><span className="text-slate-500">Deliverables:</span> 500-word how-to article, 4-6 citations, Practical examples</p>
+                ) : (
+                  <div className="text-center py-16">
+                    <p className="text-sm text-slate-500">
+                      Intent confirmation data will appear here when Jōgan runs
+                    </p>
                   </div>
-                </div>
-                <p className="text-center text-sm text-slate-500">
-                  Intent confirmation data will appear here when Jōgan runs
-                </p>
+                )}
               </div>
             </>
           )}
 
-          {/* Evidence & Validation Tab */}
-          {activeTab === 'evidence' && (
+          {activeTab === MonitorTabId.EVIDENCE && (
             <>
               <div className="mb-6">
                 <h2 className="text-xl font-semibold text-white">Evidence & Validation</h2>
                 <p className="text-sm text-slate-400 mt-1">Quality gates, code review, and factual verification results</p>
               </div>
               <div className="space-y-6">
-                {/* Code Review (Mangekyō) */}
                 <div>
                   <h3 className="text-sm font-semibold text-purple-400 mb-3">Code Review (Mangekyō)</h3>
-                  <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm text-white">Quality Score</span>
-                      <span className="text-lg font-semibold text-green-400">96/100</span>
+                  {evidenceData.mangekyo ? (
+                    <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
+                      {evidenceData.mangekyo.qualityScore && typeof evidenceData.mangekyo.qualityScore === 'number' && (
+                        <>
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm text-white">Quality Score</span>
+                            <span className="text-lg font-semibold text-green-400">{evidenceData.mangekyo.qualityScore}/100</span>
+                          </div>
+                          <div className="h-2 w-full rounded-full bg-brand-ink">
+                            <div className="h-2 rounded-full bg-green-400" style={{ width: `${evidenceData.mangekyo.qualityScore}%` }} />
+                          </div>
+                        </>
+                      )}
+                      {evidenceData.mangekyo.issues && Array.isArray(evidenceData.mangekyo.issues) && (
+                        <div className="mt-3 space-y-2">
+                          {evidenceData.mangekyo.issues.map((issue, idx: number) => (
+                            <p key={idx} className="text-sm text-slate-300">• {typeof issue === 'string' ? issue : JSON.stringify(issue)}</p>
+                          ))}
+                        </div>
+                      )}
+                      {!evidenceData.mangekyo.qualityScore && !evidenceData.mangekyo.issues && (
+                        <pre className="text-xs text-slate-400 overflow-x-auto">{JSON.stringify(evidenceData.mangekyo, null, 2)}</pre>
+                      )}
                     </div>
-                    <div className="h-2 w-full rounded-full bg-brand-ink">
-                      <div className="h-2 rounded-full bg-green-400" style={{ width: '96%' }} />
+                  ) : (
+                    <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
+                      <p className="text-sm text-slate-400">No code review data yet</p>
                     </div>
-                  </div>
+                  )}
                 </div>
 
-                {/* Evidence Validation (Tenseigan) */}
                 <div>
                   <h3 className="text-sm font-semibold text-blue-400 mb-3">Evidence Validation (Tenseigan)</h3>
-                  <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
-                    <p className="text-sm text-slate-300 mb-2">All 8 factual claims properly cited</p>
-                    <p className="text-xs text-slate-500">6 primary sources, 2 secondary. All sources accessible and credible.</p>
-                  </div>
+                  {evidenceData.tenseigan ? (
+                    <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
+                      {evidenceData.tenseigan.citations && Array.isArray(evidenceData.tenseigan.citations) ? (
+                        <div className="space-y-2">
+                          <p className="text-sm text-slate-300 mb-2">Found {evidenceData.tenseigan.citations.length} citation(s)</p>
+                          {evidenceData.tenseigan.citations.map((citation, idx: number) => (
+                            <div key={idx} className="text-xs text-slate-400 border-l-2 border-blue-500 pl-3">
+                              {typeof citation === 'object' && citation !== null ? JSON.stringify(citation) : String(citation)}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <pre className="text-xs text-slate-400 overflow-x-auto">{JSON.stringify(evidenceData.tenseigan, null, 2)}</pre>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
+                      <p className="text-sm text-slate-400">No evidence validation data yet</p>
+                    </div>
+                  )}
                 </div>
 
-                {/* Final Approval (Byakugan) */}
                 <div>
                   <h3 className="text-sm font-semibold text-green-400 mb-3">Final Approval (Byakugan)</h3>
-                  <div className="rounded-xl border border-green-700/50 bg-green-900/20 p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-2xl">✅</span>
-                      <span className="text-sm font-semibold text-green-300">APPROVED FOR DELIVERY</span>
+                  {evidenceData.byakugan ? (
+                    <div className={`rounded-xl border p-4 ${
+                      evidenceData.byakugan.approved ? 'border-green-700/50 bg-green-900/20' : 'border-red-700/50 bg-red-900/20'
+                    }`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <StatusBadge
+                          status={evidenceData.byakugan.approved ? ApprovalStatus.APPROVED : ApprovalStatus.REJECTED}
+                          size="sm"
+                        />
+                        <span className={`text-sm font-semibold ${evidenceData.byakugan.approved ? 'text-green-300' : 'text-red-300'}`}>
+                          {evidenceData.byakugan.approved ? 'APPROVED FOR DELIVERY' : 'REJECTED - NEEDS REVISION'}
+                        </span>
+                      </div>
+                      {evidenceData.byakugan.summary && typeof evidenceData.byakugan.summary === 'string' && (
+                        <p className={`text-xs ${evidenceData.byakugan.approved ? 'text-green-200' : 'text-red-200'}`}>
+                          {evidenceData.byakugan.summary}
+                        </p>
+                      )}
+                      {!evidenceData.byakugan.summary && (
+                        <pre className="text-xs text-slate-400 overflow-x-auto mt-2">{JSON.stringify(evidenceData.byakugan, null, 2)}</pre>
+                      )}
                     </div>
-                    <p className="text-xs text-green-200">
-                      Overall score: 96/100. Content is clear, complete, correct, high-quality, and ready.
-                    </p>
-                  </div>
+                  ) : (
+                    <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
+                      <p className="text-sm text-slate-400">No final approval data yet</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </>
           )}
 
-          {/* Raw JSON Tab */}
-          {activeTab === 'raw' && (
+          {activeTab === MonitorTabId.RAW_JSON && (
             <>
               <div className="mb-6 flex items-center justify-between">
                 <div>
@@ -705,23 +772,11 @@ function MonitorContent() {
   );
 }
 
-
-// TODO: Add speaker detection in event mapping:
-// const events = pipelineEvents.map(event => ({
-//   ...event,
-//   speaker: event.type === 'user_input' ? 'User' :
-//            event.type === 'eye_call' ? 'Assistant' : 'System',
-//   icon: event.type === 'user_input' ? '👤' :
-//         event.type === 'eye_call' ? getEyeIcon(event.eye) : '⚙️'
-// }));
-
 export default function MonitorPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-brand-ink">
-        <div className="mx-auto max-w-7xl px-6 py-10">
-          <div className="h-96 animate-pulse rounded-2xl border border-brand-outline/40 bg-brand-paper/60" />
-        </div>
+      <div className="min-h-screen bg-brand-ink flex items-center justify-center">
+        <div className="text-white">Loading monitor...</div>
       </div>
     }>
       <MonitorContent />

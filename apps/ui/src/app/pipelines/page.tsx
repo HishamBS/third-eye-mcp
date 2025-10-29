@@ -80,7 +80,7 @@ export default function PipelinesPage() {
     fetchPipelines();
   }, []);
 
-  // Auto-select system-default pipeline when pipelines are loaded
+  // Auto-select system-default pipeline when pipelines are loaded OR load default if none exist
   useEffect(() => {
     console.log('[Pipelines] Auto-select effect triggered:', {
       pipelinesCount: pipelines.length,
@@ -94,10 +94,35 @@ export default function PipelinesPage() {
         console.log('[Pipelines] Auto-selecting system-default');
         setSelectedPipeline(systemDefault.name);
       } else {
-        console.warn('[Pipelines] system-default pipeline not found in:', pipelines.map(p => p.name));
+        console.warn('[Pipelines] system-default pipeline not found, showing first pipeline');
+        setSelectedPipeline(pipelines[0].name);
       }
+    } else if (pipelines.length === 0 && !selectedPipeline && !isCreating) {
+      // No pipelines exist - show default pipeline in editor mode automatically
+      console.log('[Pipelines] No pipelines found, loading default template');
+      const defaultPipeline = {
+        name: 'system-default',
+        description: 'Complete Third Eye validation pipeline with all eyes',
+        workflow: JSON.stringify({
+          steps: [
+            { id: 'start', eye: 'overseer', next: 'sharingan' },
+            { id: 'sharingan', eye: 'sharingan', next: 'kyuubi' },
+            { id: 'kyuubi', eye: 'kyuubi', next: 'jogan' },
+            { id: 'jogan', eye: 'jogan', next: 'rinnegan' },
+            { id: 'rinnegan', eye: 'rinnegan', next: 'mangekyo' },
+            { id: 'mangekyo', eye: 'mangekyo', next: 'tenseigan' },
+            { id: 'tenseigan', eye: 'tenseigan', next: 'byakugan' },
+            { id: 'byakugan', eye: 'byakugan', next: 'end' },
+            { id: 'end', type: 'terminal' }
+          ]
+        }, null, 2),
+        category: 'built-in',
+      };
+      setFormData(defaultPipeline);
+      setOriginalFormData(defaultPipeline);
+      setIsCreating(true);
     }
-  }, [pipelines, selectedPipeline]);
+  }, [pipelines, selectedPipeline, isCreating]);
 
   useEffect(() => {
     if (selectedPipeline) {

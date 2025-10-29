@@ -10,6 +10,9 @@ import { ThemeScript } from '@/components/ThemeScript';
 import { SessionNotifier } from '@/components/SessionNotifier';
 import { DialogProvider } from '@/hooks/useDialog';
 
+// Force dynamic rendering for all pages to avoid prerendering issues with client hooks
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Third Eye MCP - Overseer',
   description: 'Local-first AI orchestration layer with Eyes',

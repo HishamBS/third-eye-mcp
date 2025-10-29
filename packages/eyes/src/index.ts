@@ -20,6 +20,9 @@ export * from './renderer';
 // Blueprints
 export * from './blueprints';
 
+// Guards
+export * from './guards';
+
 // Eye Registry
 import { overseer } from './eyes/overseer';
 import { sharingan } from './eyes/sharingan';

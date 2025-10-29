@@ -126,15 +126,15 @@ export default function EyesPage() {
         setError(null);
       }
 
-      // Enrich with capabilities from blueprints
+      // Enrich with capabilities from blueprints (call server API directly)
       const enrichedEyesData = await Promise.all(
         allEyesData.map(async (eye: Eye) => {
           if (!eye.capabilities) {
             try {
-              const blueprintRes = await fetch(`/api/personas/blueprints/${eye.id}`);
+              const blueprintRes = await fetch(`${API_URL}/api/personas/blueprints/${eye.id}`);
               if (blueprintRes.ok) {
                 const blueprint = await blueprintRes.json();
-                if (blueprint.data && blueprint.data.capabilities) {
+                if (blueprint.success && blueprint.data && blueprint.data.capabilities) {
                   return { ...eye, capabilities: blueprint.data.capabilities };
                 }
               }

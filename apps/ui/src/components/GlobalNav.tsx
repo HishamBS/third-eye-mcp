@@ -9,6 +9,7 @@ import {
   Settings, Database, BarChart, Bell, ChevronDown, Swords, FlaskConical
 } from 'lucide-react';
 import { SessionSelector } from './SessionSelector';
+import { ThemeSwitcher } from './ThemeSwitcher';
 
 interface DropdownItem {
   href: string;
@@ -141,6 +142,7 @@ export function GlobalNav() {
         {/* Right: Actions */}
         <div className="flex items-center justify-self-end space-x-3">
           <SessionSelector />
+          <ThemeSwitcher />
           <Link
             href="/monitor"
             className="rounded-lg p-2 text-slate-400 hover:text-white hover:bg-brand-paper/60 transition-colors"

@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { ReplayTheater } from '@/components/ReplayTheater';
 
+export const dynamic = 'force-dynamic';
+
 function ReplayContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('sessionId') || 'unknown';
