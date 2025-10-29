@@ -37,7 +37,7 @@ export async function loadProviderKeysIntoConfig(): Promise<void> {
             config.providers[provider] = { baseUrl: 'http://127.0.0.1:1234' };
           }
         } else {
-          (config.providers[provider] as any).apiKey = decryptedKey;
+          Object.assign(config.providers[provider], { apiKey: decryptedKey });
         }
 
         console.log(`  ✓ ${provider}`);
