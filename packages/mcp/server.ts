@@ -26,13 +26,13 @@ interface ClientMetadata {
   version: string;
   title?: string;
   displayName: string;
-  icons?: Array<Record<string, any>>;
-  raw?: Record<string, any>;
+  icons?: Array<Record<string, unknown>>;
+  raw?: Record<string, unknown>;
 }
 
 interface HandshakeContext {
-  capabilities?: Record<string, any>;
-  meta?: Record<string, any>;
+  capabilities?: Record<string, unknown>;
+  meta?: Record<string, unknown>;
   timestamp?: number;
 }
 
@@ -50,7 +50,21 @@ function isPlainObject(value: unknown): value is PlainObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function buildSessionMetadata(): Record<string, any> {
+// MCP Protocol types for request handling
+interface MCPInitializeParams {
+  clientInfo?: Record<string, unknown>;
+  clientCapabilities?: Record<string, unknown>;
+  _meta?: Record<string, unknown>;
+}
+
+interface MCPToolArguments {
+  task?: string;
+  sessionId?: string;
+  strictness?: Record<string, unknown>;
+  context?: Record<string, unknown>;
+}
+
+function buildSessionMetadata(): Record<string, unknown> {
   return {
     client: clientMetadata,
     clientName: clientMetadata.name,
@@ -197,13 +211,14 @@ export function createMCPServer(): Server {
 
   // Handle initialize request to capture client metadata
   server.setRequestHandler(InitializeRequestSchema, async (request) => {
-    const { clientInfo, clientCapabilities } = request.params as any;
-    const handshakeMeta = (request.params as any)?._meta;
+    const params = request.params as MCPInitializeParams;
+    const { clientInfo, clientCapabilities } = params;
+    const handshakeMeta = params._meta;
 
     // Store client metadata from MCP protocol
     if (clientInfo) {
-      const name = (clientInfo.name || "Unknown Agent").trim();
-      const version = (clientInfo.version || "unknown").trim();
+      const name = (typeof clientInfo.name === 'string' ? clientInfo.name : "Unknown Agent").trim();
+      const version = (typeof clientInfo.version === 'string' ? clientInfo.version : "unknown").trim();
       const title =
         typeof clientInfo.title === "string" && clientInfo.title.trim().length > 0
           ? clientInfo.title.trim()
@@ -213,7 +228,7 @@ export function createMCPServer(): Server {
         (typeof clientInfo.displayName === "string" && clientInfo.displayName.trim().length > 0
           ? clientInfo.displayName.trim()
           : name);
-      const icons = Array.isArray(clientInfo.icons) ? clientInfo.icons : undefined;
+      const icons = Array.isArray(clientInfo.icons) ? clientInfo.icons as Array<Record<string, unknown>> : undefined;
 
       clientMetadata = {
         name,
@@ -262,14 +277,15 @@ export function createMCPServer(): Server {
 
     // Handle overseer tool - main entry point
     if (name === MCP_TOOL_NAME) {
-      const task = (args as any).task;
+      const toolArgs = args as MCPToolArguments;
+      const task = toolArgs.task;
 
       // NO rejection logic - let Overseer LLM decide everything
 
       // Internal parameters (not exposed in schema but can be passed)
-      const providedSessionId = (args as any).sessionId;
-      const rawStrictness = (args as any).strictness;
-      const rawContext = (args as any).context;
+      const providedSessionId = toolArgs.sessionId;
+      const rawStrictness = toolArgs.strictness;
+      const rawContext = toolArgs.context;
 
       const strictnessOptions = isPlainObject(rawStrictness) ? rawStrictness : undefined;
       const contextOptions: PlainObject | undefined = (() => {
@@ -381,8 +397,12 @@ export function createMCPServer(): Server {
             },
           ],
         };
-      } catch (error: any) {
-        const failureSessionId = providedSessionId ?? (typeof error?.sessionId === 'string' ? error.sessionId : undefined) ?? 'unknown';
+      } catch (error: unknown) {
+        const errorObj = error instanceof Error ? error : new Error(String(error));
+        const sessionIdFromError = typeof error === 'object' && error !== null && 'sessionId' in error && typeof error.sessionId === 'string'
+          ? error.sessionId
+          : undefined;
+        const failureSessionId = providedSessionId ?? sessionIdFromError ?? 'unknown';
         const metadata = {
           sessionId: failureSessionId,
           portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${failureSessionId}`,
@@ -398,11 +418,11 @@ export function createMCPServer(): Server {
                   status: "error",
                   code: "ERROR",
                   verdict: "REJECTED",
-                  summary: `third_eye_overseer encountered an error: ${error.message}`,
+                  summary: `third_eye_overseer encountered an error: ${errorObj.message}`,
                   metadata,
                   tool: MCP_TOOL_NAME,
                   data: {
-                    message: error.message,
+                    message: errorObj.message,
                   },
                 },
                 null,
