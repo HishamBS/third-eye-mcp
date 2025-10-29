@@ -57,7 +57,7 @@ export interface EyeCompleteEvent extends BaseEvent {
     ok: boolean;
     code: string;
     md?: string;
-    data?: any;
+    data?: unknown;
     ui?: {
       title: string;
       summary: string;
@@ -118,7 +118,7 @@ export interface SessionStatusEvent extends BaseEvent {
 export interface SessionCreatedEvent extends BaseEvent {
   type: 'session_created';
   portalUrl: string;
-  config?: any;
+  config?: Record<string, unknown>;
 }
 
 /**
@@ -145,7 +145,7 @@ export interface PipelineEvent extends BaseEvent {
   status?: string;
   code?: string;
   md?: string;
-  data?: any;
+  data?: unknown;
   error?: string;
 }
 
