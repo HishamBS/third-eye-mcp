@@ -206,7 +206,7 @@ export class WSConnectionManager {
   /**
    * Broadcast to all connections
    */
-  broadcast(message: any) {
+  broadcast(message: Partial<WSMessage> & { type: WSMessage['type'] }) {
     const wsMessage: WSMessage = {
       ...message,
       timestamp: message.timestamp || Date.now()
@@ -277,7 +277,7 @@ export class WSConnectionManager {
   emitEyeComplete(
     sessionId: string,
     eye: string,
-    result: { tag: string; ok: boolean; code: string; md?: string; data?: any; ui?: any },
+    result: { tag: string; ok: boolean; code: string; md?: string; data?: unknown; ui?: unknown },
     metrics?: { tokensIn: number; tokensOut: number; latencyMs: number; provider: string; model: string }
   ) {
     this.broadcastToSession(sessionId, {
@@ -297,7 +297,7 @@ export class WSConnectionManager {
   /**
    * Emit eye_error event (Eye encountered an error)
    */
-  emitEyeError(sessionId: string, eye: string, error: { message: string; code?: string; details?: any }) {
+  emitEyeError(sessionId: string, eye: string, error: { message: string; code?: string; details?: unknown }) {
     this.broadcastToSession(sessionId, {
       type: 'pipeline_event',
       sessionId,
