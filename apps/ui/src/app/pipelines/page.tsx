@@ -661,7 +661,7 @@ export default function PipelinesPage() {
                             : 'text-slate-400 hover:text-white'
                         }`}
                       >
-                        🎨 Visual Builder
+                        Visual Builder
                       </button>
                       <button
                         type="button"
@@ -672,7 +672,7 @@ export default function PipelinesPage() {
                             : 'text-slate-400 hover:text-white'
                         }`}
                       >
-                        📝 JSON Editor
+                        JSON Editor
                       </button>
                     </div>
                   </div>
