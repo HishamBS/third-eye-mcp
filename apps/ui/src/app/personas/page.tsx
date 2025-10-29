@@ -47,6 +47,18 @@ interface PersonaVersion {
   createdAt: string;
 }
 
+interface DiffResult {
+  readonly v1: number;
+  readonly v2: number;
+  readonly changes: readonly {
+    readonly type: 'added' | 'removed' | 'modified';
+    readonly field: string;
+    readonly oldValue?: string;
+    readonly newValue?: string;
+  }[];
+  readonly summary?: string;
+}
+
 export default function PersonasPage() {
   const dialog = useDialog();
   const [personas, setPersonas] = useState<Persona[]>([]);
@@ -65,7 +77,7 @@ export default function PersonasPage() {
   const [allEyes, setAllEyes] = useState<string[]>([]);
   const [showDiff, setShowDiff] = useState(false);
   const [diffVersions, setDiffVersions] = useState<{v1: number; v2: number}>({v1: 0, v2: 0});
-  const [diffResult, setDiffResult] = useState<any>(null);
+  const [diffResult, setDiffResult] = useState<DiffResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
