@@ -224,7 +224,7 @@ export async function getEyeLeaderboards(): Promise<Array<{
   approvalRate: number;
   avgLatency: number;
   trend: 'up' | 'down' | 'stable';
-  trendData?: any;
+  trendData?: Array<{ day: string; runs: number; approvals: number }>;
 }>> {
   const { db } = getDb();
 
@@ -309,7 +309,7 @@ export async function createDatabaseIndexes(): Promise<void> {
  * Analyze query performance
  * Returns EXPLAIN QUERY PLAN results for a given query
  */
-export async function analyzeQuery(query: string): Promise<any[]> {
+export async function analyzeQuery(query: string): Promise<unknown[]> {
   const { db } = getDb();
 
   try {
