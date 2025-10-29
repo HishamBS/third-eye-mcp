@@ -54,6 +54,13 @@ export default function PersonasPage() {
   const [eyeVersions, setEyeVersions] = useState<PersonaVersion[]>([]);
   const [editingPersona, setEditingPersona] = useState<string>('');
   const [personaContent, setPersonaContent] = useState<string>('');
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: '',
+    mission: '',
+    capabilities: [] as string[],
+    capabilitiesText: '',
+  });
   const [loading, setLoading] = useState(false);
   const [allEyes, setAllEyes] = useState<string[]>([]);
   const [showDiff, setShowDiff] = useState(false);
@@ -157,7 +164,13 @@ export default function PersonasPage() {
     const persona = getPersonaById(eyeId);
     setEditingPersona(eyeId);
     if (persona) {
-      setPersonaContent(JSON.stringify(persona, null, 2));
+      setEditForm({
+        name: persona.name,
+        description: persona.description,
+        mission: persona.mission,
+        capabilities: persona.capabilities,
+        capabilitiesText: persona.capabilities.join(', '),
+      });
     }
   };
 
@@ -296,16 +309,8 @@ export default function PersonasPage() {
     }
   }, [success]);
 
-  const getEyeIcon = (eye: string) => {
-    const icons: Record<string, string> = {
-      sharingan: '👁️',
-      rinnegan: '🌀',
-      tenseigan: '💫',
-      jogan: '🔮',
-      byakugan: '👀',
-      mangekyo: '⚡',
-    };
-    return icons[eye] || '👁️';
+  const getEyeIconPath = (eye: string) => {
+    return `/eyes/${eye}.svg`;
   };
 
   const getEyeColor = (eye: string) => {
@@ -383,28 +388,36 @@ export default function PersonasPage() {
                       isSelected ? 'ring-2 ring-brand-accent' : ''
                     }`}
                   >
-                    <div className="flex items-center justify-between text-white">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{getEyeIcon(eye)}</span>
-                        <div>
-                          <h3 className="font-bold capitalize">
-                            {persona.name}
-                          </h3>
-                          <p className="text-xs opacity-80">
-                            {persona.description}
-                          </p>
+                      <div className="flex items-center justify-between text-white">
+                        <div className="flex items-center gap-3">
+                          <img 
+                            src={getEyeIconPath(eye)} 
+                            alt={`${persona.name} icon`}
+                            className="h-8 w-8"
+                            onError={(e) => {
+                              // Fallback to emoji if SVG fails to load
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                          <div>
+                            <h3 className="font-bold capitalize">
+                              {persona.name}
+                            </h3>
+                            <p className="text-xs opacity-80">
+                              {persona.description}
+                            </p>
+                          </div>
                         </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startEditing(eye);
+                          }}
+                          className="rounded-full bg-white/20 px-3 py-1 text-xs transition hover:bg-white/30"
+                        >
+                          {isEditing ? 'Editing...' : 'Edit'}
+                        </button>
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          startEditing(eye);
-                        }}
-                        className="rounded-full bg-white/20 px-3 py-1 text-xs transition hover:bg-white/30"
-                      >
-                        {isEditing ? 'Editing...' : 'Edit'}
-                      </button>
-                    </div>
                   </motion.div>
                 );
               })}
@@ -625,7 +638,7 @@ export default function PersonasPage() {
                 </div>
               </GlassCard>
             ) : editingPersona ? (
-              /* Persona Editor */
+              /* Persona Editor Form */
               <GlassCard>
                 <div className="mb-6 flex items-center justify-between">
                   <h2 className="text-xl font-semibold text-white">
@@ -640,7 +653,7 @@ export default function PersonasPage() {
                     </button>
                     <button
                       onClick={savePersona}
-                      disabled={loading || !personaContent.trim()}
+                      disabled={loading || !editForm.name.trim()}
                       className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary disabled:opacity-50"
                     >
                       {loading ? 'Publishing...' : 'Publish (Hot-Reload)'}
@@ -648,27 +661,82 @@ export default function PersonasPage() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-6">
+                  {/* Basic Info */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-300">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.name}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                        className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                        placeholder="Overseer"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-300">
+                        Description
+                      </label>
+                      <input
+                        type="text"
+                        value={editForm.description}
+                        onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                        className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                        placeholder="Navigator that analyzes requests..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Mission */}
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-300">
-                      Persona Content
+                      Mission
                     </label>
                     <textarea
-                      value={personaContent}
-                      onChange={(e) => setPersonaContent(e.target.value)}
-                      placeholder="Enter the system prompt for this Eye persona..."
-                      className="h-64 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                      value={editForm.mission}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, mission: e.target.value }))}
+                      rows={3}
+                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                      placeholder="You are the BRAIN of Third Eye MCP..."
                     />
                   </div>
 
+                  {/* Capabilities */}
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-300">
+                      Capabilities (comma-separated)
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.capabilitiesText}
+                      onChange={(e) => setEditForm(prev => ({ 
+                        ...prev, 
+                        capabilitiesText: e.target.value,
+                        capabilities: e.target.value.split(',').map(c => c.trim()).filter(Boolean)
+                      }))}
+                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                      placeholder="auto_routing, orchestration, master_coordination"
+                    />
+                    {editForm.capabilities.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {editForm.capabilities.map((cap, idx) => (
+                          <span key={idx} className="rounded-full bg-brand-accent/20 px-3 py-1 text-xs text-brand-accent">
+                            {cap}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="rounded-xl border border-yellow-700/50 bg-yellow-900/10 p-5">
-                    <h4 className="font-medium text-yellow-300">Persona Guidelines</h4>
-                    <ul className="mt-3 space-y-1 text-sm text-yellow-100">
-                      <li>• Define the Eye's role and responsibilities clearly</li>
-                      <li>• Specify the expected output format (Overseer JSON envelope)</li>
-                      <li>• Include any specific instructions or constraints</li>
-                      <li>• <strong>Hot-Reload:</strong> Changes take effect immediately for new runs (no restart needed)</li>
-                    </ul>
+                    <h4 className="font-medium text-yellow-300">Hot-Reload Enabled</h4>
+                    <p className="mt-2 text-sm text-yellow-100">
+                      Changes take effect immediately for new runs (no restart needed)
+                    </p>
                   </div>
                 </div>
               </GlassCard>
