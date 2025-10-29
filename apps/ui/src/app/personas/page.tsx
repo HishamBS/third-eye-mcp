@@ -453,15 +453,49 @@ export default function PersonasPage() {
                             {persona.phases.guidance && (
                               <div className="rounded-xl border border-blue-500/40 bg-blue-500/10 p-4">
                                 <h4 className="mb-2 font-semibold text-blue-300">Guidance Phase</h4>
-                                <p className="mb-2 text-sm text-slate-300">{persona.phases.guidance.mission}</p>
-                                <p className="text-xs text-slate-400">Check: {persona.phases.guidance.check}</p>
+                                <p className="mb-3 text-sm text-slate-300">{persona.phases.guidance.mission}</p>
+                                <div>
+                                  <p className="mb-1 text-xs font-semibold text-blue-300">Check:</p>
+                                  <ul className="list-inside list-disc space-y-1 text-xs text-slate-400">
+                                    {persona.phases.guidance.check.split(',').map((item, idx) => (
+                                      <li key={idx}>{item.trim()}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                                {persona.phases.guidance.reminders && persona.phases.guidance.reminders.length > 0 && (
+                                  <div className="mt-3">
+                                    <p className="mb-1 text-xs font-semibold text-blue-300">Reminders:</p>
+                                    <ul className="list-inside list-disc space-y-1 text-xs text-slate-400">
+                                      {persona.phases.guidance.reminders.map((reminder, idx) => (
+                                        <li key={idx}>{reminder}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
                               </div>
                             )}
                             {persona.phases.validation && (
                               <div className="rounded-xl border border-green-500/40 bg-green-500/10 p-4">
                                 <h4 className="mb-2 font-semibold text-green-300">Validation Phase</h4>
-                                <p className="mb-2 text-sm text-slate-300">{persona.phases.validation.mission}</p>
-                                <p className="text-xs text-slate-400">Check: {persona.phases.validation.check}</p>
+                                <p className="mb-3 text-sm text-slate-300">{persona.phases.validation.mission}</p>
+                                <div>
+                                  <p className="mb-1 text-xs font-semibold text-green-300">Check:</p>
+                                  <ul className="list-inside list-disc space-y-1 text-xs text-slate-400">
+                                    {persona.phases.validation.check.split(',').map((item, idx) => (
+                                      <li key={idx}>{item.trim()}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                                {persona.phases.validation.reminders && persona.phases.validation.reminders.length > 0 && (
+                                  <div className="mt-3">
+                                    <p className="mb-1 text-xs font-semibold text-green-300">Reminders:</p>
+                                    <ul className="list-inside list-disc space-y-1 text-xs text-slate-400">
+                                      {persona.phases.validation.reminders.map((reminder, idx) => (
+                                        <li key={idx}>{reminder}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
@@ -470,15 +504,30 @@ export default function PersonasPage() {
                         <section className="mb-8">
                           <h3 className="mb-3 text-lg font-semibold text-white">Envelope Contract</h3>
                           <div className="rounded-xl border border-brand-outline/50 bg-brand-paper/30 p-4">
-                            <p className="mb-2 text-sm text-slate-300">
-                              Required Keys: {persona.envelopeContract.requiredKeys.join(', ')}
-                            </p>
-                            <p className="mb-2 text-sm text-slate-300">
-                              Required Data Keys: {persona.envelopeContract.requiredDataKeys.join(', ')}
-                            </p>
-                            <p className="text-sm text-slate-300">
-                              Required UI Keys: {persona.envelopeContract.requiredUiKeys.join(', ')}
-                            </p>
+                            <div className="mb-3">
+                              <p className="mb-1 text-xs font-semibold text-brand-accent">Required Keys:</p>
+                              <ul className="list-inside list-disc text-sm text-slate-300">
+                                {persona.envelopeContract.requiredKeys.map((key, idx) => (
+                                  <li key={idx}>{key}</li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div className="mb-3">
+                              <p className="mb-1 text-xs font-semibold text-brand-accent">Required Data Keys:</p>
+                              <ul className="list-inside list-disc text-sm text-slate-300">
+                                {persona.envelopeContract.requiredDataKeys.map((key, idx) => (
+                                  <li key={idx}>{key}</li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div>
+                              <p className="mb-1 text-xs font-semibold text-brand-accent">Required UI Keys:</p>
+                              <ul className="list-inside list-disc text-sm text-slate-300">
+                                {persona.envelopeContract.requiredUiKeys.map((key, idx) => (
+                                  <li key={idx}>{key}</li>
+                                ))}
+                              </ul>
+                            </div>
                           </div>
                         </section>
                         
