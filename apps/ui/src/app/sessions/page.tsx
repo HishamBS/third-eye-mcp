@@ -4,15 +4,24 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
+// Session status color mappings (SSOT)
+const SESSION_STATUS_COLORS = Object.freeze({
+  active: 'bg-green-500/20 text-green-400 border-green-500/40',
+  completed: 'bg-blue-500/20 text-blue-400 border-blue-500/40',
+  failed: 'bg-red-500/20 text-red-400 border-red-500/40',
+} as const);
+
+type SessionStatus = keyof typeof SESSION_STATUS_COLORS;
+
 interface Session {
   id: string;
   agentName: string | null;
   model: string | null;
   displayName: string | null;
-  status: 'active' | 'completed' | 'failed';
+  status: SessionStatus;
   createdAt: string;
   lastActivity: string | null;
-  configJson: Record<string, any> | null;
+  configJson: Record<string, unknown> | null;
 }
 
 export default function SessionsPage() {
@@ -63,14 +72,8 @@ export default function SessionsPage() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const colors = {
-      active: 'bg-green-500/20 text-green-400 border-green-500/40',
-      completed: 'bg-blue-500/20 text-blue-400 border-blue-500/40',
-      failed: 'bg-red-500/20 text-red-400 border-red-500/40',
-    };
-
-    return colors[status as keyof typeof colors] || 'bg-gray-500/20 text-gray-400 border-gray-500/40';
+  const getStatusBadge = (status: SessionStatus) => {
+    return SESSION_STATUS_COLORS[status];
   };
 
   const formatDate = (dateString: string) => {
