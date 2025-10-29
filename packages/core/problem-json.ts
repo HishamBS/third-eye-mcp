@@ -90,7 +90,7 @@ export class ProblemJsonFormatter {
     status?: number;
     detail?: string;
     instance?: string;
-    extensions?: Record<string, any>;
+    extensions?: Record<string, unknown>;
   }): ProblemDetails {
     const problem: ProblemDetails = {
       title: options.title,
@@ -271,7 +271,7 @@ export class ProblemJsonFormatter {
   /**
    * Create internal error problem
    */
-  static internalError(error: string, context?: Record<string, any>): ProblemDetails {
+  static internalError(error: string, context?: Record<string, unknown>): ProblemDetails {
     return this.createProblem({
       type: ERROR_TYPES.INTERNAL_ERROR,
       title: 'Internal Server Error',
@@ -286,7 +286,7 @@ export class ProblemJsonFormatter {
   /**
    * Convert any error to problem+json format
    */
-  static fromError(error: Error, context?: Record<string, any>): ProblemDetails {
+  static fromError(error: Error, context?: Record<string, unknown>): ProblemDetails {
     // Check if error already has problem details
     if ('type' in error && 'title' in error) {
       return error as unknown as ProblemDetails;
@@ -353,7 +353,7 @@ export class ThirdEyeProblem extends Error {
   public readonly status?: number;
   public readonly detail?: string;
   public readonly instance?: string;
-  public readonly extensions?: Record<string, any>;
+  public readonly extensions?: Record<string, unknown>;
 
   constructor(problem: ProblemDetails) {
     super(problem.title);
