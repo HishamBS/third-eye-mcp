@@ -72,7 +72,7 @@ export const ERROR_TYPES = {
  */
 export function createSuccessResponse(
   c: Context,
-  data: any,
+  data: unknown,
   options?: {
     status?: number;
     pagination?: {
