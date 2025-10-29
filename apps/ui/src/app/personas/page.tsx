@@ -61,6 +61,11 @@ export default function PersonasPage() {
   const [diffResult, setDiffResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    guidance: false,
+    validation: false,
+    envelope: false,
+  });
 
   useEffect(() => {
     fetchAllEyes();
@@ -447,53 +452,73 @@ export default function PersonasPage() {
                           </div>
                         </section>
                         
-                        <section className="mb-8">
+                        <section className="mb-6">
                           <h3 className="mb-3 text-lg font-semibold text-white">Phases</h3>
-                          <div className="space-y-6">
+                          <div className="space-y-3">
                             {persona.phases.guidance && (
-                              <div className="rounded-xl border border-blue-500/40 bg-blue-500/10 p-4">
-                                <h4 className="mb-2 font-semibold text-blue-300">Guidance Phase</h4>
-                                <p className="mb-3 text-sm text-slate-300">{persona.phases.guidance.mission}</p>
-                                <div>
-                                  <p className="mb-1 text-xs font-semibold text-blue-300">Check:</p>
-                                  <ul className="list-inside list-disc space-y-1 text-xs text-slate-400">
-                                    {persona.phases.guidance.check.split(',').map((item, idx) => (
-                                      <li key={idx}>{item.trim()}</li>
-                                    ))}
-                                  </ul>
-                                </div>
-                                {persona.phases.guidance.reminders && persona.phases.guidance.reminders.length > 0 && (
-                                  <div className="mt-3">
-                                    <p className="mb-1 text-xs font-semibold text-blue-300">Reminders:</p>
-                                    <ul className="list-inside list-disc space-y-1 text-xs text-slate-400">
-                                      {persona.phases.guidance.reminders.map((reminder, idx) => (
-                                        <li key={idx}>{reminder}</li>
-                                      ))}
-                                    </ul>
+                              <div className="rounded-xl border border-blue-500/40 bg-blue-500/10 overflow-hidden">
+                                <button
+                                  onClick={() => setExpandedSections(prev => ({ ...prev, guidance: !prev.guidance }))}
+                                  className="w-full p-4 flex items-center justify-between text-left hover:bg-blue-500/20 transition"
+                                >
+                                  <h4 className="font-semibold text-blue-300">Guidance Phase</h4>
+                                  <span className="text-blue-300">{expandedSections.guidance ? '▼' : '▶'}</span>
+                                </button>
+                                {expandedSections.guidance && (
+                                  <div className="px-4 pb-4 space-y-3">
+                                    <p className="text-sm text-slate-300">{persona.phases.guidance.mission}</p>
+                                    <div>
+                                      <p className="mb-1 text-xs font-semibold text-blue-300">Check:</p>
+                                      <ul className="list-inside list-disc space-y-1 text-xs text-slate-400">
+                                        {persona.phases.guidance.check.split(',').map((item, idx) => (
+                                          <li key={idx}>{item.trim()}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                    {persona.phases.guidance.reminders && persona.phases.guidance.reminders.length > 0 && (
+                                      <div>
+                                        <p className="mb-1 text-xs font-semibold text-blue-300">Reminders:</p>
+                                        <ul className="list-inside list-disc space-y-1 text-xs text-slate-400">
+                                          {persona.phases.guidance.reminders.map((reminder, idx) => (
+                                            <li key={idx}>{reminder}</li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
                             )}
                             {persona.phases.validation && (
-                              <div className="rounded-xl border border-green-500/40 bg-green-500/10 p-4">
-                                <h4 className="mb-2 font-semibold text-green-300">Validation Phase</h4>
-                                <p className="mb-3 text-sm text-slate-300">{persona.phases.validation.mission}</p>
-                                <div>
-                                  <p className="mb-1 text-xs font-semibold text-green-300">Check:</p>
-                                  <ul className="list-inside list-disc space-y-1 text-xs text-slate-400">
-                                    {persona.phases.validation.check.split(',').map((item, idx) => (
-                                      <li key={idx}>{item.trim()}</li>
-                                    ))}
-                                  </ul>
-                                </div>
-                                {persona.phases.validation.reminders && persona.phases.validation.reminders.length > 0 && (
-                                  <div className="mt-3">
-                                    <p className="mb-1 text-xs font-semibold text-green-300">Reminders:</p>
-                                    <ul className="list-inside list-disc space-y-1 text-xs text-slate-400">
-                                      {persona.phases.validation.reminders.map((reminder, idx) => (
-                                        <li key={idx}>{reminder}</li>
-                                      ))}
-                                    </ul>
+                              <div className="rounded-xl border border-green-500/40 bg-green-500/10 overflow-hidden">
+                                <button
+                                  onClick={() => setExpandedSections(prev => ({ ...prev, validation: !prev.validation }))}
+                                  className="w-full p-4 flex items-center justify-between text-left hover:bg-green-500/20 transition"
+                                >
+                                  <h4 className="font-semibold text-green-300">Validation Phase</h4>
+                                  <span className="text-green-300">{expandedSections.validation ? '▼' : '▶'}</span>
+                                </button>
+                                {expandedSections.validation && (
+                                  <div className="px-4 pb-4 space-y-3">
+                                    <p className="text-sm text-slate-300">{persona.phases.validation.mission}</p>
+                                    <div>
+                                      <p className="mb-1 text-xs font-semibold text-green-300">Check:</p>
+                                      <ul className="list-inside list-disc space-y-1 text-xs text-slate-400">
+                                        {persona.phases.validation.check.split(',').map((item, idx) => (
+                                          <li key={idx}>{item.trim()}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                    {persona.phases.validation.reminders && persona.phases.validation.reminders.length > 0 && (
+                                      <div>
+                                        <p className="mb-1 text-xs font-semibold text-green-300">Reminders:</p>
+                                        <ul className="list-inside list-disc space-y-1 text-xs text-slate-400">
+                                          {persona.phases.validation.reminders.map((reminder, idx) => (
+                                            <li key={idx}>{reminder}</li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -501,33 +526,43 @@ export default function PersonasPage() {
                           </div>
                         </section>
                         
-                        <section className="mb-8">
-                          <h3 className="mb-3 text-lg font-semibold text-white">Envelope Contract</h3>
-                          <div className="rounded-xl border border-brand-outline/50 bg-brand-paper/30 p-4">
-                            <div className="mb-3">
-                              <p className="mb-1 text-xs font-semibold text-brand-accent">Required Keys:</p>
-                              <ul className="list-inside list-disc text-sm text-slate-300">
-                                {persona.envelopeContract.requiredKeys.map((key, idx) => (
-                                  <li key={idx}>{key}</li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div className="mb-3">
-                              <p className="mb-1 text-xs font-semibold text-brand-accent">Required Data Keys:</p>
-                              <ul className="list-inside list-disc text-sm text-slate-300">
-                                {persona.envelopeContract.requiredDataKeys.map((key, idx) => (
-                                  <li key={idx}>{key}</li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div>
-                              <p className="mb-1 text-xs font-semibold text-brand-accent">Required UI Keys:</p>
-                              <ul className="list-inside list-disc text-sm text-slate-300">
-                                {persona.envelopeContract.requiredUiKeys.map((key, idx) => (
-                                  <li key={idx}>{key}</li>
-                                ))}
-                              </ul>
-                            </div>
+                        <section className="mb-6">
+                          <div className="rounded-xl border border-brand-outline/50 bg-brand-paper/30 overflow-hidden">
+                            <button
+                              onClick={() => setExpandedSections(prev => ({ ...prev, envelope: !prev.envelope }))}
+                              className="w-full p-4 flex items-center justify-between text-left hover:bg-brand-paper/50 transition"
+                            >
+                              <h3 className="text-lg font-semibold text-white">Envelope Contract</h3>
+                              <span className="text-brand-accent">{expandedSections.envelope ? '▼' : '▶'}</span>
+                            </button>
+                            {expandedSections.envelope && (
+                              <div className="px-4 pb-4 space-y-3">
+                                <div>
+                                  <p className="mb-1 text-xs font-semibold text-brand-accent">Required Keys:</p>
+                                  <ul className="list-inside list-disc text-sm text-slate-300">
+                                    {persona.envelopeContract.requiredKeys.map((key, idx) => (
+                                      <li key={idx}>{key}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                                <div>
+                                  <p className="mb-1 text-xs font-semibold text-brand-accent">Required Data Keys:</p>
+                                  <ul className="list-inside list-disc text-sm text-slate-300">
+                                    {persona.envelopeContract.requiredDataKeys.map((key, idx) => (
+                                      <li key={idx}>{key}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                                <div>
+                                  <p className="mb-1 text-xs font-semibold text-brand-accent">Required UI Keys:</p>
+                                  <ul className="list-inside list-disc text-sm text-slate-300">
+                                    {persona.envelopeContract.requiredUiKeys.map((key, idx) => (
+                                      <li key={idx}>{key}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </section>
                         
