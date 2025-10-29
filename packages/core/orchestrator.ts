@@ -2,9 +2,9 @@ import { Buffer } from 'node:buffer';
 import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
 import { runs, sessions, personas, eyesRouting, providerKeys } from '@third-eye/db';
-import { ProviderFactory } from '@third-eye/providers';
+import { ProviderFactory, type CompletionResponse } from '@third-eye/providers';
 import type { ProviderType } from '@third-eye/providers';
-import { getEye, getAllEyeNames, type EyeName, type EyeResponse, type BaseEnvelope } from '@third-eye/eyes';
+import { getEye, getAllEyeNames, type EyeName, type EyeResponse, type BaseEnvelope, type PersonaPrompt } from '@third-eye/eyes';
 import { PROVIDERS } from '@third-eye/types';
 import { eq, and, desc } from 'drizzle-orm';
 import { orderGuard, type OrderViolation } from './order-guard';
@@ -186,9 +186,9 @@ export class EyeOrchestrator {
       // Emit eye_started event
       try {
         const wsManager = getWebSocketBridge();
-        if (wsManager && 'emitEyeStarted' in wsManager) {
+        if (wsManager && 'emitEyeStarted' in wsManager && typeof (wsManager as { emitEyeStarted?: unknown }).emitEyeStarted === 'function') {
           const eyeIcon = this.getEyeIcon(eyeName);
-          (wsManager as any).emitEyeStarted(actualSessionId, eyeName, {
+          (wsManager as { emitEyeStarted: (sessionId: string, eyeName: string, ui: Record<string, unknown>) => void }).emitEyeStarted(actualSessionId, eyeName, {
             title: `${eye.name} Started`,
             summary: `Analyzing request...`,
             details: `Eye ${eyeName} is processing the input`,
@@ -278,7 +278,7 @@ export class EyeOrchestrator {
       let attempt = 0;
       let envelope: BaseEnvelope | null = null;
       let latencyMs = 0;
-      let completion: any = null;
+      let completion: CompletionResponse | null = null;
       let enrichedInput = input;
       
       // **DYNAMIC ROUTING**: If this is the Overseer eye, load capabilities from DB
@@ -310,7 +310,7 @@ export class EyeOrchestrator {
 
         // Build persona prompt (may include reminder on retries)
         // Use dynamic router persona for Overseer, otherwise use blueprint
-        let personaPrompt: any;
+        let personaPrompt: PersonaPrompt;
         if (dynamicRouterPersona && eyeName === 'overseer') {
           personaPrompt = {
             systemPrompt: dynamicRouterPersona,
@@ -369,8 +369,9 @@ export class EyeOrchestrator {
           }
 
           // 9. Validate envelope with Eye's validator
-          if ((envelope as any)?.next === undefined && (envelope as any)?.next_action !== undefined) {
-            (envelope as any).next = (envelope as any).next_action;
+          // Handle legacy next_action field (some Eyes may still use it)
+          if (envelope && 'next' in envelope && envelope.next === undefined && 'next_action' in envelope && envelope.next_action) {
+            (envelope as BaseEnvelope & { next: string | string[] }).next = envelope.next_action;
           }
 
           if (!eye.validate(envelope)) {
