@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { getDb } from '@third-eye/db';
-import { sessions, runs, pipelineEvents } from '@third-eye/db';
+import { sessions, runs, pipelineEvents, type Session, type Run, type PipelineEvent } from '@third-eye/db';
 import { eq, desc } from 'drizzle-orm';
 import {
   validateBodyWithEnvelope,
@@ -24,6 +24,13 @@ app.use('*', requestIdMiddleware());
 app.use('*', errorHandler());
 
 type ExportFormat = 'pdf' | 'html' | 'json' | 'md';
+
+interface ExportData {
+  session: Session;
+  runs: Run[];
+  events: PipelineEvent[];
+  exportedAt: string;
+}
 
 /**
  * GET /api/export/:sessionId - Export session data
@@ -108,7 +115,7 @@ app.get('/:sessionId', async (c) => {
 /**
  * Generate Markdown export
  */
-function generateMarkdown(data: any): string {
+function generateMarkdown(data: ExportData): string {
   const { session, runs, events } = data;
 
   let md = `# Third Eye Session Export\n\n`;
@@ -122,7 +129,7 @@ function generateMarkdown(data: any): string {
   }
 
   md += `## Timeline Events (${events.length})\n\n`;
-  events.forEach((event: any, index: number) => {
+  events.forEach((event, index) => {
     md += `### ${index + 1}. ${event.type} - ${event.eye || 'system'}\n`;
     md += `- **Code:** ${event.code || 'N/A'}\n`;
     md += `- **Time:** ${new Date(event.createdAt).toLocaleString()}\n`;
@@ -133,7 +140,7 @@ function generateMarkdown(data: any): string {
   });
 
   md += `## Eye Runs (${runs.length})\n\n`;
-  runs.forEach((run: any, index: number) => {
+  runs.forEach((run, index) => {
     md += `### ${index + 1}. ${run.eye}\n`;
     md += `- **Provider:** ${run.provider}\n`;
     md += `- **Model:** ${run.model}\n`;
@@ -154,7 +161,7 @@ function generateMarkdown(data: any): string {
 /**
  * Generate HTML export
  */
-function generateHTML(data: any, forPrint = false): string {
+function generateHTML(data: ExportData, forPrint = false): string {
   const { session, runs, events } = data;
 
   const printStyles = forPrint
@@ -229,7 +236,7 @@ function generateHTML(data: any, forPrint = false): string {
     <div class="stat">
       <div class="stat-label">Total Tokens</div>
       <div class="stat-value">${runs.reduce(
-        (sum: number, r: any) => sum + (r.tokensIn || 0) + (r.tokensOut || 0),
+        (sum, r) => sum + (r.tokensIn || 0) + (r.tokensOut || 0),
         0
       )}</div>
     </div>
@@ -237,7 +244,7 @@ function generateHTML(data: any, forPrint = false): string {
       <div class="stat-label">Avg Latency</div>
       <div class="stat-value">${
         runs.length > 0
-          ? Math.round(runs.reduce((sum: number, r: any) => sum + (r.latencyMs || 0), 0) / runs.length)
+          ? Math.round(runs.reduce((sum, r) => sum + (r.latencyMs || 0), 0) / runs.length)
           : 0
       }ms</div>
     </div>
@@ -246,7 +253,7 @@ function generateHTML(data: any, forPrint = false): string {
   <h2>Timeline Events (${events.length})</h2>
   ${events
     .map(
-      (event: any, index: number) => `
+      (event, index) => `
     <div class="event">
       <h3>${index + 1}. ${event.type} - ${event.eye || 'system'}</h3>
       <p><strong>Code:</strong> ${event.code || 'N/A'}</p>
@@ -261,7 +268,7 @@ function generateHTML(data: any, forPrint = false): string {
   <h2>Eye Runs (${runs.length})</h2>
   ${runs
     .map(
-      (run: any, index: number) => `
+      (run, index) => `
     <div class="run">
       <h3>${index + 1}. ${run.eye}</h3>
       <div class="stats">
