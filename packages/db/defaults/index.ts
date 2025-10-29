@@ -264,7 +264,7 @@ async function seedIntegrations(
   if (force) {
     await db
       .delete(mcpIntegrations)
-      .where(inArray(mcpIntegrations.slug as any, DEFAULT_INTEGRATIONS.map((integration) => integration.slug)))
+      .where(inArray(mcpIntegrations.slug, DEFAULT_INTEGRATIONS.map((integration) => integration.slug)))
       .run();
   }
 
@@ -274,7 +274,7 @@ async function seedIntegrations(
     const existing = await db
       .select({ id: mcpIntegrations.id })
       .from(mcpIntegrations)
-      .where(eq(mcpIntegrations.slug as any, integration.slug))
+      .where(eq(mcpIntegrations.slug, integration.slug))
       .limit(1);
 
     if (existing.length > 0) {
