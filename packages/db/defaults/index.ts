@@ -53,12 +53,13 @@ const DEFAULT_APP_SETTINGS: NewAppSetting[] = [
 
 export interface SeedDefaultsOptions {
   force?: boolean;
-  subsets?: Partial<Record<'personas' | 'routing' | 'strictness' | 'appSettings' | 'integrations', boolean>>;
+  subsets?: Partial<Record<'personas' | 'blueprints' | 'routing' | 'strictness' | 'appSettings' | 'integrations', boolean>>;
   log?: (message: string) => void;
 }
 
 export interface SeedReport {
   personas: boolean;
+  blueprints: boolean;
   routing: boolean;
   strictness: boolean;
   appSettings: boolean;
@@ -67,6 +68,65 @@ export interface SeedReport {
 
 function generatePersonaId(eyeName: string, version: number) {
   return `${eyeName}_v${version}`;
+}
+
+async function seedBlueprints(
+  db: ReturnType<typeof getDb>['db'],
+  log: (message: string) => void,
+  force: boolean
+): Promise<boolean> {
+  try {
+    const { personaBlueprints } = await import('./schema');
+    const { count } = await import('drizzle-orm');
+    
+    // Check if blueprints already exist
+    const existingCount = await db
+      .select({ value: count() })
+      .from(personaBlueprints)
+      .limit(1);
+    
+    if (existingCount[0]?.value && existingCount[0].value > 0 && !force) {
+      log('   ✓ Blueprints already seeded');
+      return false;
+    }
+
+    // Import and seed from TypeScript registry
+    const { BLUEPRINT_REGISTRY } = await import('@third-eye/eyes/blueprint-client');
+    const now = new Date();
+    
+    let seeded = 0;
+    for (const [eyeId, blueprint] of Object.entries(BLUEPRINT_REGISTRY)) {
+      try {
+        await db
+          .insert(personaBlueprints)
+          .values({
+            eyeId,
+            name: blueprint.metadata.name,
+            description: blueprint.metadata.description,
+            version: blueprint.metadata.version,
+            capabilities: JSON.stringify(blueprint.metadata.capabilities),
+            mission: blueprint.mission,
+            phases: JSON.stringify(blueprint.phases),
+            envelopeContract: JSON.stringify(blueprint.envelopeContract),
+            reminders: JSON.stringify(blueprint.reminders),
+            notes: blueprint.notes || null,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .onConflictDoNothing();
+        
+        seeded++;
+      } catch (error) {
+        // Ignore duplicates
+      }
+    }
+    
+    log(`   ✓ Seeded ${seeded} blueprints`);
+    return true;
+  } catch (error) {
+    log(`   ✗ Failed to seed blueprints: ${error}`);
+    return false;
+  }
 }
 
 async function seedPersonas(
@@ -268,6 +328,7 @@ export async function seedDefaults(options: SeedDefaultsOptions = {}): Promise<S
   const force = options.force ?? false;
   const subsets = {
     personas: true,
+    blueprints: true,
     routing: true,
     strictness: true,
     appSettings: true,
@@ -277,6 +338,7 @@ export async function seedDefaults(options: SeedDefaultsOptions = {}): Promise<S
 
   const report: SeedReport = {
     personas: false,
+    blueprints: false,
     routing: false,
     strictness: false,
     appSettings: false,
@@ -285,6 +347,10 @@ export async function seedDefaults(options: SeedDefaultsOptions = {}): Promise<S
 
   if (subsets.personas) {
     report.personas = await seedPersonas(db, sqlite, log, force);
+  }
+
+  if (subsets.blueprints) {
+    report.blueprints = await seedBlueprints(db, log, force);
   }
 
   if (subsets.routing) {
