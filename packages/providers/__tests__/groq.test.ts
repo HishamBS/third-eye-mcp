@@ -95,10 +95,10 @@ describe('GroqProvider', () => {
       return;
     }
 
-    // Missing model
-    const invalidRequest: any = {
+    // Missing model - intentionally invalid for testing
+    const invalidRequest = {
       messages: [{ role: 'user', content: 'test' }]
-    };
+    } as CompletionRequest;
 
     await expect(provider.complete(invalidRequest)).rejects.toThrow();
   });
@@ -155,7 +155,7 @@ describe('GroqProvider', () => {
       const response = await provider.complete(request);
 
       // Verify response is valid JSON
-      let parsed: any;
+      let parsed: unknown;
       expect(() => {
         parsed = JSON.parse(response.output);
       }).not.toThrow();
@@ -228,11 +228,11 @@ describe('GroqProvider', () => {
 
       // Mock fetch to intercept the request
       const originalFetch = global.fetch;
-      let capturedBody: any = null;
+      let capturedBody: unknown = null;
 
       try {
-        global.fetch = async (url: any, options: any) => {
-          if (options?.body) {
+        global.fetch = async (url: string | URL | Request, options?: RequestInit) => {
+          if (options?.body && typeof options.body === 'string') {
             capturedBody = JSON.parse(options.body);
           }
           return originalFetch(url, options);
