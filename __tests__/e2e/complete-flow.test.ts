@@ -30,7 +30,7 @@ const API_URL = 'http://127.0.0.1:7070';
 describe('E2E Complete Flow Test Suite', () => {
   let mcpClient: Client;
   let mcpTransport: StdioClientTransport;
-  let db: any;
+  let db: ReturnType<typeof getDb>['db'];
   let testSessionId: string | null = null;
 
   // Capture all logs for debugging
@@ -139,8 +139,8 @@ describe('E2E Complete Flow Test Suite', () => {
         {} as any
       );
 
-      const tools = (result as any).tools;
-      const toolNames = tools.map((t: any) => t.name.toLowerCase());
+      const tools = (result as any).tools as Array<{ name: string }>;
+      const toolNames = tools.map(t => t.name.toLowerCase());
 
       // List of Eye names that should NEVER appear
       const forbiddenNames = [
