@@ -171,7 +171,7 @@ export class AutoRouter {
       complexity: (overseerResult.data.complexity as 'simple' | 'medium' | 'complex') || 'medium',
       recommendedFlow: pipelineRoute as EyeName[],
       reasoning: (overseerResult.data.routingReasoning as string) || 'Overseer-determined',
-      estimatedSteps: (pipelineRoute as any[]).length
+      estimatedSteps: pipelineRoute.length
     };
   }
 
