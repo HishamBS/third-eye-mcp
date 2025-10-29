@@ -23,12 +23,14 @@ export default function PersonasPage() {
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [selectedPersona, setSelectedPersona] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchPersonas();
   }, []);
 
   const fetchPersonas = async () => {
+    setLoading(true);
     try {
       const response = await fetch('/api/personas/blueprints');
       if (response.ok) {
@@ -39,7 +41,14 @@ export default function PersonasPage() {
     } catch (error) {
       console.error('Failed to fetch personas:', error);
       setError('Failed to load personas');
+    } finally {
+      setLoading(false);
     }
+  };
+
+
+  const getEyeIconPath = (eye: string) => {
+    return `/eyes/${eye}.svg`;
   };
 
   const getEyeIconPath = (eye: string) => {
@@ -85,7 +94,24 @@ export default function PersonasPage() {
 
       {/* Eye Cards Grid */}
       <div className="mx-auto max-w-7xl px-6 py-8">
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <p className="text-slate-400">Loading personas...</p>
+          </div>
+        ) : personas.length === 0 ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <p className="text-slate-400">No personas found</p>
+              <button
+                onClick={fetchPersonas}
+                className="mt-4 rounded-full bg-brand-accent px-6 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {personas.map((persona, index) => {
             const eye = persona.id;
             const isSelected = selectedPersona === eye;
@@ -140,7 +166,7 @@ export default function PersonasPage() {
                           className="rounded-full bg-brand-accent/20 px-2 py-1 text-xs text-brand-accent"
                         >
                           {cap}
-                        </span>
+                                </span>
                     ))}
                   </div>
                   )}
@@ -148,7 +174,8 @@ export default function PersonasPage() {
               </motion.div>
             );
           })}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
