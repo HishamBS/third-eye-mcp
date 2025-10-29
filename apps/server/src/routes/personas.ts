@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
 import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
-import { personas, personaVersions, personaBlueprints } from '@third-eye/db';
+import { personas, personaVersions } from '@third-eye/db';
+import { personaBlueprints } from '@third-eye/db/schema';
 import { DEFAULT_PERSONA_MAP } from '@third-eye/db/defaults';
 import { getEyeIconPath, EyeId } from '@third-eye/constants';
 import { eq, and, desc } from 'drizzle-orm';
