@@ -8,15 +8,19 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
  * with correct schemas and handlers.
  */
 
+interface MockMcpServer {
+  tool: (name: string, config: unknown, handler: unknown) => void;
+}
+
 describe('MCP Bridge - Eyes Registration', () => {
-  let mockServer: any;
-  let registeredTools: Map<string, any>;
+  let mockServer: MockMcpServer;
+  let registeredTools: Map<string, { name: string; config: unknown; handler: unknown }>;
 
   beforeEach(() => {
     registeredTools = new Map();
 
     mockServer = {
-      tool: vi.fn((name: string, config: any, handler: any) => {
+      tool: vi.fn((name: string, config: unknown, handler: unknown) => {
         registeredTools.set(name, { name, config, handler });
       }),
     };
