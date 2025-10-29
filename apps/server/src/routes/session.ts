@@ -21,6 +21,12 @@ import { z } from 'zod';
  * Handles session creation, retrieval, and run history
  */
 
+interface Clarification {
+  question: string;
+  answer?: string;
+  [key: string]: unknown;
+}
+
 const app = new Hono();
 
 app.use('*', requestIdMiddleware());
@@ -51,13 +57,13 @@ const validateClarificationSchema = z.object({
 // Create new session
 app.post('/', async (c) => {
   try {
-    let body: any = {};
+    let body: Record<string, unknown> = {};
     try {
       body = await c.req.json();
     } catch (e) {
       // Empty body is ok
     }
-    const { config: sessionConfig } = body;
+    const sessionConfig = body.config as Record<string, unknown> | undefined;
 
     const sessionId = nanoid(12);
     const { db } = getDb();
@@ -65,9 +71,9 @@ app.post('/', async (c) => {
 
     const newSession = {
       id: sessionId,
-      agentName: sessionConfig?.agentName || 'Unknown Agent',
-      model: sessionConfig?.model || null,
-      displayName: sessionConfig?.displayName || sessionId,
+      agentName: (typeof sessionConfig?.agentName === 'string' ? sessionConfig.agentName : undefined) || 'Unknown Agent',
+      model: (typeof sessionConfig?.model === 'string' ? sessionConfig.model : null) || null,
+      displayName: (typeof sessionConfig?.displayName === 'string' ? sessionConfig.displayName : undefined) || sessionId,
       createdAt: new Date(),
       status: 'active',
       configJson: sessionConfig || null,
@@ -1132,9 +1138,9 @@ app.post('/:id/clarifications/:clarificationId/validate', async (c) => {
 
     // Check for contradictions with previous clarifications
     if (valid) {
-      const previousAnswers = Object.values(clarifications)
-        .filter((c: any) => c.answer)
-        .map((c: any) => c.answer.toLowerCase());
+      const previousAnswers = Object.values(clarifications as Record<string, Clarification>)
+        .filter((c): c is Clarification & { answer: string } => typeof c.answer === 'string')
+        .map((c) => c.answer.toLowerCase());
 
       const answerLower = answer.toLowerCase();
 
