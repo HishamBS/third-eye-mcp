@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import type { Run } from '@/types/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,7 +21,7 @@ export async function GET() {
     const totalSessions = sessions.length;
 
     // Fetch runs for each session and aggregate metrics
-    let allRuns: any[] = [];
+    let allRuns: Run[] = [];
     const providerStats = new Map<string, { totalCalls: number; totalLatency: number; successCount: number; totalTokens: number }>();
 
     for (const session of sessions) {
