@@ -6,11 +6,11 @@ import { z } from 'zod';
 export interface ToolMetadata {
   name: string;
   description: string;
-  inputSchema: z.ZodType<any> | Record<string, any>;
-  outputSchema: z.ZodType<any> | Record<string, any>;
+  inputSchema: z.ZodType<any> | Record<string, unknown>;
+  outputSchema: z.ZodType<any> | Record<string, unknown>;
   version: string;
   tags?: string[];
-  examples?: Array<{ input: any; output: any; description?: string }>;
+  examples?: Array<{ input: unknown; output: unknown; description?: string }>;
 }
 
 /**
@@ -292,8 +292,8 @@ toolRegistry.register({
 export function getToolsJSON(): Array<{
   name: string;
   description: string;
-  inputSchema: any;
-  outputSchema: any;
+  inputSchema: unknown;
+  outputSchema: unknown;
   version: string;
   tags?: string[];
 }> {
