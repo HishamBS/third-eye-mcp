@@ -5,23 +5,10 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1759819374396,
-      "tag": "0000_tan_shockwave",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1761681373000,
-      "tag": "0001_romantic_madrox",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1761719582744,
-      "tag": "0002_windy_typhoid_mary",
+      "when": 1738098580217,
+      "tag": "consolidated_schema",
       "breakpoints": true
     }
   ]
 }
+

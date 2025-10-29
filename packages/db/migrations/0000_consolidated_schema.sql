@@ -1,3 +1,6 @@
+-- Consolidated Migration for Third Eye MCP
+-- This is the single source of truth for database schema
+
 CREATE TABLE `app_settings` (
 	`key` text PRIMARY KEY NOT NULL,
 	`value` text NOT NULL
@@ -39,13 +42,21 @@ CREATE TABLE `eyes_custom` (
 	`created_at` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `eyes_custom_name_version_unique` ON `eyes_custom` (`name`,`version`);--> statement-breakpoint
+CREATE UNIQUE INDEX `eyes_custom_name_version_unique` ON `eyes_custom` (`name`,`version`);
+--> statement-breakpoint
 CREATE TABLE `eyes_routing` (
 	`eye` text PRIMARY KEY NOT NULL,
 	`primary_provider` text,
 	`primary_model` text,
 	`fallback_provider` text,
 	`fallback_model` text
+);
+--> statement-breakpoint
+CREATE TABLE `eye_settings` (
+	`eye` text PRIMARY KEY NOT NULL,
+	`display_name` text,
+	`description` text,
+	`updated_at` integer NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `mcp_integrations` (
@@ -67,7 +78,8 @@ CREATE TABLE `mcp_integrations` (
 	`updated_at` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `mcp_integrations_slug_unique` ON `mcp_integrations` (`slug`);--> statement-breakpoint
+CREATE UNIQUE INDEX `mcp_integrations_slug_unique` ON `mcp_integrations` (`slug`);
+--> statement-breakpoint
 CREATE TABLE `models_cache` (
 	`provider` text NOT NULL,
 	`model` text NOT NULL,
@@ -77,7 +89,8 @@ CREATE TABLE `models_cache` (
 	`last_seen` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `models_cache_provider_model_unique` ON `models_cache` (`provider`,`model`);--> statement-breakpoint
+CREATE UNIQUE INDEX `models_cache_provider_model_unique` ON `models_cache` (`provider`,`model`);
+--> statement-breakpoint
 CREATE TABLE `persona_versions` (
 	`id` text PRIMARY KEY NOT NULL,
 	`persona_id` text NOT NULL,
@@ -91,13 +104,30 @@ CREATE TABLE `persona_versions` (
 CREATE TABLE `personas` (
 	`id` text PRIMARY KEY NOT NULL,
 	`eye` text NOT NULL,
+	`name` text NOT NULL,
 	`version` integer NOT NULL,
 	`content` text NOT NULL,
 	`active` integer DEFAULT false NOT NULL,
 	`created_at` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `personas_eye_version_unique` ON `personas` (`eye`,`version`);--> statement-breakpoint
+CREATE UNIQUE INDEX `personas_eye_version_unique` ON `personas` (`eye`,`version`);
+--> statement-breakpoint
+CREATE TABLE `persona_blueprints` (
+	`eye_id` text PRIMARY KEY NOT NULL,
+	`name` text NOT NULL,
+	`description` text NOT NULL,
+	`version` text NOT NULL,
+	`capabilities` text NOT NULL,
+	`mission` text NOT NULL,
+	`phases` text NOT NULL,
+	`envelope_contract` text NOT NULL,
+	`reminders` text,
+	`notes` text,
+	`created_at` integer NOT NULL,
+	`updated_at` integer NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE `pipeline_events` (
 	`id` text PRIMARY KEY NOT NULL,
 	`session_id` text NOT NULL,
@@ -136,7 +166,8 @@ CREATE TABLE `pipelines` (
 	`created_at` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `pipelines_name_version_unique` ON `pipelines` (`name`,`version`);--> statement-breakpoint
+CREATE UNIQUE INDEX `pipelines_name_version_unique` ON `pipelines` (`name`,`version`);
+--> statement-breakpoint
 CREATE TABLE `prompts` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
@@ -149,7 +180,8 @@ CREATE TABLE `prompts` (
 	`created_at` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `prompts_name_version_unique` ON `prompts` (`name`,`version`);--> statement-breakpoint
+CREATE UNIQUE INDEX `prompts_name_version_unique` ON `prompts` (`name`,`version`);
+--> statement-breakpoint
 CREATE TABLE `provider_keys` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`provider` text NOT NULL,
@@ -198,3 +230,31 @@ CREATE TABLE `strictness_profiles` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `strictness_profiles_name_unique` ON `strictness_profiles` (`name`);
+--> statement-breakpoint
+CREATE TABLE `clarifications` (
+	`id` text PRIMARY KEY NOT NULL,
+	`session_id` text NOT NULL,
+	`field` text NOT NULL,
+	`question` text NOT NULL,
+	`answer` text,
+	`status` text DEFAULT 'pending' NOT NULL,
+	`created_at` integer NOT NULL,
+	`answered_at` integer,
+	FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `clarifications_session_id_field_unique` ON `clarifications` (`session_id`,`field`);
+--> statement-breakpoint
+CREATE TABLE `intent_confirmations` (
+	`id` text PRIMARY KEY NOT NULL,
+	`session_id` text NOT NULL,
+	`intent_analysis` text,
+	`confirmation_prompt` text NOT NULL,
+	`response` text,
+	`user_identity` text,
+	`status` text DEFAULT 'pending' NOT NULL,
+	`created_at` integer NOT NULL,
+	`responded_at` integer,
+	FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON UPDATE no action ON DELETE no action
+);
+
