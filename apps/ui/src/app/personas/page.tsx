@@ -46,11 +46,6 @@ export default function PersonasPage() {
     }
   };
 
-
-  const getEyeIconPath = (eye: string) => {
-    return `/eyes/${eye}.svg`;
-  };
-
   const getEyeIconPath = (eye: string) => {
     return `/eyes/${eye}.svg`;
   };
@@ -169,8 +164,8 @@ export default function PersonasPage() {
                         >
                           {toHumanReadable(cap)}
                         </span>
-                      ))}
-                    </div>
+                    ))}
+                  </div>
                   )}
                 </div>
               </motion.div>
