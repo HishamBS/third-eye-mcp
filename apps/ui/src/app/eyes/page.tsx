@@ -27,6 +27,28 @@ interface Persona {
   eye: string;
 }
 
+interface CreateEyePayload {
+  readonly name: string;
+  readonly description: string;
+  readonly inputSchema: Record<string, unknown>;
+  readonly outputSchema: Record<string, unknown>;
+  readonly personaId?: string;
+}
+
+interface UpdateEyePayload {
+  readonly name: string;
+  readonly description: string;
+  readonly inputSchema: Record<string, unknown>;
+  readonly outputSchema: Record<string, unknown>;
+  readonly personaId?: string;
+}
+
+interface EyeTestResult {
+  readonly success: boolean;
+  readonly output?: Record<string, unknown>;
+  readonly error?: string;
+}
+
 export default function EyesPage() {
   const dialog = useDialog();
   const [eyes, setEyes] = useState<Eye[]>([]);
@@ -40,7 +62,7 @@ export default function EyesPage() {
   const [viewMode, setViewMode] = useState<'all' | 'built-in' | 'custom'>('all');
   const [isTesting, setIsTesting] = useState(false);
   const [testInput, setTestInput] = useState('');
-  const [testResult, setTestResult] = useState<any>(null);
+  const [testResult, setTestResult] = useState<EyeTestResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -240,17 +262,13 @@ export default function EyesPage() {
     setLoading(true);
     setError(null);
     try {
-      const payload: any = {
+      const payload: CreateEyePayload = {
         name: formData.name,
         description: formData.description,
         inputSchema,
         outputSchema,
+        ...(formData.personaId && { personaId: formData.personaId }),
       };
-
-      // Only include personaId if user selected one
-      if (formData.personaId) {
-        payload.personaId = formData.personaId;
-      }
 
       const response = await fetch('/api/eyes/custom', {
         method: 'POST',
@@ -304,17 +322,13 @@ export default function EyesPage() {
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
 
-      const payload: any = {
+      const payload: UpdateEyePayload = {
         name: formData.name,
         description: formData.description,
         inputSchema,
         outputSchema,
+        ...(formData.personaId && { personaId: formData.personaId }),
       };
-
-      // Only include personaId if user selected one
-      if (formData.personaId) {
-        payload.personaId = formData.personaId;
-      }
 
       const response = await fetch(`${API_URL}/api/eyes/custom/${selectedEye.id}`, {
         method: 'PUT',
@@ -401,9 +415,9 @@ export default function EyesPage() {
     return `/eyes/${eyeId}.svg`;
   };
 
-  const getEyeColor = (eyeId: string) => {
-    // All cards use the same Byakugan color scheme
-    return 'border-white/40 bg-white/10';
+  const getEyeColor = (_eyeId: string) => {
+    // All cards use consistent brand tokens
+    return 'border-brand-outline/40 bg-brand-paper/10';
   };
 
   const toHumanReadable = (text: string) => {
