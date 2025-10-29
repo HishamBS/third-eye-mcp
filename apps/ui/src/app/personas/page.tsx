@@ -408,7 +408,92 @@ export default function PersonasPage() {
 
           {/* Main Content */}
           <div>
-            {showDiff && diffResult ? (
+            {selectedEye && !editingPersona && !showDiff ? (
+              /* Persona Detail View */
+              <GlassCard>
+                {(() => {
+                  const persona = getPersonaById(selectedEye);
+                  if (!persona) return null;
+                  
+                  return (
+                    <>
+                      <div className="mb-6 flex items-center justify-between">
+                        <div>
+                          <h2 className="text-2xl font-semibold text-white">{persona.name}</h2>
+                          <p className="mt-1 text-sm text-slate-400">{persona.description}</p>
+                        </div>
+                        <button
+                          onClick={() => startEditing(selectedEye)}
+                          className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                      
+                      <div className="prose prose-invert max-w-none">
+                        <section className="mb-8">
+                          <h3 className="mb-3 text-lg font-semibold text-white">Mission</h3>
+                          <p className="text-slate-300">{persona.mission}</p>
+                        </section>
+                        
+                        <section className="mb-8">
+                          <h3 className="mb-3 text-lg font-semibold text-white">Capabilities</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {persona.capabilities.map((cap) => (
+                              <span key={cap} className="rounded-full bg-brand-accent/20 px-3 py-1 text-sm text-brand-accent">
+                                {cap}
+                              </span>
+                            ))}
+                          </div>
+                        </section>
+                        
+                        <section className="mb-8">
+                          <h3 className="mb-3 text-lg font-semibold text-white">Phases</h3>
+                          <div className="space-y-6">
+                            {persona.phases.guidance && (
+                              <div className="rounded-xl border border-blue-500/40 bg-blue-500/10 p-4">
+                                <h4 className="mb-2 font-semibold text-blue-300">Guidance Phase</h4>
+                                <p className="mb-2 text-sm text-slate-300">{persona.phases.guidance.mission}</p>
+                                <p className="text-xs text-slate-400">Check: {persona.phases.guidance.check}</p>
+                              </div>
+                            )}
+                            {persona.phases.validation && (
+                              <div className="rounded-xl border border-green-500/40 bg-green-500/10 p-4">
+                                <h4 className="mb-2 font-semibold text-green-300">Validation Phase</h4>
+                                <p className="mb-2 text-sm text-slate-300">{persona.phases.validation.mission}</p>
+                                <p className="text-xs text-slate-400">Check: {persona.phases.validation.check}</p>
+                              </div>
+                            )}
+                          </div>
+                        </section>
+                        
+                        <section className="mb-8">
+                          <h3 className="mb-3 text-lg font-semibold text-white">Envelope Contract</h3>
+                          <div className="rounded-xl border border-brand-outline/50 bg-brand-paper/30 p-4">
+                            <p className="mb-2 text-sm text-slate-300">
+                              Required Keys: {persona.envelopeContract.requiredKeys.join(', ')}
+                            </p>
+                            <p className="mb-2 text-sm text-slate-300">
+                              Required Data Keys: {persona.envelopeContract.requiredDataKeys.join(', ')}
+                            </p>
+                            <p className="text-sm text-slate-300">
+                              Required UI Keys: {persona.envelopeContract.requiredUiKeys.join(', ')}
+                            </p>
+                          </div>
+                        </section>
+                        
+                        {persona.notes && (
+                          <section className="mb-8">
+                            <h3 className="mb-3 text-lg font-semibold text-white">Notes</h3>
+                            <p className="text-slate-300">{persona.notes}</p>
+                          </section>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
+              </GlassCard>
+            ) : showDiff && diffResult ? (
               /* Diff View */
               <GlassCard>
                 <div className="mb-6 flex items-center justify-between">
