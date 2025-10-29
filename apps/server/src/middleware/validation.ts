@@ -31,7 +31,7 @@ export function sanitizeString(input: string): string {
 /**
  * Recursively sanitize object values
  */
-export function sanitizeObject(obj: any): any {
+export function sanitizeObject(obj: unknown): unknown {
   if (typeof obj === 'string') {
     return sanitizeString(obj);
   }
@@ -41,7 +41,7 @@ export function sanitizeObject(obj: any): any {
   }
 
   if (obj !== null && typeof obj === 'object') {
-    const sanitized: any = {};
+    const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
       sanitized[key] = sanitizeObject(value);
     }
