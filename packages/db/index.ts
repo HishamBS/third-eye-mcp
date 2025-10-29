@@ -70,10 +70,13 @@ export function runMigrations(db: ReturnType<typeof createDb>['db'], sqlite: Dat
     } else {
       console.warn(`⚠️  Migrations folder not found: ${migrationsFolder}`);
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     // Ignore "table already exists" errors during migration
-    if (!err.message?.includes('already exists') && !err.cause?.message?.includes('already exists')) {
-      console.error('❌ Migration error:', err.message);
+    const message = err instanceof Error ? err.message : String(err);
+    const causeMessage = err instanceof Error && err.cause instanceof Error ? err.cause.message : undefined;
+
+    if (!message?.includes('already exists') && !causeMessage?.includes('already exists')) {
+      console.error('❌ Migration error:', message);
       throw err;
     }
   }
