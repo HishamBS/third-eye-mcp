@@ -1,11 +1,11 @@
 /**
  * Personas Blueprints API
  * 
- * Returns blueprint-based persona data for UI consumption
+ * Returns blueprint-based persona data for UI consumption from database
  */
 
 import { NextResponse } from 'next/server';
-import { BLUEPRINT_REGISTRY } from '@third-eye/eyes/blueprint-client';
+import { personaBlueprints } from '@third-eye/db/schema';
 import { EyeId } from '@third-eye/constants';
 import { getEyeIconPath } from '@third-eye/constants';
 
@@ -50,25 +50,34 @@ export interface PersonaBlueprintUI {
   notes?: string;
 }
 
-export function GET() {
+export async function GET() {
   try {
-    const blueprints = Object.entries(BLUEPRINT_REGISTRY).map(([eyeId, blueprint]) => {
-      return {
-        id: eyeId,
-        eyeId: eyeId as EyeId,
-        name: blueprint.metadata.name,
-        description: blueprint.metadata.description,
-        version: blueprint.metadata.version,
-        capabilities: blueprint.metadata.capabilities as string[],
-        iconPath: getEyeIconPath(eyeId as EyeId),
-        metadata: blueprint.metadata,
-        mission: blueprint.mission,
-        phases: blueprint.phases,
-        envelopeContract: blueprint.envelopeContract,
-        reminders: blueprint.reminders,
-        notes: blueprint.notes,
-      } as PersonaBlueprintUI;
-    });
+    const { getDb } = await import('@third-eye/db');
+    const { db } = getDb();
+    
+    const dbBlueprints = await db.select().from(personaBlueprints);
+    
+    const blueprints = dbBlueprints.map(blueprint => ({
+      id: blueprint.eyeId,
+      eyeId: blueprint.eyeId as EyeId,
+      name: blueprint.name,
+      description: blueprint.description,
+      version: blueprint.version,
+      capabilities: JSON.parse(blueprint.capabilities) as string[],
+      iconPath: getEyeIconPath(blueprint.eyeId as EyeId),
+      metadata: {
+        eyeId: blueprint.eyeId as EyeId,
+        name: blueprint.name,
+        description: blueprint.description,
+        version: blueprint.version,
+        capabilities: JSON.parse(blueprint.capabilities),
+      },
+      mission: blueprint.mission,
+      phases: JSON.parse(blueprint.phases),
+      envelopeContract: JSON.parse(blueprint.envelopeContract),
+      reminders: JSON.parse(blueprint.reminders || '[]'),
+      notes: blueprint.notes || undefined,
+    } as PersonaBlueprintUI));
 
     return NextResponse.json({
       success: true,

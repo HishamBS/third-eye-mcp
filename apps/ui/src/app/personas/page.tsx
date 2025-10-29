@@ -180,33 +180,48 @@ export default function PersonasPage() {
   };
 
   const savePersona = async () => {
-    if (!editingPersona || !personaContent.trim()) {
-      setError('Persona content is required');
+    if (!editingPersona || !editForm.name.trim()) {
+      setError('Name is required');
       return;
     }
 
     setLoading(true);
     setError(null);
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/personas/${editingPersona}`, {
-        method: 'POST',
+      const persona = getPersonaById(editingPersona);
+      
+      const response = await fetch(`/api/personas/blueprints/${editingPersona}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          content: personaContent.trim(),
+          name: editForm.name,
+          description: editForm.description,
+          mission: editForm.mission,
+          version: persona?.version || '1.0.0',
+          capabilities: editForm.capabilities,
+          phases: persona?.phases || { guidance: {}, validation: {} },
+          envelopeContract: persona?.envelopeContract || { requiredKeys: [], requiredDataKeys: [], requiredUiKeys: [] },
+          reminders: persona?.reminders || [],
+          notes: persona?.notes,
         }),
       });
 
       if (response.ok) {
-        setSuccess('Persona published successfully (hot-reloaded)');
+        setSuccess('Persona blueprint saved to database successfully');
         await fetchPersonas();
         setEditingPersona('');
-        setPersonaContent('');
+        setEditForm({
+          name: '',
+          description: '',
+          mission: '',
+          capabilities: [],
+          capabilitiesText: '',
+        });
       } else {
         const result = await response.json();
-        setError(result.error?.detail || 'Failed to save persona');
+        setError(result.error || 'Failed to save persona');
       }
     } catch (error) {
       setError('Failed to save persona');
