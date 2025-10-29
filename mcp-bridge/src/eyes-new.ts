@@ -157,7 +157,7 @@ export function buildEyes(server: McpServer) {
     },
   );
 
-  // Prompt Helper - Optimize prompts
+  // Kyuubi - Optimize prompts
   server.tool(
     "helper/rewrite_prompt",
     {
@@ -180,7 +180,7 @@ export function buildEyes(server: McpServer) {
       const input = payload.clarification_answers_md
         ? `${payload.user_prompt}\n\nClarifications: ${payload.clarification_answers_md}`
         : payload.user_prompt;
-      return executeEye("prompt-helper", input, args as Record<string, unknown>);
+      return executeEye("kyuubi", input, args as Record<string, unknown>);
     },
   );
 

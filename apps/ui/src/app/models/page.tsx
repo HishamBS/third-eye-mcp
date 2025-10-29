@@ -198,7 +198,7 @@ export default function ModelsPage() {
     const iconMap: Record<string, string> = {
       overseer: '🧿',
       sharingan: '👁️',
-      'prompt-helper': '✨',
+      'kyuubi': '✨',
       jogan: '🔮',
       rinnegan_requirements: '🌀',
       rinnegan_review: '🌀',

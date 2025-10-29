@@ -8,7 +8,7 @@ import { eq, and } from 'drizzle-orm';
 
 console.log('🔍 Verifying Transformed Eyes...\n');
 
-const eyeNames = ['overseer', 'sharingan', 'prompt-helper', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan'] as const;
+const eyeNames = ['overseer', 'sharingan', 'kyuubi', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan'] as const;
 
 let allPassed = true;
 

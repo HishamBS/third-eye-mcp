@@ -206,7 +206,7 @@ export const BUILT_IN_PROFILES = {
  */
 export const EYE_DISPLAY_NAMES: Record<string, string> = {
   sharingan: 'Sharingan',
-  'prompt-helper': 'Prompt Helper',
+  'kyuubi': 'Kyuubi',
   jogan: 'Jōgan',
   rinnegan_plan: 'Rinnegan (Plan)',
   rinnegan_review: 'Rinnegan (Review)',
@@ -225,7 +225,7 @@ export const EYE_DISPLAY_NAMES: Record<string, string> = {
  */
 export const EYE_COLORS: Record<string, string> = {
   sharingan: '#ef4444', // red
-  'prompt-helper': '#8b5cf6', // purple
+  'kyuubi': '#8b5cf6', // purple
   jogan: '#06b6d4', // cyan
   rinnegan_plan: '#a855f7', // purple
   rinnegan_review: '#9333ea', // purple

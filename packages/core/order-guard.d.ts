@@ -24,7 +24,7 @@ export interface OrderViolation {
  *
  * For freeform tasks:
  * 1. Sharingan (ambiguity + is_code_related + questions)
- * 2. Prompt Helper (with clarifications)
+ * 2. Kyuubi (with clarifications)
  * 3. Jōgan (intent confirm)
  * 4a. For CODE: Rinnegan plan → Rinnegan review loop → Mangekyō phases → Rinnegan final
  * 4b. For TEXT: Rinnegan plan (optional) → Tenseigan → Byakugan → Rinnegan final

@@ -48,7 +48,7 @@ const SYSTEM_PIPELINE = {
       },
       {
         id: 'rewrite_prompt',
-        eye: 'prompt-helper',
+        eye: 'kyuubi',
         description: 'Restructure prompt into ROLE/TASK/CONTEXT/REQUIREMENTS/OUTPUT format',
         next: 'confirm_intent'
       },

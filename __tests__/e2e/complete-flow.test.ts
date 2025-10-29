@@ -150,7 +150,7 @@ describe('E2E Complete Flow Test Suite', () => {
         'mangekyo',
         'tenseigan',
         'byakugan',
-        'prompt-helper',
+        'kyuubi',
       ];
 
       for (const forbidden of forbiddenNames) {
@@ -655,7 +655,7 @@ describe('E2E Complete Flow Test Suite', () => {
         'mangekyo',
         'tenseigan',
         'byakugan',
-        'prompt-helper',
+        'kyuubi',
       ];
 
       for (const forbidden of forbiddenNames) {

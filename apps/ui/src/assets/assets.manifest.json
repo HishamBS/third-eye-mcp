@@ -54,8 +54,8 @@
     "sha256": "004f094ecb8ea2c85ee3ad1a5e6faa6300126d11601da91c8bcab8493053e138"
   },
   {
-    "name": "prompt-helper.png",
-    "path": "eyes/prompt-helper.png",
+    "name": "kyuubi.png",
+    "path": "eyes/kyuubi.png",
     "format": "png",
     "width": 256,
     "height": 256,
@@ -63,8 +63,8 @@
     "sha256": "e2901e9a775fcae9b5e3d73a6dea3d705c9c6c171da33ea2a3ca877f3828b4ec"
   },
   {
-    "name": "prompt-helper.webp",
-    "path": "eyes/prompt-helper.webp",
+    "name": "kyuubi.webp",
+    "path": "eyes/kyuubi.webp",
     "format": "webp",
     "width": 256,
     "height": 256,

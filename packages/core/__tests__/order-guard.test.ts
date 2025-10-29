@@ -72,17 +72,17 @@ describe('OrderGuard', () => {
       });
     });
 
-    it('should allow Prompt Helper after Sharingan', () => {
+    it('should allow Kyuubi after Sharingan', () => {
       const violation = orderGuard.validateOrder(testSessionId, 'kyuubi');
       expect(violation).toBeNull();
     });
 
-    it('should reject Jogan before Prompt Helper', () => {
+    it('should reject Jogan before Kyuubi', () => {
       const violation = orderGuard.validateOrder(testSessionId, 'jogan');
 
       expect(violation).not.toBeNull();
       expect(violation?.code).toBe('E_PIPELINE_ORDER');
-      expect(violation?.violation).toContain('Jōgan called before Prompt Helper');
+      expect(violation?.violation).toContain('Jōgan called before Kyuubi');
       expect(violation?.expectedNext).toContain('kyuubi');
       expect(violation?.fixInstructions).toBeDefined();
       // Example payload is optional in some violations
@@ -91,8 +91,8 @@ describe('OrderGuard', () => {
       }
     });
 
-    it('should allow Jogan after Prompt Helper', () => {
-      // Complete Prompt Helper
+    it('should allow Jogan after Kyuubi', () => {
+      // Complete Kyuubi
       orderGuard.validateOrder(testSessionId, 'kyuubi');
       orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
         code: 'OK_PROMPT_OPTIMIZED',
@@ -112,7 +112,7 @@ describe('OrderGuard', () => {
   });
 
   describe('Correct Sequence - Code Path', () => {
-    it('should allow Sharingan → Prompt Helper → Jogan sequence', () => {
+    it('should allow Sharingan → Kyuubi → Jogan sequence', () => {
       // 1. Sharingan
       let violation = orderGuard.validateOrder(testSessionId, 'sharingan');
       expect(violation).toBeNull();
@@ -121,7 +121,7 @@ describe('OrderGuard', () => {
         metadata: { isCodeRelated: true },
       });
 
-      // 2. Prompt Helper
+      // 2. Kyuubi
       violation = orderGuard.validateOrder(testSessionId, 'kyuubi');
       expect(violation).toBeNull();
       orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
@@ -243,7 +243,7 @@ describe('OrderGuard', () => {
   });
 
   describe('Correct Sequence - Text Path', () => {
-    it('should allow text branch: Sharingan → Prompt Helper → Jogan → Tenseigan', () => {
+    it('should allow text branch: Sharingan → Kyuubi → Jogan → Tenseigan', () => {
       // 1. Sharingan (text task)
       orderGuard.validateOrder(testSessionId, 'sharingan');
       orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
@@ -251,7 +251,7 @@ describe('OrderGuard', () => {
         metadata: { isCodeRelated: false },
       });
 
-      // 2. Prompt Helper
+      // 2. Kyuubi
       orderGuard.validateOrder(testSessionId, 'kyuubi');
       orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
         code: 'OK_PROMPT_OPTIMIZED',
@@ -440,7 +440,7 @@ describe('OrderGuard', () => {
       expect(expectedNext).toContain('kyuubi');
     });
 
-    it('should return correct next Eyes after Prompt Helper', () => {
+    it('should return correct next Eyes after Kyuubi', () => {
       orderGuard.validateOrder(testSessionId, 'sharingan');
       orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
         code: 'OK',
@@ -553,7 +553,7 @@ describe('OrderGuard', () => {
         metadata: { isCodeRelated: true },
       });
 
-      // Try to skip Prompt Helper - this violation includes examplePayload
+      // Try to skip Kyuubi - this violation includes examplePayload
       const violation = orderGuard.validateOrder(testSessionId, 'jogan');
 
       expect(violation).not.toBeNull();
@@ -594,7 +594,7 @@ describe('OrderGuard', () => {
       // Mark as auto-router session
       orderGuard.markAsAutoRouterSession(testSessionId);
 
-      // Execute full auto-router flow (Sharingan -> Prompt Helper -> Jogan)
+      // Execute full auto-router flow (Sharingan -> Kyuubi -> Jogan)
       orderGuard.validateOrder(testSessionId, 'sharingan');
       orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
         code: 'OK',

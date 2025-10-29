@@ -85,7 +85,7 @@ export function ClarificationsPanel({ sessionId, apiKey, questions, onSubmitted,
           {error && <p className="text-sm text-rose-400">{error}</p>}
 
           <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-400">Responses forward to Prompt Helper for rewrite.</p>
+            <p className="text-xs text-slate-400">Responses forward to Kyuubi for rewrite.</p>
             <button
               type="submit"
               disabled={disabled}

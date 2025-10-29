@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import Image from 'next/image';
 import type { EyeState } from '../types/pipeline';
 import sharinganPng from '../assets/eyes/sharingan.png';
-import promptHelperPng from '../assets/eyes/prompt-helper.png';
+import promptHelperPng from '../assets/eyes/kyuubi.png';
 import joganPng from '../assets/eyes/jogan.png';
 import rinneganPng from '../assets/eyes/rinnegan.png';
 import mangekyoPng from '../assets/eyes/mangekyo.png';
@@ -27,7 +27,7 @@ const eyeAssets = {
 
 const eyeLabels: Record<string, string> = {
   SHARINGAN: 'Sharingan',
-  PROMPT_HELPER: 'Prompt Helper',
+  PROMPT_HELPER: 'Kyuubi',
   JOGAN: 'Jōgan',
   RINNEGAN_PLAN: 'Rinnegan · Plan',
   RINNEGAN_REVIEW: 'Rinnegan · Review',

@@ -22,7 +22,7 @@ interface PipelineVisualizationProps {
 const EYE_POSITIONS = {
   overseer: { x: 50, y: 10 },
   sharingan: { x: 20, y: 30 },
-  'prompt-helper': { x: 50, y: 30 },
+  'kyuubi': { x: 50, y: 30 },
   jogan: { x: 80, y: 30 },
   rinnegan: { x: 10, y: 60 },
   mangekyo: { x: 40, y: 60 },
@@ -33,7 +33,7 @@ const EYE_POSITIONS = {
 const EYE_COLORS = {
   overseer: '#8B5CF6', // Purple
   sharingan: '#EF4444', // Red
-  'prompt-helper': '#F59E0B', // Amber
+  'kyuubi': '#F59E0B', // Amber
   jogan: '#3B82F6', // Blue
   rinnegan: '#10B981', // Emerald
   mangekyo: '#F97316', // Orange

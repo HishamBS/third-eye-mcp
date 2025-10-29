@@ -113,7 +113,7 @@ describe('Persona Blueprints', () => {
       testBlueprintExamples(BYAKUGAN_BLUEPRINT);
     });
 
-    it('should have valid JSON examples for Prompt Helper', () => {
+    it('should have valid JSON examples for Kyuubi', () => {
       testBlueprintExamples(PROMPT_HELPER_BLUEPRINT);
     });
   });

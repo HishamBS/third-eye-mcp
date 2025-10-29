@@ -166,7 +166,7 @@ packages/eyes/src/blueprints/
 ├── mangekyo.blueprint.ts
 ├── tenseigan.blueprint.ts
 ├── byakugan.blueprint.ts
-└── prompt-helper.blueprint.ts
+└── kyuubi.blueprint.ts
 
 packages/eyes/src/blueprints/__tests__/
 └── blueprints.test.ts

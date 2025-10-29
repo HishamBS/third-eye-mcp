@@ -49,7 +49,7 @@ export const NEEDS_INPUT_CODES = {
 
   /**
    * SUGGEST_ALTERNATIVE - 302 equivalent
-   * Eye suggests a different approach (used by Prompt Helper)
+   * Eye suggests a different approach (used by Kyuubi)
    * Next action: Present alternative, await decision
    */
   SUGGEST_ALTERNATIVE: 'SUGGEST_ALTERNATIVE',
@@ -245,7 +245,7 @@ export const EYE_CODES = {
     NEEDS_INPUT_CODES.NEED_MORE_CONTEXT,
   ],
 
-  'prompt-helper': [
+  'kyuubi': [
     SUCCESS_CODES.OK,
     SUCCESS_CODES.OK_WITH_NOTES,
     NEEDS_INPUT_CODES.SUGGEST_ALTERNATIVE,

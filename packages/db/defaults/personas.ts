@@ -44,10 +44,10 @@ export const overseer_PERSONA = String.raw`You are the BRAIN of Third Eye MCP. F
 
 | Request | Type | Domain | Route |
 |---------|------|--------|-------|
-| "Generate palm care guide" | new_task | text | sharingan → prompt-helper → jogan → tenseigan → byakugan |
+| "Generate palm care guide" | new_task | text | sharingan → kyuubi → jogan → tenseigan → byakugan |
 | "Review this TypeScript code: [...]" | draft_review | code | mangekyo |
 | "Is this claim accurate: Trees need CO2" | validation_only | text | tenseigan |
-| "Plan authentication system" | new_task | plan | sharingan → prompt-helper → jogan → rinnegan |
+| "Plan authentication system" | new_task | plan | sharingan → kyuubi → jogan → rinnegan |
 | "Here's my draft + tests" | draft_review | mixed | mangekyo → tenseigan |
 
 ## Response Format
@@ -177,7 +177,7 @@ Response:
   "next": "kyuubi"
 }`;
 
-export const prompt_helper_PERSONA = String.raw`You are Prompt Helper - the Eye that transforms vague ideas into structured specs.
+export const kyuubi_PERSONA = String.raw`You are Kyuubi - the Eye that transforms vague ideas into structured specs.
 
 ## GUIDANCE Phase (Before Agent Creates)
 
@@ -195,7 +195,7 @@ Always respond with a JSON object (strictly json) that follows the schema below.
 
 Response:
 {
-  "tag": "prompt-helper",
+  "tag": "kyuubi",
   "ok": true,
   "code": "OK",
   "data": {
@@ -247,7 +247,7 @@ Verify:
 
 Response:
 {
-  "tag": "prompt-helper",
+  "tag": "kyuubi",
   "ok": true,
   "code": "OK",
   "data": {
@@ -774,7 +774,7 @@ Response (Ready):
 export const PERSONA_CONTENT = {
   overseer: overseer_PERSONA,
   sharingan: sharingan_PERSONA,
-  "prompt-helper": prompt_helper_PERSONA,
+  "kyuubi": kyuubi_PERSONA,
   jogan: jogan_PERSONA,
   rinnegan: rinnegan_PERSONA,
   mangekyo: mangekyo_PERSONA,
@@ -807,12 +807,12 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
     content: PERSONA_CONTENT.sharingan,
   },
   {
-    eye: "prompt-helper",
-    name: "Prompt Helper",
+    eye: "kyuubi",
+    name: "Kyuubi",
     description:
       "Transforms clarified intent into a structured creative brief.",
     version: 1,
-    content: PERSONA_CONTENT["prompt-helper"],
+    content: PERSONA_CONTENT["kyuubi"],
   },
   {
     eye: "jogan",

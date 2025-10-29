@@ -17,7 +17,7 @@
 - ✅ Defined structure: metadata, mission, phases, envelope contract, reminders, canonical examples
 
 ### Remaining Work for Story 2.1
-- [ ] Create blueprints for: sharingan, prompt-helper, jogan, rinnegan, mangekyo, tenseigan, byakugan
+- [ ] Create blueprints for: sharingan, kyuubi, jogan, rinnegan, mangekyo, tenseigan, byakugan
 - [ ] Add unit tests verifying blueprint shape and JSON parsing
 - [ ] Map capabilities arrays to `EyeCapability` enums
 

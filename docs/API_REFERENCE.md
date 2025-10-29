@@ -62,7 +62,7 @@ Get workflow recommendations and routing suggestions.
     "workflows": {
       "clarification": {
         "description": "For ambiguous requests",
-        "sequence": ["sharingan", "prompt-helper", "jogan"]
+        "sequence": ["sharingan", "kyuubi", "jogan"]
       }
     },
     "routing": {

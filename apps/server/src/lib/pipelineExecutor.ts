@@ -256,7 +256,7 @@ export const examplePipelines: PipelineDefinition[] = [
     steps: [
       { eye: 'sharingan' },
       {
-        eye: 'prompt-helper',
+        eye: 'kyuubi',
         conditions: {
           skipIf: {
             previousEye: 'sharingan',
@@ -275,7 +275,7 @@ export const examplePipelines: PipelineDefinition[] = [
     description: 'Complete software development lifecycle',
     steps: [
       { eye: 'sharingan' },
-      { eye: 'prompt-helper' },
+      { eye: 'kyuubi' },
       { eye: 'jogan' },
       { eye: 'rinnegan', config: { mode: 'requirements' } },
       { eye: 'rinnegan', config: { mode: 'review' } },

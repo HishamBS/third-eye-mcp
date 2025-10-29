@@ -15,8 +15,8 @@ export interface SessionHistory {
  */
 const PREREQUISITES: Record<string, string[]> = {
   // Clarification workflow
-  'prompt-helper': ['sharingan'],
-  'jogan': ['prompt-helper'],
+  'kyuubi': ['sharingan'],
+  'jogan': ['kyuubi'],
 
   // Planning workflow
   'rinnegan:review': ['rinnegan:requirements'],
@@ -95,7 +95,7 @@ export function orderGuard(
  * Detect workflow type based on executed Eyes
  */
 export function detectWorkflow(executedEyes: string[]): SessionHistory['currentWorkflow'] | undefined {
-  if (executedEyes.includes('sharingan') || executedEyes.includes('prompt-helper')) {
+  if (executedEyes.includes('sharingan') || executedEyes.includes('kyuubi')) {
     return 'clarification';
   }
 
@@ -125,8 +125,8 @@ export function getRecommendedNextEye(sessionHistory: SessionHistory): string | 
   }
 
   // Follow workflow chains
-  if (lastEye === 'sharingan') return 'prompt-helper';
-  if (lastEye === 'prompt-helper') return 'jogan';
+  if (lastEye === 'sharingan') return 'kyuubi';
+  if (lastEye === 'kyuubi') return 'jogan';
   if (lastEye === 'rinnegan:requirements') return 'rinnegan:review';
   if (lastEye === 'rinnegan:review') return 'mangekyo:scaffold';
   if (lastEye === 'mangekyo:scaffold') return 'mangekyo:impl';

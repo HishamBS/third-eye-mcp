@@ -169,7 +169,7 @@ export type WebSocketEvent =
 export const EYE_ICONS: Record<string, string> = {
   overseer: '🧿',
   sharingan: '🔍',
-  'prompt-helper': '✨',
+  'kyuubi': '✨',
   jogan: '👁️',
   rinnegan: '🔮',
   rinnegan_plan: '🔮',
@@ -190,7 +190,7 @@ export const EYE_ICONS: Record<string, string> = {
 export const EYE_COLORS: Record<string, EventUI['color']> = {
   overseer: 'purple',
   sharingan: 'red',
-  'prompt-helper': 'orange',
+  'kyuubi': 'orange',
   jogan: 'cyan',
   rinnegan: 'indigo',
   rinnegan_plan: 'indigo',

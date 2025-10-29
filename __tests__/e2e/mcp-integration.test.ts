@@ -105,8 +105,8 @@ describe('MCP Integration E2E', () => {
         'mangekyo',
         'tenseigan',
         'byakugan',
-        'prompt-helper',
-        'prompt-helper',
+        'kyuubi',
+        'kyuubi',
       ];
 
       const toolNames = result.tools.map(t => t.name.toLowerCase());
@@ -224,7 +224,7 @@ describe('MCP Integration E2E', () => {
         'mangekyo',
         'tenseigan',
         'byakugan',
-        'prompt-helper',
+        'kyuubi',
       ];
 
       const lowerResponse = responseText.toLowerCase();

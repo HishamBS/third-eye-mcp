@@ -151,7 +151,7 @@ root/
 ## 5. Persona Engine
 
 ### 5.1 Blueprint Files
-- `packages/eyes/src/personas/{overseer,sharingan,prompt-helper,jogan,rinnegan,mangekyo,tenseigan,byakugan}.ts`.
+- `packages/eyes/src/personas/{overseer,sharingan,kyuubi,jogan,rinnegan,mangekyo,tenseigan,byakugan}.ts`.
 - Each blueprint includes:
   - `metadata`: `eyeId`, `displayName`, `tagline`, `description`, `version`, `capabilities` (array of `CapabilityTag`).
   - `mission`: single string summarizing purpose.

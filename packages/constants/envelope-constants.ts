@@ -74,7 +74,7 @@ export const EyeTag = freezeTokens({
   MANGEKYO: 'mangekyo',
   TENSEIGAN: 'tenseigan',
   BYAKUGAN: 'byakugan',
-  PROMPT_HELPER: 'prompt-helper',
+  PROMPT_HELPER: 'kyuubi',
 } as const);
 
 export type EyeTag = TokenLiteral<typeof EyeTag>;

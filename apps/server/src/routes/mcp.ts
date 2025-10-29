@@ -200,8 +200,8 @@ app.get('/quickstart', (c) => {
       workflows: {
         clarification: {
           description: 'For ambiguous user requests requiring clarification',
-          sequence: ['sharingan', 'prompt-helper', 'jogan'],
-          example: 'User says "make it better" → Sharingan detects ambiguity → prompt-helper rewrites → Jogan confirms',
+          sequence: ['sharingan', 'kyuubi', 'jogan'],
+          example: 'User says "make it better" → Sharingan detects ambiguity → kyuubi rewrites → Jogan confirms',
         },
         planning: {
           description: 'For tasks requiring a detailed plan',

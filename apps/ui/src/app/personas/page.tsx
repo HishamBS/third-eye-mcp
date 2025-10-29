@@ -73,6 +73,7 @@ export default function PersonasPage() {
     validation: false,
     envelope: false,
   });
+  const [capabilitiesDropdownOpen, setCapabilitiesDropdownOpen] = useState(false);
 
   useEffect(() => {
     fetchAllEyes();
@@ -403,8 +404,8 @@ export default function PersonasPage() {
                       isSelected ? 'ring-2 ring-brand-accent' : ''
                     }`}
                   >
-                      <div className="flex items-center justify-between text-white">
-                        <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-between text-white">
+                      <div className="flex items-center gap-3">
                           <img 
                             src={getEyeIconPath(eye)} 
                             alt={`${persona.name} icon`}
@@ -414,25 +415,25 @@ export default function PersonasPage() {
                               (e.target as HTMLImageElement).style.display = 'none';
                             }}
                           />
-                          <div>
-                            <h3 className="font-bold capitalize">
+                        <div>
+                          <h3 className="font-bold capitalize">
                               {persona.name}
-                            </h3>
-                            <p className="text-xs opacity-80">
+                          </h3>
+                          <p className="text-xs opacity-80">
                               {persona.description}
-                            </p>
-                          </div>
+                          </p>
                         </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            startEditing(eye);
-                          }}
-                          className="rounded-full bg-white/20 px-3 py-1 text-xs transition hover:bg-white/30"
-                        >
-                          {isEditing ? 'Editing...' : 'Edit'}
-                        </button>
                       </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startEditing(eye);
+                        }}
+                        className="rounded-full bg-white/20 px-3 py-1 text-xs transition hover:bg-white/30"
+                      >
+                        {isEditing ? 'Editing...' : 'Edit'}
+                      </button>
+                    </div>
                   </motion.div>
                 );
               })}
@@ -678,7 +679,7 @@ export default function PersonasPage() {
 
                 <div className="space-y-6">
                   {/* Basic Info */}
-                  <div className="space-y-4">
+                <div className="space-y-4">
                     <div>
                       <label className="mb-2 block text-sm font-medium text-slate-300">
                         Name
@@ -720,43 +721,69 @@ export default function PersonasPage() {
                     />
                   </div>
 
-                  {/* Capabilities Multi-Select */}
-                  <div>
+                  {/* Capabilities Dropdown Multi-Select */}
+                  <div className="relative">
                     <label className="mb-2 block text-sm font-medium text-slate-300">
                       Capabilities
                     </label>
-                    <select
-                      multiple
-                      value={editForm.capabilities}
-                      onChange={(e) => {
-                        const selected = Array.from(e.target.selectedOptions, option => option.value);
-                        setEditForm(prev => ({ 
-                          ...prev, 
-                          capabilities: selected,
-                          capabilitiesText: selected.join(', ')
-                        }));
-                      }}
-                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white focus:border-brand-accent focus:outline-none"
-                      size={5}
-                    >
-                      <option value="auto_routing">auto_routing</option>
-                      <option value="orchestration">orchestration</option>
-                      <option value="master_coordination">master_coordination</option>
-                      <option value="ambiguity_detection">ambiguity_detection</option>
-                      <option value="intent_confirmation">intent_confirmation</option>
-                      <option value="prompt_structuring">prompt_structuring</option>
-                      <option value="requirements_synthesis">requirements_synthesis</option>
-                      <option value="scope_estimation">scope_estimation</option>
-                      <option value="plan_validation">plan_validation</option>
-                      <option value="code_review">code_review</option>
-                      <option value="evidence_verification">evidence_verification</option>
-                      <option value="quality_gating">quality_gating</option>
-                    </select>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setCapabilitiesDropdownOpen(!capabilitiesDropdownOpen)}
+                        className="w-full flex items-center justify-between rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white hover:border-brand-accent focus:border-brand-accent focus:outline-none transition-colors"
+                      >
+                        <span className="text-sm text-slate-200">
+                          {editForm.capabilities.length === 0
+                            ? 'Select capabilities...'
+                            : `${editForm.capabilities.length} capability${editForm.capabilities.length !== 1 ? 'ies' : ''} selected`}
+                        </span>
+                        <svg
+                          className={`w-5 h-5 transition-transform ${capabilitiesDropdownOpen ? 'rotate-180' : ''}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      {capabilitiesDropdownOpen && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-10"
+                            onClick={() => setCapabilitiesDropdownOpen(false)}
+                          />
+                          <div className="absolute z-20 mt-2 w-full max-h-64 overflow-y-auto rounded-xl border border-brand-outline/50 bg-brand-paper shadow-xl">
+                            <div className="p-2 space-y-1">
+                              {['auto_routing', 'orchestration', 'master_coordination', 'ambiguity_detection', 'intent_confirmation', 'prompt_structuring', 'requirements_synthesis', 'scope_estimation', 'plan_validation', 'code_review', 'evidence_verification', 'quality_gating'].map((capability) => (
+                                <label key={capability} className="flex items-center gap-3 cursor-pointer hover:bg-slate-800/50 p-2 rounded-lg transition-colors">
+                                  <input
+                                    type="checkbox"
+                                    checked={editForm.capabilities.includes(capability)}
+                                    onChange={(e) => {
+                                      const selected = e.target.checked
+                                        ? [...editForm.capabilities, capability]
+                                        : editForm.capabilities.filter(c => c !== capability);
+                                      setEditForm(prev => ({
+                                        ...prev,
+                                        capabilities: selected,
+                                        capabilitiesText: selected.join(', ')
+                                      }));
+                                    }}
+                                    className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-2 focus:ring-blue-500"
+                                  />
+                                  <span className="text-sm text-slate-200">{capability.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
                     {editForm.capabilities.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
+                      <div className="mt-3 flex flex-wrap gap-2">
                         {editForm.capabilities.map((cap, idx) => (
                           <span key={idx} className="rounded-full bg-brand-accent/20 px-3 py-1 text-xs text-brand-accent">
-                            {cap}
+                            {cap.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                           </span>
                         ))}
                       </div>

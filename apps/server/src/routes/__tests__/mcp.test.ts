@@ -40,7 +40,7 @@ describe('MCP Endpoints Integration Tests', () => {
 
       const eyeNames = data.tools.map((t: any) => t.name);
       expect(eyeNames).toContain('sharingan');
-      expect(eyeNames).toContain('prompt-helper');
+      expect(eyeNames).toContain('kyuubi');
       expect(eyeNames).toContain('jogan');
       expect(eyeNames).toContain('rinnegan');
       expect(eyeNames).toContain('mangekyo');

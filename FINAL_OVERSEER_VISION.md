@@ -305,7 +305,7 @@ Your response must include routing decisions:
   "data": {
     "requestType": "new_task" | "review_content",
     "contentType": "code" | "text" | "plan" | "mixed",
-    "pipelineRoute": ["sharingan", "prompt-helper", "jogan", "tenseigan", "byakugan"],
+    "pipelineRoute": ["sharingan", "kyuubi", "jogan", "tenseigan", "byakugan"],
     "reasoning": "This is a new text request, so we need ambiguity check, intent confirmation, then factual validation."
   },
   "next": "sharingan"
@@ -367,7 +367,7 @@ I LOVE this! Like watching the agent's inner thoughts:
   </LogEntry>
 
   {/* Prompt Helper refines */}
-  <LogEntry speaker="prompt-helper" color="orange" icon="✨">
+  <LogEntry speaker="kyuubi" color="orange" icon="✨">
     Refined prompt structure:
     - Topic: Indoor palm care in Saudi Arabia
     - Audience: Beginners (no prior experience)
@@ -441,10 +441,10 @@ interface OverseerIntelligence {
 
 // Example routes (NOT hardcoded, LLM decides!):
 const exampleRoutes = {
-  "Generate a report": ["sharingan", "prompt-helper", "jogan", "tenseigan", "byakugan"],
+  "Generate a report": ["sharingan", "kyuubi", "jogan", "tenseigan", "byakugan"],
   "Review this code": ["mangekyo"],
   "Is this accurate?": ["tenseigan"],
-  "Plan a feature": ["sharingan", "prompt-helper", "jogan", "rinnegan"],
+  "Plan a feature": ["sharingan", "kyuubi", "jogan", "rinnegan"],
   "Here's my draft code with tests": ["mangekyo", "tenseigan"],
 };
 
@@ -612,7 +612,7 @@ Intelligence - Uses LLM strength (understanding context) not weakness (following
 │  Returns:        │                      │
 │  pipelineRoute:  │                      │
 │  [sharingan,     │                      │
-│   prompt-helper, │                      │
+│   kyuubi, │                      │
 │   jogan,         │                      │
 │   tenseigan,     │                      │
 │   byakugan]      │                      │
@@ -1183,10 +1183,10 @@ You are the BRAIN of Third Eye MCP. For every request, you decide the pipeline r
 
 | Request | Type | Domain | Route |
 |---------|------|--------|-------|
-| "Generate palm care guide" | new_task | text | sharingan → prompt-helper → jogan → tenseigan → byakugan |
+| "Generate palm care guide" | new_task | text | sharingan → kyuubi → jogan → tenseigan → byakugan |
 | "Review this TypeScript code: [...]" | draft_review | code | mangekyo |
 | "Is this claim accurate: Trees need CO2" | validation_only | text | tenseigan |
-| "Plan authentication system" | new_task | plan | sharingan → prompt-helper → jogan → rinnegan |
+| "Plan authentication system" | new_task | plan | sharingan → kyuubi → jogan → rinnegan |
 | "Here's my draft + tests" | draft_review | mixed | mangekyo → tenseigan |
 
 ## Response Format
@@ -1321,7 +1321,7 @@ Structure requirements into:
 
 Response:
 {
-  "tag": "prompt-helper",
+  "tag": "kyuubi",
   "ok": true,
   "code": "OK",
   "data": {
@@ -1373,7 +1373,7 @@ Verify:
 
 Response:
 {
-  "tag": "prompt-helper",
+  "tag": "kyuubi",
   "ok": true,
   "code": "OK",
   "data": {

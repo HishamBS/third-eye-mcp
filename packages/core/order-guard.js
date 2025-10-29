@@ -9,7 +9,7 @@
  *
  * For freeform tasks:
  * 1. Sharingan (ambiguity + is_code_related + questions)
- * 2. Prompt Helper (with clarifications)
+ * 2. Kyuubi (with clarifications)
  * 3. Jōgan (intent confirm)
  * 4a. For CODE: Rinnegan plan → Rinnegan review loop → Mangekyō phases → Rinnegan final
  * 4b. For TEXT: Rinnegan plan (optional) → Tenseigan → Byakugan → Rinnegan final
@@ -58,25 +58,25 @@ export class OrderGuard {
                     fixInstructions: 'Complete Sharingan analysis first to detect ambiguity',
                 };
             }
-            if (eyeName === 'prompt-helper') {
+            if (eyeName === 'kyuubi') {
                 return null; // Always allowed after Sharingan
             }
-            if (eyeName === 'jogan' && state.completedEyes.includes('prompt-helper')) {
-                return null; // Allowed after Prompt Helper
+            if (eyeName === 'jogan' && state.completedEyes.includes('kyuubi')) {
+                return null; // Allowed after Kyuubi
             }
-            if (eyeName === 'jogan' && !state.completedEyes.includes('prompt-helper')) {
+            if (eyeName === 'jogan' && !state.completedEyes.includes('kyuubi')) {
                 return {
                     code: 'E_PIPELINE_ORDER',
-                    violation: 'Jōgan called before Prompt Helper',
-                    expectedNext: ['prompt-helper'],
-                    fixInstructions: 'Use Prompt Helper to optimize clarity before intent confirmation',
+                    violation: 'Jōgan called before Kyuubi',
+                    expectedNext: ['kyuubi'],
+                    fixInstructions: 'Use Kyuubi to optimize clarity before intent confirmation',
                 };
             }
             return {
                 code: 'E_PIPELINE_ORDER',
                 violation: `${eyeName} not allowed in clarification phase`,
-                expectedNext: state.completedEyes.includes('prompt-helper') ? ['jogan'] : ['prompt-helper'],
-                fixInstructions: 'Follow clarification sequence: Sharingan → Prompt Helper → Jōgan',
+                expectedNext: state.completedEyes.includes('kyuubi') ? ['jogan'] : ['kyuubi'],
+                fixInstructions: 'Follow clarification sequence: Sharingan → Kyuubi → Jōgan',
             };
         }
         // Check planning/implementation phase
@@ -198,8 +198,8 @@ export class OrderGuard {
             case 'initialization':
                 return ['sharingan'];
             case 'clarification':
-                if (!state.completedEyes.includes('prompt-helper')) {
-                    return ['prompt-helper'];
+                if (!state.completedEyes.includes('kyuubi')) {
+                    return ['kyuubi'];
                 }
                 if (!state.completedEyes.includes('jogan')) {
                     return ['jogan'];

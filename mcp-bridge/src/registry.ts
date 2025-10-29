@@ -106,7 +106,7 @@ toolRegistry.register({
 });
 
 toolRegistry.register({
-  name: 'prompt-helper',
+  name: 'kyuubi',
   description: 'Prompt Rewriter - Transforms vague prompts into structured ROLE/TASK/CONTEXT/REQUIREMENTS/OUTPUT format',
   version: '1.0.0',
   tags: ['prompt-engineering', 'optimization'],

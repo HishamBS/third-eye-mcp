@@ -17,7 +17,7 @@ export type ProviderId = typeof PROVIDERS[number];
 export const EYES = [
   'overseer',
   'sharingan',
-  'prompt-helper',
+  'kyuubi',
   'jogan',
   'rinnegan',
   'mangekyo',

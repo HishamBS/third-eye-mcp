@@ -67,7 +67,7 @@
 - `packages/eyes/src/blueprints/mangekyo.blueprint.ts`
 - `packages/eyes/src/blueprints/tenseigan.blueprint.ts`
 - `packages/eyes/src/blueprints/byakugan.blueprint.ts`
-- `packages/eyes/src/blueprints/prompt-helper.blueprint.ts`
+- `packages/eyes/src/blueprints/kyuubi.blueprint.ts`
 
 **Renderer**:
 - `packages/eyes/src/renderer/persona-renderer.ts`
