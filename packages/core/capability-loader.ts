@@ -1,11 +1,12 @@
 /**
  * Dynamic Capability Loader
- * 
+ *
  * Queries the database for eyes and personas to build a dynamic capability registry.
  * This registry is used by the LLM router to make intelligent routing decisions.
  */
 
 import { EyeStageToken } from '@third-eye/constants';
+import type { getDb } from '@third-eye/db';
 
 // SSOT: Stage type values
 const STAGE_BOTH = 'both';
@@ -33,7 +34,7 @@ export interface DynamicRouteDecision {
 /**
  * Load dynamic capabilities from the database
  */
-export async function loadDynamicCapabilities(db: any): Promise<CapabilityRegistry> {
+export async function loadDynamicCapabilities(db: ReturnType<typeof getDb>['db']): Promise<CapabilityRegistry> {
   try {
     const { eyeSettings, personaBlueprints } = await import('@third-eye/db/schema');
 
@@ -47,7 +48,7 @@ export async function loadDynamicCapabilities(db: any): Promise<CapabilityRegist
     const registry: CapabilityRegistry = {};
 
     for (const eye of eyes) {
-      const blueprint = personas.find((p: any) => p.eyeId === eye.eye);
+      const blueprint = personas.find((p) => p.eyeId === eye.eye);
       if (!blueprint) {
         console.warn(`[CapabilityLoader] No blueprint found for eye: ${eye.eye}`);
         continue;
@@ -66,20 +67,20 @@ export async function loadDynamicCapabilities(db: any): Promise<CapabilityRegist
       }
 
       // Parse metadata to determine stage
-      let metadata: any = {};
+      let metadata: Record<string, unknown> = {};
       if (typeof blueprint.metadata === 'string') {
         try {
           metadata = JSON.parse(blueprint.metadata);
         } catch (e) {
           console.error(`[CapabilityLoader] Failed to parse metadata for ${eye.eye}:`, e);
         }
-      } else if (typeof blueprint.metadata === 'object') {
-        metadata = blueprint.metadata;
+      } else if (typeof blueprint.metadata === 'object' && blueprint.metadata !== null) {
+        metadata = blueprint.metadata as Record<string, unknown>;
       }
 
       registry[eye.eye] = {
         capabilities,
-        stage: metadata.stage || STAGE_BOTH,
+        stage: (typeof metadata.stage === 'string' ? metadata.stage : undefined) || STAGE_BOTH,
         description: blueprint.description || eye.displayName || eye.eye,
         active: true, // Assume all eyes in DB are active
       };
