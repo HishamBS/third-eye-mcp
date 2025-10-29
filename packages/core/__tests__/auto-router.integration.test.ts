@@ -4,7 +4,7 @@
  * Tests dynamic routing based on Overseer LLM decisions
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { AutoRouter } from '../auto-router';
 import { EyeOrchestrator } from '../orchestrator';
 import type { BaseEnvelope } from '@third-eye/eyes';
@@ -21,7 +21,7 @@ vi.mock('../../apps/server/src/websocket', () => ({
 
 describe('AutoRouter - Dynamic Routing Integration', () => {
   let autoRouter: AutoRouter;
-  let mockOrchestrator: any;
+  let mockOrchestrator: EyeOrchestrator;
 
   beforeEach(() => {
     autoRouter = new AutoRouter();
@@ -77,7 +77,7 @@ describe('AutoRouter - Dynamic Routing Integration', () => {
       expect(result.results.length).toBe(6); // overseer + 5 eyes
 
       // Verify Eyes were called in correct order
-      const eyeCalls = (mockOrchestrator.runEye as any).mock.calls.map((call: any[]) => call[0]);
+      const eyeCalls = (mockOrchestrator.runEye as unknown as Mock).mock.calls.map(call => call[0] as string);
       expect(eyeCalls).toEqual(['overseer', 'sharingan', 'kyuubi', 'jogan', 'tenseigan', 'byakugan']);
     });
   });
@@ -124,7 +124,7 @@ describe('AutoRouter - Dynamic Routing Integration', () => {
       expect(result.completed).toBe(true);
       expect(result.results.length).toBe(4); // overseer + 3 eyes
 
-      const eyeCalls = (mockOrchestrator.runEye as any).mock.calls.map((call: any[]) => call[0]);
+      const eyeCalls = (mockOrchestrator.runEye as unknown as Mock).mock.calls.map(call => call[0] as string);
       expect(eyeCalls).toEqual(['overseer', 'jogan', 'tenseigan', 'byakugan']);
       expect(eyeCalls).not.toContain('sharingan');
     });
@@ -173,7 +173,7 @@ describe('AutoRouter - Dynamic Routing Integration', () => {
       expect(result.completed).toBe(true);
       expect(result.results.length).toBe(2); // overseer + mangekyo
 
-      const eyeCalls = (mockOrchestrator.runEye as any).mock.calls.map((call: any[]) => call[0]);
+      const eyeCalls = (mockOrchestrator.runEye as unknown as Mock).mock.calls.map(call => call[0] as string);
       expect(eyeCalls).toEqual(['overseer', 'mangekyo']);
       expect(eyeCalls).not.toContain('sharingan');
       expect(eyeCalls).not.toContain('jogan');
@@ -410,7 +410,7 @@ describe('AutoRouter - Dynamic Routing Integration', () => {
       expect(result.error).toContain('rejected');
       expect(result.results.length).toBe(2); // Should stop after rejection
 
-      const eyeCalls = (mockOrchestrator.runEye as any).mock.calls.map((call: any[]) => call[0]);
+      const eyeCalls = (mockOrchestrator.runEye as unknown as Mock).mock.calls.map(call => call[0] as string);
       expect(eyeCalls).not.toContain('byakugan'); // Should not continue to byakugan
     });
   });
@@ -456,7 +456,7 @@ describe('AutoRouter - Dynamic Routing Integration', () => {
       expect(result.completed).toBe(true);
       expect(result.results.length).toBe(4); // overseer + 3 validators
 
-      const eyeCalls = (mockOrchestrator.runEye as any).mock.calls.map((call: any[]) => call[0]);
+      const eyeCalls = (mockOrchestrator.runEye as unknown as Mock).mock.calls.map(call => call[0] as string);
       expect(eyeCalls).toEqual(['overseer', 'mangekyo', 'tenseigan', 'byakugan']);
     });
   });
