@@ -6,13 +6,14 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { ReplayTheater } from '@/components/ReplayTheater';
+import type { WebSocketEvent } from '@third-eye/types/events';
 
 export const dynamic = 'force-dynamic';
 
 function ReplayContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('sessionId') || 'unknown';
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<WebSocketEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

@@ -3,6 +3,21 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+// Table icon mapping (SSOT)
+const TABLE_ICONS = Object.freeze({
+  app_settings: '⚙️',
+  provider_keys: '🔑',
+  models_cache: '🤖',
+  eyes_routing: '👁️',
+  personas: '🎭',
+  sessions: '📝',
+  runs: '🏃',
+  default: '📊',
+} as const);
+
+// Row data type - unknown is safer than any
+type RowData = Record<string, unknown>;
+
 interface TableSchema {
   name: string;
   type: string;
@@ -13,7 +28,7 @@ interface TableSchema {
 
 interface TableInfo {
   name: string;
-  data: Record<string, any>[];
+  data: RowData[];
   editable: boolean;
   schema: TableSchema[];
 }
@@ -28,7 +43,7 @@ export default function DatabasePage() {
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('');
   const [editingRow, setEditingRow] = useState<string | null>(null);
-  const [editValues, setEditValues] = useState<Record<string, any>>({});
+  const [editValues, setEditValues] = useState<RowData>({});
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(50);
 
@@ -57,7 +72,7 @@ export default function DatabasePage() {
     }
   };
 
-  const handleEdit = (rowKey: string, row: Record<string, any>) => {
+  const handleEdit = (rowKey: string, row: RowData) => {
     setEditingRow(rowKey);
     setEditValues({ ...row });
   };
@@ -91,7 +106,7 @@ export default function DatabasePage() {
     }
   };
 
-  const handleDelete = async (tableName: string, rowKey: string, row: Record<string, any>) => {
+  const handleDelete = async (tableName: string, rowKey: string, row: RowData) => {
     if (!data) return;
 
     try {
@@ -134,20 +149,11 @@ export default function DatabasePage() {
     }
   };
 
-  const getTableIcon = (tableName: string) => {
-    switch (tableName) {
-      case 'app_settings': return '⚙️';
-      case 'provider_keys': return '🔑';
-      case 'models_cache': return '🤖';
-      case 'eyes_routing': return '👁️';
-      case 'personas': return '🎭';
-      case 'sessions': return '📝';
-      case 'runs': return '🏃';
-      default: return '📊';
-    }
+  const getTableIcon = (tableName: string): string => {
+    return TABLE_ICONS[tableName as keyof typeof TABLE_ICONS] || TABLE_ICONS.default;
   };
 
-  const getRowKey = (row: Record<string, any>, schema: TableSchema[]): string => {
+  const getRowKey = (row: RowData, schema: TableSchema[]): string => {
     const primaryKey = schema.find(s => s.primary);
     return primaryKey ? String(row[primaryKey.name]) : JSON.stringify(row);
   };
