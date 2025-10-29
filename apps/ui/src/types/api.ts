@@ -47,7 +47,7 @@ export interface Session {
   displayName: string;
   createdAt: Date | string;
   status: 'active' | 'completed' | 'failed' | 'killed';
-  configJson: any;
+  configJson: unknown;
 }
 
 export interface SessionWithStats extends Session {
@@ -97,7 +97,7 @@ export interface Run {
   tokensOut: number;
   latencyMs: number;
   createdAt: Date | string;
-  outputJson: any;
+  outputJson: unknown;
 }
 
 export type GetSessionRunsResponse = ApiEnvelope<{
@@ -204,7 +204,7 @@ export type ExecutePipelineResponse = ApiEnvelope<{
   runId: string;
   pipelineId: string;
   sessionId: string;
-  workflow: any;
+  workflow: unknown;
   status: string;
   message: string;
 }>;
