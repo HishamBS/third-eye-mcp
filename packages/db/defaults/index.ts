@@ -75,7 +75,11 @@ async function seedBlueprints(
   log: (message: string) => void,
   force: boolean
 ): Promise<boolean> {
-  try {
+  // TODO: Re-enable after fixing TypeScript references
+  // This function is temporarily disabled due to cross-package import issues
+  log('   ⏭ Blueprint seeding temporarily disabled');
+  return false;
+  /* try {
     const { personaBlueprints } = await import('./schema');
     const { count } = await import('drizzle-orm');
     
@@ -91,7 +95,7 @@ async function seedBlueprints(
     }
 
     // Import and seed from TypeScript registry
-    const { BLUEPRINT_REGISTRY } = await import('@third-eye/eyes/blueprint-client');
+    const { BLUEPRINT_REGISTRY } = await import('@third-eye/eyes');
     const now = new Date();
     
     let seeded = 0;
@@ -126,7 +130,7 @@ async function seedBlueprints(
   } catch (error) {
     log(`   ✗ Failed to seed blueprints: ${error}`);
     return false;
-  }
+  } */
 }
 
 async function seedPersonas(
@@ -350,7 +354,9 @@ export async function seedDefaults(options: SeedDefaultsOptions = {}): Promise<S
   }
 
   if (subsets.blueprints) {
-    report.blueprints = await seedBlueprints(db, log, force);
+    // TODO: Fix TypeScript references to allow seeding blueprints
+    log('   ⏭ Blueprint seeding temporarily disabled');
+    report.blueprints = false;
   }
 
   if (subsets.routing) {

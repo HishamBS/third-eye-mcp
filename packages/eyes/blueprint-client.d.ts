@@ -1,0 +1,9 @@
+/**
+ * Client-side blueprint exports
+ *
+ * Exports only blueprint-related functionality for Next.js API routes
+ * Does not import database or core orchestration modules
+ */
+export { BLUEPRINT_REGISTRY, getPersonaBlueprint } from './src/blueprints';
+export type { PersonaBlueprint } from './src/interfaces/persona-blueprint';
+//# sourceMappingURL=blueprint-client.d.ts.map

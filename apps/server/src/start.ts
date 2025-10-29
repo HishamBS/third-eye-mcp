@@ -12,6 +12,7 @@ import { createWebSocketHandler } from './websocket';
 import { getConfig } from '@third-eye/config';
 import { loadProviderKeysIntoConfig } from '@third-eye/core/load-provider-keys';
 import { seedDefaults } from '@third-eye/db/defaults';
+import { seedBlueprints } from './seed-blueprints';
 import { TOOL_NAME, DATA_DIRECTORY, PROVIDERS } from '@third-eye/types';
 
 const config = getConfig();
@@ -36,6 +37,11 @@ const seedReport = await seedDefaults({
   log: (message: string) => console.log(message),
 });
 console.log('[Startup] Default seeding complete:', seedReport, '\n');
+
+// Seed blueprints (separate from defaults due to cross-package imports)
+console.log('[Startup] Seeding blueprints...');
+await seedBlueprints();
+console.log('[Startup] Blueprint seeding complete.\n');
 
 // Load provider keys from database into config
 await loadProviderKeysIntoConfig();
