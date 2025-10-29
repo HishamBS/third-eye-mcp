@@ -6,6 +6,13 @@ import { useUI } from '@/contexts/UIContext';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import type { WSMessage } from '@third-eye/types';
 
+// Session data structure from WebSocket message
+interface SessionData {
+  configJson?: string | Record<string, unknown>;
+  agentName?: string;
+  displayName?: string;
+}
+
 /**
  * SessionNotifier Component
  *
@@ -19,7 +26,7 @@ export function SessionNotifier() {
     // Handle new session creation
     if (message.type === 'session_created') {
       const newSessionId = message.sessionId;
-      const session = message.session as any;
+      const session = (message as { session?: SessionData }).session;
       const config = typeof session?.configJson === 'string'
         ? JSON.parse(session.configJson)
         : session?.configJson || {};
