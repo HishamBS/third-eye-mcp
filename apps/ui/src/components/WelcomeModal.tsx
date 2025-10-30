@@ -13,22 +13,22 @@ interface WelcomeStep {
 
 const WELCOME_STEPS: WelcomeStep[] = [
   {
-    title: 'Welcome to Third Eye MCP! 👋',
+    title: 'Welcome to Third Eye MCP',
     description: 'An intelligent oversight system that watches over your AI conversations. Think of it as having multiple expert Eyes reviewing every interaction to ensure quality, safety, and accuracy.',
     icon: <Sparkles className="h-12 w-12 text-brand-accent" />,
   },
   {
-    title: 'Meet the Eyes 👁️',
+    title: 'Meet the Eyes',
     description: 'Eyes are specialized AI agents - each with unique capabilities like fact-checking, tone analysis, or security scanning. You can create custom Eyes or use our built-in collection. Find them in the Eyes page!',
     icon: <Eye className="h-12 w-12 text-blue-400" />,
   },
   {
-    title: 'Build Pipelines 🔧',
+    title: 'Build Pipelines',
     description: 'Combine multiple Eyes into workflows called Pipelines. Drag and drop Eyes to create visual flows - like a quality control assembly line for your AI conversations. Check out the Pipelines page to get started!',
     icon: <GitBranch className="h-12 w-12 text-purple-400" />,
   },
   {
-    title: 'Monitor Everything 📊',
+    title: 'Monitor Everything',
     description: 'Watch your Eyes work in real-time on the Monitor page. See sessions in the Sessions page, and replay past conversations in the Replay page. All your oversight activity in one place!',
     icon: <Activity className="h-12 w-12 text-green-400" />,
   },

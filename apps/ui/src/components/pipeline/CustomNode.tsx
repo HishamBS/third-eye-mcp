@@ -118,8 +118,8 @@ function CustomNode({ data, selected }: NodeProps<CustomNodeData>) {
           {/* Stage Badge */}
           {data.stage && (
             <div className="text-xs font-semibold text-white/80 mb-2">
-              {data.stage === EyeStageToken.GUIDANCE && '🎯 Guidance'}
-              {data.stage === EyeStageToken.VALIDATION && '✓ Validation'}
+              {data.stage === EyeStageToken.GUIDANCE && 'Guidance'}
+              {data.stage === EyeStageToken.VALIDATION && 'Validation'}
             </div>
           )}
 
