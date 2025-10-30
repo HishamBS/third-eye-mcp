@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BaseProvider, type CompletionRequest, type CompletionResponse, type HealthStatus, type ModelInfo, type ProviderConfig } from './base.js';
+import { BaseProvider, type CompletionRequest, type CompletionResponse, type HealthStatus, type ModelInfo, type ProviderConfig } from './base';
 
 const GroqModelSchema = z.object({
   id: z.string(),

@@ -66,21 +66,31 @@ export async function loadDynamicCapabilities(db: ReturnType<typeof getDb>['db']
         capabilities = blueprint.capabilities;
       }
 
-      // Parse metadata to determine stage
-      let metadata: Record<string, unknown> = {};
-      if (typeof blueprint.metadata === 'string') {
+      // Parse phases to determine stage
+      let phases: Record<string, unknown> = {};
+      if (typeof blueprint.phases === 'string') {
         try {
-          metadata = JSON.parse(blueprint.metadata);
+          phases = JSON.parse(blueprint.phases);
         } catch (e) {
-          console.error(`[CapabilityLoader] Failed to parse metadata for ${eye.eye}:`, e);
+          console.error(`[CapabilityLoader] Failed to parse phases for ${eye.eye}:`, e);
         }
-      } else if (typeof blueprint.metadata === 'object' && blueprint.metadata !== null) {
-        metadata = blueprint.metadata as Record<string, unknown>;
+      } else if (typeof blueprint.phases === 'object' && blueprint.phases !== null) {
+        phases = blueprint.phases as Record<string, unknown>;
+      }
+
+      // Determine stage from phases
+      const hasGuidance = phases.guidance !== undefined && phases.guidance !== null;
+      const hasValidation = phases.validation !== undefined && phases.validation !== null;
+      let stage = STAGE_BOTH;
+      if (hasGuidance && !hasValidation) {
+        stage = EyeStageToken.GUIDANCE;
+      } else if (hasValidation && !hasGuidance) {
+        stage = EyeStageToken.VALIDATION;
       }
 
       registry[eye.eye] = {
         capabilities,
-        stage: (typeof metadata.stage === 'string' ? metadata.stage : undefined) || STAGE_BOTH,
+        stage,
         description: blueprint.description || eye.displayName || eye.eye,
         active: true, // Assume all eyes in DB are active
       };

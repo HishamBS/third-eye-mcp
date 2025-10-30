@@ -28,28 +28,29 @@ interface SessionIdentity {
 
 function deriveSessionIdentity(config: SessionConfig = {}): SessionIdentity {
   const metadata = config.metadata ?? {};
-  const client =
+  const client: Record<string, unknown> = (
     metadata.client ||
     metadata.clientInfo ||
-    {};
+    {}
+  ) as Record<string, unknown>;
 
   const title: string | undefined =
     config.displayName ||
-    metadata.clientDisplayName ||
-    client.displayName ||
-    client.title;
+    (metadata.clientDisplayName as string | undefined) ||
+    (client.displayName as string | undefined) ||
+    (client.title as string | undefined);
 
   const rawAgentName: string | undefined =
     config.agentName ||
-    metadata.clientName ||
-    client.name ||
+    (metadata.clientName as string | undefined) ||
+    (client.name as string | undefined) ||
     title;
 
   const agentName = (rawAgentName && rawAgentName.trim()) || 'Unknown Agent';
 
   const version: string | undefined =
-    metadata.clientVersion ||
-    client.version;
+    (metadata.clientVersion as string | undefined) ||
+    (client.version as string | undefined);
 
   const baseDisplay = (title && title.trim()) || agentName;
   const versionLabel = version && version.trim().length > 0 ? version.trim() : null;

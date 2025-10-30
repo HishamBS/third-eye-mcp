@@ -1,8 +1,8 @@
-import { BaseProvider, type ProviderConfig } from './base.js';
-import { GroqProvider } from './groq.js';
-import { OpenRouterProvider } from './openrouter.js';
-import { OllamaProvider } from './ollama.js';
-import { LMStudioProvider } from './lmstudio.js';
+import { BaseProvider, type ProviderConfig } from './base';
+import { GroqProvider } from './groq';
+import { OpenRouterProvider } from './openrouter';
+import { OllamaProvider } from './ollama';
+import { LMStudioProvider } from './lmstudio';
 import { ProviderId, PROVIDERS } from '@third-eye/types/enums';
 
 export type ProviderType = ProviderId;

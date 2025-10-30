@@ -9,8 +9,8 @@
  * running the broader seedDefaults routine.
  */
 
-import { getDb } from './index.js';
-import { personas } from './schema.js';
+import { getDb } from './index';
+import { personas } from './schema';
 import { DEFAULT_PERSONAS } from './defaults/personas';
 
 function generatePersonaId(eye: string, version: number) {

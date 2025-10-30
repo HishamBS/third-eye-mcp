@@ -1,14 +1,14 @@
 import { Database } from 'bun:sqlite';
 import { drizzle } from 'drizzle-orm/bun-sqlite';
 import { migrate } from 'drizzle-orm/bun-sqlite/migrator';
-import * as schema from './schema.js';
+import * as schema from './schema';
 import { resolve } from 'path';
 import { homedir } from 'os';
 import { mkdirSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
-export * from './schema.js';
+export * from './schema';
 
 // Default database path: ~/.third-eye-mcp/mcp.db (following prompt.md spec)
 export function getDbPath(): string {

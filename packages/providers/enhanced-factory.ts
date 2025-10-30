@@ -5,8 +5,8 @@ import type {
   CompletionResponse,
   HealthResponse,
 } from '@third-eye/types';
-import { ProviderFactory, type ProviderType } from './src/factory.js';
-import type { ProviderConfig } from './src/base.js';
+import { ProviderFactory, type ProviderType } from './src/factory';
+import type { ProviderConfig } from './src/base';
 
 interface ProviderInstance {
   client: ProviderClient;

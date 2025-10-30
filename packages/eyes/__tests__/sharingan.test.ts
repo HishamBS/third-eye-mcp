@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { clarify, type SharinganRequest } from '../sharingan.js';
-import { StatusCode, DataKey } from '../constants.js';
+import { clarify, type SharinganRequest } from '../sharingan';
+import { StatusCode, DataKey } from '../constants';
 
 describe('Sharingan Eye', () => {
   describe('Ambiguity Detection', () => {

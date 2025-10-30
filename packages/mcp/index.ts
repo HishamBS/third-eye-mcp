@@ -1,1 +1,1 @@
-export { createMCPServer, startMCPServer } from './server.js';
+export { createMCPServer, startMCPServer } from './server';
