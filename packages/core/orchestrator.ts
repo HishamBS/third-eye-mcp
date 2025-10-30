@@ -1,7 +1,7 @@
 import { Buffer } from 'node:buffer';
 import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
-import { runs, sessions, personas, eyesRouting, providerKeys } from '@third-eye/db';
+import { runs, sessions, personas, eyesRouting, providerKeys, providerFailovers } from '@third-eye/db';
 import { ProviderFactory, type CompletionResponse } from '@third-eye/providers';
 import type { ProviderType } from '@third-eye/providers';
 import { getEye, getAllEyeNames, type EyeName, type EyeResponse, type BaseEnvelope, type PersonaPrompt } from '@third-eye/eyes';
@@ -16,7 +16,7 @@ import { getStageTemplate } from '@third-eye/constants';
 import { EyeStageToken } from '@third-eye/constants';
 import { capabilityProgress } from './capability-progress';
 import { retryWithThrow } from './provider-retry';
-import { RETRY_CONFIG } from '@third-eye/constants';
+import { RETRY_CONFIG, FALLBACK_CONFIG, FALLBACK_EVENT_TYPE, categorizeRetryReason } from '@third-eye/constants';
 
 function isSupportedProvider(value: unknown): value is ProviderType {
   if (typeof value !== 'string') {
@@ -225,42 +225,40 @@ export class EyeOrchestrator {
         );
       }
 
-      // 4. Get provider API key
-      const targetProvider = routing.primaryProvider;
-      const targetModel = routing.primaryModel;
-
-      const providerType = this.resolveProviderType(targetProvider);
-      if (!providerType) {
-        return this.createErrorEnvelope(
-          eyeName,
-          `Unsupported provider configured: ${targetProvider}`,
-          runId,
-          actualSessionId,
-          startTime
-        );
+      // 4. Build provider chain (primary + fallback if configured)
+      interface ProviderConfig {
+        provider: string;
+        model: string;
+        isPrimary: boolean;
       }
 
-      const providerCredentials = await this.getProviderCredentials(providerType);
-      const apiKey = providerCredentials?.apiKey ?? null;
-      if (!apiKey && providerType !== 'ollama' && providerType !== 'lmstudio') {
-        return this.createErrorEnvelope(
-          eyeName,
-          `No API key configured for provider: ${providerType}. Add key via UI Settings or .env file.`,
-          runId,
-          actualSessionId,
-          startTime
-        );
+      const providerChain: ProviderConfig[] = [
+        {
+          provider: routing.primaryProvider,
+          model: routing.primaryModel,
+          isPrimary: true,
+        },
+      ];
+
+      // Add fallback provider if configured and fallback is enabled
+      if (
+        FALLBACK_CONFIG.ENABLED &&
+        routing.fallbackProvider &&
+        routing.fallbackModel &&
+        providerChain.length < FALLBACK_CONFIG.MAX_PROVIDERS_TO_TRY
+      ) {
+        providerChain.push({
+          provider: routing.fallbackProvider,
+          model: routing.fallbackModel,
+          isPrimary: false,
+        });
       }
 
-      const providerLabel = providerOverride?.label ?? providerType;
+      // Track which providers we've tried
+      let lastError: unknown = null;
+      let providerAttemptIndex = 0;
 
-      // 5. Create provider instance
-      const provider = ProviderFactory.createProvider(providerType, {
-        apiKey: apiKey ?? undefined,
-        baseUrl: providerCredentials?.baseUrl,
-      });
-
-      // 6. Build persona prompt using blueprint renderer
+      // 5. Build persona prompt using blueprint renderer (done once, used for all providers)
       const blueprint = getPersonaBlueprint(eyeName);
       if (!blueprint) {
         return this.createErrorEnvelope(
@@ -272,181 +270,249 @@ export class EyeOrchestrator {
         );
       }
 
-      // Determine stage based on pipeline state
-      const stage = EyeStageToken.GUIDANCE; // TODO: Get actual stage from context
-      
-      // Retry loop for persona guard validation
-      const MAX_PERSONA_RETRIES = RETRY_CONFIG.MAX_PERSONA_RETRIES;
-      let attempt = 0;
+      // Variables to hold successful results
       let envelope: BaseEnvelope | null = null;
-      let latencyMs = 0;
       let completion: CompletionResponse | null = null;
-      let enrichedInput = input;
-      
-      // **DYNAMIC ROUTING**: If this is the Overseer eye, load capabilities from DB
-      let dynamicRouterPersona: string | null = null;
-      if (eyeName === 'overseer') {
-        try {
-          const { loadDynamicCapabilities, buildRouterPersona, extractUserNeeds } = await import('./capability-loader');
-          const { getDb } = await import('@third-eye/db');
-          const { db } = getDb();
-          
-          const capabilityRegistry = await loadDynamicCapabilities(db);
-          dynamicRouterPersona = buildRouterPersona(capabilityRegistry);
-          
-          // Enrich input with user needs analysis
-          const userNeeds = extractUserNeeds(input);
-          enrichedInput = `${input}\n\n[User Needs Detected: ${userNeeds.join(', ')}]`;
-          
-          console.log('[Orchestrator] Dynamic capabilities loaded for Overseer routing');
-          console.log(`[Orchestrator] Capability Registry:`, Object.keys(capabilityRegistry));
-        } catch (error) {
-          console.error('[Orchestrator] Failed to load dynamic capabilities:', error);
-          // Continue with static blueprint as fallback
-        }
-      }
+      let latencyMs = 0;
+      let successfulProviderType: ProviderType | null = null;
+      let successfulModel: string | null = null;
+      let providerLabel = '';
 
-      while (attempt < MAX_PERSONA_RETRIES) {
-        attempt++;
-        const attemptStartTime = Date.now();
+      // 6. **FALLBACK LOOP**: Try each provider in chain until one succeeds
+      for (const providerConfig of providerChain) {
+        const targetProvider = providerConfig.provider;
+        const targetModel = providerConfig.model;
+        const isPrimary = providerConfig.isPrimary;
 
-        // Build persona prompt (may include reminder on retries)
-        // Use dynamic router persona for Overseer, otherwise use blueprint
-        let personaPrompt: PersonaPrompt;
-        if (dynamicRouterPersona && eyeName === 'overseer') {
-          personaPrompt = {
-            systemPrompt: dynamicRouterPersona,
-            userMessage: enrichedInput,
-            config: {
-              temperature: 0,
-              response_format: { type: 'json_object' as const },
-            },
-          };
-        } else {
-          personaPrompt = renderPersonaPrompt(blueprint, stage, enrichedInput);
+        // Skip if we already succeeded
+        if (envelope !== null) {
+          break;
         }
 
-        // 7. Call provider with persona as system prompt (with retry logic)
+        console.log(`\n🔄 Attempting ${isPrimary ? 'primary' : 'fallback'} provider: ${targetProvider}/${targetModel}`);
+
         try {
-          completion = await retryWithThrow(
-            async () => provider.complete({
-              model: targetModel,
-              messages: [
-                { role: 'system', content: personaPrompt.systemPrompt },
-                { role: 'user', content: personaPrompt.userMessage }
-              ],
-              temperature: options.temperature ?? personaPrompt.config.temperature,
-              max_tokens: options.maxTokens ?? 4096,
-              response_format: personaPrompt.config.response_format,
-            }),
-            {
-              context: `${providerType}/${targetModel} API call for ${eyeName} Eye`,
-              onRetry: (attemptNum, maxAttempts, delayMs, error) => {
-                console.warn(`🔄 Retrying ${eyeName} provider call (${attemptNum}/${maxAttempts}) after ${delayMs}ms`);
-              },
+          // Resolve provider type
+          const providerType = this.resolveProviderType(targetProvider);
+          if (!providerType) {
+            throw new Error(`Unsupported provider configured: ${targetProvider}`);
+          }
+
+          // Get credentials
+          const providerCredentials = await this.getProviderCredentials(providerType);
+          const apiKey = providerCredentials?.apiKey ?? null;
+          if (!apiKey && providerType !== 'ollama' && providerType !== 'lmstudio') {
+            throw new Error(`No API key configured for provider: ${providerType}`);
+          }
+
+          providerLabel = providerOverride?.label ?? providerType;
+
+          // Create provider instance
+          const provider = ProviderFactory.createProvider(providerType, {
+            apiKey: apiKey ?? undefined,
+            baseUrl: providerCredentials?.baseUrl,
+          });
+
+          // Determine stage based on pipeline state
+          const stage = EyeStageToken.GUIDANCE; // TODO: Get actual stage from context
+
+          // Retry loop for persona guard validation
+          const MAX_PERSONA_RETRIES = RETRY_CONFIG.MAX_PERSONA_RETRIES;
+          let attempt = 0;
+          let enrichedInput = input;
+
+          // **DYNAMIC ROUTING**: If this is the Overseer eye, load capabilities from DB
+          let dynamicRouterPersona: string | null = null;
+          if (eyeName === 'overseer') {
+            try {
+              const { loadDynamicCapabilities, buildRouterPersona, extractUserNeeds } = await import('./capability-loader');
+              const { getDb } = await import('@third-eye/db');
+              const { db } = getDb();
+
+              const capabilityRegistry = await loadDynamicCapabilities(db);
+              dynamicRouterPersona = buildRouterPersona(capabilityRegistry);
+
+              // Enrich input with user needs analysis
+              const userNeeds = extractUserNeeds(input);
+              enrichedInput = `${input}\n\n[User Needs Detected: ${userNeeds.join(', ')}]`;
+
+              console.log('[Orchestrator] Dynamic capabilities loaded for Overseer routing');
+              console.log(`[Orchestrator] Capability Registry:`, Object.keys(capabilityRegistry));
+            } catch (error) {
+              console.error('[Orchestrator] Failed to load dynamic capabilities:', error);
+              // Continue with static blueprint as fallback
             }
-          );
+          }
 
-          latencyMs = Date.now() - attemptStartTime;
+          // Persona validation retry loop
+          while (attempt < MAX_PERSONA_RETRIES) {
+            attempt++;
+            const attemptStartTime = Date.now();
 
-          // Log actual LLM response for debugging
-          console.log(`\n📤 ${eyeName} LLM raw response (attempt ${attempt}/${MAX_PERSONA_RETRIES}):\n${completion.content}\n`);
-
-          // 8. Parse response as envelope
-          try {
-            envelope = JSON.parse(completion.content);
-          } catch (parseError) {
-            // Try to extract JSON from markdown code blocks
-            const jsonMatch = completion.content.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
-            if (jsonMatch) {
-              envelope = JSON.parse(jsonMatch[1]);
+            // Build persona prompt (may include reminder on retries)
+            // Use dynamic router persona for Overseer, otherwise use blueprint
+            let personaPrompt: PersonaPrompt;
+            if (dynamicRouterPersona && eyeName === 'overseer') {
+              personaPrompt = {
+                systemPrompt: dynamicRouterPersona,
+                userMessage: enrichedInput,
+                config: {
+                  temperature: 0,
+                  response_format: { type: 'json_object' as const },
+                },
+              };
             } else {
-              // Response is not valid envelope
+              personaPrompt = renderPersonaPrompt(blueprint, stage, enrichedInput);
+            }
+
+            // 7. Call provider with persona as system prompt (with retry logic)
+            try {
+              completion = await retryWithThrow(
+                async () => provider.complete({
+                  model: targetModel,
+                  messages: [
+                    { role: 'system', content: personaPrompt.systemPrompt },
+                    { role: 'user', content: personaPrompt.userMessage }
+                  ],
+                  temperature: options.temperature ?? personaPrompt.config.temperature,
+                  max_tokens: options.maxTokens ?? 4096,
+                  response_format: personaPrompt.config.response_format,
+                }),
+                {
+                  context: `${providerType}/${targetModel} API call for ${eyeName} Eye`,
+                  onRetry: (attemptNum, maxAttempts, delayMs, error) => {
+                    console.warn(`🔄 Retrying ${eyeName} provider call (${attemptNum}/${maxAttempts}) after ${delayMs}ms`);
+                  },
+                }
+              );
+
+              latencyMs = Date.now() - attemptStartTime;
+
+              // Log actual LLM response for debugging
+              console.log(`\n📤 ${eyeName} LLM raw response (attempt ${attempt}/${MAX_PERSONA_RETRIES}):\n${completion.text}\n`);
+
+              // 8. Parse response as envelope
+              try {
+                envelope = JSON.parse(completion.text);
+              } catch (parseError) {
+                // Try to extract JSON from markdown code blocks
+                const jsonMatch = completion.text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+                if (jsonMatch) {
+                  envelope = JSON.parse(jsonMatch[1]);
+                } else {
+                  // Response is not valid envelope
+                  if (attempt < MAX_PERSONA_RETRIES) {
+                    console.warn(`⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Invalid JSON response`);
+                    enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\nYour previous response was not valid JSON. You MUST return a valid JSON object matching the envelope schema.`;
+                    continue;
+                  } else {
+                    throw new Error(`LLM response is not valid JSON envelope after ${MAX_PERSONA_RETRIES} attempts`);
+                  }
+                }
+              }
+
+              // 9. Validate envelope with Eye's validator
+              // Handle legacy next_action field (some Eyes may still use it)
+              if (envelope && 'next' in envelope && envelope.next === undefined && 'next_action' in envelope && envelope.next_action) {
+                (envelope as BaseEnvelope & { next: string | string[] }).next = envelope.next_action;
+              }
+
+              if (!eye.validate(envelope)) {
+                if (attempt < MAX_PERSONA_RETRIES) {
+                  console.warn(`⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Schema validation failed`);
+                  enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\nYour previous response failed schema validation. Review the envelope schema in your prompt and ensure all required fields are present with correct types.`;
+                  envelope = null;
+                  continue;
+                } else {
+                  throw new Error(`LLM response does not match Eye's envelope schema after ${MAX_PERSONA_RETRIES} attempts`);
+                }
+              }
+
+              // 10. Persona guard validation with retry logic
+              const { ensureEyeBehavior, buildReminderMessage } = await import('@third-eye/eyes');
+              const guardResult = ensureEyeBehavior(blueprint, envelope);
+
+              if (!guardResult.valid) {
+                console.warn(`⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Persona contract violated`);
+
+                if (attempt < MAX_PERSONA_RETRIES) {
+                  // Build targeted reminder from violations
+                  const reminder = buildReminderMessage(guardResult.violations);
+                  enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\n${reminder}`;
+                  envelope = null;
+                  continue;
+                } else {
+                  throw new Error(`Persona contract violated after ${MAX_PERSONA_RETRIES} attempts: ${guardResult.violations.map((v: { message: string }) => v.message).join('; ')}`);
+                }
+              }
+
+              // Success! Break out of retry loop
+              break;
+
+            } catch (error) {
+              // LLM call failed
               if (attempt < MAX_PERSONA_RETRIES) {
-                console.warn(`⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Invalid JSON response`);
-                enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\nYour previous response was not valid JSON. You MUST return a valid JSON object matching the envelope schema.`;
+                console.warn(`⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: LLM call failed:`, error);
                 continue;
               } else {
-                return this.createErrorEnvelope(
-                  eyeName,
-                  `LLM response is not valid JSON envelope after ${MAX_PERSONA_RETRIES} attempts: ${completion.content.substring(0, 200)}`,
-                  runId,
-                  actualSessionId,
-                  startTime
-                );
+                throw error;
               }
             }
-          }
+          } // End of persona validation while loop
 
-          // 9. Validate envelope with Eye's validator
-          // Handle legacy next_action field (some Eyes may still use it)
-          if (envelope && 'next' in envelope && envelope.next === undefined && 'next_action' in envelope && envelope.next_action) {
-            (envelope as BaseEnvelope & { next: string | string[] }).next = envelope.next_action;
-          }
+          // Successfully got valid envelope from this provider
+          successfulProviderType = providerType;
+          successfulModel = targetModel;
+          console.log(`✅ Successfully received valid response from ${providerType}/${targetModel}`);
 
-          if (!eye.validate(envelope)) {
-            if (attempt < MAX_PERSONA_RETRIES) {
-              console.warn(`⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Schema validation failed`);
-              enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\nYour previous response failed schema validation. Review the envelope schema in your prompt and ensure all required fields are present with correct types.`;
-              envelope = null;
-              continue;
-            } else {
-              console.error(`❌ ${eyeName} validation failed after ${MAX_PERSONA_RETRIES} attempts. Envelope:`, JSON.stringify(envelope, null, 2));
-              return this.createErrorEnvelope(
-                eyeName,
-                `LLM response does not match Eye's envelope schema after ${MAX_PERSONA_RETRIES} attempts`,
-                runId,
-                actualSessionId,
-                startTime
-              );
-            }
-          }
-
-          // 10. Persona guard validation with retry logic
-          const { ensureEyeBehavior, buildReminderMessage } = await import('@third-eye/eyes');
-          const guardResult = ensureEyeBehavior(blueprint, envelope);
-          
-          if (!guardResult.valid) {
-            console.warn(`⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Persona contract violated`);
-            
-            if (attempt < MAX_PERSONA_RETRIES) {
-              // Build targeted reminder from violations
-              const reminder = buildReminderMessage(guardResult.violations);
-              enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\n${reminder}`;
-              envelope = null;
-              continue;
-            } else {
-              // Exhausted retries
-              console.error(`❌ ${eyeName} failed after ${MAX_PERSONA_RETRIES} attempts. Violations:`, guardResult.violations);
-              return this.createErrorEnvelope(
-                eyeName,
-                `Persona contract violated after ${MAX_PERSONA_RETRIES} attempts: ${guardResult.violations.map((v: { message: string }) => v.message).join('; ')}. Consider adjusting provider or persona blueprint.`,
-                runId,
-                actualSessionId,
-                startTime
-              );
-            }
-          }
-
-          // Success! Break out of retry loop
+          // Break out of fallback loop
           break;
 
-        } catch (error) {
-          // LLM call failed
-          if (attempt < MAX_PERSONA_RETRIES) {
-            console.warn(`⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: LLM call failed:`, error);
-            continue;
+        } catch (providerError) {
+          // This provider (after all retries) failed
+          lastError = providerError;
+          providerAttemptIndex++;
+
+          const errorReason = categorizeRetryReason(providerError);
+          const isLastProvider = providerAttemptIndex >= providerChain.length;
+
+          if (isLastProvider) {
+            // All providers exhausted - fail
+            console.error(`❌ All ${providerChain.length} provider(s) exhausted for ${eyeName}`);
+            throw providerError;
           } else {
-            throw error;
+            // Log failover event to database
+            if (FALLBACK_CONFIG.LOG_FAILOVER_EVENTS && !isPrimary) {
+              try {
+                await this.db.insert(providerFailovers).values({
+                  id: nanoid(),
+                  sessionId: actualSessionId,
+                  eye: eyeName,
+                  primaryProvider: providerChain[0].provider,
+                  primaryModel: providerChain[0].model,
+                  failedReason: errorReason,
+                  fallbackProvider: targetProvider,
+                  fallbackModel: targetModel,
+                  fallbackSuccess: false,
+                  errorDetails: JSON.stringify({ error: String(providerError) }),
+                  createdAt: new Date(),
+                });
+              } catch (dbError) {
+                console.error('Failed to log failover event:', dbError);
+              }
+            }
+
+            console.warn(`⚠️  Provider ${targetProvider}/${targetModel} failed. Trying next provider in chain...`);
+            // Continue to next provider in chain
           }
         }
-      }
+      } // End of fallback loop
 
-      // Ensure we have a valid envelope after retry loop
-      if (!envelope) {
+      // Ensure we have a valid envelope after fallback loop
+      if (!envelope || !successfulProviderType || !successfulModel || !completion) {
         return this.createErrorEnvelope(
           eyeName,
-          `Failed to get valid response after ${MAX_PERSONA_RETRIES} attempts`,
+          `Failed to get valid response from any provider in chain. Last error: ${lastError}`,
           runId,
           actualSessionId,
           startTime
@@ -464,18 +530,17 @@ export class EyeOrchestrator {
         id: runId,
         sessionId: actualSessionId,
         eye: eyeName,
-        provider: providerType,
-        model: targetModel,
+        provider: successfulProviderType,
+        model: successfulModel,
         inputMd: input,
         outputJson: envelope,
-        tokensIn: completion.usage.prompt_tokens ?? 0,
-        tokensOut: completion.usage.completion_tokens ?? 0,
+        tokensIn: completion.tokensIn ?? 0,
+        tokensOut: completion.tokensOut ?? 0,
         latencyMs,
         createdAt: new Date(),
       });
 
       // 11. Persist pipeline event for Monitor page
-      const { nanoid } = await import('nanoid');
       const { pipelineEvents } = await import('@third-eye/db');
 
       // Extract next action (can be string or array from Overseer)
@@ -485,14 +550,14 @@ export class EyeOrchestrator {
       const eventData = envelope.data && typeof envelope.data === 'object'
         ? {
             ...envelope.data,
-            provider: providerType,
+            provider: successfulProviderType,
             providerLabel,
-            model: targetModel,
+            model: successfulModel,
           }
         : {
-            provider: providerType,
+            provider: successfulProviderType,
             providerLabel,
-            model: targetModel,
+            model: successfulModel,
           };
 
       await this.db.insert(pipelineEvents).values({

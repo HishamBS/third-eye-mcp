@@ -98,6 +98,21 @@ export const pipelineEvents = sqliteTable('pipeline_events', {
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
 
+// Provider failover events for tracking fallback chain usage
+export const providerFailovers = sqliteTable('provider_failovers', {
+  id: text('id').primaryKey(),
+  sessionId: text('session_id').notNull().references(() => sessions.id),
+  eye: text('eye').notNull(),
+  primaryProvider: text('primary_provider').notNull(),
+  primaryModel: text('primary_model').notNull(),
+  failedReason: text('failed_reason').notNull(), // RETRY_REASON constant
+  fallbackProvider: text('fallback_provider').notNull(),
+  fallbackModel: text('fallback_model').notNull(),
+  fallbackSuccess: integer('fallback_success', { mode: 'boolean' }).notNull(),
+  errorDetails: text('error_details', { mode: 'json' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
 export type AppSetting = typeof appSettings.$inferSelect;
 export type NewAppSetting = typeof appSettings.$inferInsert;
 
@@ -124,6 +139,9 @@ export type NewRun = typeof runs.$inferInsert;
 
 export type PipelineEvent = typeof pipelineEvents.$inferSelect;
 export type NewPipelineEvent = typeof pipelineEvents.$inferInsert;
+
+export type ProviderFailover = typeof providerFailovers.$inferSelect;
+export type NewProviderFailover = typeof providerFailovers.$inferInsert;
 
 // Prompts library with versioning and variables
 export const prompts = sqliteTable('prompts', {
