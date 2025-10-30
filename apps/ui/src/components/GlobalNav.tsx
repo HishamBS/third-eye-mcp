@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { SessionSelector } from './SessionSelector';
 import { ThemeSwitcher } from './ThemeSwitcher';
+import { ViewModeToggle } from './ViewModeToggle';
 
 interface DropdownItem {
   href: string;
@@ -151,6 +152,7 @@ export function GlobalNav() {
         {/* Right: Actions */}
         <div className="flex items-center justify-self-end space-x-3">
           <SessionSelector />
+          <ViewModeToggle />
           <ThemeSwitcher />
           <Link
             href="/settings"
