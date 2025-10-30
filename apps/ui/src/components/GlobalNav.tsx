@@ -122,47 +122,49 @@ function Dropdown({ section }: { section: DropdownSection }) {
 export function GlobalNav() {
   return (
     <header className="border-b border-brand-outline/60 bg-brand-paperElev/80 backdrop-blur-sm sticky top-0 z-50">
-      <div className="mx-auto max-w-7xl px-8 py-4 grid grid-cols-[auto_1fr_auto] items-center gap-8">
-        {/* Left: Logo */}
-        <Link
-          href="/"
-          className="flex items-center space-x-3 group justify-self-start"
-          aria-label="Third Eye MCP"
-        >
-          <Image
-            src="/logo.svg"
-            alt="Third Eye MCP logo"
-            width={40}
-            height={40}
-            priority
-            className="h-10 w-10 transform transition-transform duration-200 group-hover:scale-110"
-          />
-          <span className="text-xl font-semibold text-white group-hover:text-brand-accent transition-colors">
-            Third Eye MCP
-          </span>
-        </Link>
-
-        {/* Center: Navigation */}
-        <nav className="flex items-center justify-center space-x-1">
-          {NAVIGATION_SECTIONS.map((section) => (
-            <Dropdown key={section.label} section={section} />
-          ))}
-        </nav>
-
-        {/* Right: Actions */}
-        <div className="flex items-center justify-self-end space-x-3 min-w-[650px]">
-          <SessionSelector />
-          <ViewModeToggle />
-          <ThemeSwitcher />
+      <div className="mx-auto max-w-[1600px] px-6 py-3.5">
+        <div className="flex items-center justify-between gap-6">
+          {/* Left: Logo */}
           <Link
-            href="/settings"
-            className="rounded-lg p-2 text-slate-400 hover:text-white hover:bg-brand-paper/60 transition-colors"
-            aria-label="Settings"
+            href="/"
+            className="flex items-center gap-3 group shrink-0"
+            aria-label="Third Eye MCP"
           >
-            <Settings className="h-5 w-5" />
+            <Image
+              src="/logo.svg"
+              alt="Third Eye MCP logo"
+              width={36}
+              height={36}
+              priority
+              className="h-9 w-9 transform transition-transform duration-200 group-hover:scale-110"
+            />
+            <span className="text-lg font-semibold text-white group-hover:text-brand-accent transition-colors whitespace-nowrap">
+              Third Eye MCP
+            </span>
           </Link>
-          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
-            AI
+
+          {/* Center: Navigation */}
+          <nav className="flex items-center justify-center gap-1 flex-1">
+            {NAVIGATION_SECTIONS.map((section) => (
+              <Dropdown key={section.label} section={section} />
+            ))}
+          </nav>
+
+          {/* Right: Actions */}
+          <div className="flex items-center gap-3 shrink-0">
+            <SessionSelector />
+            <ViewModeToggle />
+            <ThemeSwitcher />
+            <Link
+              href="/settings"
+              className="rounded-lg p-2 text-slate-400 hover:text-white hover:bg-brand-paper/60 transition-colors"
+              aria-label="Settings"
+            >
+              <Settings className="h-5 w-5" />
+            </Link>
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
+              AI
+            </div>
           </div>
         </div>
       </div>

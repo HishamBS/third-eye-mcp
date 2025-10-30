@@ -7,14 +7,15 @@ export function ThemeScript() {
     (function() {
       try {
         const theme = localStorage.getItem('third-eye-theme') || '${DEFAULT_THEME}';
-        const darkMode = localStorage.getItem('third-eye-dark-mode');
+        const mode = localStorage.getItem('third-eye-theme-mode') || 'dark';
 
         document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.setAttribute('data-mode', mode);
 
-        if (darkMode === 'false') {
-          document.documentElement.classList.remove('dark');
-        } else {
+        if (mode === 'dark') {
           document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
         }
       } catch (e) {}
     })();

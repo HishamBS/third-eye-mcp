@@ -43,27 +43,71 @@ export function ThemeSwitcher() {
   const currentTheme = THEME_METADATA.find(t => t.value === theme)!;
 
   return (
-    <div className="relative">
+    <div className="flex items-center gap-2 shrink-0">
       {/* Theme Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-full border border-brand-outline/50 bg-brand-paper px-3 py-1.5 text-sm transition-colors hover:border-brand-accent hover:bg-brand-paperElev"
-        aria-label="Switch theme"
-      >
-        <div
-          className="h-4 w-4 rounded-full"
-          style={{ backgroundColor: currentTheme.color }}
-        />
-        <span className="hidden text-white sm:inline">{currentTheme.label}</span>
-        <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
+      <div className="relative">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-2 rounded-full border border-brand-outline/50 bg-brand-paper px-3 py-1.5 text-sm transition-colors hover:border-brand-accent hover:bg-brand-paperElev whitespace-nowrap"
+          aria-label="Switch theme"
+        >
+          <div
+            className="h-4 w-4 rounded-full shrink-0"
+            style={{ backgroundColor: currentTheme.color }}
+          />
+          <span className="text-white">{currentTheme.label}</span>
+          <svg className="h-4 w-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {/* Dropdown Menu */}
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 z-40"
+              onClick={() => setIsOpen(false)}
+            />
+
+            {/* Menu */}
+            <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-xl border border-brand-outline/50 bg-brand-paper shadow-lg">
+              <div className="p-2">
+                <div className="mb-2 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Select Theme
+                </div>
+                {THEME_METADATA.map((t) => (
+                  <button
+                    key={t.value}
+                    onClick={() => selectTheme(t.value)}
+                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                      theme === t.value
+                        ? 'bg-brand-accent text-white'
+                        : 'text-slate-300 hover:bg-brand-paperElev hover:text-white'
+                    }`}
+                  >
+                    <div
+                      className="h-4 w-4 rounded-full"
+                      style={{ backgroundColor: t.color }}
+                    />
+                    <span>{t.label}</span>
+                    {theme === t.value && (
+                      <svg className="ml-auto h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Mode Toggle */}
       <button
         onClick={toggleMode}
-        className="ml-2 rounded-full border border-brand-outline/50 bg-brand-paper p-1.5 transition-colors hover:border-brand-accent hover:bg-brand-paperElev"
+        className="rounded-full border border-brand-outline/50 bg-brand-paper p-1.5 transition-colors hover:border-brand-accent hover:bg-brand-paperElev shrink-0"
         aria-label={`Switch to ${mode === 'light' ? 'dark' : 'light'} mode`}
       >
         {mode === 'light' ? (
@@ -76,48 +120,6 @@ export function ThemeSwitcher() {
           </svg>
         )}
       </button>
-
-      {/* Dropdown Menu */}
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
-          
-          {/* Menu */}
-          <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-xl border border-brand-outline/50 bg-brand-paper shadow-lg">
-            <div className="p-2">
-              <div className="mb-2 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Select Theme
-              </div>
-              {THEME_METADATA.map((t) => (
-                <button
-                  key={t.value}
-                  onClick={() => selectTheme(t.value)}
-                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                    theme === t.value
-                      ? 'bg-brand-accent text-white'
-                      : 'text-slate-300 hover:bg-brand-paperElev hover:text-white'
-                  }`}
-                >
-                  <div
-                    className="h-4 w-4 rounded-full"
-                    style={{ backgroundColor: t.color }}
-                  />
-                  <span>{t.label}</span>
-                  {theme === t.value && (
-                    <svg className="ml-auto h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 }
