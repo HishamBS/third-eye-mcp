@@ -7,6 +7,7 @@ import { Eye as EyeIcon, Sparkles } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useDialog } from '@/hooks/useDialog';
 import { EmptyState } from '@/components/EmptyState';
+import { HelpIcon } from '@/components/HelpIcon';
 
 interface Eye {
   id: string;
@@ -441,7 +442,10 @@ export default function EyesPage() {
               </Link>
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Eyes</p>
-                <h1 className="mt-1 text-2xl font-semibold text-white">Eyes Management</h1>
+                <div className="mt-1 flex items-center gap-2">
+                  <h1 className="text-2xl font-semibold text-white">Eyes Management</h1>
+                  <HelpIcon helpTextKey="EYES_PAGE_TITLE" size="md" />
+                </div>
               </div>
             </div>
             <div className="flex gap-4">
@@ -451,12 +455,15 @@ export default function EyesPage() {
               <Link href="/personas" className="text-sm text-slate-400 transition-colors hover:text-white">
                 Personas
               </Link>
-              <button
-                onClick={startCreating}
-                className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
-              >
-                + Create Custom Eye
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={startCreating}
+                  className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
+                >
+                  + Create Custom Eye
+                </button>
+                <HelpIcon helpTextKey="EYES_CREATE_BUTTON" size="sm" />
+              </div>
             </div>
           </div>
         </div>
@@ -698,36 +705,45 @@ export default function EyesPage() {
           <div>
             {/* View Mode Tabs */}
             <div className="mb-6 flex gap-3">
-              <button
-                onClick={() => setViewMode('all')}
-                className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
-                  viewMode === 'all'
-                    ? 'bg-brand-accent text-brand-ink'
-                    : 'border border-brand-outline/40 text-slate-300 hover:border-brand-accent hover:text-brand-accent'
-                }`}
-              >
-                All ({eyes.length})
-              </button>
-              <button
-                onClick={() => setViewMode('built-in')}
-                className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
-                  viewMode === 'built-in'
-                    ? 'bg-brand-accent text-brand-ink'
-                    : 'border border-brand-outline/40 text-slate-300 hover:border-brand-accent hover:text-brand-accent'
-                }`}
-              >
-                Built-In ({builtInEyes.length})
-              </button>
-              <button
-                onClick={() => setViewMode('custom')}
-                className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
-                  viewMode === 'custom'
-                    ? 'bg-brand-accent text-brand-ink'
-                    : 'border border-brand-outline/40 text-slate-300 hover:border-brand-accent hover:text-brand-accent'
-                }`}
-              >
-                Custom ({customEyes.length})
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setViewMode('all')}
+                  className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                    viewMode === 'all'
+                      ? 'bg-brand-accent text-brand-ink'
+                      : 'border border-brand-outline/40 text-slate-300 hover:border-brand-accent hover:text-brand-accent'
+                  }`}
+                >
+                  All ({eyes.length})
+                </button>
+                <HelpIcon helpTextKey="EYES_ALL_FILTER" size="sm" />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setViewMode('built-in')}
+                  className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                    viewMode === 'built-in'
+                      ? 'bg-brand-accent text-brand-ink'
+                      : 'border border-brand-outline/40 text-slate-300 hover:border-brand-accent hover:text-brand-accent'
+                  }`}
+                >
+                  Built-In ({builtInEyes.length})
+                </button>
+                <HelpIcon helpTextKey="EYES_BUILTIN_FILTER" size="sm" />
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setViewMode('custom')}
+                  className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                    viewMode === 'custom'
+                      ? 'bg-brand-accent text-brand-ink'
+                      : 'border border-brand-outline/40 text-slate-300 hover:border-brand-accent hover:text-brand-accent'
+                  }`}
+                >
+                  Custom ({customEyes.length})
+                </button>
+                <HelpIcon helpTextKey="EYES_CUSTOM_FILTER" size="sm" />
+              </div>
             </div>
 
             {/* Eyes Grid */}
