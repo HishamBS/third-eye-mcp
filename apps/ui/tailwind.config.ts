@@ -17,6 +17,7 @@ const config: Config = {
           paper: 'rgb(var(--color-paper) / <alpha-value>)',
           paperElev: 'rgb(var(--color-paper-elev) / <alpha-value>)',
           outline: 'rgb(var(--color-outline) / <alpha-value>)',
+          foreground: 'rgb(var(--color-foreground) / <alpha-value>)',
         },
 
         // Eye colors (consistent across all themes)
@@ -59,6 +60,7 @@ const config: Config = {
           '--color-paper': '15 23 42',
           '--color-paper-elev': '30 41 59',
           '--color-outline': '51 65 85',
+          '--color-foreground': '248 248 242',
         },
         ':root[data-theme="aurora"]:not(.dark)': {
           '--color-primary': '14 165 233', // sky-600 (WCAG AA compliant)
@@ -67,6 +69,7 @@ const config: Config = {
           '--color-paper': '248 250 252',
           '--color-paper-elev': '241 245 249',
           '--color-outline': '203 213 225',
+          '--color-foreground': '15 23 42',
         },
 
         // Midnight Theme (Indigo & Purple) - Dark Mode
@@ -77,6 +80,7 @@ const config: Config = {
           '--color-paper': '17 24 39',
           '--color-paper-elev': '31 41 55',
           '--color-outline': '55 65 81',
+          '--color-foreground': '248 248 242',
         },
         ':root[data-theme="midnight"]:not(.dark)': {
           '--color-primary': '79 70 229', // indigo-600 (WCAG AA)
@@ -85,6 +89,7 @@ const config: Config = {
           '--color-paper': '248 250 252',
           '--color-paper-elev': '241 245 249',
           '--color-outline': '199 210 254',
+          '--color-foreground': '30 27 75',
         },
 
         // Sakura Theme (Pink) - Dark Mode
@@ -95,6 +100,7 @@ const config: Config = {
           '--color-paper': '24 10 24',
           '--color-paper-elev': '39 20 39',
           '--color-outline': '62 35 62',
+          '--color-foreground': '248 248 242',
         },
         ':root[data-theme="sakura"]:not(.dark)': {
           '--color-primary': '219 39 119', // pink-700 (WCAG AA)
@@ -103,6 +109,7 @@ const config: Config = {
           '--color-paper': '253 242 248',
           '--color-paper-elev': '252 231 243',
           '--color-outline': '251 207 232',
+          '--color-foreground': '63 15 50',
         },
 
         // Horizon Theme (Orange & Amber) - Dark Mode
@@ -113,6 +120,7 @@ const config: Config = {
           '--color-paper': '31 20 16',
           '--color-paper-elev': '42 31 26',
           '--color-outline': '61 46 36',
+          '--color-foreground': '248 248 242',
         },
         ':root[data-theme="horizon"]:not(.dark)': {
           '--color-primary': '217 119 6', // amber-700 (WCAG AA)
@@ -121,6 +129,7 @@ const config: Config = {
           '--color-paper': '254 252 232',
           '--color-paper-elev': '254 249 195',
           '--color-outline': '253 230 138',
+          '--color-foreground': '69 26 3',
         },
 
         // Emerald Theme (Green) - Dark Mode
@@ -131,6 +140,7 @@ const config: Config = {
           '--color-paper': '6 20 14',
           '--color-paper-elev': '20 46 35',
           '--color-outline': '45 74 58',
+          '--color-foreground': '248 248 242',
         },
         ':root[data-theme="emerald"]:not(.dark)': {
           '--color-primary': '5 150 105', // emerald-700 (WCAG AA)
@@ -139,6 +149,7 @@ const config: Config = {
           '--color-paper': '240 253 244',
           '--color-paper-elev': '209 250 229',
           '--color-outline': '167 243 208',
+          '--color-foreground': '6 78 59',
         },
 
         // Obsidian Theme (Grayscale) - Dark Mode
@@ -149,6 +160,7 @@ const config: Config = {
           '--color-paper': '17 17 17',
           '--color-paper-elev': '26 26 26',
           '--color-outline': '51 51 51',
+          '--color-foreground': '248 248 242',
         },
         ':root[data-theme="obsidian"]:not(.dark)': {
           '--color-primary': '55 65 81', // gray-700 (WCAG AA)
@@ -157,6 +169,7 @@ const config: Config = {
           '--color-paper': '249 250 251',
           '--color-paper-elev': '243 244 246',
           '--color-outline': '209 213 219',
+          '--color-foreground': '17 24 39',
         },
       })
     }

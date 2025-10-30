@@ -8,6 +8,7 @@ import {
   type StrictnessPresetId,
 } from '@third-eye/types';
 import { type ThemeName, DEFAULT_THEME } from '@third-eye/theme';
+import { STORAGE_KEYS } from '@/constants/storage';
 
 export type ViewMode = 'novice' | 'expert';
 
@@ -64,16 +65,16 @@ export function UIProvider({ children }: { children: ReactNode }) {
         if (data.auto_open !== undefined) setAutoOpenSessionsState(data.auto_open);
       })
       .catch(() => {
-        const savedMode = localStorage.getItem('third-eye-view-mode') as ViewMode;
+        const savedMode = localStorage.getItem(STORAGE_KEYS.VIEW_MODE) as ViewMode;
         if (savedMode) setViewModeState(savedMode);
 
-        const savedTheme = localStorage.getItem('third-eye-theme') as ThemeName;
+        const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) as ThemeName;
         if (savedTheme) setThemeState(savedTheme);
 
-        const savedDarkMode = localStorage.getItem('third-eye-dark-mode');
-        if (savedDarkMode !== null) setDarkModeState(savedDarkMode === 'true');
+        const savedDarkMode = localStorage.getItem(STORAGE_KEYS.THEME_MODE);
+        if (savedDarkMode !== null) setDarkModeState(savedDarkMode === 'dark');
 
-        const savedStrictness = localStorage.getItem('third-eye-strictness');
+        const savedStrictness = localStorage.getItem(STORAGE_KEYS.STRICTNESS);
         if (savedStrictness) {
           try {
             setStrictnessState(JSON.parse(savedStrictness));
@@ -82,20 +83,20 @@ export function UIProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        const savedAutoOpen = localStorage.getItem('third-eye-auto-open');
+        const savedAutoOpen = localStorage.getItem(STORAGE_KEYS.AUTO_OPEN);
         if (savedAutoOpen !== null) setAutoOpenSessionsState(savedAutoOpen === 'true');
 
-        const savedPersonaVoice = localStorage.getItem('third-eye-persona-voice');
+        const savedPersonaVoice = localStorage.getItem(STORAGE_KEYS.PERSONA_VOICE);
         if (savedPersonaVoice !== null) setShowPersonaVoiceState(savedPersonaVoice === 'true');
 
-        const savedSessionId = localStorage.getItem('third-eye-selected-session');
+        const savedSessionId = localStorage.getItem(STORAGE_KEYS.SELECTED_SESSION);
         if (savedSessionId) setSelectedSessionIdState(savedSessionId);
       });
   }, []);
 
   const setViewMode = (mode: ViewMode) => {
     setViewModeState(mode);
-    localStorage.setItem('third-eye-view-mode', mode);
+    localStorage.setItem(STORAGE_KEYS.VIEW_MODE, mode);
   };
 
   const toggleViewMode = () => {
@@ -107,7 +108,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
     if (!mounted) return;
 
     setThemeState(newTheme);
-    localStorage.setItem('third-eye-theme', newTheme);
+    localStorage.setItem(STORAGE_KEYS.THEME, newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
 
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
@@ -122,7 +123,9 @@ export function UIProvider({ children }: { children: ReactNode }) {
     if (!mounted) return;
 
     setDarkModeState(enabled);
-    localStorage.setItem('third-eye-dark-mode', enabled.toString());
+    const mode = enabled ? 'dark' : 'light';
+    localStorage.setItem(STORAGE_KEYS.THEME_MODE, mode);
+    document.documentElement.setAttribute('data-mode', mode);
 
     if (enabled) {
       document.documentElement.classList.add('dark');
@@ -140,7 +143,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
   const setStrictness = (settings: StrictnessSettings) => {
     setStrictnessState(settings);
-    localStorage.setItem('third-eye-strictness', JSON.stringify(settings));
+    localStorage.setItem(STORAGE_KEYS.STRICTNESS, JSON.stringify(settings));
   };
 
   const applyStrictnessProfile = (profile: StrictnessPresetId) => {
@@ -149,20 +152,20 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
   const setAutoOpenSessions = (value: boolean) => {
     setAutoOpenSessionsState(value);
-    localStorage.setItem('third-eye-auto-open', value.toString());
+    localStorage.setItem(STORAGE_KEYS.AUTO_OPEN, value.toString());
   };
 
   const setShowPersonaVoice = (value: boolean) => {
     setShowPersonaVoiceState(value);
-    localStorage.setItem('third-eye-persona-voice', value.toString());
+    localStorage.setItem(STORAGE_KEYS.PERSONA_VOICE, value.toString());
   };
 
   const setSelectedSession = (sessionId: string | null) => {
     setSelectedSessionIdState(sessionId);
     if (sessionId) {
-      localStorage.setItem('third-eye-selected-session', sessionId);
+      localStorage.setItem(STORAGE_KEYS.SELECTED_SESSION, sessionId);
     } else {
-      localStorage.removeItem('third-eye-selected-session');
+      localStorage.removeItem(STORAGE_KEYS.SELECTED_SESSION);
     }
   };
 
@@ -170,6 +173,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
     if (!mounted) return;
 
     document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-mode', darkMode ? 'dark' : 'light');
+
     if (darkMode) {
       document.documentElement.classList.add('dark');
     } else {
