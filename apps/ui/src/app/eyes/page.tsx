@@ -11,6 +11,7 @@ import { HelpIcon } from '@/components/HelpIcon';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import { UI_HELP_TEXT } from '@third-eye/constants';
 import { PersonaWizardModal } from '@/components/persona-form/PersonaWizardModal';
+import { SchemaTemplateSelector } from '@/components/custom-eye-form/SchemaTemplateSelector';
 
 interface Eye {
   id: string;
@@ -708,6 +709,19 @@ export default function EyesPage() {
                     {UI_HELP_TEXT.EYES_HELPER_PERSONA}
                   </p>
                 </div>
+
+                {/* Phase 19.3: Schema Templates */}
+                {(isCreating || isEditing) && (
+                  <SchemaTemplateSelector
+                    onSelect={(inputSchema, outputSchema) => {
+                      setFormData({
+                        ...formData,
+                        inputSchema,
+                        outputSchema,
+                      });
+                    }}
+                  />
+                )}
 
                 <div className="grid gap-6 md:grid-cols-2">
                   <div>
