@@ -42,6 +42,7 @@ export const eyeSettings = sqliteTable('eye_settings', {
   eye: text('eye').primaryKey(),
   displayName: text('display_name'),
   description: text('description'),
+  iconSvg: text('icon_svg'), // Custom SVG content (overrides default SVG)
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });
 
@@ -178,6 +179,7 @@ export const eyesCustom = sqliteTable('eyes_custom', {
   name: text('name').notNull(),
   version: integer('version').notNull(),
   description: text('description').notNull(),
+  iconSvg: text('icon_svg'), // Custom SVG content (stored directly, not path)
   inputSchemaJson: text('input_schema_json', { mode: 'json' }).notNull(),
   outputSchemaJson: text('output_schema_json', { mode: 'json' }).notNull(),
   personaId: text('persona_id'),

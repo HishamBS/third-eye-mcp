@@ -1,6 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { DEFAULT_API_URL } from '@third-eye/config/constants';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL;
+
+const BACKEND_ROUTES = {
+  EYES_CUSTOM: '/api/eyes/custom',
+} as const;
+
+export async function GET() {
+  try {
+    const response = await fetch(`${API_URL}${BACKEND_ROUTES.EYES_CUSTOM}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
+  } catch (error) {
+    console.error('[Custom Eye API] Proxy error:', error);
+    return NextResponse.json(
+      { error: { detail: 'Failed to fetch custom eyes', technical: error instanceof Error ? error.message : String(error) } },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,9 +39,9 @@ export async function POST(req: NextRequest) {
       outputSchema: typeof body.outputSchema,
       personaId: typeof body.personaId,
     });
-    console.log('[Custom Eye API] Target URL:', `${API_URL}/api/eyes/custom`);
+    console.log('[Custom Eye API] Target URL:', `${API_URL}${BACKEND_ROUTES.EYES_CUSTOM}`);
 
-    const response = await fetch(`${API_URL}/api/eyes/custom`, {
+    const response = await fetch(`${API_URL}${BACKEND_ROUTES.EYES_CUSTOM}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

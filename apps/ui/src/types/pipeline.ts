@@ -1,3 +1,8 @@
+// Phase 10 imports - React Flow types for pipeline builder
+import type { Node, Edge } from 'reactflow';
+import type { EyeName } from '@third-eye/types';
+import type { EdgeConditionType } from '@/components/pipeline-builder/constants';
+
 export type EyeType =
   | 'SHARINGAN'
   | 'PROMPT_HELPER'
@@ -158,3 +163,120 @@ export interface SessionSummary {
   evidence?: Record<string, unknown> | null;
   operations?: Record<string, unknown> | null;
 }
+
+// ============================================================================
+// Pipeline Builder Types - Phase 10
+// React Flow visualization types for designing and editing pipelines
+// Per R07: Strict typing, no 'any' types
+// ============================================================================
+
+/**
+ * Eye Node Data - Data attached to each Eye node in the pipeline
+ * Per R07: Strict typing with precise types
+ */
+export interface EyeNodeData {
+  eyeId: EyeName | string; // string for custom eyes
+  displayName?: string;
+  capabilities?: string[];
+  customConfig?: Record<string, unknown>;
+  isCustom?: boolean;
+  iconSvg?: string; // Custom SVG content from database
+}
+
+/**
+ * Pipeline Node - React Flow node with Eye data
+ * Per R07: Extends React Flow Node with strict typing
+ */
+export interface PipelineNode extends Node<EyeNodeData> {
+  type: 'eyeNode';
+  data: EyeNodeData;
+}
+
+/**
+ * Edge Condition Data - Configuration for conditional routing
+ * Per R07: All fields explicitly typed
+ */
+export interface EdgeConditionData {
+  condition: EdgeConditionType;
+  threshold?: number; // 0-100 for score_threshold
+  maxIterations?: number; // For max_iterations condition
+  description?: string;
+  enabled?: boolean;
+}
+
+/**
+ * Pipeline Edge - React Flow edge with condition data
+ * Per R07: Extends React Flow Edge with strict typing
+ */
+export interface PipelineEdge extends Edge<EdgeConditionData> {
+  data?: EdgeConditionData;
+}
+
+/**
+ * Complete Pipeline Definition
+ * Per R07: All fields explicitly typed
+ */
+export interface Pipeline {
+  id: string;
+  name: string;
+  description?: string;
+  nodes: PipelineNode[];
+  edges: PipelineEdge[];
+  isActive: boolean;
+  isSystem: boolean;
+  version: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Capability Mapping - Used for connection validation
+ * Per R07: Strict typing for capability analysis
+ */
+export interface CapabilityMapping {
+  eyeId: string;
+  inputCapabilities: string[];
+  outputCapabilities: string[];
+  isCustom: boolean;
+}
+
+/**
+ * Pipeline Validation Result
+ * Per R07: Explicitly typed validation errors
+ */
+export interface PipelineValidationError {
+  type: 'orphan_node' | 'missing_overseer' | 'missing_approval' | 'incompatible_connection' | 'invalid_condition';
+  nodeId?: string;
+  edgeId?: string;
+  message: string;
+}
+
+export interface PipelineValidationResult {
+  valid: boolean;
+  errors: PipelineValidationError[];
+  warnings: PipelineValidationError[];
+}
+
+/**
+ * Eye Definition - Unified type for built-in and custom eyes
+ * Per R07: Union type with discriminator
+ */
+export type EyeDefinition = {
+  id: string;
+  name: string;
+  description: string;
+  iconSvg?: string;
+  capabilities: string[];
+  isCustom: false;
+  stage: 'GUIDANCE' | 'VALIDATION' | 'ROUTER' | 'BOTH';
+} | {
+  id: string;
+  name: string;
+  description: string;
+  iconSvg?: string;
+  capabilities: string[];
+  isCustom: true;
+  version: number;
+  inputSchema: Record<string, unknown>;
+  outputSchema: Record<string, unknown>;
+};

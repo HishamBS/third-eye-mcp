@@ -37,6 +37,7 @@ interface CreateEyePayload {
   readonly description: string;
   readonly inputSchema: Record<string, unknown>;
   readonly outputSchema: Record<string, unknown>;
+  readonly iconSvg?: string;
   readonly personaId?: string;
 }
 
@@ -45,6 +46,7 @@ interface UpdateEyePayload {
   readonly description: string;
   readonly inputSchema: Record<string, unknown>;
   readonly outputSchema: Record<string, unknown>;
+  readonly iconSvg?: string;
   readonly personaId?: string;
 }
 
@@ -76,6 +78,7 @@ export default function EyesPage() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    iconSvg: '', // SVG content (not path)
     inputSchema: '{\n  "type": "object",\n  "properties": {\n    "input": {"type": "string"}\n  },\n  "required": ["input"]\n}',
     outputSchema: '{\n  "type": "object",\n  "properties": {\n    "result": {"type": "string"}\n  }\n}',
     personaTemplate: '',
@@ -195,6 +198,7 @@ export default function EyesPage() {
     const initialData = {
       name: '',
       description: '',
+      iconSvg: '',
       inputSchema: '{\n  "type": "object",\n  "properties": {\n    "input": {"type": "string"}\n  },\n  "required": ["input"]\n}',
       outputSchema: '{\n  "type": "object",\n  "properties": {\n    "result": {"type": "string"}\n  }\n}',
       personaTemplate: '',
@@ -219,9 +223,11 @@ export default function EyesPage() {
       const data = {
         name: eye.name,
         description: eye.description,
+        iconSvg: (eye as any).iconSvg || '',
         inputSchema: JSON.stringify(eye.inputSchema, null, 2),
         outputSchema: JSON.stringify(eye.outputSchema, null, 2),
         personaTemplate: eye.personaTemplate || '',
+        personaId: eye.personaId || '',
       };
       setFormData(data);
       setOriginalFormData(data);
@@ -272,6 +278,7 @@ export default function EyesPage() {
         description: formData.description,
         inputSchema,
         outputSchema,
+        ...(formData.iconSvg && { iconSvg: formData.iconSvg }),
         ...(formData.personaId && { personaId: formData.personaId }),
       };
 
@@ -332,6 +339,7 @@ export default function EyesPage() {
         description: formData.description,
         inputSchema,
         outputSchema,
+        ...(formData.iconSvg && { iconSvg: formData.iconSvg }),
         ...(formData.personaId && { personaId: formData.personaId }),
       };
 
@@ -629,6 +637,35 @@ export default function EyesPage() {
                     disabled={!isCreating && !isEditing}
                     className="h-24 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
                   />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-300">Icon SVG (Optional)</label>
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <textarea
+                        value={formData.iconSvg}
+                        onChange={(e) => setFormData({ ...formData, iconSvg: e.target.value })}
+                        placeholder="<svg>...</svg>"
+                        disabled={!isCreating && !isEditing}
+                        className="h-32 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-green-400 placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
+                      />
+                      <p className="mt-1 text-xs text-slate-400">
+                        Paste SVG content here to customize the Eye icon
+                      </p>
+                    </div>
+                    {formData.iconSvg && (
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-xs text-slate-400">Preview:</span>
+                        <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-brand-outline/50 bg-brand-paperElev p-2">
+                          <div
+                            dangerouslySetInnerHTML={{ __html: formData.iconSvg }}
+                            className="h-full w-full"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>

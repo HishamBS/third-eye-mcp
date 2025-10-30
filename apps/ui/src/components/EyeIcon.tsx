@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { EyeIconPaths, getEyeIconPath } from '@third-eye/constants/eye-icons';
 import { EyeId } from '@third-eye/constants/taxonomy';
@@ -7,23 +8,66 @@ interface EyeIconProps {
   eye: string;
   size?: number;
   className?: string;
+  customSvg?: string; // Direct SVG content (optional)
 }
 
 /**
- * Eye Icon Component - Uses SSOT SVG paths
- * NO EMOJIS - All icons are SVG assets from /public/eyes/
+ * Eye Icon Component - Uses SSOT SVG paths OR database SVG content
+ * NO EMOJIS - All icons are SVG assets or inline SVG content
+ *
+ * Priority:
+ * 1. customSvg prop (if provided)
+ * 2. Database SVG (fetched via API)
+ * 3. Default SVG from /public/eyes/
  */
-export function EyeIcon({ eye, size = 24, className = '' }: EyeIconProps) {
+export function EyeIcon({ eye, size = 24, className = '', customSvg }: EyeIconProps) {
   const eyeLower = eye.toLowerCase();
+  const [dbSvg, setDbSvg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // Try to get icon path from SSOT
+  // Fetch custom SVG from database if not provided as prop
+  useEffect(() => {
+    if (customSvg) return; // Skip fetch if SVG already provided
+
+    const fetchSvg = async () => {
+      setLoading(true);
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+        const response = await fetch(`${API_URL}/api/eyes/${eyeLower}/icon`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.iconSvg) {
+            setDbSvg(data.iconSvg);
+          }
+        }
+      } catch (error) {
+        console.debug(`[EyeIcon] No custom SVG for ${eye}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSvg();
+  }, [eye, eyeLower, customSvg]);
+
+  // Use custom SVG if available (prop > database > default)
+  const svgContent = customSvg || dbSvg;
+
+  if (svgContent) {
+    return (
+      <div
+        className={`inline-flex items-center justify-center ${className}`}
+        style={{ width: size, height: size }}
+        dangerouslySetInnerHTML={{ __html: svgContent }}
+      />
+    );
+  }
+
+  // Try to get default icon path from SSOT
   const iconPath = EyeIconPaths[eyeLower as EyeId] || EyeIconPaths[eyeLower as keyof typeof EyeIconPaths];
 
-  if (!iconPath) {
-    // Log error instead of falling back to emoji
-    console.error(`[EyeIcon] Missing SVG icon for eye: ${eye}. Please add to /apps/ui/public/eyes/`);
-
-    // Return placeholder SVG icon instead of emoji
+  if (!iconPath && !loading) {
+    // Return placeholder if no SVG found
     return (
       <div
         className={`inline-flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full ${className}`}
@@ -32,6 +76,16 @@ export function EyeIcon({ eye, size = 24, className = '' }: EyeIconProps) {
       >
         <span className="text-xs text-gray-500 dark:text-gray-400">?</span>
       </div>
+    );
+  }
+
+  if (loading || !iconPath) {
+    // Show loading state
+    return (
+      <div
+        className={`inline-flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse ${className}`}
+        style={{ width: size, height: size }}
+      />
     );
   }
 
