@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Copy, Check, ExternalLink, ChevronDown, ChevronUp, Plus, Edit, Trash2, X } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useDialog } from '@/hooks/useDialog';
+import { UI_HELP_TEXT } from '@third-eye/constants';
 
 interface McpIntegration {
   id: string;
@@ -99,7 +100,7 @@ export default function ConnectionsPage() {
       setIntegrations(data.data?.integrations || []);
     } catch (err) {
       console.error('Error fetching integrations:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load integrations');
+      setError(err instanceof Error ? err.message : UI_HELP_TEXT.CONNECTIONS_ERROR_LOAD_FAILED);
     } finally {
       setLoading(false);
     }
@@ -185,21 +186,21 @@ export default function ConnectionsPage() {
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
-    if (!formData.name.trim()) errors.name = 'Name is required';
-    if (!formData.slug.trim()) errors.slug = 'Slug is required';
-    if (!formData.configTemplate.trim()) errors.configTemplate = 'Configuration template is required';
+    if (!formData.name.trim()) errors.name = UI_HELP_TEXT.CONNECTIONS_ERROR_NAME_REQUIRED;
+    if (!formData.slug.trim()) errors.slug = UI_HELP_TEXT.CONNECTIONS_ERROR_SLUG_REQUIRED;
+    if (!formData.configTemplate.trim()) errors.configTemplate = UI_HELP_TEXT.CONNECTIONS_ERROR_CONFIG_REQUIRED;
 
     // Validate JSON fields
     try {
       JSON.parse(formData.configFiles);
     } catch (e) {
-      errors.configFiles = 'Invalid JSON format';
+      errors.configFiles = UI_HELP_TEXT.CONNECTIONS_ERROR_INVALID_JSON;
     }
 
     try {
       JSON.parse(formData.setupSteps);
     } catch (e) {
-      errors.setupSteps = 'Invalid JSON format';
+      errors.setupSteps = UI_HELP_TEXT.CONNECTIONS_ERROR_INVALID_JSON;
     }
 
     setFormErrors(errors);
@@ -229,11 +230,11 @@ export default function ConnectionsPage() {
 
       if (!response.ok) throw new Error('Failed to create integration');
 
-      setSuccess('Integration created successfully');
+      setSuccess(UI_HELP_TEXT.CONNECTIONS_SUCCESS_CREATED);
       closeModal();
       await fetchIntegrations();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create integration');
+      setError(err instanceof Error ? err.message : UI_HELP_TEXT.CONNECTIONS_ERROR_CREATE_FAILED);
     } finally {
       setLoading(false);
     }
@@ -261,11 +262,11 @@ export default function ConnectionsPage() {
 
       if (!response.ok) throw new Error('Failed to update integration');
 
-      setSuccess('Integration updated successfully');
+      setSuccess(UI_HELP_TEXT.CONNECTIONS_SUCCESS_UPDATED);
       closeModal();
       await fetchIntegrations();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update integration');
+      setError(err instanceof Error ? err.message : UI_HELP_TEXT.CONNECTIONS_ERROR_UPDATE_FAILED);
     } finally {
       setLoading(false);
     }
@@ -273,10 +274,10 @@ export default function ConnectionsPage() {
 
   const handleDelete = async (integration: McpIntegration) => {
     const confirmed = await dialog.confirm(
-      'Delete Integration',
-      `Are you sure you want to delete "${integration.name}"? This action cannot be undone.`,
-      'Delete',
-      'Cancel'
+      UI_HELP_TEXT.CONNECTIONS_DIALOG_DELETE_TITLE,
+      UI_HELP_TEXT.CONNECTIONS_DIALOG_DELETE_MESSAGE.replace('{name}', integration.name),
+      UI_HELP_TEXT.CONNECTIONS_DIALOG_DELETE_CONFIRM,
+      UI_HELP_TEXT.CONNECTIONS_DIALOG_DELETE_CANCEL
     );
 
     if (!confirmed) return;
@@ -289,10 +290,10 @@ export default function ConnectionsPage() {
 
       if (!response.ok) throw new Error('Failed to delete integration');
 
-      setSuccess('Integration deleted successfully');
+      setSuccess(UI_HELP_TEXT.CONNECTIONS_SUCCESS_DELETED);
       await fetchIntegrations();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete integration');
+      setError(err instanceof Error ? err.message : UI_HELP_TEXT.CONNECTIONS_ERROR_DELETE_FAILED);
     } finally {
       setLoading(false);
     }
@@ -317,7 +318,7 @@ export default function ConnectionsPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-white mb-8">MCP Connection Guides</h1>
+          <h1 className="text-3xl font-bold text-white mb-8">{UI_HELP_TEXT.CONNECTIONS_HEADER_TITLE}</h1>
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="border border-brand-accent/30 bg-brand-paper rounded-lg p-6 animate-pulse">
@@ -335,9 +336,9 @@ export default function ConnectionsPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-white mb-8">MCP Connection Guides</h1>
+          <h1 className="text-3xl font-bold text-white mb-8">{UI_HELP_TEXT.CONNECTIONS_HEADER_TITLE}</h1>
           <div className="border border-red-500/50 bg-red-500/10 rounded-lg p-6">
-            <p className="text-red-400">Error: {error}</p>
+            <p className="text-red-400">{UI_HELP_TEXT.CONNECTIONS_ERROR_PREFIX}{error}</p>
           </div>
         </div>
       </div>
@@ -374,17 +375,17 @@ export default function ConnectionsPage() {
           transition={{ duration: 0.5 }}
         >
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-3xl font-bold text-white">MCP Connection Guides</h1>
+            <h1 className="text-3xl font-bold text-white">{UI_HELP_TEXT.CONNECTIONS_HEADER_TITLE}</h1>
             <button
               onClick={openCreateModal}
               className="flex items-center gap-2 rounded-full bg-brand-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-accent/90"
             >
               <Plus className="w-4 h-4" />
-              Add Integration
+              {UI_HELP_TEXT.CONNECTIONS_BUTTON_ADD}
             </button>
           </div>
           <p className="text-slate-400 mb-8">
-            Connect Third Eye MCP to your favorite AI tools. Click an integration to view setup instructions.
+            {UI_HELP_TEXT.CONNECTIONS_SUBTITLE}
           </p>
         </motion.div>
 
@@ -435,7 +436,7 @@ export default function ConnectionsPage() {
                           openEditModal(integration);
                         }}
                         className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition"
-                        title="Edit integration"
+                        title={UI_HELP_TEXT.CONNECTIONS_TOOLTIP_EDIT}
                       >
                         <Edit className="w-4 h-4" />
                       </button>
@@ -445,7 +446,7 @@ export default function ConnectionsPage() {
                           handleDelete(integration);
                         }}
                         className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition"
-                        title="Delete integration"
+                        title={UI_HELP_TEXT.CONNECTIONS_TOOLTIP_DELETE}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -478,7 +479,7 @@ export default function ConnectionsPage() {
                       <div className="px-6 py-4 space-y-6">
                         {/* Configuration File Path */}
                         <div>
-                          <h4 className="font-semibold text-white mb-2">Configuration File</h4>
+                          <h4 className="font-semibold text-white mb-2">{UI_HELP_TEXT.CONNECTIONS_SECTION_CONFIG_FILE}</h4>
                           {integration.configFiles.map((file) => (
                             <div key={file.platform} className="text-sm">
                               <span className="font-mono bg-brand-accent/10 text-brand-accent px-2 py-1 rounded">
@@ -493,7 +494,7 @@ export default function ConnectionsPage() {
                         {config && (
                           <div>
                             <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-semibold text-white">Configuration</h4>
+                              <h4 className="font-semibold text-white">{UI_HELP_TEXT.CONNECTIONS_SECTION_CONFIGURATION}</h4>
                               <button
                                 onClick={() => copyToClipboard(config.config, integration.id)}
                                 className="flex items-center gap-2 px-3 py-1 text-sm bg-brand-accent text-white rounded hover:bg-brand-accent/80 transition-colors"
@@ -501,12 +502,12 @@ export default function ConnectionsPage() {
                                 {copiedId === integration.id ? (
                                   <>
                                     <Check className="w-4 h-4" />
-                                    Copied!
+                                    {UI_HELP_TEXT.CONNECTIONS_BUTTON_COPIED}
                                   </>
                                 ) : (
                                   <>
                                     <Copy className="w-4 h-4" />
-                                    Copy Config
+                                    {UI_HELP_TEXT.CONNECTIONS_BUTTON_COPY_CONFIG}
                                   </>
                                 )}
                               </button>
@@ -520,7 +521,7 @@ export default function ConnectionsPage() {
                         {/* Setup Steps */}
                         {integration.setupSteps.length > 0 && (
                           <div>
-                            <h4 className="font-semibold text-white mb-3">Setup Instructions</h4>
+                            <h4 className="font-semibold text-white mb-3">{UI_HELP_TEXT.CONNECTIONS_SECTION_SETUP}</h4>
                             <ol className="space-y-3">
                               {integration.setupSteps.map((step, idx) => (
                                 <li key={idx} className="flex gap-3">
@@ -547,7 +548,7 @@ export default function ConnectionsPage() {
                               className="inline-flex items-center gap-2 text-brand-accent hover:text-brand-accent/80"
                             >
                               <ExternalLink className="w-4 h-4" />
-                              Official Documentation
+                              {UI_HELP_TEXT.CONNECTIONS_LINK_DOCS}
                             </a>
                           </div>
                         )}
@@ -562,7 +563,7 @@ export default function ConnectionsPage() {
 
         {integrations.length === 0 && (
           <div className="text-center py-12 text-slate-400">
-            No integrations available. Please check your server configuration.
+            {UI_HELP_TEXT.CONNECTIONS_EMPTY_MESSAGE}
           </div>
         )}
 
@@ -591,7 +592,7 @@ export default function ConnectionsPage() {
                   {/* Modal Header */}
                   <div className="flex items-center justify-between border-b border-brand-outline/50 px-6 py-4">
                     <h2 className="text-xl font-semibold text-white">
-                      {editingIntegration ? 'Edit Integration' : 'Add Integration'}
+                      {editingIntegration ? UI_HELP_TEXT.CONNECTIONS_MODAL_TITLE_EDIT : UI_HELP_TEXT.CONNECTIONS_MODAL_TITLE_ADD}
                     </h2>
                     <button
                       onClick={closeModal}
@@ -607,14 +608,14 @@ export default function ConnectionsPage() {
                       {/* Name */}
                       <div>
                         <label className="block text-sm font-medium text-slate-300 mb-1">
-                          Name <span className="text-red-400">*</span>
+                          {UI_HELP_TEXT.CONNECTIONS_LABEL_NAME} <span className="text-red-400">*</span>
                         </label>
                         <input
                           type="text"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                           className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
-                          placeholder="e.g., Claude Desktop"
+                          placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_NAME}
                         />
                         {formErrors.name && (
                           <p className="mt-1 text-xs text-red-400">{formErrors.name}</p>
@@ -624,14 +625,14 @@ export default function ConnectionsPage() {
                       {/* Slug */}
                       <div>
                         <label className="block text-sm font-medium text-slate-300 mb-1">
-                          Slug <span className="text-red-400">*</span>
+                          {UI_HELP_TEXT.CONNECTIONS_LABEL_SLUG} <span className="text-red-400">*</span>
                         </label>
                         <input
                           type="text"
                           value={formData.slug}
                           onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                           className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
-                          placeholder="e.g., claude-desktop"
+                          placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_SLUG}
                         />
                         {formErrors.slug && (
                           <p className="mt-1 text-xs text-red-400">{formErrors.slug}</p>
@@ -641,27 +642,27 @@ export default function ConnectionsPage() {
                       {/* Logo URL */}
                       <div>
                         <label className="block text-sm font-medium text-slate-300 mb-1">
-                          Logo URL
+                          {UI_HELP_TEXT.CONNECTIONS_LABEL_LOGO_URL}
                         </label>
                         <input
                           type="text"
                           value={formData.logoUrl}
                           onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
                           className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
-                          placeholder="https://..."
+                          placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_URL}
                         />
                       </div>
 
                       {/* Description */}
                       <div>
                         <label className="block text-sm font-medium text-slate-300 mb-1">
-                          Description
+                          {UI_HELP_TEXT.CONNECTIONS_LABEL_DESCRIPTION}
                         </label>
                         <textarea
                           value={formData.description}
                           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                           className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none resize-none"
-                          placeholder="Brief description of the integration..."
+                          placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_DESCRIPTION}
                           rows={2}
                         />
                       </div>
@@ -669,29 +670,29 @@ export default function ConnectionsPage() {
                       {/* Config Type */}
                       <div>
                         <label className="block text-sm font-medium text-slate-300 mb-1">
-                          Config Type
+                          {UI_HELP_TEXT.CONNECTIONS_LABEL_CONFIG_TYPE}
                         </label>
                         <select
                           value={formData.configType}
                           onChange={(e) => setFormData({ ...formData, configType: e.target.value })}
                           className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white focus:border-brand-accent focus:outline-none"
                         >
-                          <option value="json">JSON</option>
-                          <option value="toml">TOML</option>
-                          <option value="yaml">YAML</option>
+                          <option value="json">{UI_HELP_TEXT.CONNECTIONS_SELECT_JSON}</option>
+                          <option value="toml">{UI_HELP_TEXT.CONNECTIONS_SELECT_TOML}</option>
+                          <option value="yaml">{UI_HELP_TEXT.CONNECTIONS_SELECT_YAML}</option>
                         </select>
                       </div>
 
                       {/* Config Files (JSON) */}
                       <div>
                         <label className="block text-sm font-medium text-slate-300 mb-1">
-                          Config Files (JSON Array)
+                          {UI_HELP_TEXT.CONNECTIONS_LABEL_CONFIG_FILES}
                         </label>
                         <textarea
                           value={formData.configFiles}
                           onChange={(e) => setFormData({ ...formData, configFiles: e.target.value })}
                           className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 font-mono text-sm text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none resize-none"
-                          placeholder='[{"platform": "macos", "path": "~/Library/..."}]'
+                          placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_CONFIG_FILES}
                           rows={3}
                         />
                         {formErrors.configFiles && (
@@ -702,13 +703,13 @@ export default function ConnectionsPage() {
                       {/* Config Template */}
                       <div>
                         <label className="block text-sm font-medium text-slate-300 mb-1">
-                          Config Template <span className="text-red-400">*</span>
+                          {UI_HELP_TEXT.CONNECTIONS_LABEL_CONFIG_TEMPLATE} <span className="text-red-400">*</span>
                         </label>
                         <textarea
                           value={formData.configTemplate}
                           onChange={(e) => setFormData({ ...formData, configTemplate: e.target.value })}
                           className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 font-mono text-sm text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none resize-none"
-                          placeholder="Configuration template with placeholders like {{HOME}}..."
+                          placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_CONFIG_TEMPLATE}
                           rows={6}
                         />
                         {formErrors.configTemplate && (
@@ -719,13 +720,13 @@ export default function ConnectionsPage() {
                       {/* Setup Steps (JSON) */}
                       <div>
                         <label className="block text-sm font-medium text-slate-300 mb-1">
-                          Setup Steps (JSON Array)
+                          {UI_HELP_TEXT.CONNECTIONS_LABEL_SETUP_STEPS}
                         </label>
                         <textarea
                           value={formData.setupSteps}
                           onChange={(e) => setFormData({ ...formData, setupSteps: e.target.value })}
                           className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 font-mono text-sm text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none resize-none"
-                          placeholder='[{"title": "Step 1", "description": "...", "code": null}]'
+                          placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_SETUP_STEPS}
                           rows={4}
                         />
                         {formErrors.setupSteps && (
@@ -736,14 +737,14 @@ export default function ConnectionsPage() {
                       {/* Docs URL */}
                       <div>
                         <label className="block text-sm font-medium text-slate-300 mb-1">
-                          Documentation URL
+                          {UI_HELP_TEXT.CONNECTIONS_LABEL_DOCS_URL}
                         </label>
                         <input
                           type="text"
                           value={formData.docsUrl}
                           onChange={(e) => setFormData({ ...formData, docsUrl: e.target.value })}
                           className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
-                          placeholder="https://..."
+                          placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_URL}
                         />
                       </div>
 
@@ -757,7 +758,7 @@ export default function ConnectionsPage() {
                           className="w-4 h-4 rounded border-brand-outline/50 bg-brand-paper text-brand-accent focus:ring-brand-accent"
                         />
                         <label htmlFor="enabled" className="text-sm text-slate-300">
-                          Enabled (visible to users)
+                          {UI_HELP_TEXT.CONNECTIONS_LABEL_ENABLED}
                         </label>
                       </div>
                     </div>
@@ -769,14 +770,14 @@ export default function ConnectionsPage() {
                       onClick={closeModal}
                       className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
                     >
-                      Cancel
+                      {UI_HELP_TEXT.CONNECTIONS_BUTTON_CANCEL}
                     </button>
                     <button
                       onClick={editingIntegration ? handleUpdate : handleCreate}
                       disabled={loading}
                       className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-accent/90 disabled:opacity-50"
                     >
-                      {loading ? 'Saving...' : editingIntegration ? 'Update' : 'Create'}
+                      {loading ? UI_HELP_TEXT.CONNECTIONS_BUTTON_SAVING : editingIntegration ? UI_HELP_TEXT.CONNECTIONS_BUTTON_UPDATE : UI_HELP_TEXT.CONNECTIONS_BUTTON_CREATE}
                     </button>
                   </div>
                 </motion.div>

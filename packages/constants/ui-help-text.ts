@@ -462,6 +462,85 @@ export const UI_HELP_TEXT = Object.freeze({
   PIPELINES_HELP_FORMAT_3: '• Conditional steps: type: \'condition\', condition, true, false',
   PIPELINES_HELP_FORMAT_4: '• User input steps: type: \'user_input\', prompt, next',
   PIPELINES_HELP_FORMAT_5: '• Terminal step: type: \'terminal\'',
+
+  // Connections Page - Header & Navigation
+  CONNECTIONS_HEADER_TITLE: 'MCP Connection Guides',
+  CONNECTIONS_SUBTITLE: 'Connect Third Eye MCP to your favorite AI tools. Click an integration to view setup instructions.',
+  CONNECTIONS_BUTTON_ADD: 'Add Integration',
+  CONNECTIONS_TOOLTIP_EDIT: 'Edit integration',
+  CONNECTIONS_TOOLTIP_DELETE: 'Delete integration',
+  CONNECTIONS_ERROR_PREFIX: 'Error: ',
+
+  // Connections Page - Card Content
+  CONNECTIONS_SECTION_CONFIG_FILE: 'Configuration File',
+  CONNECTIONS_SECTION_CONFIGURATION: 'Configuration',
+  CONNECTIONS_BUTTON_COPIED: 'Copied!',
+  CONNECTIONS_BUTTON_COPY_CONFIG: 'Copy Config',
+  CONNECTIONS_SECTION_SETUP: 'Setup Instructions',
+  CONNECTIONS_LINK_DOCS: 'Official Documentation',
+
+  // Connections Page - Empty State
+  CONNECTIONS_EMPTY_MESSAGE: 'No integrations available. Please check your server configuration.',
+
+  // Connections Page - Modal Titles
+  CONNECTIONS_MODAL_TITLE_EDIT: 'Edit Integration',
+  CONNECTIONS_MODAL_TITLE_ADD: 'Add Integration',
+
+  // Connections Page - Form Labels
+  CONNECTIONS_LABEL_NAME: 'Name',
+  CONNECTIONS_LABEL_SLUG: 'Slug',
+  CONNECTIONS_LABEL_LOGO_URL: 'Logo URL',
+  CONNECTIONS_LABEL_DESCRIPTION: 'Description',
+  CONNECTIONS_LABEL_CONFIG_TYPE: 'Config Type',
+  CONNECTIONS_LABEL_CONFIG_FILES: 'Config Files (JSON Array)',
+  CONNECTIONS_LABEL_CONFIG_TEMPLATE: 'Config Template',
+  CONNECTIONS_LABEL_SETUP_STEPS: 'Setup Steps (JSON Array)',
+  CONNECTIONS_LABEL_DOCS_URL: 'Documentation URL',
+  CONNECTIONS_LABEL_ENABLED: 'Enabled (visible to users)',
+
+  // Connections Page - Placeholders
+  CONNECTIONS_PLACEHOLDER_NAME: 'e.g., Claude Desktop',
+  CONNECTIONS_PLACEHOLDER_SLUG: 'e.g., claude-desktop',
+  CONNECTIONS_PLACEHOLDER_URL: 'https://...',
+  CONNECTIONS_PLACEHOLDER_DESCRIPTION: 'Brief description of the integration...',
+  CONNECTIONS_PLACEHOLDER_CONFIG_FILES: '[{"platform": "macos", "path": "~/Library/..."}]',
+  CONNECTIONS_PLACEHOLDER_CONFIG_TEMPLATE: 'Configuration template with placeholders like {{HOME}}...',
+  CONNECTIONS_PLACEHOLDER_SETUP_STEPS: '[{"title": "Step 1", "description": "...", "code": null}]',
+
+  // Connections Page - Dropdown Options
+  CONNECTIONS_SELECT_JSON: 'JSON',
+  CONNECTIONS_SELECT_TOML: 'TOML',
+  CONNECTIONS_SELECT_YAML: 'YAML',
+
+  // Connections Page - Buttons
+  CONNECTIONS_BUTTON_CANCEL: 'Cancel',
+  CONNECTIONS_BUTTON_SAVING: 'Saving...',
+  CONNECTIONS_BUTTON_UPDATE: 'Update',
+  CONNECTIONS_BUTTON_CREATE: 'Create',
+  CONNECTIONS_BUTTON_DELETE: 'Delete',
+
+  // Connections Page - Validation Errors
+  CONNECTIONS_ERROR_NAME_REQUIRED: 'Name is required',
+  CONNECTIONS_ERROR_SLUG_REQUIRED: 'Slug is required',
+  CONNECTIONS_ERROR_CONFIG_REQUIRED: 'Configuration template is required',
+  CONNECTIONS_ERROR_INVALID_JSON: 'Invalid JSON format',
+
+  // Connections Page - Success Messages
+  CONNECTIONS_SUCCESS_CREATED: 'Integration created successfully',
+  CONNECTIONS_SUCCESS_UPDATED: 'Integration updated successfully',
+  CONNECTIONS_SUCCESS_DELETED: 'Integration deleted successfully',
+
+  // Connections Page - Error Messages
+  CONNECTIONS_ERROR_LOAD_FAILED: 'Failed to load integrations',
+  CONNECTIONS_ERROR_CREATE_FAILED: 'Failed to create integration',
+  CONNECTIONS_ERROR_UPDATE_FAILED: 'Failed to update integration',
+  CONNECTIONS_ERROR_DELETE_FAILED: 'Failed to delete integration',
+
+  // Connections Page - Delete Dialog
+  CONNECTIONS_DIALOG_DELETE_TITLE: 'Delete Integration',
+  CONNECTIONS_DIALOG_DELETE_MESSAGE: 'Are you sure you want to delete "{name}"? This action cannot be undone.',
+  CONNECTIONS_DIALOG_DELETE_CONFIRM: 'Delete',
+  CONNECTIONS_DIALOG_DELETE_CANCEL: 'Cancel',
 });
 
 export type UiHelpTextKey = keyof typeof UI_HELP_TEXT;
