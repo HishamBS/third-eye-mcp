@@ -205,7 +205,7 @@ export default function PipelinesPage() {
       });
 
       if (!sessionResponse.ok) {
-        setError('Failed to create session');
+        setError(UI_HELP_TEXT.ERROR_PIPELINE_SESSION_FAILED);
         setRunningPipeline(null);
         return;
       }
@@ -229,10 +229,10 @@ export default function PipelinesPage() {
         await fetchPipelineRuns(pipelineId);
       } else {
         const result = await response.json();
-        setError(result.error?.detail || 'Failed to run pipeline');
+        setError(result.error?.detail || UI_HELP_TEXT.ERROR_PIPELINE_RUN_FAILED);
       }
     } catch (error) {
-      setError('Failed to run pipeline');
+      setError(UI_HELP_TEXT.ERROR_PIPELINE_RUN_FAILED);
     } finally {
       setRunningPipeline(null);
     }
@@ -343,10 +343,10 @@ export default function PipelinesPage() {
         handleCancel();
       } else {
         const result = await response.json();
-        setError(result.error?.detail || 'Failed to save pipeline');
+        setError(result.error?.detail || UI_HELP_TEXT.ERROR_PIPELINE_SAVE_FAILED);
       }
     } catch (error) {
-      setError('Failed to save pipeline');
+      setError(UI_HELP_TEXT.ERROR_PIPELINE_SAVE_FAILED);
     } finally {
       setLoading(false);
     }

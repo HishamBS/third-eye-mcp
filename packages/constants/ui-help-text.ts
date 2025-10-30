@@ -71,6 +71,26 @@ export const UI_HELP_TEXT = Object.freeze({
   EXECUTION_MS_SUFFIX: 'ms',
   EXECUTION_EMPTY_TITLE: 'No execution running',
   EXECUTION_EMPTY_DESCRIPTION: 'Click Start Execution to begin',
+
+  // Error Messages - Friendly Language for Non-Technical Users
+  ERROR_EYES_NO_REGISTRY: 'Could not find any Eyes. They might not be set up yet. Please check that Third Eye is running properly.',
+  ERROR_EYES_LOAD_FAILED: 'Could not load your Eyes right now. Please check that Third Eye is running and try refreshing the page.',
+  ERROR_EYE_NAME_REQUIRED: 'Please give your Eye a name before saving.',
+  ERROR_EYE_DESCRIPTION_REQUIRED: 'Please add a description so others know what this Eye does.',
+  ERROR_EYE_INVALID_SCHEMA: 'The settings you entered are not in the right format. Please check and try again.',
+  ERROR_EYE_SAVE_FAILED: 'Could not save your Eye right now. Please try again in a moment.',
+  ERROR_EYE_UPDATE_FAILED: 'Could not update your Eye. Please try again.',
+  ERROR_EYE_DELETE_FAILED: 'Could not delete this Eye. Please try again.',
+  ERROR_EYE_TEST_INPUT_REQUIRED: 'Please enter some text to test your Eye.',
+  ERROR_EYE_TEST_FAILED: 'Could not test your Eye right now. Please try again.',
+
+  ERROR_PIPELINE_SESSION_FAILED: 'Could not start a new session. Please try again.',
+  ERROR_PIPELINE_RUN_FAILED: 'Could not run this pipeline. Please make sure Third Eye is running and try again.',
+  ERROR_PIPELINE_SAVE_FAILED: 'Could not save your pipeline. Please try again.',
+
+  ERROR_GENERIC_LOAD: 'Having trouble loading this page. Please refresh and try again.',
+  ERROR_GENERIC_SAVE: 'Could not save your changes. Please try again.',
+  ERROR_GENERIC_DELETE: 'Could not delete this item. Please try again.',
 });
 
 export type UiHelpTextKey = keyof typeof UI_HELP_TEXT;

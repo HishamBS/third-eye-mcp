@@ -148,7 +148,7 @@ export default function EyesPage() {
       }
 
       if (allEyesData.length === 0) {
-        setError('No Eyes available. Verify registry seeding.');
+        setError(UI_HELP_TEXT.ERROR_EYES_NO_REGISTRY);
       } else {
         setError(null);
       }
@@ -178,7 +178,7 @@ export default function EyesPage() {
       setCustomEyes(enrichedEyesData.filter((e: Eye) => e.source === 'custom'));
     } catch (error) {
       console.error('Failed to fetch eyes:', error);
-      setError('Failed to load Eyes from MCP server');
+      setError(UI_HELP_TEXT.ERROR_EYES_LOAD_FAILED);
       setEyes([]);
       setBuiltInEyes([]);
       setCustomEyes([]);
@@ -251,7 +251,7 @@ export default function EyesPage() {
 
   const saveEye = async () => {
     if (!formData.name || !formData.description) {
-      setError('Name and description are required');
+      setError(formData.name ? UI_HELP_TEXT.ERROR_EYE_DESCRIPTION_REQUIRED : UI_HELP_TEXT.ERROR_EYE_NAME_REQUIRED);
       return;
     }
 
@@ -260,7 +260,7 @@ export default function EyesPage() {
       inputSchema = JSON.parse(formData.inputSchema);
       outputSchema = JSON.parse(formData.outputSchema);
     } catch (error) {
-      setError('Invalid JSON schema');
+      setError(UI_HELP_TEXT.ERROR_EYE_INVALID_SCHEMA);
       return;
     }
 
@@ -293,7 +293,7 @@ export default function EyesPage() {
       }
     } catch (error) {
       console.error('Custom eye creation error:', error);
-      setError('Failed to save eye');
+      setError(UI_HELP_TEXT.ERROR_EYE_SAVE_FAILED);
     } finally {
       setLoading(false);
     }
@@ -309,7 +309,7 @@ export default function EyesPage() {
 
   const updateEye = async () => {
     if (!selectedEye || !formData.description) {
-      setError('Description is required');
+      setError(UI_HELP_TEXT.ERROR_EYE_DESCRIPTION_REQUIRED);
       return;
     }
 
@@ -318,7 +318,7 @@ export default function EyesPage() {
       inputSchema = JSON.parse(formData.inputSchema);
       outputSchema = JSON.parse(formData.outputSchema);
     } catch (error) {
-      setError('Invalid JSON schema');
+      setError(UI_HELP_TEXT.ERROR_EYE_INVALID_SCHEMA);
       return;
     }
 
@@ -352,7 +352,7 @@ export default function EyesPage() {
         setError(result.error?.detail || 'Failed to update Eye');
       }
     } catch (error) {
-      setError('Failed to update eye');
+      setError(UI_HELP_TEXT.ERROR_EYE_UPDATE_FAILED);
     } finally {
       setLoading(false);
     }
@@ -377,16 +377,16 @@ export default function EyesPage() {
         cancelForm();
       } else {
         const result = await response.json();
-        setError(result.error?.detail || 'Failed to delete Eye');
+        setError(result.error?.detail || UI_HELP_TEXT.ERROR_EYE_DELETE_FAILED);
       }
     } catch (error) {
-      setError('Failed to delete eye');
+      setError(UI_HELP_TEXT.ERROR_EYE_DELETE_FAILED);
     }
   };
 
   const testEye = async () => {
     if (!selectedEye || !testInput) {
-      setError('Test input is required');
+      setError(UI_HELP_TEXT.ERROR_EYE_TEST_INPUT_REQUIRED);
       return;
     }
 
@@ -407,10 +407,10 @@ export default function EyesPage() {
         setSuccess('Test completed successfully');
       } else {
         const result = await response.json();
-        setError(result.error?.detail || 'Test failed');
+        setError(result.error?.detail || UI_HELP_TEXT.ERROR_EYE_TEST_FAILED);
       }
     } catch (error) {
-      setError('Failed to test eye');
+      setError(UI_HELP_TEXT.ERROR_EYE_TEST_FAILED);
     } finally {
       setLoading(false);
     }
