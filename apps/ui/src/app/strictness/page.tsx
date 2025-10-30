@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useDialog } from '@/hooks/useDialog';
+import { UI_HELP_TEXT } from '@third-eye/constants';
 
 interface StrictnessProfile {
   id: string;
@@ -67,7 +68,7 @@ export default function StrictnessPage() {
 
   const handleEdit = async (profile: StrictnessProfile) => {
     if (profile.isBuiltIn) {
-      await dialog.alert('Cannot Edit', 'Built-in profiles cannot be edited');
+      await dialog.alert(UI_HELP_TEXT.STRICTNESS_DIALOG_CANNOT_EDIT_TITLE, UI_HELP_TEXT.STRICTNESS_DIALOG_CANNOT_EDIT_MESSAGE);
       return;
     }
 
@@ -100,7 +101,7 @@ export default function StrictnessPage() {
 
   const handleSubmit = async () => {
     if (!formData.name) {
-      await dialog.alert('Validation Error', 'Please provide a profile name');
+      await dialog.alert(UI_HELP_TEXT.STRICTNESS_DIALOG_VALIDATION_TITLE, UI_HELP_TEXT.STRICTNESS_DIALOG_VALIDATION_MESSAGE);
       return;
     }
 
@@ -120,7 +121,7 @@ export default function StrictnessPage() {
           handleCancel();
         } else {
           const error = await response.json();
-          await dialog.alert('Create Failed', `Failed to create profile: ${error.error || 'Unknown error'}`);
+          await dialog.alert(UI_HELP_TEXT.STRICTNESS_DIALOG_CREATE_FAILED_TITLE, UI_HELP_TEXT.STRICTNESS_DIALOG_CREATE_FAILED_MESSAGE.replace('{error}', error.error || UI_HELP_TEXT.STRICTNESS_ERROR_UNKNOWN));
         }
       } else if (isEditing && selectedProfile) {
         const response = await fetch(`/api/strictness/${selectedProfile.id}`, {
@@ -136,12 +137,12 @@ export default function StrictnessPage() {
           handleCancel();
         } else {
           const error = await response.json();
-          await dialog.alert('Update Failed', `Failed to update profile: ${error.error || 'Unknown error'}`);
+          await dialog.alert(UI_HELP_TEXT.STRICTNESS_DIALOG_UPDATE_FAILED_TITLE, UI_HELP_TEXT.STRICTNESS_DIALOG_UPDATE_FAILED_MESSAGE.replace('{error}', error.error || UI_HELP_TEXT.STRICTNESS_ERROR_UNKNOWN));
         }
       }
     } catch (error) {
       console.error('Failed to save profile:', error);
-      await dialog.alert('Error', 'Failed to save profile');
+      await dialog.alert(UI_HELP_TEXT.STRICTNESS_DIALOG_ERROR_TITLE, UI_HELP_TEXT.STRICTNESS_DIALOG_ERROR_SAVE);
     } finally {
       setLoading(false);
     }
@@ -149,15 +150,15 @@ export default function StrictnessPage() {
 
   const handleDelete = async (profile: StrictnessProfile) => {
     if (profile.isBuiltIn) {
-      await dialog.alert('Cannot Delete', 'Built-in profiles cannot be deleted');
+      await dialog.alert(UI_HELP_TEXT.STRICTNESS_DIALOG_CANNOT_DELETE_TITLE, UI_HELP_TEXT.STRICTNESS_DIALOG_CANNOT_DELETE_MESSAGE);
       return;
     }
 
     const confirmed = await dialog.confirm(
-      'Delete Profile',
-      `Are you sure you want to delete the profile "${profile.name}"? This action cannot be undone.`,
-      'Delete',
-      'Cancel'
+      UI_HELP_TEXT.STRICTNESS_DIALOG_DELETE_TITLE,
+      UI_HELP_TEXT.STRICTNESS_DIALOG_DELETE_MESSAGE.replace('{name}', profile.name),
+      UI_HELP_TEXT.STRICTNESS_DIALOG_DELETE_CONFIRM,
+      UI_HELP_TEXT.STRICTNESS_DIALOG_DELETE_CANCEL
     );
 
     if (!confirmed) {
@@ -176,11 +177,11 @@ export default function StrictnessPage() {
         }
       } else {
         const error = await response.json();
-        await dialog.alert('Delete Failed', `Failed to delete profile: ${error.error || 'Unknown error'}`);
+        await dialog.alert(UI_HELP_TEXT.STRICTNESS_DIALOG_DELETE_FAILED_TITLE, UI_HELP_TEXT.STRICTNESS_DIALOG_DELETE_FAILED_MESSAGE.replace('{error}', error.error || UI_HELP_TEXT.STRICTNESS_ERROR_UNKNOWN));
       }
     } catch (error) {
       console.error('Failed to delete profile:', error);
-      await dialog.alert('Error', 'Failed to delete profile');
+      await dialog.alert(UI_HELP_TEXT.STRICTNESS_DIALOG_ERROR_TITLE, UI_HELP_TEXT.STRICTNESS_DIALOG_ERROR_DELETE);
     }
   };
 
@@ -195,10 +196,10 @@ export default function StrictnessPage() {
 
   const getStrictnessLabel = (profile: StrictnessProfile) => {
     const avg = (profile.ambiguityThreshold + profile.citationCutoff + profile.consistencyTolerance) / 3;
-    if (avg < 40) return 'Very Strict';
-    if (avg < 60) return 'Strict';
-    if (avg < 75) return 'Balanced';
-    return 'Lenient';
+    if (avg < 40) return UI_HELP_TEXT.STRICTNESS_LABEL_VERY_STRICT;
+    if (avg < 60) return UI_HELP_TEXT.STRICTNESS_LABEL_STRICT;
+    if (avg < 75) return UI_HELP_TEXT.STRICTNESS_LABEL_BALANCED;
+    return UI_HELP_TEXT.STRICTNESS_LABEL_LENIENT;
   };
 
   const builtInProfiles = profiles.filter(p => p.isBuiltIn);
@@ -212,25 +213,25 @@ export default function StrictnessPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
               <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
-                ← Home
+                {UI_HELP_TEXT.STRICTNESS_NAV_HOME}
               </Link>
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Validation</p>
-                <h1 className="mt-1 text-2xl font-semibold text-white">Strictness Profiles</h1>
+                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">{UI_HELP_TEXT.STRICTNESS_SECTION_LABEL}</p>
+                <h1 className="mt-1 text-2xl font-semibold text-white">{UI_HELP_TEXT.STRICTNESS_HEADER_TITLE}</h1>
               </div>
             </div>
             <div className="flex gap-4">
               <Link href="/models" className="text-sm text-slate-400 transition-colors hover:text-white">
-                Models
+                {UI_HELP_TEXT.STRICTNESS_NAV_MODELS}
               </Link>
               <Link href="/personas" className="text-sm text-slate-400 transition-colors hover:text-white">
-                Personas
+                {UI_HELP_TEXT.STRICTNESS_NAV_PERSONAS}
               </Link>
               <button
                 onClick={handleCreate}
                 className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
               >
-                + Create Profile
+                {UI_HELP_TEXT.STRICTNESS_BUTTON_CREATE}
               </button>
             </div>
           </div>
@@ -243,7 +244,7 @@ export default function StrictnessPage() {
           <div className="space-y-6">
             {/* Built-in Profiles */}
             <div>
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-brand-accent">Built-in Profiles</h2>
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-brand-accent">{UI_HELP_TEXT.STRICTNESS_SECTION_BUILTIN}</h2>
               <div className="space-y-3">
                 {builtInProfiles.map((profile, index) => (
                   <motion.div
@@ -268,10 +269,10 @@ export default function StrictnessPage() {
 
             {/* Custom Profiles */}
             <div>
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-brand-accent">Custom Profiles</h2>
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-brand-accent">{UI_HELP_TEXT.STRICTNESS_SECTION_CUSTOM}</h2>
               <div className="space-y-3">
                 {customProfiles.length === 0 ? (
-                  <p className="text-sm text-slate-400">No custom profiles yet</p>
+                  <p className="text-sm text-slate-400">{UI_HELP_TEXT.STRICTNESS_EMPTY_CUSTOM}</p>
                 ) : (
                   customProfiles.map((profile, index) => (
                     <motion.div
@@ -288,7 +289,7 @@ export default function StrictnessPage() {
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <h3 className="font-bold">{profile.name}</h3>
-                            <p className="mt-1 text-sm opacity-80">{profile.description || 'No description'}</p>
+                            <p className="mt-1 text-sm opacity-80">{profile.description || UI_HELP_TEXT.STRICTNESS_NO_DESCRIPTION}</p>
                             <p className="mt-2 text-xs opacity-70">{getStrictnessLabel(profile)}</p>
                           </div>
                           <button
@@ -298,7 +299,7 @@ export default function StrictnessPage() {
                             }}
                             className="ml-2 rounded-full bg-white/20 px-3 py-1 text-sm transition-colors hover:bg-white/30"
                           >
-                            Edit
+                            {UI_HELP_TEXT.STRICTNESS_BUTTON_EDIT}
                           </button>
                         </div>
                       </div>
@@ -316,21 +317,21 @@ export default function StrictnessPage() {
               <GlassCard>
                 <div className="mb-6 flex items-center justify-between">
                   <h2 className="text-xl font-semibold text-white">
-                    {isCreating ? 'Create New Profile' : `Edit ${formData.name}`}
+                    {isCreating ? UI_HELP_TEXT.STRICTNESS_TITLE_CREATE : UI_HELP_TEXT.STRICTNESS_TITLE_EDIT.replace('{name}', formData.name)}
                   </h2>
                   <div className="flex gap-3">
                     <button
                       onClick={handleCancel}
                       className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
                     >
-                      Cancel
+                      {UI_HELP_TEXT.STRICTNESS_BUTTON_CANCEL}
                     </button>
                     <button
                       onClick={handleSubmit}
                       disabled={loading}
                       className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary disabled:opacity-50"
                     >
-                      {loading ? 'Saving...' : 'Save Profile'}
+                      {loading ? UI_HELP_TEXT.STRICTNESS_BUTTON_SAVING : UI_HELP_TEXT.STRICTNESS_BUTTON_SAVE}
                     </button>
                   </div>
                 </div>
@@ -338,33 +339,33 @@ export default function StrictnessPage() {
                 <div className="space-y-6">
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-300">
-                      Name <span className="text-brand-primary">*</span>
+                      {UI_HELP_TEXT.STRICTNESS_LABEL_NAME} <span className="text-brand-primary">*</span>
                     </label>
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
-                      placeholder="My Custom Profile"
+                      placeholder={UI_HELP_TEXT.STRICTNESS_PLACEHOLDER_NAME}
                     />
                   </div>
 
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-300">
-                      Description
+                      {UI_HELP_TEXT.STRICTNESS_LABEL_DESCRIPTION}
                     </label>
                     <textarea
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       className="h-24 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
-                      placeholder="Describe when to use this profile..."
+                      placeholder={UI_HELP_TEXT.STRICTNESS_PLACEHOLDER_DESCRIPTION}
                     />
                   </div>
 
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
                       <label className="mb-2 block text-sm font-medium text-slate-300">
-                        Ambiguity Threshold
+                        {UI_HELP_TEXT.STRICTNESS_LABEL_AMBIGUITY}
                         <span className="ml-2 text-sm text-slate-400">({formData.ambiguityThreshold}%)</span>
                       </label>
                       <input
@@ -376,13 +377,13 @@ export default function StrictnessPage() {
                         className="w-full accent-brand-accent"
                       />
                       <p className="mt-1 text-xs text-slate-400">
-                        Lower = more questions asked by Sharingan
+                        {UI_HELP_TEXT.STRICTNESS_HELP_AMBIGUITY}
                       </p>
                     </div>
 
                     <div>
                       <label className="mb-2 block text-sm font-medium text-slate-300">
-                        Citation Cutoff
+                        {UI_HELP_TEXT.STRICTNESS_LABEL_CITATION}
                         <span className="ml-2 text-sm text-slate-400">({formData.citationCutoff}%)</span>
                       </label>
                       <input
@@ -394,13 +395,13 @@ export default function StrictnessPage() {
                         className="w-full accent-brand-accent"
                       />
                       <p className="mt-1 text-xs text-slate-400">
-                        Higher = requires more citations (Tenseigan)
+                        {UI_HELP_TEXT.STRICTNESS_HELP_CITATION}
                       </p>
                     </div>
 
                     <div>
                       <label className="mb-2 block text-sm font-medium text-slate-300">
-                        Consistency Tolerance
+                        {UI_HELP_TEXT.STRICTNESS_LABEL_CONSISTENCY}
                         <span className="ml-2 text-sm text-slate-400">({formData.consistencyTolerance}%)</span>
                       </label>
                       <input
@@ -412,36 +413,36 @@ export default function StrictnessPage() {
                         className="w-full accent-brand-accent"
                       />
                       <p className="mt-1 text-xs text-slate-400">
-                        Higher = more tolerant of inconsistencies (Byakugan)
+                        {UI_HELP_TEXT.STRICTNESS_HELP_CONSISTENCY}
                       </p>
                     </div>
 
                     <div>
                       <label className="mb-2 block text-sm font-medium text-slate-300">
-                        Mangekyo Strictness
+                        {UI_HELP_TEXT.STRICTNESS_LABEL_MANGEKYO}
                       </label>
                       <select
                         value={formData.mangekyoStrictness}
                         onChange={(e) => setFormData({ ...formData, mangekyoStrictness: e.target.value as any })}
                         className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                       >
-                        <option value="lenient">Lenient</option>
-                        <option value="standard">Standard</option>
-                        <option value="strict">Strict</option>
+                        <option value="lenient">{UI_HELP_TEXT.STRICTNESS_OPTION_LENIENT}</option>
+                        <option value="standard">{UI_HELP_TEXT.STRICTNESS_OPTION_STANDARD}</option>
+                        <option value="strict">{UI_HELP_TEXT.STRICTNESS_OPTION_STRICT}</option>
                       </select>
                       <p className="mt-1 text-xs text-slate-400">
-                        Code review strictness level
+                        {UI_HELP_TEXT.STRICTNESS_HELP_MANGEKYO}
                       </p>
                     </div>
                   </div>
 
                   <div className="rounded-xl border border-yellow-700/50 bg-yellow-900/10 p-5">
-                    <h4 className="font-medium text-yellow-300">Profile Guidelines</h4>
+                    <h4 className="font-medium text-yellow-300">{UI_HELP_TEXT.STRICTNESS_GUIDELINES_TITLE}</h4>
                     <ul className="mt-3 space-y-1 text-sm text-yellow-100">
-                      <li>• Casual: Relaxed validation for prototyping (50/50/60)</li>
-                      <li>• Enterprise: Balanced for production (30/70/80)</li>
-                      <li>• Security: Maximum validation for critical systems (10/90/95)</li>
-                      <li>• Custom: Tailor thresholds to your needs</li>
+                      <li>{UI_HELP_TEXT.STRICTNESS_GUIDELINES_CASUAL}</li>
+                      <li>{UI_HELP_TEXT.STRICTNESS_GUIDELINES_ENTERPRISE}</li>
+                      <li>{UI_HELP_TEXT.STRICTNESS_GUIDELINES_SECURITY}</li>
+                      <li>{UI_HELP_TEXT.STRICTNESS_GUIDELINES_CUSTOM}</li>
                     </ul>
                   </div>
                 </div>
@@ -452,14 +453,14 @@ export default function StrictnessPage() {
                 <div className="mb-6 flex items-center justify-between">
                   <div>
                     <h2 className="text-2xl font-bold text-white">{selectedProfile.name}</h2>
-                    <p className="mt-1 text-slate-400">{selectedProfile.description || 'No description'}</p>
+                    <p className="mt-1 text-slate-400">{selectedProfile.description || UI_HELP_TEXT.STRICTNESS_NO_DESCRIPTION}</p>
                     <div className="mt-2 flex items-center gap-4">
                       <span className={`rounded-full px-3 py-1 text-sm ${
                         selectedProfile.isBuiltIn
                           ? 'bg-eye-jogan/20 text-eye-jogan'
                           : 'bg-brand-accent/20 text-brand-accent'
                       }`}>
-                        {selectedProfile.isBuiltIn ? 'Built-in' : 'Custom'}
+                        {selectedProfile.isBuiltIn ? UI_HELP_TEXT.STRICTNESS_BADGE_BUILTIN : UI_HELP_TEXT.STRICTNESS_BADGE_CUSTOM}
                       </span>
                       <span className="text-sm text-slate-400">{getStrictnessLabel(selectedProfile)}</span>
                     </div>
@@ -471,13 +472,13 @@ export default function StrictnessPage() {
                           onClick={() => handleEdit(selectedProfile)}
                           className="rounded-full bg-brand-accent px-4 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary"
                         >
-                          Edit
+                          {UI_HELP_TEXT.STRICTNESS_BUTTON_EDIT}
                         </button>
                         <button
                           onClick={() => handleDelete(selectedProfile)}
                           className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
                         >
-                          Delete
+                          {UI_HELP_TEXT.STRICTNESS_BUTTON_DELETE}
                         </button>
                       </>
                     )}
@@ -486,69 +487,68 @@ export default function StrictnessPage() {
 
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/50 p-5">
-                    <h3 className="mb-2 font-semibold text-white">Ambiguity Threshold</h3>
+                    <h3 className="mb-2 font-semibold text-white">{UI_HELP_TEXT.STRICTNESS_DETAIL_AMBIGUITY}</h3>
                     <div className="flex items-end gap-2">
                       <span className="text-4xl font-bold text-brand-accent">{selectedProfile.ambiguityThreshold}</span>
                       <span className="mb-1 text-xl text-slate-400">%</span>
                     </div>
                     <p className="mt-2 text-sm text-slate-400">
-                      Controls how many clarification questions Sharingan asks
+                      {UI_HELP_TEXT.STRICTNESS_DESC_AMBIGUITY}
                     </p>
                   </div>
 
                   <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/50 p-5">
-                    <h3 className="mb-2 font-semibold text-white">Citation Cutoff</h3>
+                    <h3 className="mb-2 font-semibold text-white">{UI_HELP_TEXT.STRICTNESS_DETAIL_CITATION}</h3>
                     <div className="flex items-end gap-2">
                       <span className="text-4xl font-bold text-eye-jogan">{selectedProfile.citationCutoff}</span>
                       <span className="mb-1 text-xl text-slate-400">%</span>
                     </div>
                     <p className="mt-2 text-sm text-slate-400">
-                      Minimum score for Tenseigan evidence validation
+                      {UI_HELP_TEXT.STRICTNESS_DESC_CITATION}
                     </p>
                   </div>
 
                   <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/50 p-5">
-                    <h3 className="mb-2 font-semibold text-white">Consistency Tolerance</h3>
+                    <h3 className="mb-2 font-semibold text-white">{UI_HELP_TEXT.STRICTNESS_DETAIL_CONSISTENCY}</h3>
                     <div className="flex items-end gap-2">
                       <span className="text-4xl font-bold text-green-400">{selectedProfile.consistencyTolerance}</span>
                       <span className="mb-1 text-xl text-slate-400">%</span>
                     </div>
                     <p className="mt-2 text-sm text-slate-400">
-                      How much inconsistency Byakugan tolerates
+                      {UI_HELP_TEXT.STRICTNESS_DESC_CONSISTENCY}
                     </p>
                   </div>
 
                   <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/50 p-5">
-                    <h3 className="mb-2 font-semibold text-white">Mangekyo Strictness</h3>
+                    <h3 className="mb-2 font-semibold text-white">{UI_HELP_TEXT.STRICTNESS_DETAIL_MANGEKYO}</h3>
                     <div className="flex items-end gap-2">
                       <span className="text-4xl font-bold capitalize text-brand-primary">{selectedProfile.mangekyoStrictness}</span>
                     </div>
                     <p className="mt-2 text-sm text-slate-400">
-                      Code review validation level
+                      {UI_HELP_TEXT.STRICTNESS_DESC_MANGEKYO}
                     </p>
                   </div>
                 </div>
 
                 <div className="mt-6 rounded-xl border border-yellow-700/50 bg-yellow-900/10 p-5">
-                  <h4 className="font-medium text-yellow-300">Applied To</h4>
+                  <h4 className="font-medium text-yellow-300">{UI_HELP_TEXT.STRICTNESS_APPLIED_TITLE}</h4>
                   <p className="mt-2 text-sm text-yellow-100">
-                    This profile affects: Sharingan (ambiguity), Tenseigan (citations),
-                    Byakugan (consistency), Mangekyo (code review), Rinnegan (planning)
+                    {UI_HELP_TEXT.STRICTNESS_APPLIED_DESC}
                   </p>
                 </div>
               </GlassCard>
             ) : (
               /* Welcome Screen */
               <GlassCard className="p-12 text-center">
-                <h2 className="mb-4 text-2xl font-semibold text-white">Strictness Configuration</h2>
+                <h2 className="mb-4 text-2xl font-semibold text-white">{UI_HELP_TEXT.STRICTNESS_WELCOME_TITLE}</h2>
                 <p className="mb-6 text-lg text-slate-400">
-                  Select a profile from the left to view details or create a custom profile
+                  {UI_HELP_TEXT.STRICTNESS_WELCOME_SUBTITLE}
                 </p>
                 <div className="space-y-2 text-sm text-slate-500">
-                  <p>• Control validation thresholds across all Eyes</p>
-                  <p>• Built-in profiles: Casual, Enterprise, Security</p>
-                  <p>• Create custom profiles for specific workflows</p>
-                  <p>• Fine-tune ambiguity, citations, and consistency checks</p>
+                  <p>{UI_HELP_TEXT.STRICTNESS_WELCOME_BULLET_1}</p>
+                  <p>{UI_HELP_TEXT.STRICTNESS_WELCOME_BULLET_2}</p>
+                  <p>{UI_HELP_TEXT.STRICTNESS_WELCOME_BULLET_3}</p>
+                  <p>{UI_HELP_TEXT.STRICTNESS_WELCOME_BULLET_4}</p>
                 </div>
               </GlassCard>
             )}

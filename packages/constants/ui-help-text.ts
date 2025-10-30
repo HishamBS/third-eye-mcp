@@ -541,6 +541,119 @@ export const UI_HELP_TEXT = Object.freeze({
   CONNECTIONS_DIALOG_DELETE_MESSAGE: 'Are you sure you want to delete "{name}"? This action cannot be undone.',
   CONNECTIONS_DIALOG_DELETE_CONFIRM: 'Delete',
   CONNECTIONS_DIALOG_DELETE_CANCEL: 'Cancel',
+
+  // Strictness Page - Navigation
+  STRICTNESS_NAV_HOME: '← Home',
+  STRICTNESS_SECTION_LABEL: 'Validation',
+  STRICTNESS_HEADER_TITLE: 'Strictness Profiles',
+  STRICTNESS_NAV_MODELS: 'Models',
+  STRICTNESS_NAV_PERSONAS: 'Personas',
+
+  // Strictness Page - Buttons
+  STRICTNESS_BUTTON_CREATE: '+ Create Profile',
+  STRICTNESS_BUTTON_EDIT: 'Edit',
+  STRICTNESS_BUTTON_CANCEL: 'Cancel',
+  STRICTNESS_BUTTON_SAVING: 'Saving...',
+  STRICTNESS_BUTTON_SAVE: 'Save Profile',
+  STRICTNESS_BUTTON_DELETE: 'Delete',
+
+  // Strictness Page - Section Headers
+  STRICTNESS_SECTION_BUILTIN: 'Built-in Profiles',
+  STRICTNESS_SECTION_CUSTOM: 'Custom Profiles',
+
+  // Strictness Page - Empty State
+  STRICTNESS_EMPTY_CUSTOM: 'No custom profiles yet',
+
+  // Strictness Page - Strictness Labels
+  STRICTNESS_LABEL_VERY_STRICT: 'Very Strict',
+  STRICTNESS_LABEL_STRICT: 'Strict',
+  STRICTNESS_LABEL_BALANCED: 'Balanced',
+  STRICTNESS_LABEL_LENIENT: 'Lenient',
+
+  // Strictness Page - Badges
+  STRICTNESS_BADGE_BUILTIN: 'Built-in',
+  STRICTNESS_BADGE_CUSTOM: 'Custom',
+  STRICTNESS_NO_DESCRIPTION: 'No description',
+
+  // Strictness Page - Editor Titles
+  STRICTNESS_TITLE_CREATE: 'Create New Profile',
+  STRICTNESS_TITLE_EDIT: 'Edit {name}',
+
+  // Strictness Page - Form Labels
+  STRICTNESS_LABEL_NAME: 'Name',
+  STRICTNESS_LABEL_DESCRIPTION: 'Description',
+  STRICTNESS_LABEL_AMBIGUITY: 'Ambiguity Threshold',
+  STRICTNESS_LABEL_CITATION: 'Citation Cutoff',
+  STRICTNESS_LABEL_CONSISTENCY: 'Consistency Tolerance',
+  STRICTNESS_LABEL_MANGEKYO: 'Mangekyo Strictness',
+
+  // Strictness Page - Placeholders
+  STRICTNESS_PLACEHOLDER_NAME: 'My Custom Profile',
+  STRICTNESS_PLACEHOLDER_DESCRIPTION: 'Describe when to use this profile...',
+
+  // Strictness Page - Help Text
+  STRICTNESS_HELP_AMBIGUITY: 'Lower = more questions asked by Sharingan',
+  STRICTNESS_HELP_CITATION: 'Higher = requires more citations (Tenseigan)',
+  STRICTNESS_HELP_CONSISTENCY: 'Higher = more tolerant of inconsistencies (Byakugan)',
+  STRICTNESS_HELP_MANGEKYO: 'Code review strictness level',
+
+  // Strictness Page - Dropdown Options
+  STRICTNESS_OPTION_LENIENT: 'Lenient',
+  STRICTNESS_OPTION_STANDARD: 'Standard',
+  STRICTNESS_OPTION_STRICT: 'Strict',
+
+  // Strictness Page - Guidelines
+  STRICTNESS_GUIDELINES_TITLE: 'Profile Guidelines',
+  STRICTNESS_GUIDELINES_CASUAL: '• Casual: Relaxed validation for prototyping (50/50/60)',
+  STRICTNESS_GUIDELINES_ENTERPRISE: '• Enterprise: Balanced for production (30/70/80)',
+  STRICTNESS_GUIDELINES_SECURITY: '• Security: Maximum validation for critical systems (10/90/95)',
+  STRICTNESS_GUIDELINES_CUSTOM: '• Custom: Tailor thresholds to your needs',
+
+  // Strictness Page - Detail View Headers
+  STRICTNESS_DETAIL_AMBIGUITY: 'Ambiguity Threshold',
+  STRICTNESS_DETAIL_CITATION: 'Citation Cutoff',
+  STRICTNESS_DETAIL_CONSISTENCY: 'Consistency Tolerance',
+  STRICTNESS_DETAIL_MANGEKYO: 'Mangekyo Strictness',
+
+  // Strictness Page - Detail View Descriptions
+  STRICTNESS_DESC_AMBIGUITY: 'Controls how many clarification questions Sharingan asks',
+  STRICTNESS_DESC_CITATION: 'Minimum score for Tenseigan evidence validation',
+  STRICTNESS_DESC_CONSISTENCY: 'How much inconsistency Byakugan tolerates',
+  STRICTNESS_DESC_MANGEKYO: 'Code review validation level',
+
+  // Strictness Page - Applied To Section
+  STRICTNESS_APPLIED_TITLE: 'Applied To',
+  STRICTNESS_APPLIED_DESC: 'This profile affects: Sharingan (ambiguity), Tenseigan (citations), Byakugan (consistency), Mangekyo (code review), Rinnegan (planning)',
+
+  // Strictness Page - Welcome Screen
+  STRICTNESS_WELCOME_TITLE: 'Strictness Configuration',
+  STRICTNESS_WELCOME_SUBTITLE: 'Select a profile from the left to view details or create a custom profile',
+  STRICTNESS_WELCOME_BULLET_1: '• Control validation thresholds across all Eyes',
+  STRICTNESS_WELCOME_BULLET_2: '• Built-in profiles: Casual, Enterprise, Security',
+  STRICTNESS_WELCOME_BULLET_3: '• Create custom profiles for specific workflows',
+  STRICTNESS_WELCOME_BULLET_4: '• Fine-tune ambiguity, citations, and consistency checks',
+
+  // Strictness Page - Dialog Messages
+  STRICTNESS_DIALOG_CANNOT_EDIT_TITLE: 'Cannot Edit',
+  STRICTNESS_DIALOG_CANNOT_EDIT_MESSAGE: 'Built-in profiles cannot be edited',
+  STRICTNESS_DIALOG_VALIDATION_TITLE: 'Validation Error',
+  STRICTNESS_DIALOG_VALIDATION_MESSAGE: 'Please provide a profile name',
+  STRICTNESS_DIALOG_CREATE_FAILED_TITLE: 'Create Failed',
+  STRICTNESS_DIALOG_CREATE_FAILED_MESSAGE: 'Failed to create profile: {error}',
+  STRICTNESS_DIALOG_UPDATE_FAILED_TITLE: 'Update Failed',
+  STRICTNESS_DIALOG_UPDATE_FAILED_MESSAGE: 'Failed to update profile: {error}',
+  STRICTNESS_DIALOG_ERROR_TITLE: 'Error',
+  STRICTNESS_DIALOG_ERROR_SAVE: 'Failed to save profile',
+  STRICTNESS_DIALOG_CANNOT_DELETE_TITLE: 'Cannot Delete',
+  STRICTNESS_DIALOG_CANNOT_DELETE_MESSAGE: 'Built-in profiles cannot be deleted',
+  STRICTNESS_DIALOG_DELETE_TITLE: 'Delete Profile',
+  STRICTNESS_DIALOG_DELETE_MESSAGE: 'Are you sure you want to delete the profile "{name}"? This action cannot be undone.',
+  STRICTNESS_DIALOG_DELETE_CONFIRM: 'Delete',
+  STRICTNESS_DIALOG_DELETE_CANCEL: 'Cancel',
+  STRICTNESS_DIALOG_DELETE_FAILED_TITLE: 'Delete Failed',
+  STRICTNESS_DIALOG_DELETE_FAILED_MESSAGE: 'Failed to delete profile: {error}',
+  STRICTNESS_DIALOG_ERROR_DELETE: 'Failed to delete profile',
+  STRICTNESS_ERROR_UNKNOWN: 'Unknown error',
 });
 
 export type UiHelpTextKey = keyof typeof UI_HELP_TEXT;
