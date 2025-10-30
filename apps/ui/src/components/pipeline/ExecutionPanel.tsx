@@ -5,6 +5,7 @@ import { GlassCard } from '../ui/GlassCard';
 import { Play, Pause, RefreshCw, CheckCircle, XCircle, Clock, Zap } from 'lucide-react';
 import {
   EXECUTION_STATUS,
+  EXECUTION_STATUS_LABELS,
   NODE_STATUS,
   STATUS_COLORS,
   EXECUTION_API_ENDPOINTS,
@@ -14,6 +15,7 @@ import {
   type ExecutionStatus,
   type NodeStatus,
 } from '../../constants/execution';
+import { UI_HELP_TEXT } from '@third-eye/constants';
 
 interface ExecutionStep {
   id: string;
@@ -207,7 +209,7 @@ export function ExecutionPanel({ pipelineId, runId, onClose }: ExecutionPanelPro
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-white">Pipeline Execution</h3>
+          <h3 className="text-lg font-semibold text-white">{UI_HELP_TEXT.EXECUTION_PANEL_TITLE}</h3>
           {executionState?.runId && (
             <p className="text-xs text-slate-400 font-mono mt-1">{executionState.runId}</p>
           )}
@@ -216,7 +218,7 @@ export function ExecutionPanel({ pipelineId, runId, onClose }: ExecutionPanelPro
           <button
             onClick={onClose}
             className="rounded-lg p-2 hover:bg-brand-outline/20 transition-colors"
-            aria-label="Close execution panel"
+            aria-label={UI_HELP_TEXT.EXECUTION_PANEL_CLOSE}
           >
             <svg className="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -240,7 +242,7 @@ export function ExecutionPanel({ pipelineId, runId, onClose }: ExecutionPanelPro
         <div className="mb-6">
           <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg ${statusColor}`}>
             <StatusIcon className={`h-4 w-4 ${executionState.status === EXECUTION_STATUS.RUNNING ? 'animate-spin' : ''}`} />
-            <span className="text-sm font-medium capitalize">{executionState.status}</span>
+            <span className="text-sm font-medium">{EXECUTION_STATUS_LABELS[executionState.status]}</span>
           </div>
         </div>
       )}
@@ -254,7 +256,7 @@ export function ExecutionPanel({ pipelineId, runId, onClose }: ExecutionPanelPro
             className="flex items-center gap-2 rounded-lg bg-brand-accent px-4 py-2 text-sm font-semibold text-white hover:bg-brand-primary transition-colors disabled:opacity-50"
           >
             <Play className="h-4 w-4" />
-            {loading ? 'Starting...' : 'Start Execution'}
+            {loading ? UI_HELP_TEXT.EXECUTION_STARTING : UI_HELP_TEXT.EXECUTION_START}
           </button>
         ) : (
           <>
@@ -264,7 +266,7 @@ export function ExecutionPanel({ pipelineId, runId, onClose }: ExecutionPanelPro
                 className="flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
               >
                 <Pause className="h-4 w-4" />
-                Pause
+                {UI_HELP_TEXT.EXECUTION_PAUSE}
               </button>
             )}
             {executionState.status === EXECUTION_STATUS.PAUSED && (
@@ -273,7 +275,7 @@ export function ExecutionPanel({ pipelineId, runId, onClose }: ExecutionPanelPro
                 className="flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-sm font-semibold text-white hover:bg-green-600 transition-colors"
               >
                 <Play className="h-4 w-4" />
-                Resume
+                {UI_HELP_TEXT.EXECUTION_RESUME}
               </button>
             )}
           </>
@@ -288,7 +290,7 @@ export function ExecutionPanel({ pipelineId, runId, onClose }: ExecutionPanelPro
           }`}
         >
           <RefreshCw className={`h-4 w-4 ${autoRefresh ? 'animate-spin' : ''}`} />
-          Auto-refresh
+          {UI_HELP_TEXT.EXECUTION_AUTO_REFRESH}
         </button>
       </div>
 
@@ -296,13 +298,13 @@ export function ExecutionPanel({ pipelineId, runId, onClose }: ExecutionPanelPro
       {executionState && (
         <div className="mb-6 grid grid-cols-2 gap-3">
           <div className="rounded-lg bg-brand-ink p-3">
-            <div className="text-xs text-slate-400 mb-1">Duration</div>
+            <div className="text-xs text-slate-400 mb-1">{UI_HELP_TEXT.EXECUTION_DURATION}</div>
             <div className="text-lg font-semibold text-white">
               {formatDuration(executionState.startedAt, executionState.completedAt)}
             </div>
           </div>
           <div className="rounded-lg bg-brand-ink p-3">
-            <div className="text-xs text-slate-400 mb-1">Steps Completed</div>
+            <div className="text-xs text-slate-400 mb-1">{UI_HELP_TEXT.EXECUTION_STEPS_COMPLETED}</div>
             <div className="text-lg font-semibold text-white">
               {executionState.steps.filter(s => s.status === NODE_STATUS.SUCCESS).length} / {executionState.steps.length}
             </div>
@@ -313,7 +315,7 @@ export function ExecutionPanel({ pipelineId, runId, onClose }: ExecutionPanelPro
       {/* Final Verdict */}
       {executionState?.finalVerdict && (
         <div className="mb-6 rounded-lg bg-brand-ink p-4">
-          <div className="text-sm text-slate-400 mb-2">Final Verdict</div>
+          <div className="text-sm text-slate-400 mb-2">{UI_HELP_TEXT.EXECUTION_FINAL_VERDICT}</div>
           <div className="text-lg font-semibold text-brand-accent">{executionState.finalVerdict}</div>
         </div>
       )}
@@ -321,7 +323,7 @@ export function ExecutionPanel({ pipelineId, runId, onClose }: ExecutionPanelPro
       {/* Execution Steps */}
       {executionState && executionState.steps.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold text-white mb-3">Execution Steps</h4>
+          <h4 className="text-sm font-semibold text-white mb-3">{UI_HELP_TEXT.EXECUTION_STEPS_TITLE}</h4>
           <div className="space-y-3">
             {executionState.steps.map((step) => {
               const StepIcon = STATUS_ICONS[step.status];
@@ -338,7 +340,7 @@ export function ExecutionPanel({ pipelineId, runId, onClose }: ExecutionPanelPro
                       <span className="text-sm font-medium text-white">{step.nodeType}</span>
                     </div>
                     <span className={`text-xs px-2 py-1 rounded ${stepColor}`}>
-                      {step.status}
+                      {EXECUTION_STATUS_LABELS[step.status]}
                     </span>
                   </div>
 
@@ -346,13 +348,13 @@ export function ExecutionPanel({ pipelineId, runId, onClose }: ExecutionPanelPro
 
                   {step.verdict && (
                     <div className="text-sm text-brand-accent mb-2">
-                      Verdict: {step.verdict}
+                      {UI_HELP_TEXT.EXECUTION_VERDICT_PREFIX} {step.verdict}
                     </div>
                   )}
 
                   {step.errorMessage && (
                     <div className="text-sm text-red-400 mb-2">
-                      Error: {step.errorMessage}
+                      {UI_HELP_TEXT.EXECUTION_ERROR_PREFIX} {step.errorMessage}
                     </div>
                   )}
 
@@ -360,13 +362,13 @@ export function ExecutionPanel({ pipelineId, runId, onClose }: ExecutionPanelPro
                     {step.tokensUsed !== undefined && step.tokensUsed > 0 && (
                       <div className="flex items-center gap-1 text-xs text-slate-400">
                         <Zap className="h-3 w-3" />
-                        <span>{step.tokensUsed} tokens</span>
+                        <span>{step.tokensUsed} {UI_HELP_TEXT.EXECUTION_TOKENS_SUFFIX}</span>
                       </div>
                     )}
                     {step.latencyMs !== undefined && (
                       <div className="flex items-center gap-1 text-xs text-slate-400">
                         <Clock className="h-3 w-3" />
-                        <span>{step.latencyMs}ms</span>
+                        <span>{step.latencyMs}{UI_HELP_TEXT.EXECUTION_MS_SUFFIX}</span>
                       </div>
                     )}
                   </div>
@@ -382,8 +384,8 @@ export function ExecutionPanel({ pipelineId, runId, onClose }: ExecutionPanelPro
         <div className="text-center py-12">
           <div className="text-slate-400 mb-4">
             <Play className="h-12 w-12 mx-auto mb-3" />
-            <p className="text-sm">No execution running</p>
-            <p className="text-xs mt-2">Click Start Execution to begin</p>
+            <p className="text-sm">{UI_HELP_TEXT.EXECUTION_EMPTY_TITLE}</p>
+            <p className="text-xs mt-2">{UI_HELP_TEXT.EXECUTION_EMPTY_DESCRIPTION}</p>
           </div>
         </div>
       )}

@@ -44,6 +44,25 @@ export const UI_HELP_TEXT = Object.freeze({
   DELETE: 'Permanently remove this item',
   EDIT: 'Modify this item',
   DUPLICATE: 'Create a copy of this item',
+
+  // Execution Panel
+  EXECUTION_PANEL_TITLE: 'Pipeline Execution',
+  EXECUTION_PANEL_CLOSE: 'Close execution panel',
+  EXECUTION_START: 'Start Execution',
+  EXECUTION_STARTING: 'Starting...',
+  EXECUTION_PAUSE: 'Pause',
+  EXECUTION_RESUME: 'Resume',
+  EXECUTION_AUTO_REFRESH: 'Auto-refresh',
+  EXECUTION_DURATION: 'Duration',
+  EXECUTION_STEPS_COMPLETED: 'Steps Completed',
+  EXECUTION_FINAL_VERDICT: 'Final Verdict',
+  EXECUTION_STEPS_TITLE: 'Execution Steps',
+  EXECUTION_VERDICT_PREFIX: 'Verdict:',
+  EXECUTION_ERROR_PREFIX: 'Error:',
+  EXECUTION_TOKENS_SUFFIX: 'tokens',
+  EXECUTION_MS_SUFFIX: 'ms',
+  EXECUTION_EMPTY_TITLE: 'No execution running',
+  EXECUTION_EMPTY_DESCRIPTION: 'Click Start Execution to begin',
 });
 
 export type UiHelpTextKey = keyof typeof UI_HELP_TEXT;

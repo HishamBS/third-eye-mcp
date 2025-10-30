@@ -29,6 +29,18 @@ export const NODE_STATUS = {
 
 export type NodeStatus = typeof NODE_STATUS[keyof typeof NODE_STATUS];
 
+// Status Display Labels (human-readable)
+export const EXECUTION_STATUS_LABELS = {
+  [EXECUTION_STATUS.PENDING]: 'Pending',
+  [EXECUTION_STATUS.RUNNING]: 'Running',
+  [EXECUTION_STATUS.SUCCESS]: 'Success',
+  [EXECUTION_STATUS.ERROR]: 'Error',
+  [EXECUTION_STATUS.AWAITING_INPUT]: 'Awaiting Input',
+  [EXECUTION_STATUS.PAUSED]: 'Paused',
+  [EXECUTION_STATUS.COMPLETED]: 'Completed',
+  [EXECUTION_STATUS.FAILED]: 'Failed',
+} as const;
+
 // Status Display Colors (Tailwind classes)
 export const STATUS_COLORS = {
   [EXECUTION_STATUS.PENDING]: 'text-slate-400 bg-slate-500/10',
