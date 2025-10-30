@@ -10,6 +10,7 @@ import {
   LAYOUT,
 } from './constants';
 import { EYES } from '@third-eye/types/enums';
+import { API_ROUTES } from '@/constants/api-routes';
 import type { EyeDefinition } from '@/types/pipeline';
 
 /**
@@ -48,17 +49,25 @@ export const EyePalette = memo(function EyePalette({
     const fetchCustomEyes = async () => {
       setLoading(true);
       try {
-        const response = await get<Array<{
-          id: string;
-          name: string;
-          description: string;
-          iconSvg?: string;
-          version: number;
-          inputSchemaJson: Record<string, unknown>;
-          outputSchemaJson: Record<string, unknown>;
-        }>>('/api/eyes/custom');
+        const envelope = await get<{
+          success: boolean;
+          data: Array<{
+            id: string;
+            name: string;
+            description: string;
+            iconSvg?: string;
+            version: number;
+            inputSchemaJson: Record<string, unknown>;
+            outputSchemaJson: Record<string, unknown>;
+          }>;
+          meta: {
+            requestId?: string;
+            timestamp?: string;
+          };
+        }>(API_ROUTES.EYES_CUSTOM);
 
-        const mapped: EyeDefinition[] = response.map((eye) => ({
+        const customEyesData = envelope.data || [];
+        const mapped: EyeDefinition[] = customEyesData.map((eye) => ({
           id: eye.id,
           name: eye.name,
           description: eye.description,

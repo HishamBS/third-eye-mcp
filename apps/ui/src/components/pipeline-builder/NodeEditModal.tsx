@@ -1,7 +1,9 @@
 'use client';
 
 import { memo, useState, useCallback, useEffect } from 'react';
+import { Settings } from 'lucide-react';
 import { NODE_EDIT_TEXT } from './constants';
+import { UI_HELP_TEXT } from '@third-eye/constants';
 import type { PipelineNode, EyeNodeData } from '@/types/pipeline';
 
 /**
@@ -13,6 +15,7 @@ interface NodeEditModalProps {
   onClose: () => void;
   onSave: (nodeId: string, updates: Partial<EyeNodeData>) => void;
   onDelete: (nodeId: string) => void;
+  onConfigurePersona: (eyeId: string, eyeName: string) => void;
 }
 
 /**
@@ -33,24 +36,35 @@ export const NodeEditModal = memo(function NodeEditModal({
   onClose,
   onSave,
   onDelete,
+  onConfigurePersona,
 }: NodeEditModalProps) {
   const [formData, setFormData] = useState<Partial<EyeNodeData>>({});
   const [jsonError, setJsonError] = useState<string>('');
   const [newCapability, setNewCapability] = useState<string>('');
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
+  const [nodeName, setNodeName] = useState<string>('');
+  const [nodeDescription, setNodeDescription] = useState<string>('');
+  const [nodeEnabled, setNodeEnabled] = useState<boolean>(true);
 
   // Initialize form when node changes
   useEffect(() => {
     if (node) {
+      const config = node.data.customConfig || {};
       setFormData({
         eyeId: node.data.eyeId,
         displayName: node.data.displayName,
         capabilities: node.data.capabilities || [],
-        customConfig: node.data.customConfig || {},
+        customConfig: config,
         isCustom: node.data.isCustom,
         iconSvg: node.data.iconSvg,
       });
+      // Initialize form fields from customConfig
+      setNodeName((config as Record<string, unknown>).name as string || '');
+      setNodeDescription((config as Record<string, unknown>).description as string || '');
+      setNodeEnabled((config as Record<string, unknown>).enabled !== false);
       setJsonError('');
       setNewCapability('');
+      setShowAdvanced(false);
     }
   }, [node]);
 
@@ -91,9 +105,20 @@ export const NodeEditModal = memo(function NodeEditModal({
     if (!node) return;
     if (jsonError) return; // Don't save if JSON is invalid
 
-    onSave(node.id, formData);
+    // Merge form fields into customConfig
+    const updatedConfig = {
+      ...(formData.customConfig || {}),
+      name: nodeName || undefined,
+      description: nodeDescription || undefined,
+      enabled: nodeEnabled,
+    };
+
+    onSave(node.id, {
+      ...formData,
+      customConfig: updatedConfig,
+    });
     onClose();
-  }, [node, formData, jsonError, onSave, onClose]);
+  }, [node, formData, jsonError, nodeName, nodeDescription, nodeEnabled, onSave, onClose]);
 
   // Handle delete
   const handleDelete = useCallback(() => {
@@ -160,6 +185,23 @@ export const NodeEditModal = memo(function NodeEditModal({
                 </span>
               )}
             </div>
+
+            {/* Phase 16: Configure Persona button */}
+            <button
+              onClick={() => {
+                onConfigurePersona(
+                  formData.eyeId || '',
+                  formData.displayName || formData.eyeId || ''
+                );
+              }}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-brand-accent/10 px-4 py-2 text-sm font-medium text-brand-accent transition-all hover:bg-brand-accent/20 hover:scale-[1.02] active:scale-95"
+            >
+              <Settings className="h-4 w-4" />
+              {UI_HELP_TEXT.PIPELINE_BUTTON_CONFIGURE_PERSONA}
+            </button>
+            <div className="mt-1 text-xs text-brand-ink/60 text-center">
+              {UI_HELP_TEXT.PIPELINE_PERSONA_CONFIG_HINT}
+            </div>
           </div>
 
           {/* Capabilities */}
@@ -219,24 +261,112 @@ export const NodeEditModal = memo(function NodeEditModal({
             </div>
           </div>
 
-          {/* Custom Configuration (JSON) */}
-          <div>
-            <label className="block text-sm font-medium text-brand-ink mb-2">
-              {NODE_EDIT_TEXT.CONFIG_LABEL}
-            </label>
-            <textarea
-              value={configJson}
-              onChange={(e) => handleConfigChange(e.target.value)}
-              placeholder={NODE_EDIT_TEXT.CONFIG_JSON_HINT}
-              rows={8}
-              className={`w-full px-3 py-2 bg-brand-paperElev border rounded-md text-brand-ink placeholder-brand-ink/50 focus:outline-none focus:ring-2 font-mono text-sm ${
-                jsonError
-                  ? 'border-red-500 focus:ring-red-500'
-                  : 'border-brand-outline focus:ring-brand-primary'
-              }`}
-            />
-            {jsonError && (
-              <div className="mt-1 text-sm text-red-500">{jsonError}</div>
+          {/* Basic Configuration Forms */}
+          <div className="space-y-4 p-4 bg-brand-paperElev rounded-lg border border-brand-outline">
+            <h3 className="text-sm font-semibold text-brand-ink uppercase tracking-wider">
+              Configuration
+            </h3>
+
+            {/* Node Name */}
+            <div>
+              <label className="block text-sm font-medium text-brand-ink mb-2">
+                Node Name
+              </label>
+              <input
+                type="text"
+                value={nodeName}
+                onChange={(e) => setNodeName(e.target.value)}
+                placeholder="Optional display name for this node"
+                className="w-full px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-ink placeholder-brand-ink/50 focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
+              />
+              <div className="mt-1 text-xs text-brand-ink/60">
+                Custom name to identify this node in the pipeline
+              </div>
+            </div>
+
+            {/* Node Description */}
+            <div>
+              <label className="block text-sm font-medium text-brand-ink mb-2">
+                Description
+              </label>
+              <textarea
+                value={nodeDescription}
+                onChange={(e) => setNodeDescription(e.target.value)}
+                placeholder="Optional description of this node's purpose"
+                rows={3}
+                className="w-full px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-ink placeholder-brand-ink/50 focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
+              />
+            </div>
+
+            {/* Enabled Toggle */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-brand-ink">
+                Enabled
+              </label>
+              <button
+                onClick={() => setNodeEnabled(!nodeEnabled)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  nodeEnabled ? 'bg-brand-primary' : 'bg-brand-outline/40'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    nodeEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Advanced Configuration (Collapsible) */}
+          <div className="border border-brand-outline rounded-lg overflow-hidden">
+            <button
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="w-full flex items-center justify-between px-4 py-3 bg-brand-paperElev hover:bg-brand-outline/10 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <svg
+                  className={`w-4 h-4 text-brand-ink transition-transform ${
+                    showAdvanced ? 'rotate-90' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+                <span className="text-sm font-semibold text-brand-ink uppercase tracking-wider">
+                  Advanced Configuration
+                </span>
+              </div>
+              <span className="text-xs text-brand-ink/60">
+                JSON Editor (Power Users)
+              </span>
+            </button>
+
+            {showAdvanced && (
+              <div className="px-4 py-3 bg-brand-paper border-t border-brand-outline">
+                <label className="block text-sm font-medium text-brand-ink mb-2">
+                  {NODE_EDIT_TEXT.CONFIG_LABEL}
+                </label>
+                <textarea
+                  value={configJson}
+                  onChange={(e) => handleConfigChange(e.target.value)}
+                  placeholder={NODE_EDIT_TEXT.CONFIG_JSON_HINT}
+                  rows={8}
+                  className={`w-full px-3 py-2 bg-brand-paperElev border rounded-md text-brand-ink placeholder-brand-ink/50 focus:outline-none focus:ring-2 font-mono text-sm ${
+                    jsonError
+                      ? 'border-red-500 focus:ring-red-500'
+                      : 'border-brand-outline focus:ring-brand-primary'
+                  }`}
+                />
+                {jsonError && (
+                  <div className="mt-1 text-sm text-red-500">{jsonError}</div>
+                )}
+                <div className="mt-2 text-xs text-brand-ink/60">
+                  Direct JSON editing. Changes here will override form values above.
+                </div>
+              </div>
             )}
           </div>
         </div>

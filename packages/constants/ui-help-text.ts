@@ -127,6 +127,11 @@ export const UI_HELP_TEXT = Object.freeze({
   EYES_ERROR_PERSONA_SAVE_FAILED: 'Failed to save persona configuration',
   EYES_SUCCESS_PERSONA_SAVED: 'Persona configuration saved successfully',
 
+  // Pipeline Builder - Persona Configuration (Phase 16)
+  PIPELINE_BUTTON_CONFIGURE_PERSONA: 'Configure Persona',
+  PIPELINE_PERSONA_CONFIG_HINT: 'Define how this Eye behaves in this specific pipeline node',
+  PIPELINE_SUCCESS_PERSONA_SAVED: 'Node persona configuration saved successfully',
+
   // Personas Page - Navigation
   PERSONAS_NAV_HOME: '← Home',
   PERSONAS_NAV_MODELS: 'Models',

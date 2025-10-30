@@ -20,7 +20,8 @@ import { EyePalette } from './EyePalette';
 import { NodeEditModal } from './NodeEditModal';
 import { EdgeConfigModal } from './EdgeConfigModal';
 import { Toolbar } from './Toolbar';
-import { CANVAS_SETTINGS, LAYOUT } from './constants';
+import { PersonaWizardModal } from '@/components/persona-form/PersonaWizardModal';
+import { CANVAS_SETTINGS, LAYOUT, SYSTEM_DEFAULT_PIPELINE } from './constants';
 import type { PipelineNode, PipelineEdge, EyeNodeData, EdgeConditionData } from '@/types/pipeline';
 
 // Register custom node types
@@ -43,14 +44,22 @@ const nodeTypes = { eyeNode: EyeNode };
  * Per R13: All constants from SSOT
  */
 export function PipelineCanvasEnhanced() {
-  const [nodes, setNodes, onNodesChange] = useNodesState<PipelineNode>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<PipelineEdge>([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<PipelineNode>(
+    SYSTEM_DEFAULT_PIPELINE.nodes as PipelineNode[]
+  );
+  const [edges, setEdges, onEdgesChange] = useEdgesState<PipelineEdge>(
+    SYSTEM_DEFAULT_PIPELINE.edges as PipelineEdge[]
+  );
   const [selectedNode, setSelectedNode] = useState<PipelineNode | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<PipelineEdge | null>(null);
   const [paletteCollapsed, setPaletteCollapsed] = useState<boolean>(false);
   const [showMinimap, setShowMinimap] = useState<boolean>(true);
   const [showGrid, setShowGrid] = useState<boolean>(true);
   const reactFlowInstance = useReactFlow();
+
+  // Phase 16: Persona configuration modal state
+  const [isPersonaModalOpen, setIsPersonaModalOpen] = useState(false);
+  const [selectedPersonaEye, setSelectedPersonaEye] = useState<{ id: string; name: string } | null>(null);
 
   // Placeholder pipeline data (will be replaced by service hooks in S8)
   const activePipeline = useMemo(() => null, []);
@@ -131,6 +140,23 @@ export function PipelineCanvasEnhanced() {
     },
     [setEdges]
   );
+
+  // Phase 16: Persona configuration handlers
+  const handleConfigurePersona = useCallback((eyeId: string, eyeName: string) => {
+    setSelectedPersonaEye({ id: eyeId, name: eyeName });
+    setIsPersonaModalOpen(true);
+    setSelectedNode(null); // Close node edit modal
+  }, []);
+
+  const handleClosePersonaModal = useCallback(() => {
+    setIsPersonaModalOpen(false);
+    setSelectedPersonaEye(null);
+  }, []);
+
+  const handlePersonaSaved = useCallback(() => {
+    // Could refresh node data here if needed
+    console.log('Persona saved for pipeline node');
+  }, []);
 
   // Handle new connections
   const onConnect = useCallback(
@@ -271,6 +297,7 @@ export function PipelineCanvasEnhanced() {
           onClose={() => setSelectedNode(null)}
           onSave={handleNodeUpdate}
           onDelete={handleNodeDelete}
+          onConfigurePersona={handleConfigurePersona}
         />
 
         {/* Edge Config Modal */}
@@ -280,6 +307,17 @@ export function PipelineCanvasEnhanced() {
           onSave={handleEdgeUpdate}
           onDelete={handleEdgeDelete}
         />
+
+        {/* Phase 16: Persona Configuration Modal */}
+        {selectedPersonaEye && (
+          <PersonaWizardModal
+            isOpen={isPersonaModalOpen}
+            eyeId={selectedPersonaEye.id}
+            eyeName={selectedPersonaEye.name}
+            onClose={handleClosePersonaModal}
+            onSave={handlePersonaSaved}
+          />
+        )}
       </div>
     </div>
   );

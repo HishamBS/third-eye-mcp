@@ -319,3 +319,197 @@ export const PIPELINE_DEFAULTS = {
   MIN_ITERATIONS: 1,
   MAX_ITERATIONS: 20,
 } as const;
+
+/**
+ * System Default Pipeline - Phase 10
+ * Pre-configured 8-Eye validation flow
+ * Per R13: Centralized default pipeline structure
+ *
+ * Flow: Overseer → Sharingan → Kyuubi → Jogan → Rinnegan → Mangekyo → Byakugan → Tenseigan
+ */
+export const SYSTEM_DEFAULT_PIPELINE = {
+  nodes: [
+    {
+      id: 'node-overseer',
+      type: 'eyeNode',
+      position: { x: 100, y: 200 },
+      data: {
+        eyeId: 'overseer' as const,
+        displayName: EYE_DISPLAY_NAMES.overseer,
+        capabilities: [EYE_PRIMARY_CAPABILITIES.overseer],
+        isCustom: false as const,
+        stage: EYE_STAGES.overseer,
+      },
+    },
+    {
+      id: 'node-sharingan',
+      type: 'eyeNode',
+      position: { x: 400, y: 100 },
+      data: {
+        eyeId: 'sharingan' as const,
+        displayName: EYE_DISPLAY_NAMES.sharingan,
+        capabilities: [EYE_PRIMARY_CAPABILITIES.sharingan],
+        isCustom: false as const,
+        stage: EYE_STAGES.sharingan,
+      },
+    },
+    {
+      id: 'node-kyuubi',
+      type: 'eyeNode',
+      position: { x: 700, y: 100 },
+      data: {
+        eyeId: 'kyuubi' as const,
+        displayName: EYE_DISPLAY_NAMES.kyuubi,
+        capabilities: [EYE_PRIMARY_CAPABILITIES.kyuubi],
+        isCustom: false as const,
+        stage: EYE_STAGES.kyuubi,
+      },
+    },
+    {
+      id: 'node-jogan',
+      type: 'eyeNode',
+      position: { x: 1000, y: 100 },
+      data: {
+        eyeId: 'jogan' as const,
+        displayName: EYE_DISPLAY_NAMES.jogan,
+        capabilities: [EYE_PRIMARY_CAPABILITIES.jogan],
+        isCustom: false as const,
+        stage: EYE_STAGES.jogan,
+      },
+    },
+    {
+      id: 'node-rinnegan',
+      type: 'eyeNode',
+      position: { x: 400, y: 300 },
+      data: {
+        eyeId: 'rinnegan' as const,
+        displayName: EYE_DISPLAY_NAMES.rinnegan,
+        capabilities: [EYE_PRIMARY_CAPABILITIES.rinnegan],
+        isCustom: false as const,
+        stage: EYE_STAGES.rinnegan,
+      },
+    },
+    {
+      id: 'node-mangekyo',
+      type: 'eyeNode',
+      position: { x: 700, y: 300 },
+      data: {
+        eyeId: 'mangekyo' as const,
+        displayName: EYE_DISPLAY_NAMES.mangekyo,
+        capabilities: [EYE_PRIMARY_CAPABILITIES.mangekyo],
+        isCustom: false as const,
+        stage: EYE_STAGES.mangekyo,
+      },
+    },
+    {
+      id: 'node-byakugan',
+      type: 'eyeNode',
+      position: { x: 1000, y: 300 },
+      data: {
+        eyeId: 'byakugan' as const,
+        displayName: EYE_DISPLAY_NAMES.byakugan,
+        capabilities: [EYE_PRIMARY_CAPABILITIES.byakugan],
+        isCustom: false as const,
+        stage: EYE_STAGES.byakugan,
+      },
+    },
+    {
+      id: 'node-tenseigan',
+      type: 'eyeNode',
+      position: { x: 1300, y: 200 },
+      data: {
+        eyeId: 'tenseigan' as const,
+        displayName: EYE_DISPLAY_NAMES.tenseigan,
+        capabilities: [EYE_PRIMARY_CAPABILITIES.tenseigan],
+        isCustom: false as const,
+        stage: EYE_STAGES.tenseigan,
+      },
+    },
+  ],
+  edges: [
+    {
+      id: 'edge-overseer-sharingan',
+      source: 'node-overseer',
+      target: 'node-sharingan',
+      type: 'smoothstep',
+      animated: true,
+      markerEnd: { type: 'arrowclosed' },
+      data: {
+        condition: EDGE_CONDITION_TYPES.ALWAYS,
+        enabled: true,
+      },
+    },
+    {
+      id: 'edge-sharingan-kyuubi',
+      source: 'node-sharingan',
+      target: 'node-kyuubi',
+      type: 'smoothstep',
+      animated: true,
+      markerEnd: { type: 'arrowclosed' },
+      data: {
+        condition: EDGE_CONDITION_TYPES.ALWAYS,
+        enabled: true,
+      },
+    },
+    {
+      id: 'edge-kyuubi-jogan',
+      source: 'node-kyuubi',
+      target: 'node-jogan',
+      type: 'smoothstep',
+      animated: true,
+      markerEnd: { type: 'arrowclosed' },
+      data: {
+        condition: EDGE_CONDITION_TYPES.ALWAYS,
+        enabled: true,
+      },
+    },
+    {
+      id: 'edge-jogan-rinnegan',
+      source: 'node-jogan',
+      target: 'node-rinnegan',
+      type: 'smoothstep',
+      animated: true,
+      markerEnd: { type: 'arrowclosed' },
+      data: {
+        condition: EDGE_CONDITION_TYPES.ALWAYS,
+        enabled: true,
+      },
+    },
+    {
+      id: 'edge-rinnegan-mangekyo',
+      source: 'node-rinnegan',
+      target: 'node-mangekyo',
+      type: 'smoothstep',
+      animated: true,
+      markerEnd: { type: 'arrowclosed' },
+      data: {
+        condition: EDGE_CONDITION_TYPES.ALWAYS,
+        enabled: true,
+      },
+    },
+    {
+      id: 'edge-mangekyo-byakugan',
+      source: 'node-mangekyo',
+      target: 'node-byakugan',
+      type: 'smoothstep',
+      animated: true,
+      markerEnd: { type: 'arrowclosed' },
+      data: {
+        condition: EDGE_CONDITION_TYPES.ALWAYS,
+        enabled: true,
+      },
+    },
+    {
+      id: 'edge-byakugan-tenseigan',
+      source: 'node-byakugan',
+      target: 'node-tenseigan',
+      type: 'smoothstep',
+      animated: true,
+      markerEnd: { type: 'arrowclosed' },
+      data: {
+        condition: EDGE_CONDITION_TYPES.ALWAYS,
+        enabled: true,
+      },
+    },
+  ],
+} as const;
