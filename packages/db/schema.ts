@@ -46,13 +46,23 @@ export const eyeSettings = sqliteTable('eye_settings', {
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });
 
-// Personas with versioning
+// Personas with structured fields - Phase 12 (R10 compliant: NO TEXT blob)
 export const personas = sqliteTable('personas', {
   id: text('id').primaryKey(),
   eye: text('eye').notNull(),
   name: text('name').notNull(),
   version: integer('version').notNull(),
-  content: text('content').notNull(),
+
+  // Structured PersonaBlueprint fields (replaces TEXT blob per R10)
+  metadata_json: text('metadata_json', { mode: 'json' }).notNull(), // {eyeId, name, description, version, capabilities[]}
+  mission: text('mission').notNull(),
+  guidance_json: text('guidance_json', { mode: 'json' }), // {mission, check, reminders[], example} or null
+  validation_json: text('validation_json', { mode: 'json' }), // {mission, check, reminders[], example} or null
+  envelope_json: text('envelope_json', { mode: 'json' }).notNull(), // {requiredKeys[], requiredDataKeys[], requiredUiKeys[]}
+  reminders_json: text('reminders_json', { mode: 'json' }).notNull(), // string[]
+  notes: text('notes'), // Optional internal notes
+  llm_config_json: text('llm_config_json', { mode: 'json' }).notNull(), // {temperature, top_p, response_format, max_tokens}
+
   active: integer('active', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 }, (table) => ({

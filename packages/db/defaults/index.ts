@@ -139,6 +139,14 @@ async function seedPersonas(
   log: (message: string) => void,
   force: boolean
 ): Promise<boolean> {
+  // TODO Phase 12-14: Re-enable after PersonaWizard implementation
+  // Per R10: Old TEXT blob persona seeding disabled
+  // Personas will be created through PersonaWizard UI (Phases 13-14)
+  // DEFAULT_PERSONAS uses old TEXT blob structure which we're migrating away from
+  log('   ⏭ Persona seeding temporarily disabled (Phase 12 migration)');
+  return false;
+
+  /* OLD TEXT BLOB IMPLEMENTATION - REMOVED PER R10
   const existing = await db.select({ id: personas.id }).from(personas).limit(1);
   const shouldSeed = force || existing.length === 0;
   if (!shouldSeed) {
@@ -161,7 +169,7 @@ async function seedPersonas(
     eye: persona.eye,
     name: persona.name,
     version: persona.version,
-    content: persona.content,
+    content: persona.content, // <- OLD TEXT BLOB
     active: true,
     createdAt: now,
   }));
@@ -177,6 +185,7 @@ async function seedPersonas(
 
   log('  • Personas seeded');
   return true;
+  */
 }
 
 async function seedRouting(
