@@ -20,15 +20,15 @@ import type {
 import { ChevronLeft, ChevronRight, Save, X } from 'lucide-react';
 import { MetadataStep } from './steps/MetadataStep';
 import { MissionStep } from './steps/MissionStep';
+import { EnvelopeStep } from './steps/EnvelopeStep';
+import { NotesStep } from './steps/NotesStep';
+import { LLMConfigStep } from './steps/LLMConfigStep';
 import {
   GuidanceStep,
   ValidationStep,
-  EnvelopeStep,
   RemindersStep,
-  NotesStep,
   ReviewStep,
 } from './steps/PlaceholderSteps';
-import { LLMConfigStep } from './steps/LLMConfigStep';
 
 /**
  * PersonaWizard - Multi-step form for persona configuration
