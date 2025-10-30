@@ -15,6 +15,8 @@ import { renderPersonaPrompt, getPersonaBlueprint } from '@third-eye/eyes';
 import { getStageTemplate } from '@third-eye/constants';
 import { EyeStageToken } from '@third-eye/constants';
 import { capabilityProgress } from './capability-progress';
+import { retryWithThrow } from './provider-retry';
+import { RETRY_CONFIG } from '@third-eye/constants';
 
 function isSupportedProvider(value: unknown): value is ProviderType {
   if (typeof value !== 'string') {
@@ -274,7 +276,7 @@ export class EyeOrchestrator {
       const stage = EyeStageToken.GUIDANCE; // TODO: Get actual stage from context
       
       // Retry loop for persona guard validation
-      const MAX_PERSONA_RETRIES = 3;
+      const MAX_PERSONA_RETRIES = RETRY_CONFIG.MAX_PERSONA_RETRIES;
       let attempt = 0;
       let envelope: BaseEnvelope | null = null;
       let latencyMs = 0;
@@ -324,18 +326,26 @@ export class EyeOrchestrator {
           personaPrompt = renderPersonaPrompt(blueprint, stage, enrichedInput);
         }
 
-        // 7. Call provider with persona as system prompt
+        // 7. Call provider with persona as system prompt (with retry logic)
         try {
-          completion = await provider.complete({
-            model: targetModel,
-            messages: [
-              { role: 'system', content: personaPrompt.systemPrompt },
-              { role: 'user', content: personaPrompt.userMessage }
-            ],
-            temperature: options.temperature ?? personaPrompt.config.temperature,
-            max_tokens: options.maxTokens ?? 4096,
-            response_format: personaPrompt.config.response_format,
-          });
+          completion = await retryWithThrow(
+            async () => provider.complete({
+              model: targetModel,
+              messages: [
+                { role: 'system', content: personaPrompt.systemPrompt },
+                { role: 'user', content: personaPrompt.userMessage }
+              ],
+              temperature: options.temperature ?? personaPrompt.config.temperature,
+              max_tokens: options.maxTokens ?? 4096,
+              response_format: personaPrompt.config.response_format,
+            }),
+            {
+              context: `${providerType}/${targetModel} API call for ${eyeName} Eye`,
+              onRetry: (attemptNum, maxAttempts, delayMs, error) => {
+                console.warn(`🔄 Retrying ${eyeName} provider call (${attemptNum}/${maxAttempts}) after ${delayMs}ms`);
+              },
+            }
+          );
 
           latencyMs = Date.now() - attemptStartTime;
 
