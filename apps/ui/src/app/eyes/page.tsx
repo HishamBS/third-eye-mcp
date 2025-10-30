@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Eye as EyeIcon, Sparkles } from 'lucide-react';
+import { Eye as EyeIcon, Sparkles, Settings } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useDialog } from '@/hooks/useDialog';
 import { EmptyState } from '@/components/EmptyState';
 import { HelpIcon } from '@/components/HelpIcon';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import { UI_HELP_TEXT } from '@third-eye/constants';
+import { PersonaWizardModal } from '@/components/persona-form/PersonaWizardModal';
 
 interface Eye {
   id: string;
@@ -73,6 +74,10 @@ export default function EyesPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Phase 15: Persona configuration modal
+  const [isPersonaModalOpen, setIsPersonaModalOpen] = useState(false);
+  const [selectedPersonaEye, setSelectedPersonaEye] = useState<{ id: string; name: string } | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -438,6 +443,22 @@ export default function EyesPage() {
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
+  };
+
+  // Phase 15: Persona configuration handlers
+  const openPersonaConfig = (eye: Eye) => {
+    setSelectedPersonaEye({ id: eye.id, name: eye.name });
+    setIsPersonaModalOpen(true);
+  };
+
+  const closePersonaConfig = () => {
+    setIsPersonaModalOpen(false);
+    setSelectedPersonaEye(null);
+  };
+
+  const handlePersonaSaved = () => {
+    setSuccess(UI_HELP_TEXT.EYES_SUCCESS_PERSONA_SAVED);
+    fetchEyes(); // Refresh eyes list to show updated persona status
   };
 
   return (
@@ -819,68 +840,82 @@ export default function EyesPage() {
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {getFilteredEyes().map((eye, index) => (
-                <Link key={eye.id} href={`/eyes/${eye.id}`}>
                   <motion.div
+                    key={eye.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05, duration: 0.3 }}
                     whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
-                    whileTap={{ scale: 0.97 }}
-                    className={`cursor-pointer rounded-2xl border p-6 text-left shadow-lg transition-all duration-300 hover:shadow-2xl hover:border-brand-accent/50 ${getEyeColor(eye.id)} focus-within:ring-2 focus-within:ring-brand-accent focus-within:ring-offset-2 focus-within:ring-offset-brand-ink`}
+                    className={`rounded-2xl border p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:border-brand-accent/50 ${getEyeColor(eye.id)}`}
                   >
-                    <div className="mb-4 text-center">
-                      <div className="mb-3 flex justify-center">
-                        <img 
-                          src={getEyeIconPath(eye.id)} 
-                          alt={`${eye.name} icon`}
-                          className="h-16 w-16"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
-                        />
-                      </div>
-                      <h3 className="mb-1 text-xl font-bold text-white">{eye.name}</h3>
-                      <div className="mb-2 flex items-center justify-center gap-2">
-                        <span className="text-sm text-white/80">v{eye.version}</span>
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs ${
-                            eye.source === 'built-in'
-                              ? 'bg-white/20 text-white'
-                              : 'bg-green-500/30 text-green-100'
-                          }`}
-                        >
-                          {eye.source}
-                        </span>
-                      </div>
-                      
-                      {/* Capabilities pills if available */}
-                      {eye.capabilities && eye.capabilities.length > 0 && (
-                        <div className="mb-3 flex flex-wrap justify-center gap-2">
-                          {eye.capabilities.map((cap, idx) => (
-                            <span 
-                              key={idx} 
-                              className="rounded-full bg-brand-accent/20 px-2 py-1 text-xs text-brand-accent"
-                            >
-                              {toHumanReadable(cap)}
-                            </span>
-                          ))}
+                    <Link href={`/eyes/${eye.id}`} className="block">
+                      <div className="mb-4 text-center">
+                        <div className="mb-3 flex justify-center">
+                          <img
+                            src={getEyeIconPath(eye.id)}
+                            alt={`${eye.name} icon`}
+                            className="h-16 w-16"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
                         </div>
-                      )}
+                        <h3 className="mb-1 text-xl font-bold text-white">{eye.name}</h3>
+                        <div className="mb-2 flex items-center justify-center gap-2">
+                          <span className="text-sm text-white/80">v{eye.version}</span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs ${
+                              eye.source === 'built-in'
+                                ? 'bg-white/20 text-white'
+                                : 'bg-green-500/30 text-green-100'
+                            }`}
+                          >
+                            {eye.source}
+                          </span>
+                        </div>
+
+                        {/* Capabilities pills if available */}
+                        {eye.capabilities && eye.capabilities.length > 0 && (
+                          <div className="mb-3 flex flex-wrap justify-center gap-2">
+                            {eye.capabilities.map((cap, idx) => (
+                              <span
+                                key={idx}
+                                className="rounded-full bg-brand-accent/20 px-2 py-1 text-xs text-brand-accent"
+                              >
+                                {toHumanReadable(cap)}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <p className="line-clamp-3 text-center text-sm text-white/90">
+                        {eye.description}
+                      </p>
+                    </Link>
+
+                    {/* Phase 15: Configure Persona button */}
+                    <div className="mt-4 border-t border-white/20 pt-4">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openPersonaConfig(eye);
+                        }}
+                        className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-accent/10 px-4 py-2 text-sm font-medium text-brand-accent transition-all hover:bg-brand-accent/20 hover:scale-105 active:scale-95"
+                      >
+                        <Settings className="h-4 w-4" />
+                        {UI_HELP_TEXT.EYES_BUTTON_CONFIGURE_PERSONA}
+                      </button>
                     </div>
 
-                    <p className="line-clamp-3 text-center text-sm text-white/90">
-                      {eye.description}
-                    </p>
-
                     {eye.source === 'custom' && (
-                      <div className="mt-4 border-t border-white/20 pt-4 text-center">
+                      <div className="mt-2 text-center">
                         <span className="text-xs text-white/70">
                           {UI_HELP_TEXT.EYES_CREATED_PREFIX} {new Date(eye.createdAt!).toLocaleDateString()}
                         </span>
                       </div>
                     )}
                   </motion.div>
-                </Link>
               ))}
               </div>
             )}
@@ -908,6 +943,17 @@ export default function EyesPage() {
           </div>
         )}
       </div>
+
+      {/* Phase 15: Persona Configuration Modal */}
+      {selectedPersonaEye && (
+        <PersonaWizardModal
+          isOpen={isPersonaModalOpen}
+          eyeId={selectedPersonaEye.id}
+          eyeName={selectedPersonaEye.name}
+          onClose={closePersonaConfig}
+          onSave={handlePersonaSaved}
+        />
+      )}
     </div>
   );
 }

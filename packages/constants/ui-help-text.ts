@@ -115,6 +115,18 @@ export const UI_HELP_TEXT = Object.freeze({
   // Eyes Page - Date Display
   EYES_CREATED_PREFIX: 'Created',
 
+  // Eyes Page - Persona Configuration (Phase 15)
+  EYES_BUTTON_CONFIGURE_PERSONA: 'Configure Persona',
+  EYES_PERSONA_MODAL_TITLE: 'Configure Persona for {eyeName}',
+  EYES_PERSONA_MODAL_SUBTITLE: 'Define the AI behavior and capabilities for this Eye',
+  EYES_PERSONA_MODAL_CLOSE: 'Close Without Saving',
+  EYES_PERSONA_MODAL_SAVE: 'Save Persona',
+  EYES_PERSONA_CONFIGURED_BADGE: 'Persona Configured',
+  EYES_PERSONA_NOT_CONFIGURED: 'No Persona',
+  EYES_ERROR_PERSONA_LOAD_FAILED: 'Failed to load persona configuration',
+  EYES_ERROR_PERSONA_SAVE_FAILED: 'Failed to save persona configuration',
+  EYES_SUCCESS_PERSONA_SAVED: 'Persona configuration saved successfully',
+
   // Personas Page - Navigation
   PERSONAS_NAV_HOME: '← Home',
   PERSONAS_NAV_MODELS: 'Models',
