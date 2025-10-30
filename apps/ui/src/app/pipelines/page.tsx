@@ -279,10 +279,10 @@ export default function PipelinesPage() {
   const handleCancel = async () => {
     if (hasUnsavedChanges) {
       const confirmed = await dialog.confirm(
-        'Discard Changes',
-        'You have unsaved changes. Are you sure you want to discard them?',
-        'Discard',
-        'Cancel'
+        UI_HELP_TEXT.PIPELINES_DIALOG_DISCARD_TITLE,
+        UI_HELP_TEXT.PIPELINES_DIALOG_DISCARD_MESSAGE,
+        UI_HELP_TEXT.PIPELINES_DIALOG_DISCARD_CONFIRM,
+        UI_HELP_TEXT.PIPELINES_DIALOG_DISCARD_CANCEL
       );
       if (!confirmed) {
         return;
@@ -309,7 +309,7 @@ export default function PipelinesPage() {
 
   const handleSubmit = async () => {
     if (!formData.name || !formData.description || !formData.workflow) {
-      await dialog.alert('Validation Error', 'Please fill in all required fields');
+      await dialog.alert(UI_HELP_TEXT.PIPELINES_ALERT_VALIDATION_TITLE, UI_HELP_TEXT.PIPELINES_ALERT_VALIDATION_MESSAGE);
       return;
     }
 
@@ -317,7 +317,7 @@ export default function PipelinesPage() {
     try {
       workflowJson = JSON.parse(formData.workflow);
     } catch (e) {
-      await dialog.alert('Invalid JSON', 'Invalid JSON in workflow field. Please check your syntax.');
+      await dialog.alert(UI_HELP_TEXT.PIPELINES_ALERT_INVALID_JSON_TITLE, UI_HELP_TEXT.PIPELINES_ALERT_INVALID_JSON_MESSAGE);
       return;
     }
 
@@ -337,7 +337,7 @@ export default function PipelinesPage() {
       });
 
       if (response.ok) {
-        setSuccess('Pipeline saved successfully');
+        setSuccess(UI_HELP_TEXT.PIPELINES_SUCCESS_SAVED);
         setHasUnsavedChanges(false);
         await fetchPipelines();
         handleCancel();
@@ -371,10 +371,10 @@ export default function PipelinesPage() {
 
   const handleDelete = async (pipelineId: string) => {
     const confirmed = await dialog.confirm(
-      'Deactivate Pipeline',
-      'Are you sure you want to deactivate this pipeline?',
-      'Deactivate',
-      'Cancel'
+      UI_HELP_TEXT.PIPELINES_DIALOG_DEACTIVATE_TITLE,
+      UI_HELP_TEXT.PIPELINES_DIALOG_DEACTIVATE_MESSAGE,
+      UI_HELP_TEXT.PIPELINES_DIALOG_DEACTIVATE_CONFIRM,
+      UI_HELP_TEXT.PIPELINES_DIALOG_DEACTIVATE_CANCEL
     );
 
     if (!confirmed) {
@@ -422,26 +422,26 @@ export default function PipelinesPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
               <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent" aria-label={UI_HELP_TEXT.ARIA_NAV_HOME}>
-                ← Home
+                {UI_HELP_TEXT.PIPELINES_NAV_HOME}
               </Link>
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Workflows</p>
-                <h1 className="mt-1 text-2xl font-semibold text-white">Pipelines</h1>
+                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">{UI_HELP_TEXT.PIPELINES_SECTION_LABEL}</p>
+                <h1 className="mt-1 text-2xl font-semibold text-white">{UI_HELP_TEXT.PIPELINES_HEADER_TITLE}</h1>
               </div>
             </div>
             <div className="flex gap-4">
               <Link href="/models" className="text-sm text-slate-400 transition-colors hover:text-white" aria-label={UI_HELP_TEXT.ARIA_NAV_MODELS}>
-                Models
+                {UI_HELP_TEXT.PIPELINES_NAV_MODELS}
               </Link>
               <Link href="/personas" className="text-sm text-slate-400 transition-colors hover:text-white" aria-label={UI_HELP_TEXT.ARIA_NAV_PERSONAS}>
-                Personas
+                {UI_HELP_TEXT.PIPELINES_NAV_PERSONAS}
               </Link>
               <button
                 onClick={handleCreate}
                 aria-label={UI_HELP_TEXT.ARIA_CREATE_PIPELINE}
                 className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition-all duration-200 hover:bg-brand-primary hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink active:scale-95"
               >
-                + Create Pipeline
+                {UI_HELP_TEXT.PIPELINES_BUTTON_CREATE}
               </button>
             </div>
           </div>
@@ -478,14 +478,14 @@ export default function PipelinesPage() {
         {/* Pipeline Selector */}
         <div className="mb-8">
           <label className="mb-3 block text-sm font-semibold uppercase tracking-[0.2em] text-brand-accent">
-            Select Pipeline
+            {UI_HELP_TEXT.PIPELINES_LABEL_SELECT_PIPELINE}
           </label>
           <select
             value={selectedPipeline}
             onChange={(e) => setSelectedPipeline(e.target.value)}
             className="w-full max-w-xl rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
           >
-            <option value="">-- Choose a pipeline --</option>
+            <option value="">{UI_HELP_TEXT.PIPELINES_SELECT_CHOOSE}</option>
             {uniquePipelines.map((pipeline) => (
               <option key={pipeline.name} value={pipeline.name}>
                 {pipeline.name} (v{pipeline.version}) - {pipeline.category}
@@ -510,7 +510,7 @@ export default function PipelinesPage() {
                     {uniquePipelines.find(p => p.name === selectedPipeline)?.active && (
                       <>
                         <span>•</span>
-                        <span className="text-green-400">Active</span>
+                        <span className="text-green-400">{UI_HELP_TEXT.PIPELINES_BADGE_ACTIVE}</span>
                       </>
                     )}
                   </div>
@@ -525,7 +525,7 @@ export default function PipelinesPage() {
                     aria-label={UI_HELP_TEXT.ARIA_RUN_PIPELINE}
                     className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
                   >
-                    {runningPipeline ? 'Running...' : 'Run Pipeline'}
+                    {runningPipeline ? UI_HELP_TEXT.PIPELINES_BUTTON_RUNNING : UI_HELP_TEXT.PIPELINES_BUTTON_RUN}
                   </button>
                   <button
                     onClick={() => {
@@ -535,7 +535,7 @@ export default function PipelinesPage() {
                     aria-label={UI_HELP_TEXT.ARIA_EDIT_PIPELINE}
                     className="rounded-full border border-brand-outline/50 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
                   >
-                    Edit
+                    {UI_HELP_TEXT.PIPELINES_BUTTON_EDIT}
                   </button>
                 </div>
               </div>
@@ -549,18 +549,18 @@ export default function PipelinesPage() {
               /* Pipeline Runs */
               <GlassCard>
                 <div className="mb-6 flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-white">Pipeline Runs</h2>
+                  <h2 className="text-xl font-semibold text-white">{UI_HELP_TEXT.PIPELINES_SECTION_RUNS}</h2>
                   <button
                     onClick={() => setShowRuns(false)}
                     className="text-sm text-slate-400 transition-colors hover:text-white"
                   >
-                    Back to Versions
+                    {UI_HELP_TEXT.PIPELINES_BUTTON_BACK_TO_VERSIONS}
                   </button>
                 </div>
 
                 {pipelineRuns.length === 0 ? (
                   <div className="py-12 text-center">
-                    <p className="text-lg text-slate-400">No runs yet</p>
+                    <p className="text-lg text-slate-400">{UI_HELP_TEXT.PIPELINES_EMPTY_NO_RUNS}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -603,14 +603,14 @@ export default function PipelinesPage() {
               <GlassCard>
                 <div className="mb-6 flex items-center justify-between">
                   <h2 className="text-xl font-semibold text-white">
-                    {isCreating ? 'Create New Pipeline' : `Edit ${formData.name}`}
+                    {isCreating ? UI_HELP_TEXT.PIPELINES_TITLE_CREATE : UI_HELP_TEXT.PIPELINES_TITLE_EDIT.replace('{name}', formData.name)}
                   </h2>
                   <div className="flex gap-3">
                     <button
                       onClick={handleCancel}
                       className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
                     >
-                      Cancel
+                      {UI_HELP_TEXT.PIPELINES_BUTTON_CANCEL}
                     </button>
                     <button
                       onClick={handleSubmit}
@@ -618,7 +618,7 @@ export default function PipelinesPage() {
                       aria-label={UI_HELP_TEXT.ARIA_SAVE_PIPELINE}
                       className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary disabled:opacity-50"
                     >
-                      {loading ? 'Saving...' : 'Save Pipeline'}
+                      {loading ? UI_HELP_TEXT.PIPELINES_BUTTON_SAVING : UI_HELP_TEXT.PIPELINES_BUTTON_SAVE}
                     </button>
                   </div>
                 </div>
@@ -626,7 +626,7 @@ export default function PipelinesPage() {
                 <div className="space-y-6">
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-300">
-                      Name {isCreating && <span className="text-brand-primary">*</span>}
+                      {UI_HELP_TEXT.PIPELINES_LABEL_NAME} {isCreating && <span className="text-brand-primary">*</span>}
                     </label>
                     <input
                       type="text"
@@ -634,38 +634,38 @@ export default function PipelinesPage() {
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       disabled={isEditing}
                       className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
-                      placeholder="my_pipeline"
+                      placeholder={UI_HELP_TEXT.PIPELINES_PLACEHOLDER_NAME}
                     />
                   </div>
 
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-300">
-                      Description <span className="text-brand-primary">*</span>
+                      {UI_HELP_TEXT.PIPELINES_LABEL_DESCRIPTION} <span className="text-brand-primary">*</span>
                     </label>
                     <textarea
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       className="h-24 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
-                      placeholder="Describe what this pipeline does..."
+                      placeholder={UI_HELP_TEXT.PIPELINES_PLACEHOLDER_DESCRIPTION}
                     />
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">Category</label>
+                    <label className="mb-2 block text-sm font-medium text-slate-300">{UI_HELP_TEXT.PIPELINES_LABEL_CATEGORY}</label>
                     <select
                       value={formData.category}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                       className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                     >
-                      <option value="custom">Custom</option>
-                      <option value="built-in">Built-in</option>
+                      <option value="custom">{UI_HELP_TEXT.PIPELINES_SELECT_CUSTOM}</option>
+                      <option value="built-in">{UI_HELP_TEXT.PIPELINES_SELECT_BUILTIN}</option>
                     </select>
                   </div>
 
                   {/* Editor Mode Toggle */}
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-300">
-                      Workflow Editor
+                      {UI_HELP_TEXT.PIPELINES_LABEL_WORKFLOW_EDITOR}
                     </label>
                     <div className="flex gap-2 rounded-xl border border-brand-outline/50 bg-brand-paper p-1">
                       <button
@@ -677,7 +677,7 @@ export default function PipelinesPage() {
                             : 'text-slate-400 hover:text-white'
                         }`}
                       >
-                        Visual Builder
+                        {UI_HELP_TEXT.PIPELINES_BUTTON_VISUAL_BUILDER}
                       </button>
                       <button
                         type="button"
@@ -688,7 +688,7 @@ export default function PipelinesPage() {
                             : 'text-slate-400 hover:text-white'
                         }`}
                       >
-                        JSON Editor
+                        {UI_HELP_TEXT.PIPELINES_BUTTON_JSON_EDITOR}
                       </button>
                     </div>
                   </div>
@@ -696,7 +696,7 @@ export default function PipelinesPage() {
                   {/* Workflow Editor */}
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-300">
-                      Workflow <span className="text-brand-primary">*</span>
+                      {UI_HELP_TEXT.PIPELINES_LABEL_WORKFLOW} <span className="text-brand-primary">*</span>
                     </label>
                     {editorMode === 'visual' ? (
                       <div className="overflow-hidden rounded-xl">
@@ -726,7 +726,7 @@ export default function PipelinesPage() {
                         value={formData.workflow}
                         onChange={(e) => setFormData({ ...formData, workflow: e.target.value })}
                         className="h-96 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-green-400 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
-                        placeholder='{"steps": [...]}'
+                        placeholder={UI_HELP_TEXT.PIPELINES_PLACEHOLDER_JSON}
                       />
                     )}
                   </div>
@@ -743,7 +743,7 @@ export default function PipelinesPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                         <span className="text-sm font-medium text-white">
-                          You have unsaved changes to this pipeline
+                          {UI_HELP_TEXT.PIPELINES_MESSAGE_UNSAVED}
                         </span>
                       </div>
                       <div className="flex gap-3">
@@ -752,27 +752,27 @@ export default function PipelinesPage() {
                           disabled={loading}
                           className="rounded-lg border border-brand-outline/40 bg-brand-paper px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-brand-paperElev disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          Discard Changes
+                          {UI_HELP_TEXT.PIPELINES_BUTTON_DISCARD}
                         </button>
                         <button
                           onClick={handleSubmit}
                           disabled={loading}
                           className="rounded-lg bg-brand-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          {loading ? 'Saving...' : 'Save Pipeline'}
+                          {loading ? UI_HELP_TEXT.PIPELINES_BUTTON_SAVING : UI_HELP_TEXT.PIPELINES_BUTTON_SAVE}
                         </button>
                       </div>
                     </motion.div>
                   )}
 
                   <div className="rounded-xl border border-yellow-700/50 bg-yellow-900/10 p-5">
-                    <h4 className="font-medium text-yellow-300">Pipeline Workflow Format</h4>
+                    <h4 className="font-medium text-yellow-300">{UI_HELP_TEXT.PIPELINES_HELP_FORMAT_TITLE}</h4>
                     <ul className="mt-3 space-y-1 text-sm text-yellow-100">
-                      <li>• Define workflow as JSON with array of steps</li>
-                      <li>• Each step has: id, eye (or type), next</li>
-                      <li>• Conditional steps: type: 'condition', condition, true, false</li>
-                      <li>• User input steps: type: 'user_input', prompt, next</li>
-                      <li>• Terminal step: type: 'terminal'</li>
+                      <li>{UI_HELP_TEXT.PIPELINES_HELP_FORMAT_1}</li>
+                      <li>{UI_HELP_TEXT.PIPELINES_HELP_FORMAT_2}</li>
+                      <li>{UI_HELP_TEXT.PIPELINES_HELP_FORMAT_3}</li>
+                      <li>{UI_HELP_TEXT.PIPELINES_HELP_FORMAT_4}</li>
+                      <li>{UI_HELP_TEXT.PIPELINES_HELP_FORMAT_5}</li>
                     </ul>
                   </div>
                 </div>
@@ -782,19 +782,19 @@ export default function PipelinesPage() {
               <GlassCard>
                 <div className="mb-6 flex items-center justify-between">
                   <h2 className="text-xl font-semibold text-white">
-                    {selectedPipeline} Versions
+                    {UI_HELP_TEXT.PIPELINES_SECTION_VERSIONS.replace('{name}', selectedPipeline)}
                   </h2>
                   <button
                     onClick={() => setShowRuns(true)}
                     className="rounded-full border border-brand-outline/50 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
                   >
-                    View Runs ({pipelineRuns.length})
+                    {UI_HELP_TEXT.PIPELINES_BUTTON_VIEW_RUNS.replace('{count}', pipelineRuns.length.toString())}
                   </button>
                 </div>
 
                 {pipelineVersions.length === 0 ? (
                   <div className="py-12 text-center">
-                    <p className="text-lg text-slate-400">No versions found</p>
+                    <p className="text-lg text-slate-400">{UI_HELP_TEXT.PIPELINES_EMPTY_NO_VERSIONS}</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -813,7 +813,7 @@ export default function PipelinesPage() {
                               Version {version.version}
                               {version.active && (
                                 <span className="ml-2 rounded-full bg-green-500/20 px-2 py-1 text-xs text-green-400">
-                                  Active
+                                  {UI_HELP_TEXT.PIPELINES_BADGE_ACTIVE_VERSION}
                                 </span>
                               )}
                             </h3>
@@ -828,14 +828,14 @@ export default function PipelinesPage() {
                                 onClick={() => handleActivate(version.id)}
                                 className="rounded-full bg-green-600 px-3 py-1 text-sm text-white transition-colors hover:bg-green-700"
                               >
-                                Activate
+                                {UI_HELP_TEXT.PIPELINES_BUTTON_ACTIVATE}
                               </button>
                             )}
                             <button
                               onClick={() => handleDelete(version.id)}
                               className="rounded-full bg-red-600 px-3 py-1 text-sm text-white transition-colors hover:bg-red-700"
                             >
-                              Delete
+                              {UI_HELP_TEXT.PIPELINES_BUTTON_DELETE}
                             </button>
                           </div>
                         </div>
@@ -844,7 +844,7 @@ export default function PipelinesPage() {
                           {/* Visual Flow Diagram */}
                           {version.workflowJson?.steps && (
                             <div className="rounded-lg border border-brand-outline/40 bg-brand-paper/70 p-4">
-                              <h4 className="mb-3 text-sm font-semibold text-slate-300">Visual Flow</h4>
+                              <h4 className="mb-3 text-sm font-semibold text-slate-300">{UI_HELP_TEXT.PIPELINES_LABEL_VISUAL_FLOW}</h4>
                               <div className="overflow-hidden rounded-lg">
                                 <PipelineFlowBuilder
                                   workflowJson={version.workflowJson}
@@ -858,7 +858,7 @@ export default function PipelinesPage() {
                           {version.workflowJson?.steps && (
                             <details className="rounded-lg border border-brand-outline/40 bg-brand-paper/70 p-4">
                               <summary className="cursor-pointer text-sm font-semibold text-slate-300">
-                                View Steps List
+                                {UI_HELP_TEXT.PIPELINES_BUTTON_VIEW_STEPS}
                               </summary>
                               <div className="mt-3 space-y-2">
                                 {version.workflowJson.steps.map((step, idx: number) => (
@@ -903,7 +903,7 @@ export default function PipelinesPage() {
                           {/* JSON View */}
                           <details className="rounded-lg bg-brand-paper/70 p-3">
                             <summary className="cursor-pointer text-sm font-medium text-slate-300">
-                              View Raw JSON
+                              {UI_HELP_TEXT.PIPELINES_BUTTON_VIEW_JSON}
                             </summary>
                             <pre className="mt-2 overflow-x-auto whitespace-pre-wrap text-xs text-slate-400">
                               {JSON.stringify(version.workflowJson, null, 2)}
@@ -918,16 +918,16 @@ export default function PipelinesPage() {
             ) : (
               /* Welcome Screen */
               <GlassCard className="p-12 text-center">
-                <h2 className="mb-4 text-2xl font-semibold text-white">Pipeline Management</h2>
+                <h2 className="mb-4 text-2xl font-semibold text-white">{UI_HELP_TEXT.PIPELINES_WELCOME_TITLE}</h2>
                 <p className="mb-6 text-lg text-slate-400">
-                  Select a pipeline above to view versions or create a new one
+                  {UI_HELP_TEXT.PIPELINES_WELCOME_SUBTITLE}
                 </p>
                 <div className="space-y-2 text-sm text-slate-500">
-                  <p>• Orchestrate multi-Eye workflows with sequential validation</p>
-                  <p>• Add conditional logic and user input steps</p>
-                  <p>• Version control for pipeline iterations</p>
-                  <p>• Activate/deactivate pipeline versions</p>
-                  <p>• See the <strong>system-default</strong> pipeline for a comprehensive example</p>
+                  <p>{UI_HELP_TEXT.PIPELINES_WELCOME_BULLET_1}</p>
+                  <p>{UI_HELP_TEXT.PIPELINES_WELCOME_BULLET_2}</p>
+                  <p>{UI_HELP_TEXT.PIPELINES_WELCOME_BULLET_3}</p>
+                  <p>{UI_HELP_TEXT.PIPELINES_WELCOME_BULLET_4}</p>
+                  <p dangerouslySetInnerHTML={{ __html: UI_HELP_TEXT.PIPELINES_WELCOME_BULLET_5 }} />
                 </div>
               </GlassCard>
             )}

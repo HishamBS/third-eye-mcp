@@ -365,6 +365,103 @@ export const UI_HELP_TEXT = Object.freeze({
   // Dashboard / Homepage
   DASHBOARD_PLATFORM_HIGHLIGHTS_TITLE: 'Platform Highlights',
   DASHBOARD_PLATFORM_HIGHLIGHTS_SUBTITLE: 'Powerful tools for AI orchestration, validation, and analysis. All features work with real-time data.',
+
+  // Pipelines Page - Navigation
+  PIPELINES_NAV_HOME: '← Home',
+  PIPELINES_NAV_MODELS: 'Models',
+  PIPELINES_NAV_PERSONAS: 'Personas',
+  PIPELINES_SECTION_LABEL: 'Workflows',
+  PIPELINES_HEADER_TITLE: 'Pipelines',
+
+  // Pipelines Page - Buttons
+  PIPELINES_BUTTON_CREATE: '+ Create Pipeline',
+  PIPELINES_BUTTON_RUN: 'Run Pipeline',
+  PIPELINES_BUTTON_RUNNING: 'Running...',
+  PIPELINES_BUTTON_EDIT: 'Edit',
+  PIPELINES_BUTTON_BACK_TO_VERSIONS: 'Back to Versions',
+  PIPELINES_BUTTON_CANCEL: 'Cancel',
+  PIPELINES_BUTTON_SAVE: 'Save Pipeline',
+  PIPELINES_BUTTON_SAVING: 'Saving...',
+  PIPELINES_BUTTON_VISUAL_BUILDER: 'Visual Builder',
+  PIPELINES_BUTTON_JSON_EDITOR: 'JSON Editor',
+  PIPELINES_BUTTON_DISCARD: 'Discard Changes',
+  PIPELINES_BUTTON_VIEW_RUNS: 'View Runs ({count})',
+  PIPELINES_BUTTON_ACTIVATE: 'Activate',
+  PIPELINES_BUTTON_DELETE: 'Delete',
+  PIPELINES_BUTTON_VIEW_STEPS: 'View Steps List',
+  PIPELINES_BUTTON_VIEW_JSON: 'View Raw JSON',
+
+  // Pipelines Page - Section Headers
+  PIPELINES_SECTION_RUNS: 'Pipeline Runs',
+  PIPELINES_SECTION_VERSIONS: '{name} Versions',
+
+  // Pipelines Page - Form Labels
+  PIPELINES_LABEL_NAME: 'Name',
+  PIPELINES_LABEL_DESCRIPTION: 'Description',
+  PIPELINES_LABEL_CATEGORY: 'Category',
+  PIPELINES_LABEL_WORKFLOW_EDITOR: 'Workflow Editor',
+  PIPELINES_LABEL_WORKFLOW: 'Workflow',
+  PIPELINES_LABEL_SELECT_PIPELINE: 'Select Pipeline',
+  PIPELINES_LABEL_VISUAL_FLOW: 'Visual Flow',
+
+  // Pipelines Page - Placeholders
+  PIPELINES_PLACEHOLDER_NAME: 'my_pipeline',
+  PIPELINES_PLACEHOLDER_DESCRIPTION: 'Describe what this pipeline does...',
+  PIPELINES_PLACEHOLDER_JSON: '{"steps": [...]}',
+
+  // Pipelines Page - Dropdown Options
+  PIPELINES_SELECT_CHOOSE: '-- Choose a pipeline --',
+  PIPELINES_SELECT_CUSTOM: 'Custom',
+  PIPELINES_SELECT_BUILTIN: 'Built-in',
+
+  // Pipelines Page - Badges
+  PIPELINES_BADGE_ACTIVE: 'Active',
+  PIPELINES_BADGE_ACTIVE_VERSION: 'Active',
+
+  // Pipelines Page - Empty States
+  PIPELINES_EMPTY_NO_RUNS: 'No runs yet',
+  PIPELINES_EMPTY_NO_VERSIONS: 'No versions found',
+
+  // Pipelines Page - Messages
+  PIPELINES_MESSAGE_UNSAVED: 'You have unsaved changes to this pipeline',
+  PIPELINES_TITLE_CREATE: 'Create New Pipeline',
+  PIPELINES_TITLE_EDIT: 'Edit {name}',
+
+  // Pipelines Page - Dialogs
+  PIPELINES_DIALOG_DISCARD_TITLE: 'Discard Changes',
+  PIPELINES_DIALOG_DISCARD_MESSAGE: 'You have unsaved changes. Are you sure you want to discard them?',
+  PIPELINES_DIALOG_DISCARD_CONFIRM: 'Discard',
+  PIPELINES_DIALOG_DISCARD_CANCEL: 'Cancel',
+  PIPELINES_DIALOG_DEACTIVATE_TITLE: 'Deactivate Pipeline',
+  PIPELINES_DIALOG_DEACTIVATE_MESSAGE: 'Are you sure you want to deactivate this pipeline?',
+  PIPELINES_DIALOG_DEACTIVATE_CONFIRM: 'Deactivate',
+  PIPELINES_DIALOG_DEACTIVATE_CANCEL: 'Cancel',
+
+  // Pipelines Page - Alerts
+  PIPELINES_ALERT_VALIDATION_TITLE: 'Validation Error',
+  PIPELINES_ALERT_VALIDATION_MESSAGE: 'Please fill in all required fields',
+  PIPELINES_ALERT_INVALID_JSON_TITLE: 'Invalid JSON',
+  PIPELINES_ALERT_INVALID_JSON_MESSAGE: 'Invalid JSON in workflow field. Please check your syntax.',
+
+  // Pipelines Page - Success Messages
+  PIPELINES_SUCCESS_SAVED: 'Pipeline saved successfully',
+
+  // Pipelines Page - Welcome Screen
+  PIPELINES_WELCOME_TITLE: 'Pipeline Management',
+  PIPELINES_WELCOME_SUBTITLE: 'Select a pipeline above to view versions or create a new one',
+  PIPELINES_WELCOME_BULLET_1: '• Orchestrate multi-Eye workflows with sequential validation',
+  PIPELINES_WELCOME_BULLET_2: '• Add conditional logic and user input steps',
+  PIPELINES_WELCOME_BULLET_3: '• Version control for pipeline iterations',
+  PIPELINES_WELCOME_BULLET_4: '• Activate/deactivate pipeline versions',
+  PIPELINES_WELCOME_BULLET_5: '• See the <strong>system-default</strong> pipeline for a comprehensive example',
+
+  // Pipelines Page - Help Text
+  PIPELINES_HELP_FORMAT_TITLE: 'Pipeline Workflow Format',
+  PIPELINES_HELP_FORMAT_1: '• Define workflow as JSON with array of steps',
+  PIPELINES_HELP_FORMAT_2: '• Each step has: id, eye (or type), next',
+  PIPELINES_HELP_FORMAT_3: '• Conditional steps: type: \'condition\', condition, true, false',
+  PIPELINES_HELP_FORMAT_4: '• User input steps: type: \'user_input\', prompt, next',
+  PIPELINES_HELP_FORMAT_5: '• Terminal step: type: \'terminal\'',
 });
 
 export type UiHelpTextKey = keyof typeof UI_HELP_TEXT;
