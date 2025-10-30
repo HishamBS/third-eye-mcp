@@ -19,6 +19,7 @@ import { useUI } from '@/contexts/UIContext';
 import { ConversationEntry, type ConversationEntryData } from '@/components/monitor/ConversationEntry';
 import { TabButton } from '@/components/monitor/TabButton';
 import { StatusBadge } from '@/components/monitor/StatusBadge';
+import { ViewModeDescription } from '@/components/ViewModeToggle';
 import type { EyeName } from '@third-eye/types';
 import { EYE_DISPLAY_NAMES } from '@third-eye/config/constants';
 import {
@@ -207,7 +208,7 @@ function normalizeWebSocketMessage(message: WSMessage): ConversationEntryData | 
 
 function MonitorContent() {
   const searchParams = useSearchParams();
-  const { selectedSessionId, setSelectedSession } = useUI();
+  const { selectedSessionId, setSelectedSession, viewMode } = useUI();
   const sessionIdFromQuery = searchParams.get('sessionId');
   const sessionId = sessionIdFromQuery ?? selectedSessionId ?? null;
 
@@ -496,15 +497,19 @@ function MonitorContent() {
       </div>
 
       <div className="mx-auto max-w-7xl px-6 py-8">
-        <div className="mb-6 flex gap-2 border-b border-brand-outline/30" role="tablist">
-          {MONITOR_TABS.map((tab) => (
-            <TabButton
-              key={tab.id}
-              tab={tab}
-              isActive={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
-            />
-          ))}
+        <ViewModeDescription />
+
+        <div className="mt-6 mb-6 flex gap-2 border-b border-brand-outline/30" role="tablist">
+          {MONITOR_TABS
+            .filter((tab) => viewMode === 'expert' || tab.id !== MonitorTabId.RAW_JSON)
+            .map((tab) => (
+              <TabButton
+                key={tab.id}
+                tab={tab}
+                isActive={activeTab === tab.id}
+                onClick={() => setActiveTab(tab.id)}
+              />
+            ))}
         </div>
 
         <GlassCard className="p-6">

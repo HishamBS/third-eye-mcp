@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Settings, BarChart3, Loader2, Rocket, Eye as LucideEye } from 'lucide-react';
 import { useUI } from '@/contexts/UIContext';
 import { SessionMemoryPanel } from '@/components/SessionMemoryPanel';
-import { ViewModeToggle } from '@/components/ViewModeToggle';
+import { ViewModeToggle, ViewModeDescription } from '@/components/ViewModeToggle';
 import { StrictnessControls } from '@/components/StrictnessControls';
 import type { PipelineEvent } from '@/types/pipeline';
 import type { Envelope } from '@third-eye/types';
@@ -42,7 +42,7 @@ interface EyeDefinition {
 export default function PlaygroundPage() {
   const params = useParams();
   const sessionId = params.id as string;
-  const { strictness, setSelectedSession } = useUI();
+  const { strictness, setSelectedSession, viewMode } = useUI();
 
   const [session, setSession] = useState<Session | null>(null);
   const [runs, setRuns] = useState<Run[]>([]);
@@ -353,6 +353,7 @@ export default function PlaygroundPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
+        <ViewModeDescription />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left: Task Input */}
           <div className="lg:col-span-2 space-y-6">
@@ -500,9 +501,11 @@ export default function PlaygroundPage() {
                     </p>
                   )}
 
-                  <pre className="mt-4 max-h-64 overflow-x-auto overflow-y-auto rounded bg-gray-900/90 p-3 text-xs text-gray-100">
-                    {JSON.stringify(eyeResult, null, 2)}
-                  </pre>
+                  {viewMode === 'expert' && (
+                    <pre className="mt-4 max-h-64 overflow-x-auto overflow-y-auto rounded bg-gray-900/90 p-3 text-xs text-gray-100">
+                      {JSON.stringify(eyeResult, null, 2)}
+                    </pre>
+                  )}
                 </div>
               )}
             </div>
@@ -533,12 +536,14 @@ export default function PlaygroundPage() {
                             {new Date(run.createdAt).toLocaleString()}
                           </span>
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {run.tokensIn && run.tokensOut && (
-                            <span>{run.tokensIn}→{run.tokensOut} tokens • </span>
-                          )}
-                          {run.latencyMs && <span>{run.latencyMs}ms</span>}
-                        </div>
+                        {viewMode === 'expert' && (
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {run.tokensIn && run.tokensOut && (
+                              <span>{run.tokensIn}→{run.tokensOut} tokens • </span>
+                            )}
+                            {run.latencyMs && <span>{run.latencyMs}ms</span>}
+                          </div>
+                        )}
                       </div>
 
                       <div className="text-sm">

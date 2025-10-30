@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useUI } from '@/contexts/UIContext';
+import { ViewModeToggle, ViewModeDescription } from '@/components/ViewModeToggle';
 
 // Session status color mappings (SSOT)
 const SESSION_STATUS_COLORS = Object.freeze({
@@ -25,6 +27,7 @@ interface Session {
 }
 
 export default function SessionsPage() {
+  const { viewMode } = useUI();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [filteredSessions, setFilteredSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,6 +121,7 @@ export default function SessionsPage() {
               <div className="text-slate-400 text-sm">
                 {filteredSessions.length} of {sessions.length} sessions
               </div>
+              <ViewModeToggle />
               <button
                 onClick={fetchSessions}
                 className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary"
@@ -130,7 +134,9 @@ export default function SessionsPage() {
       </div>
 
       <div className="container mx-auto px-6 py-8">
-        <div className="mb-6 flex gap-4 items-center">
+        <ViewModeDescription />
+
+        <div className="mt-6 mb-6 flex gap-4 items-center">
           <input
             type="text"
             placeholder="Search sessions..."
@@ -200,7 +206,7 @@ export default function SessionsPage() {
                       <div className="text-white text-sm">
                         {session.agentName || 'Unknown Agent'}
                       </div>
-                      {session.model && (
+                      {viewMode === 'expert' && session.model && (
                         <div className="text-slate-400 text-xs font-mono mt-1">
                           {session.model}
                         </div>
