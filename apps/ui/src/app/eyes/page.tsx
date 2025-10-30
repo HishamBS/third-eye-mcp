@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { Eye as EyeIcon, Sparkles } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useDialog } from '@/hooks/useDialog';
+import { EmptyState } from '@/components/EmptyState';
 
 interface Eye {
   id: string;
@@ -797,19 +799,24 @@ export default function EyesPage() {
             </div>
 
             {getFilteredEyes().length === 0 && (
-              <div className="rounded-2xl border border-brand-outline/60 bg-brand-paperElev/80 p-12 text-center shadow-glass">
-                <p className="mb-4 text-lg text-slate-400">
-                  No {viewMode === 'custom' ? 'custom' : ''} Eyes found
-                </p>
-                {viewMode === 'custom' && (
-                  <button
-                    onClick={startCreating}
-                    className="rounded-full bg-brand-accent px-6 py-2.5 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary"
-                  >
-                    Create First Custom Eye
-                  </button>
-                )}
-              </div>
+              <EmptyState
+                icon={viewMode === 'custom' ? Sparkles : EyeIcon}
+                title={viewMode === 'custom' ? 'No Custom Eyes Yet' : viewMode === 'built-in' ? 'No Built-in Eyes Available' : 'No Eyes Found'}
+                description={
+                  viewMode === 'custom'
+                    ? 'Custom Eyes are your own specialized AI agents! Create one to add unique capabilities like fact-checking, tone analysis, or custom validation rules.'
+                    : viewMode === 'built-in'
+                    ? 'Built-in Eyes are pre-configured AI agents that come with Third Eye MCP. They should be available by default.'
+                    : 'Eyes are specialized AI agents that watch over your conversations. Each Eye has unique capabilities - explore them to get started!'
+                }
+                actions={
+                  viewMode === 'custom'
+                    ? [{ label: 'Create Your First Eye', onClick: startCreating, variant: 'primary' }]
+                    : viewMode === 'all'
+                    ? [{ label: 'View Built-in Eyes', onClick: () => setViewMode('built-in'), variant: 'secondary' }]
+                    : []
+                }
+              />
             )}
           </div>
         )}
