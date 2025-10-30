@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useDialog } from '@/hooks/useDialog';
+import { Download } from 'lucide-react';
+import { exportPersona, type ExportFormat, type ExportPersona } from '@third-eye/utils';
 
 interface Persona {
   id: string;
@@ -468,12 +470,69 @@ export default function PersonasPage() {
                           <h2 className="text-2xl font-semibold text-white">{persona.name}</h2>
                           <p className="mt-1 text-sm text-slate-400">{persona.description}</p>
                         </div>
-                        <button
-                          onClick={() => startEditing(selectedEye)}
-                          className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary"
-                        >
-                          Edit
-                        </button>
+                        <div className="flex items-center gap-2">
+                          {/* Export Buttons */}
+                          <button
+                            onClick={() => {
+                              const exportData: ExportPersona = {
+                                id: persona.id,
+                                eyeId: persona.eyeId,
+                                name: persona.name,
+                                version: persona.version,
+                                mission: persona.mission,
+                                overview: persona.description,
+                              };
+                              exportPersona('markdown', exportData);
+                            }}
+                            className="flex items-center gap-1 rounded-md bg-brand-accent/10 px-3 py-1.5 text-xs font-medium text-brand-accent hover:bg-brand-accent/20 transition-colors"
+                            title="Export as Markdown"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                            MD
+                          </button>
+                          <button
+                            onClick={() => {
+                              const exportData: ExportPersona = {
+                                id: persona.id,
+                                eyeId: persona.eyeId,
+                                name: persona.name,
+                                version: persona.version,
+                                mission: persona.mission,
+                                overview: persona.description,
+                              };
+                              exportPersona('pdf', exportData);
+                            }}
+                            className="flex items-center gap-1 rounded-md bg-brand-accent/10 px-3 py-1.5 text-xs font-medium text-brand-accent hover:bg-brand-accent/20 transition-colors"
+                            title="Export as PDF"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                            PDF
+                          </button>
+                          <button
+                            onClick={() => {
+                              const exportData: ExportPersona = {
+                                id: persona.id,
+                                eyeId: persona.eyeId,
+                                name: persona.name,
+                                version: persona.version,
+                                mission: persona.mission,
+                                overview: persona.description,
+                              };
+                              exportPersona('json', exportData);
+                            }}
+                            className="flex items-center gap-1 rounded-md bg-brand-accent/10 px-3 py-1.5 text-xs font-medium text-brand-accent hover:bg-brand-accent/20 transition-colors"
+                            title="Export as JSON"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                            JSON
+                          </button>
+                          <button
+                            onClick={() => startEditing(selectedEye)}
+                            className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary"
+                          >
+                            Edit
+                          </button>
+                        </div>
                       </div>
                       
                       <div className="prose prose-invert max-w-none">

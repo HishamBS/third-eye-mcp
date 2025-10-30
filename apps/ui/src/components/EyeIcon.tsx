@@ -1,4 +1,7 @@
 import Image from 'next/image';
+import { EyeIconPaths, getEyeIconPath } from '@third-eye/constants/eye-icons';
+import { EyeId } from '@third-eye/constants/taxonomy';
+import { SHARED_EYE_COLORS } from '@third-eye/theme';
 
 interface EyeIconProps {
   eye: string;
@@ -6,62 +9,50 @@ interface EyeIconProps {
   className?: string;
 }
 
-const EYE_ICONS: Record<string, string> = {
-  sharingan: '/eyes/sharingan.svg',
-  rinnegan: '/eyes/rinnegan.svg',
-  byakugan: '/eyes/byakugan.svg',
-  jogan: '/eyes/jogan.svg',
-  tenseigan: '/eyes/tenseigan.svg',
-  mangekyo: '/eyes/mangekyo.svg',
-  overseer: '/eyes/overseer.svg',
-};
-
-// Fallback emoji mapping
-const EYE_EMOJI: Record<string, string> = {
-  sharingan: '👁️',
-  rinnegan: '🔮',
-  byakugan: '👀',
-  jogan: '⚡',
-  tenseigan: '✨',
-  mangekyo: '🌀',
-  overseer: '🧿',
-};
-
+/**
+ * Eye Icon Component - Uses SSOT SVG paths
+ * NO EMOJIS - All icons are SVG assets from /public/eyes/
+ */
 export function EyeIcon({ eye, size = 24, className = '' }: EyeIconProps) {
-  const iconPath = EYE_ICONS[eye.toLowerCase()];
+  const eyeLower = eye.toLowerCase();
 
-  if (iconPath) {
+  // Try to get icon path from SSOT
+  const iconPath = EyeIconPaths[eyeLower as EyeId] || EyeIconPaths[eyeLower as keyof typeof EyeIconPaths];
+
+  if (!iconPath) {
+    // Log error instead of falling back to emoji
+    console.error(`[EyeIcon] Missing SVG icon for eye: ${eye}. Please add to /apps/ui/public/eyes/`);
+
+    // Return placeholder SVG icon instead of emoji
     return (
-      <Image
-        src={iconPath}
-        alt={`${eye} eye`}
-        width={size}
-        height={size}
-        className={className}
-      />
+      <div
+        className={`inline-flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full ${className}`}
+        style={{ width: size, height: size }}
+        title={`Missing icon: ${eye}`}
+      >
+        <span className="text-xs text-gray-500 dark:text-gray-400">?</span>
+      </div>
     );
   }
 
-  // Fallback to emoji if SVG not found
   return (
-    <span className={className} style={{ fontSize: size }}>
-      {EYE_EMOJI[eye.toLowerCase()] || '👁️'}
-    </span>
+    <Image
+      src={iconPath}
+      alt={`${eye} eye`}
+      width={size}
+      height={size}
+      className={className}
+    />
   );
 }
 
-// Helper function to get eye color for styling
+/**
+ * Get Eye color from theme SSOT
+ * Uses SHARED_EYE_COLORS from theme system (no hardcoded colors!)
+ */
 export function getEyeColor(eye: string): string {
-  const colors: Record<string, string> = {
-    sharingan: '#ff0000',
-    rinnegan: '#9b59b6',
-    byakugan: '#e8e8f0',
-    jogan: '#00d4ff',
-    tenseigan: '#ffd700',
-    mangekyo: '#cc0000',
-    overseer: '#6644cc',
-  };
-  return colors[eye.toLowerCase()] || '#64b5f6';
+  const eyeLower = eye.toLowerCase() as keyof typeof SHARED_EYE_COLORS;
+  return SHARED_EYE_COLORS[eyeLower] || '#64b5f6'; // Fallback to blue if eye not found
 }
 
 // Helper function to get eye name

@@ -7,9 +7,9 @@ import {
   type StrictnessSettings,
   type StrictnessPresetId,
 } from '@third-eye/types';
+import { type ThemeName, DEFAULT_THEME } from '@third-eye/theme';
 
 export type ViewMode = 'novice' | 'expert';
-export type ThemeName = 'overseer' | 'midnight' | 'ocean' | 'forest' | 'sunset' | 'monochrome';
 
 interface UIContextValue {
   viewMode: ViewMode;
@@ -41,7 +41,7 @@ const UIContext = createContext<UIContextValue | undefined>(undefined);
 export function UIProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
   const [viewMode, setViewModeState] = useState<ViewMode>('expert');
-  const [theme, setThemeState] = useState<ThemeName>('overseer');
+  const [theme, setThemeState] = useState<ThemeName>(DEFAULT_THEME);
   const [darkMode, setDarkModeState] = useState(true);
   const [strictness, setStrictnessState] = useState<StrictnessSettings>(
     STRICTNESS_PRESETS[DEFAULT_STRICTNESS_PRESET].settings

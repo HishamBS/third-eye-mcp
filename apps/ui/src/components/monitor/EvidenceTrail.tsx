@@ -2,6 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Book, Brain, CheckCircle2, AlertTriangle, Search, FileText, Check, X } from 'lucide-react';
+import { EyeIcon } from '@/components/EyeIcon';
+import type { ReactNode } from 'react';
 
 interface Evidence {
   id: string;
@@ -146,14 +149,15 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
     return stats;
   }, [evidenceItems]);
 
-  const getEvidenceIcon = (type: string) => {
+  const getEvidenceIcon = (type: string): ReactNode => {
+    const iconClass = "h-4 w-4";
     switch (type) {
-      case 'citation': return '📖';
-      case 'analysis': return '🧠';
-      case 'validation': return '✅';
-      case 'contradiction': return '⚠️';
-      case 'fact': return '🔍';
-      default: return '📄';
+      case 'citation': return <Book className={iconClass} />;
+      case 'analysis': return <Brain className={iconClass} />;
+      case 'validation': return <CheckCircle2 className={iconClass} />;
+      case 'contradiction': return <AlertTriangle className={iconClass} />;
+      case 'fact': return <Search className={iconClass} />;
+      default: return <FileText className={iconClass} />;
     }
   };
 
@@ -168,15 +172,8 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
     return colors[type as keyof typeof colors] || '#6B7280';
   };
 
-  const getEyeIcon = (eye: string) => {
-    const icons: Record<string, string> = {
-      tenseigan: '🔍',
-      byakugan: '👁️',
-      rinnegan: '🧠',
-      mangekyo: '⚡',
-      sharingan: '🎯'
-    };
-    return icons[eye] || '👁️';
+  const getEyeIcon = (eye: string): ReactNode => {
+    return <EyeIcon eye={eye} size={16} className="inline-block" />;
   };
 
   return (
@@ -303,8 +300,9 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
                       {new Date(evidence.timestamp).toLocaleTimeString()}
                     </span>
                     {evidence.verified !== undefined && (
-                      <span className={`text-xs ${evidence.verified ? 'text-green-400' : 'text-red-400'}`}>
-                        {evidence.verified ? '✓ Verified' : '✗ Unverified'}
+                      <span className={`flex items-center space-x-1 text-xs ${evidence.verified ? 'text-green-400' : 'text-red-400'}`}>
+                        {evidence.verified ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                        <span>{evidence.verified ? 'Verified' : 'Unverified'}</span>
                       </span>
                     )}
                   </div>

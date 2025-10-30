@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useUI } from '@/contexts/UIContext';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useDialog } from '@/hooks/useDialog';
+import { THEME_METADATA } from '@third-eye/theme';
 
 interface ProviderKey {
   id: number;
@@ -394,25 +395,18 @@ export default function SettingsPage() {
               <div>
                 <label className="mb-3 block text-sm font-medium text-slate-300">Theme</label>
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                  {(['overseer', 'midnight', 'ocean', 'forest', 'sunset', 'monochrome'] as const).map((themeName) => (
+                  {THEME_METADATA.map((themeOption) => (
                     <button
-                      key={themeName}
-                      onClick={() => setTheme(themeName)}
+                      key={themeOption.value}
+                      onClick={() => setTheme(themeOption.value)}
                       className={`rounded-xl border p-4 text-left transition-all ${
-                        theme === themeName
+                        theme === themeOption.value
                           ? 'border-brand-accent bg-brand-accent/10'
                           : 'border-brand-outline/40 hover:border-brand-accent/60'
                       }`}
                     >
-                      <div className="font-semibold capitalize text-white">{themeName}</div>
-                      <div className="mt-1 text-xs text-slate-400">
-                        {themeName === 'overseer' && 'Default theme'}
-                        {themeName === 'midnight' && 'Indigo & Purple'}
-                        {themeName === 'ocean' && 'Cyan & Teal'}
-                        {themeName === 'forest' && 'Emerald & Lime'}
-                        {themeName === 'sunset' && 'Orange & Amber'}
-                        {themeName === 'monochrome' && 'Grayscale'}
-                      </div>
+                      <div className="font-semibold text-white">{themeOption.label}</div>
+                      <div className="mt-1 text-xs text-slate-400">{themeOption.description}</div>
                     </button>
                   ))}
                 </div>

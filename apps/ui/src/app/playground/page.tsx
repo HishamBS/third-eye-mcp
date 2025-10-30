@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { EyeIcon } from '@/components/EyeIcon';
 
 export default function PlaygroundIndexPage() {
   const router = useRouter();
@@ -17,7 +18,9 @@ export default function PlaygroundIndexPage() {
   return (
     <div className="min-h-screen bg-brand-ink flex items-center justify-center">
       <div className="text-center">
-        <div className="mb-4 text-6xl">👁️</div>
+        <div className="mb-4 flex justify-center">
+          <EyeIcon eye="overseer" size={64} />
+        </div>
         <h1 className="text-2xl font-semibold text-white mb-2">Creating Playground Session...</h1>
         <p className="text-slate-400">Redirecting you to the playground</p>
       </div>

@@ -2,18 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Settings, Key, Bot, Eye, Users, FileText, Play, BarChart3 } from 'lucide-react';
+import type { ReactNode } from 'react';
 
-// Table icon mapping (SSOT)
-const TABLE_ICONS = Object.freeze({
-  app_settings: '⚙️',
-  provider_keys: '🔑',
-  models_cache: '🤖',
-  eyes_routing: '👁️',
-  personas: '🎭',
-  sessions: '📝',
-  runs: '🏃',
-  default: '📊',
-} as const);
+// Table icon mapping (SSOT) - Returns icon components instead of emojis
+const TABLE_ICONS: Record<string, ReactNode> = Object.freeze({
+  app_settings: <Settings className="h-5 w-5" />,
+  provider_keys: <Key className="h-5 w-5" />,
+  models_cache: <Bot className="h-5 w-5" />,
+  eyes_routing: <Eye className="h-5 w-5" />,
+  personas: <Users className="h-5 w-5" />,
+  sessions: <FileText className="h-5 w-5" />,
+  runs: <Play className="h-5 w-5" />,
+  default: <BarChart3 className="h-5 w-5" />,
+});
 
 // Row data type - unknown is safer than any
 type RowData = Record<string, unknown>;
@@ -149,8 +151,8 @@ export default function DatabasePage() {
     }
   };
 
-  const getTableIcon = (tableName: string): string => {
-    return TABLE_ICONS[tableName as keyof typeof TABLE_ICONS] || TABLE_ICONS.default;
+  const getTableIcon = (tableName: string): ReactNode => {
+    return TABLE_ICONS[tableName] || TABLE_ICONS.default;
   };
 
   const getRowKey = (row: RowData, schema: TableSchema[]): string => {
@@ -252,7 +254,7 @@ export default function DatabasePage() {
                   }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <span className="text-xl">{getTableIcon(tableName)}</span>
+                    <div className="flex items-center">{getTableIcon(tableName)}</div>
                     <div>
                       <div className="font-medium">{table.name}</div>
                       <div className="text-sm opacity-80">

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { Brain, Clock, ChevronRight, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { EyeIcon } from '@/components/EyeIcon';
+import type { ReactNode } from 'react';
 
 interface PriorRun {
   id: string;
@@ -84,16 +86,8 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
     }
   };
 
-  const getEyeIcon = (eye: string) => {
-    const icons: Record<string, string> = {
-      sharingan: '👁️',
-      rinnegan: '🌀',
-      tenseigan: '💫',
-      jogan: '🔮',
-      byakugan: '👀',
-      mangekyo: '⚡',
-    };
-    return icons[eye] || '🧿';
+  const getEyeIcon = (eye: string): ReactNode => {
+    return <EyeIcon eye={eye} size={20} className="inline-block" />;
   };
 
   const formatTimeAgo = (dateString: string) => {
@@ -154,7 +148,7 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
                 >
                   <div className="mb-2 flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-xl">{getEyeIcon(run.eye)}</span>
+                      {getEyeIcon(run.eye)}
                       <div>
                         <h4 className="font-medium capitalize text-white">{run.eye}</h4>
                         <p className="text-xs text-slate-400">{formatTimeAgo(run.createdAt)}</p>

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye } from 'lucide-react';
+import { EyeIcon } from '@/components/EyeIcon';
+import type { ReactNode } from 'react';
 
 type EyeName = 'sharingan' | 'rinnegan' | 'byakugan' | 'tenseigan' | 'mangekyo' | 'jogan' | 'overseer';
 
@@ -10,8 +11,7 @@ interface PersonaTheme {
   gradient: string;
   accent: string;
   glow: string;
-  pattern: string;
-  emoji: string;
+  eyeName: string;
   voice: string;
 }
 
@@ -20,56 +20,49 @@ const PERSONA_THEMES: Record<EyeName, PersonaTheme> = {
     gradient: 'from-red-500/20 via-red-600/10 to-transparent',
     accent: 'text-red-400',
     glow: 'shadow-red-500/30',
-    pattern: '🔴',
-    emoji: '👁️',
+    eyeName: 'sharingan',
     voice: 'Analytical and questioning, seeking clarity',
   },
   rinnegan: {
     gradient: 'from-purple-500/20 via-purple-600/10 to-transparent',
     accent: 'text-purple-400',
     glow: 'shadow-purple-500/30',
-    pattern: '🌀',
-    emoji: '🔮',
+    eyeName: 'rinnegan',
     voice: 'Authoritative and decisive, guarding standards',
   },
   byakugan: {
     gradient: 'from-blue-500/20 via-blue-600/10 to-transparent',
     accent: 'text-blue-400',
     glow: 'shadow-blue-500/30',
-    pattern: '🔵',
-    emoji: '👀',
+    eyeName: 'byakugan',
     voice: 'Methodical and thorough, detecting inconsistencies',
   },
   tenseigan: {
     gradient: 'from-cyan-500/20 via-cyan-600/10 to-transparent',
     accent: 'text-cyan-400',
     glow: 'shadow-cyan-500/30',
-    pattern: '💫',
-    emoji: '✨',
+    eyeName: 'tenseigan',
     voice: 'Evidence-focused and precise, validating claims',
   },
   mangekyo: {
     gradient: 'from-amber-500/20 via-amber-600/10 to-transparent',
     accent: 'text-amber-400',
     glow: 'shadow-amber-500/30',
-    pattern: '⚡',
-    emoji: '⚡',
+    eyeName: 'mangekyo',
     voice: 'Technical and critical, reviewing code quality',
   },
   jogan: {
     gradient: 'from-pink-500/20 via-pink-600/10 to-transparent',
     accent: 'text-pink-400',
     glow: 'shadow-pink-500/30',
-    pattern: '🌸',
-    emoji: '🎯',
+    eyeName: 'jogan',
     voice: 'Strategic and coordinating, routing intelligently',
   },
   overseer: {
     gradient: 'from-yellow-500/20 via-yellow-600/10 to-transparent',
     accent: 'text-yellow-400',
     glow: 'shadow-yellow-500/30',
-    pattern: '👑',
-    emoji: '👑',
+    eyeName: 'overseer',
     voice: 'Commanding and orchestrating, overseeing all',
   },
 };
@@ -129,13 +122,12 @@ export function PersonaVoiceDecorator({
             className={`fixed left-1/2 top-4 z-50 -translate-x-1/2 transform rounded-full border border-brand-outline/40 bg-brand-paper/90 px-6 py-3 shadow-xl backdrop-blur-md ${theme.glow}`}
           >
             <div className="flex items-center gap-3">
-              <motion.span
+              <motion.div
                 animate={{ rotate: [0, 360] }}
                 transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                className="text-2xl"
               >
-                {theme.emoji}
-              </motion.span>
+                <EyeIcon eye={theme.eyeName} size={24} />
+              </motion.div>
               <div>
                 <div className="flex items-center gap-2">
                   <span className={`text-sm font-bold uppercase tracking-wider ${theme.accent}`}>
@@ -190,7 +182,9 @@ export function PersonaVoiceDecorator({
                 className={`absolute inset-0 rounded-full border-2 ${theme.accent.replace('text-', 'border-')}`}
               />
 
-              <span className="relative text-2xl">{theme.emoji}</span>
+              <div className="relative">
+                <EyeIcon eye={theme.eyeName} size={32} />
+              </div>
 
               {/* Tooltip */}
               <motion.div
@@ -215,18 +209,19 @@ export function PersonaVoiceDecorator({
         {children}
       </div>
 
-      {/* Decorative Pattern */}
+      {/* Decorative Pattern - CSS-based circles instead of emojis */}
       <AnimatePresence>
         {theme && (
           <motion.div
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.05 }}
+            animate={{ opacity: 0.03 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1 }}
             className="pointer-events-none fixed inset-0 z-0"
             style={{
-              backgroundImage: `radial-gradient(circle at 25% 25%, ${theme.pattern} 2px, transparent 2px)`,
+              backgroundImage: `radial-gradient(circle at 25% 25%, currentColor 2px, transparent 2px)`,
               backgroundSize: '50px 50px',
+              color: theme.accent.replace('text-', '#'),
             }}
           />
         )}
@@ -271,7 +266,7 @@ export function PersonaCard({ eye, children, className = '' }: PersonaCardProps)
       className={`rounded-2xl border bg-gradient-to-br p-6 ${theme.accent.replace('text-', 'border-')} ${theme.gradient} ${theme.glow} ${className}`}
     >
       <div className="mb-3 flex items-center gap-2">
-        <span className="text-2xl">{theme.emoji}</span>
+        <EyeIcon eye={theme.eyeName} size={24} />
         <span className={`text-sm font-bold uppercase tracking-wider ${theme.accent}`}>
           {eye}
         </span>

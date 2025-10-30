@@ -3,7 +3,10 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { EyeIcon } from '@/components/EyeIcon';
+import type { ReactNode } from 'react';
 
 interface ModelInfo {
   name: string;
@@ -194,23 +197,10 @@ export default function ModelsPage() {
     return pendingChanges ? { ...baseRouting, ...pendingChanges } : baseRouting;
   };
 
-  const getEyeIcon = (eye: string) => {
-    const iconMap: Record<string, string> = {
-      overseer: '🧿',
-      sharingan: '👁️',
-      'kyuubi': '✨',
-      jogan: '🔮',
-      rinnegan_requirements: '🌀',
-      rinnegan_review: '🌀',
-      rinnegan_approval: '🌀',
-      mangekyo_scaffold: '⚡',
-      mangekyo_impl: '⚡',
-      mangekyo_tests: '⚡',
-      mangekyo_docs: '⚡',
-      tenseigan: '💫',
-      byakugan: '👀',
-    };
-    return iconMap[eye] || '👁️';
+  const getEyeIcon = (eye: string): ReactNode => {
+    // Extract base eye name from compound names (e.g., "rinnegan_requirements" -> "rinnegan")
+    const baseEyeName = eye.split('_')[0];
+    return <EyeIcon eye={baseEyeName} size={24} className="inline-block" />;
   };
 
   useEffect(() => {
@@ -300,10 +290,10 @@ export default function ModelsPage() {
                       <h3 className="text-lg font-semibold text-white">{provider.name}</h3>
                       {isHealthy !== undefined && (
                         <span
-                          className={`text-xl ${isHealthy ? 'text-green-400' : 'text-red-400'}`}
+                          className={`flex items-center ${isHealthy ? 'text-green-400' : 'text-red-400'}`}
                           title={isHealthy ? 'Online' : 'Offline'}
                         >
-                          {isHealthy ? '🟢' : '🔴'}
+                          {isHealthy ? <CheckCircle2 className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
                         </span>
                       )}
                     </div>

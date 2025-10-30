@@ -11,7 +11,8 @@ import { Suspense, useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Eye } from 'lucide-react';
+import { Eye, Download } from 'lucide-react';
+import { exportSession, type ExportFormat, type ExportEvent } from '@third-eye/utils';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useWebSocket, type WSMessage } from '@/hooks/useWebSocket';
 import { useUI } from '@/contexts/UIContext';
@@ -511,8 +512,87 @@ function MonitorContent() {
             <>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-white">Timeline</h2>
-                <div className="text-xs text-slate-500">
-                  {entries.length} {entries.length === 1 ? 'event' : 'events'}
+                <div className="flex items-center gap-4">
+                  <div className="text-xs text-slate-500">
+                    {entries.length} {entries.length === 1 ? 'event' : 'events'}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        const exportEvents: ExportEvent[] = entries.map(e => ({
+                          id: e.id || '',
+                          sessionId: sessionId || '',
+                          eyeId: e.eyeId,
+                          eyeName: e.eyeName,
+                          stage: e.stage,
+                          status: e.status,
+                          message: e.message || '',
+                          timestamp: e.timestamp || new Date().toISOString(),
+                          latencyMs: e.latencyMs,
+                          data: e.data,
+                        }));
+                        exportSession('markdown', sessionId || 'unknown', exportEvents, {
+                          agent: displayName,
+                          createdAt: entries[0]?.timestamp,
+                        });
+                      }}
+                      className="flex items-center gap-1 rounded-md bg-brand-accent/10 px-3 py-1.5 text-xs font-medium text-brand-accent hover:bg-brand-accent/20 transition-colors"
+                      title="Export as Markdown"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      MD
+                    </button>
+                    <button
+                      onClick={() => {
+                        const exportEvents: ExportEvent[] = entries.map(e => ({
+                          id: e.id || '',
+                          sessionId: sessionId || '',
+                          eyeId: e.eyeId,
+                          eyeName: e.eyeName,
+                          stage: e.stage,
+                          status: e.status,
+                          message: e.message || '',
+                          timestamp: e.timestamp || new Date().toISOString(),
+                          latencyMs: e.latencyMs,
+                          data: e.data,
+                        }));
+                        exportSession('pdf', sessionId || 'unknown', exportEvents, {
+                          agent: displayName,
+                          createdAt: entries[0]?.timestamp,
+                        });
+                      }}
+                      className="flex items-center gap-1 rounded-md bg-brand-accent/10 px-3 py-1.5 text-xs font-medium text-brand-accent hover:bg-brand-accent/20 transition-colors"
+                      title="Export as PDF"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      PDF
+                    </button>
+                    <button
+                      onClick={() => {
+                        const exportEvents: ExportEvent[] = entries.map(e => ({
+                          id: e.id || '',
+                          sessionId: sessionId || '',
+                          eyeId: e.eyeId,
+                          eyeName: e.eyeName,
+                          stage: e.stage,
+                          status: e.status,
+                          message: e.message || '',
+                          timestamp: e.timestamp || new Date().toISOString(),
+                          latencyMs: e.latencyMs,
+                          data: e.data,
+                        }));
+                        exportSession('json', sessionId || 'unknown', exportEvents, {
+                          agent: displayName,
+                          createdAt: entries[0]?.timestamp,
+                        });
+                      }}
+                      className="flex items-center gap-1 rounded-md bg-brand-accent/10 px-3 py-1.5 text-xs font-medium text-brand-accent hover:bg-brand-accent/20 transition-colors"
+                      title="Export as JSON"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      JSON
+                    </button>
+                  </div>
                 </div>
               </div>
 

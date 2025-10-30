@@ -183,6 +183,56 @@ export const pipelineRuns = sqliteTable('pipeline_runs', {
   completedAt: integer('completed_at', { mode: 'timestamp' }),
 });
 
+// DAG Pipeline Queue - async execution tracking
+export const pipelineQueue = sqliteTable('pipeline_queue', {
+  id: text('id').primaryKey(),
+  runId: text('run_id').notNull().unique(),
+  pipelineId: text('pipeline_id').notNull().references(() => pipelines.id),
+  sessionId: text('session_id').notNull().references(() => sessions.id),
+  status: text('status').notNull(), // 'pending', 'running', 'paused', 'completed', 'failed'
+  inputJson: text('input_json', { mode: 'json' }),
+  finalVerdict: text('final_verdict'),
+  errorMessage: text('error_message'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  startedAt: integer('started_at', { mode: 'timestamp' }),
+  completedAt: integer('completed_at', { mode: 'timestamp' }),
+});
+
+// DAG Node Execution Steps - individual node tracking
+export const executionSteps = sqliteTable('execution_steps', {
+  id: text('id').primaryKey(),
+  runId: text('run_id').notNull().references(() => pipelineQueue.runId),
+  nodeId: text('node_id').notNull(),
+  nodeType: text('node_type').notNull(), // 'Eye', 'Condition', 'UserInput', 'Terminal'
+  status: text('status').notNull(), // 'pending', 'running', 'success', 'error', 'awaiting_input'
+  verdict: text('verdict'),
+  outputJson: text('output_json', { mode: 'json' }),
+  errorMessage: text('error_message'),
+  tokensUsed: integer('tokens_used'),
+  latencyMs: integer('latency_ms'),
+  metadataJson: text('metadata_json', { mode: 'json' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  completedAt: integer('completed_at', { mode: 'timestamp' }),
+}, (table) => ({
+  runNodeUnique: unique().on(table.runId, table.nodeId),
+}));
+
+// DAG Node Configurations - per-node overrides
+export const nodeConfigs = sqliteTable('node_configs', {
+  id: text('id').primaryKey(),
+  pipelineId: text('pipeline_id').notNull().references(() => pipelines.id),
+  nodeId: text('node_id').notNull(),
+  eyeId: text('eye_id'),
+  providerOverride: text('provider_override', { mode: 'json' }), // { provider, model }
+  strictnessOverride: text('strictness_override'),
+  notesMd: text('notes_md'),
+  configJson: text('config_json', { mode: 'json' }), // Additional node-specific config
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+}, (table) => ({
+  pipelineNodeUnique: unique().on(table.pipelineId, table.nodeId),
+}));
+
 // Strictness profiles
 export const strictnessProfiles = sqliteTable('strictness_profiles', {
   id: text('id').primaryKey(),
@@ -207,6 +257,15 @@ export type NewPipeline = typeof pipelines.$inferInsert;
 
 export type PipelineRun = typeof pipelineRuns.$inferSelect;
 export type NewPipelineRun = typeof pipelineRuns.$inferInsert;
+
+export type PipelineQueueItem = typeof pipelineQueue.$inferSelect;
+export type NewPipelineQueueItem = typeof pipelineQueue.$inferInsert;
+
+export type ExecutionStep = typeof executionSteps.$inferSelect;
+export type NewExecutionStep = typeof executionSteps.$inferInsert;
+
+export type NodeConfig = typeof nodeConfigs.$inferSelect;
+export type NewNodeConfig = typeof nodeConfigs.$inferInsert;
 
 export type StrictnessProfile = typeof strictnessProfiles.$inferSelect;
 export type NewStrictnessProfile = typeof strictnessProfiles.$inferInsert;

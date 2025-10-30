@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { Settings, BarChart3, Loader2, Rocket, Eye as LucideEye } from 'lucide-react';
 import { useUI } from '@/contexts/UIContext';
 import { SessionMemoryPanel } from '@/components/SessionMemoryPanel';
 import { ViewModeToggle } from '@/components/ViewModeToggle';
@@ -326,15 +327,17 @@ export default function PlaygroundPage() {
               <ViewModeToggle />
               <button
                 onClick={() => setShowStrictness(!showStrictness)}
-                className="px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+                className="flex items-center gap-2 px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
               >
-                ⚙️ Strictness
+                <Settings className="h-4 w-4" />
+                Strictness
               </button>
               <Link
                 href={`/monitor?sessionId=${sessionId}`}
-                className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               >
-                📊 Monitor
+                <BarChart3 className="h-4 w-4" />
+                Monitor
               </Link>
             </div>
           </div>
@@ -375,9 +378,19 @@ export default function PlaygroundPage() {
                 <button
                   type="submit"
                   disabled={loading || !taskInput.trim()}
-                  className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-gray-400 disabled:to-gray-500 text-white py-3 px-6 rounded-lg font-semibold transition-all disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-gray-400 disabled:to-gray-500 text-white py-3 px-6 rounded-lg font-semibold transition-all disabled:cursor-not-allowed"
                 >
-                  {loading ? '⏳ Processing through pipeline...' : '🚀 Submit Task'}
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Processing through pipeline...
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="h-5 w-5" />
+                      Submit Task
+                    </>
+                  )}
                 </button>
               </form>
             </div>
@@ -437,9 +450,19 @@ export default function PlaygroundPage() {
                 <button
                   type="submit"
                   disabled={eyeLoading || !selectedEye || !eyeInput.trim()}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-sky-500 hover:from-emerald-600 hover:to-sky-600 disabled:from-gray-400 disabled:to-gray-500 text-white py-3 px-6 rounded-lg font-semibold transition-all disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-sky-500 hover:from-emerald-600 hover:to-sky-600 disabled:from-gray-400 disabled:to-gray-500 text-white py-3 px-6 rounded-lg font-semibold transition-all disabled:cursor-not-allowed"
                 >
-                  {eyeLoading ? '⏳ Running Eye...' : '👁️ Execute Eye'}
+                  {eyeLoading ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Running Eye...
+                    </>
+                  ) : (
+                    <>
+                      <LucideEye className="h-5 w-5" />
+                      Execute Eye
+                    </>
+                  )}
                 </button>
               </form>
 

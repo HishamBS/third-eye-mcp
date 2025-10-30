@@ -1,10 +1,12 @@
 'use client';
 
+import { DEFAULT_THEME } from '@third-eye/theme';
+
 export function ThemeScript() {
   const themeScript = `
     (function() {
       try {
-        const theme = localStorage.getItem('third-eye-theme') || 'overseer';
+        const theme = localStorage.getItem('third-eye-theme') || '${DEFAULT_THEME}';
         const darkMode = localStorage.getItem('third-eye-dark-mode');
 
         document.documentElement.setAttribute('data-theme', theme);

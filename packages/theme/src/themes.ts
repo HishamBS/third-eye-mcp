@@ -30,8 +30,9 @@ export interface ColorTokens {
   };
   // Eye colors
   readonly eye: {
+    readonly overseer: string;
     readonly sharingan: string;
-    readonly prompt: string;
+    readonly kyuubi: string;
     readonly jogan: string;
     readonly rinnegan: string;
     readonly mangekyo: string;
@@ -177,14 +178,15 @@ const SHARED_SHADOWS: ShadowTokens = Object.freeze({
   xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
 });
 
-const SHARED_EYE_COLORS = Object.freeze({
-  sharingan: '#E11D48',
-  prompt: '#A78BFA',
-  jogan: '#38BDF8',
-  rinnegan: '#818CF8',
-  mangekyo: '#FB7185',
-  tenseigan: '#34D399',
-  byakugan: '#93C5FD',
+export const SHARED_EYE_COLORS = Object.freeze({
+  overseer: '#8B5CF6',      // Violet-500 - Added for completeness
+  sharingan: '#E11D48',     // Rose-600
+  kyuubi: '#A78BFA',        // Purple-400 (was 'prompt')
+  jogan: '#38BDF8',         // Sky-400
+  rinnegan: '#818CF8',      // Indigo-400
+  mangekyo: '#FB7185',      // Rose-400
+  tenseigan: '#34D399',     // Emerald-400
+  byakugan: '#93C5FD',      // Blue-300
 });
 
 // AURORA THEME - Vibrant sunrise colors
@@ -598,3 +600,23 @@ export const getAllThemes = (): readonly Theme[] => {
 export const getThemeNames = (): readonly ThemeName[] => {
   return Object.keys(THEMES) as ThemeName[];
 };
+
+// SSOT: Default theme
+export const DEFAULT_THEME: ThemeName = 'midnight';
+
+// SSOT: Theme metadata for UI display
+export interface ThemeMetadata {
+  readonly value: ThemeName;
+  readonly label: string;
+  readonly description: string;
+  readonly color: string;
+}
+
+export const THEME_METADATA: readonly ThemeMetadata[] = Object.freeze([
+  { value: 'aurora', label: 'Aurora', description: 'Sky Blue', color: '#60A5FA' },
+  { value: 'midnight', label: 'Midnight', description: 'Indigo & Purple', color: '#6366F1' },
+  { value: 'sakura', label: 'Sakura', description: 'Pink Blossom', color: '#F472B6' },
+  { value: 'horizon', label: 'Horizon', description: 'Orange & Amber', color: '#F59E0B' },
+  { value: 'emerald', label: 'Emerald', description: 'Green Nature', color: '#10B981' },
+  { value: 'obsidian', label: 'Obsidian', description: 'Grayscale', color: '#6B7280' },
+]);

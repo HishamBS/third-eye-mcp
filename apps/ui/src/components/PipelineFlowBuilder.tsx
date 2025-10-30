@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, Fragment } from 'react';
 import ReactFlow, {
   Controls,
   Background,
@@ -22,8 +22,10 @@ import type {
   NodeTypes,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Trash2, Plus, Layout, AlertCircle, Copy, Maximize } from 'lucide-react';
+import { Trash2, Plus, Layout, AlertCircle, Copy, Maximize, Play } from 'lucide-react';
 import CustomNode from './pipeline/CustomNode';
+import { PropertyPanel } from './pipeline/PropertyPanel';
+import { ExecutionPanel } from './pipeline/ExecutionPanel';
 import { EyeStageToken } from '@third-eye/constants';
 
 const nodeTypes: NodeTypes = {
@@ -200,7 +202,13 @@ function PipelineFlowBuilderInner({
     nodeId: string;
   } | null>(null);
   const [clipboard, setClipboard] = useState<Node[]>([]);
-  
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [showExecutionPanel, setShowExecutionPanel] = useState(false);
+
+  // Undo/Redo history
+  const [history, setHistory] = useState<Array<{ nodes: Node[]; edges: Edge[] }>>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+
   const reactFlowInstance = useReactFlow();
 
   // Convert workflow JSON to React Flow nodes/edges
@@ -337,15 +345,60 @@ function PipelineFlowBuilderInner({
     setValidationErrors(errors);
   }, []);
 
+  // Undo/Redo system
+  const saveHistory = useCallback((currentNodes: Node[], currentEdges: Edge[]) => {
+    setHistory(prev => {
+      const newHistory = prev.slice(0, historyIndex + 1);
+      newHistory.push({ nodes: JSON.parse(JSON.stringify(currentNodes)), edges: JSON.parse(JSON.stringify(currentEdges)) });
+
+      // Limit history to 50 items
+      if (newHistory.length > 50) {
+        newHistory.shift();
+        return newHistory;
+      }
+      return newHistory;
+    });
+    setHistoryIndex(prev => Math.min(prev + 1, 49));
+  }, [historyIndex]);
+
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      const prevState = history[historyIndex - 1];
+      setNodes(JSON.parse(JSON.stringify(prevState.nodes)));
+      setEdges(JSON.parse(JSON.stringify(prevState.edges)));
+      setHistoryIndex(prev => prev - 1);
+      validatePipeline(prevState.nodes, prevState.edges);
+    }
+  }, [history, historyIndex, validatePipeline]);
+
+  const redo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const nextState = history[historyIndex + 1];
+      setNodes(JSON.parse(JSON.stringify(nextState.nodes)));
+      setEdges(JSON.parse(JSON.stringify(nextState.edges)));
+      setHistoryIndex(prev => prev + 1);
+      validatePipeline(nextState.nodes, nextState.edges);
+    }
+  }, [history, historyIndex, validatePipeline]);
+
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
       setNodes((nds) => {
         const updated = applyNodeChanges(changes, nds);
         validatePipeline(updated, edges);
+
+        // Save history for significant changes (not just selection)
+        const hasSignificantChange = changes.some(c =>
+          c.type === 'remove' || c.type === 'add' || (c.type === 'position' && c.dragging === false)
+        );
+        if (hasSignificantChange) {
+          saveHistory(updated, edges);
+        }
+
         return updated;
       });
     },
-    [edges, validatePipeline]
+    [edges, validatePipeline, saveHistory]
   );
 
   const onEdgesChange = useCallback(
@@ -353,10 +406,17 @@ function PipelineFlowBuilderInner({
       setEdges((eds) => {
         const updated = applyEdgeChanges(changes, eds);
         validatePipeline(nodes, updated);
+
+        // Save history for significant changes
+        const hasSignificantChange = changes.some(c => c.type === 'remove' || c.type === 'add');
+        if (hasSignificantChange) {
+          saveHistory(nodes, updated);
+        }
+
         return updated;
       });
     },
-    [nodes, validatePipeline]
+    [nodes, validatePipeline, saveHistory]
   );
 
   const onConnect = useCallback(
@@ -371,11 +431,35 @@ function PipelineFlowBuilderInner({
         };
         const updated = addEdge(newEdge, eds);
         validatePipeline(nodes, updated);
+        saveHistory(nodes, updated);
         return updated;
       });
     },
-    [nodes, validatePipeline]
+    [nodes, validatePipeline, saveHistory]
   );
+
+  // Node selection handler
+  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+    setSelectedNode(node);
+  }, []);
+
+  // Update node data from PropertyPanel
+  const handleUpdateNode = useCallback((nodeId: string, data: Record<string, unknown>) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? { ...node, data: { ...node.data, ...data } }
+          : node
+      )
+    );
+
+    // Update selected node to reflect changes
+    setSelectedNode((prevSelected) =>
+      prevSelected && prevSelected.id === nodeId
+        ? { ...prevSelected, data: { ...prevSelected.data, ...data } }
+        : prevSelected
+    );
+  }, []);
 
   // Context menu handlers
   const onNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
@@ -450,6 +534,10 @@ function PipelineFlowBuilderInner({
     setEdges((eds) => eds.map(e => ({ ...e, selected: false })));
   }, []);
 
+  const selectAll = useCallback(() => {
+    setNodes((nds) => nds.map(n => ({ ...n, selected: true })));
+  }, []);
+
   const autoLayout = useCallback(() => {
     const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges);
     setNodes(layoutedNodes);
@@ -463,6 +551,23 @@ function PipelineFlowBuilderInner({
     const handleKeyDown = (e: KeyboardEvent) => {
       // Prevent if typing in input/textarea
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      // Undo/Redo
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'z') {
+        e.preventDefault();
+        redo();
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'y') {
+        e.preventDefault();
+        redo();
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+        e.preventDefault();
+        undo();
         return;
       }
 
@@ -486,6 +591,10 @@ function PipelineFlowBuilderInner({
         e.preventDefault();
         duplicateSelectedNodes();
       }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+        e.preventDefault();
+        selectAll();
+      }
       if ((e.metaKey || e.ctrlKey) && e.key === 'c') {
         e.preventDefault();
         copyNodes();
@@ -503,7 +612,7 @@ function PipelineFlowBuilderInner({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readOnly, nodes, edges, clipboard]);
+  }, [readOnly, nodes, edges, clipboard, undo, redo, selectAll]);
 
   // Click outside to close context menu
   useEffect(() => {
@@ -515,13 +624,16 @@ function PipelineFlowBuilderInner({
   }, [contextMenu, closeContextMenu]);
 
   return (
-    <div className="relative h-[600px] w-full rounded-xl border border-brand-outline/50 bg-brand-ink overflow-hidden">
+    <>
+    <div className="flex h-[600px] w-full rounded-xl border border-brand-outline/50 bg-brand-ink overflow-hidden">
+      <div className="relative flex-1">
         <ReactFlow
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          onNodeClick={onNodeClick}
         onNodeContextMenu={onNodeContextMenu}
           nodeTypes={nodeTypes}
         snapToGrid={true}
@@ -530,6 +642,11 @@ function PipelineFlowBuilderInner({
         fitViewOptions={{ padding: 0.2 }}
         minZoom={0.2}
         maxZoom={2}
+        selectionOnDrag={true}
+        panOnDrag={[1, 2]}
+        selectionMode="partial"
+        multiSelectionKeyCode="Shift"
+        deleteKeyCode="Delete"
         defaultEdgeOptions={{
           type: EDGE_TYPE_SMOOTHSTEP,
           animated: true,
@@ -554,6 +671,11 @@ function PipelineFlowBuilderInner({
           <Panel position="top-left" className="bg-brand-paper/90 backdrop-blur-sm border border-brand-outline/50 rounded-lg p-3 text-xs">
             <div className="text-white font-semibold mb-2">Keyboard Shortcuts</div>
             <div className="space-y-1 text-slate-400">
+              <div><kbd className="text-brand-accent">⌘/Ctrl + Z</kbd> Undo</div>
+              <div><kbd className="text-brand-accent">⌘/Ctrl + Shift + Z</kbd> Redo</div>
+              <div><kbd className="text-brand-accent">Drag</kbd> Select multiple</div>
+              <div><kbd className="text-brand-accent">Shift + Click</kbd> Add to selection</div>
+              <div><kbd className="text-brand-accent">⌘/Ctrl + A</kbd> Select all</div>
               <div><kbd className="text-brand-accent">⌘/Ctrl + Plus</kbd> Zoom in</div>
               <div><kbd className="text-brand-accent">⌘/Ctrl + Minus</kbd> Zoom out</div>
               <div><kbd className="text-brand-accent">⌘/Ctrl + 0</kbd> Reset view</div>
@@ -584,73 +706,99 @@ function PipelineFlowBuilderInner({
         {/* Action Buttons */}
           {!readOnly && (
           <Panel position="bottom-left" className="flex gap-2">
-                <button
+            <button
+              onClick={() => setShowExecutionPanel(!showExecutionPanel)}
+              className="flex items-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-green-700"
+            >
+              <Play className="h-4 w-4" />
+              {showExecutionPanel ? 'Hide Execution' : 'Run Pipeline'}
+            </button>
+            <button
               onClick={autoLayout}
               className="flex items-center gap-2 rounded-lg bg-brand-accent px-3 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-brand-primary"
-                >
+            >
               <Layout className="h-4 w-4" />
               Auto Layout
-                </button>
-                      <button
+            </button>
+            <button
               onClick={() => reactFlowInstance.fitView({ padding: 0.2 })}
               className="flex items-center gap-2 rounded-lg bg-brand-paper px-3 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-brand-paperElev"
             >
               <Maximize className="h-4 w-4" />
               Fit View
-                      </button>
+            </button>
           </Panel>
         )}
       </ReactFlow>
+      </div>
 
-      {/* Context Menu */}
-      {contextMenu && !readOnly && (
-        <div
-          className="fixed z-50 rounded-lg border border-brand-outline/50 bg-brand-paper shadow-xl"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
-          onClick={(e) => e.stopPropagation()}
-        >
-              <button
-            onClick={() => {
-              const node = nodes.find(n => n.id === contextMenu.nodeId);
-              if (node) {
-                console.log('Edit node:', node);
-              }
-              closeContextMenu();
-            }}
-            className="flex w-full items-center gap-2 px-4 py-2 text-sm text-white hover:bg-brand-accent rounded-t-lg"
-              >
-                <Plus className="h-4 w-4" />
-            Edit Node
-              </button>
-              <button
-            onClick={() => {
-              setNodes((nds) => nds.map(n => 
-                n.id === contextMenu.nodeId ? { ...n, selected: true } : n
-              ));
-              duplicateSelectedNodes();
-              closeContextMenu();
-            }}
-            className="flex w-full items-center gap-2 px-4 py-2 text-sm text-white hover:bg-brand-accent"
-          >
-            <Copy className="h-4 w-4" />
-            Duplicate
-              </button>
-                <button
-            onClick={() => {
-              setNodes((nds) => nds.filter(n => n.id !== contextMenu.nodeId));
-              setEdges((eds) => eds.filter(e => 
-                e.source !== contextMenu.nodeId && e.target !== contextMenu.nodeId
-              ));
-              closeContextMenu();
-            }}
-            className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-red-500/20 rounded-b-lg"
-                >
-                  <Trash2 className="h-4 w-4" />
-            Delete
-                </button>
-        </div>
+      {/* PropertyPanel */}
+      {!readOnly && selectedNode && (
+        <PropertyPanel
+          selectedNode={selectedNode}
+          onUpdateNode={handleUpdateNode}
+          onClose={() => setSelectedNode(null)}
+        />
+      )}
+
+      {/* ExecutionPanel */}
+      {!readOnly && showExecutionPanel && (
+        <ExecutionPanel
+          pipelineId={workflowJson?.id || 'test-pipeline'}
+          onClose={() => setShowExecutionPanel(false)}
+        />
       )}
     </div>
+
+    {/* Context Menu */}
+    {contextMenu && !readOnly && (
+      <div
+        className="fixed z-50 rounded-lg border border-brand-outline/50 bg-brand-paper shadow-xl"
+        style={{ left: contextMenu.x, top: contextMenu.y }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={() => {
+            const node = nodes.find(n => n.id === contextMenu.nodeId);
+            if (node) {
+              console.log('Edit node:', node);
+            }
+            closeContextMenu();
+          }}
+          className="flex w-full items-center gap-2 px-4 py-2 text-sm text-white hover:bg-brand-accent rounded-t-lg"
+        >
+          <Plus className="h-4 w-4" />
+          Edit Node
+        </button>
+        <button
+          onClick={() => {
+            setNodes((nds) => nds.map(n =>
+              n.id === contextMenu.nodeId ? { ...n, selected: true } : n
+            ));
+            duplicateSelectedNodes();
+            closeContextMenu();
+          }}
+          className="flex w-full items-center gap-2 px-4 py-2 text-sm text-white hover:bg-brand-accent"
+        >
+          <Copy className="h-4 w-4" />
+          Duplicate
+        </button>
+        <button
+          onClick={() => {
+            setNodes((nds) => nds.filter(n => n.id !== contextMenu.nodeId));
+            setEdges((eds) => eds.filter(e =>
+              e.source !== contextMenu.nodeId && e.target !== contextMenu.nodeId
+            ));
+            closeContextMenu();
+          }}
+          className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-red-500/20 rounded-b-lg"
+        >
+          <Trash2 className="h-4 w-4" />
+          Delete
+        </button>
+      </div>
+    )}
+    </>
   );
 }
 

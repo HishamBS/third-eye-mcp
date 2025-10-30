@@ -155,6 +155,59 @@ CREATE TABLE `pipeline_runs` (
 	FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE TABLE `pipeline_queue` (
+	`id` text PRIMARY KEY NOT NULL,
+	`run_id` text NOT NULL,
+	`pipeline_id` text NOT NULL,
+	`session_id` text NOT NULL,
+	`status` text NOT NULL,
+	`input_json` text,
+	`final_verdict` text,
+	`error_message` text,
+	`created_at` integer NOT NULL,
+	`started_at` integer,
+	`completed_at` integer,
+	FOREIGN KEY (`pipeline_id`) REFERENCES `pipelines`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `pipeline_queue_run_id_unique` ON `pipeline_queue` (`run_id`);
+--> statement-breakpoint
+CREATE TABLE `execution_steps` (
+	`id` text PRIMARY KEY NOT NULL,
+	`run_id` text NOT NULL,
+	`node_id` text NOT NULL,
+	`node_type` text NOT NULL,
+	`status` text NOT NULL,
+	`verdict` text,
+	`output_json` text,
+	`error_message` text,
+	`tokens_used` integer,
+	`latency_ms` integer,
+	`metadata_json` text,
+	`created_at` integer NOT NULL,
+	`completed_at` integer,
+	FOREIGN KEY (`run_id`) REFERENCES `pipeline_queue`(`run_id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `execution_steps_run_id_node_id_unique` ON `execution_steps` (`run_id`,`node_id`);
+--> statement-breakpoint
+CREATE TABLE `node_configs` (
+	`id` text PRIMARY KEY NOT NULL,
+	`pipeline_id` text NOT NULL,
+	`node_id` text NOT NULL,
+	`eye_id` text,
+	`provider_override` text,
+	`strictness_override` text,
+	`notes_md` text,
+	`config_json` text,
+	`created_at` integer NOT NULL,
+	`updated_at` integer NOT NULL,
+	FOREIGN KEY (`pipeline_id`) REFERENCES `pipelines`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `node_configs_pipeline_id_node_id_unique` ON `node_configs` (`pipeline_id`,`node_id`);
+--> statement-breakpoint
 CREATE TABLE `pipelines` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,

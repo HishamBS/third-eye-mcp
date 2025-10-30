@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { ReplayTheater } from '@/components/ReplayTheater';
 import type { WebSocketEvent } from '@third-eye/types/events';
+import { Download } from 'lucide-react';
+import { exportSession, type ExportEvent } from '@third-eye/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,13 +54,83 @@ function ReplayContent() {
     <div className="min-h-screen bg-brand-ink">
       <div className="border-b border-brand-outline/60 bg-brand-paperElev/50">
         <div className="mx-auto max-w-7xl px-6 py-6">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
-              ← Home
-            </Link>
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Replay Theater</p>
-              <h1 className="mt-1 text-2xl font-semibold text-white">Session: {sessionId}</h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
+                ← Home
+              </Link>
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Replay Theater</p>
+                <h1 className="mt-1 text-2xl font-semibold text-white">Session: {sessionId}</h1>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  const exportEvents: ExportEvent[] = events.map(e => ({
+                    id: e.id || '',
+                    sessionId: sessionId,
+                    eyeId: 'eyeId' in e ? String(e.eyeId) : undefined,
+                    eyeName: 'eyeName' in e ? String(e.eyeName) : undefined,
+                    stage: 'stage' in e ? String(e.stage) : undefined,
+                    status: 'status' in e ? String(e.status) : undefined,
+                    message: 'message' in e ? String(e.message) : '',
+                    timestamp: e.timestamp || new Date().toISOString(),
+                    latencyMs: 'latencyMs' in e ? Number(e.latencyMs) : undefined,
+                    data: 'data' in e ? e.data : undefined,
+                  }));
+                  exportSession('markdown', sessionId, exportEvents);
+                }}
+                className="flex items-center gap-1 rounded-md bg-brand-accent/10 px-3 py-1.5 text-xs font-medium text-brand-accent hover:bg-brand-accent/20 transition-colors"
+                title="Export as Markdown"
+              >
+                <Download className="h-3.5 w-3.5" />
+                MD
+              </button>
+              <button
+                onClick={() => {
+                  const exportEvents: ExportEvent[] = events.map(e => ({
+                    id: e.id || '',
+                    sessionId: sessionId,
+                    eyeId: 'eyeId' in e ? String(e.eyeId) : undefined,
+                    eyeName: 'eyeName' in e ? String(e.eyeName) : undefined,
+                    stage: 'stage' in e ? String(e.stage) : undefined,
+                    status: 'status' in e ? String(e.status) : undefined,
+                    message: 'message' in e ? String(e.message) : '',
+                    timestamp: e.timestamp || new Date().toISOString(),
+                    latencyMs: 'latencyMs' in e ? Number(e.latencyMs) : undefined,
+                    data: 'data' in e ? e.data : undefined,
+                  }));
+                  exportSession('pdf', sessionId, exportEvents);
+                }}
+                className="flex items-center gap-1 rounded-md bg-brand-accent/10 px-3 py-1.5 text-xs font-medium text-brand-accent hover:bg-brand-accent/20 transition-colors"
+                title="Export as PDF"
+              >
+                <Download className="h-3.5 w-3.5" />
+                PDF
+              </button>
+              <button
+                onClick={() => {
+                  const exportEvents: ExportEvent[] = events.map(e => ({
+                    id: e.id || '',
+                    sessionId: sessionId,
+                    eyeId: 'eyeId' in e ? String(e.eyeId) : undefined,
+                    eyeName: 'eyeName' in e ? String(e.eyeName) : undefined,
+                    stage: 'stage' in e ? String(e.stage) : undefined,
+                    status: 'status' in e ? String(e.status) : undefined,
+                    message: 'message' in e ? String(e.message) : '',
+                    timestamp: e.timestamp || new Date().toISOString(),
+                    latencyMs: 'latencyMs' in e ? Number(e.latencyMs) : undefined,
+                    data: 'data' in e ? e.data : undefined,
+                  }));
+                  exportSession('json', sessionId, exportEvents);
+                }}
+                className="flex items-center gap-1 rounded-md bg-brand-accent/10 px-3 py-1.5 text-xs font-medium text-brand-accent hover:bg-brand-accent/20 transition-colors"
+                title="Export as JSON"
+              >
+                <Download className="h-3.5 w-3.5" />
+                JSON
+              </button>
             </div>
           </div>
         </div>

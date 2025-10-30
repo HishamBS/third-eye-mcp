@@ -29,59 +29,6 @@ const config: Config = {
           tenseigan: '#34D399',
           byakugan: '#93C5FD',
         },
-
-        // Theme-specific palettes (CSS variables will override these)
-        theme: {
-          // Midnight Blue
-          midnight: {
-            primary: '#4F46E5', // Indigo
-            accent: '#8B5CF6', // Purple
-            ink: '#0A0A14',
-            paper: '#111827',
-            paperElev: '#1F2937',
-            outline: '#374151',
-          },
-
-          // Ocean Breeze
-          ocean: {
-            primary: '#06B6D4', // Cyan
-            accent: '#14B8A6', // Teal
-            ink: '#0C1821',
-            paper: '#0F172A',
-            paperElev: '#1E293B',
-            outline: '#334155',
-          },
-
-          // Forest Green
-          forest: {
-            primary: '#10B981', // Emerald
-            accent: '#84CC16', // Lime
-            ink: '#0A1F15',
-            paper: '#0F1F16',
-            paperElev: '#1A2E23',
-            outline: '#2D4A3A',
-          },
-
-          // Sunset Orange
-          sunset: {
-            primary: '#F97316', // Orange
-            accent: '#FBBF24', // Amber
-            ink: '#1A0F0A',
-            paper: '#1F1410',
-            paperElev: '#2A1F1A',
-            outline: '#3D2E24',
-          },
-
-          // Monochrome
-          monochrome: {
-            primary: '#6B7280', // Gray
-            accent: '#9CA3AF', // Light gray
-            ink: '#000000',
-            paper: '#111111',
-            paperElev: '#1A1A1A',
-            outline: '#333333',
-          },
-        },
       },
       boxShadow: {
         glass: '0 10px 30px rgba(0, 0, 0, 0.35)',
@@ -104,65 +51,112 @@ const config: Config = {
     // Custom plugin for theme switching
     function({ addBase, theme }) {
       addBase({
-        ':root[data-theme="overseer"]': {
-          '--color-primary': '217 70 59',
-          '--color-accent': '247 181 0',
-          '--color-ink': '15 15 18',
-          '--color-paper': '11 11 13',
-          '--color-paper-elev': '21 22 26',
-          '--color-outline': '42 43 50',
+        // Aurora Theme (Sky Blue) - Dark Mode
+        ':root[data-theme="aurora"].dark': {
+          '--color-primary': '96 165 250', // sky-400
+          '--color-accent': '125 211 252', // sky-300
+          '--color-ink': '8 8 12',
+          '--color-paper': '15 23 42',
+          '--color-paper-elev': '30 41 59',
+          '--color-outline': '51 65 85',
+        },
+        ':root[data-theme="aurora"]:not(.dark)': {
+          '--color-primary': '14 165 233', // sky-600 (WCAG AA compliant)
+          '--color-accent': '2 132 199', // sky-700
+          '--color-ink': '15 23 42',
+          '--color-paper': '248 250 252',
+          '--color-paper-elev': '241 245 249',
+          '--color-outline': '203 213 225',
         },
 
-        ':root[data-theme="midnight"]': {
-          '--color-primary': '79 70 229',
-          '--color-accent': '139 92 246',
+        // Midnight Theme (Indigo & Purple) - Dark Mode
+        ':root[data-theme="midnight"].dark': {
+          '--color-primary': '99 102 241', // indigo-500
+          '--color-accent': '139 92 246', // purple-500
           '--color-ink': '10 10 20',
           '--color-paper': '17 24 39',
           '--color-paper-elev': '31 41 55',
           '--color-outline': '55 65 81',
         },
-
-        ':root[data-theme="ocean"]': {
-          '--color-primary': '6 182 212',
-          '--color-accent': '20 184 166',
-          '--color-ink': '12 24 33',
-          '--color-paper': '15 23 42',
-          '--color-paper-elev': '30 41 59',
-          '--color-outline': '51 65 85',
+        ':root[data-theme="midnight"]:not(.dark)': {
+          '--color-primary': '79 70 229', // indigo-600 (WCAG AA)
+          '--color-accent': '124 58 237', // purple-700
+          '--color-ink': '30 27 75',
+          '--color-paper': '248 250 252',
+          '--color-paper-elev': '241 245 249',
+          '--color-outline': '199 210 254',
         },
 
-        ':root[data-theme="forest"]': {
-          '--color-primary': '16 185 129',
-          '--color-accent': '132 204 22',
-          '--color-ink': '10 31 21',
-          '--color-paper': '15 31 22',
-          '--color-paper-elev': '26 46 35',
-          '--color-outline': '45 74 58',
+        // Sakura Theme (Pink) - Dark Mode
+        ':root[data-theme="sakura"].dark': {
+          '--color-primary': '244 114 182', // pink-400
+          '--color-accent': '251 207 232', // pink-200
+          '--color-ink': '12 8 12',
+          '--color-paper': '24 10 24',
+          '--color-paper-elev': '39 20 39',
+          '--color-outline': '62 35 62',
+        },
+        ':root[data-theme="sakura"]:not(.dark)': {
+          '--color-primary': '219 39 119', // pink-700 (WCAG AA)
+          '--color-accent': '190 24 93', // pink-800
+          '--color-ink': '63 15 50',
+          '--color-paper': '253 242 248',
+          '--color-paper-elev': '252 231 243',
+          '--color-outline': '251 207 232',
         },
 
-        ':root[data-theme="sunset"]': {
-          '--color-primary': '249 115 22',
-          '--color-accent': '251 191 36',
-          '--color-ink': '26 15 10',
+        // Horizon Theme (Orange & Amber) - Dark Mode
+        ':root[data-theme="horizon"].dark': {
+          '--color-primary': '251 146 60', // orange-400
+          '--color-accent': '251 191 36', // amber-400
+          '--color-ink': '20 12 8',
           '--color-paper': '31 20 16',
           '--color-paper-elev': '42 31 26',
           '--color-outline': '61 46 36',
         },
+        ':root[data-theme="horizon"]:not(.dark)': {
+          '--color-primary': '217 119 6', // amber-700 (WCAG AA)
+          '--color-accent': '180 83 9', // amber-800
+          '--color-ink': '69 26 3',
+          '--color-paper': '254 252 232',
+          '--color-paper-elev': '254 249 195',
+          '--color-outline': '253 230 138',
+        },
 
-        ':root[data-theme="monochrome"]': {
-          '--color-primary': '107 114 128',
-          '--color-accent': '156 163 175',
+        // Emerald Theme (Green) - Dark Mode
+        ':root[data-theme="emerald"].dark': {
+          '--color-primary': '52 211 153', // emerald-400
+          '--color-accent': '110 231 183', // emerald-300
+          '--color-ink': '6 20 14',
+          '--color-paper': '6 20 14',
+          '--color-paper-elev': '20 46 35',
+          '--color-outline': '45 74 58',
+        },
+        ':root[data-theme="emerald"]:not(.dark)': {
+          '--color-primary': '5 150 105', // emerald-700 (WCAG AA)
+          '--color-accent': '4 120 87', // emerald-800
+          '--color-ink': '6 78 59',
+          '--color-paper': '240 253 244',
+          '--color-paper-elev': '209 250 229',
+          '--color-outline': '167 243 208',
+        },
+
+        // Obsidian Theme (Grayscale) - Dark Mode
+        ':root[data-theme="obsidian"].dark': {
+          '--color-primary': '107 114 128', // gray-500
+          '--color-accent': '156 163 175', // gray-400
           '--color-ink': '0 0 0',
           '--color-paper': '17 17 17',
           '--color-paper-elev': '26 26 26',
           '--color-outline': '51 51 51',
         },
-
-        ':root:not(.dark)': {
-          '--color-ink': '255 255 255',
+        ':root[data-theme="obsidian"]:not(.dark)': {
+          '--color-primary': '55 65 81', // gray-700 (WCAG AA)
+          '--color-accent': '75 85 99', // gray-600
+          '--color-ink': '17 24 39',
           '--color-paper': '249 250 251',
           '--color-paper-elev': '243 244 246',
-          '--color-outline': '229 231 235',
+          '--color-outline': '209 213 219',
         },
       })
     }

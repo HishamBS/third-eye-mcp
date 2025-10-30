@@ -18,6 +18,7 @@ import eyesRoutes from './routes/eyes';
 import guidanceRoutes from './routes/guidance';
 import promptsRoutes from './routes/prompts';
 import pipelinesRoutes from './routes/pipelines';
+import pipelineExecutionRoutes from './routes/pipeline-execution';
 import strictnessRoutes from './routes/strictness';
 import leaderboardsRoutes from './routes/leaderboards';
 import duelRoutes from './routes/duel';
@@ -82,6 +83,7 @@ app.route('/api/session', sessionRoutes);
 app.route('/api/guidance', guidanceRoutes);
 app.route('/api/prompts', promptsRoutes);
 app.route('/api/pipelines', pipelinesRoutes);
+app.route('/api/pipeline-execution', pipelineExecutionRoutes);
 app.route('/api/strictness', strictnessRoutes);
 app.route('/api/leaderboards', leaderboardsRoutes);
 app.route('/api/metrics/leaderboards', leaderboardsRoutes); // Alias for /api/leaderboards

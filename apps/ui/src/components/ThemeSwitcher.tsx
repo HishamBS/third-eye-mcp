@@ -1,19 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { ThemeName, ThemeMode } from '@third-eye/theme';
-
-const THEME_NAMES: { value: ThemeName; label: string; color: string }[] = [
-  { value: 'aurora', label: 'Aurora', color: '#60A5FA' },
-  { value: 'midnight', label: 'Midnight', color: '#6366F1' },
-  { value: 'sakura', label: 'Sakura', color: '#F472B6' },
-  { value: 'horizon', label: 'Horizon', color: '#F59E0B' },
-  { value: 'emerald', label: 'Emerald', color: '#10B981' },
-  { value: 'obsidian', label: 'Obsidian', color: '#6B7280' },
-];
+import { type ThemeName, type ThemeMode, THEME_METADATA, DEFAULT_THEME } from '@third-eye/theme';
 
 export function ThemeSwitcher() {
-  const [theme, setTheme] = useState<ThemeName>('midnight');
+  const [theme, setTheme] = useState<ThemeName>(DEFAULT_THEME);
   const [mode, setMode] = useState<ThemeMode>('dark');
   const [isOpen, setIsOpen] = useState(false);
 
@@ -21,8 +12,8 @@ export function ThemeSwitcher() {
     // Load theme from localStorage
     const savedTheme = localStorage.getItem('third-eye-theme') as ThemeName | null;
     const savedMode = localStorage.getItem('third-eye-theme-mode') as ThemeMode | null;
-    
-    if (savedTheme && THEME_NAMES.some(t => t.value === savedTheme)) {
+
+    if (savedTheme && THEME_METADATA.some(t => t.value === savedTheme)) {
       setTheme(savedTheme);
     }
     if (savedMode) {
@@ -49,7 +40,7 @@ export function ThemeSwitcher() {
     setIsOpen(false);
   };
 
-  const currentTheme = THEME_NAMES.find(t => t.value === theme)!;
+  const currentTheme = THEME_METADATA.find(t => t.value === theme)!;
 
   return (
     <div className="relative">
@@ -101,7 +92,7 @@ export function ThemeSwitcher() {
               <div className="mb-2 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Select Theme
               </div>
-              {THEME_NAMES.map((t) => (
+              {THEME_METADATA.map((t) => (
                 <button
                   key={t.value}
                   onClick={() => selectTheme(t.value)}
