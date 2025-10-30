@@ -80,10 +80,26 @@ export function PropertyPanel({ selectedNode, onUpdateNode, onClose }: PropertyP
         const response = await fetch(`${API_URL}/api/strictness`);
         if (response.ok) {
           const data = await response.json();
-          setStrictnessProfiles(data.profiles || data || []);
+          // Handle both array and object responses
+          if (Array.isArray(data)) {
+            setStrictnessProfiles(data);
+          } else if (Array.isArray(data.profiles)) {
+            setStrictnessProfiles(data.profiles);
+          } else if (typeof data === 'object' && data !== null) {
+            // Convert object to array (STRICTNESS_PRESETS format)
+            const profilesArray = Object.entries(data).map(([id, profile]: [string, any]) => ({
+              id,
+              name: profile.name || id,
+              description: profile.description,
+            }));
+            setStrictnessProfiles(profilesArray);
+          } else {
+            setStrictnessProfiles([]);
+          }
         }
       } catch (error) {
         console.error('Failed to fetch strictness profiles:', error);
+        setStrictnessProfiles([]);
       }
     };
     fetchStrictness();
