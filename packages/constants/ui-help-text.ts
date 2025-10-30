@@ -13,6 +13,108 @@ export const UI_HELP_TEXT = Object.freeze({
   EYE_CAPABILITIES: 'Special abilities this Eye has for reviewing conversations',
   EYE_STAGE: 'When this Eye runs in the pipeline: Guidance helps before, Validation checks after',
 
+  // Eyes Page - Navigation
+  EYES_NAV_HOME: '← Home',
+  EYES_NAV_PROMPTS: 'Prompts',
+  EYES_NAV_PERSONAS: 'Personas',
+
+  // Eyes Page - Header
+  EYES_SECTION_LABEL: 'Eyes',
+  EYES_HEADER_TITLE: 'Eyes Management',
+
+  // Eyes Page - Buttons
+  EYES_BUTTON_CREATE: '+ Create Custom Eye',
+  EYES_BUTTON_CANCEL: 'Cancel',
+  EYES_BUTTON_CLOSE_TEST: 'Close Test',
+  EYES_BUTTON_CREATE_EYE: 'Create Eye',
+  EYES_BUTTON_CREATING: 'Creating...',
+  EYES_BUTTON_UPDATE_EYE: 'Update Eye',
+  EYES_BUTTON_UPDATING: 'Updating...',
+  EYES_BUTTON_RUN_TEST: 'Run Test',
+  EYES_BUTTON_TESTING: 'Testing...',
+  EYES_BUTTON_EDIT: 'Edit',
+  EYES_BUTTON_TEST: 'Test',
+  EYES_BUTTON_DELETE: 'Delete',
+  EYES_BUTTON_DISCARD_CHANGES: 'Discard Changes',
+  EYES_BUTTON_SAVE_CHANGES: 'Save Changes',
+  EYES_BUTTON_SAVING: 'Saving...',
+
+  // Eyes Page - Form Titles
+  EYES_FORM_TITLE_CREATE: 'Create Custom Eye',
+  EYES_FORM_TITLE_EDIT: 'Edit {eyeName}',
+  EYES_FORM_TITLE_VIEW: 'View {eyeName}',
+  EYES_FORM_TITLE_TEST: 'Test {eyeName}',
+
+  // Eyes Page - Form Labels
+  EYES_FORM_LABEL_TEST_INPUT: 'Test Input',
+  EYES_FORM_LABEL_TEST_RESULT: 'Test Result',
+  EYES_FORM_LABEL_TEST_RESULT_EYE: 'Eye:',
+  EYES_FORM_LABEL_TEST_RESULT_RESPONSE: 'Response:',
+  EYES_FORM_LABEL_NAME: 'Eye Name (ID)',
+  EYES_FORM_LABEL_DESCRIPTION: 'Description',
+  EYES_FORM_LABEL_PERSONA: 'Persona (Optional)',
+  EYES_FORM_LABEL_INPUT_SCHEMA: 'Input Schema (JSON)',
+  EYES_FORM_LABEL_OUTPUT_SCHEMA: 'Output Schema (JSON)',
+
+  // Eyes Page - Placeholders
+  EYES_PLACEHOLDER_TEST_INPUT: 'Enter test input for the Eye...',
+  EYES_PLACEHOLDER_NAME: 'my_custom_eye',
+  EYES_PLACEHOLDER_DESCRIPTION: 'Describe what this Eye does...',
+
+  // Eyes Page - Helper Text
+  EYES_HELPER_NAME: 'Lowercase, no spaces. Will be used as tool name: third_eye_{eyeName}',
+  EYES_HELPER_PERSONA: 'Link this Eye to a persona for LLM-powered behavior',
+
+  // Eyes Page - Dropdown Options
+  EYES_DROPDOWN_NO_PERSONA: '-- No Persona (attach later) --',
+
+  // Eyes Page - Dialogs
+  EYES_DIALOG_DISCARD_TITLE: 'Discard Changes',
+  EYES_DIALOG_DISCARD_MESSAGE: 'You have unsaved changes. Are you sure you want to discard them?',
+  EYES_DIALOG_DISCARD_CONFIRM: 'Discard',
+  EYES_DIALOG_DELETE_TITLE: 'Delete Custom Eye',
+  EYES_DIALOG_DELETE_MESSAGE: 'Are you sure you want to delete this custom Eye?',
+  EYES_DIALOG_DELETE_CONFIRM: 'Delete',
+
+  // Eyes Page - Success Messages
+  EYES_SUCCESS_CREATED: 'Custom Eye created successfully',
+  EYES_SUCCESS_UPDATED: 'Custom Eye updated successfully',
+  EYES_SUCCESS_DELETED: 'Custom Eye deleted successfully',
+  EYES_SUCCESS_TEST_COMPLETED: 'Test completed successfully',
+
+  // Eyes Page - Error Fallbacks
+  EYES_ERROR_CREATE_FALLBACK: 'Failed to create Eye',
+  EYES_ERROR_UPDATE_FALLBACK: 'Failed to update Eye',
+
+  // Eyes Page - Warnings
+  EYES_WARNING_UNSAVED_CHANGES: 'You have unsaved changes to this Eye',
+
+  // Eyes Page - Guidelines
+  EYES_GUIDELINES_TITLE: 'Custom Eye Guidelines',
+  EYES_GUIDELINE_NAMES: '• Eye names must be unique and lowercase with underscores',
+  EYES_GUIDELINE_SCHEMAS: '• Input/output schemas must be valid JSON Schema format',
+  EYES_GUIDELINE_REGISTRATION: '• Eyes will be automatically registered in MCP server',
+  EYES_GUIDELINE_PERSONA: '• Link to a persona from the Prompt Library (future feature)',
+  EYES_GUIDELINE_CONTRACT: '• Custom Eyes follow the same Overseer contract as built-in Eyes',
+
+  // Eyes Page - Filter Tabs
+  EYES_FILTER_ALL: 'All ({count})',
+  EYES_FILTER_BUILTIN: 'Built-In ({count})',
+  EYES_FILTER_CUSTOM: 'Custom ({count})',
+
+  // Eyes Page - Empty States
+  EYES_EMPTY_CUSTOM_TITLE: 'No Custom Eyes Yet',
+  EYES_EMPTY_CUSTOM_DESCRIPTION: 'Custom Eyes are your own specialized AI agents! Create one to add unique capabilities like fact-checking, tone analysis, or custom validation rules.',
+  EYES_EMPTY_BUILTIN_TITLE: 'No Built-in Eyes Available',
+  EYES_EMPTY_BUILTIN_DESCRIPTION: 'Built-in Eyes are pre-configured AI agents that come with Third Eye MCP. They should be available by default.',
+  EYES_EMPTY_ALL_TITLE: 'No Eyes Found',
+  EYES_EMPTY_ALL_DESCRIPTION: 'Eyes are specialized AI agents that watch over your conversations. Each Eye has unique capabilities - explore them to get started!',
+  EYES_EMPTY_ACTION_CREATE: 'Create Your First Eye',
+  EYES_EMPTY_ACTION_VIEW_BUILTIN: 'View Built-in Eyes',
+
+  // Eyes Page - Date Display
+  EYES_CREATED_PREFIX: 'Created',
+
   // Pipelines Page
   PIPELINES_PAGE_TITLE: 'Pipelines are workflows that combine multiple Eyes to review conversations',
   PIPELINE_CREATE_BUTTON: 'Build a new pipeline by dragging and connecting Eyes',

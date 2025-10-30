@@ -235,7 +235,7 @@ export default function EyesPage() {
 
   const cancelForm = async () => {
     if (hasUnsavedChanges) {
-      const confirmed = await dialog.confirm('Discard Changes', 'You have unsaved changes. Are you sure you want to discard them?', 'Discard', 'Cancel');
+      const confirmed = await dialog.confirm(UI_HELP_TEXT.EYES_DIALOG_DISCARD_TITLE, UI_HELP_TEXT.EYES_DIALOG_DISCARD_MESSAGE, UI_HELP_TEXT.EYES_DIALOG_DISCARD_CONFIRM, UI_HELP_TEXT.EYES_BUTTON_CANCEL);
       if (!confirmed) {
         return;
       }
@@ -282,14 +282,14 @@ export default function EyesPage() {
       });
 
       if (response.ok) {
-        setSuccess('Custom Eye created successfully');
+        setSuccess(UI_HELP_TEXT.EYES_SUCCESS_CREATED);
         setHasUnsavedChanges(false);
         await fetchEyes();
         cancelForm();
       } else {
         const result = await response.json();
         console.error('Custom eye creation failed:', result);
-        setError(result.error?.detail || result.error?.title || 'Failed to create Eye');
+        setError(result.error?.detail || result.error?.title || UI_HELP_TEXT.EYES_ERROR_CREATE_FALLBACK);
       }
     } catch (error) {
       console.error('Custom eye creation error:', error);
@@ -342,14 +342,14 @@ export default function EyesPage() {
       });
 
       if (response.ok) {
-        setSuccess('Custom Eye updated successfully');
+        setSuccess(UI_HELP_TEXT.EYES_SUCCESS_UPDATED);
         setHasUnsavedChanges(false);
         setIsEditing(false);
         await fetchEyes();
         cancelForm();
       } else {
         const result = await response.json();
-        setError(result.error?.detail || 'Failed to update Eye');
+        setError(result.error?.detail || UI_HELP_TEXT.EYES_ERROR_UPDATE_FALLBACK);
       }
     } catch (error) {
       setError(UI_HELP_TEXT.ERROR_EYE_UPDATE_FAILED);
@@ -359,7 +359,7 @@ export default function EyesPage() {
   };
 
   const deleteEye = async (eyeId: string) => {
-    const confirmed = await dialog.confirm('Delete Custom Eye', 'Are you sure you want to delete this custom Eye?', 'Delete', 'Cancel');
+    const confirmed = await dialog.confirm(UI_HELP_TEXT.EYES_DIALOG_DELETE_TITLE, UI_HELP_TEXT.EYES_DIALOG_DELETE_MESSAGE, UI_HELP_TEXT.EYES_DIALOG_DELETE_CONFIRM, UI_HELP_TEXT.EYES_BUTTON_CANCEL);
     if (!confirmed) {
       return;
     }
@@ -372,7 +372,7 @@ export default function EyesPage() {
       });
 
       if (response.ok) {
-        setSuccess('Custom Eye deleted successfully');
+        setSuccess(UI_HELP_TEXT.EYES_SUCCESS_DELETED);
         await fetchEyes();
         cancelForm();
       } else {
@@ -404,7 +404,7 @@ export default function EyesPage() {
       if (response.ok) {
         const result = await response.json();
         setTestResult(result.data);
-        setSuccess('Test completed successfully');
+        setSuccess(UI_HELP_TEXT.EYES_SUCCESS_TEST_COMPLETED);
       } else {
         const result = await response.json();
         setError(result.error?.detail || UI_HELP_TEXT.ERROR_EYE_TEST_FAILED);
@@ -440,22 +440,22 @@ export default function EyesPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
               <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent" aria-label={UI_HELP_TEXT.ARIA_NAV_HOME}>
-                ← Home
+                {UI_HELP_TEXT.EYES_NAV_HOME}
               </Link>
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Eyes</p>
+                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">{UI_HELP_TEXT.EYES_SECTION_LABEL}</p>
                 <div className="mt-1 flex items-center gap-2">
-                  <h1 className="text-2xl font-semibold text-white">Eyes Management</h1>
+                  <h1 className="text-2xl font-semibold text-white">{UI_HELP_TEXT.EYES_HEADER_TITLE}</h1>
                   <HelpIcon helpTextKey="EYES_PAGE_TITLE" size="md" />
                 </div>
               </div>
             </div>
             <div className="flex gap-4">
               <Link href="/prompts" className="text-sm text-slate-400 transition-colors hover:text-white" aria-label={UI_HELP_TEXT.ARIA_NAV_PROMPTS}>
-                Prompts
+                {UI_HELP_TEXT.EYES_NAV_PROMPTS}
               </Link>
               <Link href="/personas" className="text-sm text-slate-400 transition-colors hover:text-white" aria-label={UI_HELP_TEXT.ARIA_NAV_PERSONAS}>
-                Personas
+                {UI_HELP_TEXT.EYES_NAV_PERSONAS}
               </Link>
               <div className="flex items-center gap-2">
                 <button
@@ -463,7 +463,7 @@ export default function EyesPage() {
                   aria-label={UI_HELP_TEXT.ARIA_CREATE_EYE}
                   className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition-all duration-200 hover:bg-brand-primary hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink active:scale-95"
                 >
-                  + Create Custom Eye
+                  {UI_HELP_TEXT.EYES_BUTTON_CREATE}
                 </button>
                 <HelpIcon helpTextKey="EYES_CREATE_BUTTON" size="sm" />
               </div>
@@ -504,7 +504,7 @@ export default function EyesPage() {
           <GlassCard>
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white">
-                {isCreating ? 'Create Custom Eye' : isTesting ? `Test ${selectedEye?.name}` : isEditing ? `Edit ${selectedEye?.name}` : `View ${selectedEye?.name}`}
+                {isCreating ? UI_HELP_TEXT.EYES_FORM_TITLE_CREATE : isTesting ? UI_HELP_TEXT.EYES_FORM_TITLE_TEST.replace('{eyeName}', selectedEye?.name || '') : isEditing ? UI_HELP_TEXT.EYES_FORM_TITLE_EDIT.replace('{eyeName}', selectedEye?.name || '') : UI_HELP_TEXT.EYES_FORM_TITLE_VIEW.replace('{eyeName}', selectedEye?.name || '')}
               </h2>
               <div className="flex gap-3">
                 <button
@@ -512,7 +512,7 @@ export default function EyesPage() {
                   aria-label={isTesting ? UI_HELP_TEXT.ARIA_CLOSE_TEST : UI_HELP_TEXT.ARIA_CANCEL}
                   className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
                 >
-                  {isTesting ? 'Close Test' : 'Cancel'}
+                  {isTesting ? UI_HELP_TEXT.EYES_BUTTON_CLOSE_TEST : UI_HELP_TEXT.EYES_BUTTON_CANCEL}
                 </button>
                 {isCreating && (
                   <button
@@ -521,7 +521,7 @@ export default function EyesPage() {
                     aria-label={UI_HELP_TEXT.ARIA_SAVE_EYE}
                     className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary disabled:opacity-50"
                   >
-                    {loading ? 'Creating...' : 'Create Eye'}
+                    {loading ? UI_HELP_TEXT.EYES_BUTTON_CREATING : UI_HELP_TEXT.EYES_BUTTON_CREATE_EYE}
                   </button>
                 )}
                 {isEditing && (
@@ -531,7 +531,7 @@ export default function EyesPage() {
                     aria-label={UI_HELP_TEXT.ARIA_UPDATE_EYE}
                     className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary disabled:opacity-50"
                   >
-                    {loading ? 'Updating...' : 'Update Eye'}
+                    {loading ? UI_HELP_TEXT.EYES_BUTTON_UPDATING : UI_HELP_TEXT.EYES_BUTTON_UPDATE_EYE}
                   </button>
                 )}
                 {isTesting && (
@@ -541,7 +541,7 @@ export default function EyesPage() {
                     aria-label={UI_HELP_TEXT.ARIA_RUN_TEST}
                     className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
                   >
-                    {loading ? 'Testing...' : 'Run Test'}
+                    {loading ? UI_HELP_TEXT.EYES_BUTTON_TESTING : UI_HELP_TEXT.EYES_BUTTON_RUN_TEST}
                   </button>
                 )}
                 {!isCreating && !isEditing && !isTesting && selectedEye && selectedEye.source === 'custom' && (
@@ -551,21 +551,21 @@ export default function EyesPage() {
                       aria-label={UI_HELP_TEXT.ARIA_EDIT_EYE}
                       className="rounded-full border border-brand-accent px-5 py-2 text-sm font-semibold text-brand-accent transition hover:bg-brand-accent/10"
                     >
-                      Edit
+                      {UI_HELP_TEXT.EYES_BUTTON_EDIT}
                     </button>
                     <button
                       onClick={() => setIsTesting(true)}
                       aria-label={UI_HELP_TEXT.ARIA_TEST_EYE}
                       className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-green-700"
                     >
-                      Test
+                      {UI_HELP_TEXT.EYES_BUTTON_TEST}
                     </button>
                     <button
                       onClick={() => selectedEye && deleteEye(selectedEye.id)}
                       aria-label={UI_HELP_TEXT.ARIA_DELETE_EYE}
                       className="rounded-full bg-red-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
                     >
-                      Delete
+                      {UI_HELP_TEXT.EYES_BUTTON_DELETE}
                     </button>
                   </>
                 )}
@@ -576,24 +576,24 @@ export default function EyesPage() {
               /* Test Panel */
               <div className="space-y-6">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-300">Test Input</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-300">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_INPUT}</label>
                   <textarea
                     value={testInput}
                     onChange={(e) => setTestInput(e.target.value)}
-                    placeholder="Enter test input for the Eye..."
+                    placeholder={UI_HELP_TEXT.EYES_PLACEHOLDER_TEST_INPUT}
                     className="h-40 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                   />
                 </div>
 
                 {testResult && (
                   <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
-                    <h3 className="mb-3 text-lg font-semibold text-white">Test Result</h3>
+                    <h3 className="mb-3 text-lg font-semibold text-white">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_RESULT}</h3>
                     <div className="space-y-3">
                       <div>
-                        <p className="text-sm font-medium text-slate-300">Eye: {testResult.eyeName}</p>
+                        <p className="text-sm font-medium text-slate-300">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_RESULT_EYE} {testResult.eyeName}</p>
                       </div>
                       <div>
-                        <p className="mb-2 text-sm font-medium text-slate-300">Response:</p>
+                        <p className="mb-2 text-sm font-medium text-slate-300">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_RESULT_RESPONSE}</p>
                         <pre className="overflow-x-auto rounded-lg bg-brand-ink p-4 text-xs text-green-400">
                           {JSON.stringify(testResult.response, null, 2)}
                         </pre>
@@ -606,40 +606,40 @@ export default function EyesPage() {
               /* Schema Editor */
               <div className="space-y-6">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-300">Eye Name (ID)</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-300">{UI_HELP_TEXT.EYES_FORM_LABEL_NAME}</label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="my_custom_eye"
+                    placeholder={UI_HELP_TEXT.EYES_PLACEHOLDER_NAME}
                     disabled={!isCreating}
                     className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
                   />
                   <p className="mt-1 text-xs text-slate-400">
-                    Lowercase, no spaces. Will be used as tool name: third_eye_{formData.name}
+                    {UI_HELP_TEXT.EYES_HELPER_NAME.replace('{eyeName}', formData.name)}
                   </p>
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-300">Description</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-300">{UI_HELP_TEXT.EYES_FORM_LABEL_DESCRIPTION}</label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Describe what this Eye does..."
+                    placeholder={UI_HELP_TEXT.EYES_PLACEHOLDER_DESCRIPTION}
                     disabled={!isCreating && !isEditing}
                     className="h-24 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-300">Persona (Optional)</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-300">{UI_HELP_TEXT.EYES_FORM_LABEL_PERSONA}</label>
                   <select
                     value={formData.personaId}
                     onChange={(e) => setFormData({ ...formData, personaId: e.target.value })}
                     disabled={!isCreating && !isEditing}
                     className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
                   >
-                    <option value="">-- No Persona (attach later) --</option>
+                    <option value="">{UI_HELP_TEXT.EYES_DROPDOWN_NO_PERSONA}</option>
                     {Array.isArray(personas) && personas.map((persona) => (
                       <option key={persona.id} value={persona.id}>
                         {persona.name}
@@ -647,13 +647,13 @@ export default function EyesPage() {
                     ))}
                   </select>
                   <p className="mt-1 text-xs text-slate-400">
-                    Link this Eye to a persona for LLM-powered behavior
+                    {UI_HELP_TEXT.EYES_HELPER_PERSONA}
                   </p>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">Input Schema (JSON)</label>
+                    <label className="mb-2 block text-sm font-medium text-slate-300">{UI_HELP_TEXT.EYES_FORM_LABEL_INPUT_SCHEMA}</label>
                     <textarea
                       value={formData.inputSchema}
                       onChange={(e) => setFormData({ ...formData, inputSchema: e.target.value })}
@@ -663,7 +663,7 @@ export default function EyesPage() {
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">Output Schema (JSON)</label>
+                    <label className="mb-2 block text-sm font-medium text-slate-300">{UI_HELP_TEXT.EYES_FORM_LABEL_OUTPUT_SCHEMA}</label>
                     <textarea
                       value={formData.outputSchema}
                       onChange={(e) => setFormData({ ...formData, outputSchema: e.target.value })}
@@ -685,7 +685,7 @@ export default function EyesPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                       </svg>
                       <span className="text-sm font-medium text-white">
-                        You have unsaved changes to this Eye
+                        {UI_HELP_TEXT.EYES_WARNING_UNSAVED_CHANGES}
                       </span>
                     </div>
                     <div className="flex gap-3">
@@ -694,27 +694,27 @@ export default function EyesPage() {
                         disabled={loading}
                         className="rounded-lg border border-brand-outline/40 bg-brand-paper px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-brand-paperElev disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        Discard Changes
+                        {UI_HELP_TEXT.EYES_BUTTON_DISCARD_CHANGES}
                       </button>
                       <button
                         onClick={isCreating ? saveEye : updateEye}
                         disabled={loading}
                         className="rounded-lg bg-brand-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        {loading ? 'Saving...' : 'Save Changes'}
+                        {loading ? UI_HELP_TEXT.EYES_BUTTON_SAVING : UI_HELP_TEXT.EYES_BUTTON_SAVE_CHANGES}
                       </button>
                     </div>
                   </motion.div>
                 )}
 
                 <div className="rounded-xl border border-yellow-700/50 bg-yellow-900/10 p-5">
-                  <h4 className="font-medium text-yellow-300">Custom Eye Guidelines</h4>
+                  <h4 className="font-medium text-yellow-300">{UI_HELP_TEXT.EYES_GUIDELINES_TITLE}</h4>
                   <ul className="mt-3 space-y-1 text-sm text-yellow-100">
-                    <li>• Eye names must be unique and lowercase with underscores</li>
-                    <li>• Input/output schemas must be valid JSON Schema format</li>
-                    <li>• Eyes will be automatically registered in MCP server</li>
-                    <li>• Link to a persona from the Prompt Library (future feature)</li>
-                    <li>• Custom Eyes follow the same Overseer contract as built-in Eyes</li>
+                    <li>{UI_HELP_TEXT.EYES_GUIDELINE_NAMES}</li>
+                    <li>{UI_HELP_TEXT.EYES_GUIDELINE_SCHEMAS}</li>
+                    <li>{UI_HELP_TEXT.EYES_GUIDELINE_REGISTRATION}</li>
+                    <li>{UI_HELP_TEXT.EYES_GUIDELINE_PERSONA}</li>
+                    <li>{UI_HELP_TEXT.EYES_GUIDELINE_CONTRACT}</li>
                   </ul>
                 </div>
               </div>
@@ -735,7 +735,7 @@ export default function EyesPage() {
                       : 'border border-brand-outline/40 text-slate-300 hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
                   } focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink`}
                 >
-                  All ({eyes.length})
+                  {UI_HELP_TEXT.EYES_FILTER_ALL.replace('{count}', eyes.length.toString())}
                 </button>
                 <HelpIcon helpTextKey="EYES_ALL_FILTER" size="sm" />
               </div>
@@ -749,7 +749,7 @@ export default function EyesPage() {
                       : 'border border-brand-outline/40 text-slate-300 hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
                   } focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink`}
                 >
-                  Built-In ({builtInEyes.length})
+                  {UI_HELP_TEXT.EYES_FILTER_BUILTIN.replace('{count}', builtInEyes.length.toString())}
                 </button>
                 <HelpIcon helpTextKey="EYES_BUILTIN_FILTER" size="sm" />
               </div>
@@ -763,7 +763,7 @@ export default function EyesPage() {
                       : 'border border-brand-outline/40 text-slate-300 hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
                   } focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink`}
                 >
-                  Custom ({customEyes.length})
+                  {UI_HELP_TEXT.EYES_FILTER_CUSTOM.replace('{count}', customEyes.length.toString())}
                 </button>
                 <HelpIcon helpTextKey="EYES_CUSTOM_FILTER" size="sm" />
               </div>
@@ -838,7 +838,7 @@ export default function EyesPage() {
                     {eye.source === 'custom' && (
                       <div className="mt-4 border-t border-white/20 pt-4 text-center">
                         <span className="text-xs text-white/70">
-                          Created {new Date(eye.createdAt!).toLocaleDateString()}
+                          {UI_HELP_TEXT.EYES_CREATED_PREFIX} {new Date(eye.createdAt!).toLocaleDateString()}
                         </span>
                       </div>
                     )}
@@ -851,19 +851,19 @@ export default function EyesPage() {
             {!loading && getFilteredEyes().length === 0 && (
               <EmptyState
                 icon={viewMode === 'custom' ? Sparkles : EyeIcon}
-                title={viewMode === 'custom' ? 'No Custom Eyes Yet' : viewMode === 'built-in' ? 'No Built-in Eyes Available' : 'No Eyes Found'}
+                title={viewMode === 'custom' ? UI_HELP_TEXT.EYES_EMPTY_CUSTOM_TITLE : viewMode === 'built-in' ? UI_HELP_TEXT.EYES_EMPTY_BUILTIN_TITLE : UI_HELP_TEXT.EYES_EMPTY_ALL_TITLE}
                 description={
                   viewMode === 'custom'
-                    ? 'Custom Eyes are your own specialized AI agents! Create one to add unique capabilities like fact-checking, tone analysis, or custom validation rules.'
+                    ? UI_HELP_TEXT.EYES_EMPTY_CUSTOM_DESCRIPTION
                     : viewMode === 'built-in'
-                    ? 'Built-in Eyes are pre-configured AI agents that come with Third Eye MCP. They should be available by default.'
-                    : 'Eyes are specialized AI agents that watch over your conversations. Each Eye has unique capabilities - explore them to get started!'
+                    ? UI_HELP_TEXT.EYES_EMPTY_BUILTIN_DESCRIPTION
+                    : UI_HELP_TEXT.EYES_EMPTY_ALL_DESCRIPTION
                 }
                 actions={
                   viewMode === 'custom'
-                    ? [{ label: 'Create Your First Eye', onClick: startCreating, variant: 'primary' }]
+                    ? [{ label: UI_HELP_TEXT.EYES_EMPTY_ACTION_CREATE, onClick: startCreating, variant: 'primary' }]
                     : viewMode === 'all'
-                    ? [{ label: 'View Built-in Eyes', onClick: () => setViewMode('built-in'), variant: 'secondary' }]
+                    ? [{ label: UI_HELP_TEXT.EYES_EMPTY_ACTION_VIEW_BUILTIN, onClick: () => setViewMode('built-in'), variant: 'secondary' }]
                     : []
                 }
               />
