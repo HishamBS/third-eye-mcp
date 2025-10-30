@@ -102,7 +102,8 @@ export type PersonaFormAction =
   | { readonly type: 'NEXT_STEP' }
   | { readonly type: 'PREVIOUS_STEP' }
   | { readonly type: 'RESET' }
-  | { readonly type: 'MARK_CLEAN' };
+  | { readonly type: 'MARK_CLEAN' }
+  | { readonly type: 'LOAD_IMPORTED_DATA'; readonly data: Partial<PersonaFormState> };
 
 // ============================================================================
 // Props

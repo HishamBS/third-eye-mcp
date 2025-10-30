@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useReducer, useMemo, useCallback } from 'react';
+import React, { useReducer, useMemo, useCallback, useRef } from 'react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import {
   WIZARD_STEPS,
@@ -17,7 +17,7 @@ import type {
   PersonaWizardProps,
   WizardStep,
 } from '@/types/persona-form';
-import { ChevronLeft, ChevronRight, Save, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Save, X, Upload } from 'lucide-react';
 import { MetadataStep } from './steps/MetadataStep';
 import { MissionStep } from './steps/MissionStep';
 import { EnvelopeStep } from './steps/EnvelopeStep';
@@ -127,6 +127,13 @@ function personaFormReducer(
     case 'MARK_CLEAN':
       return { ...state, isDirty: false };
 
+    case 'LOAD_IMPORTED_DATA':
+      return {
+        ...state,
+        ...action.data,
+        isDirty: true,
+      };
+
     default:
       return state;
   }
@@ -149,6 +156,8 @@ export function PersonaWizard({
       ...initial,
     })
   );
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Memoized step configuration
   const steps: readonly WizardStep[] = useMemo(
@@ -193,6 +202,68 @@ export function PersonaWizard({
     onCancel();
   }, [onCancel, state.isDirty]);
 
+  const handleImportClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = e.target?.result as string;
+          const imported = JSON.parse(content);
+
+          // Validate required fields
+          if (!imported.metadata || !imported.mission) {
+            alert(WIZARD_TEXT.IMPORT_MISSING_FIELDS);
+            return;
+          }
+
+          // Remove export metadata before loading
+          const { exportedAt, exportVersion, ...cleanMetadata } = imported.metadata;
+
+          // Load imported data
+          dispatch({
+            type: 'LOAD_IMPORTED_DATA',
+            data: {
+              metadata: cleanMetadata,
+              mission: imported.mission || '',
+              guidancePhase: imported.guidancePhase || null,
+              validationPhase: imported.validationPhase || null,
+              envelopeContract: imported.envelopeContract || {
+                requiredKeys: [],
+                requiredDataKeys: [],
+                requiredUiKeys: [],
+              },
+              reminders: imported.reminders || [],
+              llmConfig: imported.llmConfig || {
+                temperature: 0,
+                top_p: 1,
+                response_format: 'json_object',
+                max_tokens: 2000,
+              },
+              notes: imported.notes || '',
+            },
+          });
+
+          alert(WIZARD_TEXT.IMPORT_SUCCESS);
+        } catch (error) {
+          console.error('Import error:', error);
+          alert(WIZARD_TEXT.IMPORT_INVALID_JSON);
+        }
+      };
+      reader.readAsText(file);
+
+      // Reset input so same file can be imported again
+      event.target.value = '';
+    },
+    [dispatch]
+  );
+
   // Navigation state
   const isFirstStep = state.currentStep === 0;
   const isLastStep = state.currentStep === TOTAL_STEPS - 1;
@@ -201,14 +272,35 @@ export function PersonaWizard({
   return (
     <div className="min-h-screen bg-brand-paper p-8">
       <div className="mx-auto max-w-5xl">
+        {/* Hidden File Input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json,application/json"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+
         {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-brand-ink mb-2">
-            {WIZARD_TEXT.TITLE}
-          </h1>
-          <p className="text-lg text-brand-ink/70">
-            {WIZARD_TEXT.SUBTITLE}
-          </p>
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-center flex-1">
+              <h1 className="text-4xl font-bold text-brand-ink mb-2">
+                {WIZARD_TEXT.TITLE}
+              </h1>
+              <p className="text-lg text-brand-ink/70">
+                {WIZARD_TEXT.SUBTITLE}
+              </p>
+            </div>
+            <button
+              onClick={handleImportClick}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-brand-outline text-brand-ink hover:bg-brand-paperElev transition-colors"
+              title={BUTTON_LABELS.IMPORT_JSON}
+            >
+              <Upload className="w-4 h-4" />
+              {BUTTON_LABELS.IMPORT_JSON}
+            </button>
+          </div>
         </div>
 
         {/* Progress Indicator */}

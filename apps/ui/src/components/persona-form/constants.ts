@@ -51,6 +51,7 @@ export const BUTTON_LABELS = {
   FINISH: 'Finish & Save',
   CANCEL: 'Cancel',
   EXPORT_JSON: 'Export JSON',
+  IMPORT_JSON: 'Import JSON',
 } as const;
 
 export const VALIDATION_MESSAGES = {
@@ -72,6 +73,11 @@ export const WIZARD_TEXT = {
   SAVE_SUCCESS: 'Persona saved successfully',
   SAVE_ERROR: 'Failed to save persona',
   VALIDATION_ERROR: 'Please fix validation errors before proceeding',
+  IMPORT_SUCCESS: 'Persona imported successfully',
+  IMPORT_ERROR: 'Failed to import persona',
+  IMPORT_INVALID_JSON: 'Invalid JSON file. Please select a valid persona file.',
+  IMPORT_MISSING_FIELDS: 'Imported file is missing required fields',
+  EXPORT_SUCCESS: 'Persona exported successfully',
 } as const;
 
 export const OPTIONAL_STEPS = new Set([

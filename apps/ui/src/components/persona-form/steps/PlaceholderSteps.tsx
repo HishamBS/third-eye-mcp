@@ -150,27 +150,35 @@ export function RemindersStep({ state, dispatch }: WizardStepProps) {
 export function ReviewStep({ state }: WizardStepProps) {
   const [showJSON, setShowJSON] = useState(false);
 
-  const personaJSON = JSON.stringify(
-    {
-      metadata: state.metadata,
-      mission: state.mission,
-      guidancePhase: state.guidancePhase,
-      validationPhase: state.validationPhase,
-      envelopeContract: state.envelopeContract,
-      reminders: state.reminders,
-      llmConfig: state.llmConfig,
-      notes: state.notes,
+  const personaData = {
+    metadata: {
+      ...state.metadata,
+      exportedAt: new Date().toISOString(),
+      exportVersion: '1.0',
     },
-    null,
-    2
-  );
+    mission: state.mission,
+    guidancePhase: state.guidancePhase,
+    validationPhase: state.validationPhase,
+    envelopeContract: state.envelopeContract,
+    reminders: state.reminders,
+    llmConfig: state.llmConfig,
+    notes: state.notes,
+  };
+
+  const personaJSON = JSON.stringify(personaData, null, 2);
 
   const handleDownload = () => {
+    const eyeId = state.metadata.eyeId || 'draft';
+    const name = state.metadata.name.replace(/\s+/g, '-').toLowerCase() || 'unnamed';
+    const version = state.metadata.version || 1;
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `${eyeId}-${name}-v${version}-${timestamp}.json`;
+
     const blob = new Blob([personaJSON], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `persona-${state.metadata.eyeId || 'draft'}.json`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
