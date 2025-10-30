@@ -11,6 +11,7 @@ import {
   Cpu, CheckCircle2, Beaker, Monitor
 } from 'lucide-react';
 import { PROVIDERS } from '@third-eye/types/enums';
+import { UI_HELP_TEXT, PLATFORM_HIGHLIGHTS } from '@third-eye/constants';
 
 interface RealtimeStats {
   sessions: number;
@@ -20,89 +21,18 @@ interface RealtimeStats {
   providers: Array<{ id: string; status: 'online' | 'offline' }>;
 }
 
-const WOW_FEATURES = [
-  {
-    id: 'evidence-lens',
-    title: 'Evidence Lens',
-    description: 'Live claim validation with confidence scores',
-    icon: <Eye className="h-6 w-6" />,
-    color: 'from-blue-500 to-cyan-500',
-    href: '/monitor?tab=evidence',
-    demo: '95% confidence',
-  },
-  {
-    id: 'duel-mode',
-    title: 'Duel Mode',
-    description: 'Model comparison arena',
-    icon: <Zap className="h-6 w-6" />,
-    color: 'from-purple-500 to-pink-500',
-    href: '/duel',
-    demo: 'GPT-4 vs Claude',
-  },
-  {
-    id: 'replay-theater',
-    title: 'Replay Theater',
-    description: 'Session playback with speed controls',
-    icon: <PlayCircle className="h-6 w-6" />,
-    color: 'from-orange-500 to-red-500',
-    href: '/replay',
-    demo: '0.5x - 5x speed',
-  },
-  {
-    id: 'kill-switch',
-    title: 'Kill Switch',
-    description: 'One-click hallucination check',
-    icon: <ShieldAlert className="h-6 w-6" />,
-    color: 'from-red-500 to-rose-500',
-    href: '/monitor',
-    demo: 'Re-validate now',
-  },
-  {
-    id: 'visual-plan',
-    title: 'Visual Plan Renderer',
-    description: 'File tree + Kanban board',
-    icon: <FolderTree className="h-6 w-6" />,
-    color: 'from-green-500 to-emerald-500',
-    href: '/monitor?tab=plan',
-    demo: '5 phases tracked',
-  },
-  {
-    id: 'leaderboards',
-    title: 'Leaderboards',
-    description: 'Provider/model rankings',
-    icon: <Trophy className="h-6 w-6" />,
-    color: 'from-yellow-500 to-amber-500',
-    href: '/metrics',
-    demo: 'Groq leads 342ms',
-  },
-  {
-    id: 'export-engine',
-    title: 'Export Engine',
-    description: 'PDF/HTML/JSON/MD downloads',
-    icon: <Download className="h-6 w-6" />,
-    color: 'from-indigo-500 to-blue-500',
-    href: '/monitor',
-    demo: '4 formats ready',
-  },
-  {
-    id: 'adaptive-clarifications',
-    title: 'Adaptive Clarifications',
-    description: 'Sharingan inline Q&A',
-    icon: <MessageSquare className="h-6 w-6" />,
-    color: 'from-teal-500 to-cyan-500',
-    href: '/monitor?eye=sharingan',
-    demo: '3 questions asked',
-  },
-  {
-    id: 'session-memory',
-    title: 'Session Memory',
-    description: 'Byakugan context tracking',
-    icon: <History className="h-6 w-6" />,
-    color: 'from-violet-500 to-purple-500',
-    href: '/monitor?tab=evidence',
-    demo: '12 refs tracked',
-  },
-];
+// Icon mapping for Platform Highlights
+const ICON_MAP: Record<string, React.ReactNode> = {
+  Eye: <Eye className="h-6 w-6" />,
+  Zap: <Zap className="h-6 w-6" />,
+  PlayCircle: <PlayCircle className="h-6 w-6" />,
+  ShieldAlert: <ShieldAlert className="h-6 w-6" />,
+  FolderTree: <FolderTree className="h-6 w-6" />,
+  Trophy: <Trophy className="h-6 w-6" />,
+  Download: <Download className="h-6 w-6" />,
+  MessageSquare: <MessageSquare className="h-6 w-6" />,
+  History: <History className="h-6 w-6" />,
+};
 
 export default function HomePage() {
   const [stats, setStats] = useState<RealtimeStats>({
@@ -288,14 +218,14 @@ export default function HomePage() {
 
       <section className="mx-auto max-w-7xl px-6 py-12">
         <h2 className="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-brand-accent to-purple-400 bg-clip-text text-transparent">
-          WOW Features
+          {UI_HELP_TEXT.DASHBOARD_PLATFORM_HIGHLIGHTS_TITLE}
         </h2>
         <p className="text-center text-slate-400 mb-12 max-w-2xl mx-auto">
-          Powerful tools for AI orchestration, validation, and analysis. All features work with real-time data.
+          {UI_HELP_TEXT.DASHBOARD_PLATFORM_HIGHLIGHTS_SUBTITLE}
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {WOW_FEATURES.map((feature, index) => (
+          {PLATFORM_HIGHLIGHTS.map((feature, index) => (
             <motion.div
               key={feature.id}
               initial={{ opacity: 0, y: 20 }}
@@ -305,7 +235,7 @@ export default function HomePage() {
               <Link href={feature.href}>
                 <GlassCard className="group cursor-pointer hover:border-brand-accent/60 transition-all duration-300 p-6 h-full">
                   <div className={`inline-flex rounded-xl bg-gradient-to-br ${feature.color} p-3 text-white mb-4`}>
-                    {feature.icon}
+                    {ICON_MAP[feature.iconName]}
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-brand-accent transition-colors">
                     {feature.title}

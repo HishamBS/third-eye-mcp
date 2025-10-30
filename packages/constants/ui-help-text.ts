@@ -152,6 +152,98 @@ export const UI_HELP_TEXT = Object.freeze({
 
   // Metrics Page
   ERROR_METRICS_FETCH_FAILED: 'Failed to fetch metrics',
+
+  // Dashboard / Homepage
+  DASHBOARD_PLATFORM_HIGHLIGHTS_TITLE: 'Platform Highlights',
+  DASHBOARD_PLATFORM_HIGHLIGHTS_SUBTITLE: 'Powerful tools for AI orchestration, validation, and analysis. All features work with real-time data.',
 });
 
 export type UiHelpTextKey = keyof typeof UI_HELP_TEXT;
+
+/**
+ * Platform Highlights - Dashboard Feature Cards
+ * Showcases key capabilities of Third Eye MCP
+ */
+export const PLATFORM_HIGHLIGHTS = Object.freeze([
+  {
+    id: 'evidence-lens',
+    title: 'Evidence Lens',
+    description: 'Live claim validation with confidence scores',
+    iconName: 'Eye',
+    color: 'from-blue-500 to-cyan-500',
+    href: '/monitor?tab=evidence',
+    demo: '95% confidence',
+  },
+  {
+    id: 'duel-mode',
+    title: 'Duel Mode',
+    description: 'Model comparison arena',
+    iconName: 'Zap',
+    color: 'from-purple-500 to-pink-500',
+    href: '/duel',
+    demo: 'GPT-4 vs Claude',
+  },
+  {
+    id: 'replay-theater',
+    title: 'Replay Theater',
+    description: 'Session playback with speed controls',
+    iconName: 'PlayCircle',
+    color: 'from-orange-500 to-red-500',
+    href: '/replay',
+    demo: '0.5x - 5x speed',
+  },
+  {
+    id: 'kill-switch',
+    title: 'Kill Switch',
+    description: 'One-click hallucination check',
+    iconName: 'ShieldAlert',
+    color: 'from-red-500 to-rose-500',
+    href: '/monitor',
+    demo: 'Re-validate now',
+  },
+  {
+    id: 'visual-plan',
+    title: 'Visual Plan Renderer',
+    description: 'File tree + Kanban board',
+    iconName: 'FolderTree',
+    color: 'from-green-500 to-emerald-500',
+    href: '/monitor?tab=plan',
+    demo: '5 phases tracked',
+  },
+  {
+    id: 'leaderboards',
+    title: 'Leaderboards',
+    description: 'Provider/model rankings',
+    iconName: 'Trophy',
+    color: 'from-yellow-500 to-amber-500',
+    href: '/metrics',
+    demo: 'Groq leads 342ms',
+  },
+  {
+    id: 'export-engine',
+    title: 'Export Engine',
+    description: 'PDF/HTML/JSON/MD downloads',
+    iconName: 'Download',
+    color: 'from-indigo-500 to-blue-500',
+    href: '/monitor',
+    demo: '4 formats ready',
+  },
+  {
+    id: 'adaptive-clarifications',
+    title: 'Adaptive Clarifications',
+    description: 'Sharingan inline Q&A',
+    iconName: 'MessageSquare',
+    color: 'from-teal-500 to-cyan-500',
+    href: '/monitor?eye=sharingan',
+    demo: '3 questions asked',
+  },
+  {
+    id: 'session-memory',
+    title: 'Session Memory',
+    description: 'Byakugan context tracking',
+    iconName: 'History',
+    color: 'from-violet-500 to-purple-500',
+    href: '/monitor?tab=evidence',
+    demo: '12 refs tracked',
+  },
+]);
