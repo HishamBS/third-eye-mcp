@@ -122,7 +122,7 @@ function Dropdown({ section }: { section: DropdownSection }) {
 export function GlobalNav() {
   return (
     <header className="border-b border-brand-outline/60 bg-brand-paperElev/80 backdrop-blur-sm sticky top-0 z-50">
-      <div className="mx-auto max-w-7xl px-8 py-4 grid grid-cols-[1fr_auto_1fr] items-center gap-8">
+      <div className="mx-auto max-w-7xl px-8 py-4 grid grid-cols-[auto_1fr_auto] items-center gap-8">
         {/* Left: Logo */}
         <Link
           href="/"
@@ -150,7 +150,7 @@ export function GlobalNav() {
         </nav>
 
         {/* Right: Actions */}
-        <div className="flex items-center justify-self-end space-x-3">
+        <div className="flex items-center justify-self-end space-x-3 min-w-[650px]">
           <SessionSelector />
           <ViewModeToggle />
           <ThemeSwitcher />

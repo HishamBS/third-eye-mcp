@@ -196,7 +196,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
     <div className={`relative ${className}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 rounded-xl border border-brand-outline/40 bg-brand-paper/80 px-4 py-2.5 text-sm transition-all hover:border-brand-accent/60 hover:bg-brand-paper"
+        className="flex items-center gap-3 rounded-xl border border-brand-outline/40 bg-brand-paper/80 px-4 py-2.5 text-sm transition-all hover:border-brand-accent/60 hover:bg-brand-paper min-w-[180px]"
       >
         <div className="flex items-center gap-2">
           <div className={`h-2 w-2 rounded-full ${selectedSession ? 'bg-green-400 animate-pulse' : 'bg-slate-500'}`} />
