@@ -2,7 +2,7 @@
 
 import { spawn, exec, execSync } from 'child_process';
 import { resolve } from 'path';
-import { existsSync, mkdirSync, writeFileSync, readFileSync, rmSync, appendFileSync, readdirSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, readFileSync, rmSync, appendFileSync, readdirSync, statSync } from 'fs';
 import { homedir } from 'os';
 import { select, input, confirm } from '@inquirer/prompts';
 import ora, { Ora } from 'ora';
@@ -394,14 +394,25 @@ function appendLog(file: string, data: string) {
   appendFileSync(file, `[${timestamp}] ${data}`);
 }
 
-async function waitForHealth(url: string, maxAttempts: number = 15): Promise<boolean> {
+async function waitForHealth(url: string, serviceName: string, maxAttempts: number = 30): Promise<boolean> {
+  let lastError: string = '';
   for (let i = 0; i < maxAttempts; i++) {
     try {
-      const response = await fetch(url, { signal: AbortSignal.timeout(2000) });
-      if (response.ok) return true;
-    } catch {}
-    await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch(url, { signal: AbortSignal.timeout(3000) });
+      if (response.ok) {
+        console.log(kleur.dim(`  ${serviceName} health check passed`));
+        return true;
+      }
+      lastError = `HTTP ${response.status}`;
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : String(err);
+      if (i % 5 === 0 && i > 0) {
+        console.log(kleur.dim(`  Waiting for ${serviceName}... (${lastError})`));
+      }
+    }
+    await new Promise(resolve => setTimeout(resolve, 2000));
   }
+  console.error(kleur.red(`✗ ${serviceName} health check failed: ${lastError}`));
   return false;
 }
 
@@ -559,6 +570,82 @@ async function runReleasePipeline() {
   console.log('\n🎉 Release pipeline completed successfully.');
 }
 
+function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
+  const cleaned: string[] = [];
+  const packagesToRebuild: string[] = [];
+
+  // Check packages/*/dist folders
+  const packagesDir = resolve(projectRoot, 'packages');
+  if (existsSync(packagesDir)) {
+    const packages = readdirSync(packagesDir);
+    for (const pkg of packages) {
+      const distPath = resolve(packagesDir, pkg, 'dist');
+      if (existsSync(distPath)) {
+        // Check if any .ts file is newer than the dist folder
+        const srcPath = resolve(packagesDir, pkg, 'src');
+        if (existsSync(srcPath)) {
+          try {
+            const distMtime = statSync(distPath).mtimeMs;
+            const srcFiles = readdirSync(srcPath, { recursive: true }).filter(f =>
+              typeof f === 'string' && f.endsWith('.ts')
+            );
+
+            const hasNewerSource = srcFiles.some(file => {
+              const srcFile = resolve(srcPath, file);
+              try {
+                return statSync(srcFile).mtimeMs > distMtime;
+              } catch {
+                return false;
+              }
+            });
+
+            if (hasNewerSource) {
+              rmSync(distPath, { recursive: true, force: true });
+              cleaned.push(`packages/${pkg}/dist`);
+              packagesToRebuild.push(pkg);
+            }
+          } catch {
+            // If we can't stat, better to clean it
+            rmSync(distPath, { recursive: true, force: true });
+            cleaned.push(`packages/${pkg}/dist`);
+            packagesToRebuild.push(pkg);
+          }
+        }
+      }
+    }
+  }
+
+  // Check apps/ui/.next
+  const nextBuildPath = resolve(projectRoot, 'apps/ui/.next');
+  if (existsSync(nextBuildPath)) {
+    rmSync(nextBuildPath, { recursive: true, force: true });
+    cleaned.push('apps/ui/.next');
+  }
+
+  if (cleaned.length > 0 && !quiet) {
+    console.log(kleur.yellow(`🧹 Cleaned stale builds: ${cleaned.join(', ')}`));
+  }
+
+  // Rebuild cleaned packages
+  if (packagesToRebuild.length > 0) {
+    if (!quiet) {
+      console.log(kleur.cyan(`🔨 Rebuilding packages: ${packagesToRebuild.join(', ')}`));
+    }
+    for (const pkg of packagesToRebuild) {
+      try {
+        execSync(`bun run --cwd packages/${pkg} build`, {
+          cwd: projectRoot,
+          stdio: quiet ? 'ignore' : 'inherit',
+        });
+      } catch (err) {
+        if (!quiet) {
+          console.error(kleur.red(`  ✗ Failed to rebuild ${pkg}`));
+        }
+      }
+    }
+  }
+}
+
 async function startServices() {
   const args = parseArgs();
   const projectRoot = getProjectRoot();
@@ -571,6 +658,7 @@ async function startServices() {
 
   await ensureDependencies(!args.quiet);
   checkEnvironment();
+  cleanStaleBuilds(projectRoot, args.quiet);
   await prepareDatabase(!args.quiet);
   await killPortProcesses([args.port || SERVER_PORT, args.uiPort || UI_PORT]);
 
@@ -579,11 +667,35 @@ async function startServices() {
   }
 
   const serverStartTime = Date.now();
-  const serverProcess = spawn('bun', ['run', 'apps/server/src/start.ts'], {
-    cwd: projectRoot,
-    stdio: args.foreground ? 'inherit' : 'ignore',
-    detached: !args.foreground,
-    env: { ...process.env, PORT: String(args.port || SERVER_PORT) },
+
+  // Use shell redirection for logging in detached mode (Bun doesn't support stream.Writable in stdio)
+  const serverCmd = args.foreground
+    ? 'bun run apps/server/src/start.ts'
+    : `bun run apps/server/src/start.ts >> ${SERVER_LOG_FILE} 2>&1`;
+
+  const serverProcess = args.foreground
+    ? spawn('bun', ['run', 'apps/server/src/start.ts'], {
+        cwd: projectRoot,
+        stdio: 'inherit',
+        detached: false,
+        env: { ...process.env, PORT: String(args.port || SERVER_PORT) },
+      })
+    : spawn('sh', ['-c', serverCmd], {
+        cwd: projectRoot,
+        stdio: 'ignore',
+        detached: true,
+        env: { ...process.env, PORT: String(args.port || SERVER_PORT) },
+      });
+
+  // Monitor for unexpected process exits
+  serverProcess.on('exit', (code, signal) => {
+    if (code !== 0 && code !== null) {
+      console.error(kleur.red(`\n✗ Server process exited with code ${code}`));
+      console.error(kleur.dim(`  Check logs: ${SERVER_LOG_FILE}`));
+      if (!args.foreground) {
+        try { rmSync(SERVER_PID_FILE, { force: true }); } catch {}
+      }
+    }
   });
 
   if (!args.foreground) {
@@ -595,7 +707,7 @@ async function startServices() {
   if (!args.quiet) {
     serverSpinner = ora({ text: `Server starting on port ${args.port || SERVER_PORT}...`, spinner: 'dots' }).start();
   }
-  const serverHealthy = await waitForHealth(`http://127.0.0.1:${args.port || SERVER_PORT}/health`, 30);
+  const serverHealthy = await waitForHealth(`http://127.0.0.1:${args.port || SERVER_PORT}/health`, 'Server', 30);
   const serverTime = ((Date.now() - serverStartTime) / 1000).toFixed(1);
 
   if (serverSpinner) {
@@ -608,12 +720,36 @@ async function startServices() {
     log(serverHealthy ? `   ✓ Server healthy (${serverTime}s)` : `   ⚠ Server may still be starting (check status in a moment)`);
   }
 
+  let uiHealthy = false;
   if (!args.noUi) {
     const uiStartTime = Date.now();
-    const uiProcess = spawn('bun', ['run', '--cwd', 'apps/ui', 'dev', '--port', String(args.uiPort || UI_PORT)], {
-      cwd: projectRoot,
-      stdio: args.foreground ? 'inherit' : 'ignore',
-      detached: !args.foreground,
+
+    // Use shell redirection for logging in detached mode (Bun doesn't support stream.Writable in stdio)
+    const uiCmd = args.foreground
+      ? `bun run --cwd apps/ui dev --port ${args.uiPort || UI_PORT}`
+      : `bun run --cwd apps/ui dev --port ${args.uiPort || UI_PORT} >> ${UI_LOG_FILE} 2>&1`;
+
+    const uiProcess = args.foreground
+      ? spawn('bun', ['run', '--cwd', 'apps/ui', 'dev', '--port', String(args.uiPort || UI_PORT)], {
+          cwd: projectRoot,
+          stdio: 'inherit',
+          detached: false,
+        })
+      : spawn('sh', ['-c', uiCmd], {
+          cwd: projectRoot,
+          stdio: 'ignore',
+          detached: true,
+        });
+
+    // Monitor for unexpected process exits
+    uiProcess.on('exit', (code, signal) => {
+      if (code !== 0 && code !== null) {
+        console.error(kleur.red(`\n✗ UI process exited with code ${code}`));
+        console.error(kleur.dim(`  Check logs: ${UI_LOG_FILE}`));
+        if (!args.foreground) {
+          try { rmSync(UI_PID_FILE, { force: true }); } catch {}
+        }
+      }
     });
 
     if (!args.foreground) {
@@ -625,7 +761,7 @@ async function startServices() {
     if (!args.quiet) {
       uiSpinner = ora({ text: `UI starting on port ${args.uiPort || UI_PORT}...`, spinner: 'dots' }).start();
     }
-    const uiHealthy = await waitForHealth(`http://127.0.0.1:${args.uiPort || UI_PORT}`);
+    uiHealthy = await waitForHealth(`http://127.0.0.1:${args.uiPort || UI_PORT}`, 'UI', 30);
     const uiTime = ((Date.now() - uiStartTime) / 1000).toFixed(1);
 
     if (uiSpinner) {
@@ -639,15 +775,36 @@ async function startServices() {
     }
   }
 
+  // Fail-fast: Exit immediately if critical services failed health checks
+  if (!serverHealthy) {
+    console.error(kleur.red('\n✗ STARTUP FAILED: Server did not become healthy'));
+    console.error(kleur.dim(`  Logs: ${SERVER_LOG_FILE}`));
+    console.error(kleur.dim(`  Try: cd ${projectRoot} && bun run --cwd apps/server dev`));
+    console.error(kleur.dim(`       (to see error details)`));
+    process.exit(1);
+  }
+
+  if (!uiHealthy && !args.noUi) {
+    console.error(kleur.red('\n✗ STARTUP FAILED: UI did not become healthy'));
+    console.error(kleur.dim(`  Logs: ${UI_LOG_FILE}`));
+    console.error(kleur.dim(`  Common causes:`));
+    console.error(kleur.dim(`    - TypeScript compilation errors`));
+    console.error(kleur.dim(`    - Port ${args.uiPort || UI_PORT} already in use`));
+    console.error(kleur.dim(`    - Missing dependencies (try: bun install)`));
+    console.error(kleur.dim(`  Try: cd ${projectRoot} && bun run --cwd apps/ui dev`));
+    console.error(kleur.dim(`       (to see error details)`));
+    process.exit(1);
+  }
+
   const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
 
   if (!args.quiet) {
     console.log(`\n${kleur.bold(kleur.green(`✨ Started in ${totalTime}s`))}\n`);
     console.log(kleur.bold().magenta('🧿 Third-Eye MCP — READY'));
     console.log(kleur.gray('━'.repeat(60)));
-    console.log(`• Server: ${kleur.cyan(`http://127.0.0.1:${args.port || SERVER_PORT}`)} ${kleur.green('✓')}`);
+    console.log(`• Server: ${kleur.cyan(`http://127.0.0.1:${args.port || SERVER_PORT}`)} ${serverHealthy ? kleur.green('✓') : kleur.red('✗ FAILED')}`);
     if (!args.noUi) {
-      console.log(`• UI:     ${kleur.cyan(`http://127.0.0.1:${args.uiPort || UI_PORT}`)} ${kleur.green('✓')}`);
+      console.log(`• UI:     ${kleur.cyan(`http://127.0.0.1:${args.uiPort || UI_PORT}`)} ${uiHealthy ? kleur.green('✓') : kleur.red('✗ FAILED')}`);
     }
     console.log(`• DB:     ${kleur.cyan(`~/${DATA_DIRECTORY}/mcp.db`)}`);
     console.log(`• Logs:   ${kleur.cyan(`~/${DATA_DIRECTORY}/logs/`)}`);
