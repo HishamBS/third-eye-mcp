@@ -29,10 +29,12 @@ export interface BaseEvent {
 
 /**
  * Eye Started Event - Emitted when an Eye begins execution
+ * Phase 18: Added optional stage field for two-phase operation
  */
 export interface EyeStartedEvent extends BaseEvent {
   type: 'eye_started';
   eye: string;
+  stage?: 'guidance' | 'validation';
   ui: EventUI;
 }
 
@@ -48,10 +50,12 @@ export interface EyeAnalyzingEvent extends BaseEvent {
 
 /**
  * Eye Complete Event - Emitted when an Eye completes execution
+ * Phase 18: Added optional stage field for two-phase operation
  */
 export interface EyeCompleteEvent extends BaseEvent {
   type: 'eye_complete';
   eye: string;
+  stage?: 'guidance' | 'validation';
   result: {
     tag: string;
     ok: boolean;
@@ -79,10 +83,12 @@ export interface EyeCompleteEvent extends BaseEvent {
 
 /**
  * Eye Error Event - Emitted when an Eye encounters an error
+ * Phase 18: Added optional stage field for two-phase operation
  */
 export interface EyeErrorEvent extends BaseEvent {
   type: 'eye_error';
   eye: string;
+  stage?: 'guidance' | 'validation';
   error: string;
   ui?: EventUI;
 }

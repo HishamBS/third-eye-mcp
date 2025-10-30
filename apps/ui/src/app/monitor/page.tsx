@@ -148,11 +148,16 @@ function normalizeApiEvent(event: ApiPipelineEvent): ConversationEntryData {
     data?.summary,
   ]) || 'Processing...';
 
+  // Phase 18: Extract stage field from event data
+  const stageValue = data?.stage || event.stage;
+  const stage = (stageValue === 'guidance' || stageValue === 'validation') ? stageValue : undefined;
+
   return {
     id: event.id,
     timestamp: new Date(event.createdAt),
     speaker: deriveSpeaker({ type: event.type, eye: event.eye || undefined, data }),
     message,
+    stage,
     metadata: {
       code: event.code || undefined,
       dataJson: data,
@@ -191,6 +196,10 @@ function normalizeWebSocketMessage(message: WSMessage): ConversationEntryData | 
     payload.error,
   ]) || 'Processing...';
 
+  // Phase 18: Extract stage field from WebSocket payload
+  const stageValue = payload.stage;
+  const stage = (stageValue === 'guidance' || stageValue === 'validation') ? stageValue : undefined;
+
   return {
     id,
     timestamp: new Date(timestampMs),
@@ -201,6 +210,7 @@ function normalizeWebSocketMessage(message: WSMessage): ConversationEntryData | 
       speaker: getString(payload.speaker),
     }),
     message: messageText,
+    stage,
     metadata: {
       code: code || undefined,
       dataJson: payload,

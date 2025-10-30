@@ -3,7 +3,7 @@
 import { memo, useState, useCallback, useEffect } from 'react';
 import { Settings } from 'lucide-react';
 import { NODE_EDIT_TEXT } from './constants';
-import { UI_HELP_TEXT } from '@third-eye/constants';
+import { UI_HELP_TEXT, PHASE_CONFIG_TEXT } from '@third-eye/constants';
 import type { PipelineNode, EyeNodeData } from '@/types/pipeline';
 
 /**
@@ -45,11 +45,15 @@ export const NodeEditModal = memo(function NodeEditModal({
   const [nodeName, setNodeName] = useState<string>('');
   const [nodeDescription, setNodeDescription] = useState<string>('');
   const [nodeEnabled, setNodeEnabled] = useState<boolean>(true);
+  // Phase 18: Two-phase operation toggles
+  const [enableGuidance, setEnableGuidance] = useState<boolean>(true);
+  const [enableValidation, setEnableValidation] = useState<boolean>(true);
 
   // Initialize form when node changes
   useEffect(() => {
     if (node) {
       const config = node.data.customConfig || {};
+      const phases = (config as Record<string, unknown>).phases as Record<string, boolean> | undefined;
       setFormData({
         eyeId: node.data.eyeId,
         displayName: node.data.displayName,
@@ -62,6 +66,9 @@ export const NodeEditModal = memo(function NodeEditModal({
       setNodeName((config as Record<string, unknown>).name as string || '');
       setNodeDescription((config as Record<string, unknown>).description as string || '');
       setNodeEnabled((config as Record<string, unknown>).enabled !== false);
+      // Phase 18: Initialize phase toggles (default: both enabled)
+      setEnableGuidance(phases?.enableGuidance !== false);
+      setEnableValidation(phases?.enableValidation !== false);
       setJsonError('');
       setNewCapability('');
       setShowAdvanced(false);
@@ -105,12 +112,23 @@ export const NodeEditModal = memo(function NodeEditModal({
     if (!node) return;
     if (jsonError) return; // Don't save if JSON is invalid
 
+    // Phase 18: At least one phase must be enabled
+    if (!enableGuidance && !enableValidation) {
+      alert(PHASE_CONFIG_TEXT.BOTH_DISABLED_WARNING);
+      return;
+    }
+
     // Merge form fields into customConfig
     const updatedConfig = {
       ...(formData.customConfig || {}),
       name: nodeName || undefined,
       description: nodeDescription || undefined,
       enabled: nodeEnabled,
+      // Phase 18: Save phase configuration
+      phases: {
+        enableGuidance,
+        enableValidation,
+      },
     };
 
     onSave(node.id, {
@@ -118,7 +136,7 @@ export const NodeEditModal = memo(function NodeEditModal({
       customConfig: updatedConfig,
     });
     onClose();
-  }, [node, formData, jsonError, nodeName, nodeDescription, nodeEnabled, onSave, onClose]);
+  }, [node, formData, jsonError, nodeName, nodeDescription, nodeEnabled, enableGuidance, enableValidation, onSave, onClose]);
 
   // Handle delete
   const handleDelete = useCallback(() => {
@@ -316,6 +334,76 @@ export const NodeEditModal = memo(function NodeEditModal({
                 />
               </button>
             </div>
+          </div>
+
+          {/* Phase 18: Phase Configuration */}
+          <div className="space-y-4 p-4 bg-brand-paperElev rounded-lg border border-brand-outline">
+            <div>
+              <h3 className="text-sm font-semibold text-brand-ink uppercase tracking-wider">
+                {PHASE_CONFIG_TEXT.SECTION_TITLE}
+              </h3>
+              <p className="text-xs text-brand-ink/60 mt-1">
+                {PHASE_CONFIG_TEXT.SECTION_DESCRIPTION}
+              </p>
+            </div>
+
+            {/* Enable Guidance Phase */}
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <label className="text-sm font-medium text-brand-ink">
+                  {PHASE_CONFIG_TEXT.ENABLE_GUIDANCE_LABEL}
+                </label>
+                <p className="text-xs text-brand-ink/60 mt-0.5">
+                  {PHASE_CONFIG_TEXT.ENABLE_GUIDANCE_HELP}
+                </p>
+              </div>
+              <button
+                onClick={() => setEnableGuidance(!enableGuidance)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  enableGuidance ? 'bg-blue-500' : 'bg-brand-outline/40'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    enableGuidance ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Enable Validation Phase */}
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <label className="text-sm font-medium text-brand-ink">
+                  {PHASE_CONFIG_TEXT.ENABLE_VALIDATION_LABEL}
+                </label>
+                <p className="text-xs text-brand-ink/60 mt-0.5">
+                  {PHASE_CONFIG_TEXT.ENABLE_VALIDATION_HELP}
+                </p>
+              </div>
+              <button
+                onClick={() => setEnableValidation(!enableValidation)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  enableValidation ? 'bg-green-500' : 'bg-brand-outline/40'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    enableValidation ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Warning if both disabled */}
+            {!enableGuidance && !enableValidation && (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>{PHASE_CONFIG_TEXT.BOTH_DISABLED_WARNING}</span>
+              </div>
+            )}
           </div>
 
           {/* Advanced Configuration (Collapsible) */}

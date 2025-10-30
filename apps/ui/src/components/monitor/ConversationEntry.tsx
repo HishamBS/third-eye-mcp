@@ -3,12 +3,21 @@
  *
  * Displays a single conversation entry in the Timeline tab.
  * Professional, strictly-typed, with no hardcoded values.
+ * Phase 18: Added phase badge support and color-coded borders
  */
 
 import { motion } from 'framer-motion';
 import { Clock } from 'lucide-react';
 import { SpeakerBadge } from './SpeakerBadge';
-import { SPEAKER_DISPLAY_NAMES, SpeakerType, type Speaker } from '@third-eye/constants';
+import { PhaseBadge } from './PhaseBadge';
+import {
+  SPEAKER_DISPLAY_NAMES,
+  SpeakerType,
+  type Speaker,
+  PHASE_BORDER_COLORS,
+  PHASE_BG_COLORS,
+  EyeStageToken,
+} from '@third-eye/constants';
 import { EYE_DISPLAY_NAMES } from '@third-eye/config/constants';
 import type { EyeName } from '@third-eye/types';
 
@@ -17,6 +26,7 @@ export interface ConversationEntryData {
   readonly timestamp: Date;
   readonly speaker: Speaker;
   readonly message: string;
+  readonly stage?: 'guidance' | 'validation';
   readonly metadata?: {
     readonly code?: string;
     readonly dataJson?: Record<string, unknown>;
@@ -38,10 +48,31 @@ function getSpeakerDisplayName(speaker: Speaker): string {
 }
 
 /**
+ * Get phase-specific styling classes
+ * Per R13: Styling from SSOT
+ */
+function getPhaseStyles(stage?: 'guidance' | 'validation') {
+  if (!stage) {
+    return {
+      border: '',
+      background: '',
+    };
+  }
+
+  const stageToken = stage === 'guidance' ? EyeStageToken.GUIDANCE : EyeStageToken.VALIDATION;
+  return {
+    border: PHASE_BORDER_COLORS[stageToken],
+    background: PHASE_BG_COLORS[stageToken],
+  };
+}
+
+/**
  * Renders a conversation entry with avatar, name, timestamp, message, and metadata
+ * Phase 18: Added phase badge and color-coded styling
  */
 export function ConversationEntry({ entry, index }: ConversationEntryProps) {
   const speakerName = getSpeakerDisplayName(entry.speaker);
+  const phaseStyles = getPhaseStyles(entry.stage);
 
   return (
     <motion.div
@@ -59,6 +90,9 @@ export function ConversationEntry({ entry, index }: ConversationEntryProps) {
             <span className="font-semibold text-sm text-white">
               {speakerName}
             </span>
+            {entry.stage && (
+              <PhaseBadge stage={entry.stage} size="sm" />
+            )}
             <span className="text-xs text-slate-500 flex items-center gap-1">
               <Clock className="h-3 w-3" />
               {entry.timestamp.toLocaleTimeString()}
@@ -70,7 +104,7 @@ export function ConversationEntry({ entry, index }: ConversationEntryProps) {
             )}
           </div>
 
-          <div className="rounded-lg bg-brand-paper/60 border border-brand-outline/30 p-3">
+          <div className={`rounded-lg bg-brand-paper/60 border border-brand-outline/30 p-3 ${phaseStyles.border} ${phaseStyles.background}`}>
             <p className="text-sm text-slate-300 whitespace-pre-wrap break-words">
               {entry.message}
             </p>
