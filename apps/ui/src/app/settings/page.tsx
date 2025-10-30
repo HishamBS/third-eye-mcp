@@ -7,6 +7,7 @@ import { useUI } from '@/contexts/UIContext';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useDialog } from '@/hooks/useDialog';
 import { THEME_METADATA } from '@third-eye/theme';
+import { UI_HELP_TEXT } from '@third-eye/constants';
 
 interface ProviderKey {
   id: number;
@@ -108,7 +109,7 @@ export default function SettingsPage() {
 
   const addProviderKey = async () => {
     if (!newKey.label || !newKey.apiKey) {
-      setError('Label and API key are required');
+      setError(UI_HELP_TEXT.ERROR_SETTINGS_KEY_LABEL_REQUIRED);
       return;
     }
 
@@ -127,17 +128,17 @@ export default function SettingsPage() {
       });
 
       if (response.ok) {
-        setSuccess('Provider key added successfully');
+        setSuccess(UI_HELP_TEXT.SUCCESS_SETTINGS_KEY_ADDED);
         setNewKey({ provider: 'groq', label: '', apiKey: '' });
         setShowAddKey(false);
         await loadProviderKeys();
         await loadHealth();
       } else {
         const result = await response.json();
-        setError(result.error?.detail || 'Failed to add provider key');
+        setError(result.error?.detail || UI_HELP_TEXT.ERROR_SETTINGS_KEY_ADD_FAILED);
       }
     } catch (err) {
-      setError('Failed to add provider key');
+      setError(UI_HELP_TEXT.ERROR_SETTINGS_KEY_ADD_FAILED);
     } finally {
       setLoading(false);
     }
@@ -173,17 +174,17 @@ export default function SettingsPage() {
       });
 
       if (response.ok) {
-        setSuccess('Provider key updated successfully');
+        setSuccess(UI_HELP_TEXT.SUCCESS_SETTINGS_KEY_UPDATED);
         setEditingKey(null);
         setEditForm({ label: '', apiKey: '' });
         await loadProviderKeys();
         await loadHealth();
       } else {
         const result = await response.json();
-        setError(result.error?.detail || 'Failed to update provider key');
+        setError(result.error?.detail || UI_HELP_TEXT.ERROR_SETTINGS_KEY_UPDATE_FAILED);
       }
     } catch (err) {
-      setError('Failed to update provider key');
+      setError(UI_HELP_TEXT.ERROR_SETTINGS_KEY_UPDATE_FAILED);
     } finally {
       setLoading(false);
     }
@@ -201,13 +202,13 @@ export default function SettingsPage() {
       if (response.ok) {
         const result = await response.json();
         const modelCount = result.data?.count || 0;
-        setSuccess(`✓ ${provider} key works! Found ${modelCount} models`);
+        setSuccess(`✓ ${provider} ${UI_HELP_TEXT.SUCCESS_SETTINGS_KEY_TEST_OK.replace('{count}', String(modelCount))}`);
         await loadHealth();
       } else {
-        setError(`✗ ${provider} key test failed - check your API key`);
+        setError(`✗ ${provider} ${UI_HELP_TEXT.ERROR_SETTINGS_KEY_TEST_FAILED}`);
       }
     } catch (err) {
-      setError(`✗ Failed to test ${provider} key`);
+      setError(UI_HELP_TEXT.ERROR_SETTINGS_KEY_TEST_ERROR.replace('{provider}', provider));
     } finally {
       setTestingKeyId(null);
     }
@@ -226,14 +227,14 @@ export default function SettingsPage() {
       });
 
       if (response.ok) {
-        setSuccess('Provider key deleted');
+        setSuccess(UI_HELP_TEXT.SUCCESS_SETTINGS_KEY_DELETED);
         await loadProviderKeys();
         await loadHealth();
       } else {
-        setError('Failed to delete provider key');
+        setError(UI_HELP_TEXT.ERROR_SETTINGS_KEY_DELETE_FAILED);
       }
     } catch (err) {
-      setError('Failed to delete provider key');
+      setError(UI_HELP_TEXT.ERROR_SETTINGS_KEY_DELETE_FAILED);
     } finally {
       setLoading(false);
     }
@@ -250,13 +251,13 @@ export default function SettingsPage() {
       });
 
       if (response.ok) {
-        setSuccess(`Telemetry ${enabled ? 'enabled' : 'disabled'}`);
+        setSuccess(enabled ? UI_HELP_TEXT.SUCCESS_SETTINGS_TELEMETRY_ENABLED : UI_HELP_TEXT.SUCCESS_SETTINGS_TELEMETRY_DISABLED);
       } else {
-        setError('Failed to update telemetry setting');
+        setError(UI_HELP_TEXT.ERROR_SETTINGS_TELEMETRY_FAILED);
         setTelemetry(!enabled);
       }
     } catch (err) {
-      setError('Failed to update telemetry setting');
+      setError(UI_HELP_TEXT.ERROR_SETTINGS_TELEMETRY_FAILED);
       setTelemetry(!enabled);
     }
   };
@@ -277,12 +278,12 @@ export default function SettingsPage() {
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        setSuccess('Database backup downloaded');
+        setSuccess(UI_HELP_TEXT.SUCCESS_SETTINGS_DB_BACKUP);
       } else {
-        setError('Failed to create backup');
+        setError(UI_HELP_TEXT.ERROR_SETTINGS_DB_BACKUP_FAILED);
       }
     } catch (err) {
-      setError('Failed to create backup');
+      setError(UI_HELP_TEXT.ERROR_SETTINGS_DB_BACKUP_FAILED);
     }
   };
 
@@ -303,13 +304,13 @@ export default function SettingsPage() {
       });
 
       if (response.ok) {
-        setSuccess('Database restored successfully. Reloading...');
+        setSuccess(UI_HELP_TEXT.SUCCESS_SETTINGS_DB_RESTORED);
         setTimeout(() => window.location.reload(), 2000);
       } else {
-        setError('Failed to restore database');
+        setError(UI_HELP_TEXT.ERROR_SETTINGS_DB_RESTORE_FAILED);
       }
     } catch (err) {
-      setError('Failed to restore database');
+      setError(UI_HELP_TEXT.ERROR_SETTINGS_DB_RESTORE_FAILED);
     } finally {
       setLoading(false);
     }
@@ -325,14 +326,14 @@ export default function SettingsPage() {
       });
 
       if (response.ok) {
-        setSuccess('Database reset successfully. Reloading...');
+        setSuccess(UI_HELP_TEXT.SUCCESS_SETTINGS_DB_RESET);
         setShowResetConfirm(false);
         setTimeout(() => window.location.reload(), 2000);
       } else {
-        setError('Failed to reset database');
+        setError(UI_HELP_TEXT.ERROR_SETTINGS_DB_RESET_FAILED);
       }
     } catch (err) {
-      setError('Failed to reset database');
+      setError(UI_HELP_TEXT.ERROR_SETTINGS_DB_RESET_FAILED);
     } finally {
       setLoading(false);
     }

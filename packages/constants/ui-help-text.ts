@@ -124,6 +124,34 @@ export const UI_HELP_TEXT = Object.freeze({
   ARIA_ERROR_REGION: 'Error message',
   ARIA_SUCCESS_REGION: 'Success message',
   ARIA_LOADING_REGION: 'Loading content',
+
+  // Settings Page - Provider Keys
+  ERROR_SETTINGS_KEY_LABEL_REQUIRED: 'Label and API key are required',
+  SUCCESS_SETTINGS_KEY_ADDED: 'Provider key added successfully',
+  ERROR_SETTINGS_KEY_ADD_FAILED: 'Failed to add provider key',
+  SUCCESS_SETTINGS_KEY_UPDATED: 'Provider key updated successfully',
+  ERROR_SETTINGS_KEY_UPDATE_FAILED: 'Failed to update provider key',
+  SUCCESS_SETTINGS_KEY_TEST_OK: 'key works! Found {count} models',
+  ERROR_SETTINGS_KEY_TEST_FAILED: 'key test failed - check your API key',
+  ERROR_SETTINGS_KEY_TEST_ERROR: 'Failed to test {provider} key',
+  SUCCESS_SETTINGS_KEY_DELETED: 'Provider key deleted',
+  ERROR_SETTINGS_KEY_DELETE_FAILED: 'Failed to delete provider key',
+
+  // Settings Page - Telemetry
+  SUCCESS_SETTINGS_TELEMETRY_ENABLED: 'Telemetry enabled',
+  SUCCESS_SETTINGS_TELEMETRY_DISABLED: 'Telemetry disabled',
+  ERROR_SETTINGS_TELEMETRY_FAILED: 'Failed to update telemetry setting',
+
+  // Settings Page - Database
+  SUCCESS_SETTINGS_DB_BACKUP: 'Database backup downloaded',
+  ERROR_SETTINGS_DB_BACKUP_FAILED: 'Failed to create backup',
+  SUCCESS_SETTINGS_DB_RESTORED: 'Database restored successfully. Reloading...',
+  ERROR_SETTINGS_DB_RESTORE_FAILED: 'Failed to restore database',
+  SUCCESS_SETTINGS_DB_RESET: 'Database reset successfully. Reloading...',
+  ERROR_SETTINGS_DB_RESET_FAILED: 'Failed to reset database',
+
+  // Metrics Page
+  ERROR_METRICS_FETCH_FAILED: 'Failed to fetch metrics',
 });
 
 export type UiHelpTextKey = keyof typeof UI_HELP_TEXT;
