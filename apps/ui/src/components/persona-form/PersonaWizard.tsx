@@ -18,6 +18,17 @@ import type {
   WizardStep,
 } from '@/types/persona-form';
 import { ChevronLeft, ChevronRight, Save, X } from 'lucide-react';
+import { MetadataStep } from './steps/MetadataStep';
+import { MissionStep } from './steps/MissionStep';
+import {
+  GuidanceStep,
+  ValidationStep,
+  EnvelopeStep,
+  RemindersStep,
+  NotesStep,
+  ReviewStep,
+} from './steps/PlaceholderSteps';
+import { LLMConfigStep } from './steps/LLMConfigStep';
 
 /**
  * PersonaWizard - Multi-step form for persona configuration
@@ -265,15 +276,80 @@ export function PersonaWizard({
             </p>
           </div>
 
-          {/* Step Form Content - Phase 14 will implement these */}
-          <div className="py-8 text-center text-brand-ink/60">
-            <p className="text-lg mb-2">
-              Step {state.currentStep + 1} form content coming in Phase 14
-            </p>
-            <p className="text-sm">
-              Rich editors will be implemented for each step:
-              metadata, mission, phases, envelope, reminders, LLM config, notes
-            </p>
+          {/* Step Form Content */}
+          <div className="py-4">
+            {state.currentStep === WIZARD_STEPS.METADATA && (
+              <MetadataStep
+                state={state}
+                dispatch={dispatch}
+                onNext={handleNext}
+                onPrevious={handlePrevious}
+              />
+            )}
+            {state.currentStep === WIZARD_STEPS.MISSION && (
+              <MissionStep
+                state={state}
+                dispatch={dispatch}
+                onNext={handleNext}
+                onPrevious={handlePrevious}
+              />
+            )}
+            {state.currentStep === WIZARD_STEPS.GUIDANCE && (
+              <GuidanceStep
+                state={state}
+                dispatch={dispatch}
+                onNext={handleNext}
+                onPrevious={handlePrevious}
+              />
+            )}
+            {state.currentStep === WIZARD_STEPS.VALIDATION && (
+              <ValidationStep
+                state={state}
+                dispatch={dispatch}
+                onNext={handleNext}
+                onPrevious={handlePrevious}
+              />
+            )}
+            {state.currentStep === WIZARD_STEPS.ENVELOPE && (
+              <EnvelopeStep
+                state={state}
+                dispatch={dispatch}
+                onNext={handleNext}
+                onPrevious={handlePrevious}
+              />
+            )}
+            {state.currentStep === WIZARD_STEPS.REMINDERS && (
+              <RemindersStep
+                state={state}
+                dispatch={dispatch}
+                onNext={handleNext}
+                onPrevious={handlePrevious}
+              />
+            )}
+            {state.currentStep === WIZARD_STEPS.LLM_CONFIG && (
+              <LLMConfigStep
+                state={state}
+                dispatch={dispatch}
+                onNext={handleNext}
+                onPrevious={handlePrevious}
+              />
+            )}
+            {state.currentStep === WIZARD_STEPS.NOTES && (
+              <NotesStep
+                state={state}
+                dispatch={dispatch}
+                onNext={handleNext}
+                onPrevious={handlePrevious}
+              />
+            )}
+            {state.currentStep === WIZARD_STEPS.REVIEW && (
+              <ReviewStep
+                state={state}
+                dispatch={dispatch}
+                onNext={handleNext}
+                onPrevious={handlePrevious}
+              />
+            )}
           </div>
         </GlassCard>
 
