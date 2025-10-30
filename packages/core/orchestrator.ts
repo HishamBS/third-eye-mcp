@@ -368,7 +368,7 @@ export class EyeOrchestrator {
 
             // 7. Call provider with persona as system prompt (with retry logic)
             try {
-              completion = await retryWithThrow(
+              completion = (await retryWithThrow<CompletionResponse>(
                 async () => provider.complete({
                   model: targetModel,
                   messages: [
@@ -385,7 +385,7 @@ export class EyeOrchestrator {
                     console.warn(`🔄 Retrying ${eyeName} provider call (${attemptNum}/${maxAttempts}) after ${delayMs}ms`);
                   },
                 }
-              );
+              )) as CompletionResponse;
 
               latencyMs = Date.now() - attemptStartTime;
 
@@ -588,9 +588,9 @@ export class EyeOrchestrator {
               tokensIn: completion.usage.prompt_tokens ?? 0,
               tokensOut: completion.usage.completion_tokens ?? 0,
               latencyMs,
-              provider: providerType,
+              provider: successfulProviderType,
               providerLabel,
-              model: targetModel
+              model: successfulModel
             },
             timestamp: Date.now()
           },
@@ -610,9 +610,9 @@ export class EyeOrchestrator {
               tokensIn: completion.usage.prompt_tokens ?? 0,
               tokensOut: completion.usage.completion_tokens ?? 0,
               latencyMs,
-              provider: providerType,
+              provider: successfulProviderType,
               providerLabel,
-              model: targetModel
+              model: successfulModel
             },
             timestamp: Date.now()
           },

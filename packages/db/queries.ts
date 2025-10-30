@@ -240,7 +240,7 @@ export async function getEyeLeaderboards(): Promise<Array<{
         approvalRate: board.approvalRate,
         avgLatency: board.avgLatency,
         trend: trendInfo.trend,
-        trendData: board.trendData,
+        trendData: board.trendData as Array<{ day: string; runs: number; approvals: number }> | undefined,
       };
     })
   );
