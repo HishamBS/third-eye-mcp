@@ -7,6 +7,7 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { useDialog } from '@/hooks/useDialog';
 import { Download } from 'lucide-react';
 import { exportPersona, type ExportFormat, type ExportPersona } from '@third-eye/utils';
+import { UI_HELP_TEXT } from '@third-eye/constants';
 
 interface Persona {
   id: string;
@@ -167,7 +168,7 @@ export default function PersonasPage() {
       }
     } catch (error) {
       console.error('Failed to fetch personas:', error);
-      setError('Failed to load personas');
+      setError(UI_HELP_TEXT.PERSONAS_ERROR_LOAD_FAILED);
     }
   };
 
@@ -196,7 +197,7 @@ export default function PersonasPage() {
 
   const savePersona = async () => {
     if (!editingPersona || !editForm.name.trim()) {
-      setError('Name is required');
+      setError(UI_HELP_TEXT.PERSONAS_ERROR_NAME_REQUIRED);
       return;
     }
 
@@ -224,7 +225,7 @@ export default function PersonasPage() {
       });
 
       if (response.ok) {
-        setSuccess('Persona blueprint saved to database successfully');
+        setSuccess(UI_HELP_TEXT.PERSONAS_SUCCESS_SAVED);
         await fetchPersonas();
         setEditingPersona('');
         setEditForm({
@@ -236,10 +237,10 @@ export default function PersonasPage() {
         });
       } else {
         const result = await response.json();
-        setError(result.error || 'Failed to save persona');
+        setError(result.error || UI_HELP_TEXT.PERSONAS_ERROR_SAVE_FAILED);
       }
     } catch (error) {
-      setError('Failed to save persona');
+      setError(UI_HELP_TEXT.PERSONAS_ERROR_SAVE_FAILED);
     } finally {
       setLoading(false);
     }
@@ -255,13 +256,13 @@ export default function PersonasPage() {
       });
 
       if (response.ok) {
-        setSuccess(`Version ${version} activated (hot-reloaded)`);
+        setSuccess(UI_HELP_TEXT.PERSONAS_SUCCESS_ACTIVATED.replace('{version}', version.toString()));
         await fetchPersonas();
       } else {
-        setError('Failed to activate version');
+        setError(UI_HELP_TEXT.PERSONAS_ERROR_ACTIVATE_FAILED);
       }
     } catch (error) {
-      setError('Failed to activate version');
+      setError(UI_HELP_TEXT.PERSONAS_ERROR_ACTIVATE_FAILED);
     } finally {
       setLoading(false);
     }
@@ -269,7 +270,7 @@ export default function PersonasPage() {
 
   const viewDiff = async (eye: string, v1: number, v2: number) => {
     if (v1 === v2) {
-      setError('Please select two different versions');
+      setError(UI_HELP_TEXT.PERSONAS_ERROR_DIFF_VERSIONS_SAME);
       return;
     }
     setLoading(true);
@@ -283,17 +284,22 @@ export default function PersonasPage() {
         setDiffResult(result.data);
         setShowDiff(true);
       } else {
-        setError('Failed to load diff');
+        setError(UI_HELP_TEXT.PERSONAS_ERROR_LOAD_DIFF_FAILED);
       }
     } catch (error) {
-      setError('Failed to load diff');
+      setError(UI_HELP_TEXT.PERSONAS_ERROR_LOAD_DIFF_FAILED);
     } finally {
       setLoading(false);
     }
   };
 
   const revertToVersion = async (eye: string, version: number) => {
-    const confirmed = await dialog.confirm('Revert Persona', `Revert ${eye} to version ${version}? This will create a new version.`, 'Revert', 'Cancel');
+    const confirmed = await dialog.confirm(
+      UI_HELP_TEXT.PERSONAS_DIALOG_REVERT_TITLE,
+      UI_HELP_TEXT.PERSONAS_DIALOG_REVERT_MESSAGE.replace('{eyeName}', eye).replace('{version}', version.toString()),
+      UI_HELP_TEXT.PERSONAS_DIALOG_REVERT_CONFIRM,
+      UI_HELP_TEXT.PERSONAS_DIALOG_REVERT_CANCEL
+    );
     if (!confirmed) return;
 
     setLoading(true);
@@ -302,7 +308,7 @@ export default function PersonasPage() {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
       const versionToRevert = eyeVersions.find(v => v.version === version);
       if (!versionToRevert) {
-        setError('Version not found');
+        setError(UI_HELP_TEXT.PERSONAS_ERROR_VERSION_NOT_FOUND);
         return;
       }
 
@@ -313,13 +319,13 @@ export default function PersonasPage() {
       });
 
       if (response.ok) {
-        setSuccess(`Reverted to version ${version} (hot-reloaded)`);
+        setSuccess(UI_HELP_TEXT.PERSONAS_SUCCESS_REVERTED.replace('{version}', version.toString()));
         await fetchPersonas();
       } else {
-        setError('Failed to revert');
+        setError(UI_HELP_TEXT.PERSONAS_ERROR_REVERT_FAILED);
       }
     } catch (error) {
-      setError('Failed to revert');
+      setError(UI_HELP_TEXT.PERSONAS_ERROR_REVERT_FAILED);
     } finally {
       setLoading(false);
     }
@@ -361,19 +367,19 @@ export default function PersonasPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
               <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
-                ← Home
+                {UI_HELP_TEXT.PERSONAS_NAV_HOME}
               </Link>
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Personas</p>
-                <h1 className="mt-1 text-2xl font-semibold text-white">Eye Personas</h1>
+                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">{UI_HELP_TEXT.PERSONAS_SECTION_LABEL}</p>
+                <h1 className="mt-1 text-2xl font-semibold text-white">{UI_HELP_TEXT.PERSONAS_HEADER_TITLE}</h1>
               </div>
             </div>
             <div className="flex gap-4">
               <Link href="/models" className="text-sm text-slate-400 transition-colors hover:text-white">
-                Models
+                {UI_HELP_TEXT.PERSONAS_NAV_MODELS}
               </Link>
               <Link href="/settings" className="text-sm text-slate-400 transition-colors hover:text-white">
-                Settings
+                {UI_HELP_TEXT.PERSONAS_NAV_SETTINGS}
               </Link>
             </div>
           </div>
@@ -400,7 +406,7 @@ export default function PersonasPage() {
         <div className="grid gap-8 lg:grid-cols-[320px,1fr]">
           {/* Eyes List */}
           <div>
-            <h2 className="mb-6 text-sm font-semibold uppercase tracking-[0.2em] text-brand-accent">Eyes</h2>
+            <h2 className="mb-6 text-sm font-semibold uppercase tracking-[0.2em] text-brand-accent">{UI_HELP_TEXT.PERSONAS_LABEL_EYES}</h2>
             <div className="space-y-4">
               {personas.map((persona, index) => {
                 const eye = persona.id;
@@ -445,7 +451,7 @@ export default function PersonasPage() {
                         }}
                         className="rounded-full bg-white/20 px-3 py-1 text-xs transition hover:bg-white/30"
                       >
-                        {isEditing ? 'Editing...' : 'Edit'}
+                        {isEditing ? UI_HELP_TEXT.PERSONAS_BUTTON_EDITING : UI_HELP_TEXT.PERSONAS_BUTTON_EDIT}
                       </button>
                     </div>
                   </motion.div>
@@ -485,10 +491,10 @@ export default function PersonasPage() {
                               exportPersona('markdown', exportData);
                             }}
                             className="flex items-center gap-1 rounded-md bg-brand-accent/10 px-3 py-1.5 text-xs font-medium text-brand-accent hover:bg-brand-accent/20 transition-colors"
-                            title="Export as Markdown"
+                            title={UI_HELP_TEXT.PERSONAS_EXPORT_MD_TITLE}
                           >
                             <Download className="h-3.5 w-3.5" />
-                            MD
+                            {UI_HELP_TEXT.PERSONAS_BUTTON_EXPORT_MD}
                           </button>
                           <button
                             onClick={() => {
@@ -503,10 +509,10 @@ export default function PersonasPage() {
                               exportPersona('pdf', exportData);
                             }}
                             className="flex items-center gap-1 rounded-md bg-brand-accent/10 px-3 py-1.5 text-xs font-medium text-brand-accent hover:bg-brand-accent/20 transition-colors"
-                            title="Export as PDF"
+                            title={UI_HELP_TEXT.PERSONAS_EXPORT_PDF_TITLE}
                           >
                             <Download className="h-3.5 w-3.5" />
-                            PDF
+                            {UI_HELP_TEXT.PERSONAS_BUTTON_EXPORT_PDF}
                           </button>
                           <button
                             onClick={() => {
@@ -521,28 +527,28 @@ export default function PersonasPage() {
                               exportPersona('json', exportData);
                             }}
                             className="flex items-center gap-1 rounded-md bg-brand-accent/10 px-3 py-1.5 text-xs font-medium text-brand-accent hover:bg-brand-accent/20 transition-colors"
-                            title="Export as JSON"
+                            title={UI_HELP_TEXT.PERSONAS_EXPORT_JSON_TITLE}
                           >
                             <Download className="h-3.5 w-3.5" />
-                            JSON
+                            {UI_HELP_TEXT.PERSONAS_BUTTON_EXPORT_JSON}
                           </button>
                           <button
                             onClick={() => startEditing(selectedEye)}
                             className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary"
                           >
-                            Edit
+                            {UI_HELP_TEXT.PERSONAS_BUTTON_EDIT}
                           </button>
                         </div>
                       </div>
                       
                       <div className="prose prose-invert max-w-none">
                         <section className="mb-8">
-                          <h3 className="mb-3 text-lg font-semibold text-white">Mission</h3>
+                          <h3 className="mb-3 text-lg font-semibold text-white">{UI_HELP_TEXT.PERSONAS_LABEL_MISSION}</h3>
                           <p className="text-slate-300">{persona.mission}</p>
                         </section>
-                        
+
                         <section className="mb-8">
-                          <h3 className="mb-3 text-lg font-semibold text-white">Capabilities</h3>
+                          <h3 className="mb-3 text-lg font-semibold text-white">{UI_HELP_TEXT.PERSONAS_LABEL_CAPABILITIES}</h3>
                           <div className="flex flex-wrap gap-2">
                             {persona.capabilities.map((cap) => (
                               <span key={cap} className="rounded-full bg-brand-accent/20 px-3 py-1 text-sm text-brand-accent">
@@ -551,9 +557,9 @@ export default function PersonasPage() {
                             ))}
                           </div>
                         </section>
-                        
+
                         <section className="mb-6">
-                          <h3 className="mb-3 text-lg font-semibold text-white">Phases</h3>
+                          <h3 className="mb-3 text-lg font-semibold text-white">{UI_HELP_TEXT.PERSONAS_LABEL_PHASES}</h3>
                           <div className="space-y-3">
                             {persona.phases.guidance && (
                               <div className="rounded-xl border border-blue-500/40 bg-blue-500/10 overflow-hidden">
@@ -561,14 +567,14 @@ export default function PersonasPage() {
                                   onClick={() => setExpandedSections(prev => ({ ...prev, guidance: !prev.guidance }))}
                                   className="w-full p-4 flex items-center justify-between text-left hover:bg-blue-500/20 transition"
                                 >
-                                  <h4 className="font-semibold text-blue-300">Guidance Phase</h4>
+                                  <h4 className="font-semibold text-blue-300">{UI_HELP_TEXT.PERSONAS_LABEL_GUIDANCE_PHASE}</h4>
                                   <span className="text-blue-300">{expandedSections.guidance ? '▼' : '▶'}</span>
                                 </button>
                                 {expandedSections.guidance && (
                                   <div className="px-4 pb-4 space-y-3">
                                     <p className="text-sm text-slate-300">{persona.phases.guidance.mission}</p>
                                     <div>
-                                      <p className="mb-1 text-xs font-semibold text-blue-300">Check:</p>
+                                      <p className="mb-1 text-xs font-semibold text-blue-300">{UI_HELP_TEXT.PERSONAS_LABEL_CHECK}</p>
                                       <ul className="list-inside list-disc space-y-1 text-xs text-slate-400">
                                         {persona.phases.guidance.check.split(',').map((item, idx) => (
                                           <li key={idx}>{item.trim()}</li>
@@ -577,7 +583,7 @@ export default function PersonasPage() {
                                     </div>
                                     {persona.phases.guidance.reminders && persona.phases.guidance.reminders.length > 0 && (
                                       <div>
-                                        <p className="mb-1 text-xs font-semibold text-blue-300">Reminders:</p>
+                                        <p className="mb-1 text-xs font-semibold text-blue-300">{UI_HELP_TEXT.PERSONAS_LABEL_REMINDERS}</p>
                                         <ul className="list-inside list-disc space-y-1 text-xs text-slate-400">
                                           {persona.phases.guidance.reminders.map((reminder, idx) => (
                                             <li key={idx}>{reminder}</li>
@@ -595,14 +601,14 @@ export default function PersonasPage() {
                                   onClick={() => setExpandedSections(prev => ({ ...prev, validation: !prev.validation }))}
                                   className="w-full p-4 flex items-center justify-between text-left hover:bg-green-500/20 transition"
                                 >
-                                  <h4 className="font-semibold text-green-300">Validation Phase</h4>
+                                  <h4 className="font-semibold text-green-300">{UI_HELP_TEXT.PERSONAS_LABEL_VALIDATION_PHASE}</h4>
                                   <span className="text-green-300">{expandedSections.validation ? '▼' : '▶'}</span>
                                 </button>
                                 {expandedSections.validation && (
                                   <div className="px-4 pb-4 space-y-3">
                                     <p className="text-sm text-slate-300">{persona.phases.validation.mission}</p>
                                     <div>
-                                      <p className="mb-1 text-xs font-semibold text-green-300">Check:</p>
+                                      <p className="mb-1 text-xs font-semibold text-green-300">{UI_HELP_TEXT.PERSONAS_LABEL_CHECK}</p>
                                       <ul className="list-inside list-disc space-y-1 text-xs text-slate-400">
                                         {persona.phases.validation.check.split(',').map((item, idx) => (
                                           <li key={idx}>{item.trim()}</li>
@@ -611,7 +617,7 @@ export default function PersonasPage() {
                                     </div>
                                     {persona.phases.validation.reminders && persona.phases.validation.reminders.length > 0 && (
                                       <div>
-                                        <p className="mb-1 text-xs font-semibold text-green-300">Reminders:</p>
+                                        <p className="mb-1 text-xs font-semibold text-green-300">{UI_HELP_TEXT.PERSONAS_LABEL_REMINDERS}</p>
                                         <ul className="list-inside list-disc space-y-1 text-xs text-slate-400">
                                           {persona.phases.validation.reminders.map((reminder, idx) => (
                                             <li key={idx}>{reminder}</li>
@@ -632,13 +638,13 @@ export default function PersonasPage() {
                               onClick={() => setExpandedSections(prev => ({ ...prev, envelope: !prev.envelope }))}
                               className="w-full p-4 flex items-center justify-between text-left hover:bg-brand-paper/50 transition"
                             >
-                              <h3 className="text-lg font-semibold text-white">Envelope Contract</h3>
+                              <h3 className="text-lg font-semibold text-white">{UI_HELP_TEXT.PERSONAS_LABEL_ENVELOPE}</h3>
                               <span className="text-brand-accent">{expandedSections.envelope ? '▼' : '▶'}</span>
                             </button>
                             {expandedSections.envelope && (
                               <div className="px-4 pb-4 space-y-3">
                                 <div>
-                                  <p className="mb-1 text-xs font-semibold text-brand-accent">Required Keys:</p>
+                                  <p className="mb-1 text-xs font-semibold text-brand-accent">{UI_HELP_TEXT.PERSONAS_LABEL_REQUIRED_KEYS}</p>
                                   <ul className="list-inside list-disc text-sm text-slate-300">
                                     {persona.envelopeContract.requiredKeys.map((key, idx) => (
                                       <li key={idx}>{key}</li>
@@ -646,7 +652,7 @@ export default function PersonasPage() {
                                   </ul>
                                 </div>
                                 <div>
-                                  <p className="mb-1 text-xs font-semibold text-brand-accent">Required Data Keys:</p>
+                                  <p className="mb-1 text-xs font-semibold text-brand-accent">{UI_HELP_TEXT.PERSONAS_LABEL_REQUIRED_DATA_KEYS}</p>
                                   <ul className="list-inside list-disc text-sm text-slate-300">
                                     {persona.envelopeContract.requiredDataKeys.map((key, idx) => (
                                       <li key={idx}>{key}</li>
@@ -654,7 +660,7 @@ export default function PersonasPage() {
                                   </ul>
                                 </div>
                                 <div>
-                                  <p className="mb-1 text-xs font-semibold text-brand-accent">Required UI Keys:</p>
+                                  <p className="mb-1 text-xs font-semibold text-brand-accent">{UI_HELP_TEXT.PERSONAS_LABEL_REQUIRED_UI_KEYS}</p>
                                   <ul className="list-inside list-disc text-sm text-slate-300">
                                     {persona.envelopeContract.requiredUiKeys.map((key, idx) => (
                                       <li key={idx}>{key}</li>
@@ -668,7 +674,7 @@ export default function PersonasPage() {
                         
                         {persona.notes && (
                           <section className="mb-8">
-                            <h3 className="mb-3 text-lg font-semibold text-white">Notes</h3>
+                            <h3 className="mb-3 text-lg font-semibold text-white">{UI_HELP_TEXT.PERSONAS_LABEL_NOTES}</h3>
                             <p className="text-slate-300">{persona.notes}</p>
                           </section>
                         )}
@@ -681,12 +687,12 @@ export default function PersonasPage() {
               /* Diff View */
               <GlassCard>
                 <div className="mb-6 flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-white">Persona Diff</h2>
+                  <h2 className="text-xl font-semibold text-white">{UI_HELP_TEXT.PERSONAS_LABEL_DIFF_TITLE}</h2>
                   <button
                     onClick={() => { setShowDiff(false); setDiffResult(null); }}
                     className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
                   >
-                    Close
+                    {UI_HELP_TEXT.PERSONAS_BUTTON_CLOSE}
                   </button>
                 </div>
 
@@ -717,9 +723,9 @@ export default function PersonasPage() {
                   </div>
 
                   <div className="rounded-xl border border-blue-500/40 bg-blue-500/10 p-4">
-                    <h4 className="mb-2 text-sm font-semibold text-blue-300">Changes Summary</h4>
+                    <h4 className="mb-2 text-sm font-semibold text-blue-300">{UI_HELP_TEXT.PERSONAS_LABEL_CHANGES_SUMMARY}</h4>
                     <p className="text-sm text-blue-100">
-                      {diffResult.changedLines || 0} lines changed
+                      {UI_HELP_TEXT.PERSONAS_MESSAGE_LINES_CHANGED.replace('{count}', (diffResult.changedLines || 0).toString())}
                     </p>
                   </div>
                 </div>
@@ -729,21 +735,21 @@ export default function PersonasPage() {
               <GlassCard>
                 <div className="mb-6 flex items-center justify-between">
                   <h2 className="text-xl font-semibold text-white">
-                    Edit {editingPersona} Persona
+                    {UI_HELP_TEXT.PERSONAS_TITLE_EDIT.replace('{personaName}', editingPersona)}
                   </h2>
                   <div className="flex gap-3">
                     <button
                       onClick={cancelEditing}
                       className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
                     >
-                      Cancel
+                      {UI_HELP_TEXT.PERSONAS_BUTTON_CANCEL}
                     </button>
                     <button
                       onClick={savePersona}
                       disabled={loading || !editForm.name.trim()}
                       className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary disabled:opacity-50"
                     >
-                      {loading ? 'Publishing...' : 'Publish (Hot-Reload)'}
+                      {loading ? UI_HELP_TEXT.PERSONAS_BUTTON_PUBLISHING : UI_HELP_TEXT.PERSONAS_BUTTON_PUBLISH}
                     </button>
                   </div>
                 </div>
@@ -753,27 +759,27 @@ export default function PersonasPage() {
                 <div className="space-y-4">
                     <div>
                       <label className="mb-2 block text-sm font-medium text-slate-300">
-                        Name
+                        {UI_HELP_TEXT.PERSONAS_LABEL_NAME}
                       </label>
                       <input
                         type="text"
                         value={editForm.name}
                         onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
                         className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
-                        placeholder="Overseer"
+                        placeholder={UI_HELP_TEXT.PERSONAS_PLACEHOLDER_NAME}
                       />
                     </div>
 
                     <div>
                       <label className="mb-2 block text-sm font-medium text-slate-300">
-                        Description
+                        {UI_HELP_TEXT.PERSONAS_LABEL_DESCRIPTION}
                       </label>
                       <input
                         type="text"
                         value={editForm.description}
                         onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
                         className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
-                        placeholder="Navigator that analyzes requests..."
+                        placeholder={UI_HELP_TEXT.PERSONAS_PLACEHOLDER_DESCRIPTION}
                       />
                     </div>
                   </div>
@@ -781,21 +787,21 @@ export default function PersonasPage() {
                   {/* Mission */}
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-300">
-                      Mission
+                      {UI_HELP_TEXT.PERSONAS_LABEL_MISSION}
                     </label>
                     <textarea
                       value={editForm.mission}
                       onChange={(e) => setEditForm(prev => ({ ...prev, mission: e.target.value }))}
                       rows={3}
                       className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
-                      placeholder="You are the BRAIN of Third Eye MCP..."
+                      placeholder={UI_HELP_TEXT.PERSONAS_PLACEHOLDER_MISSION}
                     />
                   </div>
 
                   {/* Capabilities Dropdown Multi-Select */}
                   <div className="relative">
                     <label className="mb-2 block text-sm font-medium text-slate-300">
-                      Capabilities
+                      {UI_HELP_TEXT.PERSONAS_LABEL_CAPABILITIES}
                     </label>
                     <div className="relative">
                       <button
@@ -805,8 +811,10 @@ export default function PersonasPage() {
                       >
                         <span className="text-sm text-slate-200">
                           {editForm.capabilities.length === 0
-                            ? 'Select capabilities...'
-                            : `${editForm.capabilities.length} capability${editForm.capabilities.length !== 1 ? 'ies' : ''} selected`}
+                            ? UI_HELP_TEXT.PERSONAS_PLACEHOLDER_CAPABILITIES
+                            : UI_HELP_TEXT.PERSONAS_MESSAGE_CAPABILITIES_SELECTED
+                                .replace('{count}', editForm.capabilities.length.toString())
+                                .replace('{plural}', editForm.capabilities.length !== 1 ? 'ies' : 'y')}
                         </span>
                         <svg
                           className={`w-5 h-5 transition-transform ${capabilitiesDropdownOpen ? 'rotate-180' : ''}`}
@@ -862,9 +870,9 @@ export default function PersonasPage() {
                   </div>
 
                   <div className="rounded-xl border border-yellow-700/50 bg-yellow-900/10 p-5">
-                    <h4 className="font-medium text-yellow-300">Hot-Reload Enabled</h4>
+                    <h4 className="font-medium text-yellow-300">{UI_HELP_TEXT.PERSONAS_LABEL_HOT_RELOAD_TITLE}</h4>
                     <p className="mt-2 text-sm text-yellow-100">
-                      Changes take effect immediately for new runs (no restart needed)
+                      {UI_HELP_TEXT.PERSONAS_MESSAGE_HOT_RELOAD_DESC}
                     </p>
                   </div>
                 </div>
@@ -874,24 +882,24 @@ export default function PersonasPage() {
               <GlassCard>
                 <div className="mb-6 flex items-center justify-between">
                   <h2 className="text-xl font-semibold text-white">
-                    {selectedEye} Persona Versions
+                    {UI_HELP_TEXT.PERSONAS_TITLE_VERSIONS.replace('{personaName}', selectedEye)}
                   </h2>
                   <button
                     onClick={() => startEditing(selectedEye)}
                     className="rounded-full bg-brand-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-primary"
                   >
-                    Create New Version
+                    {UI_HELP_TEXT.PERSONAS_BUTTON_CREATE_VERSION}
                   </button>
                 </div>
 
                 {eyeVersions.length === 0 ? (
                   <div className="py-12 text-center">
-                    <p className="mb-4 text-lg text-slate-400">No personas found</p>
+                    <p className="mb-4 text-lg text-slate-400">{UI_HELP_TEXT.PERSONAS_EMPTY_TITLE}</p>
                     <button
                       onClick={() => startEditing(selectedEye)}
                       className="rounded-full bg-brand-accent px-6 py-2.5 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary"
                     >
-                      Create First Persona
+                      {UI_HELP_TEXT.PERSONAS_EMPTY_ACTION}
                     </button>
                   </div>
                 ) : (
@@ -902,10 +910,12 @@ export default function PersonasPage() {
                       onChange={(e) => setDiffVersions({ ...diffVersions, v1: parseInt(e.target.value) })}
                       className="rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white focus:border-brand-accent focus:outline-none"
                     >
-                      <option value="0">Select version 1</option>
+                      <option value="0">{UI_HELP_TEXT.PERSONAS_VERSION_SELECT_1}</option>
                       {eyeVersions.map((v) => (
                         <option key={v.version} value={v.version}>
-                          Version {v.version} {v.active ? '(Active)' : ''}
+                          {v.active
+                            ? UI_HELP_TEXT.PERSONAS_MESSAGE_VERSION_ACTIVE.replace('{version}', v.version.toString())
+                            : UI_HELP_TEXT.PERSONAS_MESSAGE_VERSION_LABEL.replace('{version}', v.version.toString())}
                         </option>
                       ))}
                     </select>
@@ -914,10 +924,12 @@ export default function PersonasPage() {
                       onChange={(e) => setDiffVersions({ ...diffVersions, v2: parseInt(e.target.value) })}
                       className="rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white focus:border-brand-accent focus:outline-none"
                     >
-                      <option value="0">Select version 2</option>
+                      <option value="0">{UI_HELP_TEXT.PERSONAS_VERSION_SELECT_2}</option>
                       {eyeVersions.map((v) => (
                         <option key={v.version} value={v.version}>
-                          Version {v.version} {v.active ? '(Active)' : ''}
+                          {v.active
+                            ? UI_HELP_TEXT.PERSONAS_MESSAGE_VERSION_ACTIVE.replace('{version}', v.version.toString())
+                            : UI_HELP_TEXT.PERSONAS_MESSAGE_VERSION_LABEL.replace('{version}', v.version.toString())}
                         </option>
                       ))}
                     </select>
@@ -926,7 +938,7 @@ export default function PersonasPage() {
                       disabled={!diffVersions.v1 || !diffVersions.v2 || diffVersions.v1 === diffVersions.v2}
                       className="rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
                     >
-                      View Diff
+                      {UI_HELP_TEXT.PERSONAS_BUTTON_VIEW_DIFF}
                     </button>
                   </div>
 
@@ -943,10 +955,10 @@ export default function PersonasPage() {
                         <div className="mb-3 flex items-start justify-between">
                           <div>
                             <h3 className="font-semibold text-white">
-                              Version {version.version}
+                              {UI_HELP_TEXT.PERSONAS_MESSAGE_VERSION_LABEL.replace('{version}', version.version.toString())}
                               {version.active && (
                                 <span className="ml-2 rounded-full bg-green-500/20 px-2 py-1 text-xs text-green-400">
-                                  Active
+                                  {UI_HELP_TEXT.PERSONAS_MESSAGE_ACTIVE_BADGE}
                                 </span>
                               )}
                             </h3>
@@ -961,7 +973,7 @@ export default function PersonasPage() {
                                 disabled={loading}
                                 className="rounded-full border border-green-600/50 px-4 py-1.5 text-xs font-semibold text-green-400 transition hover:bg-green-600/20 disabled:opacity-50"
                               >
-                                Activate
+                                {UI_HELP_TEXT.PERSONAS_BUTTON_ACTIVATE}
                               </button>
                             )}
                             <button
@@ -969,7 +981,7 @@ export default function PersonasPage() {
                               disabled={loading}
                               className="rounded-full border border-blue-600/50 px-4 py-1.5 text-xs font-semibold text-blue-400 transition hover:bg-blue-600/20 disabled:opacity-50"
                             >
-                              Revert
+                              {UI_HELP_TEXT.PERSONAS_BUTTON_REVERT}
                             </button>
                           </div>
                         </div>
@@ -988,21 +1000,21 @@ export default function PersonasPage() {
             ) : (
               /* Welcome Screen */
               <GlassCard className="p-12 text-center">
-                <h2 className="mb-4 text-2xl font-semibold text-white">Persona Management</h2>
+                <h2 className="mb-4 text-2xl font-semibold text-white">{UI_HELP_TEXT.PERSONAS_WELCOME_TITLE}</h2>
                 <p className="mb-6 text-lg text-slate-400">
-                  Select an Eye from the left to view and edit its personas
+                  {UI_HELP_TEXT.PERSONAS_WELCOME_SUBTITLE}
                 </p>
                 <div className="space-y-2 text-sm text-slate-500">
-                  <p>• Each Eye has versioned personas with system prompts</p>
-                  <p>• Only one version can be active at a time</p>
-                  <p>• Changes take effect immediately for new runs (hot-reload)</p>
-                  <p>• Previous versions are preserved for rollback</p>
-                  <p>• Click "Edit" on any Eye to create or modify its persona</p>
+                  <p>{UI_HELP_TEXT.PERSONAS_WELCOME_BULLET_1}</p>
+                  <p>{UI_HELP_TEXT.PERSONAS_WELCOME_BULLET_2}</p>
+                  <p>{UI_HELP_TEXT.PERSONAS_WELCOME_BULLET_3}</p>
+                  <p>{UI_HELP_TEXT.PERSONAS_WELCOME_BULLET_4}</p>
+                  <p>{UI_HELP_TEXT.PERSONAS_WELCOME_BULLET_5}</p>
                 </div>
                 {personas.length === 0 && (
                   <div className="mt-8 rounded-xl border border-yellow-500/40 bg-yellow-500/10 p-4">
                     <p className="text-yellow-400 text-sm">
-                      No personas detected. Make sure the server is running and personas are properly configured.
+                      {UI_HELP_TEXT.PERSONAS_WELCOME_NO_PERSONAS}
                     </p>
                   </div>
                 )}

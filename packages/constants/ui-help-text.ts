@@ -115,6 +115,113 @@ export const UI_HELP_TEXT = Object.freeze({
   // Eyes Page - Date Display
   EYES_CREATED_PREFIX: 'Created',
 
+  // Personas Page - Navigation
+  PERSONAS_NAV_HOME: '← Home',
+  PERSONAS_NAV_MODELS: 'Models',
+  PERSONAS_NAV_SETTINGS: 'Settings',
+
+  // Personas Page - Header
+  PERSONAS_SECTION_LABEL: 'Personas',
+  PERSONAS_HEADER_TITLE: 'Eye Personas',
+
+  // Personas Page - Buttons
+  PERSONAS_BUTTON_EDIT: 'Edit',
+  PERSONAS_BUTTON_EDITING: 'Editing...',
+  PERSONAS_BUTTON_EXPORT_MD: 'MD',
+  PERSONAS_BUTTON_EXPORT_PDF: 'PDF',
+  PERSONAS_BUTTON_EXPORT_JSON: 'JSON',
+  PERSONAS_BUTTON_CLOSE: 'Close',
+  PERSONAS_BUTTON_CANCEL: 'Cancel',
+  PERSONAS_BUTTON_PUBLISHING: 'Publishing...',
+  PERSONAS_BUTTON_PUBLISH: 'Publish (Hot-Reload)',
+  PERSONAS_BUTTON_CREATE_VERSION: 'Create New Version',
+  PERSONAS_BUTTON_CREATE_FIRST: 'Create First Persona',
+  PERSONAS_BUTTON_VIEW_DIFF: 'View Diff',
+  PERSONAS_BUTTON_ACTIVATE: 'Activate',
+  PERSONAS_BUTTON_REVERT: 'Revert',
+
+  // Personas Page - Labels
+  PERSONAS_LABEL_EYES: 'Eyes',
+  PERSONAS_LABEL_MISSION: 'Mission',
+  PERSONAS_LABEL_CAPABILITIES: 'Capabilities',
+  PERSONAS_LABEL_PHASES: 'Phases',
+  PERSONAS_LABEL_GUIDANCE_PHASE: 'Guidance Phase',
+  PERSONAS_LABEL_VALIDATION_PHASE: 'Validation Phase',
+  PERSONAS_LABEL_CHECK: 'Check:',
+  PERSONAS_LABEL_REMINDERS: 'Reminders:',
+  PERSONAS_LABEL_ENVELOPE: 'Envelope Contract',
+  PERSONAS_LABEL_REQUIRED_KEYS: 'Required Keys:',
+  PERSONAS_LABEL_REQUIRED_DATA_KEYS: 'Required Data Keys:',
+  PERSONAS_LABEL_REQUIRED_UI_KEYS: 'Required UI Keys:',
+  PERSONAS_LABEL_NOTES: 'Notes',
+  PERSONAS_LABEL_DIFF_TITLE: 'Persona Diff',
+  PERSONAS_LABEL_CHANGES_SUMMARY: 'Changes Summary',
+  PERSONAS_LABEL_NAME: 'Name',
+  PERSONAS_LABEL_DESCRIPTION: 'Description',
+  PERSONAS_LABEL_HOT_RELOAD_TITLE: 'Hot-Reload Enabled',
+
+  // Personas Page - Titles
+  PERSONAS_TITLE_EDIT: 'Edit {personaName} Persona',
+  PERSONAS_TITLE_VERSIONS: '{personaName} Persona Versions',
+
+  // Personas Page - Export
+  PERSONAS_EXPORT_MD_TITLE: 'Export as Markdown',
+  PERSONAS_EXPORT_PDF_TITLE: 'Export as PDF',
+  PERSONAS_EXPORT_JSON_TITLE: 'Export as JSON',
+
+  // Personas Page - Placeholders
+  PERSONAS_PLACEHOLDER_NAME: 'Overseer',
+  PERSONAS_PLACEHOLDER_DESCRIPTION: 'Navigator that analyzes requests...',
+  PERSONAS_PLACEHOLDER_MISSION: 'You are the BRAIN of Third Eye MCP...',
+  PERSONAS_PLACEHOLDER_CAPABILITIES: 'Select capabilities...',
+
+  // Personas Page - Messages
+  PERSONAS_MESSAGE_CAPABILITIES_SELECTED: '{count} capability{plural} selected',
+  PERSONAS_MESSAGE_HOT_RELOAD_DESC: 'Changes take effect immediately for new runs (no restart needed)',
+  PERSONAS_MESSAGE_LINES_CHANGED: '{count} lines changed',
+  PERSONAS_MESSAGE_VERSION_LABEL: 'Version {version}',
+  PERSONAS_MESSAGE_VERSION_ACTIVE: 'Version {version} (Active)',
+  PERSONAS_MESSAGE_ACTIVE_BADGE: 'Active',
+
+  // Personas Page - Errors
+  PERSONAS_ERROR_LOAD_FAILED: 'Failed to load personas',
+  PERSONAS_ERROR_NAME_REQUIRED: 'Name is required',
+  PERSONAS_ERROR_SAVE_FAILED: 'Failed to save persona',
+  PERSONAS_ERROR_ACTIVATE_FAILED: 'Failed to activate version',
+  PERSONAS_ERROR_DIFF_VERSIONS_SAME: 'Please select two different versions',
+  PERSONAS_ERROR_LOAD_DIFF_FAILED: 'Failed to load diff',
+  PERSONAS_ERROR_VERSION_NOT_FOUND: 'Version not found',
+  PERSONAS_ERROR_REVERT_FAILED: 'Failed to revert',
+
+  // Personas Page - Success Messages
+  PERSONAS_SUCCESS_SAVED: 'Persona blueprint saved to database successfully',
+  PERSONAS_SUCCESS_ACTIVATED: 'Version {version} activated (hot-reloaded)',
+  PERSONAS_SUCCESS_REVERTED: 'Reverted to version {version} (hot-reloaded)',
+
+  // Personas Page - Dialogs
+  PERSONAS_DIALOG_REVERT_TITLE: 'Revert Persona',
+  PERSONAS_DIALOG_REVERT_MESSAGE: 'Revert {eyeName} to version {version}? This will create a new version.',
+  PERSONAS_DIALOG_REVERT_CONFIRM: 'Revert',
+  PERSONAS_DIALOG_REVERT_CANCEL: 'Cancel',
+
+  // Personas Page - Welcome Screen
+  PERSONAS_WELCOME_TITLE: 'Persona Management',
+  PERSONAS_WELCOME_SUBTITLE: 'Select an Eye from the left to view and edit its personas',
+  PERSONAS_WELCOME_BULLET_1: '• Each Eye has versioned personas with system prompts',
+  PERSONAS_WELCOME_BULLET_2: '• Only one version can be active at a time',
+  PERSONAS_WELCOME_BULLET_3: '• Changes take effect immediately for new runs (hot-reload)',
+  PERSONAS_WELCOME_BULLET_4: '• Previous versions are preserved for rollback',
+  PERSONAS_WELCOME_BULLET_5: '• Click "Edit" on any Eye to create or modify its persona',
+  PERSONAS_WELCOME_NO_PERSONAS: 'No personas detected. Make sure the server is running and personas are properly configured.',
+
+  // Personas Page - Empty States
+  PERSONAS_EMPTY_TITLE: 'No personas found',
+  PERSONAS_EMPTY_ACTION: 'Create First Persona',
+
+  // Personas Page - Version Selects
+  PERSONAS_VERSION_SELECT_1: 'Select version 1',
+  PERSONAS_VERSION_SELECT_2: 'Select version 2',
+
   // Pipelines Page
   PIPELINES_PAGE_TITLE: 'Pipelines are workflows that combine multiple Eyes to review conversations',
   PIPELINE_CREATE_BUTTON: 'Build a new pipeline by dragging and connecting Eyes',
