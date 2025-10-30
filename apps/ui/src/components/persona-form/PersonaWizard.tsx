@@ -17,7 +17,7 @@ import type {
   PersonaWizardProps,
   WizardStep,
 } from '@/types/persona-form';
-import { ChevronLeft, ChevronRight, Save, X, Upload } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Save, X, Upload, Sparkles } from 'lucide-react';
 import { MetadataStep } from './steps/MetadataStep';
 import { MissionStep } from './steps/MissionStep';
 import { EnvelopeStep } from './steps/EnvelopeStep';
@@ -29,6 +29,8 @@ import {
   RemindersStep,
   ReviewStep,
 } from './steps/PlaceholderSteps';
+import { TemplateSelector } from './TemplateSelector';
+import type { PersonaTemplate } from '@/lib/persona-templates';
 
 /**
  * PersonaWizard - Multi-step form for persona configuration
@@ -158,6 +160,7 @@ export function PersonaWizard({
   );
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showTemplateSelector, setShowTemplateSelector] = React.useState(false);
 
   // Memoized step configuration
   const steps: readonly WizardStep[] = useMemo(
@@ -264,6 +267,21 @@ export function PersonaWizard({
     [dispatch]
   );
 
+  const handleTemplateSelect = useCallback(
+    (template: PersonaTemplate) => {
+      if (state.isDirty) {
+        const confirmed = window.confirm(WIZARD_TEXT.TEMPLATE_REPLACE_CONFIRM);
+        if (!confirmed) return;
+      }
+
+      dispatch({
+        type: 'LOAD_IMPORTED_DATA',
+        data: template.data,
+      });
+    },
+    [state.isDirty, dispatch]
+  );
+
   // Navigation state
   const isFirstStep = state.currentStep === 0;
   const isLastStep = state.currentStep === TOTAL_STEPS - 1;
@@ -292,14 +310,23 @@ export function PersonaWizard({
                 {WIZARD_TEXT.SUBTITLE}
               </p>
             </div>
-            <button
-              onClick={handleImportClick}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-brand-outline text-brand-ink hover:bg-brand-paperElev transition-colors"
-              title={BUTTON_LABELS.IMPORT_JSON}
-            >
-              <Upload className="w-4 h-4" />
-              {BUTTON_LABELS.IMPORT_JSON}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowTemplateSelector(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-accent text-white hover:bg-brand-accent/90 transition-colors"
+              >
+                <Sparkles className="w-4 h-4" />
+                {BUTTON_LABELS.START_FROM_TEMPLATE}
+              </button>
+              <button
+                onClick={handleImportClick}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-brand-outline text-brand-ink hover:bg-brand-paperElev transition-colors"
+                title={BUTTON_LABELS.IMPORT_JSON}
+              >
+                <Upload className="w-4 h-4" />
+                {BUTTON_LABELS.IMPORT_JSON}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -504,6 +531,14 @@ export function PersonaWizard({
             )}
           </div>
         </div>
+
+        {/* Template Selector Modal */}
+        {showTemplateSelector && (
+          <TemplateSelector
+            onSelect={handleTemplateSelect}
+            onClose={() => setShowTemplateSelector(false)}
+          />
+        )}
       </div>
     </div>
   );

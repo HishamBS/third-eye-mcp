@@ -52,6 +52,7 @@ export const BUTTON_LABELS = {
   CANCEL: 'Cancel',
   EXPORT_JSON: 'Export JSON',
   IMPORT_JSON: 'Import JSON',
+  START_FROM_TEMPLATE: 'Start from Template',
 } as const;
 
 export const VALIDATION_MESSAGES = {
@@ -78,6 +79,16 @@ export const WIZARD_TEXT = {
   IMPORT_INVALID_JSON: 'Invalid JSON file. Please select a valid persona file.',
   IMPORT_MISSING_FIELDS: 'Imported file is missing required fields',
   EXPORT_SUCCESS: 'Persona exported successfully',
+  TEMPLATE_REPLACE_CONFIRM: 'Loading a template will replace your current work. Continue?',
+} as const;
+
+export const TEMPLATE_SELECTOR_TEXT = {
+  TITLE: 'Start from Template',
+  SUBTITLE: 'Choose a pre-built persona template to get started quickly',
+  SEARCH_PLACEHOLDER: 'Search templates...',
+  ALL_CATEGORIES: 'All Categories',
+  NO_RESULTS: 'No templates found',
+  SELECT_BUTTON: 'Use Template',
 } as const;
 
 export const OPTIONAL_STEPS = new Set([
