@@ -6,7 +6,8 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   Cable, Eye, Cpu, Users, GitBranch, Shield, FileText,
-  Settings, Database, BarChart, Bell, ChevronDown, Swords, FlaskConical
+  Settings, Database, BarChart, ChevronDown, Swords, FlaskConical,
+  History, Activity, PlayCircle
 } from 'lucide-react';
 import { SessionSelector } from './SessionSelector';
 import { ThemeSwitcher } from './ThemeSwitcher';
@@ -41,6 +42,14 @@ const NAVIGATION_SECTIONS: DropdownSection[] = [
       { href: '/prompts', label: 'Prompts', icon: <FileText className="h-4 w-4" />, description: 'Library' },
       { href: '/duel', label: 'Duel Mode', icon: <Swords className="h-4 w-4" />, description: 'Compare models' },
       { href: '/playground', label: 'Playground', icon: <FlaskConical className="h-4 w-4" />, description: 'Test Eyes manually' },
+    ],
+  },
+  {
+    label: 'MONITORING',
+    items: [
+      { href: '/sessions', label: 'Sessions', icon: <History className="h-4 w-4" />, description: 'Session history' },
+      { href: '/monitor', label: 'Monitor', icon: <Activity className="h-4 w-4" />, description: 'Real-time view' },
+      { href: '/replay', label: 'Replay', icon: <PlayCircle className="h-4 w-4" />, description: 'Session playback' },
     ],
   },
   {
@@ -144,14 +153,9 @@ export function GlobalNav() {
           <SessionSelector />
           <ThemeSwitcher />
           <Link
-            href="/monitor"
-            className="rounded-lg p-2 text-slate-400 hover:text-white hover:bg-brand-paper/60 transition-colors"
-          >
-            <Bell className="h-5 w-5" />
-          </Link>
-          <Link
             href="/settings"
             className="rounded-lg p-2 text-slate-400 hover:text-white hover:bg-brand-paper/60 transition-colors"
+            aria-label="Settings"
           >
             <Settings className="h-5 w-5" />
           </Link>
