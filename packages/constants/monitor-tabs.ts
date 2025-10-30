@@ -9,6 +9,7 @@ import { freezeTokens, TokenLiteral } from './taxonomy';
 
 export const MonitorTabId = freezeTokens({
   TIMELINE: 'timeline',
+  ROUTING: 'routing',
   CLARIFICATIONS: 'clarifications',
   INTENT: 'intent',
   EVIDENCE: 'evidence',
@@ -33,6 +34,12 @@ export const MONITOR_TABS: ReadonlyArray<MonitorTabConfig> = Object.freeze([
     label: 'Timeline',
     icon: 'timeline',
     description: 'Chat-style conversation log with Eye responses',
+  },
+  {
+    id: MonitorTabId.ROUTING,
+    label: 'Routing Decision',
+    icon: 'route',
+    description: 'Overseer-determined dynamic Eye sequence and rationale',
   },
   {
     id: MonitorTabId.CLARIFICATIONS,

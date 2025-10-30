@@ -20,6 +20,7 @@ import { ConversationEntry, type ConversationEntryData } from '@/components/moni
 import { TabButton } from '@/components/monitor/TabButton';
 import { StatusBadge } from '@/components/monitor/StatusBadge';
 import { ViewModeDescription } from '@/components/ViewModeToggle';
+import { RoutingDecisionPanel } from '@/components/monitor/RoutingDecisionPanel';
 import type { EyeName } from '@third-eye/types';
 import { EYE_DISPLAY_NAMES } from '@third-eye/config/constants';
 import {
@@ -29,6 +30,7 @@ import {
   type Speaker,
   ApprovalStatus,
 } from '@third-eye/constants';
+import type { EyeSequence } from '@third-eye/eyes';
 
 export const dynamic = 'force-dynamic';
 
@@ -231,6 +233,7 @@ function MonitorContent() {
     tenseigan: null,
     byakugan: null,
   });
+  const [routingDecision, setRoutingDecision] = useState<EyeSequence | null>(null);
 
   const { connectionStatus, subscribe } = useWebSocket();
 
@@ -365,6 +368,21 @@ function MonitorContent() {
     }
   };
 
+  const fetchRoutingDecision = async () => {
+    if (!sessionId) return;
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}/routing`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.routing) {
+          setRoutingDecision(data.routing);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch routing decision:', err);
+    }
+  };
+
   useEffect(() => {
     const mangekyoEvent = entries.find((e) => e.speaker === 'mangekyo');
     const tenseiganEvent = entries.find((e) => e.speaker === 'tenseigan');
@@ -381,6 +399,7 @@ function MonitorContent() {
     if (!sessionId) return;
     fetchClarifications();
     fetchIntentConfirmations();
+    fetchRoutingDecision();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
@@ -537,7 +556,7 @@ function MonitorContent() {
                           data: e.data,
                         }));
                         exportSession('markdown', sessionId || 'unknown', exportEvents, {
-                          agent: displayName,
+                          agent: summary?.agentName || 'Unknown Agent',
                           createdAt: entries[0]?.timestamp,
                         });
                       }}
@@ -562,7 +581,7 @@ function MonitorContent() {
                           data: e.data,
                         }));
                         exportSession('pdf', sessionId || 'unknown', exportEvents, {
-                          agent: displayName,
+                          agent: summary?.agentName || 'Unknown Agent',
                           createdAt: entries[0]?.timestamp,
                         });
                       }}
@@ -587,7 +606,7 @@ function MonitorContent() {
                           data: e.data,
                         }));
                         exportSession('json', sessionId || 'unknown', exportEvents, {
-                          agent: displayName,
+                          agent: summary?.agentName || 'Unknown Agent',
                           createdAt: entries[0]?.timestamp,
                         });
                       }}
@@ -620,6 +639,10 @@ function MonitorContent() {
                 </div>
               )}
             </>
+          )}
+
+          {activeTab === MonitorTabId.ROUTING && (
+            <RoutingDecisionPanel routing={routingDecision} sessionId={sessionId || undefined} />
           )}
 
           {activeTab === MonitorTabId.CLARIFICATIONS && (
