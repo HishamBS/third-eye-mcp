@@ -16,6 +16,7 @@ import { getStageTemplate } from '@third-eye/constants';
 import { EyeStageToken } from '@third-eye/constants';
 import { capabilityProgress } from './capability-progress';
 import { retryWithThrow } from './provider-retry';
+import { getRateLimiter } from './rate-limiter';
 import { RETRY_CONFIG, FALLBACK_CONFIG, FALLBACK_EVENT_TYPE, categorizeRetryReason } from '@third-eye/constants';
 
 function isSupportedProvider(value: unknown): value is ProviderType {
@@ -365,6 +366,21 @@ export class EyeOrchestrator {
             } else {
               personaPrompt = renderPersonaPrompt(blueprint, stage, enrichedInput);
             }
+
+            // 6.5. Check rate limit before calling provider
+            const rateLimiter = getRateLimiter();
+            const rateLimitResult = await rateLimiter.waitForLimit({
+              provider: providerType,
+              eye: eyeName,
+              tokensRequired: 1,
+            });
+
+            if (!rateLimitResult.allowed) {
+              console.warn(`⚠️  Rate limit exceeded for ${providerType}. ${rateLimitResult.reason}`);
+              throw new Error(`Rate limit exceeded: ${rateLimitResult.reason}`);
+            }
+
+            console.log(`✅ Rate limit check passed for ${providerType} (${rateLimitResult.tokensRemaining} tokens remaining)`);
 
             // 7. Call provider with persona as system prompt (with retry logic)
             try {

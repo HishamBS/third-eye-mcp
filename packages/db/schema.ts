@@ -143,6 +143,20 @@ export type NewPipelineEvent = typeof pipelineEvents.$inferInsert;
 export type ProviderFailover = typeof providerFailovers.$inferSelect;
 export type NewProviderFailover = typeof providerFailovers.$inferInsert;
 
+// Rate Limit Tracking - tracks rate limit usage per provider
+export const rateLimitTracking = sqliteTable('rate_limit_tracking', {
+  id: text('id').primaryKey(),
+  provider: text('provider').notNull(),
+  eye: text('eye'),
+  windowStart: integer('window_start', { mode: 'timestamp' }).notNull(),
+  requestCount: integer('request_count').notNull(),
+  tokensConsumed: integer('tokens_consumed').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
+export type RateLimitTracking = typeof rateLimitTracking.$inferSelect;
+export type NewRateLimitTracking = typeof rateLimitTracking.$inferInsert;
+
 // Prompts library with versioning and variables
 export const prompts = sqliteTable('prompts', {
   id: text('id').primaryKey(),
