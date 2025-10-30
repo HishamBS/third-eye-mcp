@@ -91,6 +91,39 @@ export const UI_HELP_TEXT = Object.freeze({
   ERROR_GENERIC_LOAD: 'Having trouble loading this page. Please refresh and try again.',
   ERROR_GENERIC_SAVE: 'Could not save your changes. Please try again.',
   ERROR_GENERIC_DELETE: 'Could not delete this item. Please try again.',
+
+  // ARIA Labels for Accessibility
+  ARIA_CREATE_EYE: 'Create a new custom Eye',
+  ARIA_CANCEL: 'Cancel and return to list',
+  ARIA_SAVE_EYE: 'Save this Eye',
+  ARIA_UPDATE_EYE: 'Update Eye settings',
+  ARIA_DELETE_EYE: 'Delete this Eye permanently',
+  ARIA_EDIT_EYE: 'Edit Eye settings',
+  ARIA_TEST_EYE: 'Test this Eye with sample input',
+  ARIA_RUN_TEST: 'Run the test',
+  ARIA_CLOSE_TEST: 'Close test panel',
+
+  ARIA_CREATE_PIPELINE: 'Create a new pipeline',
+  ARIA_SAVE_PIPELINE: 'Save this pipeline',
+  ARIA_RUN_PIPELINE: 'Run this pipeline',
+  ARIA_EDIT_PIPELINE: 'Edit pipeline settings',
+
+  ARIA_FILTER_ALL: 'Show all Eyes',
+  ARIA_FILTER_BUILTIN: 'Show only built-in Eyes',
+  ARIA_FILTER_CUSTOM: 'Show only custom Eyes',
+
+  ARIA_NAV_HOME: 'Return to home page',
+  ARIA_NAV_EYES: 'Go to Eyes management',
+  ARIA_NAV_PIPELINES: 'Go to Pipelines',
+  ARIA_NAV_PERSONAS: 'Go to Personas',
+  ARIA_NAV_PROMPTS: 'Go to Prompts',
+  ARIA_NAV_MODELS: 'Go to Models',
+  ARIA_NAV_MONITOR: 'Go to Monitor',
+  ARIA_NAV_SESSIONS: 'Go to Sessions',
+
+  ARIA_ERROR_REGION: 'Error message',
+  ARIA_SUCCESS_REGION: 'Success message',
+  ARIA_LOADING_REGION: 'Loading content',
 });
 
 export type UiHelpTextKey = keyof typeof UI_HELP_TEXT;

@@ -439,7 +439,7 @@ export default function EyesPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
+              <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent" aria-label={UI_HELP_TEXT.ARIA_NAV_HOME}>
                 ← Home
               </Link>
               <div>
@@ -451,15 +451,16 @@ export default function EyesPage() {
               </div>
             </div>
             <div className="flex gap-4">
-              <Link href="/prompts" className="text-sm text-slate-400 transition-colors hover:text-white">
+              <Link href="/prompts" className="text-sm text-slate-400 transition-colors hover:text-white" aria-label={UI_HELP_TEXT.ARIA_NAV_PROMPTS}>
                 Prompts
               </Link>
-              <Link href="/personas" className="text-sm text-slate-400 transition-colors hover:text-white">
+              <Link href="/personas" className="text-sm text-slate-400 transition-colors hover:text-white" aria-label={UI_HELP_TEXT.ARIA_NAV_PERSONAS}>
                 Personas
               </Link>
               <div className="flex items-center gap-2">
                 <button
                   onClick={startCreating}
+                  aria-label={UI_HELP_TEXT.ARIA_CREATE_EYE}
                   className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition-all duration-200 hover:bg-brand-primary hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink active:scale-95"
                 >
                   + Create Custom Eye
@@ -473,7 +474,12 @@ export default function EyesPage() {
 
       {error && (
         <div className="mx-auto max-w-7xl px-6 pt-4">
-          <div className="rounded-xl border border-red-500/50 bg-red-500/10 p-4 text-red-400">
+          <div
+            role="alert"
+            aria-live="assertive"
+            aria-label={UI_HELP_TEXT.ARIA_ERROR_REGION}
+            className="rounded-xl border border-red-500/50 bg-red-500/10 p-4 text-red-400"
+          >
             {error}
           </div>
         </div>
@@ -481,7 +487,12 @@ export default function EyesPage() {
 
       {success && (
         <div className="mx-auto max-w-7xl px-6 pt-4">
-          <div className="rounded-xl border border-green-500/50 bg-green-500/10 p-4 text-green-400">
+          <div
+            role="alert"
+            aria-live="polite"
+            aria-label={UI_HELP_TEXT.ARIA_SUCCESS_REGION}
+            className="rounded-xl border border-green-500/50 bg-green-500/10 p-4 text-green-400"
+          >
             {success}
           </div>
         </div>
@@ -498,6 +509,7 @@ export default function EyesPage() {
               <div className="flex gap-3">
                 <button
                   onClick={cancelForm}
+                  aria-label={isTesting ? UI_HELP_TEXT.ARIA_CLOSE_TEST : UI_HELP_TEXT.ARIA_CANCEL}
                   className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
                 >
                   {isTesting ? 'Close Test' : 'Cancel'}
@@ -506,6 +518,7 @@ export default function EyesPage() {
                   <button
                     onClick={saveEye}
                     disabled={loading || !formData.name || !formData.description}
+                    aria-label={UI_HELP_TEXT.ARIA_SAVE_EYE}
                     className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary disabled:opacity-50"
                   >
                     {loading ? 'Creating...' : 'Create Eye'}
@@ -515,6 +528,7 @@ export default function EyesPage() {
                   <button
                     onClick={updateEye}
                     disabled={loading || !formData.description}
+                    aria-label={UI_HELP_TEXT.ARIA_UPDATE_EYE}
                     className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary disabled:opacity-50"
                   >
                     {loading ? 'Updating...' : 'Update Eye'}
@@ -524,6 +538,7 @@ export default function EyesPage() {
                   <button
                     onClick={testEye}
                     disabled={loading || !testInput}
+                    aria-label={UI_HELP_TEXT.ARIA_RUN_TEST}
                     className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
                   >
                     {loading ? 'Testing...' : 'Run Test'}
@@ -533,18 +548,21 @@ export default function EyesPage() {
                   <>
                     <button
                       onClick={() => setIsEditing(true)}
+                      aria-label={UI_HELP_TEXT.ARIA_EDIT_EYE}
                       className="rounded-full border border-brand-accent px-5 py-2 text-sm font-semibold text-brand-accent transition hover:bg-brand-accent/10"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => setIsTesting(true)}
+                      aria-label={UI_HELP_TEXT.ARIA_TEST_EYE}
                       className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-green-700"
                     >
                       Test
                     </button>
                     <button
                       onClick={() => selectedEye && deleteEye(selectedEye.id)}
+                      aria-label={UI_HELP_TEXT.ARIA_DELETE_EYE}
                       className="rounded-full bg-red-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
                     >
                       Delete
@@ -710,6 +728,7 @@ export default function EyesPage() {
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setViewMode('all')}
+                  aria-label={UI_HELP_TEXT.ARIA_FILTER_ALL}
                   className={`rounded-full px-5 py-2 text-sm font-semibold transition-all duration-200 ${
                     viewMode === 'all'
                       ? 'bg-brand-accent text-brand-ink scale-105'
@@ -723,6 +742,7 @@ export default function EyesPage() {
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setViewMode('built-in')}
+                  aria-label={UI_HELP_TEXT.ARIA_FILTER_BUILTIN}
                   className={`rounded-full px-5 py-2 text-sm font-semibold transition-all duration-200 ${
                     viewMode === 'built-in'
                       ? 'bg-brand-accent text-brand-ink scale-105'
@@ -736,6 +756,7 @@ export default function EyesPage() {
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setViewMode('custom')}
+                  aria-label={UI_HELP_TEXT.ARIA_FILTER_CUSTOM}
                   className={`rounded-full px-5 py-2 text-sm font-semibold transition-all duration-200 ${
                     viewMode === 'custom'
                       ? 'bg-brand-accent text-brand-ink scale-105'

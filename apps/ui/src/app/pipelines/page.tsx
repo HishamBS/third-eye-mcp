@@ -421,7 +421,7 @@ export default function PipelinesPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
+              <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent" aria-label={UI_HELP_TEXT.ARIA_NAV_HOME}>
                 ← Home
               </Link>
               <div>
@@ -430,14 +430,15 @@ export default function PipelinesPage() {
               </div>
             </div>
             <div className="flex gap-4">
-              <Link href="/models" className="text-sm text-slate-400 transition-colors hover:text-white">
+              <Link href="/models" className="text-sm text-slate-400 transition-colors hover:text-white" aria-label={UI_HELP_TEXT.ARIA_NAV_MODELS}>
                 Models
               </Link>
-              <Link href="/personas" className="text-sm text-slate-400 transition-colors hover:text-white">
+              <Link href="/personas" className="text-sm text-slate-400 transition-colors hover:text-white" aria-label={UI_HELP_TEXT.ARIA_NAV_PERSONAS}>
                 Personas
               </Link>
               <button
                 onClick={handleCreate}
+                aria-label={UI_HELP_TEXT.ARIA_CREATE_PIPELINE}
                 className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition-all duration-200 hover:bg-brand-primary hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink active:scale-95"
               >
                 + Create Pipeline
@@ -449,7 +450,12 @@ export default function PipelinesPage() {
 
       {error && (
         <div className="mx-auto max-w-7xl px-6 pt-4">
-          <div className="rounded-xl border border-red-500/50 bg-red-500/10 p-4 text-red-400">
+          <div
+            role="alert"
+            aria-live="assertive"
+            aria-label={UI_HELP_TEXT.ARIA_ERROR_REGION}
+            className="rounded-xl border border-red-500/50 bg-red-500/10 p-4 text-red-400"
+          >
             {error}
           </div>
         </div>
@@ -457,7 +463,12 @@ export default function PipelinesPage() {
 
       {success && (
         <div className="mx-auto max-w-7xl px-6 pt-4">
-          <div className="rounded-xl border border-green-500/50 bg-green-500/10 p-4 text-green-400">
+          <div
+            role="alert"
+            aria-live="polite"
+            aria-label={UI_HELP_TEXT.ARIA_SUCCESS_REGION}
+            className="rounded-xl border border-green-500/50 bg-green-500/10 p-4 text-green-400"
+          >
             {success}
           </div>
         </div>
@@ -511,6 +522,7 @@ export default function PipelinesPage() {
                       if (pipeline) handleRunPipeline(pipeline.id);
                     }}
                     disabled={runningPipeline !== null}
+                    aria-label={UI_HELP_TEXT.ARIA_RUN_PIPELINE}
                     className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:opacity-50"
                   >
                     {runningPipeline ? 'Running...' : 'Run Pipeline'}
@@ -520,6 +532,7 @@ export default function PipelinesPage() {
                       const pipeline = uniquePipelines.find(p => p.name === selectedPipeline);
                       if (pipeline) handleEdit(pipeline);
                     }}
+                    aria-label={UI_HELP_TEXT.ARIA_EDIT_PIPELINE}
                     className="rounded-full border border-brand-outline/50 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
                   >
                     Edit
@@ -602,6 +615,7 @@ export default function PipelinesPage() {
                     <button
                       onClick={handleSubmit}
                       disabled={loading}
+                      aria-label={UI_HELP_TEXT.ARIA_SAVE_PIPELINE}
                       className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary disabled:opacity-50"
                     >
                       {loading ? 'Saving...' : 'Save Pipeline'}
