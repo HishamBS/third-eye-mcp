@@ -9,6 +9,7 @@ import { SecurityBanner } from '@/components/SecurityBanner';
 import { ThemeScript } from '@/components/ThemeScript';
 import { SessionNotifier } from '@/components/SessionNotifier';
 import { DialogProvider } from '@/hooks/useDialog';
+import { WelcomeModal } from '@/components/WelcomeModal';
 
 // Force dynamic rendering for all pages to avoid prerendering issues with client hooks
 export const dynamic = 'force-dynamic';
@@ -45,6 +46,7 @@ export default function RootLayout({
         <UIProvider>
           <SecurityBanner />
           <SessionNotifier />
+          <WelcomeModal />
           <div id="root">
             <GlobalNav />
             <Breadcrumbs />
