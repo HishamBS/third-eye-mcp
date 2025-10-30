@@ -358,6 +358,7 @@ export class EyeOrchestrator {
                 userMessage: enrichedInput,
                 config: {
                   temperature: 0,
+                  top_p: 1,
                   response_format: { type: 'json_object' as const },
                 },
               };
@@ -389,14 +390,14 @@ export class EyeOrchestrator {
               latencyMs = Date.now() - attemptStartTime;
 
               // Log actual LLM response for debugging
-              console.log(`\n📤 ${eyeName} LLM raw response (attempt ${attempt}/${MAX_PERSONA_RETRIES}):\n${completion.text}\n`);
+              console.log(`\n📤 ${eyeName} LLM raw response (attempt ${attempt}/${MAX_PERSONA_RETRIES}):\n${completion.content}\n`);
 
               // 8. Parse response as envelope
               try {
-                envelope = JSON.parse(completion.text);
+                envelope = JSON.parse(completion.content);
               } catch (parseError) {
                 // Try to extract JSON from markdown code blocks
-                const jsonMatch = completion.text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+                const jsonMatch = completion.content.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
                 if (jsonMatch) {
                   envelope = JSON.parse(jsonMatch[1]);
                 } else {
@@ -534,8 +535,8 @@ export class EyeOrchestrator {
         model: successfulModel,
         inputMd: input,
         outputJson: envelope,
-        tokensIn: completion.tokensIn ?? 0,
-        tokensOut: completion.tokensOut ?? 0,
+        tokensIn: completion.usage.prompt_tokens ?? 0,
+        tokensOut: completion.usage.completion_tokens ?? 0,
         latencyMs,
         createdAt: new Date(),
       });
