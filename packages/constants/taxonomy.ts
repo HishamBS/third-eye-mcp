@@ -45,6 +45,11 @@ export const EyeStageToken = freezeTokens({
 export type EyeStageToken = TokenLiteral<typeof EyeStageToken>;
 export const ALL_EYE_STAGE_TOKENS = tokenValues(EyeStageToken);
 
+export const EYE_STAGE_LABELS: Record<EyeStageToken, string> = Object.freeze({
+  [EyeStageToken.GUIDANCE]: 'Guidance',
+  [EyeStageToken.VALIDATION]: 'Validation',
+});
+
 export const EyeCapability = freezeTokens({
   ORCHESTRATION: 'orchestration',
   ROUTING: 'routing',

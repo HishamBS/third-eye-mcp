@@ -3,7 +3,7 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
 import type { NodeProps } from 'reactflow';
-import { EyeStageToken } from '@third-eye/constants';
+import { EyeStageToken, EYE_STAGE_LABELS } from '@third-eye/constants';
 import { CheckCircle, XCircle, Clock, Zap, Loader2 } from 'lucide-react';
 import { NODE_STATUS, NODE_STATUS_GRADIENTS, type NodeStatus } from '../../constants/execution';
 
@@ -118,8 +118,7 @@ function CustomNode({ data, selected }: NodeProps<CustomNodeData>) {
           {/* Stage Badge */}
           {data.stage && (
             <div className="text-xs font-semibold text-white/80 mb-2">
-              {data.stage === EyeStageToken.GUIDANCE && 'Guidance'}
-              {data.stage === EyeStageToken.VALIDATION && 'Validation'}
+              {EYE_STAGE_LABELS[data.stage as EyeStageToken]}
             </div>
           )}
 
