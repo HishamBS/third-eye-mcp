@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useDialog } from '@/hooks/useDialog';
 import { PipelineFlowBuilder } from '@/components/PipelineFlowBuilder';
+import { SkeletonList } from '@/components/ui/Skeleton';
+import { UI_HELP_TEXT } from '@third-eye/constants';
 
 interface Pipeline {
   id: string;
@@ -436,7 +438,7 @@ export default function PipelinesPage() {
               </Link>
               <button
                 onClick={handleCreate}
-                className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
+                className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition-all duration-200 hover:bg-brand-primary hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink active:scale-95"
               >
                 + Create Pipeline
               </button>

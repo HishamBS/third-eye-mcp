@@ -45,6 +45,14 @@ export const UI_HELP_TEXT = Object.freeze({
   EDIT: 'Modify this item',
   DUPLICATE: 'Create a copy of this item',
 
+  // Loading States
+  LOADING_EYES: 'Loading Eyes...',
+  LOADING_PIPELINES: 'Loading Pipelines...',
+  LOADING_SESSIONS: 'Loading Sessions...',
+  LOADING_DATA: 'Loading...',
+  LOADING_PERSONAS: 'Loading Personas...',
+  LOADING_MODELS: 'Loading Models...',
+
   // Execution Panel
   EXECUTION_PANEL_TITLE: 'Pipeline Execution',
   EXECUTION_PANEL_CLOSE: 'Close execution panel',

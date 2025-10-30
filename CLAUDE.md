@@ -335,3 +335,4 @@ When integrating new backend APIs in Next.js applications, you MUST verify ALL a
 CLAUDE\_CODE\_MAX\_OUTPUT\_TOKENS=200000
 
 ```
+- I NEVER WANT TO SEE ANY STRING LITERALS OR VIOLATIONS OF SSOT
