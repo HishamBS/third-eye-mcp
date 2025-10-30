@@ -153,32 +153,40 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
     }
   });
 
-  // Position nodes with two-lane layout (guidance left, validation right)
+  // Position nodes with two-lane horizontal layout (guidance top, validation bottom)
+  const nodeWidth = 280;
   const nodeHeight = 120;
-  const horizontalSpacing = 100;
-  const verticalSpacing = 120;
-  const laneWidth = 400;
+  const horizontalSpacing = 350; // Spacing between pipeline stages (left-to-right)
+  const verticalSpacing = 180; // Spacing between lanes (top-to-bottom)
+  const laneHeight = 200;
+  const startX = 50;
+  const startY = 50;
 
   const layoutedNodes = nodes.map(node => {
     const level = levels.get(node.id) || 0;
     const levelNodes = nodesByLevel.get(level)!;
     const stage = node.data?.stage;
 
-    let x = 0;
-    let indexInLane = 0;
-
+    // X position: based on level (pipeline progression left-to-right)
+    let indexInLevel = 0;
     if (stage === EyeStageToken.GUIDANCE) {
-      indexInLane = levelNodes.guidance.indexOf(node);
-      x = laneWidth * 0 + (indexInLane * horizontalSpacing);
+      indexInLevel = levelNodes.guidance.indexOf(node);
     } else if (stage === EyeStageToken.VALIDATION) {
-      indexInLane = levelNodes.validation.indexOf(node);
-      x = laneWidth * 2 + (indexInLane * horizontalSpacing);
+      indexInLevel = levelNodes.validation.indexOf(node);
     } else {
-      indexInLane = levelNodes.other.indexOf(node);
-      x = laneWidth * 1 + (indexInLane * horizontalSpacing);
+      indexInLevel = levelNodes.other.indexOf(node);
     }
+    const x = startX + (level * horizontalSpacing) + (indexInLevel * 50);
 
-    const y = level * (nodeHeight + verticalSpacing) + 50;
+    // Y position: based on stage (guidance top lane, validation bottom lane)
+    let y = startY;
+    if (stage === EyeStageToken.GUIDANCE) {
+      y = startY; // Top lane
+    } else if (stage === EyeStageToken.VALIDATION) {
+      y = startY + laneHeight + verticalSpacing; // Bottom lane
+    } else {
+      y = startY + (laneHeight / 2); // Middle lane for other nodes
+    }
 
     return {
       ...node,
