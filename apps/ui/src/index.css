@@ -6,11 +6,6 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 11 11 13;
-    --foreground: 248 248 242;
-  }
-
   body {
     background-color: rgb(var(--color-paper));
     color: rgb(var(--color-foreground));
