@@ -469,22 +469,22 @@ export default function EyesPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent" aria-label={UI_HELP_TEXT.ARIA_NAV_HOME}>
+              <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent" aria-label={UI_HELP_TEXT.ARIA_NAV_HOME}>
                 {UI_HELP_TEXT.EYES_NAV_HOME}
               </Link>
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">{UI_HELP_TEXT.EYES_SECTION_LABEL}</p>
                 <div className="mt-1 flex items-center gap-2">
-                  <h1 className="text-2xl font-semibold text-white">{UI_HELP_TEXT.EYES_HEADER_TITLE}</h1>
+                  <h1 className="text-2xl font-semibold text-brand-foreground">{UI_HELP_TEXT.EYES_HEADER_TITLE}</h1>
                   <HelpIcon helpTextKey="EYES_PAGE_TITLE" size="md" />
                 </div>
               </div>
             </div>
             <div className="flex gap-4">
-              <Link href="/prompts" className="text-sm text-slate-400 transition-colors hover:text-white" aria-label={UI_HELP_TEXT.ARIA_NAV_PROMPTS}>
+              <Link href="/prompts" className="text-sm text-brand-outline transition-colors hover:text-brand-foreground" aria-label={UI_HELP_TEXT.ARIA_NAV_PROMPTS}>
                 {UI_HELP_TEXT.EYES_NAV_PROMPTS}
               </Link>
-              <Link href="/personas" className="text-sm text-slate-400 transition-colors hover:text-white" aria-label={UI_HELP_TEXT.ARIA_NAV_PERSONAS}>
+              <Link href="/personas" className="text-sm text-brand-outline transition-colors hover:text-brand-foreground" aria-label={UI_HELP_TEXT.ARIA_NAV_PERSONAS}>
                 {UI_HELP_TEXT.EYES_NAV_PERSONAS}
               </Link>
               <div className="flex items-center gap-2">
@@ -548,7 +548,7 @@ export default function EyesPage() {
           /* Test Panel and View Mode */
           <GlassCard>
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-white">
+              <h2 className="text-xl font-semibold text-brand-foreground">
                 {isTesting ? UI_HELP_TEXT.EYES_FORM_TITLE_TEST.replace('{eyeName}', selectedEye?.name || '') : UI_HELP_TEXT.EYES_FORM_TITLE_VIEW.replace('{eyeName}', selectedEye?.name || '')}
               </h2>
               <div className="flex gap-3">
@@ -557,7 +557,7 @@ export default function EyesPage() {
                     <button
                       onClick={cancelForm}
                       aria-label={UI_HELP_TEXT.ARIA_CLOSE_TEST}
-                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       {UI_HELP_TEXT.EYES_BUTTON_CLOSE_TEST}
                     </button>
@@ -565,7 +565,7 @@ export default function EyesPage() {
                       onClick={testEye}
                       disabled={loading || !testInput}
                       aria-label={UI_HELP_TEXT.ARIA_RUN_TEST}
-                      className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
+                      className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-green-700 disabled:opacity-50"
                     >
                       {loading ? UI_HELP_TEXT.EYES_BUTTON_TESTING : UI_HELP_TEXT.EYES_BUTTON_RUN_TEST}
                     </button>
@@ -583,14 +583,14 @@ export default function EyesPage() {
                     <button
                       onClick={() => setIsTesting(true)}
                       aria-label={UI_HELP_TEXT.ARIA_TEST_EYE}
-                      className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-green-700"
+                      className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-green-700"
                     >
                       {UI_HELP_TEXT.EYES_BUTTON_TEST}
                     </button>
                     <button
                       onClick={() => selectedEye && deleteEye(selectedEye.id)}
                       aria-label={UI_HELP_TEXT.ARIA_DELETE_EYE}
-                      className="rounded-full bg-red-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                      className="rounded-full bg-red-600 px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-red-700"
                     >
                       {UI_HELP_TEXT.EYES_BUTTON_DELETE}
                     </button>
@@ -603,24 +603,24 @@ export default function EyesPage() {
               /* Test Panel */
               <div className="space-y-6">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-300">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_INPUT}</label>
+                  <label className="mb-2 block text-sm font-medium text-brand-outline">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_INPUT}</label>
                   <textarea
                     value={testInput}
                     onChange={(e) => setTestInput(e.target.value)}
                     placeholder={UI_HELP_TEXT.EYES_PLACEHOLDER_TEST_INPUT}
-                    className="h-40 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                    className="h-40 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                   />
                 </div>
 
                 {testResult && (
                   <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
-                    <h3 className="mb-3 text-lg font-semibold text-white">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_RESULT}</h3>
+                    <h3 className="mb-3 text-lg font-semibold text-brand-foreground">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_RESULT}</h3>
                     <div className="space-y-3">
                       <div>
-                        <p className="text-sm font-medium text-slate-300">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_RESULT_EYE} {testResult.eyeName}</p>
+                        <p className="text-sm font-medium text-brand-outline">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_RESULT_EYE} {testResult.eyeName}</p>
                       </div>
                       <div>
-                        <p className="mb-2 text-sm font-medium text-slate-300">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_RESULT_RESPONSE}</p>
+                        <p className="mb-2 text-sm font-medium text-brand-outline">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_RESULT_RESPONSE}</p>
                         <pre className="overflow-x-auto rounded-lg bg-brand-ink p-4 text-xs text-green-400">
                           {JSON.stringify(testResult.response, null, 2)}
                         </pre>
@@ -636,19 +636,19 @@ export default function EyesPage() {
                   <>
                     {/* Basic Information */}
                     <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
-                      <h3 className="mb-3 text-lg font-semibold text-white">Basic Information</h3>
+                      <h3 className="mb-3 text-lg font-semibold text-brand-foreground">Basic Information</h3>
                       <dl className="space-y-2">
                         <div>
-                          <dt className="text-sm font-medium text-slate-300">Eye Name</dt>
-                          <dd className="mt-1 text-white">{selectedEye.name}</dd>
+                          <dt className="text-sm font-medium text-brand-outline">Eye Name</dt>
+                          <dd className="mt-1 text-brand-foreground">{selectedEye.name}</dd>
                         </div>
                         <div>
-                          <dt className="text-sm font-medium text-slate-300">Description</dt>
-                          <dd className="mt-1 text-white">{selectedEye.description}</dd>
+                          <dt className="text-sm font-medium text-brand-outline">Description</dt>
+                          <dd className="mt-1 text-brand-foreground">{selectedEye.description}</dd>
                         </div>
                         {selectedEye.iconSvg && (
                           <div>
-                            <dt className="text-sm font-medium text-slate-300">Icon</dt>
+                            <dt className="text-sm font-medium text-brand-outline">Icon</dt>
                             <dd className="mt-2">
                               <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-brand-outline/50 bg-brand-paperElev p-2">
                                 <div
@@ -664,7 +664,7 @@ export default function EyesPage() {
 
                     {/* Input Schema */}
                     <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
-                      <h3 className="mb-3 text-lg font-semibold text-white">Input Schema</h3>
+                      <h3 className="mb-3 text-lg font-semibold text-brand-foreground">Input Schema</h3>
                       <pre className="overflow-x-auto rounded-lg bg-brand-ink p-4 text-xs text-green-400">
                         {JSON.stringify(JSON.parse(selectedEye.inputSchema || '{}'), null, 2)}
                       </pre>
@@ -672,7 +672,7 @@ export default function EyesPage() {
 
                     {/* Output Schema */}
                     <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
-                      <h3 className="mb-3 text-lg font-semibold text-white">Output Schema</h3>
+                      <h3 className="mb-3 text-lg font-semibold text-brand-foreground">Output Schema</h3>
                       <pre className="overflow-x-auto rounded-lg bg-brand-ink p-4 text-xs text-green-400">
                         {JSON.stringify(JSON.parse(selectedEye.outputSchema || '{}'), null, 2)}
                       </pre>
@@ -694,7 +694,7 @@ export default function EyesPage() {
                   className={`rounded-full px-5 py-2 text-sm font-semibold transition-all duration-200 ${
                     viewMode === 'all'
                       ? 'bg-brand-accent text-brand-ink scale-105'
-                      : 'border border-brand-outline/40 text-slate-300 hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
+                      : 'border border-brand-outline/40 text-brand-outline hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
                   } focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink`}
                 >
                   {UI_HELP_TEXT.EYES_FILTER_ALL.replace('{count}', eyes.length.toString())}
@@ -708,7 +708,7 @@ export default function EyesPage() {
                   className={`rounded-full px-5 py-2 text-sm font-semibold transition-all duration-200 ${
                     viewMode === 'built-in'
                       ? 'bg-brand-accent text-brand-ink scale-105'
-                      : 'border border-brand-outline/40 text-slate-300 hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
+                      : 'border border-brand-outline/40 text-brand-outline hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
                   } focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink`}
                 >
                   {UI_HELP_TEXT.EYES_FILTER_BUILTIN.replace('{count}', builtInEyes.length.toString())}
@@ -722,7 +722,7 @@ export default function EyesPage() {
                   className={`rounded-full px-5 py-2 text-sm font-semibold transition-all duration-200 ${
                     viewMode === 'custom'
                       ? 'bg-brand-accent text-brand-ink scale-105'
-                      : 'border border-brand-outline/40 text-slate-300 hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
+                      : 'border border-brand-outline/40 text-brand-outline hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
                   } focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink`}
                 >
                   {UI_HELP_TEXT.EYES_FILTER_CUSTOM.replace('{count}', customEyes.length.toString())}
@@ -764,13 +764,13 @@ export default function EyesPage() {
                             }}
                           />
                         </div>
-                        <h3 className="mb-1 text-xl font-bold text-white">{eye.name}</h3>
+                        <h3 className="mb-1 text-xl font-bold text-brand-foreground">{eye.name}</h3>
                         <div className="mb-2 flex items-center justify-center gap-2">
-                          <span className="text-sm text-white/80">v{eye.version}</span>
+                          <span className="text-sm text-brand-foreground/80">v{eye.version}</span>
                           <span
                             className={`rounded-full px-2 py-0.5 text-xs ${
                               eye.source === 'built-in'
-                                ? 'bg-white/20 text-white'
+                                ? 'bg-white/20 text-brand-foreground'
                                 : 'bg-green-500/30 text-green-100'
                             }`}
                           >
@@ -793,7 +793,7 @@ export default function EyesPage() {
                         )}
                       </div>
 
-                      <p className="line-clamp-3 text-center text-sm text-white/90">
+                      <p className="line-clamp-3 text-center text-sm text-brand-foreground/90">
                         {eye.description}
                       </p>
                     </Link>
@@ -814,7 +814,7 @@ export default function EyesPage() {
 
                     {eye.source === 'custom' && (
                       <div className="mt-2 text-center">
-                        <span className="text-xs text-white/70">
+                        <span className="text-xs text-brand-foreground/70">
                           {UI_HELP_TEXT.EYES_CREATED_PREFIX} {new Date(eye.createdAt!).toLocaleDateString()}
                         </span>
                       </div>

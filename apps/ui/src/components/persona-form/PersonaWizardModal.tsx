@@ -223,7 +223,7 @@ export function PersonaWizardModal({
           {/* Modal Header */}
           <div className="mb-4 flex items-center justify-between rounded-t-2xl bg-brand-paperElev border border-brand-outline p-6">
             <div>
-              <h2 className="text-2xl font-bold text-white">
+              <h2 className="text-2xl font-bold text-brand-foreground">
                 {UI_HELP_TEXT.EYES_PERSONA_MODAL_TITLE.replace('{eyeName}', eyeName)}
               </h2>
               <p className="mt-1 text-sm text-brand-ink/70">

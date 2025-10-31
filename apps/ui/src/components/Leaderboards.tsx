@@ -76,8 +76,8 @@ export function Leaderboards({
   return (
     <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-6 text-sm">
       <header className="mb-4">
-        <h3 className="text-xl font-bold text-white">🏆 Leaderboards</h3>
-        <p className="text-xs text-slate-400 mt-1">Model performance rankings</p>
+        <h3 className="text-xl font-bold text-brand-foreground">🏆 Leaderboards</h3>
+        <p className="text-xs text-brand-outline mt-1">Model performance rankings</p>
       </header>
 
       {/* Category Tabs */}
@@ -88,8 +88,8 @@ export function Leaderboards({
             onClick={() => setCategory(cat)}
             className={`px-3 py-1.5 text-xs font-medium rounded transition ${
               category === cat
-                ? 'bg-brand-accent text-white'
-                : 'text-slate-400 hover:text-white hover:bg-brand-paper'
+                ? 'bg-brand-accent text-brand-foreground'
+                : 'text-brand-outline hover:text-brand-foreground hover:bg-brand-paper'
             }`}
           >
             {cat === 'fastest' && '⚡'}
@@ -107,7 +107,7 @@ export function Leaderboards({
         <select
           value={eye}
           onChange={(e) => setEye(e.target.value)}
-          className="px-3 py-1.5 text-xs bg-brand-paper border border-brand-outline/30 rounded text-white"
+          className="px-3 py-1.5 text-xs bg-brand-paper border border-brand-outline/30 rounded text-brand-foreground"
         >
           <option value="">All Eyes</option>
           <option value="sharingan">Sharingan</option>
@@ -122,7 +122,7 @@ export function Leaderboards({
         <select
           value={days}
           onChange={(e) => setDays(parseInt(e.target.value))}
-          className="px-3 py-1.5 text-xs bg-brand-paper border border-brand-outline/30 rounded text-white"
+          className="px-3 py-1.5 text-xs bg-brand-paper border border-brand-outline/30 rounded text-brand-foreground"
         >
           <option value="7">Last 7 days</option>
           <option value="30">Last 30 days</option>
@@ -133,11 +133,11 @@ export function Leaderboards({
 
       {/* Rankings */}
       {loading ? (
-        <div className="text-center py-8 text-slate-400">Loading...</div>
+        <div className="text-center py-8 text-brand-outline">Loading...</div>
       ) : error ? (
         <div className="text-rose-300 text-xs">{error}</div>
       ) : rankings.length === 0 ? (
-        <div className="text-slate-400 text-xs text-center py-8">No data available</div>
+        <div className="text-brand-outline text-xs text-center py-8">No data available</div>
       ) : (
         <div className="space-y-2">
           {rankings.map((entry) => (
@@ -150,13 +150,13 @@ export function Leaderboards({
               <div className="flex items-center gap-3 flex-1">
                 <span className="text-lg">{getRankEmoji(entry.rank)}</span>
                 <div>
-                  <div className="text-white font-medium text-xs">{entry.model}</div>
-                  <div className="text-slate-500 text-[10px]">{entry.provider}</div>
+                  <div className="text-brand-foreground font-medium text-xs">{entry.model}</div>
+                  <div className="text-brand-outline text-[10px]">{entry.provider}</div>
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-brand-accent font-bold text-sm">{formatScore(entry)}</div>
-                <div className="text-slate-500 text-[10px]">{entry.totalRuns} runs</div>
+                <div className="text-brand-outline text-[10px]">{entry.totalRuns} runs</div>
               </div>
             </div>
           ))}

@@ -21,7 +21,7 @@ export function HelpIcon({ helpTextKey, position = 'top', size = 'sm' }: HelpIco
     <Tooltip helpTextKey={helpTextKey} helpTextMap={UI_HELP_TEXT} position={position}>
       <button
         type="button"
-        className="inline-flex items-center justify-center rounded-full text-slate-400 hover:text-brand-accent transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 focus:ring-offset-brand-ink"
+        className="inline-flex items-center justify-center rounded-full text-brand-outline hover:text-brand-accent transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 focus:ring-offset-brand-ink"
         aria-label={UI_HELP_TEXT[helpTextKey]}
       >
         <HelpCircle className={SIZE_CLASSES[size]} />

@@ -212,19 +212,19 @@ export default function StrictnessPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
+              <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent">
                 {UI_HELP_TEXT.STRICTNESS_NAV_HOME}
               </Link>
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">{UI_HELP_TEXT.STRICTNESS_SECTION_LABEL}</p>
-                <h1 className="mt-1 text-2xl font-semibold text-white">{UI_HELP_TEXT.STRICTNESS_HEADER_TITLE}</h1>
+                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">{UI_HELP_TEXT.STRICTNESS_HEADER_TITLE}</h1>
               </div>
             </div>
             <div className="flex gap-4">
-              <Link href="/models" className="text-sm text-slate-400 transition-colors hover:text-white">
+              <Link href="/models" className="text-sm text-brand-outline transition-colors hover:text-brand-foreground">
                 {UI_HELP_TEXT.STRICTNESS_NAV_MODELS}
               </Link>
-              <Link href="/personas" className="text-sm text-slate-400 transition-colors hover:text-white">
+              <Link href="/personas" className="text-sm text-brand-outline transition-colors hover:text-brand-foreground">
                 {UI_HELP_TEXT.STRICTNESS_NAV_PERSONAS}
               </Link>
               <button
@@ -257,7 +257,7 @@ export default function StrictnessPage() {
                     }`}
                     onClick={() => setSelectedProfile(profile)}
                   >
-                    <div className="text-white">
+                    <div className="text-brand-foreground">
                       <h3 className="font-bold">{profile.name}</h3>
                       <p className="mt-1 text-sm opacity-80">{profile.description}</p>
                       <p className="mt-2 text-xs opacity-70">{getStrictnessLabel(profile)}</p>
@@ -272,7 +272,7 @@ export default function StrictnessPage() {
               <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-brand-accent">{UI_HELP_TEXT.STRICTNESS_SECTION_CUSTOM}</h2>
               <div className="space-y-3">
                 {customProfiles.length === 0 ? (
-                  <p className="text-sm text-slate-400">{UI_HELP_TEXT.STRICTNESS_EMPTY_CUSTOM}</p>
+                  <p className="text-sm text-brand-outline">{UI_HELP_TEXT.STRICTNESS_EMPTY_CUSTOM}</p>
                 ) : (
                   customProfiles.map((profile, index) => (
                     <motion.div
@@ -285,7 +285,7 @@ export default function StrictnessPage() {
                       }`}
                       onClick={() => setSelectedProfile(profile)}
                     >
-                      <div className="text-white">
+                      <div className="text-brand-foreground">
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <h3 className="font-bold">{profile.name}</h3>
@@ -316,13 +316,13 @@ export default function StrictnessPage() {
               /* Profile Editor */
               <GlassCard>
                 <div className="mb-6 flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-white">
+                  <h2 className="text-xl font-semibold text-brand-foreground">
                     {isCreating ? UI_HELP_TEXT.STRICTNESS_TITLE_CREATE : UI_HELP_TEXT.STRICTNESS_TITLE_EDIT.replace('{name}', formData.name)}
                   </h2>
                   <div className="flex gap-3">
                     <button
                       onClick={handleCancel}
-                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       {UI_HELP_TEXT.STRICTNESS_BUTTON_CANCEL}
                     </button>
@@ -338,35 +338,35 @@ export default function StrictnessPage() {
 
                 <div className="space-y-6">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">
+                    <label className="mb-2 block text-sm font-medium text-brand-outline">
                       {UI_HELP_TEXT.STRICTNESS_LABEL_NAME} <span className="text-brand-primary">*</span>
                     </label>
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                       placeholder={UI_HELP_TEXT.STRICTNESS_PLACEHOLDER_NAME}
                     />
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">
+                    <label className="mb-2 block text-sm font-medium text-brand-outline">
                       {UI_HELP_TEXT.STRICTNESS_LABEL_DESCRIPTION}
                     </label>
                     <textarea
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="h-24 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                      className="h-24 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                       placeholder={UI_HELP_TEXT.STRICTNESS_PLACEHOLDER_DESCRIPTION}
                     />
                   </div>
 
                   <div className="grid gap-6 md:grid-cols-2">
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-slate-300">
+                      <label className="mb-2 block text-sm font-medium text-brand-outline">
                         {UI_HELP_TEXT.STRICTNESS_LABEL_AMBIGUITY}
-                        <span className="ml-2 text-sm text-slate-400">({formData.ambiguityThreshold}%)</span>
+                        <span className="ml-2 text-sm text-brand-outline">({formData.ambiguityThreshold}%)</span>
                       </label>
                       <input
                         type="range"
@@ -376,15 +376,15 @@ export default function StrictnessPage() {
                         onChange={(e) => setFormData({ ...formData, ambiguityThreshold: parseInt(e.target.value) })}
                         className="w-full accent-brand-accent"
                       />
-                      <p className="mt-1 text-xs text-slate-400">
+                      <p className="mt-1 text-xs text-brand-outline">
                         {UI_HELP_TEXT.STRICTNESS_HELP_AMBIGUITY}
                       </p>
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-slate-300">
+                      <label className="mb-2 block text-sm font-medium text-brand-outline">
                         {UI_HELP_TEXT.STRICTNESS_LABEL_CITATION}
-                        <span className="ml-2 text-sm text-slate-400">({formData.citationCutoff}%)</span>
+                        <span className="ml-2 text-sm text-brand-outline">({formData.citationCutoff}%)</span>
                       </label>
                       <input
                         type="range"
@@ -394,15 +394,15 @@ export default function StrictnessPage() {
                         onChange={(e) => setFormData({ ...formData, citationCutoff: parseInt(e.target.value) })}
                         className="w-full accent-brand-accent"
                       />
-                      <p className="mt-1 text-xs text-slate-400">
+                      <p className="mt-1 text-xs text-brand-outline">
                         {UI_HELP_TEXT.STRICTNESS_HELP_CITATION}
                       </p>
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-slate-300">
+                      <label className="mb-2 block text-sm font-medium text-brand-outline">
                         {UI_HELP_TEXT.STRICTNESS_LABEL_CONSISTENCY}
-                        <span className="ml-2 text-sm text-slate-400">({formData.consistencyTolerance}%)</span>
+                        <span className="ml-2 text-sm text-brand-outline">({formData.consistencyTolerance}%)</span>
                       </label>
                       <input
                         type="range"
@@ -412,25 +412,25 @@ export default function StrictnessPage() {
                         onChange={(e) => setFormData({ ...formData, consistencyTolerance: parseInt(e.target.value) })}
                         className="w-full accent-brand-accent"
                       />
-                      <p className="mt-1 text-xs text-slate-400">
+                      <p className="mt-1 text-xs text-brand-outline">
                         {UI_HELP_TEXT.STRICTNESS_HELP_CONSISTENCY}
                       </p>
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-slate-300">
+                      <label className="mb-2 block text-sm font-medium text-brand-outline">
                         {UI_HELP_TEXT.STRICTNESS_LABEL_MANGEKYO}
                       </label>
                       <select
                         value={formData.mangekyoStrictness}
                         onChange={(e) => setFormData({ ...formData, mangekyoStrictness: e.target.value as any })}
-                        className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                        className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                       >
                         <option value="lenient">{UI_HELP_TEXT.STRICTNESS_OPTION_LENIENT}</option>
                         <option value="standard">{UI_HELP_TEXT.STRICTNESS_OPTION_STANDARD}</option>
                         <option value="strict">{UI_HELP_TEXT.STRICTNESS_OPTION_STRICT}</option>
                       </select>
-                      <p className="mt-1 text-xs text-slate-400">
+                      <p className="mt-1 text-xs text-brand-outline">
                         {UI_HELP_TEXT.STRICTNESS_HELP_MANGEKYO}
                       </p>
                     </div>
@@ -452,8 +452,8 @@ export default function StrictnessPage() {
               <GlassCard>
                 <div className="mb-6 flex items-center justify-between">
                   <div>
-                    <h2 className="text-2xl font-bold text-white">{selectedProfile.name}</h2>
-                    <p className="mt-1 text-slate-400">{selectedProfile.description || UI_HELP_TEXT.STRICTNESS_NO_DESCRIPTION}</p>
+                    <h2 className="text-2xl font-bold text-brand-foreground">{selectedProfile.name}</h2>
+                    <p className="mt-1 text-brand-outline">{selectedProfile.description || UI_HELP_TEXT.STRICTNESS_NO_DESCRIPTION}</p>
                     <div className="mt-2 flex items-center gap-4">
                       <span className={`rounded-full px-3 py-1 text-sm ${
                         selectedProfile.isBuiltIn
@@ -462,7 +462,7 @@ export default function StrictnessPage() {
                       }`}>
                         {selectedProfile.isBuiltIn ? UI_HELP_TEXT.STRICTNESS_BADGE_BUILTIN : UI_HELP_TEXT.STRICTNESS_BADGE_CUSTOM}
                       </span>
-                      <span className="text-sm text-slate-400">{getStrictnessLabel(selectedProfile)}</span>
+                      <span className="text-sm text-brand-outline">{getStrictnessLabel(selectedProfile)}</span>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -476,7 +476,7 @@ export default function StrictnessPage() {
                         </button>
                         <button
                           onClick={() => handleDelete(selectedProfile)}
-                          className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                          className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-red-700"
                         >
                           {UI_HELP_TEXT.STRICTNESS_BUTTON_DELETE}
                         </button>
@@ -487,44 +487,44 @@ export default function StrictnessPage() {
 
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/50 p-5">
-                    <h3 className="mb-2 font-semibold text-white">{UI_HELP_TEXT.STRICTNESS_DETAIL_AMBIGUITY}</h3>
+                    <h3 className="mb-2 font-semibold text-brand-foreground">{UI_HELP_TEXT.STRICTNESS_DETAIL_AMBIGUITY}</h3>
                     <div className="flex items-end gap-2">
                       <span className="text-4xl font-bold text-brand-accent">{selectedProfile.ambiguityThreshold}</span>
-                      <span className="mb-1 text-xl text-slate-400">%</span>
+                      <span className="mb-1 text-xl text-brand-outline">%</span>
                     </div>
-                    <p className="mt-2 text-sm text-slate-400">
+                    <p className="mt-2 text-sm text-brand-outline">
                       {UI_HELP_TEXT.STRICTNESS_DESC_AMBIGUITY}
                     </p>
                   </div>
 
                   <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/50 p-5">
-                    <h3 className="mb-2 font-semibold text-white">{UI_HELP_TEXT.STRICTNESS_DETAIL_CITATION}</h3>
+                    <h3 className="mb-2 font-semibold text-brand-foreground">{UI_HELP_TEXT.STRICTNESS_DETAIL_CITATION}</h3>
                     <div className="flex items-end gap-2">
                       <span className="text-4xl font-bold text-eye-jogan">{selectedProfile.citationCutoff}</span>
-                      <span className="mb-1 text-xl text-slate-400">%</span>
+                      <span className="mb-1 text-xl text-brand-outline">%</span>
                     </div>
-                    <p className="mt-2 text-sm text-slate-400">
+                    <p className="mt-2 text-sm text-brand-outline">
                       {UI_HELP_TEXT.STRICTNESS_DESC_CITATION}
                     </p>
                   </div>
 
                   <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/50 p-5">
-                    <h3 className="mb-2 font-semibold text-white">{UI_HELP_TEXT.STRICTNESS_DETAIL_CONSISTENCY}</h3>
+                    <h3 className="mb-2 font-semibold text-brand-foreground">{UI_HELP_TEXT.STRICTNESS_DETAIL_CONSISTENCY}</h3>
                     <div className="flex items-end gap-2">
                       <span className="text-4xl font-bold text-green-400">{selectedProfile.consistencyTolerance}</span>
-                      <span className="mb-1 text-xl text-slate-400">%</span>
+                      <span className="mb-1 text-xl text-brand-outline">%</span>
                     </div>
-                    <p className="mt-2 text-sm text-slate-400">
+                    <p className="mt-2 text-sm text-brand-outline">
                       {UI_HELP_TEXT.STRICTNESS_DESC_CONSISTENCY}
                     </p>
                   </div>
 
                   <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/50 p-5">
-                    <h3 className="mb-2 font-semibold text-white">{UI_HELP_TEXT.STRICTNESS_DETAIL_MANGEKYO}</h3>
+                    <h3 className="mb-2 font-semibold text-brand-foreground">{UI_HELP_TEXT.STRICTNESS_DETAIL_MANGEKYO}</h3>
                     <div className="flex items-end gap-2">
                       <span className="text-4xl font-bold capitalize text-brand-primary">{selectedProfile.mangekyoStrictness}</span>
                     </div>
-                    <p className="mt-2 text-sm text-slate-400">
+                    <p className="mt-2 text-sm text-brand-outline">
                       {UI_HELP_TEXT.STRICTNESS_DESC_MANGEKYO}
                     </p>
                   </div>
@@ -540,11 +540,11 @@ export default function StrictnessPage() {
             ) : (
               /* Welcome Screen */
               <GlassCard className="p-12 text-center">
-                <h2 className="mb-4 text-2xl font-semibold text-white">{UI_HELP_TEXT.STRICTNESS_WELCOME_TITLE}</h2>
-                <p className="mb-6 text-lg text-slate-400">
+                <h2 className="mb-4 text-2xl font-semibold text-brand-foreground">{UI_HELP_TEXT.STRICTNESS_WELCOME_TITLE}</h2>
+                <p className="mb-6 text-lg text-brand-outline">
                   {UI_HELP_TEXT.STRICTNESS_WELCOME_SUBTITLE}
                 </p>
-                <div className="space-y-2 text-sm text-slate-500">
+                <div className="space-y-2 text-sm text-brand-outline">
                   <p>{UI_HELP_TEXT.STRICTNESS_WELCOME_BULLET_1}</p>
                   <p>{UI_HELP_TEXT.STRICTNESS_WELCOME_BULLET_2}</p>
                   <p>{UI_HELP_TEXT.STRICTNESS_WELCOME_BULLET_3}</p>

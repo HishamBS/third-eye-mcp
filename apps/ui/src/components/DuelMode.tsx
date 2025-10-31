@@ -217,7 +217,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
       case 'NEEDS_INPUT':
         return <span className="rounded-full bg-yellow-500/20 px-2 py-1 text-xs text-yellow-400">⚠ Needs Input</span>;
       default:
-        return <span className="rounded-full bg-gray-500/20 px-2 py-1 text-xs text-gray-400">Unknown</span>;
+        return <span className="rounded-full bg-brand-paper0/20 px-2 py-1 text-xs text-brand-outline">Unknown</span>;
     }
   };
 
@@ -225,16 +225,16 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
     <div className="rounded-2xl border border-brand-outline/40 bg-brand-paper/50 p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-100">⚔️ Duel Mode</h2>
-          <p className="mt-1 text-sm text-slate-400">Compare 2-4 models side-by-side</p>
+          <h2 className="text-2xl font-bold text-brand-foreground">⚔️ Duel Mode</h2>
+          <p className="mt-1 text-sm text-brand-outline">Compare 2-4 models side-by-side</p>
         </div>
         <button
           onClick={runDuel}
           disabled={selectedConfigs.length < 2 || isRunning}
           className={`flex items-center space-x-2 rounded-lg px-4 py-2 font-semibold transition ${
             selectedConfigs.length >= 2 && !isRunning
-              ? 'bg-brand-accent text-white hover:bg-brand-accent/90'
-              : 'cursor-not-allowed bg-gray-600 text-gray-400'
+              ? 'bg-brand-accent text-brand-foreground hover:bg-brand-accent/90'
+              : 'cursor-not-allowed bg-gray-600 text-brand-outline'
           }`}
         >
           {isRunning ? (
@@ -253,7 +253,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
 
       {/* Model Selection */}
       <div className="mb-6">
-        <h3 className="mb-3 text-sm font-semibold text-slate-300">Selected Models ({selectedConfigs.length}/4)</h3>
+        <h3 className="mb-3 text-sm font-semibold text-brand-outline">Selected Models ({selectedConfigs.length}/4)</h3>
         <div className="grid grid-cols-2 gap-3">
           {selectedConfigs.map((config, index) => (
             <motion.div
@@ -264,8 +264,8 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
               className="flex items-center justify-between rounded-lg border border-brand-outline/40 bg-brand-ink/60 p-3"
             >
               <div>
-                <p className="text-sm font-medium text-slate-200">{formatProviderName(config.provider)}</p>
-                <p className="text-xs text-slate-400">{config.model}</p>
+                <p className="text-sm font-medium text-brand-outline">{formatProviderName(config.provider)}</p>
+                <p className="text-xs text-brand-outline">{config.model}</p>
               </div>
               <button
                 onClick={() => removeConfig(index)}
@@ -279,12 +279,12 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
 
         {selectedConfigs.length < 4 && (
           <div className="mt-4 space-y-3">
-            <h4 className="text-xs font-semibold uppercase text-slate-500">Configure competitor</h4>
+            <h4 className="text-xs font-semibold uppercase text-brand-outline">Configure competitor</h4>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-400">Provider</label>
+                <label className="mb-1 block text-xs font-medium text-brand-outline">Provider</label>
                 <select
-                  className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-sm text-slate-200 focus:border-brand-accent focus:outline-none"
+                  className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-sm text-brand-outline focus:border-brand-accent focus:outline-none"
                   value={stagedProvider}
                   onChange={(e) => setStagedProvider(e.target.value)}
                   disabled={loadingProviders || Object.keys(availableProviders).length === 0 || isRunning}
@@ -298,9 +298,9 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-400">Model</label>
+                <label className="mb-1 block text-xs font-medium text-brand-outline">Model</label>
                 <select
-                  className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-sm text-slate-200 focus:border-brand-accent focus:outline-none"
+                  className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-sm text-brand-outline focus:border-brand-accent focus:outline-none"
                   value={stagedModel}
                   onChange={(e) => setStagedModel(e.target.value)}
                   disabled={
@@ -319,7 +319,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
               </div>
             </div>
             {loadingProviders && (
-              <p className="text-xs text-slate-500">Loading provider models...</p>
+              <p className="text-xs text-brand-outline">Loading provider models...</p>
             )}
             <button
               type="button"
@@ -330,7 +330,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
                 isRunning ||
                 (availableProviders[stagedProvider]?.length ?? 0) === 0
               }
-              className="inline-flex items-center justify-center rounded-lg bg-brand-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-accent/90 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300"
+              className="inline-flex items-center justify-center rounded-lg bg-brand-accent px-4 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-accent/90 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-brand-outline"
             >
               Add Competitor
             </button>
@@ -343,7 +343,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
         <div>
           <div className="mb-4 flex items-center space-x-2">
             <Trophy className="h-5 w-5 text-yellow-400" />
-            <h3 className="text-lg font-bold text-slate-100">Results</h3>
+            <h3 className="text-lg font-bold text-brand-foreground">Results</h3>
             {winner && <span className="rounded-full bg-yellow-500/20 px-3 py-1 text-sm font-semibold text-yellow-400">Winner: {winner}</span>}
           </div>
 
@@ -364,13 +364,13 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
                   <div className="flex items-center space-x-3">
                     {index === 0 && <Trophy className="h-5 w-5 text-yellow-400" />}
                     <div>
-                      <p className="font-semibold text-slate-100">
+                      <p className="font-semibold text-brand-foreground">
                         #{index + 1} {(result.providerLabel ?? formatProviderName(result.provider))} / {result.model}
                       </p>
                       <div className="mt-1 flex items-center space-x-2">
                         {getVerdictBadge(result.verdict)}
                         {result.confidence !== undefined && (
-                          <span className="text-xs text-slate-400">Confidence: {result.confidence}%</span>
+                          <span className="text-xs text-brand-outline">Confidence: {result.confidence}%</span>
                         )}
                       </div>
                     </div>
@@ -384,30 +384,30 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
                   <div className="flex items-center space-x-2">
                     <Clock className="h-4 w-4 text-blue-400" />
                     <div>
-                      <p className="text-slate-500">Latency</p>
-                      <p className="font-semibold text-slate-200">{result.latency}ms</p>
+                      <p className="text-brand-outline">Latency</p>
+                      <p className="font-semibold text-brand-outline">{result.latency}ms</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Zap className="h-4 w-4 text-yellow-400" />
                     <div>
-                      <p className="text-slate-500">Tokens</p>
-                      <p className="font-semibold text-slate-200">
+                      <p className="text-brand-outline">Tokens</p>
+                      <p className="font-semibold text-brand-outline">
                         {result.tokens.input} / {result.tokens.output}
                       </p>
                     </div>
                   </div>
                   {result.cost !== undefined && (
                     <div>
-                      <p className="text-slate-500">Cost</p>
-                      <p className="font-semibold text-slate-200">${result.cost.toFixed(4)}</p>
+                      <p className="text-brand-outline">Cost</p>
+                      <p className="font-semibold text-brand-outline">${result.cost.toFixed(4)}</p>
                     </div>
                   )}
                 </div>
 
                 <div className="mt-3 rounded-lg bg-brand-ink/60 p-3">
-                  <p className="mb-1 text-xs font-semibold text-slate-400">Output:</p>
-                  <p className="text-sm text-slate-300">{result.output || 'No output available'}</p>
+                  <p className="mb-1 text-xs font-semibold text-brand-outline">Output:</p>
+                  <p className="text-sm text-brand-outline">{result.output || 'No output available'}</p>
                 </div>
               </motion.div>
             ))}
@@ -419,7 +419,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-brand-accent border-t-transparent mx-auto" />
-            <p className="text-slate-400">Running duel across {selectedConfigs.length} models...</p>
+            <p className="text-brand-outline">Running duel across {selectedConfigs.length} models...</p>
           </div>
         </div>
       )}

@@ -80,7 +80,7 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
 
   if (!nodes.length && !fileImpacts.length) {
     return (
-      <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-slate-300">
+      <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-brand-outline">
         No plan detected. Once Rinnegan issues a scaffold, it will render here.
       </section>
     );
@@ -115,28 +115,28 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
   };
 
   return (
-    <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-slate-200">
+    <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-brand-outline">
       <header className="mb-4 flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Visual Plan</p>
-          <h3 className="text-lg font-semibold text-white">Implementation Roadmap</h3>
+          <h3 className="text-lg font-semibold text-brand-foreground">Implementation Roadmap</h3>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setView('plan')}
-            className={`px-3 py-1 rounded text-xs ${view === 'plan' ? 'bg-brand-accent text-white' : 'text-slate-400 hover:text-white'}`}
+            className={`px-3 py-1 rounded text-xs ${view === 'plan' ? 'bg-brand-accent text-brand-foreground' : 'text-brand-outline hover:text-brand-foreground'}`}
           >
             Plan
           </button>
           <button
             onClick={() => setView('files')}
-            className={`px-3 py-1 rounded text-xs ${view === 'files' ? 'bg-brand-accent text-white' : 'text-slate-400 hover:text-white'}`}
+            className={`px-3 py-1 rounded text-xs ${view === 'files' ? 'bg-brand-accent text-brand-foreground' : 'text-brand-outline hover:text-brand-foreground'}`}
           >
             Files ({fileImpacts.length})
           </button>
           <button
             onClick={() => setView('kanban')}
-            className={`px-3 py-1 rounded text-xs ${view === 'kanban' ? 'bg-brand-accent text-white' : 'text-slate-400 hover:text-white'}`}
+            className={`px-3 py-1 rounded text-xs ${view === 'kanban' ? 'bg-brand-accent text-brand-foreground' : 'text-brand-outline hover:text-brand-foreground'}`}
           >
             Kanban
           </button>
@@ -147,8 +147,8 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
         <div className="grid gap-3 md:grid-cols-2">
           {nodes.map((node) => (
             <article key={node.title} className="rounded-xl border border-brand-outline/30 bg-brand-paper/80 p-3">
-              <h4 className="text-sm font-semibold text-white">{node.title}</h4>
-              <ul className="mt-2 space-y-1 text-xs text-slate-300">
+              <h4 className="text-sm font-semibold text-brand-foreground">{node.title}</h4>
+              <ul className="mt-2 space-y-1 text-xs text-brand-outline">
                 {node.items.map((item, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <span className="mt-1 text-brand-accent">•</span>
@@ -167,11 +167,11 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
             <div key={dir} className="rounded-lg border border-brand-outline/30 bg-brand-paper/60 p-2">
               <button
                 onClick={() => toggleDir(dir)}
-                className="flex items-center gap-2 w-full text-left text-xs font-semibold text-white hover:text-brand-accent transition"
+                className="flex items-center gap-2 w-full text-left text-xs font-semibold text-brand-foreground hover:text-brand-accent transition"
               >
                 <span>{expandedDirs.has(dir) ? '▼' : '▶'}</span>
                 <span>📁 {dir}</span>
-                <span className="text-slate-500">({impacts.length})</span>
+                <span className="text-brand-outline">({impacts.length})</span>
               </button>
               {expandedDirs.has(dir) && (
                 <ul className="mt-2 ml-6 space-y-1">
@@ -180,7 +180,7 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
                       <span className={`font-bold ${getActionColor(impact.action)}`}>
                         {getActionIcon(impact.action)}
                       </span>
-                      <span className="text-slate-300">{impact.path.split('/').pop()}</span>
+                      <span className="text-brand-outline">{impact.path.split('/').pop()}</span>
                       <span className={`ml-auto ${getActionColor(impact.action)}`}>
                         {impact.action}
                       </span>
@@ -197,7 +197,7 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
         <div className="grid grid-cols-5 gap-2 overflow-x-auto">
           {['Plan', 'Scaffold', 'Implementation', 'Tests', 'Documentation'].map((phase) => (
             <div key={phase} className="min-w-[150px]">
-              <div className="rounded-t-lg bg-brand-accent/20 border border-brand-accent/40 px-2 py-1 text-xs font-semibold text-white text-center">
+              <div className="rounded-t-lg bg-brand-accent/20 border border-brand-accent/40 px-2 py-1 text-xs font-semibold text-brand-foreground text-center">
                 {phase}
               </div>
               <div className="rounded-b-lg border border-brand-outline/30 bg-brand-paper/40 p-2 min-h-[100px] space-y-1">
@@ -216,7 +216,7 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
                       <div className={`font-semibold ${getActionColor(impact.action)}`}>
                         {impact.path.split('/').pop()}
                       </div>
-                      <div className="text-slate-500 text-[10px] mt-0.5">{impact.action}</div>
+                      <div className="text-brand-outline text-[10px] mt-0.5">{impact.action}</div>
                     </div>
                   ))}
               </div>

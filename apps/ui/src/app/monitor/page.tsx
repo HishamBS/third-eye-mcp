@@ -419,25 +419,25 @@ function MonitorContent() {
         <div className="border-b border-brand-outline/60 bg-brand-paperElev/50">
           <div className="mx-auto max-w-7xl px-6 py-6">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
+              <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent">
                 ← Home
               </Link>
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Real-time</p>
-                <h1 className="mt-1 text-2xl font-semibold text-white">Monitor</h1>
+                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">Monitor</h1>
               </div>
             </div>
           </div>
         </div>
         <div className="mx-auto max-w-4xl px-6 py-16 text-center">
           <GlassCard className="py-12">
-            <p className="text-lg text-white mb-2">No Session Selected</p>
-            <p className="text-sm text-slate-400 mb-6">
+            <p className="text-lg text-brand-foreground mb-2">No Session Selected</p>
+            <p className="text-sm text-brand-outline mb-6">
               Select a session to watch real-time agent conversations
             </p>
             <Link
               href="/"
-              className="inline-flex items-center space-x-2 rounded-lg bg-brand-accent px-6 py-3 text-sm font-semibold text-white hover:bg-brand-accent/90 transition-colors"
+              className="inline-flex items-center space-x-2 rounded-lg bg-brand-accent px-6 py-3 text-sm font-semibold text-brand-foreground hover:bg-brand-accent/90 transition-colors"
             >
               <span>Back to Dashboard</span>
             </Link>
@@ -453,12 +453,12 @@ function MonitorContent() {
         <div className="border-b border-brand-outline/60 bg-brand-paperElev/50">
           <div className="mx-auto max-w-7xl px-6 py-6">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
+              <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent">
                 ← Home
               </Link>
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Real-time</p>
-                <h1 className="mt-1 text-2xl font-semibold text-white">Monitor</h1>
+                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">Monitor</h1>
               </div>
             </div>
           </div>
@@ -482,7 +482,7 @@ function MonitorContent() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
+              <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent">
                 ← Home
               </Link>
               <div>
@@ -494,16 +494,16 @@ function MonitorContent() {
                       connectionStatus === 'reconnecting' ? 'bg-yellow-400 animate-pulse' :
                       'bg-red-400'
                     }`} />
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-brand-outline">
                       {connectionStatus === 'connected' ? 'Live' :
                        connectionStatus === 'reconnecting' ? 'Reconnecting...' :
                        'Disconnected'}
                     </span>
                   </div>
                 </div>
-                <h1 className="mt-1 text-2xl font-semibold text-white">Session {sessionId?.slice(0, 8)}...</h1>
+                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">Session {sessionId?.slice(0, 8)}...</h1>
                 {summary && (
-                  <p className="mt-1 text-sm text-slate-400">
+                  <p className="mt-1 text-sm text-brand-outline">
                     Status: {summary.status} · {summary.eventCount} events
                     {summary.eyes && summary.eyes.length > 0 && ` · Eyes: ${summary.eyes.map(e => EYE_DISPLAY_NAMES[e as EyeName] || e).join(', ')}`}
                   </p>
@@ -511,7 +511,7 @@ function MonitorContent() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
+              <label className="flex items-center gap-2 text-sm text-brand-outline cursor-pointer">
                 <input
                   type="checkbox"
                   checked={autoScroll}
@@ -545,9 +545,9 @@ function MonitorContent() {
           {activeTab === MonitorTabId.TIMELINE && (
             <>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-white">Timeline</h2>
+                <h2 className="text-xl font-semibold text-brand-foreground">Timeline</h2>
                 <div className="flex items-center gap-4">
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-brand-outline">
                     {entries.length} {entries.length === 1 ? 'event' : 'events'}
                   </div>
                   <div className="flex items-center gap-2">
@@ -634,9 +634,9 @@ function MonitorContent() {
                 <div className="h-96 animate-pulse rounded-2xl border border-brand-outline/40 bg-brand-paper/60" />
               ) : entries.length === 0 ? (
                 <div className="py-16 text-center">
-                  <Eye className="h-12 w-12 mx-auto mb-4 text-slate-600" />
-                  <p className="text-lg text-white mb-2">No Conversation Yet</p>
-                  <p className="text-sm text-slate-400">
+                  <Eye className="h-12 w-12 mx-auto mb-4 text-brand-outline" />
+                  <p className="text-lg text-brand-foreground mb-2">No Conversation Yet</p>
+                  <p className="text-sm text-brand-outline">
                     Waiting for agent to start communicating...
                   </p>
                 </div>
@@ -658,8 +658,8 @@ function MonitorContent() {
           {activeTab === MonitorTabId.CLARIFICATIONS && (
             <>
               <div className="mb-6">
-                <h2 className="text-xl font-semibold text-white">Clarifications</h2>
-                <p className="text-sm text-slate-400 mt-1">Questions and answers that clarify task requirements</p>
+                <h2 className="text-xl font-semibold text-brand-foreground">Clarifications</h2>
+                <p className="text-sm text-brand-outline mt-1">Questions and answers that clarify task requirements</p>
               </div>
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
@@ -684,15 +684,15 @@ function MonitorContent() {
                   <div className="space-y-3">
                     {clarifications.resolved.length === 0 ? (
                       <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
-                        <p className="text-sm text-slate-400">No resolved clarifications yet</p>
+                        <p className="text-sm text-brand-outline">No resolved clarifications yet</p>
                       </div>
                     ) : (
                       clarifications.resolved.map((c) => (
                         <div key={c.id} className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
-                          <p className="text-xs text-slate-500 mb-1 font-semibold uppercase">{c.field}</p>
-                          <p className="text-sm text-slate-200 font-medium mb-1">{c.question}</p>
+                          <p className="text-xs text-brand-outline mb-1 font-semibold uppercase">{c.field}</p>
+                          <p className="text-sm text-brand-outline font-medium mb-1">{c.question}</p>
                           <p className="text-sm text-green-300">{c.answer}</p>
-                          <p className="text-xs text-slate-500 mt-2">Answered: {new Date(c.answeredAt).toLocaleString()}</p>
+                          <p className="text-xs text-brand-outline mt-2">Answered: {new Date(c.answeredAt).toLocaleString()}</p>
                         </div>
                       ))
                     )}
@@ -705,17 +705,17 @@ function MonitorContent() {
           {activeTab === MonitorTabId.INTENT && (
             <>
               <div className="mb-6">
-                <h2 className="text-xl font-semibold text-white">Intent Confirmation</h2>
-                <p className="text-sm text-slate-400 mt-1">Human approval of scope and effort before work proceeds</p>
+                <h2 className="text-xl font-semibold text-brand-foreground">Intent Confirmation</h2>
+                <p className="text-sm text-brand-outline mt-1">Human approval of scope and effort before work proceeds</p>
               </div>
               <div className="space-y-4">
                 {intentData ? (
                   <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <p className="text-sm font-semibold text-white">Intent Analysis</p>
+                        <p className="text-sm font-semibold text-brand-foreground">Intent Analysis</p>
                         {intentData.intentAnalysis && (
-                          <div className="mt-2 space-y-1 text-xs text-slate-400">
+                          <div className="mt-2 space-y-1 text-xs text-brand-outline">
                             {Object.entries(intentData.intentAnalysis).map(([key, value]) => (
                               <p key={key}>
                                 <span className="font-semibold uppercase">{key}:</span> {
@@ -737,8 +737,8 @@ function MonitorContent() {
                     </div>
                     {intentData.confirmationPrompt && (
                       <div className="mt-4 rounded-lg border border-brand-outline/30 bg-brand-ink/50 p-3">
-                        <p className="text-xs text-slate-500 mb-1">Confirmation Prompt:</p>
-                        <p className="text-sm text-slate-300">{intentData.confirmationPrompt}</p>
+                        <p className="text-xs text-brand-outline mb-1">Confirmation Prompt:</p>
+                        <p className="text-sm text-brand-outline">{intentData.confirmationPrompt}</p>
                       </div>
                     )}
                     {intentData.response === 'approved' && intentData.userIdentity && (
@@ -750,7 +750,7 @@ function MonitorContent() {
                   </div>
                 ) : (
                   <div className="text-center py-16">
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-brand-outline">
                       Intent confirmation data will appear here when Jōgan runs
                     </p>
                   </div>
@@ -762,8 +762,8 @@ function MonitorContent() {
           {activeTab === MonitorTabId.EVIDENCE && (
             <>
               <div className="mb-6">
-                <h2 className="text-xl font-semibold text-white">Evidence & Validation</h2>
-                <p className="text-sm text-slate-400 mt-1">Quality gates, code review, and factual verification results</p>
+                <h2 className="text-xl font-semibold text-brand-foreground">Evidence & Validation</h2>
+                <p className="text-sm text-brand-outline mt-1">Quality gates, code review, and factual verification results</p>
               </div>
               <div className="space-y-6">
                 <div>
@@ -773,7 +773,7 @@ function MonitorContent() {
                       {evidenceData.mangekyo.qualityScore && typeof evidenceData.mangekyo.qualityScore === 'number' && (
                         <>
                           <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm text-white">Quality Score</span>
+                            <span className="text-sm text-brand-foreground">Quality Score</span>
                             <span className="text-lg font-semibold text-green-400">{evidenceData.mangekyo.qualityScore}/100</span>
                           </div>
                           <div className="h-2 w-full rounded-full bg-brand-ink">
@@ -784,17 +784,17 @@ function MonitorContent() {
                       {evidenceData.mangekyo.issues && Array.isArray(evidenceData.mangekyo.issues) && (
                         <div className="mt-3 space-y-2">
                           {evidenceData.mangekyo.issues.map((issue, idx: number) => (
-                            <p key={idx} className="text-sm text-slate-300">• {typeof issue === 'string' ? issue : JSON.stringify(issue)}</p>
+                            <p key={idx} className="text-sm text-brand-outline">• {typeof issue === 'string' ? issue : JSON.stringify(issue)}</p>
                           ))}
                         </div>
                       )}
                       {!evidenceData.mangekyo.qualityScore && !evidenceData.mangekyo.issues && (
-                        <pre className="text-xs text-slate-400 overflow-x-auto">{JSON.stringify(evidenceData.mangekyo, null, 2)}</pre>
+                        <pre className="text-xs text-brand-outline overflow-x-auto">{JSON.stringify(evidenceData.mangekyo, null, 2)}</pre>
                       )}
                     </div>
                   ) : (
                     <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
-                      <p className="text-sm text-slate-400">No code review data yet</p>
+                      <p className="text-sm text-brand-outline">No code review data yet</p>
                     </div>
                   )}
                 </div>
@@ -805,20 +805,20 @@ function MonitorContent() {
                     <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
                       {evidenceData.tenseigan.citations && Array.isArray(evidenceData.tenseigan.citations) ? (
                         <div className="space-y-2">
-                          <p className="text-sm text-slate-300 mb-2">Found {evidenceData.tenseigan.citations.length} citation(s)</p>
+                          <p className="text-sm text-brand-outline mb-2">Found {evidenceData.tenseigan.citations.length} citation(s)</p>
                           {evidenceData.tenseigan.citations.map((citation, idx: number) => (
-                            <div key={idx} className="text-xs text-slate-400 border-l-2 border-blue-500 pl-3">
+                            <div key={idx} className="text-xs text-brand-outline border-l-2 border-blue-500 pl-3">
                               {typeof citation === 'object' && citation !== null ? JSON.stringify(citation) : String(citation)}
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <pre className="text-xs text-slate-400 overflow-x-auto">{JSON.stringify(evidenceData.tenseigan, null, 2)}</pre>
+                        <pre className="text-xs text-brand-outline overflow-x-auto">{JSON.stringify(evidenceData.tenseigan, null, 2)}</pre>
                       )}
                     </div>
                   ) : (
                     <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
-                      <p className="text-sm text-slate-400">No evidence validation data yet</p>
+                      <p className="text-sm text-brand-outline">No evidence validation data yet</p>
                     </div>
                   )}
                 </div>
@@ -844,12 +844,12 @@ function MonitorContent() {
                         </p>
                       )}
                       {!evidenceData.byakugan.summary && (
-                        <pre className="text-xs text-slate-400 overflow-x-auto mt-2">{JSON.stringify(evidenceData.byakugan, null, 2)}</pre>
+                        <pre className="text-xs text-brand-outline overflow-x-auto mt-2">{JSON.stringify(evidenceData.byakugan, null, 2)}</pre>
                       )}
                     </div>
                   ) : (
                     <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
-                      <p className="text-sm text-slate-400">No final approval data yet</p>
+                      <p className="text-sm text-brand-outline">No final approval data yet</p>
                     </div>
                   )}
                 </div>
@@ -861,12 +861,12 @@ function MonitorContent() {
             <>
               <div className="mb-6 flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold text-white">Raw JSON</h2>
-                  <p className="text-sm text-slate-400 mt-1">Complete pipeline event data</p>
+                  <h2 className="text-xl font-semibold text-brand-foreground">Raw JSON</h2>
+                  <p className="text-sm text-brand-outline mt-1">Complete pipeline event data</p>
                 </div>
                 <button
                   onClick={() => navigator.clipboard.writeText(JSON.stringify(entries, null, 2))}
-                  className="rounded-lg bg-brand-accent px-4 py-2 text-sm font-semibold text-white hover:bg-brand-accent/90 transition-colors"
+                  className="rounded-lg bg-brand-accent px-4 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-accent/90 transition-colors"
                 >
                   Copy All
                 </button>
@@ -874,10 +874,10 @@ function MonitorContent() {
               <div className="max-h-[600px] overflow-y-auto">
                 {entries.length === 0 ? (
                   <div className="py-16 text-center">
-                    <p className="text-sm text-slate-400">No events yet</p>
+                    <p className="text-sm text-brand-outline">No events yet</p>
                   </div>
                 ) : (
-                  <pre className="rounded-xl border border-brand-outline/30 bg-brand-ink p-4 text-xs text-slate-300 overflow-x-auto">
+                  <pre className="rounded-xl border border-brand-outline/30 bg-brand-ink p-4 text-xs text-brand-outline overflow-x-auto">
                     {JSON.stringify(entries, null, 2)}
                   </pre>
                 )}
@@ -894,7 +894,7 @@ export default function MonitorPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-brand-ink flex items-center justify-center">
-        <div className="text-white">Loading monitor...</div>
+        <div className="text-brand-foreground">Loading monitor...</div>
       </div>
     }>
       <MonitorContent />

@@ -46,7 +46,7 @@ function MetricCard({ title, value, unit, trend, trendValue, icon, color = '#3B8
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           {icon && <div className="flex items-center">{icon}</div>}
-          <p className="text-sm font-medium text-slate-300">{title}</p>
+          <p className="text-sm font-medium text-brand-outline">{title}</p>
         </div>
         {trend && trendValue && (
           <div className="flex items-center space-x-1 text-xs" style={{ color: getTrendColor() }}>
@@ -56,10 +56,10 @@ function MetricCard({ title, value, unit, trend, trendValue, icon, color = '#3B8
         )}
       </div>
       <div className="mt-2 flex items-baseline space-x-1">
-        <span className="text-2xl font-bold text-white" style={{ color }}>
+        <span className="text-2xl font-bold text-brand-foreground" style={{ color }}>
           {value}
         </span>
-        {unit && <span className="text-sm text-slate-400">{unit}</span>}
+        {unit && <span className="text-sm text-brand-outline">{unit}</span>}
       </div>
     </motion.div>
   );
@@ -212,9 +212,9 @@ export function PerformanceMetrics({ events, runs = [] }: PerformanceMetricsProp
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className="h-2 w-2 animate-pulse rounded-full bg-green-400"></div>
-            <p className="text-sm font-medium text-slate-300">Pipeline Activity</p>
+            <p className="text-sm font-medium text-brand-outline">Pipeline Activity</p>
           </div>
-          <p className="text-xs text-slate-400">Last 24 hours</p>
+          <p className="text-xs text-brand-outline">Last 24 hours</p>
         </div>
 
         <div className="mt-3 flex space-x-1">
@@ -241,7 +241,7 @@ export function PerformanceMetrics({ events, runs = [] }: PerformanceMetricsProp
           })}
         </div>
 
-        <div className="mt-2 flex justify-between text-xs text-slate-400">
+        <div className="mt-2 flex justify-between text-xs text-brand-outline">
           <span>24h ago</span>
           <span>Now</span>
         </div>

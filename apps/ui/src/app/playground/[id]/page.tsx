@@ -299,19 +299,19 @@ export default function PlaygroundPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-brand-paper dark:bg-brand-ink">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 border-b border-brand-outline/40 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Link
                 href="/"
-                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                className="text-brand-outline dark:text-brand-outline hover:text-brand-ink dark:hover:text-gray-100"
               >
                 ← Back
               </Link>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <h1 className="text-2xl font-bold text-brand-ink dark:text-gray-100">
                 Session: {session?.agentName || sessionId.slice(0, 8)}
               </h1>
               <span className={`px-2 py-1 rounded text-xs ${
@@ -327,14 +327,14 @@ export default function PlaygroundPage() {
               <ViewModeToggle />
               <button
                 onClick={() => setShowStrictness(!showStrictness)}
-                className="flex items-center gap-2 px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+                className="flex items-center gap-2 px-3 py-2 bg-purple-500 text-brand-foreground rounded hover:bg-purple-600"
               >
                 <Settings className="h-4 w-4" />
                 Strictness
               </button>
               <Link
                 href={`/monitor?sessionId=${sessionId}`}
-                className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-brand-foreground rounded hover:bg-blue-600"
               >
                 <BarChart3 className="h-4 w-4" />
                 Monitor
@@ -359,10 +359,10 @@ export default function PlaygroundPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Task Submission */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
+              <h2 className="text-xl font-bold mb-4 text-brand-ink dark:text-gray-100">
                 Run Overseer Pipeline
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-sm text-brand-outline dark:text-brand-outline mb-4">
                 Send a full task through <code className="font-mono text-xs">{TOOL_NAME}</code>. Overseer analyzes the request,
                 selects the Eye sequence, and records every step in this playground session.
               </p>
@@ -372,14 +372,14 @@ export default function PlaygroundPage() {
                   value={taskInput}
                   onChange={(e) => setTaskInput(e.target.value)}
                   placeholder="Describe what you need (e.g., 'Create a palm care guide', 'Analyze this data', 'Write a function to...')"
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 bg-brand-paper dark:bg-brand-ink border border-brand-outline/50 dark:border-gray-700 rounded-lg text-brand-ink dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={6}
                   disabled={loading}
                 />
                 <button
                   type="submit"
                   disabled={loading || !taskInput.trim()}
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-gray-400 disabled:to-gray-500 text-white py-3 px-6 rounded-lg font-semibold transition-all disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-gray-400 disabled:to-gray-500 text-brand-foreground py-3 px-6 rounded-lg font-semibold transition-all disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <>
@@ -398,21 +398,21 @@ export default function PlaygroundPage() {
 
             {/* Individual Eye Testing */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
+              <h2 className="text-xl font-bold mb-4 text-brand-ink dark:text-gray-100">
                 Test Individual Eye
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-sm text-brand-outline dark:text-brand-outline mb-4">
                 Run a single Eye directly to validate personas and prompts before wiring them into a pipeline.
                 Results are logged to this session so you can inspect them in the monitor.
               </p>
 
               <form onSubmit={runEyeTest} className="space-y-4">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="mb-1 block text-sm font-medium text-brand-foreground dark:text-brand-outline">
                     Eye
                   </label>
                   <select
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                    className="w-full rounded-lg border border-brand-outline/50 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-brand-ink dark:text-gray-100"
                     value={selectedEye}
                     onChange={(e) => setSelectedEye(e.target.value)}
                     disabled={eyes.length === 0 || eyeLoading}
@@ -429,14 +429,14 @@ export default function PlaygroundPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="mb-1 block text-sm font-medium text-brand-foreground dark:text-brand-outline">
                     Input
                   </label>
                   <textarea
                     value={eyeInput}
                     onChange={(e) => setEyeInput(e.target.value)}
                     placeholder="Provide the exact prompt or payload this Eye should handle."
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-brand-paper dark:bg-brand-ink border border-brand-outline/50 dark:border-gray-700 rounded-lg text-brand-ink dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                     rows={4}
                     disabled={eyeLoading}
                   />
@@ -451,7 +451,7 @@ export default function PlaygroundPage() {
                 <button
                   type="submit"
                   disabled={eyeLoading || !selectedEye || !eyeInput.trim()}
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-sky-500 hover:from-emerald-600 hover:to-sky-600 disabled:from-gray-400 disabled:to-gray-500 text-white py-3 px-6 rounded-lg font-semibold transition-all disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-sky-500 hover:from-emerald-600 hover:to-sky-600 disabled:from-gray-400 disabled:to-gray-500 text-brand-foreground py-3 px-6 rounded-lg font-semibold transition-all disabled:cursor-not-allowed"
                 >
                   {eyeLoading ? (
                     <>
@@ -468,14 +468,14 @@ export default function PlaygroundPage() {
               </form>
 
               {eyeResult && (
-                <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm dark:border-gray-700 dark:bg-gray-900">
+                <div className="mt-6 rounded-lg border border-brand-outline/40 bg-brand-paper p-4 text-sm dark:border-gray-700 dark:bg-brand-ink">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-semibold text-gray-900 dark:text-gray-100">
+                      <p className="font-semibold text-brand-ink dark:text-gray-100">
                         {eyeResult.eye || selectedEye} &middot; {eyeResult.code}
                       </p>
                       {eyeResult.summary && (
-                        <p className="mt-1 text-gray-600 dark:text-gray-300">
+                        <p className="mt-1 text-brand-outline dark:text-brand-outline">
                           {eyeResult.summary}
                         </p>
                       )}
@@ -496,13 +496,13 @@ export default function PlaygroundPage() {
                   </div>
 
                   {eyeResult.md && (
-                    <p className="mt-3 text-gray-700 dark:text-gray-400 whitespace-pre-wrap">
+                    <p className="mt-3 text-brand-foreground dark:text-brand-outline whitespace-pre-wrap">
                       {eyeResult.md}
                     </p>
                   )}
 
                   {viewMode === 'expert' && (
-                    <pre className="mt-4 max-h-64 overflow-x-auto overflow-y-auto rounded bg-gray-900/90 p-3 text-xs text-gray-100">
+                    <pre className="mt-4 max-h-64 overflow-x-auto overflow-y-auto rounded bg-brand-ink/90 p-3 text-xs text-brand-foreground">
                       {JSON.stringify(eyeResult, null, 2)}
                     </pre>
                   )}
@@ -512,12 +512,12 @@ export default function PlaygroundPage() {
 
             {/* Pipeline History */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
+              <h2 className="text-xl font-bold mb-4 text-brand-ink dark:text-gray-100">
                 Pipeline History ({runs.length})
               </h2>
 
               {runs.length === 0 ? (
-                <p className="text-gray-500 dark:text-gray-400 text-center py-8">
+                <p className="text-brand-outline dark:text-brand-outline text-center py-8">
                   No runs yet. Submit a task above to get started.
                 </p>
               ) : (
@@ -525,19 +525,19 @@ export default function PlaygroundPage() {
                   {runs.slice().reverse().map((run) => (
                     <div
                       key={run.id}
-                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                      className="border border-brand-outline/40 dark:border-gray-700 rounded-lg p-4"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center space-x-2">
                           <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-mono">
                             {run.eye}
                           </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                          <span className="text-xs text-brand-outline dark:text-brand-outline">
                             {new Date(run.createdAt).toLocaleString()}
                           </span>
                         </div>
                         {viewMode === 'expert' && (
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                          <div className="text-xs text-brand-outline dark:text-brand-outline">
                             {run.tokensIn && run.tokensOut && (
                               <span>{run.tokensIn}→{run.tokensOut} tokens • </span>
                             )}
@@ -548,19 +548,19 @@ export default function PlaygroundPage() {
 
                       <div className="text-sm">
                         <details className="cursor-pointer">
-                          <summary className="font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">
+                          <summary className="font-semibold text-brand-foreground dark:text-brand-outline hover:text-brand-ink dark:hover:text-gray-100">
                             Input
                           </summary>
-                          <pre className="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded text-xs overflow-x-auto">
+                          <pre className="mt-2 p-2 bg-brand-paper dark:bg-brand-ink rounded text-xs overflow-x-auto">
                             {run.inputMd}
                           </pre>
                         </details>
 
                         <details className="mt-2 cursor-pointer">
-                          <summary className="font-semibold text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100">
+                          <summary className="font-semibold text-brand-foreground dark:text-brand-outline hover:text-brand-ink dark:hover:text-gray-100">
                             Output
                           </summary>
-                          <pre className="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded text-xs overflow-x-auto">
+                          <pre className="mt-2 p-2 bg-brand-paper dark:bg-brand-ink rounded text-xs overflow-x-auto">
                             {JSON.stringify(run.outputJson, null, 2)}
                           </pre>
                         </details>

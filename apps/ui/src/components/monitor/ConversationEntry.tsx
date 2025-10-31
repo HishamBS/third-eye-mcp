@@ -87,34 +87,34 @@ export function ConversationEntry({ entry, index }: ConversationEntryProps) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="font-semibold text-sm text-white">
+            <span className="font-semibold text-sm text-brand-foreground">
               {speakerName}
             </span>
             {entry.stage && (
               <PhaseBadge stage={entry.stage} size="sm" />
             )}
-            <span className="text-xs text-slate-500 flex items-center gap-1">
+            <span className="text-xs text-brand-outline flex items-center gap-1">
               <Clock className="h-3 w-3" />
               {entry.timestamp.toLocaleTimeString()}
             </span>
             {entry.metadata?.code && (
-              <span className="text-xs px-2 py-0.5 rounded bg-brand-paper text-slate-400 font-mono">
+              <span className="text-xs px-2 py-0.5 rounded bg-brand-paper text-brand-outline font-mono">
                 {entry.metadata.code}
               </span>
             )}
           </div>
 
           <div className={`rounded-lg bg-brand-paper/60 border border-brand-outline/30 p-3 ${phaseStyles.border} ${phaseStyles.background}`}>
-            <p className="text-sm text-slate-300 whitespace-pre-wrap break-words">
+            <p className="text-sm text-brand-outline whitespace-pre-wrap break-words">
               {entry.message}
             </p>
 
             {entry.metadata?.dataJson && Object.keys(entry.metadata.dataJson).length > 0 && (
               <details className="mt-2 text-xs">
-                <summary className="cursor-pointer text-slate-500 hover:text-slate-400">
+                <summary className="cursor-pointer text-brand-outline hover:text-brand-outline">
                   Technical Data
                 </summary>
-                <pre className="mt-2 p-2 rounded bg-brand-ink/50 text-slate-400 overflow-x-auto">
+                <pre className="mt-2 p-2 rounded bg-brand-ink/50 text-brand-outline overflow-x-auto">
                   {JSON.stringify(entry.metadata.dataJson, null, 2)}
                 </pre>
               </details>

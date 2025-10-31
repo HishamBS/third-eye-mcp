@@ -21,14 +21,14 @@ export function Timeline({ events, selectedIndex, onSelect, onFocusEye }: Timeli
 
   if (!ordered.length) {
     return (
-      <div className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-5 text-sm text-slate-300">
+      <div className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-5 text-sm text-brand-outline">
         Awaiting pipeline activity.
       </div>
     );
   }
 
   return (
-    <ol className="max-h-[24rem] space-y-2 overflow-y-auto rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-slate-200">
+    <ol className="max-h-[24rem] space-y-2 overflow-y-auto rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-brand-outline">
       {ordered.map((event, index) => {
         const isSelected = selectedIndex === index;
         const idx = events.length - 1 - index;
@@ -41,14 +41,14 @@ export function Timeline({ events, selectedIndex, onSelect, onFocusEye }: Timeli
               onMouseEnter={() => onFocusEye?.(event)}
               className={clsx(
                 'flex-1 rounded-xl border border-brand-outline/40 px-3 py-2 text-left transition',
-                isSelected ? 'border-brand-accent/70 bg-brand-accent/10 text-white' : 'hover:border-brand-accent/60 hover:bg-brand-accent/5',
+                isSelected ? 'border-brand-accent/70 bg-brand-accent/10 text-brand-foreground' : 'hover:border-brand-accent/60 hover:bg-brand-accent/5',
               )}
             >
-              <div className="flex items-center justify-between text-xs text-slate-400">
+              <div className="flex items-center justify-between text-xs text-brand-outline">
                 <span>{formatTimestamp(event.ts)}</span>
                 <span>{event.eye ?? event.type}</span>
               </div>
-              <p className="mt-1 text-sm text-slate-200">{event.code ?? event.type}</p>
+              <p className="mt-1 text-sm text-brand-outline">{event.code ?? event.type}</p>
             </button>
           </li>
         );

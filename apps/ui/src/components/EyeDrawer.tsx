@@ -100,14 +100,14 @@ export function EyeDrawer({ isOpen, onClose, state, noviceMode = false, personaM
             <header className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Eye detail</p>
-                <h2 className="text-2xl font-semibold text-white">{state?.eye ?? 'Unknown eye'}</h2>
+                <h2 className="text-2xl font-semibold text-brand-foreground">{state?.eye ?? 'Unknown eye'}</h2>
                 {personaMode && state?.eye && personaMeta[state.eye] ? (
                   <p className={clsx('mt-1 text-sm font-semibold', personaMeta[state.eye].tone)}>
                     Persona voice: {personaMeta[state.eye].prefix}
                   </p>
                 ) : null}
                 {state?.code && (
-                  <p className="mt-2 text-sm text-slate-300">
+                  <p className="mt-2 text-sm text-brand-outline">
                     Status code <span className="font-mono text-brand-accent">{state.code}</span>
                   </p>
                 )}
@@ -115,7 +115,7 @@ export function EyeDrawer({ isOpen, onClose, state, noviceMode = false, personaM
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-full border border-brand-outline/60 px-3 py-1 text-sm text-slate-300 transition hover:border-brand-accent hover:text-brand-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/40"
+                className="rounded-full border border-brand-outline/60 px-3 py-1 text-sm text-brand-outline transition hover:border-brand-accent hover:text-brand-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/40"
               >
                 Close
               </button>
@@ -133,7 +133,7 @@ export function EyeDrawer({ isOpen, onClose, state, noviceMode = false, personaM
                       'rounded-full px-4 py-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/40',
                       isActive
                         ? 'bg-brand-accent/20 text-brand-accent shadow-inner shadow-brand-accent/50'
-                        : 'border border-brand-outline/60 text-slate-300 hover:border-brand-accent hover:text-brand-accent',
+                        : 'border border-brand-outline/60 text-brand-outline hover:border-brand-accent hover:text-brand-accent',
                     )}
                     onClick={() => setActiveTab(tab.id)}
                   >
@@ -143,7 +143,7 @@ export function EyeDrawer({ isOpen, onClose, state, noviceMode = false, personaM
               })}
             </nav>
 
-            <section className="mt-6 max-h-[24rem] overflow-y-auto rounded-xl border border-brand-outline/40 bg-brand-paper p-5 text-sm text-slate-100">
+            <section className="mt-6 max-h-[24rem] overflow-y-auto rounded-xl border border-brand-outline/40 bg-brand-paper p-5 text-sm text-brand-foreground">
               <div
                 className="space-y-3 leading-relaxed [&_ul]:space-y-2 [&_li]:ml-5 [&_li]:list-disc [&_code]:font-mono [&_strong]:text-brand-accent"
                 dangerouslySetInnerHTML={{ __html: renderMarkdown(tabContent(activeTab, state)) }}

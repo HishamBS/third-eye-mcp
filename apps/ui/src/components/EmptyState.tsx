@@ -46,7 +46,7 @@ export function EmptyState({ icon: Icon, title, description, actions, illustrati
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="text-2xl font-bold text-white mb-3 text-center"
+        className="text-2xl font-bold text-brand-foreground mb-3 text-center"
       >
         {title}
       </motion.h3>
@@ -56,7 +56,7 @@ export function EmptyState({ icon: Icon, title, description, actions, illustrati
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
-        className="text-base text-slate-400 mb-8 text-center max-w-md leading-relaxed"
+        className="text-base text-brand-outline mb-8 text-center max-w-md leading-relaxed"
       >
         {description}
       </motion.p>
@@ -71,8 +71,8 @@ export function EmptyState({ icon: Icon, title, description, actions, illustrati
         >
           {actions.map((action, index) => {
             const buttonClasses = action.variant === 'secondary'
-              ? 'rounded-lg border border-brand-outline/50 bg-brand-paper px-6 py-3 text-sm font-medium text-white hover:border-brand-accent hover:bg-brand-paperElev transition-colors'
-              : 'rounded-lg bg-brand-accent px-6 py-3 text-sm font-medium text-white hover:bg-brand-primary transition-colors shadow-lg shadow-brand-accent/20';
+              ? 'rounded-lg border border-brand-outline/50 bg-brand-paper px-6 py-3 text-sm font-medium text-brand-foreground hover:border-brand-accent hover:bg-brand-paperElev transition-colors'
+              : 'rounded-lg bg-brand-accent px-6 py-3 text-sm font-medium text-brand-foreground hover:bg-brand-primary transition-colors shadow-lg shadow-brand-accent/20';
 
             if (action.href) {
               return (

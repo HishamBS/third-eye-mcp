@@ -51,8 +51,8 @@ export function KillSwitch({
             <AlertCircle className="h-5 w-5 text-red-400" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-slate-100">Kill Switch</h3>
-            <p className="text-sm text-slate-400">Re-validate with same or different Eye</p>
+            <h3 className="text-lg font-semibold text-brand-foreground">Kill Switch</h3>
+            <p className="text-sm text-brand-outline">Re-validate with same or different Eye</p>
           </div>
         </div>
 
@@ -86,7 +86,7 @@ export function KillSwitch({
         <div className="mt-4 space-y-4">
           <div className="flex items-center gap-2">
             <Eye className="h-4 w-4 text-brand-gold" />
-            <span className="text-sm font-semibold text-slate-200">Rerun Result</span>
+            <span className="text-sm font-semibold text-brand-outline">Rerun Result</span>
             {hasChanged && (
               <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-100 text-xs">
                 Changed
@@ -97,10 +97,10 @@ export function KillSwitch({
           <div className="grid grid-cols-2 gap-4">
             {/* Original Result */}
             <div className="rounded-lg border border-brand-outline/40 bg-brand-paperElev/60 p-4">
-              <p className="text-xs font-semibold text-slate-400 mb-2">ORIGINAL</p>
+              <p className="text-xs font-semibold text-brand-outline mb-2">ORIGINAL</p>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-300">Verdict:</span>
+                  <span className="text-sm text-brand-outline">Verdict:</span>
                   <span className={`text-sm font-semibold ${
                     originalResult.verdict === 'APPROVED' ? 'text-green-400' :
                     originalResult.verdict === 'REJECTED' ? 'text-red-400' :
@@ -110,22 +110,22 @@ export function KillSwitch({
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-300">Code:</span>
-                  <span className="text-sm text-slate-200">{originalResult.code}</span>
+                  <span className="text-sm text-brand-outline">Code:</span>
+                  <span className="text-sm text-brand-outline">{originalResult.code}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-300">Confidence:</span>
-                  <span className="text-sm text-slate-200">{originalResult.confidence}%</span>
+                  <span className="text-sm text-brand-outline">Confidence:</span>
+                  <span className="text-sm text-brand-outline">{originalResult.confidence}%</span>
                 </div>
               </div>
             </div>
 
             {/* Rerun Result */}
             <div className="rounded-lg border border-brand-outline/40 bg-brand-paperElev/60 p-4">
-              <p className="text-xs font-semibold text-slate-400 mb-2">RERUN</p>
+              <p className="text-xs font-semibold text-brand-outline mb-2">RERUN</p>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-300">Verdict:</span>
+                  <span className="text-sm text-brand-outline">Verdict:</span>
                   <span className={`text-sm font-semibold ${
                     rerunResult.verdict === 'APPROVED' ? 'text-green-400' :
                     rerunResult.verdict === 'REJECTED' ? 'text-red-400' :
@@ -136,14 +136,14 @@ export function KillSwitch({
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-300">Code:</span>
-                  <span className={`text-sm text-slate-200 ${rerunResult.code !== originalResult.code ? 'underline' : ''}`}>
+                  <span className="text-sm text-brand-outline">Code:</span>
+                  <span className={`text-sm text-brand-outline ${rerunResult.code !== originalResult.code ? 'underline' : ''}`}>
                     {rerunResult.code}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-slate-300">Confidence:</span>
-                  <span className={`text-sm text-slate-200 ${rerunResult.confidence !== originalResult.confidence ? 'underline' : ''}`}>
+                  <span className="text-sm text-brand-outline">Confidence:</span>
+                  <span className={`text-sm text-brand-outline ${rerunResult.confidence !== originalResult.confidence ? 'underline' : ''}`}>
                     {rerunResult.confidence}%
                   </span>
                 </div>
@@ -152,19 +152,19 @@ export function KillSwitch({
           </div>
 
           <div className="rounded-lg border border-brand-outline/40 bg-brand-paper/60 p-4">
-            <p className="text-xs font-semibold text-slate-400 mb-2">SUMMARY</p>
-            <p className="text-sm text-slate-200">{rerunResult.summary}</p>
+            <p className="text-xs font-semibold text-brand-outline mb-2">SUMMARY</p>
+            <p className="text-sm text-brand-outline">{rerunResult.summary}</p>
             {rerunResult.details && (
-              <p className="mt-2 text-sm text-slate-300">{rerunResult.details}</p>
+              <p className="mt-2 text-sm text-brand-outline">{rerunResult.details}</p>
             )}
           </div>
 
           {rerunResult.suggestions && rerunResult.suggestions.length > 0 && (
             <div className="rounded-lg border border-brand-outline/40 bg-brand-paper/60 p-4">
-              <p className="text-xs font-semibold text-slate-400 mb-2">SUGGESTIONS</p>
+              <p className="text-xs font-semibold text-brand-outline mb-2">SUGGESTIONS</p>
               <ul className="space-y-1">
                 {rerunResult.suggestions.map((suggestion, idx) => (
-                  <li key={idx} className="text-sm text-slate-200 flex gap-2">
+                  <li key={idx} className="text-sm text-brand-outline flex gap-2">
                     <span className="text-brand-gold">•</span>
                     {suggestion}
                   </li>

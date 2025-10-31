@@ -200,7 +200,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
       >
         <div className="flex items-center gap-2">
           <div className={`h-2 w-2 rounded-full ${selectedSession ? 'bg-green-400 animate-pulse' : 'bg-slate-500'}`} />
-          <span className="font-medium text-white">
+          <span className="font-medium text-brand-foreground">
             {selectedSession
               ? `${selectedSession.displayName.substring(0, 24)}${selectedSession.displayName.length > 24 ? '…' : ''}`
               : 'No Session Selected'}
@@ -214,7 +214,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
         )}
 
         <svg
-          className={`h-4 w-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 text-brand-outline transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -234,11 +234,11 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
           >
             <div className="border-b border-brand-outline/30 px-4 py-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-white">Active Sessions</h3>
+                <h3 className="text-sm font-semibold text-brand-foreground">Active Sessions</h3>
                 <button
                   onClick={fetchActiveSessions}
                   disabled={loading}
-                  className="rounded-lg p-1 text-slate-400 transition-colors hover:bg-brand-paper hover:text-brand-accent disabled:opacity-50"
+                  className="rounded-lg p-1 text-brand-outline transition-colors hover:bg-brand-paper hover:text-brand-accent disabled:opacity-50"
                 >
                   <svg
                     className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
@@ -255,8 +255,8 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
             <div className="max-h-96 overflow-y-auto p-2">
               {sessions.length === 0 ? (
                 <div className="py-8 text-center">
-                  <p className="text-sm text-slate-400">No active sessions</p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="text-sm text-brand-outline">No active sessions</p>
+                  <p className="mt-1 text-xs text-brand-outline">
                     Connect an MCP agent to start a session
                   </p>
                 </div>
@@ -290,14 +290,14 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <div className={`h-2 w-2 rounded-full ${isRecent ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`} />
-                              <span className="truncate text-sm font-medium text-white">
+                              <span className="truncate text-sm font-medium text-brand-foreground">
                                 {session.displayName}
                               </span>
                             </div>
                             {session.agentName && session.agentName !== session.displayName && (
-                              <p className="mt-1 text-xs text-slate-400 truncate">{session.agentName}</p>
+                              <p className="mt-1 text-xs text-brand-outline truncate">{session.agentName}</p>
                             )}
-                            <div className="mt-1 flex items-center gap-2 text-xs text-slate-400">
+                            <div className="mt-1 flex items-center gap-2 text-xs text-brand-outline">
                               <span className="truncate">{session.model}</span>
                               <span>•</span>
                               <span>{session.eventCount} events</span>
@@ -307,7 +307,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={(e) => handleDeleteSession(session.sessionId, e)}
-                              className="rounded p-1 text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                              className="rounded p-1 text-brand-outline hover:bg-red-500/10 hover:text-red-400 transition-colors"
                               title="Delete session"
                             >
                               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -322,7 +322,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                           </div>
                         </div>
 
-                        <div className="mt-2 text-xs text-slate-500">
+                        <div className="mt-2 text-xs text-brand-outline">
                           ID: {session.sessionId.substring(0, 8)}...
                         </div>
                       </div>
@@ -346,7 +346,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                       router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
                     }
                   }}
-                  className="w-full rounded-lg px-3 py-2 text-sm text-slate-400 transition-colors hover:bg-brand-paper hover:text-white"
+                  className="w-full rounded-lg px-3 py-2 text-sm text-brand-outline transition-colors hover:bg-brand-paper hover:text-brand-foreground"
                 >
                   Clear Selection
                 </button>
@@ -380,8 +380,8 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
               className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-brand-outline/40 bg-brand-paperElev p-6 shadow-2xl"
             >
               <div className="mb-4">
-                <h3 className="text-lg font-semibold text-white">Delete All Sessions?</h3>
-                <p className="mt-2 text-sm text-slate-400">
+                <h3 className="text-lg font-semibold text-brand-foreground">Delete All Sessions?</h3>
+                <p className="mt-2 text-sm text-brand-outline">
                   This will permanently delete all {sessions.length} session{sessions.length !== 1 ? 's' : ''} and their associated data. This action cannot be undone.
                 </p>
               </div>
@@ -390,14 +390,14 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
                   disabled={deleting}
-                  className="flex-1 rounded-lg border border-brand-outline/40 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-paper disabled:opacity-50"
+                  className="flex-1 rounded-lg border border-brand-outline/40 px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand-paper disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDeleteAllSessions}
                   disabled={deleting}
-                  className="flex-1 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+                  className="flex-1 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-red-600 disabled:opacity-50"
                 >
                   {deleting ? 'Deleting...' : 'Delete All'}
                 </button>

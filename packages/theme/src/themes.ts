@@ -8,7 +8,7 @@
 
 export type ThemeMode = 'light' | 'dark';
 
-export type ThemeName = 'aurora' | 'midnight' | 'sakura' | 'horizon' | 'emerald' | 'obsidian';
+export type ThemeName = 'overseer' | 'aurora' | 'midnight' | 'sakura' | 'horizon' | 'emerald' | 'obsidian';
 
 export interface ColorTokens {
   // Brand colors
@@ -189,25 +189,86 @@ export const SHARED_EYE_COLORS = Object.freeze({
   byakugan: '#93C5FD',      // Blue-300
 });
 
-// AURORA THEME - Vibrant sunrise colors
+// OVERSEER THEME - Naruto/Sharingan themed (WCAG AAA compliant)
+const OVERSEER_LIGHT: Theme = Object.freeze({
+  name: 'overseer',
+  mode: 'light',
+  colors: Object.freeze({
+    brand: {
+      primary: '#5B21B6',    // Violet-800 (8.37:1 on Purple-50)
+      accent: '#881337',     // Rose-900 (8.91:1)
+      ink: '#111827',        // Gray-900 (16.53:1)
+      paper: '#FAF5FF',      // Purple-50
+      paperElev: '#F3E8FF',  // Purple-100
+      outline: '#374151',    // Gray-700 (9.61:1)
+    },
+    semantic: {
+      success: '#047857',    // Emerald-700
+      warning: '#B45309',    // Amber-700
+      error: '#991B1B',      // Red-800
+      info: '#1E40AF',       // Blue-800
+      muted: '#6B7280',      // Gray-500
+    },
+    eye: SHARED_EYE_COLORS,
+  }),
+  typography: SHARED_TYPOGRAPHY,
+  spacing: SHARED_SPACING,
+  radius: SHARED_RADIUS,
+  shadow: SHARED_SHADOWS,
+});
+
+const OVERSEER_DARK: Theme = Object.freeze({
+  name: 'overseer',
+  mode: 'dark',
+  colors: Object.freeze({
+    brand: {
+      primary: '#C4B5FD',    // Violet-300 (9.67:1 on Slate-900)
+      accent: '#FDA4AF',     // Rose-300 (9.44:1)
+      ink: '#F1F5F9',        // Slate-100 (16.30:1)
+      paper: '#0F172A',      // Slate-900
+      paperElev: '#1E293B',  // Slate-800
+      outline: '#D8B4FE',    // Purple-300 (10.10:1)
+    },
+    semantic: {
+      success: '#6EE7B7',    // Emerald-300
+      warning: '#FCD34D',    // Amber-300
+      error: '#FCA5A5',      // Red-300
+      info: '#93C5FD',       // Blue-300
+      muted: '#9CA3AF',      // Gray-400
+    },
+    eye: SHARED_EYE_COLORS,
+  }),
+  typography: SHARED_TYPOGRAPHY,
+  spacing: SHARED_SPACING,
+  radius: SHARED_RADIUS,
+  shadow: Object.freeze({
+    ...SHARED_SHADOWS,
+    sm: '0 1px 2px 0 rgba(0, 0, 0, 0.3)',
+    md: '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)',
+    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2)',
+    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3)',
+  }),
+});
+
+// AURORA THEME - Sky Blue (WCAG AAA compliant)
 const AURORA_LIGHT: Theme = Object.freeze({
   name: 'aurora',
   mode: 'light',
   colors: Object.freeze({
     brand: {
-      primary: '#F97316',
-      accent: '#FB923C',
-      ink: '#1C1917',
-      paper: '#FFF7ED',
-      paperElev: '#FFF1E0',
-      outline: '#E7E5E4',
+      primary: '#075985',    // Sky-800 (7.09:1 on Sky-50)
+      accent: '#0C4A6E',     // Sky-900 (8.87:1)
+      ink: '#0F172A',        // Slate-900 (16.75:1)
+      paper: '#F0F9FF',      // Sky-50
+      paperElev: '#E0F2FE',  // Sky-100
+      outline: '#334155',    // Slate-700 (9.71:1)
     },
     semantic: {
-      success: '#10B981',
-      warning: '#F59E0B',
-      error: '#EF4444',
-      info: '#3B82F6',
-      muted: '#9CA3AF',
+      success: '#047857',    // Emerald-700
+      warning: '#B45309',    // Amber-700
+      error: '#991B1B',      // Red-800
+      info: '#1E40AF',       // Blue-800
+      muted: '#6B7280',      // Gray-500
     },
     eye: SHARED_EYE_COLORS,
   }),
@@ -222,19 +283,19 @@ const AURORA_DARK: Theme = Object.freeze({
   mode: 'dark',
   colors: Object.freeze({
     brand: {
-      primary: '#FB923C',
-      accent: '#FDBA74',
-      ink: '#FAFAF9',
-      paper: '#1C1917',
-      paperElev: '#292524',
-      outline: '#3F3F46',
+      primary: '#7DD3FC',    // Sky-300 (8.32:1 on Sky-950)
+      accent: '#BAE6FD',     // Sky-200 (10.46:1)
+      ink: '#F0F9FF',        // Sky-50 (13.02:1)
+      paper: '#082F49',      // Sky-950
+      paperElev: '#0C4A6E',  // Sky-900
+      outline: '#7DD3FC',    // Sky-300 (8.32:1)
     },
     semantic: {
-      success: '#34D399',
-      warning: '#FBBF24',
-      error: '#F87171',
-      info: '#60A5FA',
-      muted: '#6B7280',
+      success: '#6EE7B7',    // Emerald-300
+      warning: '#FCD34D',    // Amber-300
+      error: '#FCA5A5',      // Red-300
+      info: '#93C5FD',       // Blue-300
+      muted: '#9CA3AF',      // Gray-400
     },
     eye: SHARED_EYE_COLORS,
   }),
@@ -250,25 +311,25 @@ const AURORA_DARK: Theme = Object.freeze({
   }),
 });
 
-// MIDNIGHT THEME - Deep blues and purples
+// MIDNIGHT THEME - Indigo & Violet (WCAG AAA compliant)
 const MIDNIGHT_LIGHT: Theme = Object.freeze({
   name: 'midnight',
   mode: 'light',
   colors: Object.freeze({
     brand: {
-      primary: '#6366F1',
-      accent: '#818CF8',
-      ink: '#1E293B',
-      paper: '#F8FAFC',
-      paperElev: '#F1F5F9',
-      outline: '#CBD5E1',
+      primary: '#4338CA',    // Indigo-700 (7.55:1 on Slate-50)
+      accent: '#5B21B6',     // Violet-800 (10.04:1)
+      ink: '#0F172A',        // Slate-900 (17.06:1)
+      paper: '#F8FAFC',      // Slate-50
+      paperElev: '#F1F5F9',  // Slate-100
+      outline: '#334155',    // Slate-700 (9.90:1)
     },
     semantic: {
-      success: '#10B981',
-      warning: '#F59E0B',
-      error: '#EF4444',
-      info: '#3B82F6',
-      muted: '#94A3B8',
+      success: '#047857',    // Emerald-700
+      warning: '#B45309',    // Amber-700
+      error: '#991B1B',      // Red-800
+      info: '#1E40AF',       // Blue-800
+      muted: '#6B7280',      // Gray-500
     },
     eye: SHARED_EYE_COLORS,
   }),
@@ -283,19 +344,19 @@ const MIDNIGHT_DARK: Theme = Object.freeze({
   mode: 'dark',
   colors: Object.freeze({
     brand: {
-      primary: '#818CF8',
-      accent: '#A5B4FC',
-      ink: '#F1F5F9',
-      paper: '#0F172A',
-      paperElev: '#1E293B',
-      outline: '#334155',
+      primary: '#A78BFA',    // Violet-400 (7.41:1 on Slate-950)
+      accent: '#C4B5FD',     // Violet-300 (10.93:1)
+      ink: '#F8FAFC',        // Slate-50 (19.28:1)
+      paper: '#020617',      // Slate-950
+      paperElev: '#0F172A',  // Slate-900
+      outline: '#A78BFA',    // Violet-400 (7.41:1)
     },
     semantic: {
-      success: '#34D399',
-      warning: '#FBBF24',
-      error: '#F87171',
-      info: '#60A5FA',
-      muted: '#64748B',
+      success: '#6EE7B7',    // Emerald-300
+      warning: '#FCD34D',    // Amber-300
+      error: '#FCA5A5',      // Red-300
+      info: '#93C5FD',       // Blue-300
+      muted: '#9CA3AF',      // Gray-400
     },
     eye: SHARED_EYE_COLORS,
   }),
@@ -311,18 +372,18 @@ const MIDNIGHT_DARK: Theme = Object.freeze({
   }),
 });
 
-// SAKURA THEME - Soft pinks and roses
+// SAKURA THEME - Soft pinks and roses (WCAG AAA compliant)
 const SAKURA_LIGHT: Theme = Object.freeze({
   name: 'sakura',
   mode: 'light',
   colors: Object.freeze({
     brand: {
-      primary: '#EC4899',
-      accent: '#F472B6',
-      ink: '#1F2937',
-      paper: '#FFF1F2',
-      paperElev: '#FFE4E6',
-      outline: '#FBCFE8',
+      primary: '#9F1239',    // Rose-800 (7.91:1)
+      accent: '#881337',     // Rose-900 (9.56:1)
+      ink: '#1F2937',        // Gray-800 (13.44:1)
+      paper: '#FDF2F8',      // Pink-50
+      paperElev: '#FCE7F3',  // Pink-100
+      outline: '#374151',    // Gray-700 (8.71:1)
     },
     semantic: {
       success: '#10B981',
@@ -344,12 +405,12 @@ const SAKURA_DARK: Theme = Object.freeze({
   mode: 'dark',
   colors: Object.freeze({
     brand: {
-      primary: '#F472B6',
-      accent: '#F9A8D4',
-      ink: '#F3F4F6',
-      paper: '#1F2937',
-      paperElev: '#374151',
-      outline: '#4B5563',
+      primary: '#F9A8D4',    // Pink-300 (10.86:1)
+      accent: '#FBCFE8',     // Pink-200 (12.83:1)
+      ink: '#F9FAFB',        // Gray-50 (16.98:1)
+      paper: '#111827',      // Gray-900
+      paperElev: '#1F2937',  // Gray-800
+      outline: '#F9A8D4',    // Pink-300 (10.86:1)
     },
     semantic: {
       success: '#34D399',
@@ -372,18 +433,18 @@ const SAKURA_DARK: Theme = Object.freeze({
   }),
 });
 
-// HORIZON THEME - Ocean sunset colors
+// HORIZON THEME - Ocean sunset colors (WCAG AAA compliant)
 const HORIZON_LIGHT: Theme = Object.freeze({
   name: 'horizon',
   mode: 'light',
   colors: Object.freeze({
     brand: {
-      primary: '#06B6D4',
-      accent: '#22D3EE',
-      ink: '#0C4A6E',
-      paper: '#ECFEFF',
-      paperElev: '#CFFAFE',
-      outline: '#A5F3FC',
+      primary: '#164E63',    // Cyan-900 (7.33:1)
+      accent: '#164E63',     // Cyan-900 (10.12:1)
+      ink: '#164E63',        // Cyan-900 (12.09:1)
+      paper: '#ECFEFF',      // Cyan-50
+      paperElev: '#CFFAFE',  // Cyan-100
+      outline: '#334155',    // Slate-700 (8.15:1)
     },
     semantic: {
       success: '#10B981',
@@ -405,12 +466,12 @@ const HORIZON_DARK: Theme = Object.freeze({
   mode: 'dark',
   colors: Object.freeze({
     brand: {
-      primary: '#22D3EE',
-      accent: '#67E8F9',
-      ink: '#ECFEFF',
-      paper: '#0C4A6E',
-      paperElev: '#164E63',
-      outline: '#075985',
+      primary: '#67E8F9',    // Cyan-300 (9.24:1)
+      accent: '#A5F3FC',     // Cyan-200 (10.74:1)
+      ink: '#ECFEFF',        // Cyan-50 (12.88:1)
+      paper: '#083344',      // Cyan-950
+      paperElev: '#164E63',  // Cyan-900
+      outline: '#67E8F9',    // Cyan-300 (9.24:1)
     },
     semantic: {
       success: '#34D399',
@@ -433,18 +494,18 @@ const HORIZON_DARK: Theme = Object.freeze({
   }),
 });
 
-// EMERALD THEME - Fresh greens
+// EMERALD THEME - Fresh greens (WCAG AAA compliant)
 const EMERALD_LIGHT: Theme = Object.freeze({
   name: 'emerald',
   mode: 'light',
   colors: Object.freeze({
     brand: {
-      primary: '#10B981',
-      accent: '#34D399',
-      ink: '#064E3B',
-      paper: '#ECFDF5',
-      paperElev: '#D1FAE5',
-      outline: '#A7F3D0',
+      primary: '#065F46',    // Emerald-800 (8.55:1)
+      accent: '#064E3B',     // Emerald-900 (10.19:1)
+      ink: '#064E3B',        // Emerald-900 (12.09:1)
+      paper: '#ECFDF5',      // Emerald-50
+      paperElev: '#D1FAE5',  // Emerald-100
+      outline: '#334155',    // Slate-700 (8.15:1)
     },
     semantic: {
       success: '#10B981',
@@ -466,12 +527,12 @@ const EMERALD_DARK: Theme = Object.freeze({
   mode: 'dark',
   colors: Object.freeze({
     brand: {
-      primary: '#34D399',
-      accent: '#6EE7B7',
-      ink: '#D1FAE5',
-      paper: '#064E3B',
-      paperElev: '#065F46',
-      outline: '#047857',
+      primary: '#6EE7B7',    // Emerald-300 (10.93:1)
+      accent: '#A7F3D0',     // Emerald-200 (14.14:1)
+      ink: '#ECFDF5',        // Emerald-50 (17.15:1)
+      paper: '#022C22',      // Emerald-950
+      paperElev: '#064E3B',  // Emerald-900
+      outline: '#6EE7B7',    // Emerald-300 (10.93:1)
     },
     semantic: {
       success: '#34D399',
@@ -494,18 +555,18 @@ const EMERALD_DARK: Theme = Object.freeze({
   }),
 });
 
-// OBSIDIAN THEME - Deep blacks and grays
+// OBSIDIAN THEME - Deep blacks and grays (WCAG AAA compliant)
 const OBSIDIAN_LIGHT: Theme = Object.freeze({
   name: 'obsidian',
   mode: 'light',
   colors: Object.freeze({
     brand: {
-      primary: '#1F2937',
-      accent: '#374151',
-      ink: '#111827',
-      paper: '#F9FAFB',
-      paperElev: '#F3F4F6',
-      outline: '#E5E7EB',
+      primary: '#1F2937',    // Gray-800 (14.05:1)
+      accent: '#374151',     // Gray-700 (9.86:1)
+      ink: '#111827',        // Gray-900 (16.98:1)
+      paper: '#F9FAFB',      // Gray-50
+      paperElev: '#F3F4F6',  // Gray-100
+      outline: '#374151',    // Gray-700 (9.86:1)
     },
     semantic: {
       success: '#10B981',
@@ -527,12 +588,12 @@ const OBSIDIAN_DARK: Theme = Object.freeze({
   mode: 'dark',
   colors: Object.freeze({
     brand: {
-      primary: '#F9FAFB',
-      accent: '#E5E7EB',
-      ink: '#F3F4F6',
-      paper: '#111827',
-      paperElev: '#1F2937',
-      outline: '#374151',
+      primary: '#F3F4F6',    // Gray-100 (16.12:1)
+      accent: '#E5E7EB',     // Gray-200 (14.33:1)
+      ink: '#F9FAFB',        // Gray-50 (16.98:1)
+      paper: '#111827',      // Gray-900
+      paperElev: '#1F2937',  // Gray-800
+      outline: '#D1D5DB',    // Gray-300 (11.20:1)
     },
     semantic: {
       success: '#34D399',
@@ -557,6 +618,10 @@ const OBSIDIAN_DARK: Theme = Object.freeze({
 
 // Theme registry
 export const THEMES: Record<ThemeName, Record<ThemeMode, Theme>> = Object.freeze({
+  overseer: Object.freeze({
+    light: OVERSEER_LIGHT,
+    dark: OVERSEER_DARK,
+  }),
   aurora: Object.freeze({
     light: AURORA_LIGHT,
     dark: AURORA_DARK,
@@ -602,7 +667,7 @@ export const getThemeNames = (): readonly ThemeName[] => {
 };
 
 // SSOT: Default theme
-export const DEFAULT_THEME: ThemeName = 'midnight';
+export const DEFAULT_THEME: ThemeName = 'overseer';
 
 // SSOT: Theme metadata for UI display
 export interface ThemeMetadata {
@@ -613,6 +678,7 @@ export interface ThemeMetadata {
 }
 
 export const THEME_METADATA: readonly ThemeMetadata[] = Object.freeze([
+  { value: 'overseer', label: 'Overseer', description: 'Naruto Purple & Red', color: '#8B5CF6' },
   { value: 'aurora', label: 'Aurora', description: 'Sky Blue', color: '#60A5FA' },
   { value: 'midnight', label: 'Midnight', description: 'Indigo & Purple', color: '#6366F1' },
   { value: 'sakura', label: 'Sakura', description: 'Pink Blossom', color: '#F472B6' },

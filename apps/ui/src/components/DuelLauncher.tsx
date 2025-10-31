@@ -145,12 +145,12 @@ export function DuelLauncher({
   const launchDisabled = submitting || !prompt.trim() || selectedConfigs.length < 2;
 
   return (
-    <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-5 text-sm text-slate-200">
-      <h3 className="text-lg font-semibold text-white">Duel Mode</h3>
-      <p className="mt-2 text-sm text-slate-300">Compare multiple LLM providers/models side-by-side with identical prompts.</p>
+    <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-5 text-sm text-brand-outline">
+      <h3 className="text-lg font-semibold text-brand-foreground">Duel Mode</h3>
+      <p className="mt-2 text-sm text-brand-outline">Compare multiple LLM providers/models side-by-side with identical prompts.</p>
       <form onSubmit={handleSubmit} className="mt-3 space-y-4">
         <div>
-          <label className="block text-xs uppercase tracking-[0.2em] text-slate-400 mb-2">
+          <label className="block text-xs uppercase tracking-[0.2em] text-brand-outline mb-2">
             Prompt
           </label>
           <textarea
@@ -158,7 +158,7 @@ export function DuelLauncher({
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Enter your prompt here..."
             rows={4}
-            className="w-full rounded-lg border border-brand-outline/40 bg-brand-paper px-3 py-2 text-sm text-slate-100 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
+            className="w-full rounded-lg border border-brand-outline/40 bg-brand-paper px-3 py-2 text-sm text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
           />
         </div>
 
@@ -178,34 +178,34 @@ export function DuelLauncher({
                       onChange={() => toggleConfig(config)}
                       className="h-4 w-4 rounded border border-brand-outline/60 bg-brand-paper accent-brand-accent"
                     />
-                    <span className="font-mono text-xs text-slate-200">{label}</span>
+                    <span className="font-mono text-xs text-brand-outline">{label}</span>
                   </label>
                 );
               })}
             </div>
           ) : (
-            <p className="text-xs text-slate-400">No configurations available. Add custom configurations below.</p>
+            <p className="text-xs text-brand-outline">No configurations available. Add custom configurations below.</p>
           )}
-          <p className="text-xs text-slate-400">Select between 2 and 4 model configurations.</p>
+          <p className="text-xs text-brand-outline">Select between 2 and 4 model configurations.</p>
         </fieldset>
 
         <div className="grid grid-cols-2 gap-2">
-          <label className="text-xs uppercase tracking-[0.2em] text-slate-400">
+          <label className="text-xs uppercase tracking-[0.2em] text-brand-outline">
             Provider
             <input
               value={customProvider}
               onChange={(event) => setCustomProvider(event.target.value)}
               placeholder="e.g., groq"
-              className="mt-1 w-full rounded-lg border border-brand-outline/40 bg-brand-paper px-3 py-2 text-sm text-slate-100 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
+              className="mt-1 w-full rounded-lg border border-brand-outline/40 bg-brand-paper px-3 py-2 text-sm text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
             />
           </label>
-          <label className="text-xs uppercase tracking-[0.2em] text-slate-400">
+          <label className="text-xs uppercase tracking-[0.2em] text-brand-outline">
             Model
             <input
               value={customModel}
               onChange={(event) => setCustomModel(event.target.value)}
               placeholder="e.g., llama-3.1-8b-instant"
-              className="mt-1 w-full rounded-lg border border-brand-outline/40 bg-brand-paper px-3 py-2 text-sm text-slate-100 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
+              className="mt-1 w-full rounded-lg border border-brand-outline/40 bg-brand-paper px-3 py-2 text-sm text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
             />
           </label>
         </div>
@@ -231,7 +231,7 @@ export function DuelLauncher({
         </button>
       </form>
       {message && (
-        <p className={clsx('mt-3 text-xs', status === 'error' ? 'text-rose-300' : 'text-slate-300')}>{message}</p>
+        <p className={clsx('mt-3 text-xs', status === 'error' ? 'text-rose-300' : 'text-brand-outline')}>{message}</p>
       )}
     </section>
   );

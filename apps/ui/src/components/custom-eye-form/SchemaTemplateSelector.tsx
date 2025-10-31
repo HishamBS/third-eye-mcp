@@ -29,7 +29,7 @@ export function SchemaTemplateSelector({ onSelect }: SchemaTemplateSelectorProps
 
   return (
     <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
-      <h3 className="mb-3 text-lg font-semibold text-white">Schema Templates</h3>
+      <h3 className="mb-3 text-lg font-semibold text-brand-foreground">Schema Templates</h3>
       <p className="mb-4 text-sm text-brand-ink/70">
         Start with a pre-built schema template for common patterns
       </p>

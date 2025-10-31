@@ -14,7 +14,7 @@ export function DuelResults({ events }: DuelResultsProps) {
   const duelEvents = events.filter((event) => inferAgent(event));
   if (!duelEvents.length) {
     return (
-      <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-slate-300">
+      <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-brand-outline">
         Launch a duel to see per-agent verdicts.
       </section>
     );
@@ -28,18 +28,18 @@ export function DuelResults({ events }: DuelResultsProps) {
   }, {});
 
   return (
-    <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-slate-200">
+    <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-brand-outline">
       <header className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-white">Duel verdicts</h3>
+        <h3 className="text-lg font-semibold text-brand-foreground">Duel verdicts</h3>
       </header>
       <div className="grid gap-3 md:grid-cols-2">
         {Object.entries(grouped).map(([agent, agentEvents]) => (
           <article key={agent} className="rounded-xl border border-brand-outline/30 bg-brand-paper/80 p-3">
-            <header className="flex items-center justify-between text-xs text-slate-400">
+            <header className="flex items-center justify-between text-xs text-brand-outline">
               <span className="font-mono text-sm text-brand-accent">{agent}</span>
               <span>{agentEvents.length} events</span>
             </header>
-            <ul className="mt-2 space-y-1 text-xs text-slate-300">
+            <ul className="mt-2 space-y-1 text-xs text-brand-outline">
               {agentEvents.slice(-6).map((event, index) => (
                 <li key={`${event.eye}-${event.ts}-${index}`} className="flex items-center justify-between">
                   <span>{event.eye}</span>

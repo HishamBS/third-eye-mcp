@@ -13,10 +13,10 @@ export interface HeroRibbonProps {
 
 function MetricCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-xl border border-surface-outline/40 bg-surface-raised/70 px-5 py-4 text-sm text-slate-200 shadow-lg">
-      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-white">{value}</p>
-      {sub && <p className="text-xs text-slate-500">{sub}</p>}
+    <div className="rounded-xl border border-surface-outline/40 bg-surface-raised/70 px-5 py-4 text-sm text-brand-outline shadow-lg">
+      <p className="text-xs uppercase tracking-[0.2em] text-brand-outline">{label}</p>
+      <p className="mt-1 text-2xl font-semibold text-brand-foreground">{value}</p>
+      {sub && <p className="text-xs text-brand-outline">{sub}</p>}
     </div>
   );
 }
@@ -26,12 +26,12 @@ export function HeroRibbon({ sessionId, apiKey, connected, connectionAttempts, m
 
   return (
     <section className="grid gap-4 md:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
-      <div className={clsx('rounded-2xl border border-surface-outline/60 bg-surface-raised/80 px-6 py-5 text-sm text-slate-200 shadow-glass md:px-8 md:py-6', showSkeleton && 'animate-pulse')}>
+      <div className={clsx('rounded-2xl border border-surface-outline/60 bg-surface-raised/80 px-6 py-5 text-sm text-brand-outline shadow-glass md:px-8 md:py-6', showSkeleton && 'animate-pulse')}>
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-[0.32em] text-accent-primary">Active Session</p>
-            <h2 className="text-2xl font-semibold text-white">{sessionId || 'No session selected'}</h2>
-            <p className="mt-2 text-xs text-slate-400">API key stored locally · {apiKey ? 'configured' : 'missing'}</p>
+            <h2 className="text-2xl font-semibold text-brand-foreground">{sessionId || 'No session selected'}</h2>
+            <p className="mt-2 text-xs text-brand-outline">API key stored locally · {apiKey ? 'configured' : 'missing'}</p>
           </div>
           <span
             className={clsx(
@@ -42,7 +42,7 @@ export function HeroRibbon({ sessionId, apiKey, connected, connectionAttempts, m
             {connected ? 'Streaming' : 'Disconnected'}
           </span>
         </header>
-        <footer className="mt-4 flex items-center gap-4 text-xs text-slate-400">
+        <footer className="mt-4 flex items-center gap-4 text-xs text-brand-outline">
           <span>Retries: {connectionAttempts}</span>
           {loading && <span>Refreshing summary…</span>}
           {error && <span className="text-rose-300">{error}</span>}

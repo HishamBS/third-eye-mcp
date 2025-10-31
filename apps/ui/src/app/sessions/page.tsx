@@ -98,7 +98,7 @@ export default function SessionsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-brand-ink flex items-center justify-center">
-        <div className="text-white text-xl">Loading sessions...</div>
+        <div className="text-brand-foreground text-xl">Loading sessions...</div>
       </div>
     );
   }
@@ -109,16 +109,16 @@ export default function SessionsPage() {
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-slate-400 hover:text-brand-accent transition-colors">
+              <Link href="/" className="text-brand-outline hover:text-brand-accent transition-colors">
                 Back
               </Link>
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Monitoring</p>
-                <h1 className="text-2xl font-semibold text-white mt-1">All Sessions</h1>
+                <h1 className="text-2xl font-semibold text-brand-foreground mt-1">All Sessions</h1>
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="text-slate-400 text-sm">
+              <div className="text-brand-outline text-sm">
                 {filteredSessions.length} of {sessions.length} sessions
               </div>
               <ViewModeToggle />
@@ -142,13 +142,13 @@ export default function SessionsPage() {
             placeholder="Search sessions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 max-w-md px-4 py-2 bg-brand-paper border border-brand-outline/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+            className="flex-1 max-w-md px-4 py-2 bg-brand-paper border border-brand-outline/50 rounded-xl text-brand-foreground placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
           />
 
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 bg-brand-paper border border-brand-outline/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+            className="px-4 py-2 bg-brand-paper border border-brand-outline/50 rounded-xl text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
           >
             <option value="all">All Status</option>
             <option value="active">Active</option>
@@ -159,8 +159,8 @@ export default function SessionsPage() {
 
         {filteredSessions.length === 0 ? (
           <div className="bg-brand-paper border border-brand-outline/50 rounded-xl p-12 text-center">
-            <p className="text-slate-400 text-lg mb-2">No sessions found</p>
-            <p className="text-slate-500 text-sm">
+            <p className="text-brand-outline text-lg mb-2">No sessions found</p>
+            <p className="text-brand-outline text-sm">
               {sessions.length === 0
                 ? 'Sessions will appear here when agents connect via MCP'
                 : 'Try adjusting your filters'}
@@ -171,19 +171,19 @@ export default function SessionsPage() {
             <table className="w-full">
               <thead className="bg-brand-ink/50 border-b border-brand-outline/50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-brand-outline uppercase tracking-wider">
                     Session ID
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-brand-outline uppercase tracking-wider">
                     Agent / Model
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-brand-outline uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-brand-outline uppercase tracking-wider">
                     Created
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-brand-outline uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -203,11 +203,11 @@ export default function SessionsPage() {
                       </code>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-white text-sm">
+                      <div className="text-brand-foreground text-sm">
                         {session.agentName || 'Unknown Agent'}
                       </div>
                       {viewMode === 'expert' && session.model && (
-                        <div className="text-slate-400 text-xs font-mono mt-1">
+                        <div className="text-brand-outline text-xs font-mono mt-1">
                           {session.model}
                         </div>
                       )}
@@ -217,7 +217,7 @@ export default function SessionsPage() {
                         {session.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-300 text-sm">
+                    <td className="px-6 py-4 text-brand-outline text-sm">
                       {formatDate(session.createdAt)}
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -237,17 +237,17 @@ export default function SessionsPage() {
 
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-brand-paper border border-brand-outline/50 rounded-xl p-4">
-            <div className="text-xs uppercase tracking-wider text-slate-400 mb-1">Total Sessions</div>
-            <div className="text-2xl font-bold text-white">{sessions.length}</div>
+            <div className="text-xs uppercase tracking-wider text-brand-outline mb-1">Total Sessions</div>
+            <div className="text-2xl font-bold text-brand-foreground">{sessions.length}</div>
           </div>
           <div className="bg-brand-paper border border-brand-outline/50 rounded-xl p-4">
-            <div className="text-xs uppercase tracking-wider text-slate-400 mb-1">Active</div>
+            <div className="text-xs uppercase tracking-wider text-brand-outline mb-1">Active</div>
             <div className="text-2xl font-bold text-green-400">
               {sessions.filter(s => s.status === 'active').length}
             </div>
           </div>
           <div className="bg-brand-paper border border-brand-outline/50 rounded-xl p-4">
-            <div className="text-xs uppercase tracking-wider text-slate-400 mb-1">Completed</div>
+            <div className="text-xs uppercase tracking-wider text-brand-outline mb-1">Completed</div>
             <div className="text-2xl font-bold text-blue-400">
               {sessions.filter(s => s.status === 'completed').length}
             </div>

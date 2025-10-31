@@ -313,7 +313,7 @@ export function PersonaWizard({
             <div className="flex gap-2">
               <button
                 onClick={() => setShowTemplateSelector(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-accent text-white hover:bg-brand-accent/90 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-accent text-brand-foreground hover:bg-brand-accent/90 transition-colors"
               >
                 <Sparkles className="w-4 h-4" />
                 {BUTTON_LABELS.START_FROM_TEMPLATE}
@@ -368,9 +368,9 @@ export function PersonaWizard({
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
                     step.id === state.currentStep
-                      ? 'bg-brand-accent text-white'
+                      ? 'bg-brand-accent text-brand-foreground'
                       : step.id < state.currentStep
-                      ? 'bg-brand-accent/50 text-white'
+                      ? 'bg-brand-accent/50 text-brand-foreground'
                       : 'bg-brand-outline/30 text-brand-ink/40'
                   }`}
                 >
@@ -506,7 +506,7 @@ export function PersonaWizard({
 
             <button
               onClick={handleSave}
-              className="flex items-center gap-2 px-6 py-3 rounded-lg bg-brand-accent/20 border border-brand-accent text-brand-accent hover:bg-brand-accent hover:text-white transition-colors"
+              className="flex items-center gap-2 px-6 py-3 rounded-lg bg-brand-accent/20 border border-brand-accent text-brand-accent hover:bg-brand-accent hover:text-brand-foreground transition-colors"
             >
               <Save className="w-4 h-4" />
               {BUTTON_LABELS.SAVE_DRAFT}
@@ -515,7 +515,7 @@ export function PersonaWizard({
             {!isLastStep ? (
               <button
                 onClick={handleNext}
-                className="flex items-center gap-2 px-6 py-3 rounded-lg bg-brand-accent text-white hover:bg-brand-accent/90 transition-colors"
+                className="flex items-center gap-2 px-6 py-3 rounded-lg bg-brand-accent text-brand-foreground hover:bg-brand-accent/90 transition-colors"
               >
                 {BUTTON_LABELS.NEXT}
                 <ChevronRight className="w-4 h-4" />
@@ -523,7 +523,7 @@ export function PersonaWizard({
             ) : (
               <button
                 onClick={handleSave}
-                className="flex items-center gap-2 px-6 py-3 rounded-lg bg-brand-accent text-white hover:bg-brand-accent/90 transition-colors"
+                className="flex items-center gap-2 px-6 py-3 rounded-lg bg-brand-accent text-brand-foreground hover:bg-brand-accent/90 transition-colors"
               >
                 <Save className="w-4 h-4" />
                 {BUTTON_LABELS.FINISH}

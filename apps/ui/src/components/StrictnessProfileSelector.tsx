@@ -109,12 +109,12 @@ export function StrictnessProfileSelector({
     <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm">
       <header className="mb-4">
         <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Validation Strictness</p>
-        <h3 className="text-lg font-semibold text-white">Select Profile</h3>
+        <h3 className="text-lg font-semibold text-brand-foreground">Select Profile</h3>
       </header>
 
       <div className="space-y-3">
         <div>
-          <p className="text-xs text-slate-400 mb-2">Built-in Profiles</p>
+          <p className="text-xs text-brand-outline mb-2">Built-in Profiles</p>
           <div className="grid gap-2 md:grid-cols-3">
             {BUILT_IN_PROFILES.map((profile) => (
               <button
@@ -128,10 +128,10 @@ export function StrictnessProfileSelector({
               >
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xl">{getProfileIcon(profile.name!)}</span>
-                  <span className="font-semibold text-white">{profile.name}</span>
+                  <span className="font-semibold text-brand-foreground">{profile.name}</span>
                 </div>
-                <p className="text-xs text-slate-300">{profile.description}</p>
-                <div className="mt-2 flex gap-2 text-[10px] text-slate-400">
+                <p className="text-xs text-brand-outline">{profile.description}</p>
+                <div className="mt-2 flex gap-2 text-[10px] text-brand-outline">
                   <span>Amb: {profile.ambiguityThreshold}</span>
                   <span>•</span>
                   <span>Cite: {profile.citationCutoff}</span>
@@ -145,7 +145,7 @@ export function StrictnessProfileSelector({
 
         {customProfiles.length > 0 && (
           <div>
-            <p className="text-xs text-slate-400 mb-2">Custom Profiles</p>
+            <p className="text-xs text-brand-outline mb-2">Custom Profiles</p>
             <div className="grid gap-2 md:grid-cols-3">
               {customProfiles.map((profile) => (
                 <button
@@ -159,12 +159,12 @@ export function StrictnessProfileSelector({
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xl">{getProfileIcon(profile.name)}</span>
-                    <span className="font-semibold text-white">{profile.name}</span>
+                    <span className="font-semibold text-brand-foreground">{profile.name}</span>
                   </div>
                   {profile.description && (
-                    <p className="text-xs text-slate-300">{profile.description}</p>
+                    <p className="text-xs text-brand-outline">{profile.description}</p>
                   )}
-                  <div className="mt-2 flex gap-2 text-[10px] text-slate-400">
+                  <div className="mt-2 flex gap-2 text-[10px] text-brand-outline">
                     <span>Amb: {profile.ambiguityThreshold}</span>
                     <span>•</span>
                     <span>Cite: {profile.citationCutoff}</span>
@@ -182,20 +182,20 @@ export function StrictnessProfileSelector({
             <p className="text-xs text-brand-accent font-semibold mb-2">Active Profile: {selected}</p>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
-                <span className="text-slate-400">Ambiguity Threshold:</span>
-                <span className="ml-2 text-white">{currentProfile.ambiguityThreshold}</span>
+                <span className="text-brand-outline">Ambiguity Threshold:</span>
+                <span className="ml-2 text-brand-foreground">{currentProfile.ambiguityThreshold}</span>
               </div>
               <div>
-                <span className="text-slate-400">Citation Cutoff:</span>
-                <span className="ml-2 text-white">{currentProfile.citationCutoff}</span>
+                <span className="text-brand-outline">Citation Cutoff:</span>
+                <span className="ml-2 text-brand-foreground">{currentProfile.citationCutoff}</span>
               </div>
               <div>
-                <span className="text-slate-400">Consistency:</span>
-                <span className="ml-2 text-white">{currentProfile.consistencyTolerance}</span>
+                <span className="text-brand-outline">Consistency:</span>
+                <span className="ml-2 text-brand-foreground">{currentProfile.consistencyTolerance}</span>
               </div>
               <div>
-                <span className="text-slate-400">Mangekyō:</span>
-                <span className="ml-2 text-white capitalize">{currentProfile.mangekyoStrictness}</span>
+                <span className="text-brand-outline">Mangekyō:</span>
+                <span className="ml-2 text-brand-foreground capitalize">{currentProfile.mangekyoStrictness}</span>
               </div>
             </div>
           </div>

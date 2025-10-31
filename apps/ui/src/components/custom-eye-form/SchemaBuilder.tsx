@@ -75,10 +75,10 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-white">{title}</h3>
+        <h3 className="text-lg font-semibold text-brand-foreground">{title}</h3>
         <button
           onClick={handleAddProperty}
-          className="flex items-center gap-2 rounded-lg bg-brand-accent px-4 py-2 text-sm font-medium text-white transition-all hover:bg-brand-accent/90 hover:scale-105 active:scale-95"
+          className="flex items-center gap-2 rounded-lg bg-brand-accent px-4 py-2 text-sm font-medium text-brand-foreground transition-all hover:bg-brand-accent/90 hover:scale-105 active:scale-95"
         >
           <Plus className="h-4 w-4" />
           Add Property
@@ -99,7 +99,7 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
               <div className="grid gap-4 md:grid-cols-12">
                 {/* Property Name */}
                 <div className="md:col-span-3">
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
+                  <label className="mb-1 block text-xs font-medium text-brand-outline">
                     Property Name
                   </label>
                   <input
@@ -107,13 +107,13 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
                     value={property.name}
                     onChange={(e) => handleUpdateProperty(index, 'name', e.target.value)}
                     placeholder={PLACEHOLDERS.NAME}
-                    className="w-full rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                    className="w-full rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                   />
                 </div>
 
                 {/* Property Type */}
                 <div className="md:col-span-2">
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
+                  <label className="mb-1 block text-xs font-medium text-brand-outline">
                     Type
                   </label>
                   <select
@@ -121,7 +121,7 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
                     onChange={(e) =>
                       handleUpdateProperty(index, 'type', e.target.value as SchemaProperty['type'])
                     }
-                    className="w-full rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-white focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                    className="w-full rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                   >
                     {Object.entries(TYPE_LABELS).map(([value, label]) => (
                       <option key={value} value={value}>
@@ -133,7 +133,7 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
 
                 {/* Description */}
                 <div className="md:col-span-5">
-                  <label className="mb-1 block text-xs font-medium text-slate-300">
+                  <label className="mb-1 block text-xs font-medium text-brand-outline">
                     Description
                   </label>
                   <input
@@ -141,7 +141,7 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
                     value={property.description}
                     onChange={(e) => handleUpdateProperty(index, 'description', e.target.value)}
                     placeholder="What is this property for?"
-                    className="w-full rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                    className="w-full rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                   />
                 </div>
 
@@ -154,7 +154,7 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
                       onChange={(e) => handleUpdateProperty(index, 'required', e.target.checked)}
                       className="h-4 w-4 rounded border-brand-outline/50 bg-brand-paper text-brand-accent focus:ring-2 focus:ring-brand-accent/40 focus:ring-offset-0"
                     />
-                    <span className="text-xs font-medium text-slate-300">Required</span>
+                    <span className="text-xs font-medium text-brand-outline">Required</span>
                   </label>
                   <button
                     onClick={() => handleRemoveProperty(index)}

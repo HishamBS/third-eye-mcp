@@ -26,7 +26,7 @@ export function EvidenceTab({ claims, events, latestDraft, byakuganEvents, novic
       <EvidenceLens draft={latestDraft} claims={claims} expertMode={!noviceMode} />
       {!noviceMode && <SessionMemoryPanel byakuganEvents={byakuganEvents} />}
       {noviceMode && events.length === 0 && (
-        <p className="text-xs text-slate-400">Evidence will appear as soon as the pipeline emits Byakugan or Tenseigan envelopes.</p>
+        <p className="text-xs text-brand-outline">Evidence will appear as soon as the pipeline emits Byakugan or Tenseigan envelopes.</p>
       )}
     </div>
   );

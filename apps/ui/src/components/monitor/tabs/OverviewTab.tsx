@@ -16,8 +16,8 @@ export function OverviewTab({ summary, sessionId, apiKey, latestPlanMd, loading 
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-surface-outline/40 bg-surface-raised/80 p-6 text-sm text-slate-200">
-        <h3 className="text-lg font-semibold text-white">Session Snapshot</h3>
+      <section className="rounded-2xl border border-surface-outline/40 bg-surface-raised/80 p-6 text-sm text-brand-outline">
+        <h3 className="text-lg font-semibold text-brand-foreground">Session Snapshot</h3>
         {showSkeleton ? (
           <div className="mt-4 space-y-3">
             <div className="h-4 w-32 animate-pulse rounded-full bg-slate-600/40" />
@@ -31,22 +31,22 @@ export function OverviewTab({ summary, sessionId, apiKey, latestPlanMd, loading 
             </div>
           </div>
         ) : summary ? (
-          <dl className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-xs text-slate-300">
+          <dl className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-xs text-brand-outline">
             <div>
               <dt>Status</dt>
-              <dd className="text-white">{summary.status ?? 'Unknown'}</dd>
+              <dd className="text-brand-foreground">{summary.status ?? 'Unknown'}</dd>
             </div>
             <div>
               <dt>Tenant</dt>
-              <dd className="text-white">{summary.tenant ?? '—'}</dd>
+              <dd className="text-brand-foreground">{summary.tenant ?? '—'}</dd>
             </div>
             <div>
               <dt>Dominant Provider</dt>
-              <dd className="text-white">{summary.hero_metrics?.dominant_provider ?? '—'}</dd>
+              <dd className="text-brand-foreground">{summary.hero_metrics?.dominant_provider ?? '—'}</dd>
             </div>
           </dl>
         ) : (
-          <p className="mt-2 text-xs text-slate-400">Summary data will appear once the stream is active.</p>
+          <p className="mt-2 text-xs text-brand-outline">Summary data will appear once the stream is active.</p>
         )}
       </section>
 

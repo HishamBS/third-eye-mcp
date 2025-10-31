@@ -172,19 +172,19 @@ export function PipelineCanvas() {
       {/* Toolbar (placeholder for Phase 10) */}
       <div className="absolute bottom-4 left-4 flex gap-2 p-2 bg-brand-paperElev border border-brand-outline rounded-lg shadow-lg">
         <button
-          className="px-4 py-2 bg-green-600 text-white rounded-md font-semibold text-sm cursor-pointer hover:bg-green-700 transition-colors"
+          className="px-4 py-2 bg-green-600 text-brand-foreground rounded-md font-semibold text-sm cursor-pointer hover:bg-green-700 transition-colors"
           onClick={() => console.log('Run pipeline (coming in Phase 10)')}
         >
           {PIPELINE_UI_TEXT.TOOLBAR_RUN}
         </button>
         <button
-          className="px-4 py-2 bg-brand-primary text-white rounded-md font-semibold text-sm cursor-pointer hover:bg-brand-primary/90 transition-colors"
+          className="px-4 py-2 bg-brand-primary text-brand-foreground rounded-md font-semibold text-sm cursor-pointer hover:bg-brand-primary/90 transition-colors"
           onClick={() => console.log('Auto-layout (coming in Phase 10)')}
         >
           {PIPELINE_UI_TEXT.TOOLBAR_AUTO_LAYOUT}
         </button>
         <button
-          className="px-4 py-2 bg-brand-accent text-white rounded-md font-semibold text-sm cursor-pointer hover:bg-brand-accent/90 transition-colors"
+          className="px-4 py-2 bg-brand-accent text-brand-foreground rounded-md font-semibold text-sm cursor-pointer hover:bg-brand-accent/90 transition-colors"
           onClick={() => console.log('Save pipeline (coming in Phase 10)')}
         >
           {PIPELINE_UI_TEXT.TOOLBAR_SAVE}

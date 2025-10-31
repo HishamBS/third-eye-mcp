@@ -57,11 +57,11 @@ export function SecurityBanner() {
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 dark:bg-red-700 text-white shadow-lg">
+    <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 dark:bg-red-700 text-brand-foreground shadow-lg">
       <div className="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between flex-wrap">
           <div className="flex items-center flex-1">
-            <AlertTriangle className="h-6 w-6 text-white mr-3 flex-shrink-0" />
+            <AlertTriangle className="h-6 w-6 text-brand-foreground mr-3 flex-shrink-0" />
             <p className="font-medium text-sm sm:text-base">
               <span className="font-bold">Security Warning:</span> Server is exposed on{' '}
               <code className="bg-red-800 dark:bg-red-900 px-2 py-0.5 rounded font-mono text-xs sm:text-sm">

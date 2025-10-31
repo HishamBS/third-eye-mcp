@@ -11,36 +11,6 @@
     --foreground: 248 248 242;
   }
 
-  [data-theme='overseer'] {
-    --brand-accent: 124 58 237;
-    --brand-accent-rgb: rgb(124 58 237);
-  }
-
-  [data-theme='midnight'] {
-    --brand-accent: 67 56 202;
-    --brand-accent-rgb: rgb(67 56 202);
-  }
-
-  [data-theme='ocean'] {
-    --brand-accent: 14 165 233;
-    --brand-accent-rgb: rgb(14 165 233);
-  }
-
-  [data-theme='forest'] {
-    --brand-accent: 34 197 94;
-    --brand-accent-rgb: rgb(34 197 94);
-  }
-
-  [data-theme='sunset'] {
-    --brand-accent: 251 146 60;
-    --brand-accent-rgb: rgb(251 146 60);
-  }
-
-  [data-theme='monochrome'] {
-    --brand-accent: 163 163 163;
-    --brand-accent-rgb: rgb(163 163 163);
-  }
-
   body {
     background-color: rgb(var(--color-paper));
     color: rgb(var(--color-foreground));

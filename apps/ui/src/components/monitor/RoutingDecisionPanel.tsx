@@ -42,7 +42,7 @@ function getStageBadgeClass(stage: EyeRouteStep['stage']): string {
     case 'both':
       return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
     default:
-      return 'bg-slate-500/20 text-slate-400 border-slate-500/30';
+      return 'bg-slate-500/20 text-brand-outline border-slate-500/30';
   }
 }
 

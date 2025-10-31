@@ -171,6 +171,26 @@ const config: Config = {
           '--color-outline': '209 213 219',
           '--color-foreground': '17 24 39',
         },
+
+        // Overseer Theme (Naruto/Sharingan Purple & Red) - Dark Mode (WCAG AAA)
+        ':root[data-theme="overseer"].dark': {
+          '--color-primary': '196 181 253', // violet-300 (9.67:1)
+          '--color-accent': '253 164 175', // rose-300 (9.44:1)
+          '--color-ink': '241 245 249', // slate-100 (16.30:1)
+          '--color-paper': '15 23 42', // slate-900
+          '--color-paper-elev': '30 41 59', // slate-800
+          '--color-outline': '216 180 254', // purple-300 (10.10:1)
+          '--color-foreground': '241 245 249',
+        },
+        ':root[data-theme="overseer"]:not(.dark)': {
+          '--color-primary': '91 33 182', // violet-800 (8.37:1)
+          '--color-accent': '136 19 55', // rose-900 (8.91:1)
+          '--color-ink': '17 24 39', // gray-900 (16.53:1)
+          '--color-paper': '250 245 255', // purple-50
+          '--color-paper-elev': '243 232 255', // purple-100
+          '--color-outline': '55 65 81', // gray-700 (9.61:1)
+          '--color-foreground': '17 24 39',
+        },
       })
     }
   ],

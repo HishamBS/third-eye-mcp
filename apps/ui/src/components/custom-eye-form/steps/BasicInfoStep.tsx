@@ -14,7 +14,7 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
   return (
     <div className="space-y-6">
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-300">
+        <label className="mb-2 block text-sm font-medium text-brand-outline">
           {FIELD_LABELS.NAME}
         </label>
         <input
@@ -25,13 +25,13 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
           }
           placeholder={PLACEHOLDERS.NAME}
           disabled={state.isEditing}
-          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50 disabled:cursor-not-allowed"
         />
-        <p className="mt-1 text-xs text-slate-400">{HELP_TEXT.NAME}</p>
+        <p className="mt-1 text-xs text-brand-outline">{HELP_TEXT.NAME}</p>
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-slate-300">
+        <label className="mb-2 block text-sm font-medium text-brand-outline">
           {FIELD_LABELS.DESCRIPTION}
         </label>
         <textarea
@@ -41,9 +41,9 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
           }
           placeholder={PLACEHOLDERS.DESCRIPTION}
           rows={4}
-          className="w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+          className="w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
         />
-        <p className="mt-1 text-xs text-slate-400">{HELP_TEXT.DESCRIPTION}</p>
+        <p className="mt-1 text-xs text-brand-outline">{HELP_TEXT.DESCRIPTION}</p>
       </div>
     </div>
   );

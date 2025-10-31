@@ -164,7 +164,7 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
           />
           <button
             onClick={handleAddCapability}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-accent text-white hover:bg-brand-accent/90 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-accent text-brand-foreground hover:bg-brand-accent/90 transition-colors"
           >
             <Plus className="w-4 h-4" />
             {ARRAY_ACTIONS.ADD}

@@ -156,13 +156,13 @@ export function DialogProvider() {
             >
               {/* Title */}
               {title && (
-                <h3 className="mb-4 text-xl font-semibold text-white">
+                <h3 className="mb-4 text-xl font-semibold text-brand-foreground">
                   {title}
                 </h3>
               )}
 
               {/* Message */}
-              <p className="mb-6 text-slate-300">
+              <p className="mb-6 text-brand-outline">
                 {message}
               </p>
 
@@ -173,7 +173,7 @@ export function DialogProvider() {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   autoFocus
-                  className="mb-6 w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                  className="mb-6 w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                   placeholder="Enter value..."
                 />
               )}
@@ -183,7 +183,7 @@ export function DialogProvider() {
                 {type !== 'alert' && (
                   <button
                     onClick={handleCancel}
-                    className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
+                    className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
                   >
                     {cancelText || 'Cancel'}
                   </button>
@@ -191,7 +191,7 @@ export function DialogProvider() {
                 <button
                   onClick={handleConfirm}
                   autoFocus={type !== 'prompt'}
-                  className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-accent/90 focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
+                  className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-accent/90 focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
                 >
                   {confirmText || 'OK'}
                 </button>

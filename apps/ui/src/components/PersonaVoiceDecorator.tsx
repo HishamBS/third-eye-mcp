@@ -133,9 +133,9 @@ export function PersonaVoiceDecorator({
                   <span className={`text-sm font-bold uppercase tracking-wider ${theme.accent}`}>
                     {activeEye}
                   </span>
-                  <span className="text-xs text-slate-400">Active</span>
+                  <span className="text-xs text-brand-outline">Active</span>
                 </div>
-                <p className="text-xs text-slate-400">{theme.voice}</p>
+                <p className="text-xs text-brand-outline">{theme.voice}</p>
               </div>
               <motion.div
                 animate={{ scale: [1, 1.2, 1] }}
@@ -193,7 +193,7 @@ export function PersonaVoiceDecorator({
                 className="absolute right-full mr-3 whitespace-nowrap rounded-lg border border-brand-outline/40 bg-brand-paper px-3 py-2 text-xs shadow-lg"
               >
                 <span className={`font-semibold uppercase ${theme.accent}`}>{activeEye}</span>
-                <span className="ml-2 text-slate-400">is active</span>
+                <span className="ml-2 text-brand-outline">is active</span>
               </motion.div>
             </motion.div>
           </motion.div>

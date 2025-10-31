@@ -70,7 +70,7 @@ export default function EyeCard({ state, onClick }: EyeCardProps) {
     ? 'text-emerald-400' 
     : state.ok === false 
     ? 'text-rose-400' 
-    : 'text-slate-400';
+    : 'text-brand-outline';
 
   return (
     <motion.button
@@ -97,12 +97,12 @@ export default function EyeCard({ state, onClick }: EyeCardProps) {
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-white truncate">{label}</h3>
+          <h3 className="text-sm font-semibold text-brand-foreground truncate">{label}</h3>
           <p className={clsx('text-xs font-medium mt-1', statusColor)}>
             {state.code || (state.ok === true ? 'Approved' : state.ok === false ? 'Blocked' : 'Pending')}
           </p>
           {state.ts && (
-            <p className="text-[10px] text-slate-500 mt-1">
+            <p className="text-[10px] text-brand-outline mt-1">
               {new Date(state.ts).toLocaleTimeString()}
             </p>
           )}

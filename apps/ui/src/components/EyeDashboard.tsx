@@ -92,7 +92,7 @@ function getStatusChip(status: EyeStatus['status']) {
       return (
         <div className="flex items-center gap-2 rounded-full bg-slate-500/20 border border-slate-500/40 px-3 py-1">
           <div className="h-2 w-2 rounded-full bg-slate-400" />
-          <span className="text-xs font-medium text-slate-300">Idle</span>
+          <span className="text-xs font-medium text-brand-outline">Idle</span>
         </div>
       );
   }
@@ -160,14 +160,14 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
       {/* Dashboard Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white">Eye Dashboard</h2>
-          <p className="mt-1 text-sm text-slate-400">
+          <h2 className="text-2xl font-bold text-brand-foreground">Eye Dashboard</h2>
+          <p className="mt-1 text-sm text-brand-outline">
             Real-time status of all 7 Eyes {sessionId && `for session ${sessionId}`}
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-full border border-brand-outline/40 bg-brand-paper/60 px-4 py-2">
           <Activity className="h-4 w-4 text-brand-accent" />
-          <span className="text-sm text-slate-300">
+          <span className="text-sm text-brand-outline">
             {eyeStatuses.filter((e) => e.status === 'running').length} active
           </span>
         </div>
@@ -219,7 +219,7 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
                   >
                     <Icon
                       className={`h-6 w-6 ${
-                        isActive ? `text-${config.color}-400` : 'text-slate-400'
+                        isActive ? `text-${config.color}-400` : 'text-brand-outline'
                       }`}
                     />
                   </div>
@@ -228,34 +228,34 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
 
                 {/* Eye Name & Description */}
                 <div className="mb-4">
-                  <h3 className="text-lg font-bold capitalize text-white">{eyeName}</h3>
-                  <p className="mt-1 text-xs text-slate-400">{config.description}</p>
+                  <h3 className="text-lg font-bold capitalize text-brand-foreground">{eyeName}</h3>
+                  <p className="mt-1 text-xs text-brand-outline">{config.description}</p>
                 </div>
 
                 {/* Current Task */}
                 {eyeStatus.currentTask && (
                   <div className="mb-4 rounded-lg border border-brand-outline/30 bg-brand-ink/40 p-2">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-brand-outline">
                       Current Task
                     </p>
-                    <p className="mt-1 text-xs text-slate-300 line-clamp-2">{eyeStatus.currentTask}</p>
+                    <p className="mt-1 text-xs text-brand-outline line-clamp-2">{eyeStatus.currentTask}</p>
                   </div>
                 )}
 
                 {/* Metrics */}
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div className="rounded-lg bg-brand-ink/40 p-2">
-                    <p className="text-slate-500">Runs</p>
-                    <p className="mt-1 font-semibold text-white">{eyeStatus.totalRuns}</p>
+                    <p className="text-brand-outline">Runs</p>
+                    <p className="mt-1 font-semibold text-brand-foreground">{eyeStatus.totalRuns}</p>
                   </div>
                   <div className="rounded-lg bg-brand-ink/40 p-2">
-                    <p className="text-slate-500">Success</p>
+                    <p className="text-brand-outline">Success</p>
                     <p className="mt-1 font-semibold text-emerald-400">
                       {eyeStatus.successRate.toFixed(1)}%
                     </p>
                   </div>
                   <div className="col-span-2 rounded-lg bg-brand-ink/40 p-2">
-                    <p className="text-slate-500">Avg Latency</p>
+                    <p className="text-brand-outline">Avg Latency</p>
                     <p className="mt-1 font-semibold text-blue-400">{eyeStatus.avgLatency.toFixed(0)}ms</p>
                   </div>
                 </div>
@@ -263,7 +263,7 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
                 {/* Last Run */}
                 {eyeStatus.lastRun && (
                   <div className="mt-3 border-t border-brand-outline/30 pt-3 text-center">
-                    <p className="text-[10px] text-slate-500">
+                    <p className="text-[10px] text-brand-outline">
                       Last run: {new Date(eyeStatus.lastRun).toLocaleTimeString()}
                     </p>
                   </div>
@@ -277,13 +277,13 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
       {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/60 p-4">
-          <p className="text-xs uppercase tracking-wider text-slate-400">Total Runs</p>
-          <p className="mt-2 text-2xl font-bold text-white">
+          <p className="text-xs uppercase tracking-wider text-brand-outline">Total Runs</p>
+          <p className="mt-2 text-2xl font-bold text-brand-foreground">
             {eyeStatuses.reduce((sum, eye) => sum + eye.totalRuns, 0)}
           </p>
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/60 p-4">
-          <p className="text-xs uppercase tracking-wider text-slate-400">Avg Success Rate</p>
+          <p className="text-xs uppercase tracking-wider text-brand-outline">Avg Success Rate</p>
           <p className="mt-2 text-2xl font-bold text-emerald-400">
             {eyeStatuses.length > 0
               ? (
@@ -294,14 +294,14 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
           </p>
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/60 p-4">
-          <p className="text-xs uppercase tracking-wider text-slate-400">Active Eyes</p>
+          <p className="text-xs uppercase tracking-wider text-brand-outline">Active Eyes</p>
           <p className="mt-2 text-2xl font-bold text-blue-400">
             {eyeStatuses.filter((e) => e.status === 'running').length} / {eyeStatuses.length}
           </p>
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/60 p-4">
-          <p className="text-xs uppercase tracking-wider text-slate-400">Avg Latency</p>
-          <p className="mt-2 text-2xl font-bold text-slate-200">
+          <p className="text-xs uppercase tracking-wider text-brand-outline">Avg Latency</p>
+          <p className="mt-2 text-2xl font-bold text-brand-outline">
             {eyeStatuses.length > 0
               ? (
                   eyeStatuses.reduce((sum, eye) => sum + eye.avgLatency, 0) / eyeStatuses.length

@@ -66,16 +66,16 @@ export function PipelineTemplateSelector({
         {/* Header */}
         <div className="mb-6 flex items-start justify-between">
           <div>
-            <h2 id="template-selector-title" className="text-2xl font-bold text-white">
+            <h2 id="template-selector-title" className="text-2xl font-bold text-brand-foreground">
               {TEMPLATE_TEXT.SELECTOR_TITLE}
             </h2>
-            <p id="template-selector-description" className="mt-1 text-sm text-slate-400">
+            <p id="template-selector-description" className="mt-1 text-sm text-brand-outline">
               {TEMPLATE_TEXT.SELECTOR_SUBTITLE}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-2 text-slate-400 hover:bg-brand-outline/20 hover:text-white transition-colors"
+            className="rounded-lg p-2 text-brand-outline hover:bg-brand-outline/20 hover:text-brand-foreground transition-colors"
             aria-label={ARIA_LABELS.CLOSE_TEMPLATE_SELECTOR}
           >
             <X className="h-5 w-5" />
@@ -92,9 +92,9 @@ export function PipelineTemplateSelector({
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-white">{template.name}</h3>
-                  <p className="mt-1 text-sm text-slate-400">{template.description}</p>
-                  <div className="mt-3 flex items-center gap-4 text-xs text-slate-500">
+                  <h3 className="text-lg font-semibold text-brand-foreground">{template.name}</h3>
+                  <p className="mt-1 text-sm text-brand-outline">{template.description}</p>
+                  <div className="mt-3 flex items-center gap-4 text-xs text-brand-outline">
                     <span>{template.nodes.length} Eyes</span>
                     <span>{template.edges.length} Connections</span>
                   </div>
@@ -111,7 +111,7 @@ export function PipelineTemplateSelector({
         <div className="mt-6 flex justify-end">
           <button
             onClick={onClose}
-            className="rounded-lg border border-brand-outline px-5 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-brand-outline/20"
+            className="rounded-lg border border-brand-outline px-5 py-2 text-sm font-medium text-brand-outline transition-colors hover:bg-brand-outline/20"
           >
             {TEMPLATE_TEXT.CANCEL_BUTTON}
           </button>

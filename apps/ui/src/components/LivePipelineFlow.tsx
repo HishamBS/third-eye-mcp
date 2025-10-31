@@ -209,7 +209,7 @@ export function LivePipelineFlow({ sessionId, initialEvents = [] }: LivePipeline
         <div className={`flex items-center space-x-2 rounded-full px-3 py-1 text-xs font-medium ${
           isConnected
             ? 'bg-green-500/20 text-green-400 border border-green-500/40'
-            : 'bg-gray-500/20 text-gray-400 border border-gray-500/40'
+            : 'bg-brand-paper0/20 text-brand-outline border border-gray-500/40'
         }`}>
           <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-gray-400'}`} />
           <span>{isConnected ? 'Live' : 'Disconnected'}</span>
@@ -225,7 +225,7 @@ export function LivePipelineFlow({ sessionId, initialEvents = [] }: LivePipeline
 
       {/* Event Feed */}
       <div className="mt-4 max-h-64 overflow-y-auto rounded-lg bg-brand-paper/50 p-4">
-        <h3 className="mb-2 text-sm font-semibold text-slate-300">Event Feed</h3>
+        <h3 className="mb-2 text-sm font-semibold text-brand-outline">Event Feed</h3>
         <div className="space-y-2">
           {events.slice(-10).reverse().map((event, index) => (
             <div
@@ -239,19 +239,19 @@ export function LivePipelineFlow({ sessionId, initialEvents = [] }: LivePipeline
               }`} />
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-slate-200">{event.eye || 'System'}</span>
-                  <span className="text-slate-500">
+                  <span className="font-medium text-brand-outline">{event.eye || 'System'}</span>
+                  <span className="text-brand-outline">
                     {new Date(event.createdAt || Date.now()).toLocaleTimeString()}
                   </span>
                 </div>
-                <p className="mt-1 text-slate-400">
+                <p className="mt-1 text-brand-outline">
                   {event.code || event.type}: {event.md || event.message || 'Event received'}
                 </p>
               </div>
             </div>
           ))}
           {events.length === 0 && (
-            <p className="text-center text-slate-500">No events yet. Waiting for pipeline activity...</p>
+            <p className="text-center text-brand-outline">No events yet. Waiting for pipeline activity...</p>
           )}
         </div>
       </div>

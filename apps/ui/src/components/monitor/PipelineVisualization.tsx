@@ -157,8 +157,8 @@ export function PipelineVisualization({ sessionId, events, isLive = false }: Pip
       {/* Session Info */}
       <div className="absolute top-4 left-4 z-10">
         <div className="rounded-lg bg-brand-paper/80 px-3 py-2 backdrop-blur-sm">
-          <p className="text-xs font-medium text-slate-300">Session: {sessionId}</p>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs font-medium text-brand-outline">Session: {sessionId}</p>
+          <p className="text-xs text-brand-outline">
             Active Eyes: {currentFlow.length} |
             {isLive && <span className="ml-2 inline-flex items-center">
               <div className="mr-1 h-2 w-2 animate-pulse rounded-full bg-green-400"></div>
@@ -259,7 +259,7 @@ export function PipelineVisualization({ sessionId, events, isLive = false }: Pip
                 {/* Confidence Indicator */}
                 {status.confidence !== undefined && (
                   <div
-                    className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-xs font-bold text-gray-800"
+                    className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-xs font-bold text-brand-foreground"
                     title={`Confidence: ${status.confidence}%`}
                   >
                     {Math.round(status.confidence)}
@@ -268,18 +268,18 @@ export function PipelineVisualization({ sessionId, events, isLive = false }: Pip
               </div>
 
               {/* Eye Name Label */}
-              <div className="absolute top-14 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black/80 px-2 py-1 text-xs text-white">
+              <div className="absolute top-14 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black/80 px-2 py-1 text-xs text-brand-foreground">
                 {eyeName}
               </div>
 
               {/* Tooltip on Hover */}
-              <div className="absolute bottom-16 left-1/2 z-20 hidden -translate-x-1/2 rounded-lg bg-black/90 px-3 py-2 text-xs text-white shadow-xl hover:block group-hover:block">
+              <div className="absolute bottom-16 left-1/2 z-20 hidden -translate-x-1/2 rounded-lg bg-black/90 px-3 py-2 text-xs text-brand-foreground shadow-xl hover:block group-hover:block">
                 <p className="font-semibold">{eyeName}</p>
-                <p className="text-slate-300">Status: {status.status}</p>
-                {status.verdict && <p className="text-slate-300">Verdict: {status.verdict}</p>}
-                {status.latency && <p className="text-slate-300">Latency: {status.latency}ms</p>}
+                <p className="text-brand-outline">Status: {status.status}</p>
+                {status.verdict && <p className="text-brand-outline">Verdict: {status.verdict}</p>}
+                {status.latency && <p className="text-brand-outline">Latency: {status.latency}ms</p>}
                 {status.output && (
-                  <p className="mt-1 max-w-xs truncate text-slate-400">
+                  <p className="mt-1 max-w-xs truncate text-brand-outline">
                     {status.output}
                   </p>
                 )}
@@ -294,20 +294,20 @@ export function PipelineVisualization({ sessionId, events, isLive = false }: Pip
         <div className="rounded-lg bg-brand-paper/80 px-3 py-2 backdrop-blur-sm">
           <div className="flex space-x-4 text-xs">
             <div className="flex items-center space-x-1">
-              <div className="h-2 w-2 rounded-full bg-gray-500"></div>
-              <span className="text-slate-400">Idle</span>
+              <div className="h-2 w-2 rounded-full bg-brand-paper0"></div>
+              <span className="text-brand-outline">Idle</span>
             </div>
             <div className="flex items-center space-x-1">
               <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-              <span className="text-slate-400">Running</span>
+              <span className="text-brand-outline">Running</span>
             </div>
             <div className="flex items-center space-x-1">
               <div className="h-2 w-2 rounded-full bg-green-500"></div>
-              <span className="text-slate-400">Approved</span>
+              <span className="text-brand-outline">Approved</span>
             </div>
             <div className="flex items-center space-x-1">
               <div className="h-2 w-2 rounded-full bg-red-500"></div>
-              <span className="text-slate-400">Rejected</span>
+              <span className="text-brand-outline">Rejected</span>
             </div>
           </div>
         </div>

@@ -1,32 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { type ThemeName, THEME_METADATA, DEFAULT_THEME } from '@third-eye/theme';
+import { useState } from 'react';
+import { type ThemeName, THEME_METADATA } from '@third-eye/theme';
 import { useUI } from '@/contexts/UIContext';
-import { STORAGE_KEYS } from '@/constants/storage';
 import { ARIA_LABELS } from '@/constants/accessibility';
 
 export function ThemeSwitcher() {
-  const { darkMode, setDarkMode } = useUI();
-  const [theme, setTheme] = useState<ThemeName>(DEFAULT_THEME);
+  const { theme, setTheme, darkMode, setDarkMode } = useUI();
   const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    // Load theme from localStorage
-    const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) as ThemeName | null;
-
-    if (savedTheme && THEME_METADATA.some(t => t.value === savedTheme)) {
-      setTheme(savedTheme);
-    }
-  }, []);
-
-  useEffect(() => {
-    // Apply theme to document
-    document.documentElement.setAttribute('data-theme', theme);
-
-    // Save to localStorage
-    localStorage.setItem(STORAGE_KEYS.THEME, theme);
-  }, [theme]);
 
   const selectTheme = (newTheme: ThemeName) => {
     setTheme(newTheme);
@@ -36,11 +17,11 @@ export function ThemeSwitcher() {
   const currentTheme = THEME_METADATA.find(t => t.value === theme)!;
 
   return (
-    <div className="flex items-center gap-2 shrink-0">
+    <div className="flex items-center gap-4 shrink-0">
       {/* Theme Button */}
       <div className="relative">
         <button
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
           className="flex items-center gap-2 rounded-full border border-brand-outline/50 bg-brand-paper px-3 py-1.5 text-sm transition-colors hover:border-brand-accent hover:bg-brand-paperElev whitespace-nowrap"
           aria-label={`Switch theme, current: ${currentTheme.label}`}
           aria-expanded={isOpen}
@@ -51,9 +32,9 @@ export function ThemeSwitcher() {
             style={{ backgroundColor: currentTheme.color }}
             aria-hidden="true"
           />
-          <span className="text-white">{currentTheme.label}</span>
+          <span className="text-brand-foreground">{currentTheme.label}</span>
           <svg
-            className="h-4 w-4 text-slate-400 shrink-0"
+            className="h-4 w-4 text-brand-outline shrink-0"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -79,7 +60,7 @@ export function ThemeSwitcher() {
               aria-label="Theme options"
             >
               <div className="p-2">
-                <div className="mb-2 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <div className="mb-2 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-outline">
                   Select Theme
                 </div>
                 {THEME_METADATA.map((t) => (
@@ -88,8 +69,8 @@ export function ThemeSwitcher() {
                     onClick={() => selectTheme(t.value)}
                     className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                       theme === t.value
-                        ? 'bg-brand-accent text-white'
-                        : 'text-slate-300 hover:bg-brand-paperElev hover:text-white'
+                        ? 'bg-brand-accent text-brand-foreground'
+                        : 'text-brand-outline hover:bg-brand-paperElev hover:text-brand-foreground'
                     }`}
                     role="menuitem"
                     aria-label={`Select ${t.label} theme`}
@@ -121,7 +102,7 @@ export function ThemeSwitcher() {
 
       {/* Mode Toggle */}
       <button
-        onClick={() => setDarkMode(!darkMode)}
+        onClick={(e) => { e.stopPropagation(); setDarkMode(!darkMode); }}
         className="rounded-full border border-brand-outline/50 bg-brand-paper p-1.5 transition-colors hover:border-brand-accent hover:bg-brand-paperElev shrink-0"
         aria-label={ARIA_LABELS.TOGGLE_THEME}
         title={`Switch to ${darkMode ? 'light' : 'dark'} mode`}

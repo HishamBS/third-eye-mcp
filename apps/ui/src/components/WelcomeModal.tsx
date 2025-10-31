@@ -114,7 +114,7 @@ export function WelcomeModal() {
             {/* Close button */}
             <button
               onClick={handleClose}
-              className="absolute top-4 right-4 rounded-lg p-2 text-slate-400 hover:text-white hover:bg-brand-outline/20 transition-colors z-10"
+              className="absolute top-4 right-4 rounded-lg p-2 text-brand-outline hover:text-brand-foreground hover:bg-brand-outline/20 transition-colors z-10"
               aria-label={ARIA_LABELS.CLOSE_WELCOME}
             >
               <X className="h-5 w-5" />
@@ -145,13 +145,13 @@ export function WelcomeModal() {
               >
                 <h2
                   id="welcome-modal-title"
-                  className="text-2xl font-bold text-white mb-4"
+                  className="text-2xl font-bold text-brand-foreground mb-4"
                 >
                   {currentStepData.title}
                 </h2>
                 <p
                   id="welcome-modal-description"
-                  className="text-base text-slate-300 leading-relaxed max-w-xl mx-auto"
+                  className="text-base text-brand-outline leading-relaxed max-w-xl mx-auto"
                 >
                   {currentStepData.description}
                 </p>
@@ -185,7 +185,7 @@ export function WelcomeModal() {
               <div className="flex items-center justify-between">
                 <button
                   onClick={handleSkip}
-                  className="text-sm text-slate-400 hover:text-white transition-colors"
+                  className="text-sm text-brand-outline hover:text-brand-foreground transition-colors"
                 >
                   Skip tour
                 </button>
@@ -194,7 +194,7 @@ export function WelcomeModal() {
                   {currentStep > 0 && (
                     <button
                       onClick={handlePrev}
-                      className="flex items-center gap-2 rounded-lg bg-brand-outline/20 px-4 py-2 text-sm font-medium text-white hover:bg-brand-outline/30 transition-colors"
+                      className="flex items-center gap-2 rounded-lg bg-brand-outline/20 px-4 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-outline/30 transition-colors"
                       aria-label={ARIA_LABELS.PREVIOUS_STEP}
                     >
                       <ArrowLeft className="h-4 w-4" />
@@ -204,7 +204,7 @@ export function WelcomeModal() {
 
                   <button
                     onClick={handleNext}
-                    className="flex items-center gap-2 rounded-lg bg-brand-accent px-6 py-2 text-sm font-medium text-white hover:bg-brand-primary transition-colors"
+                    className="flex items-center gap-2 rounded-lg bg-brand-accent px-6 py-2 text-sm font-medium text-brand-foreground hover:bg-brand-primary transition-colors"
                     aria-label={
                       currentStep < WELCOME_STEPS.length - 1
                         ? ARIA_LABELS.NEXT_STEP
@@ -231,7 +231,7 @@ export function WelcomeModal() {
                     onChange={(e) => setNeverShow(e.target.checked)}
                     className="h-4 w-4 rounded border-brand-outline/50 bg-brand-ink text-brand-accent focus:ring-brand-accent focus:ring-offset-brand-ink"
                   />
-                  <label htmlFor="never-show" className="text-sm text-slate-400 cursor-pointer">
+                  <label htmlFor="never-show" className="text-sm text-brand-outline cursor-pointer">
                     Don&apos;t show this again
                   </label>
                 </motion.div>

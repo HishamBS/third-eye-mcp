@@ -19,6 +19,7 @@
     "@fontsource-variable/inter": "^5.2.8",
     "@fontsource/geist-mono": "^5.2.7",
     "@third-eye/core": "workspace:*",
+    "@third-eye/theme": "workspace:*",
     "@third-eye/types": "workspace:*",
     "@third-eye/utils": "workspace:*",
     "@types/dagre": "^0.7.53",

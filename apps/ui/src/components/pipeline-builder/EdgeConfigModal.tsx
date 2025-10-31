@@ -243,7 +243,7 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
         <div className="flex items-center justify-between px-6 py-4 border-t border-brand-outline">
           <button
             onClick={handleDelete}
-            className="px-4 py-2 bg-red-600 text-white rounded-md font-medium text-sm hover:bg-red-700 transition-colors"
+            className="px-4 py-2 bg-red-600 text-brand-foreground rounded-md font-medium text-sm hover:bg-red-700 transition-colors"
           >
             {EDGE_TEXT.DELETE}
           </button>
@@ -256,7 +256,7 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
             </button>
             <button
               onClick={handleSave}
-              className="px-4 py-2 bg-brand-primary text-white rounded-md font-medium text-sm hover:bg-brand-primary/90 transition-colors"
+              className="px-4 py-2 bg-brand-primary text-brand-foreground rounded-md font-medium text-sm hover:bg-brand-primary/90 transition-colors"
             >
               {EDGE_TEXT.SAVE}
             </button>

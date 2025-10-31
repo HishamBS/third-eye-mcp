@@ -17,7 +17,7 @@ function sessionStatusTone(status: SessionOverview['status']): string {
     case 'blocked':
       return 'bg-rose-500/20 text-rose-200 border border-rose-400/40';
     default:
-      return 'bg-slate-500/20 text-slate-200 border border-slate-400/30';
+      return 'bg-slate-500/20 text-brand-outline border border-slate-400/30';
   }
 }
 
@@ -124,12 +124,12 @@ export function SessionHeader({
   };
 
   return (
-    <section className="rounded-2xl border border-brand-outline/60 bg-brand-paperElev/80 px-6 py-6 text-sm text-slate-200 shadow-glass md:px-8 md:py-7">
+    <section className="rounded-2xl border border-brand-outline/60 bg-brand-paperElev/80 px-6 py-6 text-sm text-brand-outline shadow-glass md:px-8 md:py-7">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.32em] text-brand-accent">Session Controls</p>
-          <h1 className="text-2xl font-semibold text-white">Truth Monitor</h1>
-          <p className="mt-2 text-sm text-slate-400">
+          <h1 className="text-2xl font-semibold text-brand-foreground">Truth Monitor</h1>
+          <p className="mt-2 text-sm text-brand-outline">
             Connect to a live Overseer session to stream Eye envelopes in real time. API keys are never stored remotely; they live in your browser storage only.
           </p>
         </div>
@@ -138,7 +138,7 @@ export function SessionHeader({
             {connected ? 'Realtime Connected' : 'Disconnected'}
           </span>
           {connectionAttempts > 0 && (
-            <span className="text-slate-400">Retries: {connectionAttempts}</span>
+            <span className="text-brand-outline">Retries: {connectionAttempts}</span>
           )}
         </div>
       </header>
@@ -151,7 +151,7 @@ export function SessionHeader({
         }}
       >
         <div className="flex flex-col gap-2">
-          <label className="text-xs uppercase tracking-[0.2em] text-slate-400" htmlFor="session-selector">
+          <label className="text-xs uppercase tracking-[0.2em] text-brand-outline" htmlFor="session-selector">
             Session
           </label>
           <div className="flex flex-col gap-2">
@@ -170,7 +170,7 @@ export function SessionHeader({
                     }
                   }}
                   disabled={sessionsLoading || !sortedSessions.length}
-                  className="flex-1 rounded-xl border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-slate-100 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-60"
+                  className="flex-1 rounded-xl border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-60"
                 >
                   {sortedSessions.length ? (
                     sortedSessions.map((item) => (
@@ -194,9 +194,9 @@ export function SessionHeader({
             )}
             {sessionsError && <p className="text-xs text-rose-300">{sessionsError}</p>}
             {sessionMeta && !showSessionSkeleton && (
-              <dl className="grid gap-3 rounded-xl border border-brand-outline/40 bg-brand-paper/70 px-3 py-2 text-xs text-slate-300 sm:grid-cols-3">
+              <dl className="grid gap-3 rounded-xl border border-brand-outline/40 bg-brand-paper/70 px-3 py-2 text-xs text-brand-outline sm:grid-cols-3">
                 <div>
-                  <dt className="uppercase tracking-[0.2em] text-slate-500">Status</dt>
+                  <dt className="uppercase tracking-[0.2em] text-brand-outline">Status</dt>
                   <dd>
                     <span className={clsx('inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold', sessionStatusTone(sessionMeta.status))}>
                       {sessionStatusLabel(sessionMeta.status)}
@@ -204,24 +204,24 @@ export function SessionHeader({
                   </dd>
                 </div>
                 <div>
-                  <dt className="uppercase tracking-[0.2em] text-slate-500">Tenant</dt>
-                  <dd className="mt-1 text-slate-200">{sessionMeta.tenant ?? '—'}</dd>
+                  <dt className="uppercase tracking-[0.2em] text-brand-outline">Tenant</dt>
+                  <dd className="mt-1 text-brand-outline">{sessionMeta.tenant ?? '—'}</dd>
                 </div>
                 <div>
-                  <dt className="uppercase tracking-[0.2em] text-slate-500">Last activity</dt>
-                  <dd className="mt-1 text-slate-200">{formatTimestamp(sessionMeta.last_event_at ?? sessionMeta.created_at)}</dd>
+                  <dt className="uppercase tracking-[0.2em] text-brand-outline">Last activity</dt>
+                  <dd className="mt-1 text-brand-outline">{formatTimestamp(sessionMeta.last_event_at ?? sessionMeta.created_at)}</dd>
                 </div>
               </dl>
             )}
           </div>
         </div>
         <label className="flex flex-col gap-2">
-          <span className="text-xs uppercase tracking-[0.2em] text-slate-400">API Key</span>
+          <span className="text-xs uppercase tracking-[0.2em] text-brand-outline">API Key</span>
           <input
             value={apiKey}
             required
             onChange={(event) => onApiKeyChange(event.target.value)}
-            className="rounded-xl border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-slate-100 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+            className="rounded-xl border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
             placeholder="Paste bearer token"
             aria-label="API key"
             autoComplete="off"
@@ -239,7 +239,7 @@ export function SessionHeader({
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
         <div className="flex flex-col gap-3 rounded-xl border border-brand-outline/40 bg-brand-paper/80 p-4">
-          <h3 className="text-sm font-semibold text-white">User Modes</h3>
+          <h3 className="text-sm font-semibold text-brand-foreground">User Modes</h3>
           <div className="flex items-center justify-between">
             <span>Novice mode</span>
             <input
@@ -273,13 +273,13 @@ export function SessionHeader({
         </div>
 
         <form className="rounded-xl border border-brand-outline/40 bg-brand-paper/80 p-4" onSubmit={handleSettingsSubmit}>
-          <h3 className="text-sm font-semibold text-white">Session Settings</h3>
-          <p className="mt-1 text-xs text-slate-400">Tune Overseer strictness per session.</p>
+          <h3 className="text-sm font-semibold text-brand-foreground">Session Settings</h3>
+          <p className="mt-1 text-xs text-brand-outline">Tune Overseer strictness per session.</p>
 
-          <label className="mt-3 flex flex-col gap-2 text-xs text-slate-400">
+          <label className="mt-3 flex flex-col gap-2 text-xs text-brand-outline">
             Strictness profile
             <select
-              className="rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-slate-100 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+              className="rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
               defaultValue="choose"
               onChange={async (event) => {
                 const value = event.target.value as 'choose' | 'casual' | 'enterprise' | 'security';
@@ -354,7 +354,7 @@ export function SessionHeader({
             <select
               value={draftSettings.mangekyo ?? 'normal'}
               onChange={(event) => setDraftSettings((prev) => ({ ...prev, mangekyo: event.target.value }))}
-              className="rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-slate-100 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+              className="rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
             >
               <option value="lenient">Lenient</option>
               <option value="normal">Normal</option>
@@ -369,12 +369,12 @@ export function SessionHeader({
           >
             {settingsSaving ? 'Saving…' : 'Save settings'}
           </button>
-          {feedback && <p className="mt-2 text-xs text-slate-400">{feedback}</p>}
+          {feedback && <p className="mt-2 text-xs text-brand-outline">{feedback}</p>}
         </form>
 
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/80 p-4">
-          <h3 className="text-sm font-semibold text-white">Legend</h3>
-          <ul className="mt-2 space-y-2 text-xs text-slate-400">
+          <h3 className="text-sm font-semibold text-brand-foreground">Legend</h3>
+          <ul className="mt-2 space-y-2 text-xs text-brand-outline">
             <li>✅ Green chip — Eye approved; proceed.</li>
             <li>🟥 Red chip — Blocked; open drawer for issues & fixes.</li>
             <li>🟡 Amber chip — Awaiting response or pending clarifications.</li>

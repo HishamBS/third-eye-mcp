@@ -23,7 +23,7 @@ export function StrictnessControls() {
     <div className="space-y-6">
       {/* Preset Profiles */}
       <div>
-        <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
+        <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-brand-foreground">
           <Shield className="h-5 w-5 text-brand-accent" />
           Strictness Profiles
         </h3>
@@ -36,12 +36,12 @@ export function StrictnessControls() {
           >
             <div className="mb-3 flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-emerald-400" />
-              <h4 className="font-semibold text-white">Casual</h4>
+              <h4 className="font-semibold text-brand-foreground">Casual</h4>
             </div>
-            <p className="mb-4 text-sm text-slate-300">
+            <p className="mb-4 text-sm text-brand-outline">
               Relaxed validation for quick iterations and brainstorming.
             </p>
-            <div className="space-y-1 text-xs text-slate-400">
+            <div className="space-y-1 text-xs text-brand-outline">
               <p>• Ambiguity: {casual.ambiguityThreshold}/100</p>
               <p>• Citation: {casual.citationCutoff}%</p>
               <p>• Code Review: {casual.mangekyoStrictness}%</p>
@@ -55,12 +55,12 @@ export function StrictnessControls() {
           >
             <div className="mb-3 flex items-center gap-2">
               <Shield className="h-5 w-5 text-blue-400" />
-              <h4 className="font-semibold text-white">Enterprise</h4>
+              <h4 className="font-semibold text-brand-foreground">Enterprise</h4>
             </div>
-            <p className="mb-4 text-sm text-slate-300">
+            <p className="mb-4 text-sm text-brand-outline">
               Balanced validation for production-grade work.
             </p>
-            <div className="space-y-1 text-xs text-slate-400">
+            <div className="space-y-1 text-xs text-brand-outline">
               <p>• Ambiguity: {enterprise.ambiguityThreshold}/100</p>
               <p>• Citation: {enterprise.citationCutoff}%</p>
               <p>• Code Review: {enterprise.mangekyoStrictness}%</p>
@@ -74,12 +74,12 @@ export function StrictnessControls() {
           >
             <div className="mb-3 flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-400" />
-              <h4 className="font-semibold text-white">Security</h4>
+              <h4 className="font-semibold text-brand-foreground">Security</h4>
             </div>
-            <p className="mb-4 text-sm text-slate-300">
+            <p className="mb-4 text-sm text-brand-outline">
               Maximum validation for security-critical code.
             </p>
-            <div className="space-y-1 text-xs text-slate-400">
+            <div className="space-y-1 text-xs text-brand-outline">
               <p>• Ambiguity: {security.ambiguityThreshold}/100</p>
               <p>• Citation: {security.citationCutoff}%</p>
               <p>• Code Review: {security.mangekyoStrictness}%</p>
@@ -94,11 +94,11 @@ export function StrictnessControls() {
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="mb-4 flex w-full items-center justify-between text-left"
         >
-          <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
+          <h3 className="flex items-center gap-2 text-lg font-semibold text-brand-foreground">
             <Sliders className="h-5 w-5 text-brand-accent" />
             Advanced Settings
           </h3>
-          <span className="text-sm text-slate-400">
+          <span className="text-sm text-brand-outline">
             {showAdvanced ? 'Hide' : 'Show'}
           </span>
         </button>
@@ -108,7 +108,7 @@ export function StrictnessControls() {
             {/* Ambiguity Threshold */}
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium text-brand-outline">
                   Ambiguity Threshold
                 </label>
                 <span className="text-sm font-bold text-brand-accent">
@@ -124,7 +124,7 @@ export function StrictnessControls() {
                 onChange={(e) => handleSliderChange('ambiguityThreshold', parseInt(e.target.value))}
                 className="w-full accent-brand-accent"
               />
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-xs text-brand-outline">
                 Lower values are stricter. Scores above this threshold trigger clarification.
               </p>
             </div>
@@ -132,7 +132,7 @@ export function StrictnessControls() {
             {/* Citation Cutoff */}
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium text-brand-outline">
                   Citation Confidence Cutoff
                 </label>
                 <span className="text-sm font-bold text-brand-accent">
@@ -148,7 +148,7 @@ export function StrictnessControls() {
                 onChange={(e) => handleSliderChange('citationCutoff', parseInt(e.target.value))}
                 className="w-full accent-brand-accent"
               />
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-xs text-brand-outline">
                 Minimum confidence required for evidence citations to be accepted.
               </p>
             </div>
@@ -156,7 +156,7 @@ export function StrictnessControls() {
             {/* Consistency Tolerance */}
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium text-brand-outline">
                   Consistency Tolerance
                 </label>
                 <span className="text-sm font-bold text-brand-accent">
@@ -172,7 +172,7 @@ export function StrictnessControls() {
                 onChange={(e) => handleSliderChange('consistencyTolerance', parseInt(e.target.value))}
                 className="w-full accent-brand-accent"
               />
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-xs text-brand-outline">
                 Lower values are stricter. Controls how much inconsistency is tolerated.
               </p>
             </div>
@@ -180,7 +180,7 @@ export function StrictnessControls() {
             {/* Mangekyō Strictness */}
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <label className="text-sm font-medium text-slate-300">
+                <label className="text-sm font-medium text-brand-outline">
                   Code Review Strictness (Mangekyō)
                 </label>
                 <span className="text-sm font-bold text-brand-accent">
@@ -196,7 +196,7 @@ export function StrictnessControls() {
                 onChange={(e) => handleSliderChange('mangekyoStrictness', parseInt(e.target.value))}
                 className="w-full accent-brand-accent"
               />
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-xs text-brand-outline">
                 Minimum passing score for code review gates (Implementation, Tests, Docs, Security).
               </p>
             </div>
@@ -204,7 +204,7 @@ export function StrictnessControls() {
             {/* Reset Button */}
             <button
               onClick={() => applyStrictnessProfile('enterprise')}
-              className="w-full rounded-full border border-brand-outline/50 px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+              className="w-full rounded-full border border-brand-outline/50 px-4 py-2 text-sm font-medium text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
             >
               Reset to Enterprise Defaults
             </button>

@@ -67,12 +67,12 @@ export function Breadcrumbs() {
           return (
             <li key={crumb.href} className="flex items-center">
               {index > 0 && (
-                <ChevronRight className="mx-2 h-4 w-4 text-slate-500" />
+                <ChevronRight className="mx-2 h-4 w-4 text-brand-outline" />
               )}
               {isFirst ? (
                 <Link
                   href={crumb.href}
-                  className="flex items-center space-x-1 text-slate-400 hover:text-white transition-colors"
+                  className="flex items-center space-x-1 text-brand-outline hover:text-brand-foreground transition-colors"
                 >
                   <Home className="h-4 w-4" />
                   <span>Home</span>
@@ -83,7 +83,7 @@ export function Breadcrumbs() {
                   className={`transition-colors ${
                     isLast
                       ? 'text-brand-accent font-medium'
-                      : 'text-slate-400 hover:text-white'
+                      : 'text-brand-outline hover:text-brand-foreground'
                   }`}
                 >
                   {crumb.label}

@@ -101,7 +101,7 @@ export default function PersonasPage() {
 
         <button
           onClick={() => setShowWizard(true)}
-          className="mt-8 flex items-center gap-2 px-8 py-4 mx-auto rounded-lg bg-brand-accent text-white hover:bg-brand-accent/90 transition-colors text-lg font-semibold"
+          className="mt-8 flex items-center gap-2 px-8 py-4 mx-auto rounded-lg bg-brand-accent text-brand-foreground hover:bg-brand-accent/90 transition-colors text-lg font-semibold"
         >
           <Plus className="w-5 h-5" />
           Open PersonaWizard (Preview)

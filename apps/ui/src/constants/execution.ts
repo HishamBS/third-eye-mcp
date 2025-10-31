@@ -43,7 +43,7 @@ export const EXECUTION_STATUS_LABELS = {
 
 // Status Display Colors (Tailwind classes)
 export const STATUS_COLORS = {
-  [EXECUTION_STATUS.PENDING]: 'text-slate-400 bg-slate-500/10',
+  [EXECUTION_STATUS.PENDING]: 'text-brand-outline bg-slate-500/10',
   [EXECUTION_STATUS.RUNNING]: 'text-blue-400 bg-blue-500/10',
   [EXECUTION_STATUS.SUCCESS]: 'text-green-400 bg-green-500/10',
   [EXECUTION_STATUS.ERROR]: 'text-red-400 bg-red-500/10',

@@ -33,24 +33,24 @@ export function ReviewStep({ state }: WizardStepProps) {
     <div className="space-y-6">
       {/* Basic Info */}
       <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
-        <h3 className="mb-3 text-lg font-semibold text-white">Basic Information</h3>
+        <h3 className="mb-3 text-lg font-semibold text-brand-foreground">Basic Information</h3>
         <dl className="space-y-2">
           <div>
-            <dt className="text-sm font-medium text-slate-300">Eye Name</dt>
-            <dd className="mt-1 text-white">{state.formData.name || '(Not set)'}</dd>
+            <dt className="text-sm font-medium text-brand-outline">Eye Name</dt>
+            <dd className="mt-1 text-brand-foreground">{state.formData.name || '(Not set)'}</dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-slate-300">Description</dt>
-            <dd className="mt-1 text-white">{state.formData.description || '(Not set)'}</dd>
+            <dt className="text-sm font-medium text-brand-outline">Description</dt>
+            <dd className="mt-1 text-brand-foreground">{state.formData.description || '(Not set)'}</dd>
           </div>
         </dl>
       </div>
 
       {/* Input Schema */}
       <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
-        <h3 className="mb-3 text-lg font-semibold text-white">Input Schema</h3>
+        <h3 className="mb-3 text-lg font-semibold text-brand-foreground">Input Schema</h3>
         {inputProps.length === 0 ? (
-          <p className="text-slate-400">No input properties defined</p>
+          <p className="text-brand-outline">No input properties defined</p>
         ) : (
           <ul className="space-y-2">
             {inputProps.map((prop) => (
@@ -72,9 +72,9 @@ export function ReviewStep({ state }: WizardStepProps) {
 
       {/* Output Schema */}
       <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
-        <h3 className="mb-3 text-lg font-semibold text-white">Output Schema</h3>
+        <h3 className="mb-3 text-lg font-semibold text-brand-foreground">Output Schema</h3>
         {outputProps.length === 0 ? (
-          <p className="text-slate-400">No output properties defined</p>
+          <p className="text-brand-outline">No output properties defined</p>
         ) : (
           <ul className="space-y-2">
             {outputProps.map((prop) => (

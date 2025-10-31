@@ -318,7 +318,7 @@ export default function ConnectionsPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-white mb-8">{UI_HELP_TEXT.CONNECTIONS_HEADER_TITLE}</h1>
+          <h1 className="text-3xl font-bold text-brand-foreground mb-8">{UI_HELP_TEXT.CONNECTIONS_HEADER_TITLE}</h1>
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="border border-brand-accent/30 bg-brand-paper rounded-lg p-6 animate-pulse">
@@ -336,7 +336,7 @@ export default function ConnectionsPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-white mb-8">{UI_HELP_TEXT.CONNECTIONS_HEADER_TITLE}</h1>
+          <h1 className="text-3xl font-bold text-brand-foreground mb-8">{UI_HELP_TEXT.CONNECTIONS_HEADER_TITLE}</h1>
           <div className="border border-red-500/50 bg-red-500/10 rounded-lg p-6">
             <p className="text-red-400">{UI_HELP_TEXT.CONNECTIONS_ERROR_PREFIX}{error}</p>
           </div>
@@ -375,16 +375,16 @@ export default function ConnectionsPage() {
           transition={{ duration: 0.5 }}
         >
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-3xl font-bold text-white">{UI_HELP_TEXT.CONNECTIONS_HEADER_TITLE}</h1>
+            <h1 className="text-3xl font-bold text-brand-foreground">{UI_HELP_TEXT.CONNECTIONS_HEADER_TITLE}</h1>
             <button
               onClick={openCreateModal}
-              className="flex items-center gap-2 rounded-full bg-brand-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-accent/90"
+              className="flex items-center gap-2 rounded-full bg-brand-accent px-5 py-2.5 text-sm font-semibold text-brand-foreground transition hover:bg-brand-accent/90"
             >
               <Plus className="w-4 h-4" />
               {UI_HELP_TEXT.CONNECTIONS_BUTTON_ADD}
             </button>
           </div>
-          <p className="text-slate-400 mb-8">
+          <p className="text-brand-outline mb-8">
             {UI_HELP_TEXT.CONNECTIONS_SUBTITLE}
           </p>
         </motion.div>
@@ -420,13 +420,13 @@ export default function ConnectionsPage() {
                           }}
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded bg-brand-accent text-white flex items-center justify-center font-bold">
+                        <div className="w-10 h-10 rounded bg-brand-accent text-brand-foreground flex items-center justify-center font-bold">
                           {integration.name.charAt(0)}
                         </div>
                       )}
                       <div className="text-left">
-                        <h3 className="font-semibold text-lg text-white">{integration.name}</h3>
-                        <p className="text-sm text-slate-400">{integration.description}</p>
+                        <h3 className="font-semibold text-lg text-brand-foreground">{integration.name}</h3>
+                        <p className="text-sm text-brand-outline">{integration.description}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -461,9 +461,9 @@ export default function ConnectionsPage() {
                         ))}
                       </div>
                       {isExpanded ? (
-                        <ChevronUp className="w-5 h-5 text-slate-400" />
+                        <ChevronUp className="w-5 h-5 text-brand-outline" />
                       ) : (
-                        <ChevronDown className="w-5 h-5 text-slate-400" />
+                        <ChevronDown className="w-5 h-5 text-brand-outline" />
                       )}
                     </div>
                   </button>
@@ -479,13 +479,13 @@ export default function ConnectionsPage() {
                       <div className="px-6 py-4 space-y-6">
                         {/* Configuration File Path */}
                         <div>
-                          <h4 className="font-semibold text-white mb-2">{UI_HELP_TEXT.CONNECTIONS_SECTION_CONFIG_FILE}</h4>
+                          <h4 className="font-semibold text-brand-foreground mb-2">{UI_HELP_TEXT.CONNECTIONS_SECTION_CONFIG_FILE}</h4>
                           {integration.configFiles.map((file) => (
                             <div key={file.platform} className="text-sm">
                               <span className="font-mono bg-brand-accent/10 text-brand-accent px-2 py-1 rounded">
                                 {file.path}
                               </span>
-                              <span className="text-slate-400 ml-2">({getPlatformLabel(file.platform)})</span>
+                              <span className="text-brand-outline ml-2">({getPlatformLabel(file.platform)})</span>
                             </div>
                           ))}
                         </div>
@@ -494,10 +494,10 @@ export default function ConnectionsPage() {
                         {config && (
                           <div>
                             <div className="flex items-center justify-between mb-2">
-                              <h4 className="font-semibold text-white">{UI_HELP_TEXT.CONNECTIONS_SECTION_CONFIGURATION}</h4>
+                              <h4 className="font-semibold text-brand-foreground">{UI_HELP_TEXT.CONNECTIONS_SECTION_CONFIGURATION}</h4>
                               <button
                                 onClick={() => copyToClipboard(config.config, integration.id)}
-                                className="flex items-center gap-2 px-3 py-1 text-sm bg-brand-accent text-white rounded hover:bg-brand-accent/80 transition-colors"
+                                className="flex items-center gap-2 px-3 py-1 text-sm bg-brand-accent text-brand-foreground rounded hover:bg-brand-accent/80 transition-colors"
                               >
                                 {copiedId === integration.id ? (
                                   <>
@@ -512,7 +512,7 @@ export default function ConnectionsPage() {
                                 )}
                               </button>
                             </div>
-                            <pre className="bg-brand-ink text-slate-300 p-4 rounded overflow-x-auto text-sm border border-brand-accent/20">
+                            <pre className="bg-brand-ink text-brand-outline p-4 rounded overflow-x-auto text-sm border border-brand-accent/20">
                               {config.config}
                             </pre>
                           </div>
@@ -521,16 +521,16 @@ export default function ConnectionsPage() {
                         {/* Setup Steps */}
                         {integration.setupSteps.length > 0 && (
                           <div>
-                            <h4 className="font-semibold text-white mb-3">{UI_HELP_TEXT.CONNECTIONS_SECTION_SETUP}</h4>
+                            <h4 className="font-semibold text-brand-foreground mb-3">{UI_HELP_TEXT.CONNECTIONS_SECTION_SETUP}</h4>
                             <ol className="space-y-3">
                               {integration.setupSteps.map((step, idx) => (
                                 <li key={idx} className="flex gap-3">
-                                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-brand-accent text-white text-sm flex items-center justify-center">
+                                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-brand-accent text-brand-foreground text-sm flex items-center justify-center">
                                     {idx + 1}
                                   </span>
                                   <div>
-                                    <p className="font-medium text-white">{step.title}</p>
-                                    <p className="text-sm text-slate-400">{step.description}</p>
+                                    <p className="font-medium text-brand-foreground">{step.title}</p>
+                                    <p className="text-sm text-brand-outline">{step.description}</p>
                                   </div>
                                 </li>
                               ))}
@@ -562,7 +562,7 @@ export default function ConnectionsPage() {
         </div>
 
         {integrations.length === 0 && (
-          <div className="text-center py-12 text-slate-400">
+          <div className="text-center py-12 text-brand-outline">
             {UI_HELP_TEXT.CONNECTIONS_EMPTY_MESSAGE}
           </div>
         )}
@@ -591,12 +591,12 @@ export default function ConnectionsPage() {
                 >
                   {/* Modal Header */}
                   <div className="flex items-center justify-between border-b border-brand-outline/50 px-6 py-4">
-                    <h2 className="text-xl font-semibold text-white">
+                    <h2 className="text-xl font-semibold text-brand-foreground">
                       {editingIntegration ? UI_HELP_TEXT.CONNECTIONS_MODAL_TITLE_EDIT : UI_HELP_TEXT.CONNECTIONS_MODAL_TITLE_ADD}
                     </h2>
                     <button
                       onClick={closeModal}
-                      className="text-slate-400 hover:text-white transition"
+                      className="text-brand-outline hover:text-brand-foreground transition"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -607,14 +607,14 @@ export default function ConnectionsPage() {
                     <div className="space-y-4">
                       {/* Name */}
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">
+                        <label className="block text-sm font-medium text-brand-outline mb-1">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_NAME} <span className="text-red-400">*</span>
                         </label>
                         <input
                           type="text"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none"
                           placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_NAME}
                         />
                         {formErrors.name && (
@@ -624,14 +624,14 @@ export default function ConnectionsPage() {
 
                       {/* Slug */}
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">
+                        <label className="block text-sm font-medium text-brand-outline mb-1">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_SLUG} <span className="text-red-400">*</span>
                         </label>
                         <input
                           type="text"
                           value={formData.slug}
                           onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none"
                           placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_SLUG}
                         />
                         {formErrors.slug && (
@@ -641,27 +641,27 @@ export default function ConnectionsPage() {
 
                       {/* Logo URL */}
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">
+                        <label className="block text-sm font-medium text-brand-outline mb-1">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_LOGO_URL}
                         </label>
                         <input
                           type="text"
                           value={formData.logoUrl}
                           onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none"
                           placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_URL}
                         />
                       </div>
 
                       {/* Description */}
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">
+                        <label className="block text-sm font-medium text-brand-outline mb-1">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_DESCRIPTION}
                         </label>
                         <textarea
                           value={formData.description}
                           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none resize-none"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none resize-none"
                           placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_DESCRIPTION}
                           rows={2}
                         />
@@ -669,13 +669,13 @@ export default function ConnectionsPage() {
 
                       {/* Config Type */}
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">
+                        <label className="block text-sm font-medium text-brand-outline mb-1">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_CONFIG_TYPE}
                         </label>
                         <select
                           value={formData.configType}
                           onChange={(e) => setFormData({ ...formData, configType: e.target.value })}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white focus:border-brand-accent focus:outline-none"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground focus:border-brand-accent focus:outline-none"
                         >
                           <option value="json">{UI_HELP_TEXT.CONNECTIONS_SELECT_JSON}</option>
                           <option value="toml">{UI_HELP_TEXT.CONNECTIONS_SELECT_TOML}</option>
@@ -685,13 +685,13 @@ export default function ConnectionsPage() {
 
                       {/* Config Files (JSON) */}
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">
+                        <label className="block text-sm font-medium text-brand-outline mb-1">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_CONFIG_FILES}
                         </label>
                         <textarea
                           value={formData.configFiles}
                           onChange={(e) => setFormData({ ...formData, configFiles: e.target.value })}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 font-mono text-sm text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none resize-none"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 font-mono text-sm text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none resize-none"
                           placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_CONFIG_FILES}
                           rows={3}
                         />
@@ -702,13 +702,13 @@ export default function ConnectionsPage() {
 
                       {/* Config Template */}
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">
+                        <label className="block text-sm font-medium text-brand-outline mb-1">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_CONFIG_TEMPLATE} <span className="text-red-400">*</span>
                         </label>
                         <textarea
                           value={formData.configTemplate}
                           onChange={(e) => setFormData({ ...formData, configTemplate: e.target.value })}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 font-mono text-sm text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none resize-none"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 font-mono text-sm text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none resize-none"
                           placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_CONFIG_TEMPLATE}
                           rows={6}
                         />
@@ -719,13 +719,13 @@ export default function ConnectionsPage() {
 
                       {/* Setup Steps (JSON) */}
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">
+                        <label className="block text-sm font-medium text-brand-outline mb-1">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_SETUP_STEPS}
                         </label>
                         <textarea
                           value={formData.setupSteps}
                           onChange={(e) => setFormData({ ...formData, setupSteps: e.target.value })}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 font-mono text-sm text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none resize-none"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 font-mono text-sm text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none resize-none"
                           placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_SETUP_STEPS}
                           rows={4}
                         />
@@ -736,14 +736,14 @@ export default function ConnectionsPage() {
 
                       {/* Docs URL */}
                       <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">
+                        <label className="block text-sm font-medium text-brand-outline mb-1">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_DOCS_URL}
                         </label>
                         <input
                           type="text"
                           value={formData.docsUrl}
                           onChange={(e) => setFormData({ ...formData, docsUrl: e.target.value })}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none"
                           placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_URL}
                         />
                       </div>
@@ -757,7 +757,7 @@ export default function ConnectionsPage() {
                           onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
                           className="w-4 h-4 rounded border-brand-outline/50 bg-brand-paper text-brand-accent focus:ring-brand-accent"
                         />
-                        <label htmlFor="enabled" className="text-sm text-slate-300">
+                        <label htmlFor="enabled" className="text-sm text-brand-outline">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_ENABLED}
                         </label>
                       </div>
@@ -768,14 +768,14 @@ export default function ConnectionsPage() {
                   <div className="flex items-center justify-end gap-3 border-t border-brand-outline/50 px-6 py-4">
                     <button
                       onClick={closeModal}
-                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       {UI_HELP_TEXT.CONNECTIONS_BUTTON_CANCEL}
                     </button>
                     <button
                       onClick={editingIntegration ? handleUpdate : handleCreate}
                       disabled={loading}
-                      className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-accent/90 disabled:opacity-50"
+                      className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-accent/90 disabled:opacity-50"
                     >
                       {loading ? UI_HELP_TEXT.CONNECTIONS_BUTTON_SAVING : editingIntegration ? UI_HELP_TEXT.CONNECTIONS_BUTTON_UPDATE : UI_HELP_TEXT.CONNECTIONS_BUTTON_CREATE}
                     </button>

@@ -74,7 +74,7 @@ export function EyeIcon({ eye, size = 24, className = '', customSvg }: EyeIconPr
         style={{ width: size, height: size }}
         title={`Missing icon: ${eye}`}
       >
-        <span className="text-xs text-gray-500 dark:text-gray-400">?</span>
+        <span className="text-xs text-brand-outline dark:text-brand-outline">?</span>
       </div>
     );
   }

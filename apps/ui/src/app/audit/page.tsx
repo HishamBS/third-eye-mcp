@@ -59,12 +59,12 @@ export default function AuditPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
+              <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent">
                 ← Home
               </Link>
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Security</p>
-                <h1 className="mt-1 text-2xl font-semibold text-white">Audit Trail</h1>
+                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">Audit Trail</h1>
               </div>
             </div>
           </div>
@@ -80,29 +80,29 @@ export default function AuditPage() {
             <form onSubmit={handleSubmit}>
               <div className="grid gap-4 md:grid-cols-4">
                 <label className="flex flex-col gap-2">
-                  <span className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">Since</span>
+                  <span className="text-xs font-medium uppercase tracking-[0.2em] text-brand-outline">Since</span>
                   <input
                     type="datetime-local"
                     value={since}
                     onChange={(event) => setSince(event.target.value)}
-                    className="rounded-xl border border-brand-outline/50 bg-brand-paper px-3 py-2 text-slate-100 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                    className="rounded-xl border border-brand-outline/50 bg-brand-paper px-3 py-2 text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                   />
                 </label>
                 <label className="flex flex-col gap-2">
-                  <span className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">Until</span>
+                  <span className="text-xs font-medium uppercase tracking-[0.2em] text-brand-outline">Until</span>
                   <input
                     type="datetime-local"
                     value={until}
                     onChange={(event) => setUntil(event.target.value)}
-                    className="rounded-xl border border-brand-outline/50 bg-brand-paper px-3 py-2 text-slate-100 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                    className="rounded-xl border border-brand-outline/50 bg-brand-paper px-3 py-2 text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                   />
                 </label>
                 <label className="flex flex-col gap-2">
-                  <span className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">Tenant</span>
+                  <span className="text-xs font-medium uppercase tracking-[0.2em] text-brand-outline">Tenant</span>
                   <input
                     value={tenant}
                     onChange={(event) => setTenant(event.target.value)}
-                    className="rounded-xl border border-brand-outline/50 bg-brand-paper px-3 py-2 text-slate-100 placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                    className="rounded-xl border border-brand-outline/50 bg-brand-paper px-3 py-2 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                     placeholder="tenant-id"
                   />
                 </label>

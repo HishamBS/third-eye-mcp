@@ -46,12 +46,12 @@ export default function MetricsPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
+              <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent">
                 ← Home
               </Link>
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Observability</p>
-                <h1 className="mt-1 text-2xl font-semibold text-white">Provider & Budget Metrics</h1>
+                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">Provider & Budget Metrics</h1>
               </div>
             </div>
           </div>

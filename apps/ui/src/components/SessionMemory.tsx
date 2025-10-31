@@ -82,7 +82,7 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
       case 'NEEDS_INPUT':
         return 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30';
       default:
-        return 'text-slate-400 bg-slate-500/20 border-slate-500/30';
+        return 'text-brand-outline bg-slate-500/20 border-slate-500/30';
     }
   };
 
@@ -106,11 +106,11 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
   return (
     <div className="rounded-2xl border border-brand-outline/40 bg-brand-paper/60 p-6">
       <div className="mb-6 flex items-center justify-between">
-        <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
+        <h3 className="flex items-center gap-2 text-lg font-semibold text-brand-foreground">
           <Brain className="h-5 w-5 text-purple-400" />
           Session Memory
         </h3>
-        <div className="flex items-center gap-2 text-sm text-slate-400">
+        <div className="flex items-center gap-2 text-sm text-brand-outline">
           <Clock className="h-4 w-4" />
           {priorRuns.length} runs
         </div>
@@ -127,9 +127,9 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
         </div>
       ) : priorRuns.length === 0 ? (
         <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-8 text-center">
-          <Brain className="mx-auto h-12 w-12 text-slate-500" />
-          <p className="mt-3 text-slate-400">No prior runs in this session yet</p>
-          <p className="mt-1 text-xs text-slate-500">
+          <Brain className="mx-auto h-12 w-12 text-brand-outline" />
+          <p className="mt-3 text-brand-outline">No prior runs in this session yet</p>
+          <p className="mt-1 text-xs text-brand-outline">
             Byakugan will reference past validations for consistency checking
           </p>
         </div>
@@ -150,8 +150,8 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
                     <div className="flex items-center gap-2">
                       {getEyeIcon(run.eye)}
                       <div>
-                        <h4 className="font-medium capitalize text-white">{run.eye}</h4>
-                        <p className="text-xs text-slate-400">{formatTimeAgo(run.createdAt)}</p>
+                        <h4 className="font-medium capitalize text-brand-foreground">{run.eye}</h4>
+                        <p className="text-xs text-brand-outline">{formatTimeAgo(run.createdAt)}</p>
                       </div>
                     </div>
 
@@ -171,12 +171,12 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
                     </div>
                   </div>
 
-                  <p className="mb-2 line-clamp-2 text-sm text-slate-300">
+                  <p className="mb-2 line-clamp-2 text-sm text-brand-outline">
                     {run.inputMd}
                   </p>
 
                   {run.outputJson?.summary && (
-                    <p className="line-clamp-1 text-xs text-slate-400">
+                    <p className="line-clamp-1 text-xs text-brand-outline">
                       {run.outputJson.summary}
                     </p>
                   )}
@@ -196,7 +196,7 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
           {priorRuns.length > 5 && (
             <button
               onClick={() => setExpanded(!expanded)}
-              className="mt-4 flex w-full items-center justify-center gap-1 rounded-full border border-brand-outline/40 py-2 text-sm font-medium text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+              className="mt-4 flex w-full items-center justify-center gap-1 rounded-full border border-brand-outline/40 py-2 text-sm font-medium text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
             >
               {expanded ? 'Show Less' : `Show ${priorRuns.length - 5} More`}
               <ChevronRight

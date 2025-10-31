@@ -43,7 +43,7 @@ export default function RootLayout({
         <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any" />
         <ThemeScript />
       </head>
-      <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
+      <body className="min-h-screen bg-brand-paper font-sans antialiased" suppressHydrationWarning>
         <SkipLink />
         <UIProvider>
           <SecurityBanner />

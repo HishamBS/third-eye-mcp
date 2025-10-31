@@ -27,7 +27,7 @@ export default function MetricsOverview({ metrics, loading }: MetricsOverviewPro
   if (loading) {
     return (
       <div className="rounded-2xl border border-brand-outline/60 bg-brand-paperElev/70 p-6">
-        <p className="animate-pulse text-sm text-slate-400">Loading metrics...</p>
+        <p className="animate-pulse text-sm text-brand-outline">Loading metrics...</p>
       </div>
     );
   }
@@ -35,7 +35,7 @@ export default function MetricsOverview({ metrics, loading }: MetricsOverviewPro
   if (!metrics) {
     return (
       <div className="rounded-2xl border border-brand-outline/60 bg-brand-paperElev/70 p-6">
-        <p className="text-sm text-slate-400">No metrics available.</p>
+        <p className="text-sm text-brand-outline">No metrics available.</p>
       </div>
     );
   }
@@ -44,30 +44,30 @@ export default function MetricsOverview({ metrics, loading }: MetricsOverviewPro
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Total Calls</p>
-          <p className="mt-2 text-2xl font-semibold text-white">{metrics.totalCalls.toLocaleString()}</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-brand-outline">Total Calls</p>
+          <p className="mt-2 text-2xl font-semibold text-brand-foreground">{metrics.totalCalls.toLocaleString()}</p>
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Total Tokens</p>
-          <p className="mt-2 text-2xl font-semibold text-white">{metrics.totalTokens.toLocaleString()}</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-brand-outline">Total Tokens</p>
+          <p className="mt-2 text-2xl font-semibold text-brand-foreground">{metrics.totalTokens.toLocaleString()}</p>
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Tokens/Session</p>
-          <p className="mt-2 text-2xl font-semibold text-white">{(metrics.tokensPerSession || 0).toLocaleString()}</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-brand-outline">Tokens/Session</p>
+          <p className="mt-2 text-2xl font-semibold text-brand-foreground">{(metrics.tokensPerSession || 0).toLocaleString()}</p>
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Approval Rate</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-brand-outline">Approval Rate</p>
           <p className="mt-2 text-2xl font-semibold text-emerald-400">{(metrics.approvalRate || 0).toFixed(1)}%</p>
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Uptime</p>
-          <p className="mt-2 text-2xl font-semibold text-white">{(metrics.uptime / 3600).toFixed(1)}h</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-brand-outline">Uptime</p>
+          <p className="mt-2 text-2xl font-semibold text-brand-foreground">{(metrics.uptime / 3600).toFixed(1)}h</p>
         </div>
       </div>
 
       {metrics.latencyHistogram && (
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-6">
-          <h2 className="mb-4 text-lg font-semibold text-white">Latency Histogram</h2>
+          <h2 className="mb-4 text-lg font-semibold text-brand-foreground">Latency Histogram</h2>
           <div className="space-y-3">
             {Object.entries(metrics.latencyHistogram).map(([bucket, count]) => {
               const maxCount = Math.max(...Object.values(metrics.latencyHistogram!));
@@ -75,8 +75,8 @@ export default function MetricsOverview({ metrics, loading }: MetricsOverviewPro
               return (
                 <div key={bucket}>
                   <div className="mb-1 flex items-center justify-between text-sm">
-                    <span className="text-slate-300">{bucket}</span>
-                    <span className="text-slate-400">{count} runs</span>
+                    <span className="text-brand-outline">{bucket}</span>
+                    <span className="text-brand-outline">{count} runs</span>
                   </div>
                   <div className="h-6 w-full overflow-hidden rounded-full bg-brand-ink/50">
                     <div
@@ -92,7 +92,7 @@ export default function MetricsOverview({ metrics, loading }: MetricsOverviewPro
       )}
 
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-white">Provider Performance</h2>
+        <h2 className="text-lg font-semibold text-brand-foreground">Provider Performance</h2>
         {metrics.providers.map((provider) => (
           <div
             key={provider.provider}
@@ -100,14 +100,14 @@ export default function MetricsOverview({ metrics, loading }: MetricsOverviewPro
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-semibold text-white">{provider.provider}</p>
-                <p className="text-xs text-slate-400">
+                <p className="font-semibold text-brand-foreground">{provider.provider}</p>
+                <p className="text-xs text-brand-outline">
                   {provider.totalCalls} calls · {provider.avgLatency.toFixed(0)}ms avg
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-sm font-semibold text-emerald-400">{provider.successRate.toFixed(1)}%</p>
-                <p className="text-xs text-slate-500">success rate</p>
+                <p className="text-xs text-brand-outline">success rate</p>
               </div>
             </div>
           </div>

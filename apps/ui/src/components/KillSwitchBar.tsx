@@ -46,7 +46,7 @@ export function KillSwitchBar({ sessionId, apiKey, latestDraft, latestEvent }: K
   };
 
   return (
-    <section className={clsx('rounded-2xl border p-5 text-sm', status === 'error' ? 'border-rose-500/50 bg-rose-500/10 text-rose-100' : 'border-brand-outline/40 bg-brand-paperElev/70 text-slate-200')}>
+    <section className={clsx('rounded-2xl border p-5 text-sm', status === 'error' ? 'border-rose-500/50 bg-rose-500/10 text-rose-100' : 'border-brand-outline/40 bg-brand-paperElev/70 text-brand-outline')}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Hallucination Kill Switch</p>
@@ -61,7 +61,7 @@ export function KillSwitchBar({ sessionId, apiKey, latestDraft, latestEvent }: K
           {status === 'running' ? 'Revalidating…' : 'Re-run validation'}
         </button>
       </div>
-      {message && <p className="mt-3 text-xs text-slate-300">{message}</p>}
+      {message && <p className="mt-3 text-xs text-brand-outline">{message}</p>}
     </section>
   );
 }

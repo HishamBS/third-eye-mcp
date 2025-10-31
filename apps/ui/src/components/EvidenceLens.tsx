@@ -42,14 +42,14 @@ export function buildEvidenceSegments(draft: string, claims: EvidenceClaim[]): S
 
 export function EvidenceLens({ draft, claims, expertMode = true }: EvidenceLensProps) {
   if (!draft) {
-    return <p className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4 text-sm text-slate-300">No draft available.</p>;
+    return <p className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4 text-sm text-brand-outline">No draft available.</p>;
   }
 
   if (!expertMode) {
     return (
-      <article className="rounded-xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm leading-relaxed text-slate-200">
+      <article className="rounded-xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm leading-relaxed text-brand-outline">
         <p>{draft}</p>
-        <p className="mt-4 rounded-lg border border-brand-outline/30 bg-brand-paper/60 p-3 text-xs text-slate-400">
+        <p className="mt-4 rounded-lg border border-brand-outline/30 bg-brand-paper/60 p-3 text-xs text-brand-outline">
           Enable Expert Mode to see citation confidence highlights and raw claim metadata.
         </p>
       </article>
@@ -59,7 +59,7 @@ export function EvidenceLens({ draft, claims, expertMode = true }: EvidenceLensP
   const segments = buildEvidenceSegments(draft, claims);
   if (!segments.length) {
     return (
-      <article className="rounded-xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm leading-relaxed text-slate-200">
+      <article className="rounded-xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm leading-relaxed text-brand-outline">
         <p>{draft}</p>
       </article>
     );
@@ -68,11 +68,11 @@ export function EvidenceLens({ draft, claims, expertMode = true }: EvidenceLensP
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
-    <article className="rounded-xl border border-brand-outline/40 bg-brand-paperElev/60 p-4 text-sm leading-relaxed text-slate-100 relative">
+    <article className="rounded-xl border border-brand-outline/40 bg-brand-paperElev/60 p-4 text-sm leading-relaxed text-brand-foreground relative">
       {segments.map((segment, index) => {
         const key = `${index}-${segment.text.slice(0, 8)}`;
         const tone = segment.cited
-          ? 'bg-emerald-500/20 text-slate-100 hover:bg-emerald-500/30 border-emerald-500/40'
+          ? 'bg-emerald-500/20 text-brand-foreground hover:bg-emerald-500/30 border-emerald-500/40'
           : 'bg-rose-500/20 text-rose-100 hover:bg-rose-500/30 border-rose-500/40';
         const confidence = Math.round((segment.confidence ?? 0) * 100);
         const isHovered = hoveredIndex === index;
@@ -91,12 +91,12 @@ export function EvidenceLens({ draft, claims, expertMode = true }: EvidenceLensP
                 {segment.cited ? (
                   <>
                     <div className="text-emerald-400 font-semibold">✓ Cited ({confidence}% confidence)</div>
-                    <div className="text-slate-300 mt-1 max-w-xs whitespace-normal">{segment.citation || 'Citation available'}</div>
+                    <div className="text-brand-outline mt-1 max-w-xs whitespace-normal">{segment.citation || 'Citation available'}</div>
                   </>
                 ) : (
                   <>
                     <div className="text-rose-400 font-semibold">⚠ Missing Citation</div>
-                    <div className="text-slate-400 mt-1">This claim needs evidence</div>
+                    <div className="text-brand-outline mt-1">This claim needs evidence</div>
                   </>
                 )}
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-slate-900"></div>

@@ -271,7 +271,7 @@ export const NodeEditModal = memo(function NodeEditModal({
                 <button
                   onClick={handleAddCapability}
                   disabled={!newCapability.trim()}
-                  className="px-4 py-2 bg-brand-primary text-white rounded-md font-medium text-sm hover:bg-brand-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 bg-brand-primary text-brand-foreground rounded-md font-medium text-sm hover:bg-brand-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {NODE_EDIT_TEXT.ADD_CAPABILITY}
                 </button>
@@ -463,7 +463,7 @@ export const NodeEditModal = memo(function NodeEditModal({
         <div className="flex items-center justify-between px-6 py-4 border-t border-brand-outline">
           <button
             onClick={handleDelete}
-            className="px-4 py-2 bg-red-600 text-white rounded-md font-medium text-sm hover:bg-red-700 transition-colors"
+            className="px-4 py-2 bg-red-600 text-brand-foreground rounded-md font-medium text-sm hover:bg-red-700 transition-colors"
           >
             {NODE_EDIT_TEXT.DELETE}
           </button>
@@ -477,7 +477,7 @@ export const NodeEditModal = memo(function NodeEditModal({
             <button
               onClick={handleSave}
               disabled={!!jsonError}
-              className="px-4 py-2 bg-brand-primary text-white rounded-md font-medium text-sm hover:bg-brand-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 bg-brand-primary text-brand-foreground rounded-md font-medium text-sm hover:bg-brand-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {NODE_EDIT_TEXT.SAVE}
             </button>

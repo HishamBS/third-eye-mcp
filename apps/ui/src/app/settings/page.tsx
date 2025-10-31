@@ -359,12 +359,12 @@ export default function SettingsPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
+              <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent">
                 ← Home
               </Link>
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Settings</p>
-                <h1 className="mt-1 text-2xl font-semibold text-white">Application Settings</h1>
+                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">Application Settings</h1>
               </div>
             </div>
           </div>
@@ -390,11 +390,11 @@ export default function SettingsPage() {
       <div className="mx-auto max-w-7xl px-6 py-8">
         <div className="space-y-8">
           <GlassCard>
-            <h2 className="mb-6 text-xl font-semibold text-white">Appearance</h2>
+            <h2 className="mb-6 text-xl font-semibold text-brand-foreground">Appearance</h2>
 
             <div className="space-y-6">
               <div>
-                <label className="mb-3 block text-sm font-medium text-slate-300">Theme</label>
+                <label className="mb-3 block text-sm font-medium text-brand-outline">Theme</label>
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                   {THEME_METADATA.map((themeOption) => (
                     <button
@@ -406,8 +406,8 @@ export default function SettingsPage() {
                           : 'border-brand-outline/40 hover:border-brand-accent/60'
                       }`}
                     >
-                      <div className="font-semibold text-white">{themeOption.label}</div>
-                      <div className="mt-1 text-xs text-slate-400">{themeOption.description}</div>
+                      <div className="font-semibold text-brand-foreground">{themeOption.label}</div>
+                      <div className="mt-1 text-xs text-brand-outline">{themeOption.description}</div>
                     </button>
                   ))}
                 </div>
@@ -415,8 +415,8 @@ export default function SettingsPage() {
 
               <div className="flex items-center justify-between rounded-xl border border-brand-outline/40 p-4">
                 <div>
-                  <div className="font-medium text-white">Dark Mode</div>
-                  <div className="text-sm text-slate-400">Use dark color scheme</div>
+                  <div className="font-medium text-brand-foreground">Dark Mode</div>
+                  <div className="text-sm text-brand-outline">Use dark color scheme</div>
                 </div>
                 <button
                   onClick={() => setDarkMode(!darkMode)}
@@ -435,13 +435,13 @@ export default function SettingsPage() {
           </GlassCard>
 
           <GlassCard>
-            <h2 className="mb-6 text-xl font-semibold text-white">Behavior</h2>
+            <h2 className="mb-6 text-xl font-semibold text-brand-foreground">Behavior</h2>
 
             <div className="space-y-4">
               <div className="flex items-center justify-between rounded-xl border border-brand-outline/40 p-4">
                 <div>
-                  <div className="font-medium text-white">Auto-open Sessions</div>
-                  <div className="text-sm text-slate-400">Automatically open new sessions in browser</div>
+                  <div className="font-medium text-brand-foreground">Auto-open Sessions</div>
+                  <div className="text-sm text-brand-outline">Automatically open new sessions in browser</div>
                 </div>
                 <button
                   onClick={() => setAutoOpenSessions(!autoOpenSessions)}
@@ -459,8 +459,8 @@ export default function SettingsPage() {
 
               <div className="flex items-center justify-between rounded-xl border border-brand-outline/40 p-4">
                 <div>
-                  <div className="font-medium text-white">Telemetry</div>
-                  <div className="text-sm text-slate-400">Send anonymous usage data to improve the app</div>
+                  <div className="font-medium text-brand-foreground">Telemetry</div>
+                  <div className="text-sm text-brand-outline">Send anonymous usage data to improve the app</div>
                 </div>
                 <button
                   onClick={() => toggleTelemetry(!telemetry)}
@@ -480,7 +480,7 @@ export default function SettingsPage() {
 
           <GlassCard>
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-white">Provider Keys</h2>
+              <h2 className="text-xl font-semibold text-brand-foreground">Provider Keys</h2>
               <button
                 onClick={() => setShowAddKey(!showAddKey)}
                 className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary"
@@ -493,11 +493,11 @@ export default function SettingsPage() {
               <div className="mb-6 rounded-xl border border-brand-accent/40 bg-brand-accent/5 p-6">
                 <div className="space-y-4">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">Provider</label>
+                    <label className="mb-2 block text-sm font-medium text-brand-outline">Provider</label>
                     <select
                       value={newKey.provider}
                       onChange={(e) => setNewKey({ ...newKey, provider: e.target.value })}
-                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white focus:border-brand-accent focus:outline-none"
+                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground focus:border-brand-accent focus:outline-none"
                     >
                       <option value="groq">Groq</option>
                       <option value="openrouter">OpenRouter</option>
@@ -506,29 +506,29 @@ export default function SettingsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">Label</label>
+                    <label className="mb-2 block text-sm font-medium text-brand-outline">Label</label>
                     <input
                       type="text"
                       value={newKey.label}
                       onChange={(e) => setNewKey({ ...newKey, label: e.target.value })}
                       placeholder="My API Key"
-                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">API Key</label>
+                    <label className="mb-2 block text-sm font-medium text-brand-outline">API Key</label>
                     <input
                       type="password"
                       value={newKey.apiKey}
                       onChange={(e) => setNewKey({ ...newKey, apiKey: e.target.value })}
                       placeholder="sk-..."
-                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none"
                     />
                   </div>
                   <div className="flex gap-3">
                     <button
                       onClick={() => setShowAddKey(false)}
-                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       Cancel
                     </button>
@@ -546,20 +546,20 @@ export default function SettingsPage() {
 
             {editingKey && (
               <div className="mb-6 rounded-xl border border-yellow-500/40 bg-yellow-500/5 p-6">
-                <h3 className="mb-4 font-semibold text-white">Edit {editingKey.provider} Key</h3>
+                <h3 className="mb-4 font-semibold text-brand-foreground">Edit {editingKey.provider} Key</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">Label</label>
+                    <label className="mb-2 block text-sm font-medium text-brand-outline">Label</label>
                     <input
                       type="text"
                       value={editForm.label}
                       onChange={(e) => setEditForm({ ...editForm, label: e.target.value })}
                       placeholder="My API Key"
-                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">
+                    <label className="mb-2 block text-sm font-medium text-brand-outline">
                       New API Key (leave empty to keep current)
                     </label>
                     <input
@@ -567,13 +567,13 @@ export default function SettingsPage() {
                       value={editForm.apiKey}
                       onChange={(e) => setEditForm({ ...editForm, apiKey: e.target.value })}
                       placeholder="sk-... (optional)"
-                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none"
                     />
                   </div>
                   <div className="flex gap-3">
                     <button
                       onClick={cancelEdit}
-                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       Cancel
                     </button>
@@ -592,8 +592,8 @@ export default function SettingsPage() {
             <div className="space-y-3">
               {providerKeys.length === 0 ? (
                 <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/50 p-8 text-center">
-                  <p className="text-slate-400">No provider keys configured</p>
-                  <p className="mt-2 text-sm text-slate-500">Add API keys to enable LLM providers</p>
+                  <p className="text-brand-outline">No provider keys configured</p>
+                  <p className="mt-2 text-sm text-brand-outline">Add API keys to enable LLM providers</p>
                 </div>
               ) : (
                 providerKeys.map((key) => (
@@ -603,9 +603,9 @@ export default function SettingsPage() {
                   >
                     <div>
                       <div className="flex items-center gap-3">
-                        <span className="font-semibold capitalize text-white">{key.provider}</span>
-                        <span className="text-sm text-slate-400">•</span>
-                        <span className="text-sm text-slate-400">{key.label}</span>
+                        <span className="font-semibold capitalize text-brand-foreground">{key.provider}</span>
+                        <span className="text-sm text-brand-outline">•</span>
+                        <span className="text-sm text-brand-outline">{key.label}</span>
                         {health?.checks?.providers[key.provider] && (
                           <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-400">
                             Connected
@@ -617,7 +617,7 @@ export default function SettingsPage() {
                           </span>
                         )}
                       </div>
-                      <div className="mt-1 text-xs text-slate-500">
+                      <div className="mt-1 text-xs text-brand-outline">
                         Added {new Date(key.createdAt).toLocaleDateString()} • Encrypted 🔒
                       </div>
                     </div>
@@ -649,12 +649,12 @@ export default function SettingsPage() {
           </GlassCard>
 
           <GlassCard>
-            <h2 className="mb-6 text-xl font-semibold text-white">Database</h2>
+            <h2 className="mb-6 text-xl font-semibold text-brand-foreground">Database</h2>
 
             <div className="space-y-6">
               <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/50 p-4">
-                <div className="text-sm text-slate-400">Database Path</div>
-                <div className="mt-1 font-mono text-sm text-white">{dbPath}</div>
+                <div className="text-sm text-brand-outline">Database Path</div>
+                <div className="mt-1 font-mono text-sm text-brand-foreground">{dbPath}</div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
@@ -665,7 +665,7 @@ export default function SettingsPage() {
                   Backup Database
                 </button>
 
-                <label className="cursor-pointer rounded-xl border border-brand-outline/40 px-5 py-3 text-center font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent">
+                <label className="cursor-pointer rounded-xl border border-brand-outline/40 px-5 py-3 text-center font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent">
                   Restore Database
                   <input
                     type="file"
@@ -696,14 +696,14 @@ export default function SettingsPage() {
                   <div className="mt-4 flex gap-3">
                     <button
                       onClick={() => setShowResetConfirm(false)}
-                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={resetDatabase}
                       disabled={loading}
-                      className="rounded-full bg-red-500 px-5 py-2 text-sm font-semibold text-white transition hover:bg-red-600 disabled:opacity-50"
+                      className="rounded-full bg-red-500 px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-red-600 disabled:opacity-50"
                     >
                       {loading ? 'Resetting...' : 'Yes, Reset Everything'}
                     </button>

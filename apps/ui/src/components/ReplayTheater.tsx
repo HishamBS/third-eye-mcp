@@ -106,7 +106,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
   };
 
   const getEventStatusColor = (code: string | null) => {
-    if (!code) return 'bg-gray-500';
+    if (!code) return 'bg-brand-paper0';
     if (code.startsWith('OK')) return 'bg-green-500';
     if (code.startsWith('REJECT')) return 'bg-red-500';
     if (code.startsWith('NEED')) return 'bg-yellow-500';
@@ -116,7 +116,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
   if (totalEvents === 0) {
     return (
       <div className="rounded-2xl border border-brand-outline/40 bg-brand-paper/50 p-12 text-center">
-        <p className="text-slate-400">No events available for replay</p>
+        <p className="text-brand-outline">No events available for replay</p>
       </div>
     );
   }
@@ -126,13 +126,13 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-slate-100">🎬 Replay Theater</h2>
-          <p className="mt-1 text-sm text-slate-400">
+          <h2 className="text-2xl font-bold text-brand-foreground">🎬 Replay Theater</h2>
+          <p className="mt-1 text-sm text-brand-outline">
             Session: {sessionId} • {totalEvents} events
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-slate-400">Event {currentIndex + 1} / {totalEvents}</span>
+          <span className="text-sm text-brand-outline">Event {currentIndex + 1} / {totalEvents}</span>
         </div>
       </div>
 
@@ -148,21 +148,21 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className={`h-3 w-3 rounded-full ${getEventStatusColor(currentEvent.code)}`} />
-              <span className="text-lg font-semibold text-slate-100">
+              <span className="text-lg font-semibold text-brand-foreground">
                 {currentEvent.eye || 'System'}
               </span>
               <span className="rounded-full bg-brand-accent/20 px-2 py-0.5 text-xs font-medium text-brand-accent">
                 {currentEvent.type}
               </span>
             </div>
-            <span className="text-sm text-slate-500">
+            <span className="text-sm text-brand-outline">
               {formatTimestamp(currentEvent.createdAt)}
             </span>
           </div>
 
           {currentEvent.code && (
             <div className="mb-3">
-              <span className="rounded bg-slate-700 px-2 py-1 font-mono text-xs text-slate-300">
+              <span className="rounded bg-slate-700 px-2 py-1 font-mono text-xs text-brand-outline">
                 {currentEvent.code}
               </span>
             </div>
@@ -170,16 +170,16 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
 
           {currentEvent.md && (
             <div className="rounded-lg bg-brand-paper/50 p-4">
-              <p className="text-sm leading-relaxed text-slate-300">{currentEvent.md}</p>
+              <p className="text-sm leading-relaxed text-brand-outline">{currentEvent.md}</p>
             </div>
           )}
 
           {currentEvent.dataJson && Object.keys(currentEvent.dataJson).length > 0 && (
             <details className="mt-3">
-              <summary className="cursor-pointer text-xs font-semibold uppercase text-slate-500 hover:text-slate-400">
+              <summary className="cursor-pointer text-xs font-semibold uppercase text-brand-outline hover:text-brand-outline">
                 Data JSON
               </summary>
-              <pre className="mt-2 overflow-x-auto rounded-lg bg-slate-900 p-3 text-xs text-slate-300">
+              <pre className="mt-2 overflow-x-auto rounded-lg bg-slate-900 p-3 text-xs text-brand-outline">
                 {JSON.stringify(currentEvent.dataJson, null, 2)}
               </pre>
             </details>
@@ -201,7 +201,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
               background: `linear-gradient(to right, rgb(124 58 237) 0%, rgb(124 58 237) ${progress}%, rgb(51 65 85) ${progress}%, rgb(51 65 85) 100%)`
             }}
           />
-          <div className="absolute inset-x-0 top-full mt-1 flex justify-between text-xs text-slate-500">
+          <div className="absolute inset-x-0 top-full mt-1 flex justify-between text-xs text-brand-outline">
             <span>Start</span>
             <span>End</span>
           </div>
@@ -215,8 +215,8 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
               onClick={() => setCurrentIndex(index)}
               className={`h-8 min-w-[32px] flex-shrink-0 rounded text-xs font-medium transition ${
                 index === currentIndex
-                  ? 'bg-brand-accent text-white'
-                  : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+                  ? 'bg-brand-accent text-brand-foreground'
+                  : 'bg-slate-700 text-brand-outline hover:bg-slate-600'
               }`}
               title={`${event.eye || 'System'} - ${event.type}`}
             >
@@ -231,7 +231,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
         <div className="flex items-center space-x-2">
           <button
             onClick={handleReset}
-            className="rounded-lg bg-slate-700 p-2 text-slate-300 transition hover:bg-slate-600"
+            className="rounded-lg bg-slate-700 p-2 text-brand-outline transition hover:bg-slate-600"
             title="Reset to start"
           >
             <SkipBack className="h-5 w-5" />
@@ -239,7 +239,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
 
           <button
             onClick={handleSkipBackward}
-            className="rounded-lg bg-slate-700 p-2 text-slate-300 transition hover:bg-slate-600"
+            className="rounded-lg bg-slate-700 p-2 text-brand-outline transition hover:bg-slate-600"
             title="Previous event"
           >
             <Rewind className="h-5 w-5" />
@@ -247,7 +247,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
 
           <button
             onClick={togglePlayPause}
-            className="rounded-lg bg-brand-accent p-3 text-white transition hover:bg-brand-accent/90"
+            className="rounded-lg bg-brand-accent p-3 text-brand-foreground transition hover:bg-brand-accent/90"
             title={isPlaying ? 'Pause' : 'Play'}
           >
             {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
@@ -255,7 +255,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
 
           <button
             onClick={handleSkipForward}
-            className="rounded-lg bg-slate-700 p-2 text-slate-300 transition hover:bg-slate-600"
+            className="rounded-lg bg-slate-700 p-2 text-brand-outline transition hover:bg-slate-600"
             title="Next event"
           >
             <FastForward className="h-5 w-5" />
@@ -263,7 +263,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
 
           <button
             onClick={() => setCurrentIndex(totalEvents - 1)}
-            className="rounded-lg bg-slate-700 p-2 text-slate-300 transition hover:bg-slate-600"
+            className="rounded-lg bg-slate-700 p-2 text-brand-outline transition hover:bg-slate-600"
             title="Skip to end"
           >
             <SkipForward className="h-5 w-5" />
@@ -272,7 +272,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
 
         <button
           onClick={handleSpeedChange}
-          className="rounded-lg bg-slate-700 px-4 py-2 font-semibold text-slate-300 transition hover:bg-slate-600"
+          className="rounded-lg bg-slate-700 px-4 py-2 font-semibold text-brand-outline transition hover:bg-slate-600"
           title="Change playback speed"
         >
           {speed}x
@@ -283,23 +283,23 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
       <div className="mt-4 flex items-center justify-center space-x-4 text-xs">
         <div className="flex items-center space-x-1">
           <div className="h-2 w-2 rounded-full bg-green-500"></div>
-          <span className="text-slate-400">OK</span>
+          <span className="text-brand-outline">OK</span>
         </div>
         <div className="flex items-center space-x-1">
           <div className="h-2 w-2 rounded-full bg-red-500"></div>
-          <span className="text-slate-400">Reject</span>
+          <span className="text-brand-outline">Reject</span>
         </div>
         <div className="flex items-center space-x-1">
           <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
-          <span className="text-slate-400">Need Input</span>
+          <span className="text-brand-outline">Need Input</span>
         </div>
         <div className="flex items-center space-x-1">
           <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-          <span className="text-slate-400">Running</span>
+          <span className="text-brand-outline">Running</span>
         </div>
         <div className="flex items-center space-x-1">
-          <div className="h-2 w-2 rounded-full bg-gray-500"></div>
-          <span className="text-slate-400">Other</span>
+          <div className="h-2 w-2 rounded-full bg-brand-paper0"></div>
+          <span className="text-brand-outline">Other</span>
         </div>
       </div>
     </div>

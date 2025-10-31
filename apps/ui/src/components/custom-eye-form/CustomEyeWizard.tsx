@@ -215,7 +215,7 @@ export function CustomEyeWizard({ initialData, eyeId, onSave, onCancel }: Custom
             {!isLastStep ? (
               <button
                 onClick={handleNext}
-                className="flex items-center gap-2 px-6 py-3 rounded-lg bg-brand-accent text-white hover:bg-brand-accent/90 transition-colors"
+                className="flex items-center gap-2 px-6 py-3 rounded-lg bg-brand-accent text-brand-foreground hover:bg-brand-accent/90 transition-colors"
               >
                 {BUTTON_LABELS.NEXT}
                 <ChevronRight className="w-4 h-4" />
@@ -223,7 +223,7 @@ export function CustomEyeWizard({ initialData, eyeId, onSave, onCancel }: Custom
             ) : (
               <button
                 onClick={handleSave}
-                className="flex items-center gap-2 px-6 py-3 rounded-lg bg-brand-accent text-white hover:bg-brand-accent/90 transition-colors"
+                className="flex items-center gap-2 px-6 py-3 rounded-lg bg-brand-accent text-brand-foreground hover:bg-brand-accent/90 transition-colors"
               >
                 <Save className="w-4 h-4" />
                 {state.isEditing ? BUTTON_LABELS.UPDATE_EYE : BUTTON_LABELS.CREATE_EYE}

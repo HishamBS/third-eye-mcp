@@ -78,7 +78,7 @@ function Dropdown({ section }: { section: DropdownSection }) {
         className={`flex items-center space-x-1 px-4 py-2 text-sm font-medium transition-colors rounded-lg ${
           isActive
             ? 'text-brand-accent bg-brand-accent/10'
-            : 'text-slate-300 hover:text-white hover:bg-brand-paper/60'
+            : 'text-brand-outline hover:text-brand-foreground hover:bg-brand-paper/60'
         }`}
       >
         <span>{section.label}</span>
@@ -98,14 +98,14 @@ function Dropdown({ section }: { section: DropdownSection }) {
                     className={`flex items-start space-x-3 rounded-lg p-3 transition-colors ${
                       isItemActive
                         ? 'bg-brand-accent/20 text-brand-accent'
-                        : 'text-slate-300 hover:bg-brand-paper/60 hover:text-white'
+                        : 'text-brand-outline hover:bg-brand-paper/60 hover:text-brand-foreground'
                     }`}
                   >
                     <div className="mt-0.5">{item.icon}</div>
                     <div className="flex-1">
                       <div className="font-medium">{item.label}</div>
                       {item.description && (
-                        <div className="text-xs text-slate-400 mt-0.5">{item.description}</div>
+                        <div className="text-xs text-brand-outline mt-0.5">{item.description}</div>
                       )}
                     </div>
                   </Link>
@@ -138,7 +138,7 @@ export function GlobalNav() {
               priority
               className="h-9 w-9 transform transition-transform duration-200 group-hover:scale-110"
             />
-            <span className="text-lg font-semibold text-white group-hover:text-brand-accent transition-colors whitespace-nowrap">
+            <span className="text-lg font-semibold text-brand-foreground group-hover:text-brand-accent transition-colors whitespace-nowrap">
               Third Eye MCP
             </span>
           </Link>
@@ -157,12 +157,12 @@ export function GlobalNav() {
             <ThemeSwitcher />
             <Link
               href="/settings"
-              className="rounded-lg p-2 text-slate-400 hover:text-white hover:bg-brand-paper/60 transition-colors"
+              className="rounded-lg p-2 text-brand-outline hover:text-brand-foreground hover:bg-brand-paper/60 transition-colors"
               aria-label="Settings"
             >
               <Settings className="h-5 w-5" />
             </Link>
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-brand-foreground text-sm font-semibold">
               AI
             </div>
           </div>

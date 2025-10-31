@@ -45,9 +45,9 @@ export function SessionNotifier() {
               </svg>
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-white">New Session Started</p>
-              <p className="mt-0.5 text-sm text-slate-300">{displayName}</p>
-              <p className="mt-0.5 text-xs text-slate-400">{model}</p>
+              <p className="font-semibold text-brand-foreground">New Session Started</p>
+              <p className="mt-0.5 text-sm text-brand-outline">{displayName}</p>
+              <p className="mt-0.5 text-xs text-brand-outline">{model}</p>
             </div>
           </div>,
           {

@@ -118,7 +118,7 @@ export const Toolbar = memo(function Toolbar({
         {/* Save */}
         <button
           onClick={onSave}
-          className="px-4 py-2 bg-brand-primary text-white rounded-md font-medium text-sm hover:bg-brand-primary/90 transition-colors"
+          className="px-4 py-2 bg-brand-primary text-brand-foreground rounded-md font-medium text-sm hover:bg-brand-primary/90 transition-colors"
         >
           {TOOLBAR_TEXT.SAVE}
         </button>
@@ -127,7 +127,7 @@ export const Toolbar = memo(function Toolbar({
         <button
           onClick={() => activePipeline && onActivate(activePipeline.id)}
           disabled={!activePipeline || activePipeline.isActive}
-          className="px-4 py-2 bg-green-600 text-white rounded-md font-medium text-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 bg-green-600 text-brand-foreground rounded-md font-medium text-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {TOOLBAR_TEXT.ACTIVATE}
         </button>
@@ -135,7 +135,7 @@ export const Toolbar = memo(function Toolbar({
         {/* New */}
         <button
           onClick={onNew}
-          className="px-4 py-2 bg-brand-accent text-white rounded-md font-medium text-sm hover:bg-brand-accent/90 transition-colors"
+          className="px-4 py-2 bg-brand-accent text-brand-foreground rounded-md font-medium text-sm hover:bg-brand-accent/90 transition-colors"
         >
           {TOOLBAR_TEXT.NEW}
         </button>
@@ -184,7 +184,7 @@ export const Toolbar = memo(function Toolbar({
 
             <button
               onClick={onLoadTemplate}
-              className="px-3 py-2 bg-brand-primary border border-brand-primary rounded-md text-white text-sm hover:bg-brand-primary/90 transition-colors"
+              className="px-3 py-2 bg-brand-primary border border-brand-primary rounded-md text-brand-foreground text-sm hover:bg-brand-primary/90 transition-colors"
             >
               {TOOLBAR_TEXT.LOAD_TEMPLATE}
             </button>
@@ -193,7 +193,7 @@ export const Toolbar = memo(function Toolbar({
               onClick={onToggleMinimap}
               className={`px-3 py-2 border rounded-md text-sm transition-colors ${
                 showMinimap
-                  ? 'bg-brand-primary text-white border-brand-primary'
+                  ? 'bg-brand-primary text-brand-foreground border-brand-primary'
                   : 'bg-brand-paper text-brand-ink border-brand-outline hover:bg-brand-outline/10'
               }`}
             >
@@ -204,7 +204,7 @@ export const Toolbar = memo(function Toolbar({
               onClick={onToggleGrid}
               className={`px-3 py-2 border rounded-md text-sm transition-colors ${
                 showGrid
-                  ? 'bg-brand-primary text-white border-brand-primary'
+                  ? 'bg-brand-primary text-brand-foreground border-brand-primary'
                   : 'bg-brand-paper text-brand-ink border-brand-outline hover:bg-brand-outline/10'
               }`}
             >

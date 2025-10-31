@@ -56,12 +56,12 @@ function ReplayContent() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
+              <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent">
                 ← Home
               </Link>
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Replay Theater</p>
-                <h1 className="mt-1 text-2xl font-semibold text-white">Session: {sessionId}</h1>
+                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">Session: {sessionId}</h1>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -144,7 +144,7 @@ function ReplayContent() {
           >
             <GlassCard className="bg-brand-paperElev/50 p-12 text-center">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-accent border-t-transparent"></div>
-              <p className="mt-4 text-sm text-slate-400">Loading session events...</p>
+              <p className="mt-4 text-sm text-brand-outline">Loading session events...</p>
             </GlassCard>
           </motion.div>
         ) : error ? (
@@ -183,12 +183,12 @@ export default function ReplayPage() {
           <div className="border-b border-brand-outline/60 bg-brand-paperElev/50">
             <div className="mx-auto max-w-7xl px-6 py-6">
               <div className="flex items-center gap-6">
-                <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
+                <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent">
                   ← Home
                 </Link>
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Replay Theater</p>
-                  <h1 className="mt-1 text-2xl font-semibold text-white">Loading...</h1>
+                  <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">Loading...</h1>
                 </div>
               </div>
             </div>
@@ -196,7 +196,7 @@ export default function ReplayPage() {
           <div className="mx-auto max-w-7xl space-y-6 px-6 py-8">
             <GlassCard className="bg-brand-paperElev/50 p-12 text-center">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-accent border-t-transparent"></div>
-              <p className="mt-4 text-sm text-slate-400">Initializing replay theater...</p>
+              <p className="mt-4 text-sm text-brand-outline">Initializing replay theater...</p>
             </GlassCard>
           </div>
         </div>

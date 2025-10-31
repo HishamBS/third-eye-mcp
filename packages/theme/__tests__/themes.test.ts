@@ -4,8 +4,9 @@ import type { Theme, ThemeName, ThemeMode } from '../src/themes';
 
 describe('Theme Registry', () => {
   describe('THEMES object', () => {
-    it('should contain all six themes', () => {
-      expect(Object.keys(THEMES).length).toBe(6);
+    it('should contain all seven themes', () => {
+      expect(Object.keys(THEMES).length).toBe(7);
+      expect(THEMES.overseer).toBeDefined();
       expect(THEMES.aurora).toBeDefined();
       expect(THEMES.midnight).toBeDefined();
       expect(THEMES.sakura).toBeDefined();
@@ -15,8 +16,8 @@ describe('Theme Registry', () => {
     });
 
     it('should have light and dark variants for each theme', () => {
-      const themeNames: ThemeName[] = ['aurora', 'midnight', 'sakura', 'horizon', 'emerald', 'obsidian'];
-      
+      const themeNames: ThemeName[] = ['overseer', 'aurora', 'midnight', 'sakura', 'horizon', 'emerald', 'obsidian'];
+
       for (const themeName of themeNames) {
         expect(THEMES[themeName].light).toBeDefined();
         expect(THEMES[themeName].dark).toBeDefined();
@@ -49,7 +50,7 @@ describe('Theme Registry', () => {
     });
 
     it('should return theme for all theme names and modes', () => {
-      const themeNames: ThemeName[] = ['aurora', 'midnight', 'sakura', 'horizon', 'emerald', 'obsidian'];
+      const themeNames: ThemeName[] = ['overseer', 'aurora', 'midnight', 'sakura', 'horizon', 'emerald', 'obsidian'];
       const modes: ThemeMode[] = ['light', 'dark'];
 
       for (const themeName of themeNames) {
@@ -66,7 +67,7 @@ describe('Theme Registry', () => {
   describe('getAllThemes', () => {
     it('should return array of all themes', () => {
       const themes = getAllThemes();
-      expect(themes.length).toBe(12); // 6 themes × 2 modes
+      expect(themes.length).toBe(14); // 7 themes × 2 modes
     });
 
     it('should include both light and dark variants', () => {
@@ -82,7 +83,8 @@ describe('Theme Registry', () => {
   describe('getThemeNames', () => {
     it('should return all theme names', () => {
       const names = getThemeNames();
-      expect(names.length).toBe(6);
+      expect(names.length).toBe(7);
+      expect(names).toContain('overseer');
       expect(names).toContain('aurora');
       expect(names).toContain('midnight');
       expect(names).toContain('sakura');

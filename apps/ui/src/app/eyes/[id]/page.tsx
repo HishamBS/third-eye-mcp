@@ -217,7 +217,7 @@ export default function EyeDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-brand-ink flex items-center justify-center">
-        <p className="text-white">Loading Eye details...</p>
+        <p className="text-brand-foreground">Loading Eye details...</p>
       </div>
     );
   }
@@ -226,7 +226,7 @@ export default function EyeDetailPage() {
     return (
       <div className="min-h-screen bg-brand-ink flex items-center justify-center">
         <div className="text-center">
-          <p className="text-white mb-4">Eye not found</p>
+          <p className="text-brand-foreground mb-4">Eye not found</p>
           <Link href="/eyes" className="text-brand-accent hover:underline">← Back to Eyes</Link>
         </div>
       </div>
@@ -240,7 +240,7 @@ export default function EyeDetailPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/eyes" className="text-slate-400 transition-colors hover:text-brand-accent">
+              <Link href="/eyes" className="text-brand-outline transition-colors hover:text-brand-accent">
                 ← Back to Eyes
               </Link>
               <div className="flex items-center gap-4">
@@ -255,11 +255,11 @@ export default function EyeDetailPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">{eye.source}</p>
-                    <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs text-white">
+                    <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs text-brand-foreground">
                       v{eye.version}
                     </span>
                   </div>
-                  <h1 className="mt-1 text-2xl font-semibold text-white capitalize">{eye.name}</h1>
+                  <h1 className="mt-1 text-2xl font-semibold text-brand-foreground capitalize">{eye.name}</h1>
                   {eye.capabilities && eye.capabilities.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {eye.capabilities.map((cap, idx) => (
@@ -305,8 +305,8 @@ export default function EyeDetailPage() {
                 onClick={() => setActiveTab(tab)}
                 className={`border-b-2 px-2 py-4 text-sm font-semibold capitalize transition ${
                   activeTab === tab
-                    ? 'border-brand-accent text-white'
-                    : 'border-transparent text-slate-400 hover:text-white'
+                    ? 'border-brand-accent text-brand-foreground'
+                    : 'border-transparent text-brand-outline hover:text-brand-foreground'
                 }`}
               >
                 {tab}
@@ -321,17 +321,17 @@ export default function EyeDetailPage() {
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <GlassCard>
-            <h2 className="mb-6 text-xl font-semibold text-white">Eye Overview</h2>
+            <h2 className="mb-6 text-xl font-semibold text-brand-foreground">Eye Overview</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Name</label>
+                <label className="block text-sm font-medium text-brand-outline mb-2">Name</label>
                 {isEditingName ? (
                   <div className="flex gap-3">
                     <input
                       type="text"
                       value={editedName}
                       onChange={(e) => setEditedName(e.target.value)}
-                      className="flex-1 rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white focus:border-brand-accent focus:outline-none"
+                      className="flex-1 rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground focus:border-brand-accent focus:outline-none"
                       placeholder="Enter Eye name"
                     />
                     <button
@@ -342,17 +342,17 @@ export default function EyeDetailPage() {
                     </button>
                     <button
                       onClick={() => setIsEditingName(false)}
-                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       Cancel
                     </button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">
-                    <p className="text-white capitalize flex-1">{eye.name}</p>
+                    <p className="text-brand-foreground capitalize flex-1">{eye.name}</p>
                     <button
                       onClick={startEditingName}
-                      className="rounded-full border border-brand-outline/50 px-4 py-1.5 text-xs font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/50 px-4 py-1.5 text-xs font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       Edit Name
                     </button>
@@ -360,12 +360,12 @@ export default function EyeDetailPage() {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Description</label>
-                <p className="text-white">{eye.description}</p>
+                <label className="block text-sm font-medium text-brand-outline mb-2">Description</label>
+                <p className="text-brand-foreground">{eye.description}</p>
               </div>
               {eye.capabilities && eye.capabilities.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Capabilities</label>
+                  <label className="block text-sm font-medium text-brand-outline mb-2">Capabilities</label>
                   <div className="flex flex-wrap gap-2">
                     {eye.capabilities.map((cap, idx) => (
                       <span 
@@ -379,9 +379,9 @@ export default function EyeDetailPage() {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Source</label>
+                <label className="block text-sm font-medium text-brand-outline mb-2">Source</label>
                 <span className={`inline-block rounded-full px-3 py-1 text-sm ${
-                  eye.source === 'built-in' ? 'bg-white/20 text-white' : 'bg-green-500/30 text-green-100'
+                  eye.source === 'built-in' ? 'bg-white/20 text-brand-foreground' : 'bg-green-500/30 text-green-100'
                 }`}>
                   {eye.source}
                 </span>
@@ -394,7 +394,7 @@ export default function EyeDetailPage() {
         {activeTab === 'persona' && (
           <GlassCard>
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-white">Persona Management</h2>
+              <h2 className="text-xl font-semibold text-brand-foreground">Persona Management</h2>
               {!isEditingPersona && (
                 <button
                   onClick={startEditingPersona}
@@ -408,17 +408,17 @@ export default function EyeDetailPage() {
             {isEditingPersona ? (
               <div className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-300">Persona Content</label>
+                  <label className="mb-2 block text-sm font-medium text-brand-outline">Persona Content</label>
                   <textarea
                     value={personaContent}
                     onChange={(e) => setPersonaContent(e.target.value)}
-                    className="h-96 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-white focus:border-brand-accent focus:outline-none"
+                    className="h-96 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-brand-foreground focus:border-brand-accent focus:outline-none"
                   />
                 </div>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setIsEditingPersona(false)}
-                    className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                    className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
                   >
                     Cancel
                   </button>
@@ -433,7 +433,7 @@ export default function EyeDetailPage() {
             ) : (
               <div className="space-y-4">
                 {personas.length === 0 ? (
-                  <p className="text-slate-400">No personas found</p>
+                  <p className="text-brand-outline">No personas found</p>
                 ) : (
                   personas.map((persona) => (
                     <div
@@ -446,7 +446,7 @@ export default function EyeDetailPage() {
                     >
                       <div className="mb-3 flex items-start justify-between">
                         <div>
-                          <h3 className="font-semibold text-white">
+                          <h3 className="font-semibold text-brand-foreground">
                             Version {persona.version}
                             {persona.active && (
                               <span className="ml-2 rounded-full bg-green-500/20 px-2 py-1 text-xs text-green-400">
@@ -454,7 +454,7 @@ export default function EyeDetailPage() {
                               </span>
                             )}
                           </h3>
-                          <p className="text-sm text-slate-400">
+                          <p className="text-sm text-brand-outline">
                             {new Date(persona.createdAt).toLocaleString()}
                           </p>
                         </div>
@@ -468,7 +468,7 @@ export default function EyeDetailPage() {
                         )}
                       </div>
                       <div className="rounded-lg bg-brand-paper/70 p-3">
-                        <pre className="max-h-48 overflow-auto whitespace-pre-wrap text-xs text-slate-300">
+                        <pre className="max-h-48 overflow-auto whitespace-pre-wrap text-xs text-brand-outline">
                           {persona.content.substring(0, 500)}...
                         </pre>
                       </div>
@@ -483,28 +483,28 @@ export default function EyeDetailPage() {
         {/* Routing Tab */}
         {activeTab === 'routing' && (
           <GlassCard>
-            <h2 className="mb-6 text-xl font-semibold text-white">Routing Configuration</h2>
+            <h2 className="mb-6 text-xl font-semibold text-brand-foreground">Routing Configuration</h2>
             {routing ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Primary Provider</label>
-                  <p className="text-white">{routing.primaryProvider || 'Not configured'}</p>
+                  <label className="block text-sm font-medium text-brand-outline mb-2">Primary Provider</label>
+                  <p className="text-brand-foreground">{routing.primaryProvider || 'Not configured'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Primary Model</label>
-                  <p className="text-white">{routing.primaryModel || 'Not configured'}</p>
+                  <label className="block text-sm font-medium text-brand-outline mb-2">Primary Model</label>
+                  <p className="text-brand-foreground">{routing.primaryModel || 'Not configured'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Fallback Provider</label>
-                  <p className="text-white">{routing.fallbackProvider || 'Not configured'}</p>
+                  <label className="block text-sm font-medium text-brand-outline mb-2">Fallback Provider</label>
+                  <p className="text-brand-foreground">{routing.fallbackProvider || 'Not configured'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Fallback Model</label>
-                  <p className="text-white">{routing.fallbackModel || 'Not configured'}</p>
+                  <label className="block text-sm font-medium text-brand-outline mb-2">Fallback Model</label>
+                  <p className="text-brand-foreground">{routing.fallbackModel || 'Not configured'}</p>
                 </div>
               </div>
             ) : (
-              <p className="text-slate-400">No routing configuration found</p>
+              <p className="text-brand-outline">No routing configuration found</p>
             )}
           </GlassCard>
         )}
@@ -512,8 +512,8 @@ export default function EyeDetailPage() {
         {/* Test Tab */}
         {activeTab === 'test' && (
           <GlassCard>
-            <h2 className="mb-6 text-xl font-semibold text-white">Test Eye</h2>
-            <p className="text-slate-400">Test functionality coming soon...</p>
+            <h2 className="mb-6 text-xl font-semibold text-brand-foreground">Test Eye</h2>
+            <p className="text-brand-outline">Test functionality coming soon...</p>
           </GlassCard>
         )}
       </div>

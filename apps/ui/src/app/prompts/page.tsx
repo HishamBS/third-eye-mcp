@@ -258,19 +258,19 @@ export default function PromptsPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
+              <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent">
                 ← Home
               </Link>
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Templates</p>
-                <h1 className="mt-1 text-2xl font-semibold text-white">Prompt Library</h1>
+                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">Prompt Library</h1>
               </div>
             </div>
             <div className="flex gap-4">
-              <Link href="/personas" className="text-sm text-slate-400 transition-colors hover:text-white">
+              <Link href="/personas" className="text-sm text-brand-outline transition-colors hover:text-brand-foreground">
                 Personas
               </Link>
-              <Link href="/models" className="text-sm text-slate-400 transition-colors hover:text-white">
+              <Link href="/models" className="text-sm text-brand-outline transition-colors hover:text-brand-foreground">
                 Models
               </Link>
               <button
@@ -309,11 +309,11 @@ export default function PromptsPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-300">Category</label>
+                  <label className="mb-2 block text-sm font-medium text-brand-outline">Category</label>
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-3 py-2 text-white focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                    className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-3 py-2 text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                   >
                     <option value="all">All Categories</option>
                     {categories.map((cat) => (
@@ -325,11 +325,11 @@ export default function PromptsPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-300">Tag</label>
+                  <label className="mb-2 block text-sm font-medium text-brand-outline">Tag</label>
                   <select
                     value={selectedTag}
                     onChange={(e) => setSelectedTag(e.target.value)}
-                    className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-3 py-2 text-white focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                    className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-3 py-2 text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                   >
                     <option value="all">All Tags</option>
                     {allTags.map((tag) => (
@@ -341,7 +341,7 @@ export default function PromptsPage() {
                 </div>
 
                 <div className="border-t border-brand-outline/40 pt-4">
-                  <div className="text-sm text-slate-400">
+                  <div className="text-sm text-brand-outline">
                     <div>Total: {prompts.length}</div>
                     <div>Filtered: {filteredPrompts.length}</div>
                   </div>
@@ -356,10 +356,10 @@ export default function PromptsPage() {
               /* Version History */
               <GlassCard>
                 <div className="mb-6 flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-white">Version History</h2>
+                  <h2 className="text-xl font-semibold text-brand-foreground">Version History</h2>
                   <button
                     onClick={() => setShowVersions(false)}
-                    className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                    className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
                   >
                     Back to Library
                   </button>
@@ -370,14 +370,14 @@ export default function PromptsPage() {
                     <div key={ver.id} className="rounded-xl border border-brand-outline/40 bg-brand-paper/50 p-5">
                       <div className="mb-3 flex items-start justify-between">
                         <div>
-                          <h3 className="text-lg font-semibold text-white">{ver.name} v{ver.version}</h3>
+                          <h3 className="text-lg font-semibold text-brand-foreground">{ver.name} v{ver.version}</h3>
                           <div className="mt-1 flex items-center gap-2">
                             <span className={`rounded-full px-2 py-0.5 text-xs ${
-                              ver.active ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
+                              ver.active ? 'bg-green-500/20 text-green-400' : 'bg-brand-paper0/20 text-brand-outline'
                             }`}>
                               {ver.active ? 'Active' : 'Inactive'}
                             </span>
-                            <span className="text-xs text-slate-400">
+                            <span className="text-xs text-brand-outline">
                               {new Date(ver.createdAt).toLocaleDateString()}
                             </span>
                           </div>
@@ -387,14 +387,14 @@ export default function PromptsPage() {
                           className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                             ver.active
                               ? 'border border-red-500/50 text-red-400 hover:bg-red-500/10'
-                              : 'bg-green-600 text-white hover:bg-green-700'
+                              : 'bg-green-600 text-brand-foreground hover:bg-green-700'
                           }`}
                         >
                           {ver.active ? 'Deactivate' : 'Activate'}
                         </button>
                       </div>
                       <div className="rounded-xl bg-brand-ink/50 p-3">
-                        <pre className="whitespace-pre-wrap font-mono text-sm text-slate-300">
+                        <pre className="whitespace-pre-wrap font-mono text-sm text-brand-outline">
                           {ver.content.length > 200 ? ver.content.substring(0, 200) + '...' : ver.content}
                         </pre>
                       </div>
@@ -406,13 +406,13 @@ export default function PromptsPage() {
               /* Prompt Editor */
               <GlassCard>
                 <div className="mb-6 flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-white">
+                  <h2 className="text-xl font-semibold text-brand-foreground">
                     {isCreating ? 'Create New Prompt' : `Edit ${formData.name}`}
                   </h2>
                   <div className="flex gap-3">
                     <button
                       onClick={cancelForm}
-                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       Cancel
                     </button>
@@ -428,23 +428,23 @@ export default function PromptsPage() {
 
                 <div className="space-y-6">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">Name</label>
+                    <label className="mb-2 block text-sm font-medium text-brand-outline">Name</label>
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="Enter prompt name..."
-                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                       disabled={isEditing}
                     />
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">Category</label>
+                    <label className="mb-2 block text-sm font-medium text-brand-outline">Category</label>
                     <select
                       value={formData.category}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                     >
                       <option value="general">General</option>
                       <option value="eye">Eye Persona</option>
@@ -453,7 +453,7 @@ export default function PromptsPage() {
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">
+                    <label className="mb-2 block text-sm font-medium text-brand-outline">
                       Variables {formData.variables.length > 0 && `(${formData.variables.length})`}
                     </label>
                     <div className="mb-2 flex flex-wrap gap-2">
@@ -474,14 +474,14 @@ export default function PromptsPage() {
                     </div>
                     <button
                       onClick={addVariable}
-                      className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       + Add Variable
                     </button>
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">
+                    <label className="mb-2 block text-sm font-medium text-brand-outline">
                       Tags {formData.tags.length > 0 && `(${formData.tags.length})`}
                     </label>
                     <div className="mb-2 flex flex-wrap gap-2">
@@ -499,19 +499,19 @@ export default function PromptsPage() {
                     </div>
                     <button
                       onClick={addTag}
-                      className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       + Add Tag
                     </button>
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">Prompt Content</label>
+                    <label className="mb-2 block text-sm font-medium text-brand-outline">Prompt Content</label>
                     <textarea
                       value={formData.content}
                       onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                       placeholder="Enter prompt content... Use {{variable_name}} for variables"
-                      className="h-96 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                      className="h-96 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                     />
                   </div>
 
@@ -530,7 +530,7 @@ export default function PromptsPage() {
               <div className="space-y-4">
                 {filteredPrompts.length === 0 ? (
                   <GlassCard className="py-12 text-center">
-                    <p className="mb-4 text-lg text-slate-400">No prompts found</p>
+                    <p className="mb-4 text-lg text-brand-outline">No prompts found</p>
                     <button
                       onClick={startCreating}
                       className="rounded-full bg-brand-accent px-6 py-2.5 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary"
@@ -549,13 +549,13 @@ export default function PromptsPage() {
                       <GlassCard className="transition-all hover:border-brand-accent/50">
                         <div className="mb-4 flex items-start justify-between">
                           <div>
-                            <h3 className="text-lg font-semibold text-white">{prompt.name}</h3>
+                            <h3 className="text-lg font-semibold text-brand-foreground">{prompt.name}</h3>
                             <div className="mt-1 flex items-center gap-3">
-                              <span className="text-sm text-slate-400">
+                              <span className="text-sm text-brand-outline">
                                 v{prompt.version}
                               </span>
                               <span className={`rounded-full px-2 py-0.5 text-xs ${
-                                prompt.active ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
+                                prompt.active ? 'bg-green-500/20 text-green-400' : 'bg-brand-paper0/20 text-brand-outline'
                               }`}>
                                 {prompt.active ? 'Active' : 'Inactive'}
                               </span>
@@ -563,7 +563,7 @@ export default function PromptsPage() {
                                 {prompt.category}
                               </span>
                               {prompt.variablesJson && prompt.variablesJson.length > 0 && (
-                                <span className="text-xs text-slate-400">
+                                <span className="text-xs text-brand-outline">
                                   {prompt.variablesJson.length} variable{prompt.variablesJson.length > 1 ? 's' : ''}
                                 </span>
                               )}
@@ -572,7 +572,7 @@ export default function PromptsPage() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => viewVersions(prompt.name)}
-                              className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                              className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
                             >
                               Versions
                             </button>
@@ -581,14 +581,14 @@ export default function PromptsPage() {
                               className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
                                 prompt.active
                                   ? 'border border-red-500/50 text-red-400 hover:bg-red-500/10'
-                                  : 'bg-green-600 text-white hover:bg-green-700'
+                                  : 'bg-green-600 text-brand-foreground hover:bg-green-700'
                               }`}
                             >
                               {prompt.active ? 'Deactivate' : 'Activate'}
                             </button>
                             <button
                               onClick={() => startEditing(prompt)}
-                              className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                              className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
                             >
                               Edit
                             </button>
@@ -596,7 +596,7 @@ export default function PromptsPage() {
                         </div>
 
                         <div className="mb-3 rounded-xl bg-brand-paper/70 p-4">
-                          <pre className="whitespace-pre-wrap font-mono text-sm text-slate-300">
+                          <pre className="whitespace-pre-wrap font-mono text-sm text-brand-outline">
                             {prompt.content.length > 300
                               ? prompt.content.substring(0, 300) + '...'
                               : prompt.content}

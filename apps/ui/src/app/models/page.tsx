@@ -223,19 +223,19 @@ export default function ModelsPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
+              <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent">
                 ← Home
               </Link>
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Models</p>
-                <h1 className="mt-1 text-2xl font-semibold text-white">Models & Routing</h1>
+                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">Models & Routing</h1>
               </div>
             </div>
             <div className="flex gap-4">
-              <Link href="/personas" className="text-sm text-slate-400 transition-colors hover:text-white">
+              <Link href="/personas" className="text-sm text-brand-outline transition-colors hover:text-brand-foreground">
                 Personas
               </Link>
-              <Link href="/settings" className="text-sm text-slate-400 transition-colors hover:text-white">
+              <Link href="/settings" className="text-sm text-brand-outline transition-colors hover:text-brand-foreground">
                 Settings
               </Link>
             </div>
@@ -277,7 +277,7 @@ export default function ModelsPage() {
         </GlassCard>
 
         <GlassCard>
-          <h2 className="mb-6 text-xl font-semibold text-white">Available Models</h2>
+          <h2 className="mb-6 text-xl font-semibold text-brand-foreground">Available Models</h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {PROVIDERS.map((provider) => {
               const providerModels = models[provider.id] || [];
@@ -287,7 +287,7 @@ export default function ModelsPage() {
                 <div key={provider.id} className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-semibold text-white">{provider.name}</h3>
+                      <h3 className="text-lg font-semibold text-brand-foreground">{provider.name}</h3>
                       {isHealthy !== undefined && (
                         <span
                           className={`flex items-center ${isHealthy ? 'text-green-400' : 'text-red-400'}`}
@@ -308,7 +308,7 @@ export default function ModelsPage() {
 
                   <div className="max-h-80 space-y-2 overflow-y-auto">
                     {providerModels.length === 0 ? (
-                      <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4 text-center text-sm text-slate-400">
+                      <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4 text-center text-sm text-brand-outline">
                         {provider.requiresKey ? 'Add API key in Settings' : 'Click refresh to load models'}
                       </div>
                     ) : (
@@ -317,11 +317,11 @@ export default function ModelsPage() {
                           key={model.name}
                           className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-3"
                         >
-                          <div className="text-sm font-medium text-white">
+                          <div className="text-sm font-medium text-brand-foreground">
                             {model.displayName || model.name}
                           </div>
                           {model.family && (
-                            <div className="mt-1 text-xs text-slate-400">Family: {model.family}</div>
+                            <div className="mt-1 text-xs text-brand-outline">Family: {model.family}</div>
                           )}
                           {model.capability && (
                             <div className="mt-1 flex flex-wrap gap-1">
@@ -343,7 +343,7 @@ export default function ModelsPage() {
                             </div>
                           )}
                           {model.lastSeen && (
-                            <div className="mt-1 text-xs text-slate-500">
+                            <div className="mt-1 text-xs text-brand-outline">
                               Last seen: {new Date(model.lastSeen).toLocaleString()}
                             </div>
                           )}
@@ -358,7 +358,7 @@ export default function ModelsPage() {
         </GlassCard>
 
         <GlassCard>
-          <h2 className="mb-6 text-xl font-semibold text-white">Eye Routing Matrix</h2>
+          <h2 className="mb-6 text-xl font-semibold text-brand-foreground">Eye Routing Matrix</h2>
           <div className="space-y-4">
             {allEyes.map((eye) => {
               const eyeRouting = getRoutingForEye(eye);
@@ -371,14 +371,14 @@ export default function ModelsPage() {
                 >
                   <div className="mb-4 flex items-center gap-3">
                     <span className="text-2xl">{getEyeIcon(eye)}</span>
-                    <h3 className="text-lg font-semibold capitalize text-white">
+                    <h3 className="text-lg font-semibold capitalize text-brand-foreground">
                       {eye.replace(/_/g, ' ')}
                     </h3>
                   </div>
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-3">
-                      <h4 className="font-medium text-slate-300">Primary</h4>
+                      <h4 className="font-medium text-brand-outline">Primary</h4>
                       <div className="space-y-2">
                         <select
                           value={eyeRouting?.primaryProvider || ''}
@@ -386,7 +386,7 @@ export default function ModelsPage() {
                             handleRoutingChange(eye, { primaryProvider: e.target.value })
                           }
                           disabled={savingRouting}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
                         >
                           <option value="">Select Provider</option>
                           {PROVIDERS.map((p) => (
@@ -405,7 +405,7 @@ export default function ModelsPage() {
                             !eyeRouting?.primaryProvider ||
                             !models[eyeRouting.primaryProvider]
                           }
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
                         >
                           <option value="">Select Model</option>
                           {eyeRouting?.primaryProvider &&
@@ -419,7 +419,7 @@ export default function ModelsPage() {
                     </div>
 
                     <div className="space-y-3">
-                      <h4 className="font-medium text-slate-300">Fallback</h4>
+                      <h4 className="font-medium text-brand-outline">Fallback</h4>
                       <div className="space-y-2">
                         <select
                           value={eyeRouting?.fallbackProvider || ''}
@@ -427,7 +427,7 @@ export default function ModelsPage() {
                             handleRoutingChange(eye, { fallbackProvider: e.target.value })
                           }
                           disabled={savingRouting}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
                         >
                           <option value="">None</option>
                           {PROVIDERS.map((p) => (
@@ -446,7 +446,7 @@ export default function ModelsPage() {
                             !eyeRouting?.fallbackProvider ||
                             !models[eyeRouting.fallbackProvider]
                           }
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-white focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
                         >
                           <option value="">Select Model</option>
                           {eyeRouting?.fallbackProvider &&
@@ -475,7 +475,7 @@ export default function ModelsPage() {
                 <svg className="h-5 w-5 text-brand-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                <span className="text-sm font-medium text-white">
+                <span className="text-sm font-medium text-brand-foreground">
                   You have unsaved routing changes for {Object.keys(pendingRoutingChanges).length} Eye{Object.keys(pendingRoutingChanges).length > 1 ? 's' : ''}
                 </span>
               </div>
@@ -483,14 +483,14 @@ export default function ModelsPage() {
                 <button
                   onClick={discardRoutingChanges}
                   disabled={savingRouting}
-                  className="rounded-lg border border-brand-outline/40 bg-brand-paper px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-brand-paperElev disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-lg border border-brand-outline/40 bg-brand-paper px-4 py-2 text-sm font-medium text-brand-outline transition hover:bg-brand-paperElev disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Discard Changes
                 </button>
                 <button
                   onClick={saveAllRoutingChanges}
                   disabled={savingRouting}
-                  className="rounded-lg bg-brand-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-lg bg-brand-accent px-4 py-2 text-sm font-medium text-brand-foreground transition hover:bg-brand-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {savingRouting ? 'Saving...' : 'Save Routing Changes'}
                 </button>

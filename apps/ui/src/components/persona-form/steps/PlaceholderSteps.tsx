@@ -95,7 +95,7 @@ export function RemindersStep({ state, dispatch }: WizardStepProps) {
           />
           <button
             onClick={handleAddReminder}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-accent text-white hover:bg-brand-accent/90 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-accent text-brand-foreground hover:bg-brand-accent/90 transition-colors"
           >
             <Plus className="w-4 h-4" />
             {ARRAY_ACTIONS.ADD}
@@ -200,7 +200,7 @@ export function ReviewStep({ state }: WizardStepProps) {
           </button>
           <button
             onClick={handleDownload}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-accent text-white hover:bg-brand-accent/90 transition-colors text-sm"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-accent text-brand-foreground hover:bg-brand-accent/90 transition-colors text-sm"
           >
             <Download className="w-4 h-4" />
             Export JSON

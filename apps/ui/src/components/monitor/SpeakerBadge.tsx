@@ -72,7 +72,7 @@ export function SpeakerBadge({ speaker, size = 'md' }: SpeakerBadgeProps) {
 
   return (
     <div
-      className={`flex-shrink-0 ${sizeClass} rounded-full flex items-center justify-center text-white ${
+      className={`flex-shrink-0 ${sizeClass} rounded-full flex items-center justify-center text-brand-foreground ${
         isHexColor ? '' : colorValue
       }`}
       style={isHexColor ? { backgroundColor: colorValue } : undefined}
