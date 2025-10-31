@@ -3,6 +3,8 @@
 import { useCallback } from 'react';
 import { X } from 'lucide-react';
 import { TEMPLATE_TEXT, PIPELINE_TEMPLATES } from './constants';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { ARIA_LABELS } from '@/constants/accessibility';
 import type { PipelineNode, PipelineEdge } from '@/types/pipeline';
 
 /**
@@ -30,6 +32,12 @@ export function PipelineTemplateSelector({
   onClose,
   onSelect,
 }: PipelineTemplateSelectorProps) {
+  // Phase 20.1: Focus trap for accessibility
+  const modalRef = useFocusTrap({
+    isActive: isOpen,
+    onEscape: onClose,
+  });
+
   const handleSelect = useCallback(
     (template: typeof PIPELINE_TEMPLATES[number]) => {
       onSelect({
@@ -44,18 +52,31 @@ export function PipelineTemplateSelector({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="relative w-full max-w-3xl max-h-[80vh] overflow-y-auto rounded-2xl border border-brand-outline bg-brand-paper p-8 shadow-2xl">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="template-selector-title"
+      aria-describedby="template-selector-description"
+    >
+      <div
+        ref={modalRef}
+        className="relative w-full max-w-3xl max-h-[80vh] overflow-y-auto rounded-2xl border border-brand-outline bg-brand-paper p-8 shadow-2xl"
+      >
         {/* Header */}
         <div className="mb-6 flex items-start justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-white">{TEMPLATE_TEXT.SELECTOR_TITLE}</h2>
-            <p className="mt-1 text-sm text-slate-400">{TEMPLATE_TEXT.SELECTOR_SUBTITLE}</p>
+            <h2 id="template-selector-title" className="text-2xl font-bold text-white">
+              {TEMPLATE_TEXT.SELECTOR_TITLE}
+            </h2>
+            <p id="template-selector-description" className="mt-1 text-sm text-slate-400">
+              {TEMPLATE_TEXT.SELECTOR_SUBTITLE}
+            </p>
           </div>
           <button
             onClick={onClose}
             className="rounded-lg p-2 text-slate-400 hover:bg-brand-outline/20 hover:text-white transition-colors"
-            aria-label="Close"
+            aria-label={ARIA_LABELS.CLOSE_TEMPLATE_SELECTOR}
           >
             <X className="h-5 w-5" />
           </button>

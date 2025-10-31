@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { X, ArrowRight, ArrowLeft, Eye, GitBranch, Activity, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { ARIA_LABELS, ARIA_DESCRIPTIONS } from '@/constants/accessibility';
 
 interface WelcomeStep {
   title: string;
@@ -40,6 +42,12 @@ export function WelcomeModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [neverShow, setNeverShow] = useState(false);
+
+  // Phase 20.1: Focus trap for accessibility
+  const modalRef = useFocusTrap({
+    isActive: isOpen,
+    onEscape: () => handleClose(),
+  });
 
   useEffect(() => {
     // Check if user has seen the welcome modal
@@ -89,8 +97,13 @@ export function WelcomeModal() {
           onClick={(e) => {
             if (e.target === e.currentTarget) handleClose();
           }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="welcome-modal-title"
+          aria-describedby="welcome-modal-description"
         >
           <motion.div
+            ref={modalRef}
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
@@ -102,7 +115,7 @@ export function WelcomeModal() {
             <button
               onClick={handleClose}
               className="absolute top-4 right-4 rounded-lg p-2 text-slate-400 hover:text-white hover:bg-brand-outline/20 transition-colors z-10"
-              aria-label="Close welcome modal"
+              aria-label={ARIA_LABELS.CLOSE_WELCOME}
             >
               <X className="h-5 w-5" />
             </button>
@@ -130,16 +143,29 @@ export function WelcomeModal() {
                 transition={{ delay: 0.1 }}
                 className="text-center mb-8"
               >
-                <h2 className="text-2xl font-bold text-white mb-4">
+                <h2
+                  id="welcome-modal-title"
+                  className="text-2xl font-bold text-white mb-4"
+                >
                   {currentStepData.title}
                 </h2>
-                <p className="text-base text-slate-300 leading-relaxed max-w-xl mx-auto">
+                <p
+                  id="welcome-modal-description"
+                  className="text-base text-slate-300 leading-relaxed max-w-xl mx-auto"
+                >
                   {currentStepData.description}
                 </p>
               </motion.div>
 
               {/* Progress dots */}
-              <div className="flex justify-center gap-2 mb-8">
+              <div
+                className="flex justify-center gap-2 mb-8"
+                role="navigation"
+                aria-label={ARIA_DESCRIPTIONS.WIZARD_PROGRESS(
+                  currentStep + 1,
+                  WELCOME_STEPS.length
+                )}
+              >
                 {WELCOME_STEPS.map((_, index) => (
                   <button
                     key={index}
@@ -149,7 +175,8 @@ export function WelcomeModal() {
                         ? 'w-8 bg-brand-accent'
                         : 'w-2 bg-slate-600 hover:bg-slate-500'
                     }`}
-                    aria-label={`Go to step ${index + 1}`}
+                    aria-label={ARIA_LABELS.GO_TO_STEP(index + 1)}
+                    aria-current={index === currentStep ? 'step' : undefined}
                   />
                 ))}
               </div>
@@ -168,6 +195,7 @@ export function WelcomeModal() {
                     <button
                       onClick={handlePrev}
                       className="flex items-center gap-2 rounded-lg bg-brand-outline/20 px-4 py-2 text-sm font-medium text-white hover:bg-brand-outline/30 transition-colors"
+                      aria-label={ARIA_LABELS.PREVIOUS_STEP}
                     >
                       <ArrowLeft className="h-4 w-4" />
                       Back
@@ -177,6 +205,11 @@ export function WelcomeModal() {
                   <button
                     onClick={handleNext}
                     className="flex items-center gap-2 rounded-lg bg-brand-accent px-6 py-2 text-sm font-medium text-white hover:bg-brand-primary transition-colors"
+                    aria-label={
+                      currentStep < WELCOME_STEPS.length - 1
+                        ? ARIA_LABELS.NEXT_STEP
+                        : 'Get started with Third Eye'
+                    }
                   >
                     {currentStep < WELCOME_STEPS.length - 1 ? 'Next' : 'Get Started'}
                     {currentStep < WELCOME_STEPS.length - 1 && <ArrowRight className="h-4 w-4" />}

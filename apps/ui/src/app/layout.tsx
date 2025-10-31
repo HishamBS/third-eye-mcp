@@ -10,6 +10,7 @@ import { ThemeScript } from '@/components/ThemeScript';
 import { SessionNotifier } from '@/components/SessionNotifier';
 import { DialogProvider } from '@/hooks/useDialog';
 import { WelcomeModal } from '@/components/WelcomeModal';
+import { SkipLink } from '@/components/SkipLink';
 
 // Force dynamic rendering for all pages to avoid prerendering issues with client hooks
 export const dynamic = 'force-dynamic';
@@ -43,6 +44,7 @@ export default function RootLayout({
         <ThemeScript />
       </head>
       <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
+        <SkipLink />
         <UIProvider>
           <SecurityBanner />
           <SessionNotifier />
@@ -50,7 +52,7 @@ export default function RootLayout({
           <div id="root">
             <GlobalNav />
             <Breadcrumbs />
-            <main className="min-h-[calc(100vh-64px)]">
+            <main id="main-content" className="min-h-[calc(100vh-64px)]">
               {children}
             </main>
           </div>
