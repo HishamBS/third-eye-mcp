@@ -11,7 +11,7 @@ import { HelpIcon } from '@/components/HelpIcon';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import { UI_HELP_TEXT } from '@third-eye/constants';
 import { PersonaWizardModal } from '@/components/persona-form/PersonaWizardModal';
-import { SchemaTemplateSelector } from '@/components/custom-eye-form/SchemaTemplateSelector';
+import { CustomEyeWizard } from '@/components/custom-eye-form/CustomEyeWizard';
 
 interface Eye {
   id: string;
@@ -529,52 +529,49 @@ export default function EyesPage() {
       )}
 
       <div className="mx-auto max-w-7xl px-6 py-8">
-        {isCreating || isEditing || isTesting || (selectedEye && selectedEye.source === 'custom' && !isCreating && !isEditing && !isTesting) ? (
-          /* Eye Creator/Editor/Tester */
+        {isCreating || isEditing ? (
+          /* CustomEyeWizard - Full page visual schema builder */
+          <CustomEyeWizard
+            initialData={formData}
+            eyeId={selectedEye?.id}
+            onSave={async (data) => {
+              setFormData(data);
+              if (isCreating) {
+                await saveEye();
+              } else {
+                await updateEye();
+              }
+            }}
+            onCancel={cancelForm}
+          />
+        ) : isTesting || (selectedEye && selectedEye.source === 'custom' && !isCreating && !isEditing && !isTesting) ? (
+          /* Test Panel and View Mode */
           <GlassCard>
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white">
-                {isCreating ? UI_HELP_TEXT.EYES_FORM_TITLE_CREATE : isTesting ? UI_HELP_TEXT.EYES_FORM_TITLE_TEST.replace('{eyeName}', selectedEye?.name || '') : isEditing ? UI_HELP_TEXT.EYES_FORM_TITLE_EDIT.replace('{eyeName}', selectedEye?.name || '') : UI_HELP_TEXT.EYES_FORM_TITLE_VIEW.replace('{eyeName}', selectedEye?.name || '')}
+                {isTesting ? UI_HELP_TEXT.EYES_FORM_TITLE_TEST.replace('{eyeName}', selectedEye?.name || '') : UI_HELP_TEXT.EYES_FORM_TITLE_VIEW.replace('{eyeName}', selectedEye?.name || '')}
               </h2>
               <div className="flex gap-3">
-                <button
-                  onClick={cancelForm}
-                  aria-label={isTesting ? UI_HELP_TEXT.ARIA_CLOSE_TEST : UI_HELP_TEXT.ARIA_CANCEL}
-                  className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
-                >
-                  {isTesting ? UI_HELP_TEXT.EYES_BUTTON_CLOSE_TEST : UI_HELP_TEXT.EYES_BUTTON_CANCEL}
-                </button>
-                {isCreating && (
-                  <button
-                    onClick={saveEye}
-                    disabled={loading || !formData.name || !formData.description}
-                    aria-label={UI_HELP_TEXT.ARIA_SAVE_EYE}
-                    className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary disabled:opacity-50"
-                  >
-                    {loading ? UI_HELP_TEXT.EYES_BUTTON_CREATING : UI_HELP_TEXT.EYES_BUTTON_CREATE_EYE}
-                  </button>
-                )}
-                {isEditing && (
-                  <button
-                    onClick={updateEye}
-                    disabled={loading || !formData.description}
-                    aria-label={UI_HELP_TEXT.ARIA_UPDATE_EYE}
-                    className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary disabled:opacity-50"
-                  >
-                    {loading ? UI_HELP_TEXT.EYES_BUTTON_UPDATING : UI_HELP_TEXT.EYES_BUTTON_UPDATE_EYE}
-                  </button>
-                )}
-                {isTesting && (
-                  <button
-                    onClick={testEye}
-                    disabled={loading || !testInput}
-                    aria-label={UI_HELP_TEXT.ARIA_RUN_TEST}
-                    className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
-                  >
-                    {loading ? UI_HELP_TEXT.EYES_BUTTON_TESTING : UI_HELP_TEXT.EYES_BUTTON_RUN_TEST}
-                  </button>
-                )}
-                {!isCreating && !isEditing && !isTesting && selectedEye && selectedEye.source === 'custom' && (
+                {isTesting ? (
+                  <>
+                    <button
+                      onClick={cancelForm}
+                      aria-label={UI_HELP_TEXT.ARIA_CLOSE_TEST}
+                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-slate-300 transition hover:border-brand-accent hover:text-brand-accent"
+                    >
+                      {UI_HELP_TEXT.EYES_BUTTON_CLOSE_TEST}
+                    </button>
+                    <button
+                      onClick={testEye}
+                      disabled={loading || !testInput}
+                      aria-label={UI_HELP_TEXT.ARIA_RUN_TEST}
+                      className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-50"
+                    >
+                      {loading ? UI_HELP_TEXT.EYES_BUTTON_TESTING : UI_HELP_TEXT.EYES_BUTTON_RUN_TEST}
+                    </button>
+                  </>
+                ) : (
+                  /* View mode for custom eyes */
                   <>
                     <button
                       onClick={() => setIsEditing(true)}
@@ -633,162 +630,55 @@ export default function EyesPage() {
                 )}
               </div>
             ) : (
-              /* Schema Editor */
+              /* View Mode for Custom Eyes */
               <div className="space-y-6">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-300">{UI_HELP_TEXT.EYES_FORM_LABEL_NAME}</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder={UI_HELP_TEXT.EYES_PLACEHOLDER_NAME}
-                    disabled={!isCreating}
-                    className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
-                  />
-                  <p className="mt-1 text-xs text-slate-400">
-                    {UI_HELP_TEXT.EYES_HELPER_NAME.replace('{eyeName}', formData.name)}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-300">{UI_HELP_TEXT.EYES_FORM_LABEL_DESCRIPTION}</label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder={UI_HELP_TEXT.EYES_PLACEHOLDER_DESCRIPTION}
-                    disabled={!isCreating && !isEditing}
-                    className="h-24 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-300">Icon SVG (Optional)</label>
-                  <div className="flex gap-4">
-                    <div className="flex-1">
-                      <textarea
-                        value={formData.iconSvg}
-                        onChange={(e) => setFormData({ ...formData, iconSvg: e.target.value })}
-                        placeholder="<svg>...</svg>"
-                        disabled={!isCreating && !isEditing}
-                        className="h-32 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-green-400 placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
-                      />
-                      <p className="mt-1 text-xs text-slate-400">
-                        Paste SVG content here to customize the Eye icon
-                      </p>
-                    </div>
-                    {formData.iconSvg && (
-                      <div className="flex flex-col items-center gap-2">
-                        <span className="text-xs text-slate-400">Preview:</span>
-                        <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-brand-outline/50 bg-brand-paperElev p-2">
-                          <div
-                            dangerouslySetInnerHTML={{ __html: formData.iconSvg }}
-                            className="h-full w-full"
-                          />
+                {selectedEye && (
+                  <>
+                    {/* Basic Information */}
+                    <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
+                      <h3 className="mb-3 text-lg font-semibold text-white">Basic Information</h3>
+                      <dl className="space-y-2">
+                        <div>
+                          <dt className="text-sm font-medium text-slate-300">Eye Name</dt>
+                          <dd className="mt-1 text-white">{selectedEye.name}</dd>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-300">{UI_HELP_TEXT.EYES_FORM_LABEL_PERSONA}</label>
-                  <select
-                    value={formData.personaId}
-                    onChange={(e) => setFormData({ ...formData, personaId: e.target.value })}
-                    disabled={!isCreating && !isEditing}
-                    className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-white focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
-                  >
-                    <option value="">{UI_HELP_TEXT.EYES_DROPDOWN_NO_PERSONA}</option>
-                    {Array.isArray(personas) && personas.map((persona) => (
-                      <option key={persona.id} value={persona.id}>
-                        {persona.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="mt-1 text-xs text-slate-400">
-                    {UI_HELP_TEXT.EYES_HELPER_PERSONA}
-                  </p>
-                </div>
-
-                {/* Phase 19.3: Schema Templates */}
-                {(isCreating || isEditing) && (
-                  <SchemaTemplateSelector
-                    onSelect={(inputSchema, outputSchema) => {
-                      setFormData({
-                        ...formData,
-                        inputSchema,
-                        outputSchema,
-                      });
-                    }}
-                  />
-                )}
-
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">{UI_HELP_TEXT.EYES_FORM_LABEL_INPUT_SCHEMA}</label>
-                    <textarea
-                      value={formData.inputSchema}
-                      onChange={(e) => setFormData({ ...formData, inputSchema: e.target.value })}
-                      disabled={!isCreating && !isEditing}
-                      className="h-64 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-green-400 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-300">{UI_HELP_TEXT.EYES_FORM_LABEL_OUTPUT_SCHEMA}</label>
-                    <textarea
-                      value={formData.outputSchema}
-                      onChange={(e) => setFormData({ ...formData, outputSchema: e.target.value })}
-                      disabled={!isCreating && !isEditing}
-                      className="h-64 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-green-400 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
-                    />
-                  </div>
-                </div>
-
-                {/* Save/Discard Changes Banner */}
-                {hasUnsavedChanges && (isCreating || isEditing) && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center justify-between rounded-xl border border-brand-accent/40 bg-brand-accent/10 p-4"
-                  >
-                    <div className="flex items-center gap-2">
-                      <svg className="h-5 w-5 text-brand-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                      <span className="text-sm font-medium text-white">
-                        {UI_HELP_TEXT.EYES_WARNING_UNSAVED_CHANGES}
-                      </span>
+                        <div>
+                          <dt className="text-sm font-medium text-slate-300">Description</dt>
+                          <dd className="mt-1 text-white">{selectedEye.description}</dd>
+                        </div>
+                        {selectedEye.iconSvg && (
+                          <div>
+                            <dt className="text-sm font-medium text-slate-300">Icon</dt>
+                            <dd className="mt-2">
+                              <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-brand-outline/50 bg-brand-paperElev p-2">
+                                <div
+                                  dangerouslySetInnerHTML={{ __html: selectedEye.iconSvg }}
+                                  className="h-full w-full"
+                                />
+                              </div>
+                            </dd>
+                          </div>
+                        )}
+                      </dl>
                     </div>
-                    <div className="flex gap-3">
-                      <button
-                        onClick={discardChanges}
-                        disabled={loading}
-                        className="rounded-lg border border-brand-outline/40 bg-brand-paper px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-brand-paperElev disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {UI_HELP_TEXT.EYES_BUTTON_DISCARD_CHANGES}
-                      </button>
-                      <button
-                        onClick={isCreating ? saveEye : updateEye}
-                        disabled={loading}
-                        className="rounded-lg bg-brand-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {loading ? UI_HELP_TEXT.EYES_BUTTON_SAVING : UI_HELP_TEXT.EYES_BUTTON_SAVE_CHANGES}
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
 
-                <div className="rounded-xl border border-yellow-700/50 bg-yellow-900/10 p-5">
-                  <h4 className="font-medium text-yellow-300">{UI_HELP_TEXT.EYES_GUIDELINES_TITLE}</h4>
-                  <ul className="mt-3 space-y-1 text-sm text-yellow-100">
-                    <li>{UI_HELP_TEXT.EYES_GUIDELINE_NAMES}</li>
-                    <li>{UI_HELP_TEXT.EYES_GUIDELINE_SCHEMAS}</li>
-                    <li>{UI_HELP_TEXT.EYES_GUIDELINE_REGISTRATION}</li>
-                    <li>{UI_HELP_TEXT.EYES_GUIDELINE_PERSONA}</li>
-                    <li>{UI_HELP_TEXT.EYES_GUIDELINE_CONTRACT}</li>
-                  </ul>
-                </div>
+                    {/* Input Schema */}
+                    <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
+                      <h3 className="mb-3 text-lg font-semibold text-white">Input Schema</h3>
+                      <pre className="overflow-x-auto rounded-lg bg-brand-ink p-4 text-xs text-green-400">
+                        {JSON.stringify(JSON.parse(selectedEye.inputSchema || '{}'), null, 2)}
+                      </pre>
+                    </div>
+
+                    {/* Output Schema */}
+                    <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
+                      <h3 className="mb-3 text-lg font-semibold text-white">Output Schema</h3>
+                      <pre className="overflow-x-auto rounded-lg bg-brand-ink p-4 text-xs text-green-400">
+                        {JSON.stringify(JSON.parse(selectedEye.outputSchema || '{}'), null, 2)}
+                      </pre>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </GlassCard>
