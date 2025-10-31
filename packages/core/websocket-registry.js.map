@@ -1,0 +1,1 @@
+{"version":3,"file":"websocket-registry.js","sourceRoot":"","sources":["websocket-registry.ts"],"names":[],"mappings":"AAIA,IAAI,MAAM,GAA2B,IAAI,CAAC;AAE1C,MAAM,UAAU,uBAAuB,CAAC,QAAyB;IAC/D,MAAM,GAAG,QAAQ,CAAC;AACpB,CAAC;AAED,MAAM,UAAU,oBAAoB;IAClC,MAAM,GAAG,IAAI,CAAC;AAChB,CAAC;AAED,MAAM,UAAU,kBAAkB;IAChC,OAAO,MAAM,CAAC;AAChB,CAAC"}

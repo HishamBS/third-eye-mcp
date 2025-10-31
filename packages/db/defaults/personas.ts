@@ -787,7 +787,7 @@ export interface PersonaSeed {
   name: string;
   description: string;
   version: number;
-  content: string;
+  mission: string;
 }
 
 export const DEFAULT_PERSONAS: PersonaSeed[] = [
@@ -797,14 +797,14 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
     description:
       "Navigator that analyses requests and selects the optimal eye sequence.",
     version: 1,
-    content: PERSONA_CONTENT.overseer,
+    mission: PERSONA_CONTENT.overseer,
   },
   {
     eye: "sharingan",
     name: "Sharingan",
     description: "Ambiguity radar that highlights unclear requirements.",
     version: 1,
-    content: PERSONA_CONTENT.sharingan,
+    mission: PERSONA_CONTENT.sharingan,
   },
   {
     eye: "kyuubi",
@@ -812,7 +812,7 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
     description:
       "Transforms clarified intent into a structured creative brief.",
     version: 1,
-    content: PERSONA_CONTENT["kyuubi"],
+    mission: PERSONA_CONTENT["kyuubi"],
   },
   {
     eye: "jogan",
@@ -820,7 +820,7 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
     description:
       "Confirms scope and effort with the human before work proceeds.",
     version: 1,
-    content: PERSONA_CONTENT.jogan,
+    mission: PERSONA_CONTENT.jogan,
   },
   {
     eye: "rinnegan",
@@ -828,21 +828,21 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
     description:
       "Strategic planner providing architecture, plans, and plan reviews.",
     version: 1,
-    content: PERSONA_CONTENT.rinnegan,
+    mission: PERSONA_CONTENT.rinnegan,
   },
   {
     eye: "mangekyo",
     name: "Mangekyō",
     description: "Code quality gate covering structure, safety, and tests.",
     version: 1,
-    content: PERSONA_CONTENT.mangekyo,
+    mission: PERSONA_CONTENT.mangekyo,
   },
   {
     eye: "tenseigan",
     name: "Tenseigan",
     description: "Evidence and citation auditor for factual claims.",
     version: 1,
-    content: PERSONA_CONTENT.tenseigan,
+    mission: PERSONA_CONTENT.tenseigan,
   },
   {
     eye: "byakugan",
@@ -850,7 +850,7 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
     description:
       "Final readiness check ensuring clarity, completeness, and quality.",
     version: 1,
-    content: PERSONA_CONTENT.byakugan,
+    mission: PERSONA_CONTENT.byakugan,
   },
 ];
 

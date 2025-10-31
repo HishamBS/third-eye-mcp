@@ -1,11 +1,21 @@
--- Consolidated Migration for Third Eye MCP
--- This is the single source of truth for database schema
-
 CREATE TABLE `app_settings` (
 	`key` text PRIMARY KEY NOT NULL,
 	`value` text NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE `clarifications` (
+	`id` text PRIMARY KEY NOT NULL,
+	`session_id` text NOT NULL,
+	`field` text NOT NULL,
+	`question` text NOT NULL,
+	`answer` text,
+	`status` text DEFAULT 'pending' NOT NULL,
+	`created_at` integer NOT NULL,
+	`answered_at` integer,
+	FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `clarifications_session_id_field_unique` ON `clarifications` (`session_id`,`field`);--> statement-breakpoint
 CREATE TABLE `duels` (
 	`id` text PRIMARY KEY NOT NULL,
 	`eye_name` text NOT NULL,
@@ -20,6 +30,24 @@ CREATE TABLE `duels` (
 	`completed_at` integer
 );
 --> statement-breakpoint
+CREATE TABLE `execution_steps` (
+	`id` text PRIMARY KEY NOT NULL,
+	`run_id` text NOT NULL,
+	`node_id` text NOT NULL,
+	`node_type` text NOT NULL,
+	`status` text NOT NULL,
+	`verdict` text,
+	`output_json` text,
+	`error_message` text,
+	`tokens_used` integer,
+	`latency_ms` integer,
+	`metadata_json` text,
+	`created_at` integer NOT NULL,
+	`completed_at` integer,
+	FOREIGN KEY (`run_id`) REFERENCES `pipeline_queue`(`run_id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `execution_steps_run_id_node_id_unique` ON `execution_steps` (`run_id`,`node_id`);--> statement-breakpoint
 CREATE TABLE `eye_leaderboard` (
 	`eye` text PRIMARY KEY NOT NULL,
 	`total_runs` integer DEFAULT 0 NOT NULL,
@@ -29,11 +57,20 @@ CREATE TABLE `eye_leaderboard` (
 	`last_updated` integer NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE `eye_settings` (
+	`eye` text PRIMARY KEY NOT NULL,
+	`display_name` text,
+	`description` text,
+	`icon_svg` text,
+	`updated_at` integer NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE `eyes_custom` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
 	`version` integer NOT NULL,
 	`description` text NOT NULL,
+	`icon_svg` text,
 	`input_schema_json` text NOT NULL,
 	`output_schema_json` text NOT NULL,
 	`persona_id` text,
@@ -42,8 +79,7 @@ CREATE TABLE `eyes_custom` (
 	`created_at` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `eyes_custom_name_version_unique` ON `eyes_custom` (`name`,`version`);
---> statement-breakpoint
+CREATE UNIQUE INDEX `eyes_custom_name_version_unique` ON `eyes_custom` (`name`,`version`);--> statement-breakpoint
 CREATE TABLE `eyes_routing` (
 	`eye` text PRIMARY KEY NOT NULL,
 	`primary_provider` text,
@@ -52,11 +88,17 @@ CREATE TABLE `eyes_routing` (
 	`fallback_model` text
 );
 --> statement-breakpoint
-CREATE TABLE `eye_settings` (
-	`eye` text PRIMARY KEY NOT NULL,
-	`display_name` text,
-	`description` text,
-	`updated_at` integer NOT NULL
+CREATE TABLE `intent_confirmations` (
+	`id` text PRIMARY KEY NOT NULL,
+	`session_id` text NOT NULL,
+	`intent_analysis` text,
+	`confirmation_prompt` text NOT NULL,
+	`response` text,
+	`user_identity` text,
+	`status` text DEFAULT 'pending' NOT NULL,
+	`created_at` integer NOT NULL,
+	`responded_at` integer,
+	FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `mcp_integrations` (
@@ -78,8 +120,7 @@ CREATE TABLE `mcp_integrations` (
 	`updated_at` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `mcp_integrations_slug_unique` ON `mcp_integrations` (`slug`);
---> statement-breakpoint
+CREATE UNIQUE INDEX `mcp_integrations_slug_unique` ON `mcp_integrations` (`slug`);--> statement-breakpoint
 CREATE TABLE `models_cache` (
 	`provider` text NOT NULL,
 	`model` text NOT NULL,
@@ -89,30 +130,22 @@ CREATE TABLE `models_cache` (
 	`last_seen` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `models_cache_provider_model_unique` ON `models_cache` (`provider`,`model`);
---> statement-breakpoint
-CREATE TABLE `persona_versions` (
+CREATE UNIQUE INDEX `models_cache_provider_model_unique` ON `models_cache` (`provider`,`model`);--> statement-breakpoint
+CREATE TABLE `node_configs` (
 	`id` text PRIMARY KEY NOT NULL,
-	`persona_id` text NOT NULL,
-	`version_number` integer NOT NULL,
-	`system_prompt` text NOT NULL,
-	`settings` text,
+	`pipeline_id` text NOT NULL,
+	`node_id` text NOT NULL,
+	`eye_id` text,
+	`provider_override` text,
+	`strictness_override` text,
+	`notes_md` text,
+	`config_json` text,
 	`created_at` integer NOT NULL,
-	`created_by` text
+	`updated_at` integer NOT NULL,
+	FOREIGN KEY (`pipeline_id`) REFERENCES `pipelines`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE TABLE `personas` (
-	`id` text PRIMARY KEY NOT NULL,
-	`eye` text NOT NULL,
-	`name` text NOT NULL,
-	`version` integer NOT NULL,
-	`content` text NOT NULL,
-	`active` integer DEFAULT false NOT NULL,
-	`created_at` integer NOT NULL
-);
---> statement-breakpoint
-CREATE UNIQUE INDEX `personas_eye_version_unique` ON `personas` (`eye`,`version`);
---> statement-breakpoint
+CREATE UNIQUE INDEX `node_configs_pipeline_id_node_id_unique` ON `node_configs` (`pipeline_id`,`node_id`);--> statement-breakpoint
 CREATE TABLE `persona_blueprints` (
 	`eye_id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
@@ -128,6 +161,35 @@ CREATE TABLE `persona_blueprints` (
 	`updated_at` integer NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE `persona_versions` (
+	`id` text PRIMARY KEY NOT NULL,
+	`persona_id` text NOT NULL,
+	`version_number` integer NOT NULL,
+	`system_prompt` text NOT NULL,
+	`settings` text,
+	`created_at` integer NOT NULL,
+	`created_by` text,
+	FOREIGN KEY (`persona_id`) REFERENCES `personas`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `personas` (
+	`id` text PRIMARY KEY NOT NULL,
+	`eye` text NOT NULL,
+	`name` text NOT NULL,
+	`version` integer NOT NULL,
+	`metadata_json` text NOT NULL,
+	`mission` text NOT NULL,
+	`guidance_json` text,
+	`validation_json` text,
+	`envelope_json` text NOT NULL,
+	`reminders_json` text NOT NULL,
+	`notes` text,
+	`llm_config_json` text NOT NULL,
+	`active` integer DEFAULT false NOT NULL,
+	`created_at` integer NOT NULL
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `personas_eye_version_unique` ON `personas` (`eye`,`version`);--> statement-breakpoint
 CREATE TABLE `pipeline_events` (
 	`id` text PRIMARY KEY NOT NULL,
 	`session_id` text NOT NULL,
@@ -138,20 +200,6 @@ CREATE TABLE `pipeline_events` (
 	`data_json` text,
 	`next_action` text,
 	`created_at` integer NOT NULL,
-	FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON UPDATE no action ON DELETE no action
-);
---> statement-breakpoint
-CREATE TABLE `pipeline_runs` (
-	`id` text PRIMARY KEY NOT NULL,
-	`pipeline_id` text NOT NULL,
-	`session_id` text NOT NULL,
-	`status` text NOT NULL,
-	`current_step` integer DEFAULT 0 NOT NULL,
-	`state_json` text,
-	`error_message` text,
-	`created_at` integer NOT NULL,
-	`completed_at` integer,
-	FOREIGN KEY (`pipeline_id`) REFERENCES `pipelines`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
@@ -171,42 +219,20 @@ CREATE TABLE `pipeline_queue` (
 	FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `pipeline_queue_run_id_unique` ON `pipeline_queue` (`run_id`);
---> statement-breakpoint
-CREATE TABLE `execution_steps` (
-	`id` text PRIMARY KEY NOT NULL,
-	`run_id` text NOT NULL,
-	`node_id` text NOT NULL,
-	`node_type` text NOT NULL,
-	`status` text NOT NULL,
-	`verdict` text,
-	`output_json` text,
-	`error_message` text,
-	`tokens_used` integer,
-	`latency_ms` integer,
-	`metadata_json` text,
-	`created_at` integer NOT NULL,
-	`completed_at` integer,
-	FOREIGN KEY (`run_id`) REFERENCES `pipeline_queue`(`run_id`) ON UPDATE no action ON DELETE no action
-);
---> statement-breakpoint
-CREATE UNIQUE INDEX `execution_steps_run_id_node_id_unique` ON `execution_steps` (`run_id`,`node_id`);
---> statement-breakpoint
-CREATE TABLE `node_configs` (
+CREATE UNIQUE INDEX `pipeline_queue_run_id_unique` ON `pipeline_queue` (`run_id`);--> statement-breakpoint
+CREATE TABLE `pipeline_runs` (
 	`id` text PRIMARY KEY NOT NULL,
 	`pipeline_id` text NOT NULL,
-	`node_id` text NOT NULL,
-	`eye_id` text,
-	`provider_override` text,
-	`strictness_override` text,
-	`notes_md` text,
-	`config_json` text,
+	`session_id` text NOT NULL,
+	`status` text NOT NULL,
+	`current_step` integer DEFAULT 0 NOT NULL,
+	`state_json` text,
+	`error_message` text,
 	`created_at` integer NOT NULL,
-	`updated_at` integer NOT NULL,
-	FOREIGN KEY (`pipeline_id`) REFERENCES `pipelines`(`id`) ON UPDATE no action ON DELETE no action
+	`completed_at` integer,
+	FOREIGN KEY (`pipeline_id`) REFERENCES `pipelines`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON UPDATE no action ON DELETE no action
 );
---> statement-breakpoint
-CREATE UNIQUE INDEX `node_configs_pipeline_id_node_id_unique` ON `node_configs` (`pipeline_id`,`node_id`);
 --> statement-breakpoint
 CREATE TABLE `pipelines` (
 	`id` text PRIMARY KEY NOT NULL,
@@ -219,8 +245,7 @@ CREATE TABLE `pipelines` (
 	`created_at` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `pipelines_name_version_unique` ON `pipelines` (`name`,`version`);
---> statement-breakpoint
+CREATE UNIQUE INDEX `pipelines_name_version_unique` ON `pipelines` (`name`,`version`);--> statement-breakpoint
 CREATE TABLE `prompts` (
 	`id` text PRIMARY KEY NOT NULL,
 	`name` text NOT NULL,
@@ -233,7 +258,21 @@ CREATE TABLE `prompts` (
 	`created_at` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `prompts_name_version_unique` ON `prompts` (`name`,`version`);
+CREATE UNIQUE INDEX `prompts_name_version_unique` ON `prompts` (`name`,`version`);--> statement-breakpoint
+CREATE TABLE `provider_failovers` (
+	`id` text PRIMARY KEY NOT NULL,
+	`session_id` text NOT NULL,
+	`eye` text NOT NULL,
+	`primary_provider` text NOT NULL,
+	`primary_model` text NOT NULL,
+	`failed_reason` text NOT NULL,
+	`fallback_provider` text NOT NULL,
+	`fallback_model` text NOT NULL,
+	`fallback_success` integer NOT NULL,
+	`error_details` text,
+	`created_at` integer NOT NULL,
+	FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON UPDATE no action ON DELETE no action
+);
 --> statement-breakpoint
 CREATE TABLE `provider_keys` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -241,6 +280,16 @@ CREATE TABLE `provider_keys` (
 	`label` text NOT NULL,
 	`encrypted_key` blob NOT NULL,
 	`metadata` text,
+	`created_at` integer NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE `rate_limit_tracking` (
+	`id` text PRIMARY KEY NOT NULL,
+	`provider` text NOT NULL,
+	`eye` text,
+	`window_start` integer NOT NULL,
+	`request_count` integer NOT NULL,
+	`tokens_consumed` integer NOT NULL,
 	`created_at` integer NOT NULL
 );
 --> statement-breakpoint
@@ -283,31 +332,3 @@ CREATE TABLE `strictness_profiles` (
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `strictness_profiles_name_unique` ON `strictness_profiles` (`name`);
---> statement-breakpoint
-CREATE TABLE `clarifications` (
-	`id` text PRIMARY KEY NOT NULL,
-	`session_id` text NOT NULL,
-	`field` text NOT NULL,
-	`question` text NOT NULL,
-	`answer` text,
-	`status` text DEFAULT 'pending' NOT NULL,
-	`created_at` integer NOT NULL,
-	`answered_at` integer,
-	FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON UPDATE no action ON DELETE no action
-);
---> statement-breakpoint
-CREATE UNIQUE INDEX `clarifications_session_id_field_unique` ON `clarifications` (`session_id`,`field`);
---> statement-breakpoint
-CREATE TABLE `intent_confirmations` (
-	`id` text PRIMARY KEY NOT NULL,
-	`session_id` text NOT NULL,
-	`intent_analysis` text,
-	`confirmation_prompt` text NOT NULL,
-	`response` text,
-	`user_identity` text,
-	`status` text DEFAULT 'pending' NOT NULL,
-	`created_at` integer NOT NULL,
-	`responded_at` integer,
-	FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON UPDATE no action ON DELETE no action
-);
-

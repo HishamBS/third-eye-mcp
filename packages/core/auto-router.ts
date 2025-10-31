@@ -111,10 +111,13 @@ const NextInputSchema = z.object({
  * Intelligent router that analyzes tasks and executes optimal Eye pipelines
  */
 export class AutoRouter {
-  private orchestrator: EyeOrchestrator;
+  private _orchestrator: EyeOrchestrator | null = null;
 
-  constructor() {
-    this.orchestrator = new EyeOrchestrator();
+  private get orchestrator(): EyeOrchestrator {
+    if (!this._orchestrator) {
+      this._orchestrator = new EyeOrchestrator();
+    }
+    return this._orchestrator;
   }
 
   /**

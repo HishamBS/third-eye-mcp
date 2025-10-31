@@ -918,7 +918,7 @@ export class EyeOrchestrator {
       const fallback = DEFAULT_PERSONA_MAP[eyeName];
       if (fallback) {
         console.warn(`⚠️ No active persona found for ${eyeName}. Loaded default from persona catalog.`);
-        return fallback.content;
+        return fallback.mission;
       }
 
       throw new Error(
@@ -927,7 +927,7 @@ export class EyeOrchestrator {
     }
 
     console.log(`📖 Loaded persona from database for Eye: ${eyeName} (v${persona.version})`);
-    return persona.content;
+    return persona.mission;
   }
 
   /**

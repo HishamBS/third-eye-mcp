@@ -139,24 +139,10 @@ async function seedPersonas(
   log: (message: string) => void,
   force: boolean
 ): Promise<boolean> {
-  // TODO Phase 12-14: Re-enable after PersonaWizard implementation
-  // Per R10: Old TEXT blob persona seeding disabled
-  // Personas will be created through PersonaWizard UI (Phases 13-14)
-  // DEFAULT_PERSONAS uses old TEXT blob structure which we're migrating away from
-  log('   ⏭ Persona seeding temporarily disabled (Phase 12 migration)');
-  return false;
-
-  /* OLD TEXT BLOB IMPLEMENTATION - REMOVED PER R10
   const existing = await db.select({ id: personas.id }).from(personas).limit(1);
   const shouldSeed = force || existing.length === 0;
   if (!shouldSeed) {
     return false;
-  }
-
-  const tableInfo = sqlite.query('PRAGMA table_info(personas)').all() as Array<{ name: string }>;
-  const hasNameColumn = tableInfo.some((column) => column.name === 'name');
-  if (!hasNameColumn) {
-    sqlite.exec('ALTER TABLE personas ADD COLUMN name TEXT');
   }
 
   if (force) {
@@ -164,28 +150,55 @@ async function seedPersonas(
   }
 
   const now = new Date();
+
   const entries: NewPersona[] = DEFAULT_PERSONAS.map((persona) => ({
     id: generatePersonaId(persona.eye, persona.version),
     eye: persona.eye,
     name: persona.name,
     version: persona.version,
-    content: persona.content, // <- OLD TEXT BLOB
+
+    metadata_json: JSON.stringify({
+      eyeId: persona.eye,
+      name: persona.name,
+      description: persona.description,
+      version: String(persona.version),
+      capabilities: [],
+    }),
+
+    mission: persona.mission,
+    guidance_json: null,
+    validation_json: null,
+
+    envelope_json: JSON.stringify({
+      requiredKeys: ['tag', 'ok', 'code', 'data', 'ui', 'next'],
+      requiredDataKeys: [],
+      requiredUiKeys: ['title', 'summary', 'details', 'icon', 'color'],
+    }),
+
+    reminders_json: JSON.stringify([]),
+    notes: null,
+
+    llm_config_json: JSON.stringify({
+      temperature: 0.7,
+      top_p: 0.9,
+      response_format: 'json_object',
+      max_tokens: 4096,
+    }),
+
     active: true,
     createdAt: now,
   }));
 
   await db.insert(personas).values(entries).run();
 
-  // Ensure defaults are the active versions for each eye
   for (const persona of DEFAULT_PERSONAS) {
     const personaId = generatePersonaId(persona.eye, persona.version);
     await db.update(personas).set({ active: false }).where(eq(personas.eye, persona.eye)).run();
     await db.update(personas).set({ active: true }).where(eq(personas.id, personaId)).run();
   }
 
-  log('  • Personas seeded');
+  log('  • Personas seeded (8 default Eyes)');
   return true;
-  */
 }
 
 async function seedRouting(

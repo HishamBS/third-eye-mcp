@@ -341,12 +341,43 @@ function checkEnvironment() {
   } catch {}
 }
 
-async function killPortProcesses(ports: number[]) {
+async function killProcessesByPattern(pattern: string, description: string): Promise<number> {
+  let killed = 0;
+  try {
+    const psOutput = execSync(`ps aux | grep -E "${pattern}" | grep -v grep`, { encoding: 'utf-8' })
+      .trim()
+      .split('\n')
+      .filter(Boolean);
+
+    for (const line of psOutput) {
+      const parts = line.trim().split(/\s+/);
+      const pid = parseInt(parts[1]);
+
+      if (!isNaN(pid) && pid > 0) {
+        try {
+          process.kill(pid, 'SIGTERM');
+          log(`   ✓ Killed ${description} (PID ${pid})`);
+          killed++;
+          await new Promise(resolve => setTimeout(resolve, 300));
+        } catch (err) {
+          // Process might have already exited
+        }
+      }
+    }
+  } catch {
+    // No matching processes found or grep returned no results
+  }
+  return killed;
+}
+
+async function cleanStaleProcesses(ports: number[]) {
   if (!parseArgs().quiet) {
     log('🔄 Cleaning up stale processes...');
   }
 
   let killed = 0;
+
+  // Kill by port (catches active processes)
   for (const port of ports) {
     try {
       const pids = execSync(`lsof -ti:${port}`, { encoding: 'utf-8' })
@@ -364,6 +395,11 @@ async function killPortProcesses(ports: number[]) {
       }
     } catch {}
   }
+
+  // Kill zombie processes by pattern (catches detached/crashed processes)
+  killed += await killProcessesByPattern('next-server', 'zombie Next.js server');
+  killed += await killProcessesByPattern('node.*next dev.*3300', 'zombie Next.js dev process');
+  killed += await killProcessesByPattern('bun run --cwd apps/ui dev', 'zombie Bun UI process');
 
   if (killed === 0 && !parseArgs().quiet) {
     log('   ✓ No stale processes found');
@@ -674,7 +710,7 @@ async function startServices() {
   checkEnvironment();
   cleanStaleBuilds(projectRoot, args.quiet);
   await prepareDatabase(!args.quiet);
-  await killPortProcesses([args.port || SERVER_PORT, args.uiPort || UI_PORT]);
+  await cleanStaleProcesses([args.port || SERVER_PORT, args.uiPort || UI_PORT]);
 
   if (!args.quiet) {
     log(`\n${kleur.green('🚀 Starting services')}${args.foreground ? kleur.gray(' (foreground)') : kleur.gray(' (detached)')}...`);
