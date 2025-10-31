@@ -212,6 +212,8 @@ export const TOOLBAR_TEXT = {
   DELETE: 'Delete',
   SELECT_PIPELINE: 'Select Pipeline',
   SYSTEM_DEFAULT: 'System Default',
+  SAVE_AS_TEMPLATE: 'Save as Template',
+  LOAD_TEMPLATE: 'Load Template',
 } as const;
 
 /**
@@ -513,3 +515,184 @@ export const SYSTEM_DEFAULT_PIPELINE = {
     },
   ],
 } as const;
+
+/**
+ * Pipeline Template Text Constants - Phase 19.4
+ * Per R13: No literal strings
+ */
+export const TEMPLATE_TEXT = {
+  SELECTOR_TITLE: 'Pipeline Templates',
+  SELECTOR_SUBTITLE: 'Choose a pre-built pipeline to get started',
+  LOAD_BUTTON: 'Load Template',
+  CANCEL_BUTTON: 'Cancel',
+  SAVE_TITLE: 'Save as Template',
+  SAVE_SUBTITLE: 'Save current pipeline as a reusable template',
+  TEMPLATE_NAME_LABEL: 'Template Name',
+  TEMPLATE_NAME_PLACEHOLDER: 'My Pipeline Template',
+  TEMPLATE_DESC_LABEL: 'Description',
+  TEMPLATE_DESC_PLACEHOLDER: 'Describe what this pipeline does...',
+  SAVE_BUTTON: 'Save Template',
+  TEMPLATE_SAVED: 'Template saved successfully',
+  TEMPLATE_LOADED: 'Template loaded successfully',
+} as const;
+
+/**
+ * Pre-built Pipeline Templates - Phase 19.4
+ * Per R01: Single source of truth for templates
+ */
+export const PIPELINE_TEMPLATES = [
+  {
+    id: 'quick-validation',
+    name: 'Quick Validation',
+    description: 'Fast validation pipeline for simple prompts',
+    nodes: [
+      {
+        id: 'node-overseer',
+        type: 'eyeNode',
+        position: { x: 100, y: 200 },
+        data: {
+          eyeId: 'overseer' as const,
+          displayName: EYE_DISPLAY_NAMES.overseer,
+          capabilities: [EYE_PRIMARY_CAPABILITIES.overseer],
+          isCustom: false as const,
+          stage: EYE_STAGES.overseer,
+        },
+      },
+      {
+        id: 'node-sharingan',
+        type: 'eyeNode',
+        position: { x: 400, y: 200 },
+        data: {
+          eyeId: 'sharingan' as const,
+          displayName: EYE_DISPLAY_NAMES.sharingan,
+          capabilities: [EYE_PRIMARY_CAPABILITIES.sharingan],
+          isCustom: false as const,
+          stage: EYE_STAGES.sharingan,
+        },
+      },
+      {
+        id: 'node-byakugan',
+        type: 'eyeNode',
+        position: { x: 700, y: 200 },
+        data: {
+          eyeId: 'byakugan' as const,
+          displayName: EYE_DISPLAY_NAMES.byakugan,
+          capabilities: [EYE_PRIMARY_CAPABILITIES.byakugan],
+          isCustom: false as const,
+          stage: EYE_STAGES.byakugan,
+        },
+      },
+    ],
+    edges: [
+      {
+        id: 'edge-overseer-sharingan',
+        source: 'node-overseer',
+        target: 'node-sharingan',
+        type: 'smoothstep',
+        animated: true,
+        markerEnd: { type: 'arrowclosed' },
+        data: { condition: EDGE_CONDITION_TYPES.ALWAYS, enabled: true },
+      },
+      {
+        id: 'edge-sharingan-byakugan',
+        source: 'node-sharingan',
+        target: 'node-byakugan',
+        type: 'smoothstep',
+        animated: true,
+        markerEnd: { type: 'arrowclosed' },
+        data: { condition: EDGE_CONDITION_TYPES.ALWAYS, enabled: true },
+      },
+    ],
+  },
+  {
+    id: 'code-review',
+    name: 'Code Review Pipeline',
+    description: 'Specialized pipeline for code validation with review steps',
+    nodes: [
+      {
+        id: 'node-overseer',
+        type: 'eyeNode',
+        position: { x: 100, y: 200 },
+        data: {
+          eyeId: 'overseer' as const,
+          displayName: EYE_DISPLAY_NAMES.overseer,
+          capabilities: [EYE_PRIMARY_CAPABILITIES.overseer],
+          isCustom: false as const,
+          stage: EYE_STAGES.overseer,
+        },
+      },
+      {
+        id: 'node-rinnegan',
+        type: 'eyeNode',
+        position: { x: 400, y: 200 },
+        data: {
+          eyeId: 'rinnegan' as const,
+          displayName: EYE_DISPLAY_NAMES.rinnegan,
+          capabilities: [EYE_PRIMARY_CAPABILITIES.rinnegan],
+          isCustom: false as const,
+          stage: EYE_STAGES.rinnegan,
+        },
+      },
+      {
+        id: 'node-mangekyo',
+        type: 'eyeNode',
+        position: { x: 700, y: 200 },
+        data: {
+          eyeId: 'mangekyo' as const,
+          displayName: EYE_DISPLAY_NAMES.mangekyo,
+          capabilities: [EYE_PRIMARY_CAPABILITIES.mangekyo],
+          isCustom: false as const,
+          stage: EYE_STAGES.mangekyo,
+        },
+      },
+      {
+        id: 'node-tenseigan',
+        type: 'eyeNode',
+        position: { x: 1000, y: 200 },
+        data: {
+          eyeId: 'tenseigan' as const,
+          displayName: EYE_DISPLAY_NAMES.tenseigan,
+          capabilities: [EYE_PRIMARY_CAPABILITIES.tenseigan],
+          isCustom: false as const,
+          stage: EYE_STAGES.tenseigan,
+        },
+      },
+    ],
+    edges: [
+      {
+        id: 'edge-overseer-rinnegan',
+        source: 'node-overseer',
+        target: 'node-rinnegan',
+        type: 'smoothstep',
+        animated: true,
+        markerEnd: { type: 'arrowclosed' },
+        data: { condition: EDGE_CONDITION_TYPES.ALWAYS, enabled: true },
+      },
+      {
+        id: 'edge-rinnegan-mangekyo',
+        source: 'node-rinnegan',
+        target: 'node-mangekyo',
+        type: 'smoothstep',
+        animated: true,
+        markerEnd: { type: 'arrowclosed' },
+        data: { condition: EDGE_CONDITION_TYPES.ALWAYS, enabled: true },
+      },
+      {
+        id: 'edge-mangekyo-tenseigan',
+        source: 'node-mangekyo',
+        target: 'node-tenseigan',
+        type: 'smoothstep',
+        animated: true,
+        markerEnd: { type: 'arrowclosed' },
+        data: { condition: EDGE_CONDITION_TYPES.ALWAYS, enabled: true },
+      },
+    ],
+  },
+  {
+    id: 'thorough-review',
+    name: 'Thorough Review',
+    description: 'Complete validation pipeline with all guidance and validation steps',
+    nodes: SYSTEM_DEFAULT_PIPELINE.nodes,
+    edges: SYSTEM_DEFAULT_PIPELINE.edges,
+  },
+] as const;

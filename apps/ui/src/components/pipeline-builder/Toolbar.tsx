@@ -21,6 +21,7 @@ interface ToolbarProps {
   onZoomFit: () => void;
   onToggleMinimap: () => void;
   onToggleGrid: () => void;
+  onLoadTemplate: () => void;
   showMinimap: boolean;
   showGrid: boolean;
 }
@@ -51,6 +52,7 @@ export const Toolbar = memo(function Toolbar({
   onZoomFit,
   onToggleMinimap,
   onToggleGrid,
+  onLoadTemplate,
   showMinimap,
   showGrid,
 }: ToolbarProps) {
@@ -178,6 +180,13 @@ export const Toolbar = memo(function Toolbar({
               className="px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-ink text-sm hover:bg-brand-outline/10 transition-colors"
             >
               {TOOLBAR_TEXT.IMPORT}
+            </button>
+
+            <button
+              onClick={onLoadTemplate}
+              className="px-3 py-2 bg-brand-primary border border-brand-primary rounded-md text-white text-sm hover:bg-brand-primary/90 transition-colors"
+            >
+              {TOOLBAR_TEXT.LOAD_TEMPLATE}
             </button>
 
             <button

@@ -21,6 +21,7 @@ import { NodeEditModal } from './NodeEditModal';
 import { EdgeConfigModal } from './EdgeConfigModal';
 import { Toolbar } from './Toolbar';
 import { PersonaWizardModal } from '@/components/persona-form/PersonaWizardModal';
+import { PipelineTemplateSelector } from './PipelineTemplateSelector';
 import { CANVAS_SETTINGS, LAYOUT, SYSTEM_DEFAULT_PIPELINE } from './constants';
 import type { PipelineNode, PipelineEdge, EyeNodeData, EdgeConditionData } from '@/types/pipeline';
 
@@ -60,6 +61,9 @@ export function PipelineCanvasEnhanced() {
   // Phase 16: Persona configuration modal state
   const [isPersonaModalOpen, setIsPersonaModalOpen] = useState(false);
   const [selectedPersonaEye, setSelectedPersonaEye] = useState<{ id: string; name: string } | null>(null);
+
+  // Phase 19.4: Template selector modal state
+  const [isTemplateSelectorOpen, setIsTemplateSelectorOpen] = useState(false);
 
   // Placeholder pipeline data (will be replaced by service hooks in S8)
   const activePipeline = useMemo(() => null, []);
@@ -158,6 +162,19 @@ export function PipelineCanvasEnhanced() {
     console.log('Persona saved for pipeline node');
   }, []);
 
+  // Phase 19.4: Template loading handler
+  const handleLoadTemplate = useCallback(
+    (template: { nodes: readonly PipelineNode[]; edges: readonly PipelineEdge[] }) => {
+      setNodes([...template.nodes] as PipelineNode[]);
+      setEdges([...template.edges] as PipelineEdge[]);
+      // Fit view after loading template
+      setTimeout(() => {
+        reactFlowInstance.fitView({ padding: LAYOUT.FIT_VIEW_PADDING, duration: LAYOUT.ZOOM_DURATION });
+      }, 100);
+    },
+    [setNodes, setEdges, reactFlowInstance]
+  );
+
   // Handle new connections
   const onConnect = useCallback(
     (params: Connection) => {
@@ -239,6 +256,7 @@ export function PipelineCanvasEnhanced() {
         onZoomFit={handleZoomFit}
         onToggleMinimap={() => setShowMinimap(!showMinimap)}
         onToggleGrid={() => setShowGrid(!showGrid)}
+        onLoadTemplate={() => setIsTemplateSelectorOpen(true)}
         showMinimap={showMinimap}
         showGrid={showGrid}
       />
@@ -318,6 +336,13 @@ export function PipelineCanvasEnhanced() {
             onSave={handlePersonaSaved}
           />
         )}
+
+        {/* Phase 19.4: Pipeline Template Selector Modal */}
+        <PipelineTemplateSelector
+          isOpen={isTemplateSelectorOpen}
+          onClose={() => setIsTemplateSelectorOpen(false)}
+          onSelect={handleLoadTemplate}
+        />
       </div>
     </div>
   );
