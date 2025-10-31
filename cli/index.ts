@@ -585,7 +585,21 @@ function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
         const srcPath = resolve(packagesDir, pkg, 'src');
         if (existsSync(srcPath)) {
           try {
-            const distMtime = statSync(distPath).mtimeMs;
+            // Get the newest file in dist/ (not folder timestamp)
+            const distFiles = readdirSync(distPath, { recursive: true })
+              .filter(f => typeof f === 'string' && (f.endsWith('.js') || f.endsWith('.d.ts')))
+              .map(f => resolve(distPath, f));
+
+            const distMtime = distFiles.length > 0
+              ? Math.max(...distFiles.map(f => {
+                  try {
+                    return statSync(f).mtimeMs;
+                  } catch {
+                    return 0;
+                  }
+                }))
+              : 0; // Force rebuild if no dist files exist
+
             const srcFiles = readdirSync(srcPath, { recursive: true }).filter(f =>
               typeof f === 'string' && f.endsWith('.ts')
             );

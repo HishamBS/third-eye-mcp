@@ -179,7 +179,7 @@ const SHARED_SHADOWS: ShadowTokens = Object.freeze({
 });
 
 export const SHARED_EYE_COLORS = Object.freeze({
-  overseer: '#8B5CF6',      // Violet-500 - Added for completeness
+  overseer: '#F97316',      // Orange-600 - Naruto orange
   sharingan: '#E11D48',     // Rose-600
   kyuubi: '#A78BFA',        // Purple-400 (was 'prompt')
   jogan: '#38BDF8',         // Sky-400
@@ -195,12 +195,12 @@ const OVERSEER_LIGHT: Theme = Object.freeze({
   mode: 'light',
   colors: Object.freeze({
     brand: {
-      primary: '#5B21B6',    // Violet-800 (8.37:1 on Purple-50)
-      accent: '#881337',     // Rose-900 (8.91:1)
-      ink: '#111827',        // Gray-900 (16.53:1)
-      paper: '#FAF5FF',      // Purple-50
-      paperElev: '#F3E8FF',  // Purple-100
-      outline: '#374151',    // Gray-700 (9.61:1)
+      primary: '#C2410C',    // Orange-800 (7.5:1 on Orange-50)
+      accent: '#9F1239',     // Rose-900 (8.2:1)
+      ink: '#1C1917',        // Stone-900 (16.8:1)
+      paper: '#FFF7ED',      // Orange-50
+      paperElev: '#FFEDD5',  // Orange-100
+      outline: '#78350F',    // Orange-900 (10.2:1)
     },
     semantic: {
       success: '#047857',    // Emerald-700
@@ -222,12 +222,12 @@ const OVERSEER_DARK: Theme = Object.freeze({
   mode: 'dark',
   colors: Object.freeze({
     brand: {
-      primary: '#C4B5FD',    // Violet-300 (9.67:1 on Slate-900)
-      accent: '#FDA4AF',     // Rose-300 (9.44:1)
-      ink: '#F1F5F9',        // Slate-100 (16.30:1)
-      paper: '#0F172A',      // Slate-900
-      paperElev: '#1E293B',  // Slate-800
-      outline: '#D8B4FE',    // Purple-300 (10.10:1)
+      primary: '#FB923C',    // Orange-400 - Naruto orange (7.2:1 on black)
+      accent: '#EF4444',     // Red-500 - Sharingan red (7.1:1)
+      ink: '#FAFAF9',        // Stone-50 - Off-white text (16.5:1)
+      paper: '#0A0A0A',      // Near-black background
+      paperElev: '#1C1C1C',  // Elevated black surfaces
+      outline: '#78350F',    // Orange-900 - Muted orange borders (10.2:1)
     },
     semantic: {
       success: '#6EE7B7',    // Emerald-300
@@ -678,7 +678,7 @@ export interface ThemeMetadata {
 }
 
 export const THEME_METADATA: readonly ThemeMetadata[] = Object.freeze([
-  { value: 'overseer', label: 'Overseer', description: 'Naruto Purple & Red', color: '#8B5CF6' },
+  { value: 'overseer', label: 'Overseer', description: 'Naruto Orange & Red', color: '#F97316' },
   { value: 'aurora', label: 'Aurora', description: 'Sky Blue', color: '#60A5FA' },
   { value: 'midnight', label: 'Midnight', description: 'Indigo & Purple', color: '#6366F1' },
   { value: 'sakura', label: 'Sakura', description: 'Pink Blossom', color: '#F472B6' },

@@ -10,7 +10,7 @@ export function ViewModeToggle() {
   return (
     <button
       onClick={toggleViewMode}
-      className="group relative flex items-center gap-2 rounded-full border border-brand-outline/50 bg-brand-paper px-4 py-2 transition-all hover:border-brand-accent min-w-[180px]"
+      className="group relative z-30 flex items-center gap-2 rounded-full border border-brand-outline/50 bg-brand-paper px-4 py-2 transition-all hover:border-brand-accent min-w-[180px]"
     >
       <motion.div
         initial={false}
