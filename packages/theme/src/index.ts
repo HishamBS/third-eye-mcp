@@ -23,6 +23,7 @@ export type {
 export {
   THEMES,
   DEFAULT_THEME,
+  THEME_NAMES,
   THEME_METADATA,
   SHARED_EYE_COLORS,
   getTheme,

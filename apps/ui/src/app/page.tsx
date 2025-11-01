@@ -12,10 +12,12 @@ import {
 } from 'lucide-react';
 import { PROVIDERS } from '@third-eye/types/enums';
 import { UI_HELP_TEXT, PLATFORM_HIGHLIGHTS } from '@third-eye/constants';
+import { THEME_NAMES } from '@third-eye/theme';
 import { API_BASE_URL } from '@/consts/api';
 import { ANIMATION_DURATION } from '@/constants/timing';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS } from '@/constants/color-mappings';
 import { GRADIENT, SHADOW } from '@/constants/design-tokens';
+import { useUI } from '@/contexts/UIContext';
 
 interface RealtimeStats {
   sessions: number;
@@ -39,6 +41,7 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 };
 
 export default function HomePage() {
+  const { theme } = useUI();
   const [stats, setStats] = useState<RealtimeStats>({
     sessions: 0,
     runs: 0,
@@ -109,7 +112,9 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-brand-ink">
       <section className="relative overflow-hidden py-20">
-        <div className={`absolute inset-0 bg-gradient-to-br ${GRADIENT.heroBackground}`} />
+        {theme !== THEME_NAMES.OVERSEER && (
+          <div className={`absolute inset-0 bg-gradient-to-br ${GRADIENT.heroBackground}`} />
+        )}
 
         <div className="relative mx-auto max-w-7xl px-6 text-center">
           <motion.div

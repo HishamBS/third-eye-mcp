@@ -669,6 +669,17 @@ export const getThemeNames = (): readonly ThemeName[] => {
 // SSOT: Default theme
 export const DEFAULT_THEME: ThemeName = 'overseer';
 
+// SSOT: Theme name constants (eliminates string literals)
+export const THEME_NAMES = {
+  OVERSEER: 'overseer',
+  AURORA: 'aurora',
+  MIDNIGHT: 'midnight',
+  SAKURA: 'sakura',
+  HORIZON: 'horizon',
+  EMERALD: 'emerald',
+  OBSIDIAN: 'obsidian',
+} as const;
+
 // SSOT: Theme metadata for UI display
 export interface ThemeMetadata {
   readonly value: ThemeName;
