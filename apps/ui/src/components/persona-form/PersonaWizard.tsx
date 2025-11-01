@@ -36,9 +36,6 @@ import { ANIMATION_DURATION } from '@/constants/timing';
 /**
  * PersonaWizard - Multi-step form for persona configuration
  *
- * Phase 13: Foundation shell with navigation
- * Phase 14: Will implement rich editors for each step
- *
  * Per R13: All text from SSOT constants
  * Per R07: Zero `any` types, strict typing
  * Per R04: useReducer for performance, memoized handlers

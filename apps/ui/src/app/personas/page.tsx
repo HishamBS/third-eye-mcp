@@ -1,40 +1,121 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { PersonaWizard } from '@/components/persona-form/PersonaWizard';
-import { Plus, CheckCircle2 } from 'lucide-react';
+import { Plus, Eye, CheckCircle2, Circle, Calendar } from 'lucide-react';
 import type { PersonaFormState } from '@/types/persona-form';
-import { STATUS_TEXT_COLORS } from '@/constants/color-mappings';
+import type { Persona } from '@/types/api';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { TIMING } from '@/constants/timing';
+import { API_ROUTES } from '@/constants/api-routes';
 
 /**
- * Personas Page - Phase 13 Complete
+ * Personas Page - Management interface for Eye personas
  *
- * **Phase 13 Status:** PersonaWizard foundation implemented with navigation shell
- * **Next:** Phase 14 will add rich form editors for each step
+ * Features:
+ * - List all personas grouped by Eye
+ * - Create new personas via PersonaWizard
+ * - Activate/deactivate persona versions
+ * - View persona details
  *
- * Changes from Phase 11:
- * - PersonaWizard component with 9-step navigation
- * - Progress indicator and step management
- * - Form state with useReducer
- * - SSOT constants and strict types
- *
- * See: IMPLEMENTATION_PLAN.md for roadmap
- * Per: CLAUDE.md R10 (Whole-System Refactors, no mixed legacy states)
+ * Per R01: Uses SSOT for API routes, color mappings, timing
+ * Per R07: Strict typing throughout
+ * Per R13: No magic numbers or strings
  */
 export default function PersonasPage() {
+  const [personas, setPersonas] = useState<Persona[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showWizard, setShowWizard] = useState(false);
+  const [filterEye, setFilterEye] = useState<string>('all');
+
+  // Fetch personas on mount
+  useEffect(() => {
+    fetchPersonas();
+  }, []);
+
+  const fetchPersonas = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(API_ROUTES.PERSONAS);
+      if (!response.ok) {
+        throw new Error('Failed to fetch personas');
+      }
+      const data = await response.json();
+      setPersonas(data.data || data || []);
+    } catch (err) {
+      console.error('Error fetching personas:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load personas');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSave = useCallback(async (data: PersonaFormState) => {
-    console.log('Saving persona:', data);
-    // TODO Phase 14: Implement actual save logic
-    alert('Persona saved! (Phase 14 will implement actual API call)');
-    setShowWizard(false);
+    try {
+      const response = await fetch(API_ROUTES.PERSONAS, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eye: data.metadata.eyeId,
+          content: JSON.stringify(data),
+          active: false,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save persona');
+      }
+
+      await fetchPersonas();
+      setShowWizard(false);
+    } catch (err) {
+      console.error('Error saving persona:', err);
+      alert('Failed to save persona: ' + (err instanceof Error ? err.message : 'Unknown error'));
+    }
   }, []);
 
   const handleCancel = useCallback(() => {
     setShowWizard(false);
   }, []);
+
+  const toggleActive = async (persona: Persona) => {
+    try {
+      const response = await fetch(
+        API_ROUTES.PERSONAS_ACTIVATE(persona.eye, persona.version),
+        { method: 'POST' }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle persona status');
+      }
+
+      await fetchPersonas();
+    } catch (err) {
+      console.error('Error toggling persona:', err);
+      alert('Failed to update persona status');
+    }
+  };
+
+  // Group personas by eye
+  const personasByEye = personas.reduce((acc, persona) => {
+    if (!acc[persona.eye]) {
+      acc[persona.eye] = [];
+    }
+    acc[persona.eye].push(persona);
+    return acc;
+  }, {} as Record<string, Persona[]>);
+
+  // Get unique eyes for filter
+  const uniqueEyes = Object.keys(personasByEye).sort();
+
+  // Filter personas by eye
+  const filteredEyes = filterEye === 'all'
+    ? uniqueEyes
+    : uniqueEyes.filter(eye => eye === filterEye);
 
   if (showWizard) {
     return (
@@ -46,74 +127,161 @@ export default function PersonasPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-8">
-      <GlassCard className="max-w-2xl w-full p-12 text-center">
-        <div className="flex justify-center mb-6">
-          <CheckCircle2 className={`w-24 h-24 ${STATUS_TEXT_COLORS.success}`} />
+    <div className="min-h-screen bg-brand-paper">
+      {/* Header */}
+      <div className="border-b border-brand-outline/60 bg-brand-paperElev/50">
+        <div className="mx-auto max-w-7xl px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-brand-foreground">Personas</h1>
+              <p className="mt-1 text-sm text-brand-outline">
+                Manage Eye personas and configurations
+              </p>
+            </div>
+            <button
+              onClick={() => setShowWizard(true)}
+              className="flex items-center gap-2 rounded-lg bg-brand-accent px-4 py-2 font-semibold text-brand-foreground transition-colors hover:bg-brand-accent/90"
+            >
+              <Plus className="h-5 w-5" />
+              Create Persona
+            </button>
+          </div>
+
+          {/* Filter Bar */}
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={() => setFilterEye('all')}
+              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                filterEye === 'all'
+                  ? 'bg-brand-accent text-brand-foreground'
+                  : 'bg-brand-paperElev text-brand-outline hover:bg-brand-paperElev/80'
+              }`}
+            >
+              All Eyes
+            </button>
+            {uniqueEyes.map((eye) => (
+              <button
+                key={eye}
+                onClick={() => setFilterEye(eye)}
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                  filterEye === eye
+                    ? 'bg-brand-accent text-brand-foreground'
+                    : 'bg-brand-paperElev text-brand-outline hover:bg-brand-paperElev/80'
+                }`}
+              >
+                {eye}
+              </button>
+            ))}
+          </div>
         </div>
+      </div>
 
-        <h1 className="text-4xl font-bold text-brand-ink mb-4">
-          Persona Configuration
-        </h1>
+      {/* Content */}
+      <div className="mx-auto max-w-7xl px-6 py-8">
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <p className="text-brand-outline">Loading personas...</p>
+          </div>
+        )}
 
-        <p className="text-xl text-brand-ink/80 mb-6">
-          Phase 13 Complete
-        </p>
+        {error && (
+          <div className="rounded-lg border border-red-500/50 bg-red-500/10 p-4 text-red-400">
+            {error}
+          </div>
+        )}
 
-        <div className="text-left space-y-4 text-brand-ink/70 bg-brand-paperElev p-6 rounded-lg">
-          <p className={`font-semibold ${STATUS_TEXT_COLORS.success}`}>
-            Phase 13 Complete: PersonaWizard foundation implemented
-          </p>
+        {!loading && !error && personas.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <GlassCard className="max-w-md p-8 text-center">
+              <Eye className="mx-auto h-16 w-16 text-brand-outline/50" />
+              <h2 className="mt-4 text-xl font-semibold text-brand-foreground">No Personas Yet</h2>
+              <p className="mt-2 text-sm text-brand-outline">
+                Create your first persona to configure how Eyes interact with users
+              </p>
+              <button
+                onClick={() => setShowWizard(true)}
+                className="mt-6 flex items-center gap-2 rounded-lg bg-brand-accent px-6 py-3 font-semibold text-brand-foreground transition-colors hover:bg-brand-accent/90"
+              >
+                <Plus className="h-5 w-5" />
+                Create First Persona
+              </button>
+            </GlassCard>
+          </div>
+        )}
 
-          <p>
-            <strong>Implemented:</strong>
-          </p>
-          <ul className="list-disc list-inside space-y-2 ml-4">
-            <li>9-step wizard shell with navigation</li>
-            <li>Progress indicator (step X/9)</li>
-            <li>Form state management with useReducer</li>
-            <li>SSOT constants (all text centralized)</li>
-            <li>Strict TypeScript types (zero any)</li>
-            <li>Memoized handlers for performance</li>
-          </ul>
-
-          <p>
-            <strong>Coming in Phase 14:</strong>
-          </p>
-          <ul className="list-disc list-inside space-y-2 ml-4">
-            <li>Rich form editors for each step</li>
-            <li>Metadata form (Eye ID, name, description, capabilities)</li>
-            <li>Mission textarea with templates</li>
-            <li>Guidance/Validation phase forms</li>
-            <li>Envelope contract configuration</li>
-            <li>LLM config sliders and toggles</li>
-            <li>JSON import/export</li>
-          </ul>
-
-          <p className="text-sm italic mt-6 border-t border-brand-outline pt-4">
-            Per CLAUDE.md R13: All wizard text in SSOT constants.
-            Per CLAUDE.md R07: Zero any types, strict typing throughout.
-          </p>
-
-          <p className="text-sm text-brand-ink/50 mt-4">
-            See <code className="bg-brand-paper px-2 py-1 rounded">IMPLEMENTATION_PLAN.md</code> for complete roadmap.
-          </p>
-        </div>
-
-        <button
-          onClick={() => setShowWizard(true)}
-          className="mt-8 flex items-center gap-2 px-8 py-4 mx-auto rounded-lg bg-brand-accent text-brand-foreground hover:bg-brand-accent/90 transition-colors text-lg font-semibold"
-        >
-          <Plus className="w-5 h-5" />
-          Open PersonaWizard (Preview)
-        </button>
-
-        <div className="mt-6 text-sm text-brand-ink/50">
-          Click above to preview the wizard shell.
-          Form editors will be added in Phase 14.
-        </div>
-      </GlassCard>
+        {!loading && !error && personas.length > 0 && (
+          <div className="space-y-8">
+            {filteredEyes.map((eye) => (
+              <motion.div
+                key={eye}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: TIMING.ANIMATION.FAST }}
+              >
+                <h2 className="mb-4 text-xl font-bold text-brand-foreground">
+                  {eye}
+                </h2>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {personasByEye[eye]
+                    .sort((a, b) => b.version - a.version)
+                    .map((persona) => (
+                      <motion.div
+                        key={`${persona.eye}-${persona.version}`}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: TIMING.ANIMATION.FAST }}
+                      >
+                        <GlassCard
+                          className={`p-4 transition-colors ${
+                            persona.active
+                              ? `${STATUS_BORDER_COLORS_SUBTLE.success} border`
+                              : 'border border-brand-outline/30'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                {persona.active ? (
+                                  <CheckCircle2 className={`h-5 w-5 ${STATUS_TEXT_COLORS.success}`} />
+                                ) : (
+                                  <Circle className="h-5 w-5 text-brand-outline/50" />
+                                )}
+                                <h3 className="font-semibold text-brand-foreground">
+                                  Version {persona.version}
+                                </h3>
+                              </div>
+                              <div className="mt-2 flex items-center gap-2 text-xs text-brand-outline">
+                                <Calendar className="h-4 w-4" />
+                                {new Date(persona.createdAt).toLocaleDateString()}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => toggleActive(persona)}
+                              className={`rounded-lg px-3 py-1 text-xs font-semibold transition-colors ${
+                                persona.active
+                                  ? `${STATUS_BG_COLORS_SUBTLE.warning} ${STATUS_TEXT_COLORS.warning}`
+                                  : `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success}`
+                              }`}
+                            >
+                              {persona.active ? 'Deactivate' : 'Activate'}
+                            </button>
+                          </div>
+                          {persona.active && (
+                            <div className={`mt-3 rounded-lg ${STATUS_BG_COLORS_SUBTLE.success} px-3 py-2`}>
+                              <p className={`text-xs font-medium ${STATUS_TEXT_COLORS.success}`}>
+                                Active Version
+                              </p>
+                            </div>
+                          )}
+                        </GlassCard>
+                      </motion.div>
+                    ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-

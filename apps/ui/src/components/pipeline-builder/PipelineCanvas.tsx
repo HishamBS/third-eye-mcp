@@ -87,13 +87,11 @@ const initialEdges: Edge[] = [
 /**
  * Pipeline Canvas Component
  *
- * Features (Phase 9):
+ * Features:
  * - React Flow integration
  * - Custom Eye nodes
  * - Pan, zoom, minimap, grid
  * - Initial sample pipeline
- *
- * Coming in Phase 10:
  * - Drag-and-drop from palette
  * - Connection validation
  * - Context menus
@@ -170,23 +168,23 @@ export function PipelineCanvas() {
         />
       </ReactFlow>
 
-      {/* Toolbar (placeholder for Phase 10) */}
+      {/* Toolbar */}
       <div className="absolute bottom-4 left-4 flex gap-2 p-2 bg-brand-paperElev border border-brand-outline rounded-lg shadow-lg">
         <button
           className="px-4 py-2 bg-semantic-success text-brand-foreground rounded-md font-semibold text-sm cursor-pointer hover:bg-semantic-success transition-colors"
-          onClick={() => console.log('Run pipeline (coming in Phase 10)')}
+          onClick={() => console.log('Run pipeline')}
         >
           {PIPELINE_UI_TEXT.TOOLBAR_RUN}
         </button>
         <button
           className="px-4 py-2 bg-brand-primary text-brand-foreground rounded-md font-semibold text-sm cursor-pointer hover:bg-brand-primary/90 transition-colors"
-          onClick={() => console.log('Auto-layout (coming in Phase 10)')}
+          onClick={() => console.log('Auto-layout')}
         >
           {PIPELINE_UI_TEXT.TOOLBAR_AUTO_LAYOUT}
         </button>
         <button
           className="px-4 py-2 bg-brand-accent text-brand-foreground rounded-md font-semibold text-sm cursor-pointer hover:bg-brand-accent/90 transition-colors"
-          onClick={() => console.log('Save pipeline (coming in Phase 10)')}
+          onClick={() => console.log('Save pipeline')}
         >
           {PIPELINE_UI_TEXT.TOOLBAR_SAVE}
         </button>

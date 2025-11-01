@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import type { WizardStepProps } from '@/types/persona-form';
+import type { WizardStepProps, PhaseFormData } from '@/types/persona-form';
 import { Construction, Plus, X, Download } from 'lucide-react';
-import { FIELD_LABELS, PLACEHOLDERS, ARRAY_ACTIONS, REMINDER_TEMPLATES } from '../constants';
+import { FIELD_LABELS, PLACEHOLDERS, ARRAY_ACTIONS, REMINDER_TEMPLATES, HELP_TEXT } from '../constants';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 /**
- * Simplified Step Components - Phase 14 Part 2
+ * PersonaWizard Step Components
  *
- * These are functional but simplified versions.
+ * Functional step components for persona configuration wizard.
  * Future enhancements: drag-reorder, JSON syntax highlighting, collapsible cards.
  */
 
@@ -26,21 +26,343 @@ function PlaceholderStep({ title, description }: { title: string; description: s
   );
 }
 
-export function GuidanceStep(props: WizardStepProps) {
+export function GuidanceStep({ state, dispatch }: WizardStepProps) {
+  const [reminderInput, setReminderInput] = useState('');
+  const isEnabled = state.guidancePhase !== null;
+
+  const handleToggleEnabled = useCallback(() => {
+    if (isEnabled) {
+      dispatch({ type: 'SET_GUIDANCE_PHASE', guidancePhase: null });
+    } else {
+      dispatch({
+        type: 'SET_GUIDANCE_PHASE',
+        guidancePhase: {
+          mission: '',
+          check: '',
+          reminders: [],
+          example: '{}',
+        },
+      });
+    }
+  }, [isEnabled, dispatch]);
+
+  const handleUpdateField = useCallback(
+    (field: keyof PhaseFormData, value: string | readonly string[]) => {
+      if (!state.guidancePhase) return;
+      dispatch({
+        type: 'SET_GUIDANCE_PHASE',
+        guidancePhase: {
+          ...state.guidancePhase,
+          [field]: value,
+        },
+      });
+    },
+    [state.guidancePhase, dispatch]
+  );
+
+  const handleAddReminder = useCallback(() => {
+    if (!state.guidancePhase) return;
+    const trimmed = reminderInput.trim();
+    if (!trimmed || state.guidancePhase.reminders.includes(trimmed)) return;
+
+    handleUpdateField('reminders', [...state.guidancePhase.reminders, trimmed]);
+    setReminderInput('');
+  }, [reminderInput, state.guidancePhase, handleUpdateField]);
+
+  const handleRemoveReminder = useCallback(
+    (index: number) => {
+      if (!state.guidancePhase) return;
+      handleUpdateField(
+        'reminders',
+        state.guidancePhase.reminders.filter((_, i) => i !== index)
+      );
+    },
+    [state.guidancePhase, handleUpdateField]
+  );
+
   return (
-    <PlaceholderStep
-      title="Guidance Phase Configuration"
-      description="Configure mission, check logic, reminders, and example JSON for the guidance phase. Full implementation with JSON editor and reminder management coming soon."
-    />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between p-4 rounded-lg bg-brand-paperElev border border-brand-outline">
+        <div>
+          <h4 className="font-semibold text-brand-ink">Enable Guidance Phase</h4>
+          <p className="text-xs text-brand-ink/60 mt-1">
+            Configure phase-specific mission, checks, and examples
+          </p>
+        </div>
+        <button
+          onClick={handleToggleEnabled}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+            isEnabled ? 'bg-brand-accent' : 'bg-brand-outline/30'
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-brand-foreground transition-transform ${
+              isEnabled ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
+      </div>
+
+      {isEnabled && state.guidancePhase && (
+        <>
+          <div>
+            <label className="block text-sm font-medium text-brand-ink mb-2">
+              {FIELD_LABELS.PHASE_MISSION} *
+            </label>
+            <textarea
+              value={state.guidancePhase.mission}
+              onChange={(e) => handleUpdateField('mission', e.target.value)}
+              placeholder={PLACEHOLDERS.PHASE_MISSION}
+              rows={5}
+              className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
+            />
+            <p className="text-xs text-brand-ink/60 mt-1">{HELP_TEXT.PHASE_MISSION}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-brand-ink mb-2">
+              {FIELD_LABELS.CHECK_LOGIC} *
+            </label>
+            <textarea
+              value={state.guidancePhase.check}
+              onChange={(e) => handleUpdateField('check', e.target.value)}
+              placeholder={PLACEHOLDERS.CHECK_LOGIC}
+              rows={4}
+              className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
+            />
+            <p className="text-xs text-brand-ink/60 mt-1">{HELP_TEXT.CHECK_LOGIC}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-brand-ink mb-2">
+              {FIELD_LABELS.PHASE_REMINDERS}
+            </label>
+            <div className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={reminderInput}
+                onChange={(e) => setReminderInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAddReminder()}
+                placeholder={PLACEHOLDERS.REMINDER}
+                className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent"
+              />
+              <button
+                onClick={handleAddReminder}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-accent text-brand-foreground hover:bg-brand-accent/90 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                {ARRAY_ACTIONS.ADD}
+              </button>
+            </div>
+
+            <div className="space-y-2 mb-2">
+              {state.guidancePhase.reminders.map((reminder, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 rounded-lg bg-brand-paperElev border border-brand-outline"
+                >
+                  <span className="text-sm text-brand-ink">{reminder}</span>
+                  <button
+                    onClick={() => handleRemoveReminder(index)}
+                    className={`text-brand-ink/40 hover:${STATUS_TEXT_COLORS.error} transition-colors`}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {state.guidancePhase.reminders.length === 0 && (
+              <p className="text-sm text-brand-ink/50 italic">No phase reminders added yet</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-brand-ink mb-2">
+              {FIELD_LABELS.EXAMPLE_JSON}
+            </label>
+            <textarea
+              value={state.guidancePhase.example}
+              onChange={(e) => handleUpdateField('example', e.target.value)}
+              placeholder={PLACEHOLDERS.EXAMPLE_JSON}
+              rows={6}
+              className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
+            />
+            <p className="text-xs text-brand-ink/60 mt-1">{HELP_TEXT.EXAMPLE_JSON}</p>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
-export function ValidationStep(props: WizardStepProps) {
+export function ValidationStep({ state, dispatch }: WizardStepProps) {
+  const [reminderInput, setReminderInput] = useState('');
+  const isEnabled = state.validationPhase !== null;
+
+  const handleToggleEnabled = useCallback(() => {
+    if (isEnabled) {
+      dispatch({ type: 'SET_VALIDATION_PHASE', validationPhase: null });
+    } else {
+      dispatch({
+        type: 'SET_VALIDATION_PHASE',
+        validationPhase: {
+          mission: '',
+          check: '',
+          reminders: [],
+          example: '{}',
+        },
+      });
+    }
+  }, [isEnabled, dispatch]);
+
+  const handleUpdateField = useCallback(
+    (field: keyof PhaseFormData, value: string | readonly string[]) => {
+      if (!state.validationPhase) return;
+      dispatch({
+        type: 'SET_VALIDATION_PHASE',
+        validationPhase: {
+          ...state.validationPhase,
+          [field]: value,
+        },
+      });
+    },
+    [state.validationPhase, dispatch]
+  );
+
+  const handleAddReminder = useCallback(() => {
+    if (!state.validationPhase) return;
+    const trimmed = reminderInput.trim();
+    if (!trimmed || state.validationPhase.reminders.includes(trimmed)) return;
+
+    handleUpdateField('reminders', [...state.validationPhase.reminders, trimmed]);
+    setReminderInput('');
+  }, [reminderInput, state.validationPhase, handleUpdateField]);
+
+  const handleRemoveReminder = useCallback(
+    (index: number) => {
+      if (!state.validationPhase) return;
+      handleUpdateField(
+        'reminders',
+        state.validationPhase.reminders.filter((_, i) => i !== index)
+      );
+    },
+    [state.validationPhase, handleUpdateField]
+  );
+
   return (
-    <PlaceholderStep
-      title="Validation Phase Configuration"
-      description="Optional validation phase configuration with enable/disable toggle. Full implementation coming soon."
-    />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between p-4 rounded-lg bg-brand-paperElev border border-brand-outline">
+        <div>
+          <h4 className="font-semibold text-brand-ink">Enable Validation Phase</h4>
+          <p className="text-xs text-brand-ink/60 mt-1">
+            Optional validation phase with mission, checks, and examples
+          </p>
+        </div>
+        <button
+          onClick={handleToggleEnabled}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+            isEnabled ? 'bg-brand-accent' : 'bg-brand-outline/30'
+          }`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-brand-foreground transition-transform ${
+              isEnabled ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
+      </div>
+
+      {isEnabled && state.validationPhase && (
+        <>
+          <div>
+            <label className="block text-sm font-medium text-brand-ink mb-2">
+              {FIELD_LABELS.PHASE_MISSION} *
+            </label>
+            <textarea
+              value={state.validationPhase.mission}
+              onChange={(e) => handleUpdateField('mission', e.target.value)}
+              placeholder={PLACEHOLDERS.PHASE_MISSION}
+              rows={5}
+              className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
+            />
+            <p className="text-xs text-brand-ink/60 mt-1">{HELP_TEXT.PHASE_MISSION}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-brand-ink mb-2">
+              {FIELD_LABELS.CHECK_LOGIC} *
+            </label>
+            <textarea
+              value={state.validationPhase.check}
+              onChange={(e) => handleUpdateField('check', e.target.value)}
+              placeholder={PLACEHOLDERS.CHECK_LOGIC}
+              rows={4}
+              className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
+            />
+            <p className="text-xs text-brand-ink/60 mt-1">{HELP_TEXT.CHECK_LOGIC}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-brand-ink mb-2">
+              {FIELD_LABELS.PHASE_REMINDERS}
+            </label>
+            <div className="flex gap-2 mb-4">
+              <input
+                type="text"
+                value={reminderInput}
+                onChange={(e) => setReminderInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAddReminder()}
+                placeholder={PLACEHOLDERS.REMINDER}
+                className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent"
+              />
+              <button
+                onClick={handleAddReminder}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-accent text-brand-foreground hover:bg-brand-accent/90 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                {ARRAY_ACTIONS.ADD}
+              </button>
+            </div>
+
+            <div className="space-y-2 mb-2">
+              {state.validationPhase.reminders.map((reminder, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 rounded-lg bg-brand-paperElev border border-brand-outline"
+                >
+                  <span className="text-sm text-brand-ink">{reminder}</span>
+                  <button
+                    onClick={() => handleRemoveReminder(index)}
+                    className={`text-brand-ink/40 hover:${STATUS_TEXT_COLORS.error} transition-colors`}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {state.validationPhase.reminders.length === 0 && (
+              <p className="text-sm text-brand-ink/50 italic">No phase reminders added yet</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-brand-ink mb-2">
+              {FIELD_LABELS.EXAMPLE_JSON}
+            </label>
+            <textarea
+              value={state.validationPhase.example}
+              onChange={(e) => handleUpdateField('example', e.target.value)}
+              placeholder={PLACEHOLDERS.EXAMPLE_JSON}
+              rows={6}
+              className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
+            />
+            <p className="text-xs text-brand-ink/60 mt-1">{HELP_TEXT.EXAMPLE_JSON}</p>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 

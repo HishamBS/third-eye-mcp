@@ -23,25 +23,8 @@ export function usePipelines() {
     setLoading(true);
     setError(null);
     try {
-      // TODO: Uncomment when backend endpoint ready
-      // const data = await get<Pipeline[]>('/api/pipelines');
-      // setPipelines(data);
-
-      // Placeholder: System default pipeline
-      setPipelines([
-        {
-          id: 'system-default',
-          name: 'System Default',
-          description: 'Default pipeline for all sessions',
-          nodes: [],
-          edges: [],
-          isActive: true,
-          isSystem: true,
-          version: 1,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ]);
+      const data = await get<Pipeline[]>('/api/pipelines');
+      setPipelines(data);
     } catch (err) {
       setError(err as Error);
     } finally {
@@ -66,23 +49,8 @@ export function useActivePipeline() {
     setLoading(true);
     setError(null);
     try {
-      // TODO: Uncomment when backend endpoint ready
-      // const data = await get<Pipeline>('/api/pipelines/active');
-      // setPipeline(data);
-
-      // Placeholder: System default
-      setPipeline({
-        id: 'system-default',
-        name: 'System Default',
-        description: 'Default pipeline for all sessions',
-        nodes: [],
-        edges: [],
-        isActive: true,
-        isSystem: true,
-        version: 1,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      const data = await get<Pipeline>('/api/pipelines/active');
+      setPipeline(data);
     } catch (err) {
       setError(err as Error);
     } finally {
@@ -113,25 +81,10 @@ export function useSavePipeline() {
       setLoading(true);
       setError(null);
       try {
-        // TODO: Uncomment when backend endpoint ready
-        // const data = pipelineId
-        //   ? await put<Pipeline>(`/api/pipelines/${pipelineId}`, { name, description, nodes, edges })
-        //   : await post<Pipeline>('/api/pipelines', { name, description, nodes, edges });
-        // return data;
-
-        // Placeholder: Return mock pipeline
-        return {
-          id: pipelineId || `pipeline-${Date.now()}`,
-          name,
-          description,
-          nodes,
-          edges,
-          isActive: false,
-          isSystem: false,
-          version: 1,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
+        const data = pipelineId
+          ? await put<Pipeline>(`/api/pipelines/${pipelineId}`, { name, description, nodes, edges })
+          : await post<Pipeline>('/api/pipelines', { name, description, nodes, edges });
+        return data;
       } catch (err) {
         setError(err as Error);
         return null;
@@ -159,9 +112,7 @@ export function useActivatePipeline() {
       setLoading(true);
       setError(null);
       try {
-        // TODO: Uncomment when backend endpoint ready
-        // await post(`/api/pipelines/${pipelineId}/activate`, {});
-        console.log(`[usePipelines] Activated pipeline: ${pipelineId}`);
+        await post(`/api/pipelines/${pipelineId}/activate`, {});
         return true;
       } catch (err) {
         setError(err as Error);
@@ -190,9 +141,7 @@ export function useDeletePipeline() {
       setLoading(true);
       setError(null);
       try {
-        // TODO: Uncomment when backend endpoint ready
-        // await del(`/api/pipelines/${pipelineId}`);
-        console.log(`[usePipelines] Deleted pipeline: ${pipelineId}`);
+        await del(`/api/pipelines/${pipelineId}`);
         return true;
       } catch (err) {
         setError(err as Error);
