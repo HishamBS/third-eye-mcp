@@ -198,8 +198,8 @@ const OVERSEER_LIGHT: Theme = Object.freeze({
       primary: '#C2410C',    // Orange-800 (7.5:1 on Orange-50)
       accent: '#9F1239',     // Rose-900 (8.2:1)
       ink: '#1C1917',        // Stone-900 (16.8:1)
-      paper: '#FFF7ED',      // Orange-50
-      paperElev: '#FFEDD5',  // Orange-100
+      paper: '#FFFFFF',      // Pure white (WCAG AAA)
+      paperElev: '#F5F5F5',  // Gray-100 (neutral elevation)
       outline: '#78350F',    // Orange-900 (10.2:1)
     },
     semantic: {

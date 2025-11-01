@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { SHARED_EYE_COLORS } from '@third-eye/theme';
 import { motion, AnimatePresence } from 'framer-motion';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 import { ANIMATION_DURATION } from '@/constants/timing';
@@ -32,16 +33,8 @@ const EYE_POSITIONS = {
   byakugan: { x: 90, y: 60 },
 };
 
-const EYE_COLORS = {
-  overseer: '#8B5CF6', // Purple
-  sharingan: '#EF4444', // Red
-  'kyuubi': '#F59E0B', // Amber
-  jogan: '#3B82F6', // Blue
-  rinnegan: '#10B981', // Emerald
-  mangekyo: '#F97316', // Orange
-  tenseigan: '#14B8A6', // Teal
-  byakugan: '#6366F1', // Indigo
-};
+// Use SSOT eye colors from theme package
+const EYE_COLORS = SHARED_EYE_COLORS;
 
 export function PipelineVisualization({ sessionId, events, isLive = false }: PipelineVisualizationProps) {
   const [eyeStatuses, setEyeStatuses] = useState<Record<string, EyeStatus>>({});

@@ -5,6 +5,7 @@ import { toast, Toaster } from 'sonner';
 import { useUI } from '@/contexts/UIContext';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import type { WSMessage } from '@third-eye/types';
+import { TOAST_STYLE } from '@/constants/design-tokens';
 
 // Session data structure from WebSocket message
 interface SessionData {
@@ -56,11 +57,7 @@ export function SessionNotifier() {
               label: 'Switch',
               onClick: () => setSelectedSession(newSessionId),
             },
-            style: {
-              background: 'rgba(15, 23, 42, 0.95)',
-              border: '1px solid rgba(148, 163, 184, 0.2)',
-              backdropFilter: 'blur(12px)',
-            },
+            style: TOAST_STYLE,
           }
         );
       } else if (!selectedSessionId) {
@@ -72,11 +69,7 @@ export function SessionNotifier() {
           </div>,
           {
             duration: 4000,
-            style: {
-              background: 'rgba(15, 23, 42, 0.95)',
-              border: '1px solid rgba(148, 163, 184, 0.2)',
-              backdropFilter: 'blur(12px)',
-            },
+            style: TOAST_STYLE,
           }
         );
       }
@@ -91,29 +84,17 @@ export function SessionNotifier() {
         if (status === 'completed') {
           toast.success('Session completed successfully', {
             duration: 4000,
-            style: {
-              background: 'rgba(15, 23, 42, 0.95)',
-              border: '1px solid rgba(148, 163, 184, 0.2)',
-              backdropFilter: 'blur(12px)',
-            },
+            style: TOAST_STYLE,
           });
         } else if (status === 'failed') {
           toast.error('Session failed', {
             duration: 6000,
-            style: {
-              background: 'rgba(15, 23, 42, 0.95)',
-              border: '1px solid rgba(148, 163, 184, 0.2)',
-              backdropFilter: 'blur(12px)',
-            },
+            style: TOAST_STYLE,
           });
         } else if (status === 'killed') {
           toast.warning('Session killed', {
             duration: 4000,
-            style: {
-              background: 'rgba(15, 23, 42, 0.95)',
-              border: '1px solid rgba(148, 163, 184, 0.2)',
-              backdropFilter: 'blur(12px)',
-            },
+            style: TOAST_STYLE,
           });
         }
       }
@@ -134,12 +115,7 @@ export function SessionNotifier() {
       closeButton
       theme="dark"
       toastOptions={{
-        style: {
-          background: 'rgba(15, 23, 42, 0.95)',
-          border: '1px solid rgba(148, 163, 184, 0.2)',
-          backdropFilter: 'blur(12px)',
-          color: 'white',
-        },
+        style: TOAST_STYLE,
       }}
     />
   );

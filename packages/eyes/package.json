@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./blueprint-client": "./blueprint-client.ts"
+    ".": "./dist/index.js",
+    "./blueprint-client": "./dist/blueprint-client.js"
   },
   "dependencies": {
     "zod": "^3.23.8"

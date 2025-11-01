@@ -21,7 +21,7 @@ import { generateTailwindThemeConfig } from '@third-eye/theme';
 const { cssVariables, eyeColors } = generateTailwindThemeConfig();
 
 const config: Config = {
-  darkMode: 'class',
+  darkMode: ['class', '[data-mode="dark"]'],
   content: [
     './src/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
@@ -53,8 +53,8 @@ const config: Config = {
         eye: eyeColors,
       },
       boxShadow: {
-        glass: '0 10px 30px rgba(0, 0, 0, 0.35)',
-        'glass-light': '0 10px 30px rgba(0, 0, 0, 0.15)',
+        glass: '0 10px 30px rgb(var(--color-ink) / 0.35)',
+        'glass-light': '0 10px 30px rgb(var(--color-ink) / 0.15)',
       },
       borderRadius: {
         xl2: '1.25rem',

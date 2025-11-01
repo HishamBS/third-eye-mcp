@@ -23,7 +23,7 @@ export default function DuelPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-ink via-brand-paper to-brand-ink p-6">
+    <div className="min-h-screen bg-gradient-to-br from-brand-paper via-brand-ink to-brand-paper p-6">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-brand-foreground">Duel Mode</h1>
