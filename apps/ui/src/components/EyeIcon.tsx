@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { EyeIconPaths, getEyeIconPath } from '@third-eye/constants/eye-icons';
 import { EyeId } from '@third-eye/constants/taxonomy';
 import { SHARED_EYE_COLORS } from '@third-eye/theme';
+import { API_BASE_URL } from '@/consts/api';
 
 interface EyeIconProps {
   eye: string;
@@ -32,8 +33,7 @@ export function EyeIcon({ eye, size = 24, className = '', customSvg }: EyeIconPr
     const fetchSvg = async () => {
       setLoading(true);
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-        const response = await fetch(`${API_URL}/api/eyes/${eyeLower}/icon`);
+        const response = await fetch(`${API_BASE_URL}/api/eyes/${eyeLower}/icon`);
         if (response.ok) {
           const data = await response.json();
           if (data.iconSvg) {
@@ -70,7 +70,7 @@ export function EyeIcon({ eye, size = 24, className = '', customSvg }: EyeIconPr
     // Return placeholder if no SVG found
     return (
       <div
-        className={`inline-flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full ${className}`}
+        className={`inline-flex items-center justify-center bg-brand-paper rounded-full ${className}`}
         style={{ width: size, height: size }}
         title={`Missing icon: ${eye}`}
       >
@@ -83,7 +83,7 @@ export function EyeIcon({ eye, size = 24, className = '', customSvg }: EyeIconPr
     // Show loading state
     return (
       <div
-        className={`inline-flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse ${className}`}
+        className={`inline-flex items-center justify-center bg-brand-paper rounded-full animate-pulse ${className}`}
         style={{ width: size, height: size }}
       />
     );

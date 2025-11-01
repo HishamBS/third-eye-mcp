@@ -22,6 +22,7 @@ const SERVER_PID_FILE = resolve(PIDS_DIR, 'server.pid');
 const UI_PID_FILE = resolve(PIDS_DIR, 'ui.pid');
 const SERVER_LOG_FILE = resolve(LOGS_DIR, 'server.log');
 const UI_LOG_FILE = resolve(LOGS_DIR, 'ui.log');
+const BUILD_LOG_FILE = resolve(LOGS_DIR, 'build.log');
 const RELEASE_HISTORY_FILE = resolve(THIRD_EYE_DIR, 'release-history.json');
 
 interface CliArgs {
@@ -607,6 +608,10 @@ async function runReleasePipeline() {
 }
 
 function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
+  if (!quiet) {
+    console.log(kleur.cyan('🔍 Checking for stale package builds...'));
+  }
+
   const cleaned: string[] = [];
   const packagesToRebuild: string[] = [];
 
@@ -681,18 +686,70 @@ function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
     if (!quiet) {
       console.log(kleur.cyan(`🔨 Rebuilding packages: ${packagesToRebuild.join(', ')}`));
     }
-    for (const pkg of packagesToRebuild) {
+
+    // Helper function to log to both console and file
+    const buildLog = (msg: string, isError: boolean = false) => {
+      const timestamp = new Date().toISOString();
+      const logMsg = `[${timestamp}] ${msg}`;
+
+      // Ensure logs directory exists
+      if (!existsSync(LOGS_DIR)) {
+        mkdirSync(LOGS_DIR, { recursive: true });
+      }
+
+      // Always log to file
       try {
-        execSync(`bun run --cwd packages/${pkg} build`, {
-          cwd: projectRoot,
-          stdio: quiet ? 'ignore' : 'inherit',
-        });
-      } catch (err) {
-        if (!quiet) {
-          console.error(kleur.red(`  ✗ Failed to rebuild ${pkg}`));
+        appendFileSync(BUILD_LOG_FILE, logMsg + '\n');
+      } catch {
+        // Ignore file write errors
+      }
+
+      // Log to console if not quiet
+      if (!quiet) {
+        if (isError) {
+          console.error(msg);
+        } else {
+          console.log(msg);
         }
       }
+    };
+
+    buildLog(`Starting rebuild of ${packagesToRebuild.length} package(s): ${packagesToRebuild.join(', ')}`);
+
+    for (const pkg of packagesToRebuild) {
+      try {
+        buildLog(`Building ${pkg}...`);
+        execSync(`bun run --cwd packages/${pkg} build`, {
+          cwd: projectRoot,
+          stdio: quiet ? 'pipe' : 'inherit',
+        });
+        buildLog(`✓ Successfully built ${pkg}`);
+      } catch (err) {
+        const errorMsg = kleur.red(`✗ FATAL: Failed to rebuild package '${pkg}'`);
+        const hintMsg = kleur.dim(`  Run manually: bun run build:${pkg}`);
+        buildLog(errorMsg, true);
+        buildLog(hintMsg, true);
+        buildLog(`Error details: ${err instanceof Error ? err.message : String(err)}`, true);
+
+        // CRITICAL: Throw error to prevent starting with stale packages
+        throw new Error(`Package rebuild failed: ${pkg}. Cannot start services with stale builds.`);
+      }
     }
+
+    // Verify all rebuilds succeeded by checking dist directories exist
+    for (const pkg of packagesToRebuild) {
+      const distPath = resolve(packagesDir, pkg, 'dist');
+      if (!existsSync(distPath)) {
+        const errorMsg = kleur.red(`✗ FATAL: Rebuild verification failed for '${pkg}' - dist directory missing`);
+        buildLog(errorMsg, true);
+        throw new Error(`Rebuild verification failed: ${pkg}/dist does not exist after build`);
+      }
+    }
+
+    if (!quiet) {
+      console.log(kleur.green(`✓ Successfully rebuilt ${packagesToRebuild.length} package(s): ${packagesToRebuild.join(', ')}`));
+    }
+    buildLog(`All ${packagesToRebuild.length} package(s) rebuilt successfully`);
   }
 }
 

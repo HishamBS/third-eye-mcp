@@ -5,12 +5,14 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useUI } from '@/contexts/UIContext';
 import { ViewModeToggle, ViewModeDescription } from '@/components/ViewModeToggle';
+import { API_BASE_URL } from '@/consts/api';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 // Session status color mappings (SSOT)
 const SESSION_STATUS_COLORS = Object.freeze({
-  active: 'bg-green-500/20 text-green-400 border-green-500/40',
-  completed: 'bg-blue-500/20 text-blue-400 border-blue-500/40',
-  failed: 'bg-red-500/20 text-red-400 border-red-500/40',
+  active: `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success} ${STATUS_BORDER_COLORS_SUBTLE.success}`,
+  completed: `${STATUS_BG_COLORS_SUBTLE.info} ${STATUS_TEXT_COLORS.info} ${STATUS_BORDER_COLORS_SUBTLE.info}`,
+  failed: `${STATUS_BG_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error} ${STATUS_BORDER_COLORS_SUBTLE.error}`,
 } as const);
 
 type SessionStatus = keyof typeof SESSION_STATUS_COLORS;
@@ -33,8 +35,6 @@ export default function SessionsPage() {
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
-
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
 
   useEffect(() => {
     fetchSessions();
@@ -62,7 +62,7 @@ export default function SessionsPage() {
 
   const fetchSessions = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/session`);
+      const response = await fetch(`${API_BASE_URL}/api/session`);
       if (response.ok) {
         const result = await response.json();
         const data = result.data || result;
@@ -142,7 +142,7 @@ export default function SessionsPage() {
             placeholder="Search sessions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 max-w-md px-4 py-2 bg-brand-paper border border-brand-outline/50 rounded-xl text-brand-foreground placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+            className="flex-1 max-w-md px-4 py-2 bg-brand-paper border border-brand-outline/50 rounded-xl text-brand-foreground placeholder-brand-outline focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
           />
 
           <select
@@ -242,13 +242,13 @@ export default function SessionsPage() {
           </div>
           <div className="bg-brand-paper border border-brand-outline/50 rounded-xl p-4">
             <div className="text-xs uppercase tracking-wider text-brand-outline mb-1">Active</div>
-            <div className="text-2xl font-bold text-green-400">
+            <div className={`text-2xl font-bold ${STATUS_TEXT_COLORS.success}`}>
               {sessions.filter(s => s.status === 'active').length}
             </div>
           </div>
           <div className="bg-brand-paper border border-brand-outline/50 rounded-xl p-4">
             <div className="text-xs uppercase tracking-wider text-brand-outline mb-1">Completed</div>
-            <div className="text-2xl font-bold text-blue-400">
+            <div className={`text-2xl font-bold ${STATUS_TEXT_COLORS.info}`}>
               {sessions.filter(s => s.status === 'completed').length}
             </div>
           </div>

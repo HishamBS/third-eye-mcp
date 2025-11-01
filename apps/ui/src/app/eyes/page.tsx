@@ -12,6 +12,9 @@ import { SkeletonCard } from '@/components/ui/Skeleton';
 import { UI_HELP_TEXT } from '@third-eye/constants';
 import { PersonaWizardModal } from '@/components/persona-form/PersonaWizardModal';
 import { CustomEyeWizard } from '@/components/custom-eye-form/CustomEyeWizard';
+import { API_BASE_URL } from '@/consts/api';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BG_COLORS, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { TIMING, ANIMATION_DURATION } from '@/constants/timing';
 
 interface Eye {
   id: string;
@@ -101,8 +104,7 @@ export default function EyesPage() {
 
   const fetchPersonas = async () => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/personas`);
+      const response = await fetch(`${API_BASE_URL}/api/personas`);
       if (response.ok) {
         const result = await response.json();
         setPersonas(result.data || []);
@@ -114,22 +116,21 @@ export default function EyesPage() {
 
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => setError(null), 5000);
+      const timer = setTimeout(() => setError(null), TIMING.MESSAGE_AUTO_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [error]);
 
   useEffect(() => {
     if (success) {
-      const timer = setTimeout(() => setSuccess(null), 5000);
+      const timer = setTimeout(() => setSuccess(null), TIMING.MESSAGE_AUTO_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [success]);
 
   const fetchEyes = async () => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/eyes/all`);
+      const response = await fetch(`${API_BASE_URL}/api/eyes/all`);
       if (!response.ok) {
         throw new Error(`Failed to load eyes (status ${response.status})`);
       }
@@ -143,7 +144,7 @@ export default function EyesPage() {
 
       if (allEyesData.length === 0) {
         // Fallback: pull built-in registry so UI never renders empty during outages
-        const registryResponse = await fetch(`${API_URL}/api/eyes/registry`);
+        const registryResponse = await fetch(`${API_BASE_URL}/api/eyes/registry`);
         if (registryResponse.ok) {
           const registryPayload = await registryResponse.json();
           const registryEyes: Eye[] = Array.isArray(registryPayload?.data)
@@ -167,7 +168,7 @@ export default function EyesPage() {
         allEyesData.map(async (eye: Eye) => {
           if (!eye.capabilities) {
             try {
-              const blueprintRes = await fetch(`${API_URL}/api/personas/blueprints/${eye.id}`);
+              const blueprintRes = await fetch(`${API_BASE_URL}/api/personas/blueprints/${eye.id}`);
               if (blueprintRes.ok) {
                 const blueprint = await blueprintRes.json();
                 if (blueprint.success && blueprint.data && blueprint.data.capabilities) {
@@ -338,8 +339,6 @@ export default function EyesPage() {
     setLoading(true);
     setError(null);
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-
       const payload: UpdateEyePayload = {
         name: formData.name,
         description: formData.description,
@@ -349,7 +348,7 @@ export default function EyesPage() {
         ...(formData.personaId && { personaId: formData.personaId }),
       };
 
-      const response = await fetch(`${API_URL}/api/eyes/custom/${selectedEye.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/eyes/custom/${selectedEye.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -380,8 +379,7 @@ export default function EyesPage() {
 
     setError(null);
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/eyes/custom/${eyeId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/eyes/custom/${eyeId}`, {
         method: 'DELETE',
       });
 
@@ -408,8 +406,7 @@ export default function EyesPage() {
     setError(null);
     setTestResult(null);
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/eyes/custom/${selectedEye.id}/test`, {
+      const response = await fetch(`${API_BASE_URL}/api/eyes/custom/${selectedEye.id}/test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ testInput }),
@@ -491,7 +488,7 @@ export default function EyesPage() {
                 <button
                   onClick={startCreating}
                   aria-label={UI_HELP_TEXT.ARIA_CREATE_EYE}
-                  className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition-all duration-200 hover:bg-brand-primary hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink active:scale-95"
+                  className={`rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition-all ${ANIMATION_DURATION.FAST} hover:bg-brand-primary hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink active:scale-95`}
                 >
                   {UI_HELP_TEXT.EYES_BUTTON_CREATE}
                 </button>
@@ -508,7 +505,7 @@ export default function EyesPage() {
             role="alert"
             aria-live="assertive"
             aria-label={UI_HELP_TEXT.ARIA_ERROR_REGION}
-            className="rounded-xl border border-red-500/50 bg-red-500/10 p-4 text-red-400"
+            className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} p-4 ${STATUS_TEXT_COLORS.error}`}
           >
             {error}
           </div>
@@ -521,7 +518,7 @@ export default function EyesPage() {
             role="alert"
             aria-live="polite"
             aria-label={UI_HELP_TEXT.ARIA_SUCCESS_REGION}
-            className="rounded-xl border border-green-500/50 bg-green-500/10 p-4 text-green-400"
+            className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success} p-4 ${STATUS_TEXT_COLORS.success}`}
           >
             {success}
           </div>
@@ -565,7 +562,7 @@ export default function EyesPage() {
                       onClick={testEye}
                       disabled={loading || !testInput}
                       aria-label={UI_HELP_TEXT.ARIA_RUN_TEST}
-                      className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-green-700 disabled:opacity-50"
+                      className={`rounded-full ${STATUS_BG_COLORS.success} px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-semantic-success/80 disabled:opacity-50`}
                     >
                       {loading ? UI_HELP_TEXT.EYES_BUTTON_TESTING : UI_HELP_TEXT.EYES_BUTTON_RUN_TEST}
                     </button>
@@ -583,14 +580,14 @@ export default function EyesPage() {
                     <button
                       onClick={() => setIsTesting(true)}
                       aria-label={UI_HELP_TEXT.ARIA_TEST_EYE}
-                      className="rounded-full bg-green-600 px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-green-700"
+                      className={`rounded-full ${STATUS_BG_COLORS.success} px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-semantic-success/80`}
                     >
                       {UI_HELP_TEXT.EYES_BUTTON_TEST}
                     </button>
                     <button
                       onClick={() => selectedEye && deleteEye(selectedEye.id)}
                       aria-label={UI_HELP_TEXT.ARIA_DELETE_EYE}
-                      className="rounded-full bg-red-600 px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-red-700"
+                      className={`rounded-full ${STATUS_BG_COLORS.error} px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-semantic-error/80`}
                     >
                       {UI_HELP_TEXT.EYES_BUTTON_DELETE}
                     </button>
@@ -608,7 +605,7 @@ export default function EyesPage() {
                     value={testInput}
                     onChange={(e) => setTestInput(e.target.value)}
                     placeholder={UI_HELP_TEXT.EYES_PLACEHOLDER_TEST_INPUT}
-                    className="h-40 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                    className="h-40 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-brand-outline/60 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                   />
                 </div>
 
@@ -621,7 +618,7 @@ export default function EyesPage() {
                       </div>
                       <div>
                         <p className="mb-2 text-sm font-medium text-brand-outline">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_RESULT_RESPONSE}</p>
-                        <pre className="overflow-x-auto rounded-lg bg-brand-ink p-4 text-xs text-green-400">
+                        <pre className={`overflow-x-auto rounded-lg bg-brand-ink p-4 text-xs ${STATUS_TEXT_COLORS.success}`}>
                           {JSON.stringify(testResult.response, null, 2)}
                         </pre>
                       </div>
@@ -665,7 +662,7 @@ export default function EyesPage() {
                     {/* Input Schema */}
                     <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
                       <h3 className="mb-3 text-lg font-semibold text-brand-foreground">Input Schema</h3>
-                      <pre className="overflow-x-auto rounded-lg bg-brand-ink p-4 text-xs text-green-400">
+                      <pre className={`overflow-x-auto rounded-lg bg-brand-ink p-4 text-xs ${STATUS_TEXT_COLORS.success}`}>
                         {JSON.stringify(JSON.parse(selectedEye.inputSchema || '{}'), null, 2)}
                       </pre>
                     </div>
@@ -673,7 +670,7 @@ export default function EyesPage() {
                     {/* Output Schema */}
                     <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
                       <h3 className="mb-3 text-lg font-semibold text-brand-foreground">Output Schema</h3>
-                      <pre className="overflow-x-auto rounded-lg bg-brand-ink p-4 text-xs text-green-400">
+                      <pre className={`overflow-x-auto rounded-lg bg-brand-ink p-4 text-xs ${STATUS_TEXT_COLORS.success}`}>
                         {JSON.stringify(JSON.parse(selectedEye.outputSchema || '{}'), null, 2)}
                       </pre>
                     </div>
@@ -691,7 +688,7 @@ export default function EyesPage() {
                 <button
                   onClick={() => setViewMode('all')}
                   aria-label={UI_HELP_TEXT.ARIA_FILTER_ALL}
-                  className={`rounded-full px-5 py-2 text-sm font-semibold transition-all duration-200 ${
+                  className={`rounded-full px-5 py-2 text-sm font-semibold transition-all ${ANIMATION_DURATION.FAST} ${
                     viewMode === 'all'
                       ? 'bg-brand-accent text-brand-ink scale-105'
                       : 'border border-brand-outline/40 text-brand-outline hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
@@ -705,7 +702,7 @@ export default function EyesPage() {
                 <button
                   onClick={() => setViewMode('built-in')}
                   aria-label={UI_HELP_TEXT.ARIA_FILTER_BUILTIN}
-                  className={`rounded-full px-5 py-2 text-sm font-semibold transition-all duration-200 ${
+                  className={`rounded-full px-5 py-2 text-sm font-semibold transition-all ${ANIMATION_DURATION.FAST} ${
                     viewMode === 'built-in'
                       ? 'bg-brand-accent text-brand-ink scale-105'
                       : 'border border-brand-outline/40 text-brand-outline hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
@@ -719,7 +716,7 @@ export default function EyesPage() {
                 <button
                   onClick={() => setViewMode('custom')}
                   aria-label={UI_HELP_TEXT.ARIA_FILTER_CUSTOM}
-                  className={`rounded-full px-5 py-2 text-sm font-semibold transition-all duration-200 ${
+                  className={`rounded-full px-5 py-2 text-sm font-semibold transition-all ${ANIMATION_DURATION.FAST} ${
                     viewMode === 'custom'
                       ? 'bg-brand-accent text-brand-ink scale-105'
                       : 'border border-brand-outline/40 text-brand-outline hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
@@ -750,7 +747,7 @@ export default function EyesPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05, duration: 0.3 }}
                     whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
-                    className={`rounded-2xl border p-6 shadow-lg transition-all duration-300 hover:shadow-2xl hover:border-brand-accent/50 ${getEyeColor(eye.id)}`}
+                    className={`rounded-2xl border p-6 shadow-lg transition-all ${ANIMATION_DURATION.NORMAL} hover:shadow-2xl hover:border-brand-accent/50 ${getEyeColor(eye.id)}`}
                   >
                     <Link href={`/eyes/${eye.id}`} className="block">
                       <div className="mb-4 text-center">
@@ -771,7 +768,7 @@ export default function EyesPage() {
                             className={`rounded-full px-2 py-0.5 text-xs ${
                               eye.source === 'built-in'
                                 ? 'bg-white/20 text-brand-foreground'
-                                : 'bg-green-500/30 text-green-100'
+                                : `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success}`
                             }`}
                           >
                             {eye.source}

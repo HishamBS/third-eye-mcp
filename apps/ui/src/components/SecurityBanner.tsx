@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
+import { STATUS_BG_COLORS_SUBTLE, STATUS_TEXT_COLORS } from '@/constants/color-mappings';
 
 /**
  * Security Warning Banner
@@ -57,14 +58,14 @@ export function SecurityBanner() {
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 dark:bg-red-700 text-brand-foreground shadow-lg">
+    <div className={`fixed top-0 left-0 right-0 z-50 ${STATUS_BG_COLORS_SUBTLE.error} text-brand-foreground shadow-lg`}>
       <div className="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between flex-wrap">
           <div className="flex items-center flex-1">
             <AlertTriangle className="h-6 w-6 text-brand-foreground mr-3 flex-shrink-0" />
             <p className="font-medium text-sm sm:text-base">
               <span className="font-bold">Security Warning:</span> Server is exposed on{' '}
-              <code className="bg-red-800 dark:bg-red-900 px-2 py-0.5 rounded font-mono text-xs sm:text-sm">
+              <code className="bg-brand-ink px-2 py-0.5 rounded font-mono text-xs sm:text-sm">
                 {serverHost}
               </code>{' '}
               - accessible from network.
@@ -73,14 +74,14 @@ export function SecurityBanner() {
           </div>
           <button
             onClick={handleDismiss}
-            className="ml-3 flex-shrink-0 rounded-md p-1.5 hover:bg-red-700 dark:hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-white transition-colors"
+            className="ml-3 flex-shrink-0 rounded-md p-1.5 hover:bg-brand-ink focus:outline-none focus:ring-2 focus:ring-white transition-colors"
             aria-label="Dismiss security warning"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="mt-2 text-xs sm:text-sm text-red-100 dark:text-red-200">
-          To fix: Set <code className="bg-red-800 dark:bg-red-900 px-1 py-0.5 rounded font-mono">HOST=127.0.0.1</code> in environment or restart without network binding.
+        <div className={`mt-2 text-xs sm:text-sm ${STATUS_TEXT_COLORS.error}`}>
+          To fix: Set <code className="bg-brand-ink px-1 py-0.5 rounded font-mono">HOST=127.0.0.1</code> in environment or restart without network binding.
         </div>
       </div>
     </div>

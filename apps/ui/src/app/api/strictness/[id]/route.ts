@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+import { API_BASE_URL } from '@/consts/api';
 
 export async function GET(
   req: NextRequest,
@@ -8,7 +7,7 @@ export async function GET(
 ) {
   const params = await props.params;
   try {
-    const response = await fetch(`${API_URL}/strictness/${params.id}`, {
+    const response = await fetch(`${API_BASE_URL}/strictness/${params.id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -34,7 +33,7 @@ export async function PATCH(
   try {
     const body = await req.json();
 
-    const response = await fetch(`${API_URL}/strictness/${params.id}`, {
+    const response = await fetch(`${API_BASE_URL}/strictness/${params.id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -59,7 +58,7 @@ export async function DELETE(
 ) {
   const params = await props.params;
   try {
-    const response = await fetch(`${API_URL}/strictness/${params.id}`, {
+    const response = await fetch(`${API_BASE_URL}/strictness/${params.id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

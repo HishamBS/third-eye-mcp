@@ -6,6 +6,9 @@ import { Copy, Check, ExternalLink, ChevronDown, ChevronUp, Plus, Edit, Trash2, 
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useDialog } from '@/hooks/useDialog';
 import { UI_HELP_TEXT } from '@third-eye/constants';
+import { API_BASE_URL } from '@/consts/api';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { TIMING } from '@/constants/timing';
 
 interface McpIntegration {
   id: string;
@@ -85,8 +88,6 @@ export default function ConnectionsPage() {
   const [formData, setFormData] = useState<IntegrationFormData>(emptyFormData);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-
   useEffect(() => {
     fetchIntegrations();
   }, []);
@@ -94,7 +95,7 @@ export default function ConnectionsPage() {
   const fetchIntegrations = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/integrations?enabled=true`);
+      const response = await fetch(`${API_BASE_URL}/api/integrations?enabled=true`);
       if (!response.ok) throw new Error('Failed to fetch integrations');
       const data = await response.json();
       setIntegrations(data.data?.integrations || []);
@@ -110,7 +111,7 @@ export default function ConnectionsPage() {
     if (configs[integrationId]) return; // Already fetched
 
     try {
-      const response = await fetch(`${API_URL}/api/integrations/${integrationId}/config`);
+      const response = await fetch(`${API_BASE_URL}/api/integrations/${integrationId}/config`);
       if (!response.ok) throw new Error('Failed to fetch config');
       const result = await response.json();
       setConfigs((prev) => ({ ...prev, [integrationId]: result.data }));
@@ -131,7 +132,7 @@ export default function ConnectionsPage() {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
+      setTimeout(() => setCopiedId(null), TIMING.COPY_FEEDBACK_MS);
     } catch (err) {
       console.error('Failed to copy:', err);
     }
@@ -222,7 +223,7 @@ export default function ConnectionsPage() {
         setupSteps: JSON.parse(formData.setupSteps),
       };
 
-      const response = await fetch(`${API_URL}/api/integrations`, {
+      const response = await fetch(`${API_BASE_URL}/api/integrations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -254,7 +255,7 @@ export default function ConnectionsPage() {
         setupSteps: JSON.parse(formData.setupSteps),
       };
 
-      const response = await fetch(`${API_URL}/api/integrations/${editingIntegration.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/integrations/${editingIntegration.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -284,7 +285,7 @@ export default function ConnectionsPage() {
 
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/integrations/${integration.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/integrations/${integration.id}`, {
         method: 'DELETE',
       });
 
@@ -302,14 +303,14 @@ export default function ConnectionsPage() {
   // Auto-dismiss notifications
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => setError(null), 5000);
+      const timer = setTimeout(() => setError(null), TIMING.MESSAGE_AUTO_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [error]);
 
   useEffect(() => {
     if (success) {
-      const timer = setTimeout(() => setSuccess(null), 5000);
+      const timer = setTimeout(() => setSuccess(null), TIMING.MESSAGE_AUTO_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [success]);
@@ -337,8 +338,8 @@ export default function ConnectionsPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold text-brand-foreground mb-8">{UI_HELP_TEXT.CONNECTIONS_HEADER_TITLE}</h1>
-          <div className="border border-red-500/50 bg-red-500/10 rounded-lg p-6">
-            <p className="text-red-400">{UI_HELP_TEXT.CONNECTIONS_ERROR_PREFIX}{error}</p>
+          <div className={`border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} rounded-lg p-6`}>
+            <p className={STATUS_TEXT_COLORS.error}>{UI_HELP_TEXT.CONNECTIONS_ERROR_PREFIX}{error}</p>
           </div>
         </div>
       </div>
@@ -353,7 +354,7 @@ export default function ConnectionsPage() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-4 rounded-xl border border-red-500/50 bg-red-500/10 p-4 text-red-400"
+            className={`mb-4 rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} p-4 ${STATUS_TEXT_COLORS.error}`}
           >
             {error}
           </motion.div>
@@ -363,7 +364,7 @@ export default function ConnectionsPage() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-4 rounded-xl border border-green-500/50 bg-green-500/10 p-4 text-green-400"
+            className={`mb-4 rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success} p-4 ${STATUS_TEXT_COLORS.success}`}
           >
             {success}
           </motion.div>
@@ -435,7 +436,7 @@ export default function ConnectionsPage() {
                           e.stopPropagation();
                           openEditModal(integration);
                         }}
-                        className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition"
+                        className={`p-2 ${STATUS_TEXT_COLORS.info} hover:${STATUS_BG_COLORS_SUBTLE.info} rounded-lg transition`}
                         title={UI_HELP_TEXT.CONNECTIONS_TOOLTIP_EDIT}
                       >
                         <Edit className="w-4 h-4" />
@@ -445,7 +446,7 @@ export default function ConnectionsPage() {
                           e.stopPropagation();
                           handleDelete(integration);
                         }}
-                        className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition"
+                        className={`p-2 ${STATUS_TEXT_COLORS.error} hover:${STATUS_BG_COLORS_SUBTLE.error} rounded-lg transition`}
                         title={UI_HELP_TEXT.CONNECTIONS_TOOLTIP_DELETE}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -608,34 +609,34 @@ export default function ConnectionsPage() {
                       {/* Name */}
                       <div>
                         <label className="block text-sm font-medium text-brand-outline mb-1">
-                          {UI_HELP_TEXT.CONNECTIONS_LABEL_NAME} <span className="text-red-400">*</span>
+                          {UI_HELP_TEXT.CONNECTIONS_LABEL_NAME} <span className={STATUS_TEXT_COLORS.error}>*</span>
                         </label>
                         <input
                           type="text"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground placeholder-brand-outline/60 focus:border-brand-accent focus:outline-none"
                           placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_NAME}
                         />
                         {formErrors.name && (
-                          <p className="mt-1 text-xs text-red-400">{formErrors.name}</p>
+                          <p className={`mt-1 text-xs ${STATUS_TEXT_COLORS.error}`}>{formErrors.name}</p>
                         )}
                       </div>
 
                       {/* Slug */}
                       <div>
                         <label className="block text-sm font-medium text-brand-outline mb-1">
-                          {UI_HELP_TEXT.CONNECTIONS_LABEL_SLUG} <span className="text-red-400">*</span>
+                          {UI_HELP_TEXT.CONNECTIONS_LABEL_SLUG} <span className={STATUS_TEXT_COLORS.error}>*</span>
                         </label>
                         <input
                           type="text"
                           value={formData.slug}
                           onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground placeholder-brand-outline/60 focus:border-brand-accent focus:outline-none"
                           placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_SLUG}
                         />
                         {formErrors.slug && (
-                          <p className="mt-1 text-xs text-red-400">{formErrors.slug}</p>
+                          <p className={`mt-1 text-xs ${STATUS_TEXT_COLORS.error}`}>{formErrors.slug}</p>
                         )}
                       </div>
 
@@ -648,7 +649,7 @@ export default function ConnectionsPage() {
                           type="text"
                           value={formData.logoUrl}
                           onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground placeholder-brand-outline/60 focus:border-brand-accent focus:outline-none"
                           placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_URL}
                         />
                       </div>
@@ -661,7 +662,7 @@ export default function ConnectionsPage() {
                         <textarea
                           value={formData.description}
                           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none resize-none"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground placeholder-brand-outline/60 focus:border-brand-accent focus:outline-none resize-none"
                           placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_DESCRIPTION}
                           rows={2}
                         />
@@ -691,29 +692,29 @@ export default function ConnectionsPage() {
                         <textarea
                           value={formData.configFiles}
                           onChange={(e) => setFormData({ ...formData, configFiles: e.target.value })}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 font-mono text-sm text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none resize-none"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 font-mono text-sm text-brand-foreground placeholder-brand-outline/60 focus:border-brand-accent focus:outline-none resize-none"
                           placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_CONFIG_FILES}
                           rows={3}
                         />
                         {formErrors.configFiles && (
-                          <p className="mt-1 text-xs text-red-400">{formErrors.configFiles}</p>
+                          <p className={`mt-1 text-xs ${STATUS_TEXT_COLORS.error}`}>{formErrors.configFiles}</p>
                         )}
                       </div>
 
                       {/* Config Template */}
                       <div>
                         <label className="block text-sm font-medium text-brand-outline mb-1">
-                          {UI_HELP_TEXT.CONNECTIONS_LABEL_CONFIG_TEMPLATE} <span className="text-red-400">*</span>
+                          {UI_HELP_TEXT.CONNECTIONS_LABEL_CONFIG_TEMPLATE} <span className={STATUS_TEXT_COLORS.error}>*</span>
                         </label>
                         <textarea
                           value={formData.configTemplate}
                           onChange={(e) => setFormData({ ...formData, configTemplate: e.target.value })}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 font-mono text-sm text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none resize-none"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 font-mono text-sm text-brand-foreground placeholder-brand-outline/60 focus:border-brand-accent focus:outline-none resize-none"
                           placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_CONFIG_TEMPLATE}
                           rows={6}
                         />
                         {formErrors.configTemplate && (
-                          <p className="mt-1 text-xs text-red-400">{formErrors.configTemplate}</p>
+                          <p className={`mt-1 text-xs ${STATUS_TEXT_COLORS.error}`}>{formErrors.configTemplate}</p>
                         )}
                       </div>
 
@@ -725,12 +726,12 @@ export default function ConnectionsPage() {
                         <textarea
                           value={formData.setupSteps}
                           onChange={(e) => setFormData({ ...formData, setupSteps: e.target.value })}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 font-mono text-sm text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none resize-none"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 font-mono text-sm text-brand-foreground placeholder-brand-outline/60 focus:border-brand-accent focus:outline-none resize-none"
                           placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_SETUP_STEPS}
                           rows={4}
                         />
                         {formErrors.setupSteps && (
-                          <p className="mt-1 text-xs text-red-400">{formErrors.setupSteps}</p>
+                          <p className={`mt-1 text-xs ${STATUS_TEXT_COLORS.error}`}>{formErrors.setupSteps}</p>
                         )}
                       </div>
 
@@ -743,7 +744,7 @@ export default function ConnectionsPage() {
                           type="text"
                           value={formData.docsUrl}
                           onChange={(e) => setFormData({ ...formData, docsUrl: e.target.value })}
-                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                          className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground placeholder-brand-outline/60 focus:border-brand-accent focus:outline-none"
                           placeholder={UI_HELP_TEXT.CONNECTIONS_PLACEHOLDER_URL}
                         />
                       </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 interface SchemaField {
   name: string;
@@ -103,7 +104,7 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
             onChange={(e) => setNewFieldName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && addField()}
             placeholder="Field name (e.g., temperature, max_tokens)"
-            className="flex-1 rounded-lg border border-brand-outline/50 bg-brand-ink px-4 py-2 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+            className="flex-1 rounded-lg border border-brand-outline/50 bg-brand-ink px-4 py-2 text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
           />
           <button
             onClick={addField}
@@ -132,7 +133,7 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-sm font-semibold text-brand-foreground">{name}</span>
                     {field.required && (
-                      <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-xs text-red-400">
+                      <span className="rounded-full ${STATUS_BG_COLORS_SUBTLE.error} px-2 py-0.5 text-xs ${STATUS_TEXT_COLORS.error}">
                         Required
                       </span>
                     )}
@@ -146,7 +147,7 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
                     </button>
                     <button
                       onClick={() => deleteField(name)}
-                      className="rounded-lg bg-red-500/20 px-3 py-1 text-xs text-red-400 transition hover:bg-red-500/30"
+                      className="rounded-lg ${STATUS_BG_COLORS_SUBTLE.error} px-3 py-1 text-xs ${STATUS_TEXT_COLORS.error} transition hover:bg-semantic-error/30"
                     >
                       Delete
                     </button>
@@ -184,7 +185,7 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
                         value={field.description || ''}
                         onChange={(e) => updateField(name, { description: e.target.value })}
                         placeholder="Describe what this field does..."
-                        className="w-full resize-none rounded-lg border border-brand-outline/50 bg-brand-ink px-3 py-2 text-sm text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                        className="w-full resize-none rounded-lg border border-brand-outline/50 bg-brand-ink px-3 py-2 text-sm text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none"
                         rows={2}
                       />
                     </div>
@@ -220,7 +221,7 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
                             updateField(name, { enum: values.length > 0 ? values : undefined });
                           }}
                           placeholder="e.g., low, medium, high"
-                          className="w-full rounded-lg border border-brand-outline/50 bg-brand-ink px-3 py-2 text-sm text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                          className="w-full rounded-lg border border-brand-outline/50 bg-brand-ink px-3 py-2 text-sm text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none"
                         />
                       </div>
                     )}
@@ -261,7 +262,7 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
               Copy
             </button>
           </div>
-          <pre className="overflow-x-auto rounded-lg bg-brand-ink p-3 text-xs text-green-400">
+          <pre className="overflow-x-auto rounded-lg bg-brand-ink p-3 text-xs ${STATUS_TEXT_COLORS.success}">
             {JSON.stringify(generateJSONSchema(), null, 2)}
           </pre>
         </div>

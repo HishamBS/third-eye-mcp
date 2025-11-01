@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { EvidenceClaim } from '../types/pipeline';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 export interface EvidenceLensProps {
   draft: string;
@@ -72,8 +73,8 @@ export function EvidenceLens({ draft, claims, expertMode = true }: EvidenceLensP
       {segments.map((segment, index) => {
         const key = `${index}-${segment.text.slice(0, 8)}`;
         const tone = segment.cited
-          ? 'bg-emerald-500/20 text-brand-foreground hover:bg-emerald-500/30 border-emerald-500/40'
-          : 'bg-rose-500/20 text-rose-100 hover:bg-rose-500/30 border-rose-500/40';
+          ? '${STATUS_BG_COLORS_SUBTLE.success} text-brand-foreground hover:bg-semantic-success/30 ${STATUS_BORDER_COLORS_SUBTLE.success}'
+          : '${STATUS_BG_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error} hover:bg-semantic-error/30 ${STATUS_BORDER_COLORS_SUBTLE.error}';
         const confidence = Math.round((segment.confidence ?? 0) * 100);
         const isHovered = hoveredIndex === index;
 
@@ -87,15 +88,15 @@ export function EvidenceLens({ draft, claims, expertMode = true }: EvidenceLensP
               {segment.text}
             </span>
             {isHovered && (segment.cited || !segment.cited) && (
-              <span className="absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-slate-900 border border-brand-outline/60 rounded-lg text-xs whitespace-nowrap shadow-lg">
+              <span className="absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-brand-ink border border-brand-outline/60 rounded-lg text-xs whitespace-nowrap shadow-lg">
                 {segment.cited ? (
                   <>
-                    <div className="text-emerald-400 font-semibold">✓ Cited ({confidence}% confidence)</div>
+                    <div className="${STATUS_TEXT_COLORS.success} font-semibold">✓ Cited ({confidence}% confidence)</div>
                     <div className="text-brand-outline mt-1 max-w-xs whitespace-normal">{segment.citation || 'Citation available'}</div>
                   </>
                 ) : (
                   <>
-                    <div className="text-rose-400 font-semibold">⚠ Missing Citation</div>
+                    <div className="${STATUS_TEXT_COLORS.error} font-semibold">⚠ Missing Citation</div>
                     <div className="text-brand-outline mt-1">This claim needs evidence</div>
                   </>
                 )}

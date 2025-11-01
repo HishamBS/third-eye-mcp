@@ -5,12 +5,10 @@ import type {
   SessionSettingsPayload,
   SessionSummary,
 } from '../types/pipeline';
-
-const DEFAULT_BASE_URL = 'http://localhost:7070';
+import { getApiUrl } from '@/consts/api';
 
 function buildBaseUrl(): string {
-  const candidate = process.env.NEXT_PUBLIC_API_URL as string | undefined;
-  return candidate?.replace(/\/$/, '') || DEFAULT_BASE_URL;
+  return getApiUrl();
 }
 
 function buildHeaders(apiKey: string, requestId?: string) {

@@ -10,6 +10,7 @@ import {
   ARRAY_ACTIONS,
 } from '../constants';
 import { X, Plus } from 'lucide-react';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 /**
  * MetadataStep - Eye identity configuration
@@ -172,7 +173,7 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
         </div>
 
         {errors.capability && (
-          <p className="text-xs text-red-500 mb-2">{errors.capability}</p>
+          <p className="text-xs ${STATUS_TEXT_COLORS.error} mb-2">{errors.capability}</p>
         )}
 
         <div className="flex flex-wrap gap-2">

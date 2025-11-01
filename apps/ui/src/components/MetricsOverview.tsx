@@ -1,5 +1,7 @@
 'use client';
 
+import { ANIMATION_DURATION } from '@/constants/timing';
+
 export interface ProviderMetrics {
   provider: string;
   totalCalls: number;
@@ -57,7 +59,7 @@ export default function MetricsOverview({ metrics, loading }: MetricsOverviewPro
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4">
           <p className="text-xs uppercase tracking-[0.2em] text-brand-outline">Approval Rate</p>
-          <p className="mt-2 text-2xl font-semibold text-emerald-400">{(metrics.approvalRate || 0).toFixed(1)}%</p>
+          <p className="mt-2 text-2xl font-semibold ${STATUS_TEXT_COLORS.success}">{(metrics.approvalRate || 0).toFixed(1)}%</p>
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4">
           <p className="text-xs uppercase tracking-[0.2em] text-brand-outline">Uptime</p>
@@ -80,7 +82,7 @@ export default function MetricsOverview({ metrics, loading }: MetricsOverviewPro
                   </div>
                   <div className="h-6 w-full overflow-hidden rounded-full bg-brand-ink/50">
                     <div
-                      className="h-full bg-gradient-to-r from-brand-accent to-brand-primary transition-all duration-500"
+                      className={`h-full bg-gradient-to-r from-brand-accent to-brand-primary transition-all ${ANIMATION_DURATION.SLOW}`}
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
@@ -106,7 +108,7 @@ export default function MetricsOverview({ metrics, loading }: MetricsOverviewPro
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-semibold text-emerald-400">{provider.successRate.toFixed(1)}%</p>
+                <p className="text-sm font-semibold ${STATUS_TEXT_COLORS.success}">{provider.successRate.toFixed(1)}%</p>
                 <p className="text-xs text-brand-outline">success rate</p>
               </div>
             </div>

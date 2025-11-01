@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+import { API_BASE_URL } from '@/consts/api';
 
 export async function PUT(
   req: NextRequest,
@@ -10,7 +9,7 @@ export async function PUT(
     const { id } = await params;
     const body = await req.json();
 
-    const response = await fetch(`${API_URL}/api/eyes/custom/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/eyes/custom/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -36,7 +35,7 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    const response = await fetch(`${API_URL}/api/eyes/custom/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/eyes/custom/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -63,7 +62,7 @@ export async function POST(
     const body = await req.json();
 
     // Test custom eye route
-    const response = await fetch(`${API_URL}/api/eyes/custom/${id}/test`, {
+    const response = await fetch(`${API_BASE_URL}/api/eyes/custom/${id}/test`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

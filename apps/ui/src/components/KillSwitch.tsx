@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AlertCircle, RotateCw, Eye } from 'lucide-react';
 import type { BaseEnvelope } from '@third-eye/eyes';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 export interface KillSwitchProps {
   runId: string;
@@ -47,8 +48,8 @@ export function KillSwitch({
     <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/60 p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/20 border border-red-500/40">
-            <AlertCircle className="h-5 w-5 text-red-400" />
+          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${STATUS_BG_COLORS_SUBTLE.error} border ${STATUS_BORDER_COLORS_SUBTLE.error}`}>
+            <AlertCircle className={`h-5 w-5 ${STATUS_TEXT_COLORS.error}`} />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-brand-foreground">Kill Switch</h3>
@@ -59,7 +60,7 @@ export function KillSwitch({
         <button
           onClick={handleRerun}
           disabled={isRerunning}
-          className="flex items-center rounded-lg border bg-red-500/20 hover:bg-red-500/30 border-red-500/40 text-red-100 px-4 py-2 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`flex items-center rounded-lg border ${STATUS_BG_COLORS_SUBTLE.error} hover:opacity-80 ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error} px-4 py-2 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           {isRerunning ? (
             <>
@@ -76,7 +77,7 @@ export function KillSwitch({
       </div>
 
       {error && (
-        <div className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-200">
+        <div className={`mt-4 rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} p-3 text-sm ${STATUS_TEXT_COLORS.error}`}>
           <p className="font-semibold">Error</p>
           <p className="mt-1">{error}</p>
         </div>
@@ -88,7 +89,7 @@ export function KillSwitch({
             <Eye className="h-4 w-4 text-brand-gold" />
             <span className="text-sm font-semibold text-brand-outline">Rerun Result</span>
             {hasChanged && (
-              <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-100 text-xs">
+              <span className={`px-2 py-0.5 rounded-full ${STATUS_BG_COLORS_SUBTLE.warning} border ${STATUS_BORDER_COLORS_SUBTLE.warning} ${STATUS_TEXT_COLORS.warning} text-xs`}>
                 Changed
               </span>
             )}
@@ -102,9 +103,9 @@ export function KillSwitch({
                 <div className="flex justify-between">
                   <span className="text-sm text-brand-outline">Verdict:</span>
                   <span className={`text-sm font-semibold ${
-                    originalResult.verdict === 'APPROVED' ? 'text-green-400' :
-                    originalResult.verdict === 'REJECTED' ? 'text-red-400' :
-                    'text-amber-400'
+                    originalResult.verdict === 'APPROVED' ? STATUS_TEXT_COLORS.success :
+                    originalResult.verdict === 'REJECTED' ? STATUS_TEXT_COLORS.error :
+                    STATUS_TEXT_COLORS.warning
                   }`}>
                     {originalResult.verdict}
                   </span>
@@ -127,9 +128,9 @@ export function KillSwitch({
                 <div className="flex justify-between">
                   <span className="text-sm text-brand-outline">Verdict:</span>
                   <span className={`text-sm font-semibold ${
-                    rerunResult.verdict === 'APPROVED' ? 'text-green-400' :
-                    rerunResult.verdict === 'REJECTED' ? 'text-red-400' :
-                    'text-amber-400'
+                    rerunResult.verdict === 'APPROVED' ? STATUS_TEXT_COLORS.success :
+                    rerunResult.verdict === 'REJECTED' ? STATUS_TEXT_COLORS.error :
+                    STATUS_TEXT_COLORS.warning
                   } ${rerunResult.verdict !== originalResult.verdict ? 'underline' : ''}`}>
                     {rerunResult.verdict}
                     {rerunResult.verdict !== originalResult.verdict && ' →'}

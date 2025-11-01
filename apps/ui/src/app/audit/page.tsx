@@ -102,7 +102,7 @@ export default function AuditPage() {
                   <input
                     value={tenant}
                     onChange={(event) => setTenant(event.target.value)}
-                    className="rounded-xl border border-brand-outline/50 bg-brand-paper px-3 py-2 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                    className="rounded-xl border border-brand-outline/50 bg-brand-paper px-3 py-2 text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                     placeholder="tenant-id"
                   />
                 </label>

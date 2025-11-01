@@ -43,7 +43,7 @@ export default function DuelPage() {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="Enter a prompt to test across multiple models..."
-                className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/60 px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
+                className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/60 px-4 py-3 text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
                 rows={6}
               />
             </div>
@@ -64,7 +64,7 @@ export default function DuelPage() {
                 className={`rounded-lg px-6 py-3 font-semibold transition ${
                   prompt.trim()
                     ? 'bg-brand-accent text-brand-foreground hover:bg-brand-accent/90'
-                    : 'cursor-not-allowed bg-gray-600 text-brand-outline'
+                    : 'cursor-not-allowed bg-brand-paper text-brand-outline'
                 }`}
               >
                 Configure Duel

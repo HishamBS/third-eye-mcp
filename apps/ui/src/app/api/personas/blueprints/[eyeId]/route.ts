@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { API_BASE_URL } from '@/consts/api';
 
 export async function GET(
   req: NextRequest,
@@ -8,8 +9,7 @@ export async function GET(
     const { eyeId } = await params;
     
     // Proxy to server API to avoid bun:sqlite import issues
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-    const serverResponse = await fetch(`${API_URL}/api/personas/blueprints/${eyeId}`);
+    const serverResponse = await fetch(`${API_BASE_URL}/api/personas/blueprints/${eyeId}`);
     
     if (!serverResponse.ok) {
       return NextResponse.json(
@@ -38,8 +38,7 @@ export async function PUT(
     const body = await req.json();
     
     // Proxy PUT to server API
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-    const serverResponse = await fetch(`${API_URL}/api/personas/blueprints/${eyeId}`, {
+    const serverResponse = await fetch(`${API_BASE_URL}/api/personas/blueprints/${eyeId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -68,8 +67,7 @@ export async function DELETE(
     const { eyeId } = await params;
     
     // Proxy DELETE to server API
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-    const serverResponse = await fetch(`${API_URL}/api/personas/blueprints/${eyeId}`, {
+    const serverResponse = await fetch(`${API_BASE_URL}/api/personas/blueprints/${eyeId}`, {
       method: 'DELETE',
     });
     

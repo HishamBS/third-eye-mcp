@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, Shield, Search, GitBranch, Code2, Sparkles, Crown, Activity } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { API_BASE_URL } from '@/consts/api';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 interface EyeStatus {
   eye: string;
@@ -62,36 +64,36 @@ function getStatusChip(status: EyeStatus['status']) {
   switch (status) {
     case 'running':
       return (
-        <div className="flex items-center gap-2 rounded-full bg-blue-500/20 border border-blue-500/40 px-3 py-1">
-          <div className="h-2 w-2 animate-pulse rounded-full bg-blue-400" />
-          <span className="text-xs font-medium text-blue-300">Running</span>
+        <div className={`flex items-center gap-2 rounded-full ${STATUS_BG_COLORS_SUBTLE.running} border ${STATUS_BORDER_COLORS_SUBTLE.running} px-3 py-1`}>
+          <div className={`h-2 w-2 animate-pulse rounded-full ${STATUS_TEXT_COLORS.running}`} />
+          <span className={`text-xs font-medium ${STATUS_TEXT_COLORS.running}`}>Running</span>
         </div>
       );
     case 'success':
       return (
-        <div className="flex items-center gap-2 rounded-full bg-green-500/20 border border-green-500/40 px-3 py-1">
-          <div className="h-2 w-2 rounded-full bg-green-400" />
-          <span className="text-xs font-medium text-green-300">Ready</span>
+        <div className={`flex items-center gap-2 rounded-full ${STATUS_BG_COLORS_SUBTLE.success} border ${STATUS_BORDER_COLORS_SUBTLE.success} px-3 py-1`}>
+          <div className={`h-2 w-2 rounded-full ${STATUS_TEXT_COLORS.success}`} />
+          <span className={`text-xs font-medium ${STATUS_TEXT_COLORS.success}`}>Ready</span>
         </div>
       );
     case 'error':
       return (
-        <div className="flex items-center gap-2 rounded-full bg-red-500/20 border border-red-500/40 px-3 py-1">
-          <div className="h-2 w-2 rounded-full bg-red-400" />
-          <span className="text-xs font-medium text-red-300">Error</span>
+        <div className={`flex items-center gap-2 rounded-full ${STATUS_BG_COLORS_SUBTLE.error} border ${STATUS_BORDER_COLORS_SUBTLE.error} px-3 py-1`}>
+          <div className={`h-2 w-2 rounded-full ${STATUS_TEXT_COLORS.error}`} />
+          <span className={`text-xs font-medium ${STATUS_TEXT_COLORS.error}`}>Error</span>
         </div>
       );
     case 'needs_input':
       return (
-        <div className="flex items-center gap-2 rounded-full bg-yellow-500/20 border border-yellow-500/40 px-3 py-1">
-          <div className="h-2 w-2 animate-pulse rounded-full bg-yellow-400" />
-          <span className="text-xs font-medium text-yellow-300">Needs Input</span>
+        <div className={`flex items-center gap-2 rounded-full ${STATUS_BG_COLORS_SUBTLE.warning} border ${STATUS_BORDER_COLORS_SUBTLE.warning} px-3 py-1`}>
+          <div className={`h-2 w-2 animate-pulse rounded-full ${STATUS_TEXT_COLORS.warning}`} />
+          <span className={`text-xs font-medium ${STATUS_TEXT_COLORS.warning}`}>Needs Input</span>
         </div>
       );
     default:
       return (
-        <div className="flex items-center gap-2 rounded-full bg-slate-500/20 border border-slate-500/40 px-3 py-1">
-          <div className="h-2 w-2 rounded-full bg-slate-400" />
+        <div className={`flex items-center gap-2 rounded-full ${STATUS_BG_COLORS_SUBTLE.idle} border ${STATUS_BORDER_COLORS_SUBTLE.idle} px-3 py-1`}>
+          <div className={`h-2 w-2 rounded-full ${STATUS_TEXT_COLORS.idle}`} />
           <span className="text-xs font-medium text-brand-outline">Idle</span>
         </div>
       );
@@ -106,10 +108,9 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
   useEffect(() => {
     const fetchEyeStatuses = async () => {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-        const endpoint = sessionId
-          ? `${API_URL}/api/eyes/status?sessionId=${sessionId}`
-          : `${API_URL}/api/eyes/status`;
+                const endpoint = sessionId
+          ? `${API_BASE_URL}/api/eyes/status?sessionId=${sessionId}`
+          : `${API_BASE_URL}/api/eyes/status`;
 
         const response = await fetch(endpoint);
         if (!response.ok) {
@@ -148,9 +149,9 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-red-500/40 bg-red-500/10 p-6 text-center">
-        <p className="text-sm text-red-300">Error: {error}</p>
-        <p className="mt-2 text-xs text-red-400">Unable to load Eye statuses</p>
+      <div className={`rounded-2xl border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} p-6 text-center`}>
+        <p className={`text-sm ${STATUS_TEXT_COLORS.error}`}>Error: {error}</p>
+        <p className={`mt-2 text-xs ${STATUS_TEXT_COLORS.error}`}>Unable to load Eye statuses</p>
       </div>
     );
   }
@@ -250,13 +251,13 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
                   </div>
                   <div className="rounded-lg bg-brand-ink/40 p-2">
                     <p className="text-brand-outline">Success</p>
-                    <p className="mt-1 font-semibold text-emerald-400">
+                    <p className={`mt-1 font-semibold ${STATUS_TEXT_COLORS.success}`}>
                       {eyeStatus.successRate.toFixed(1)}%
                     </p>
                   </div>
                   <div className="col-span-2 rounded-lg bg-brand-ink/40 p-2">
                     <p className="text-brand-outline">Avg Latency</p>
-                    <p className="mt-1 font-semibold text-blue-400">{eyeStatus.avgLatency.toFixed(0)}ms</p>
+                    <p className={`mt-1 font-semibold ${STATUS_TEXT_COLORS.info}`}>{eyeStatus.avgLatency.toFixed(0)}ms</p>
                   </div>
                 </div>
 
@@ -284,7 +285,7 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/60 p-4">
           <p className="text-xs uppercase tracking-wider text-brand-outline">Avg Success Rate</p>
-          <p className="mt-2 text-2xl font-bold text-emerald-400">
+          <p className={`mt-2 text-2xl font-bold ${STATUS_TEXT_COLORS.success}`}>
             {eyeStatuses.length > 0
               ? (
                   eyeStatuses.reduce((sum, eye) => sum + eye.successRate, 0) / eyeStatuses.length
@@ -295,7 +296,7 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/60 p-4">
           <p className="text-xs uppercase tracking-wider text-brand-outline">Active Eyes</p>
-          <p className="mt-2 text-2xl font-bold text-blue-400">
+          <p className={`mt-2 text-2xl font-bold ${STATUS_TEXT_COLORS.info}`}>
             {eyeStatuses.filter((e) => e.status === 'running').length} / {eyeStatuses.length}
           </p>
         </div>

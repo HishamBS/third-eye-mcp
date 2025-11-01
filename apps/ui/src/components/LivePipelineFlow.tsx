@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { PipelineVisualization } from './monitor/PipelineVisualization';
 import { useWebSocket, type WSMessage } from '@/hooks/useWebSocket';
+import { API_BASE_URL } from '@/consts/api';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 type NormalizedEvent = Record<string, unknown> & {
   id: string;
@@ -135,7 +137,6 @@ export function LivePipelineFlow({ sessionId, initialEvents = [] }: LivePipeline
   );
   const [isConnected, setIsConnected] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
   const { isConnected: wsConnected, lastMessage } = useWebSocket({ sessionId });
 
   useEffect(() => {
@@ -179,7 +180,7 @@ export function LivePipelineFlow({ sessionId, initialEvents = [] }: LivePipeline
   useEffect(() => {
     const fetchInitialEvents = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/session/${sessionId}/events`);
+        const response = await fetch(`${API_BASE_URL}/api/session/${sessionId}/events`);
         if (response.ok) {
           const data = await response.json();
           const payload = Array.isArray(data?.data)
@@ -200,7 +201,7 @@ export function LivePipelineFlow({ sessionId, initialEvents = [] }: LivePipeline
     if (initialEvents.length === 0) {
       fetchInitialEvents();
     }
-  }, [sessionId, initialEvents, API_URL]);
+  }, [sessionId, initialEvents]);
 
   return (
     <div className="relative">
@@ -208,10 +209,10 @@ export function LivePipelineFlow({ sessionId, initialEvents = [] }: LivePipeline
       <div className="absolute top-2 right-2 z-20">
         <div className={`flex items-center space-x-2 rounded-full px-3 py-1 text-xs font-medium ${
           isConnected
-            ? 'bg-green-500/20 text-green-400 border border-green-500/40'
-            : 'bg-brand-paper0/20 text-brand-outline border border-gray-500/40'
+            ? `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success} border ${STATUS_BORDER_COLORS_SUBTLE.success}`
+            : `${STATUS_BG_COLORS_SUBTLE.muted} text-brand-outline border ${STATUS_BORDER_COLORS_SUBTLE.muted}`
         }`}>
-          <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-gray-400'}`} />
+          <div className={`h-2 w-2 rounded-full ${isConnected ? `${STATUS_TEXT_COLORS.success} animate-pulse` : STATUS_TEXT_COLORS.muted}`} />
           <span>{isConnected ? 'Live' : 'Disconnected'}</span>
         </div>
       </div>
@@ -233,9 +234,9 @@ export function LivePipelineFlow({ sessionId, initialEvents = [] }: LivePipeline
               className="flex items-start space-x-2 rounded border border-brand-outline/40 bg-brand-ink/50 p-2 text-xs"
             >
               <div className={`mt-0.5 h-2 w-2 flex-shrink-0 rounded-full ${
-                event.code?.startsWith('OK') ? 'bg-green-400' :
-                event.code?.startsWith('REJECT') ? 'bg-red-400' :
-                event.code?.startsWith('NEED') ? 'bg-yellow-400' : 'bg-blue-400'
+                event.code?.startsWith('OK') ? STATUS_TEXT_COLORS.success :
+                event.code?.startsWith('REJECT') ? STATUS_TEXT_COLORS.error :
+                event.code?.startsWith('NEED') ? STATUS_TEXT_COLORS.warning : STATUS_TEXT_COLORS.info
               }`} />
               <div className="flex-1">
                 <div className="flex items-center justify-between">

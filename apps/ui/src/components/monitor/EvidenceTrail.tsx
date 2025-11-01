@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Book, Brain, CheckCircle2, AlertTriangle, Search, FileText, Check, X } from 'lucide-react';
 import { EyeIcon } from '@/components/EyeIcon';
 import type { ReactNode } from 'react';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 interface Evidence {
   id: string;
@@ -207,7 +208,7 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
             placeholder="Search evidence..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-lg border border-brand-outline/40 bg-brand-paper/60 px-4 py-2 text-brand-foreground placeholder-slate-400 focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+            className="w-full rounded-lg border border-brand-outline/40 bg-brand-paper/60 px-4 py-2 text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
           />
         </div>
         <button
@@ -300,7 +301,7 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
                       {new Date(evidence.timestamp).toLocaleTimeString()}
                     </span>
                     {evidence.verified !== undefined && (
-                      <span className={`flex items-center space-x-1 text-xs ${evidence.verified ? 'text-green-400' : 'text-red-400'}`}>
+                      <span className={`flex items-center space-x-1 text-xs ${evidence.verified ? '${STATUS_TEXT_COLORS.success}' : '${STATUS_TEXT_COLORS.error}'}`}>
                         {evidence.verified ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                         <span>{evidence.verified ? 'Verified' : 'Unverified'}</span>
                       </span>

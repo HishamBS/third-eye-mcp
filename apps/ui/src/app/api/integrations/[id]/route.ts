@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+import { API_BASE_URL } from '@/consts/api';
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await req.json();
     console.log('[Integrations API] Update request:', params.id, JSON.stringify(body, null, 2));
 
-    const response = await fetch(`${API_URL}/api/integrations/${params.id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/integrations/${params.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -40,7 +39,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   try {
     console.log('[Integrations API] Delete request:', params.id);
 
-    const response = await fetch(`${API_URL}/api/integrations/${params.id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/integrations/${params.id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

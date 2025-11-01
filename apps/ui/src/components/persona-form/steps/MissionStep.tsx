@@ -10,6 +10,7 @@ import {
   MISSION_TEMPLATES,
 } from '../constants';
 import { FileText } from 'lucide-react';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 /**
  * MissionStep - Core mission configuration
@@ -73,7 +74,7 @@ export function MissionStep({ state, dispatch }: WizardStepProps) {
           rows={8}
           className={`w-full px-4 py-2 rounded-lg border bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none ${
             !isValid && charCount > 0
-              ? 'border-red-500'
+              ? '${STATUS_BORDER_COLORS_SUBTLE.error}'
               : 'border-brand-outline'
           }`}
           minLength={CHAR_LIMITS.MISSION_MIN}
@@ -84,7 +85,7 @@ export function MissionStep({ state, dispatch }: WizardStepProps) {
           <p className="text-xs text-brand-ink/60">{HELP_TEXT.MISSION}</p>
           <span
             className={`text-xs ${
-              isValid ? 'text-brand-ink/50' : 'text-red-500'
+              isValid ? 'text-brand-ink/50' : '${STATUS_TEXT_COLORS.error}'
             }`}
           >
             {charCount}/{CHAR_LIMITS.MISSION_MAX} (min: {CHAR_LIMITS.MISSION_MIN})
@@ -92,7 +93,7 @@ export function MissionStep({ state, dispatch }: WizardStepProps) {
         </div>
 
         {!isValid && charCount > 0 && (
-          <p className="text-xs text-red-500 mt-1">
+          <p className="text-xs ${STATUS_TEXT_COLORS.error} mt-1">
             Mission must be between {CHAR_LIMITS.MISSION_MIN} and{' '}
             {CHAR_LIMITS.MISSION_MAX} characters
           </p>

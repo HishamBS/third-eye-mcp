@@ -2,12 +2,12 @@
 
 import clsx from 'clsx';
 import { useDialog } from '@/hooks/useDialog';
+import { getApiUrl } from '@/consts/api';
 
 type ExportFormat = 'pdf' | 'html' | 'json' | 'md';
 
 async function requestExport(sessionId: string, format: ExportFormat) {
-  const base = (process.env.NEXT_PUBLIC_API_URL as string | undefined)?.replace(/\/$/, '') || 'http://localhost:7070';
-  const response = await fetch(`${base}/api/export/${sessionId}?format=${format}`, {
+  const response = await fetch(`${getApiUrl()}/api/export/${sessionId}?format=${format}`, {
     method: 'GET',
     headers: {
       'X-Request-ID': crypto.randomUUID(),

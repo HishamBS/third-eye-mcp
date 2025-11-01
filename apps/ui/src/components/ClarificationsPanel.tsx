@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { submitClarifications } from '../lib/api';
 import type { ClarificationQuestion } from '../types/pipeline';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 export interface ClarificationsPanelProps {
   sessionId: string;
@@ -82,7 +83,7 @@ export function ClarificationsPanel({ sessionId, apiKey, questions, onSubmitted,
             </label>
           ))}
 
-          {error && <p className="text-sm text-rose-400">{error}</p>}
+          {error && <p className="text-sm ${STATUS_TEXT_COLORS.error}">{error}</p>}
 
           <div className="flex items-center justify-between">
             <p className="text-xs text-brand-outline">Responses forward to Kyuubi for rewrite.</p>

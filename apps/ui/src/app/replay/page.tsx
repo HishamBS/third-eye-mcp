@@ -9,6 +9,8 @@ import { ReplayTheater } from '@/components/ReplayTheater';
 import type { WebSocketEvent } from '@third-eye/types/events';
 import { Download } from 'lucide-react';
 import { exportSession, type ExportEvent } from '@third-eye/utils';
+import { API_BASE_URL } from '@/consts/api';
+import { STATUS_TEXT_COLORS } from '@/constants/color-mappings';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,8 +32,7 @@ function ReplayContent() {
       setLoading(true);
       setError(null);
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-        const response = await fetch(`${API_URL}/api/session/${sessionId}/events`);
+        const response = await fetch(`${API_BASE_URL}/api/session/${sessionId}/events`);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch events: ${response.statusText}`);
@@ -153,7 +154,7 @@ function ReplayContent() {
             animate={{ opacity: 1, y: 0 }}
           >
             <GlassCard className="bg-brand-paperElev/50 p-12 text-center">
-              <p className="text-sm text-red-400">Error: {error}</p>
+              <p className={`text-sm ${STATUS_TEXT_COLORS.error}`}>Error: {error}</p>
               <Link
                 href="/"
                 className="mt-4 inline-block text-sm text-brand-accent hover:underline"

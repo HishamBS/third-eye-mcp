@@ -19,6 +19,7 @@ import 'reactflow/dist/style.css';
 import { getEyeColor } from '@/components/EyeIcon';
 import { EyeNode, type EyeNodeData } from './EyeNode';
 import {
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
   CANVAS_SETTINGS,
   PIPELINE_UI_TEXT,
 } from './constants';
@@ -172,7 +173,7 @@ export function PipelineCanvas() {
       {/* Toolbar (placeholder for Phase 10) */}
       <div className="absolute bottom-4 left-4 flex gap-2 p-2 bg-brand-paperElev border border-brand-outline rounded-lg shadow-lg">
         <button
-          className="px-4 py-2 bg-green-600 text-brand-foreground rounded-md font-semibold text-sm cursor-pointer hover:bg-green-700 transition-colors"
+          className="px-4 py-2 bg-semantic-success text-brand-foreground rounded-md font-semibold text-sm cursor-pointer hover:bg-semantic-success transition-colors"
           onClick={() => console.log('Run pipeline (coming in Phase 10)')}
         >
           {PIPELINE_UI_TEXT.TOOLBAR_RUN}

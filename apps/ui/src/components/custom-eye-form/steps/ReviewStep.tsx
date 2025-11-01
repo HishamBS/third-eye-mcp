@@ -1,6 +1,7 @@
 'use client';
 
 import type { WizardStepProps } from '@/types/custom-eye-form';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 /**
  * ReviewStep - Final step of CustomEyeWizard
@@ -60,7 +61,7 @@ export function ReviewStep({ state }: WizardStepProps) {
                   {prop.type}
                 </span>
                 {prop.required && (
-                  <span className="rounded bg-red-500/20 px-2 py-0.5 text-xs text-red-400">
+                  <span className="rounded ${STATUS_BG_COLORS_SUBTLE.error} px-2 py-0.5 text-xs ${STATUS_TEXT_COLORS.error}">
                     Required
                   </span>
                 )}
@@ -84,7 +85,7 @@ export function ReviewStep({ state }: WizardStepProps) {
                   {prop.type}
                 </span>
                 {prop.required && (
-                  <span className="rounded bg-red-500/20 px-2 py-0.5 text-xs text-red-400">
+                  <span className="rounded ${STATUS_BG_COLORS_SUBTLE.error} px-2 py-0.5 text-xs ${STATUS_TEXT_COLORS.error}">
                     Required
                   </span>
                 )}

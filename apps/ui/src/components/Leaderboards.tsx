@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { API_BASE_URL } from '@/consts/api';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 type LeaderboardCategory = 'fastest' | 'cheapest' | 'reliable' | 'popular' | 'quality';
 
@@ -43,8 +45,7 @@ export function Leaderboards({
       if (eye) params.set('eye', eye);
       params.set('days', days.toString());
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const res = await fetch(`${API_URL}/api/leaderboards/${category}?${params}`);
+      const res = await fetch(`${API_BASE_URL}/api/leaderboards/${category}?${params}`);
       const data = await res.json();
       setRankings(data.rankings || []);
     } catch (err) {
@@ -135,7 +136,7 @@ export function Leaderboards({
       {loading ? (
         <div className="text-center py-8 text-brand-outline">Loading...</div>
       ) : error ? (
-        <div className="text-rose-300 text-xs">{error}</div>
+        <div className={`text-xs ${STATUS_TEXT_COLORS.error}`}>{error}</div>
       ) : rankings.length === 0 ? (
         <div className="text-brand-outline text-xs text-center py-8">No data available</div>
       ) : (
@@ -144,7 +145,7 @@ export function Leaderboards({
             <div
               key={`${entry.provider}-${entry.model}`}
               className={`flex items-center justify-between p-2 rounded ${
-                entry.rank <= 3 ? 'bg-amber-900/20 border border-amber-700/30' : 'bg-brand-paper/50'
+                entry.rank <= 3 ? `${STATUS_BG_COLORS_SUBTLE.warning} border ${STATUS_BORDER_COLORS_SUBTLE.warning}` : 'bg-brand-paper/50'
               }`}
             >
               <div className="flex items-center gap-3 flex-1">

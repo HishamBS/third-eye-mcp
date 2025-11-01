@@ -29,3 +29,11 @@ export {
   getAllThemes,
   getThemeNames,
 } from './themes';
+
+// Re-export Tailwind generator utilities (SSOT enforcement)
+export {
+  hexToRgb,
+  generateTailwindThemeVariables,
+  generateEyeColors,
+  generateTailwindThemeConfig,
+} from './tailwind-generator';

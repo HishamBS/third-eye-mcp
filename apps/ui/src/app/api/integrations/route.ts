@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+import { API_BASE_URL } from '@/consts/api';
 
 export async function GET(req: NextRequest) {
   try {
-    const response = await fetch(`${API_URL}/api/integrations`, {
+    const response = await fetch(`${API_BASE_URL}/api/integrations`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -27,7 +26,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     console.log('[Integrations API] Create request:', JSON.stringify(body, null, 2));
 
-    const response = await fetch(`${API_URL}/api/integrations`, {
+    const response = await fetch(`${API_BASE_URL}/api/integrations`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

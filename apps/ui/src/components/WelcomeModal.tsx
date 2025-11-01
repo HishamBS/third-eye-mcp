@@ -5,6 +5,8 @@ import { X, ArrowRight, ArrowLeft, Eye, GitBranch, Activity, Sparkles } from 'lu
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { ARIA_LABELS, ARIA_DESCRIPTIONS } from '@/constants/accessibility';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { TIMING } from '@/constants/timing';
 
 interface WelcomeStep {
   title: string;
@@ -22,17 +24,17 @@ const WELCOME_STEPS: WelcomeStep[] = [
   {
     title: 'Meet the Eyes',
     description: 'Eyes are specialized AI agents - each with unique capabilities like fact-checking, tone analysis, or security scanning. You can create custom Eyes or use our built-in collection. Find them in the Eyes page!',
-    icon: <Eye className="h-12 w-12 text-blue-400" />,
+    icon: <Eye className="h-12 w-12 ${STATUS_TEXT_COLORS.info}" />,
   },
   {
     title: 'Build Pipelines',
     description: 'Combine multiple Eyes into workflows called Pipelines. Drag and drop Eyes to create visual flows - like a quality control assembly line for your AI conversations. Check out the Pipelines page to get started!',
-    icon: <GitBranch className="h-12 w-12 text-purple-400" />,
+    icon: <GitBranch className="h-12 w-12 ${STATUS_TEXT_COLORS.info}" />,
   },
   {
     title: 'Monitor Everything',
     description: 'Watch your Eyes work in real-time on the Monitor page. See sessions in the Sessions page, and replay past conversations in the Replay page. All your oversight activity in one place!',
-    icon: <Activity className="h-12 w-12 text-green-400" />,
+    icon: <Activity className="h-12 w-12 ${STATUS_TEXT_COLORS.success}" />,
   },
 ];
 
@@ -54,7 +56,7 @@ export function WelcomeModal() {
     const hasSeenWelcome = localStorage.getItem(STORAGE_KEY);
     if (!hasSeenWelcome) {
       // Delay opening slightly for better UX
-      setTimeout(() => setIsOpen(true), 500);
+      setTimeout(() => setIsOpen(true), TIMING.MODAL_ANIMATION_MS);
     }
   }, []);
 
@@ -173,7 +175,7 @@ export function WelcomeModal() {
                     className={`h-2 rounded-full transition-all ${
                       index === currentStep
                         ? 'w-8 bg-brand-accent'
-                        : 'w-2 bg-slate-600 hover:bg-slate-500'
+                        : 'w-2 bg-brand-outline hover:bg-brand-outline/80'
                     }`}
                     aria-label={ARIA_LABELS.GO_TO_STEP(index + 1)}
                     aria-current={index === currentStep ? 'step' : undefined}

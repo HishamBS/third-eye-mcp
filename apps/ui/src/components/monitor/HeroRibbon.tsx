@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import type { HeroMetrics } from '../../types/pipeline';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 export interface HeroRibbonProps {
   sessionId: string | null;
@@ -36,7 +37,7 @@ export function HeroRibbon({ sessionId, apiKey, connected, connectionAttempts, m
           <span
             className={clsx(
               'rounded-full border px-3 py-1 text-xs font-semibold',
-              connected ? 'border-emerald-400/60 text-emerald-300' : 'border-rose-400/60 text-rose-300',
+              connected ? '${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success}' : '${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error}',
             )}
           >
             {connected ? 'Streaming' : 'Disconnected'}
@@ -45,7 +46,7 @@ export function HeroRibbon({ sessionId, apiKey, connected, connectionAttempts, m
         <footer className="mt-4 flex items-center gap-4 text-xs text-brand-outline">
           <span>Retries: {connectionAttempts}</span>
           {loading && <span>Refreshing summary…</span>}
-          {error && <span className="text-rose-300">{error}</span>}
+          {error && <span className="${STATUS_TEXT_COLORS.error}">{error}</span>}
         </footer>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">

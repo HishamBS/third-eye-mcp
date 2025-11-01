@@ -3,6 +3,7 @@
 import { memo, useState, useCallback } from 'react';
 import { TOOLBAR_TEXT, LAYOUT } from './constants';
 import type { Pipeline } from '@/types/pipeline';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 /**
  * Toolbar Props
@@ -127,7 +128,7 @@ export const Toolbar = memo(function Toolbar({
         <button
           onClick={() => activePipeline && onActivate(activePipeline.id)}
           disabled={!activePipeline || activePipeline.isActive}
-          className="px-4 py-2 bg-green-600 text-brand-foreground rounded-md font-medium text-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 bg-semantic-success text-brand-foreground rounded-md font-medium text-sm hover:bg-semantic-success disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {TOOLBAR_TEXT.ACTIVATE}
         </button>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 interface PlanNode {
   title: string;
@@ -100,9 +101,9 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
 
   const getActionColor = (action: FileImpact['action']) => {
     switch (action) {
-      case 'create': return 'text-emerald-400';
-      case 'modify': return 'text-amber-400';
-      case 'delete': return 'text-rose-400';
+      case 'create': return '${STATUS_TEXT_COLORS.success}';
+      case 'modify': return '${STATUS_TEXT_COLORS.warning}';
+      case 'delete': return '${STATUS_TEXT_COLORS.error}';
     }
   };
 

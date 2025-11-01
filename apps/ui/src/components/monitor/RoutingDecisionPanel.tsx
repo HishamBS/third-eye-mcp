@@ -21,6 +21,7 @@ import { Route, ArrowRight, Info, Zap } from 'lucide-react';
 import type { EyeSequence, EyeRouteStep } from '@third-eye/eyes';
 import { EYE_DISPLAY_NAMES } from '@third-eye/config/constants';
 import type { EyeName } from '@third-eye/types';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 /**
  * Props for RoutingDecisionPanel
@@ -36,13 +37,13 @@ interface RoutingDecisionPanelProps {
 function getStageBadgeClass(stage: EyeRouteStep['stage']): string {
   switch (stage) {
     case 'guidance':
-      return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      return '${STATUS_BG_COLORS_SUBTLE.info} ${STATUS_TEXT_COLORS.info} ${STATUS_BORDER_COLORS_SUBTLE.info}';
     case 'validation':
-      return 'bg-green-500/20 text-green-400 border-green-500/30';
+      return '${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success} ${STATUS_BORDER_COLORS_SUBTLE.success}';
     case 'both':
-      return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+      return '${STATUS_BG_COLORS_SUBTLE.info} ${STATUS_TEXT_COLORS.info} ${STATUS_BORDER_COLORS_SUBTLE.info}';
     default:
-      return 'bg-slate-500/20 text-brand-outline border-slate-500/30';
+      return '${STATUS_BG_COLORS_SUBTLE.idle} text-brand-outline ${STATUS_BORDER_COLORS_SUBTLE.idle}';
   }
 }
 
@@ -50,9 +51,9 @@ function getStageBadgeClass(stage: EyeRouteStep['stage']): string {
  * Get confidence color based on score
  */
 function getConfidenceColor(confidence: number): string {
-  if (confidence >= 0.8) return 'text-green-400';
-  if (confidence >= 0.6) return 'text-yellow-400';
-  return 'text-red-400';
+  if (confidence >= 0.8) return '${STATUS_TEXT_COLORS.success}';
+  if (confidence >= 0.6) return '${STATUS_TEXT_COLORS.warning}';
+  return '${STATUS_TEXT_COLORS.error}';
 }
 
 /**

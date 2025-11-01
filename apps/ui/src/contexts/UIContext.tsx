@@ -9,6 +9,7 @@ import {
 } from '@third-eye/types';
 import { type ThemeName, DEFAULT_THEME } from '@third-eye/theme';
 import { STORAGE_KEYS } from '@/constants/storage';
+import { API_BASE_URL } from '@/consts/api';
 
 export type ViewMode = 'novice' | 'expert';
 
@@ -54,9 +55,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setMounted(true);
 
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-
-    fetch(`${API_URL}/api/app-settings`)
+    fetch(`${API_BASE_URL}/api/app-settings`)
       .then(res => res.json())
       .then(response => {
         const data = response.data || response;
@@ -111,8 +110,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEYS.THEME, newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
 
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-    fetch(`${API_URL}/api/app-settings/theme`, {
+    fetch(`${API_BASE_URL}/api/app-settings/theme`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ value: newTheme }),
@@ -133,8 +131,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       document.documentElement.classList.remove('dark');
     }
 
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-    fetch(`${API_URL}/api/app-settings/darkMode`, {
+    fetch(`${API_BASE_URL}/api/app-settings/darkMode`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ value: enabled }),

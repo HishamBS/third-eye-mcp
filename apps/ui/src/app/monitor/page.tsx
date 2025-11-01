@@ -16,6 +16,7 @@ import { exportSession, type ExportFormat, type ExportEvent } from '@third-eye/u
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useWebSocket, type WSMessage } from '@/hooks/useWebSocket';
 import { useUI } from '@/contexts/UIContext';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE, STATUS_BG_COLORS } from '@/constants/color-mappings';
 import { ConversationEntry, type ConversationEntryData } from '@/components/monitor/ConversationEntry';
 import { TabButton } from '@/components/monitor/TabButton';
 import { StatusBadge } from '@/components/monitor/StatusBadge';
@@ -490,9 +491,9 @@ function MonitorContent() {
                   <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Real-time Monitor</p>
                   <div className="flex items-center gap-2">
                     <div className={`h-2 w-2 rounded-full ${
-                      connectionStatus === 'connected' ? 'bg-green-400 animate-pulse' :
-                      connectionStatus === 'reconnecting' ? 'bg-yellow-400 animate-pulse' :
-                      'bg-red-400'
+                      connectionStatus === 'connected' ? `${STATUS_BG_COLORS.success} animate-pulse` :
+                      connectionStatus === 'reconnecting' ? `${STATUS_BG_COLORS.warning} animate-pulse` :
+                      STATUS_BG_COLORS.error
                     }`} />
                     <span className="text-xs text-brand-outline">
                       {connectionStatus === 'connected' ? 'Live' :
@@ -666,21 +667,21 @@ function MonitorContent() {
                   <h3 className="text-sm font-semibold text-brand-accent mb-3">Outstanding</h3>
                   <div className="space-y-3">
                     {clarifications.outstanding.length === 0 ? (
-                      <div className="rounded-xl border border-yellow-700/50 bg-yellow-900/10 p-4">
-                        <p className="text-sm text-yellow-200">No pending clarifications</p>
+                      <div className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.warning} ${STATUS_BG_COLORS_SUBTLE.warning} p-4`}>
+                        <p className={`text-sm ${STATUS_TEXT_COLORS.warning}`}>No pending clarifications</p>
                       </div>
                     ) : (
                       clarifications.outstanding.map((c) => (
-                        <div key={c.id} className="rounded-xl border border-yellow-700/50 bg-yellow-900/10 p-4">
-                          <p className="text-xs text-yellow-400 mb-1 font-semibold uppercase">{c.field}</p>
-                          <p className="text-sm text-yellow-200">{c.question}</p>
+                        <div key={c.id} className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.warning} ${STATUS_BG_COLORS_SUBTLE.warning} p-4`}>
+                          <p className={`text-xs ${STATUS_TEXT_COLORS.warning} mb-1 font-semibold uppercase`}>{c.field}</p>
+                          <p className={`text-sm ${STATUS_TEXT_COLORS.warning}`}>{c.question}</p>
                         </div>
                       ))
                     )}
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-green-400 mb-3">Resolved</h3>
+                  <h3 className={`text-sm font-semibold ${STATUS_TEXT_COLORS.success} mb-3`}>Resolved</h3>
                   <div className="space-y-3">
                     {clarifications.resolved.length === 0 ? (
                       <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
@@ -691,7 +692,7 @@ function MonitorContent() {
                         <div key={c.id} className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
                           <p className="text-xs text-brand-outline mb-1 font-semibold uppercase">{c.field}</p>
                           <p className="text-sm text-brand-outline font-medium mb-1">{c.question}</p>
-                          <p className="text-sm text-green-300">{c.answer}</p>
+                          <p className={`text-sm ${STATUS_TEXT_COLORS.success}`}>{c.answer}</p>
                           <p className="text-xs text-brand-outline mt-2">Answered: {new Date(c.answeredAt).toLocaleString()}</p>
                         </div>
                       ))
@@ -744,7 +745,7 @@ function MonitorContent() {
                     {intentData.response === 'approved' && intentData.userIdentity && (
                       <div className="mt-3 flex items-center gap-2">
                         <StatusBadge status={ApprovalStatus.APPROVED} size="sm" />
-                        <span className="text-sm font-semibold text-green-300">Approved by {intentData.userIdentity}</span>
+                        <span className={`text-sm font-semibold ${STATUS_TEXT_COLORS.success}`}>Approved by {intentData.userIdentity}</span>
                       </div>
                     )}
                   </div>
@@ -767,17 +768,17 @@ function MonitorContent() {
               </div>
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-sm font-semibold text-purple-400 mb-3">Code Review (Mangekyō)</h3>
+                  <h3 className={`text-sm font-semibold ${STATUS_TEXT_COLORS.info} mb-3`}>Code Review (Mangekyō)</h3>
                   {evidenceData.mangekyo ? (
                     <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
                       {evidenceData.mangekyo.qualityScore && typeof evidenceData.mangekyo.qualityScore === 'number' && (
                         <>
                           <div className="flex items-center justify-between mb-3">
                             <span className="text-sm text-brand-foreground">Quality Score</span>
-                            <span className="text-lg font-semibold text-green-400">{evidenceData.mangekyo.qualityScore}/100</span>
+                            <span className={`text-lg font-semibold ${STATUS_TEXT_COLORS.success}`}>{evidenceData.mangekyo.qualityScore}/100</span>
                           </div>
                           <div className="h-2 w-full rounded-full bg-brand-ink">
-                            <div className="h-2 rounded-full bg-green-400" style={{ width: `${evidenceData.mangekyo.qualityScore}%` }} />
+                            <div className={`h-2 rounded-full ${STATUS_BG_COLORS.success}`} style={{ width: `${evidenceData.mangekyo.qualityScore}%` }} />
                           </div>
                         </>
                       )}
@@ -800,14 +801,14 @@ function MonitorContent() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-semibold text-blue-400 mb-3">Evidence Validation (Tenseigan)</h3>
+                  <h3 className={`text-sm font-semibold ${STATUS_TEXT_COLORS.info} mb-3`}>Evidence Validation (Tenseigan)</h3>
                   {evidenceData.tenseigan ? (
                     <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
                       {evidenceData.tenseigan.citations && Array.isArray(evidenceData.tenseigan.citations) ? (
                         <div className="space-y-2">
                           <p className="text-sm text-brand-outline mb-2">Found {evidenceData.tenseigan.citations.length} citation(s)</p>
                           {evidenceData.tenseigan.citations.map((citation, idx: number) => (
-                            <div key={idx} className="text-xs text-brand-outline border-l-2 border-blue-500 pl-3">
+                            <div key={idx} className={`text-xs text-brand-outline border-l-2 ${STATUS_BORDER_COLORS.info} pl-3`}>
                               {typeof citation === 'object' && citation !== null ? JSON.stringify(citation) : String(citation)}
                             </div>
                           ))}
@@ -824,22 +825,22 @@ function MonitorContent() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-semibold text-green-400 mb-3">Final Approval (Byakugan)</h3>
+                  <h3 className={`text-sm font-semibold ${STATUS_TEXT_COLORS.success} mb-3`}>Final Approval (Byakugan)</h3>
                   {evidenceData.byakugan ? (
                     <div className={`rounded-xl border p-4 ${
-                      evidenceData.byakugan.approved ? 'border-green-700/50 bg-green-900/20' : 'border-red-700/50 bg-red-900/20'
+                      evidenceData.byakugan.approved ? `${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success}` : `${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error}`
                     }`}>
                       <div className="flex items-center gap-2 mb-2">
                         <StatusBadge
                           status={evidenceData.byakugan.approved ? ApprovalStatus.APPROVED : ApprovalStatus.REJECTED}
                           size="sm"
                         />
-                        <span className={`text-sm font-semibold ${evidenceData.byakugan.approved ? 'text-green-300' : 'text-red-300'}`}>
+                        <span className={`text-sm font-semibold ${evidenceData.byakugan.approved ? STATUS_TEXT_COLORS.success : STATUS_TEXT_COLORS.error}`}>
                           {evidenceData.byakugan.approved ? 'APPROVED FOR DELIVERY' : 'REJECTED - NEEDS REVISION'}
                         </span>
                       </div>
                       {evidenceData.byakugan.summary && typeof evidenceData.byakugan.summary === 'string' && (
-                        <p className={`text-xs ${evidenceData.byakugan.approved ? 'text-green-200' : 'text-red-200'}`}>
+                        <p className={`text-xs ${evidenceData.byakugan.approved ? STATUS_TEXT_COLORS.success : STATUS_TEXT_COLORS.error}`}>
                           {evidenceData.byakugan.summary}
                         </p>
                       )}

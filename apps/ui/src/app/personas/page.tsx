@@ -5,6 +5,7 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { PersonaWizard } from '@/components/persona-form/PersonaWizard';
 import { Plus, CheckCircle2 } from 'lucide-react';
 import type { PersonaFormState } from '@/types/persona-form';
+import { STATUS_TEXT_COLORS } from '@/constants/color-mappings';
 
 /**
  * Personas Page - Phase 13 Complete
@@ -48,7 +49,7 @@ export default function PersonasPage() {
     <div className="flex min-h-screen flex-col items-center justify-center p-8">
       <GlassCard className="max-w-2xl w-full p-12 text-center">
         <div className="flex justify-center mb-6">
-          <CheckCircle2 className="w-24 h-24 text-green-500" />
+          <CheckCircle2 className={`w-24 h-24 ${STATUS_TEXT_COLORS.success}`} />
         </div>
 
         <h1 className="text-4xl font-bold text-brand-ink mb-4">
@@ -60,7 +61,7 @@ export default function PersonasPage() {
         </p>
 
         <div className="text-left space-y-4 text-brand-ink/70 bg-brand-paperElev p-6 rounded-lg">
-          <p className="font-semibold text-green-600">
+          <p className={`font-semibold ${STATUS_TEXT_COLORS.success}`}>
             Phase 13 Complete: PersonaWizard foundation implemented
           </p>
 

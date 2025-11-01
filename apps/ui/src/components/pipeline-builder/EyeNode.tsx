@@ -10,6 +10,8 @@ import {
   type EyeStage,
 } from './constants';
 import type { EyeName } from '@third-eye/types';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { ANIMATION_DURATION } from '@/constants/timing';
 
 /**
  * Eye Node Data Structure
@@ -44,9 +46,9 @@ function EyeNodeComponent({ data, selected, dragging }: NodeProps<EyeNodeData>) 
   const getStageColorClass = (s: EyeStage): string => {
     switch (s) {
       case 'GUIDANCE':
-        return 'text-blue-400';
+        return '${STATUS_TEXT_COLORS.info}';
       case 'VALIDATION':
-        return 'text-green-400';
+        return '${STATUS_TEXT_COLORS.success}';
       case 'ROUTER':
         return 'text-brand-primary';
       case 'BOTH':
@@ -60,7 +62,7 @@ function EyeNodeComponent({ data, selected, dragging }: NodeProps<EyeNodeData>) 
     <div
       className={`
         relative min-w-[180px] rounded-lg border-2 bg-brand-paper p-4
-        transition-all duration-200 ease-in-out
+        transition-all ${ANIMATION_DURATION.FAST} ease-in-out
         ${selected ? 'border-dashed shadow-2xl' : 'border-solid shadow-lg'}
         ${dragging ? 'cursor-grabbing opacity-80' : 'cursor-grab opacity-100'}
       `}

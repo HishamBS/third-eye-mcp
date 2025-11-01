@@ -8,6 +8,7 @@ import { WIZARD_STEPS, TOTAL_STEPS, STEP_TITLES, STEP_DESCRIPTIONS, BUTTON_LABEL
 import { BasicInfoStep } from './steps/BasicInfoStep';
 import { SchemaStep } from './steps/SchemaStep';
 import { ReviewStep } from './steps/ReviewStep';
+import { ANIMATION_DURATION } from '@/constants/timing';
 
 /**
  * CustomEyeWizard - Visual schema builder for non-technical users
@@ -163,7 +164,7 @@ export function CustomEyeWizard({ initialData, eyeId, onSave, onCancel }: Custom
 
           <div className="h-2 bg-brand-outline/20 rounded-full overflow-hidden">
             <div
-              className="h-full bg-brand-accent transition-all duration-300"
+              className={`h-full bg-brand-accent transition-all ${ANIMATION_DURATION.NORMAL}`}
               style={{ width: `${((state.currentStep + 1) / SIMPLE_TOTAL_STEPS) * 100}%` }}
             />
           </div>

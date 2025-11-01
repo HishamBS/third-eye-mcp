@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Trophy, Clock, Zap } from 'lucide-react';
 import { useDialog } from '@/hooks/useDialog';
+import { API_BASE_URL } from '@/consts/api';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE, STATUS_BG_COLORS } from '@/constants/color-mappings';
 
 const ALLOWED_PROVIDERS = ['groq', 'ollama', 'lmstudio'] as const;
 
@@ -58,8 +60,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
     const fetchProviders = async () => {
       try {
         setLoadingProviders(true);
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-        const response = await fetch(`${API_URL}/api/models`);
+        const response = await fetch(`${API_BASE_URL}/api/models`);
         if (!response.ok) {
           setAvailableProviders(FALLBACK_PROVIDER_MODELS);
           return;
@@ -165,8 +166,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
     setWinner(null);
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/duel`, {
+      const response = await fetch(`${API_BASE_URL}/api/duel`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -203,21 +203,21 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-400';
-    if (score >= 60) return 'text-yellow-400';
-    return 'text-red-400';
+    if (score >= 80) return STATUS_TEXT_COLORS.success;
+    if (score >= 60) return STATUS_TEXT_COLORS.warning;
+    return STATUS_TEXT_COLORS.error;
   };
 
   const getVerdictBadge = (verdict: string) => {
     switch (verdict) {
       case 'APPROVED':
-        return <span className="rounded-full bg-green-500/20 px-2 py-1 text-xs text-green-400">✓ Approved</span>;
+        return <span className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.success} px-2 py-1 text-xs ${STATUS_TEXT_COLORS.success}`}>✓ Approved</span>;
       case 'REJECTED':
-        return <span className="rounded-full bg-red-500/20 px-2 py-1 text-xs text-red-400">✗ Rejected</span>;
+        return <span className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.error} px-2 py-1 text-xs ${STATUS_TEXT_COLORS.error}`}>✗ Rejected</span>;
       case 'NEEDS_INPUT':
-        return <span className="rounded-full bg-yellow-500/20 px-2 py-1 text-xs text-yellow-400">⚠ Needs Input</span>;
+        return <span className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.warning} px-2 py-1 text-xs ${STATUS_TEXT_COLORS.warning}`}>⚠ Needs Input</span>;
       default:
-        return <span className="rounded-full bg-brand-paper0/20 px-2 py-1 text-xs text-brand-outline">Unknown</span>;
+        return <span className="rounded-full bg-brand-paper/20 px-2 py-1 text-xs text-brand-outline">Unknown</span>;
     }
   };
 
@@ -234,7 +234,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
           className={`flex items-center space-x-2 rounded-lg px-4 py-2 font-semibold transition ${
             selectedConfigs.length >= 2 && !isRunning
               ? 'bg-brand-accent text-brand-foreground hover:bg-brand-accent/90'
-              : 'cursor-not-allowed bg-gray-600 text-brand-outline'
+              : 'cursor-not-allowed bg-brand-outline text-brand-muted'
           }`}
         >
           {isRunning ? (
@@ -269,7 +269,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
               </div>
               <button
                 onClick={() => removeConfig(index)}
-                className="rounded-full p-1 text-red-400 hover:bg-red-500/20"
+                className={`rounded-full p-1 ${STATUS_TEXT_COLORS.error} hover:${STATUS_BG_COLORS_SUBTLE.error}`}
               >
                 ✕
               </button>
@@ -330,7 +330,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
                 isRunning ||
                 (availableProviders[stagedProvider]?.length ?? 0) === 0
               }
-              className="inline-flex items-center justify-center rounded-lg bg-brand-accent px-4 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-accent/90 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-brand-outline"
+              className="inline-flex items-center justify-center rounded-lg bg-brand-accent px-4 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-accent/90 disabled:cursor-not-allowed disabled:bg-brand-outline disabled:text-brand-muted"
             >
               Add Competitor
             </button>
@@ -342,9 +342,9 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
       {results.length > 0 && (
         <div>
           <div className="mb-4 flex items-center space-x-2">
-            <Trophy className="h-5 w-5 text-yellow-400" />
+            <Trophy className={`h-5 w-5 ${STATUS_TEXT_COLORS.warning}`} />
             <h3 className="text-lg font-bold text-brand-foreground">Results</h3>
-            {winner && <span className="rounded-full bg-yellow-500/20 px-3 py-1 text-sm font-semibold text-yellow-400">Winner: {winner}</span>}
+            {winner && <span className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.warning} px-3 py-1 text-sm font-semibold ${STATUS_TEXT_COLORS.warning}`}>Winner: {winner}</span>}
           </div>
 
           <div className="space-y-4">
@@ -356,13 +356,13 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
                 transition={{ delay: index * 0.1 }}
                 className={`rounded-xl border p-4 ${
                   index === 0
-                    ? 'border-yellow-500/60 bg-yellow-500/10'
+                    ? `${STATUS_BORDER_COLORS_SUBTLE.warning} ${STATUS_BG_COLORS_SUBTLE.warning}`
                     : 'border-brand-outline/40 bg-brand-ink/40'
                 }`}
               >
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    {index === 0 && <Trophy className="h-5 w-5 text-yellow-400" />}
+                    {index === 0 && <Trophy className={`h-5 w-5 ${STATUS_TEXT_COLORS.warning}`} />}
                     <div>
                       <p className="font-semibold text-brand-foreground">
                         #{index + 1} {(result.providerLabel ?? formatProviderName(result.provider))} / {result.model}
@@ -382,14 +382,14 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
 
                 <div className="grid grid-cols-3 gap-4 rounded-lg bg-brand-paper/50 p-3 text-xs">
                   <div className="flex items-center space-x-2">
-                    <Clock className="h-4 w-4 text-blue-400" />
+                    <Clock className={`h-4 w-4 ${STATUS_TEXT_COLORS.info}`} />
                     <div>
                       <p className="text-brand-outline">Latency</p>
                       <p className="font-semibold text-brand-outline">{result.latency}ms</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <Zap className="h-4 w-4 text-yellow-400" />
+                    <Zap className={`h-4 w-4 ${STATUS_TEXT_COLORS.warning}`} />
                     <div>
                       <p className="text-brand-outline">Tokens</p>
                       <p className="font-semibold text-brand-outline">

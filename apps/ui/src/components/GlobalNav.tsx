@@ -12,6 +12,7 @@ import {
 import { SessionSelector } from './SessionSelector';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import { ViewModeToggle } from './ViewModeToggle';
+import { ANIMATION_DURATION } from '@/constants/timing';
 
 interface DropdownItem {
   href: string;
@@ -136,7 +137,7 @@ export function GlobalNav() {
               width={36}
               height={36}
               priority
-              className="h-9 w-9 transform transition-transform duration-200 group-hover:scale-110"
+              className={`h-9 w-9 transform transition-transform ${ANIMATION_DURATION.FAST} group-hover:scale-110`}
             />
             <span className="text-lg font-semibold text-brand-foreground group-hover:text-brand-accent transition-colors whitespace-nowrap">
               Third Eye MCP

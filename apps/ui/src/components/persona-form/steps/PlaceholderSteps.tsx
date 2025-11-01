@@ -4,6 +4,7 @@ import React, { useState, useCallback } from 'react';
 import type { WizardStepProps } from '@/types/persona-form';
 import { Construction, Plus, X, Download } from 'lucide-react';
 import { FIELD_LABELS, PLACEHOLDERS, ARRAY_ACTIONS, REMINDER_TEMPLATES } from '../constants';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 /**
  * Simplified Step Components - Phase 14 Part 2
@@ -111,7 +112,7 @@ export function RemindersStep({ state, dispatch }: WizardStepProps) {
               <span className="text-sm text-brand-ink">{reminder}</span>
               <button
                 onClick={() => handleRemoveReminder(index)}
-                className="text-brand-ink/40 hover:text-red-500 transition-colors"
+                className="text-brand-ink/40 hover:${STATUS_TEXT_COLORS.error} transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>

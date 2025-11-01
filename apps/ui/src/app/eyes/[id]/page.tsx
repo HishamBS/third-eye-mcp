@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { API_BASE_URL } from '@/consts/api';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 interface Eye {
   id: string;
@@ -62,8 +64,6 @@ export default function EyeDetailPage() {
     setLoading(true);
     setError(null);
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-
       // Fetch Eye details from direct eye endpoint
       const eyeRes = await fetch(`/api/eyes/${eyeId}`);
       if (eyeRes.ok) {
@@ -73,7 +73,7 @@ export default function EyeDetailPage() {
         // If eye doesn't have capabilities, fetch from blueprint (server API directly)
         if (foundEye && !foundEye.capabilities) {
           try {
-            const blueprintRes = await fetch(`${API_URL}/api/personas/blueprints/${eyeId}`);
+            const blueprintRes = await fetch(`${API_BASE_URL}/api/personas/blueprints/${eyeId}`);
             if (blueprintRes.ok) {
               const blueprint = await blueprintRes.json();
               if (blueprint.success && blueprint.data && blueprint.data.capabilities) {
@@ -88,7 +88,7 @@ export default function EyeDetailPage() {
         setEye(foundEye || null);
       } else if (eyeRes.status === 404) {
         // Fall back to fetching from eyes/all
-        const eyesRes = await fetch(`${API_URL}/api/eyes/all`);
+        const eyesRes = await fetch(`${API_BASE_URL}/api/eyes/all`);
         if (eyesRes.ok) {
           const result = await eyesRes.json();
           const foundEye = result.data?.find((e: Eye) => e.id === eyeId);
@@ -98,7 +98,7 @@ export default function EyeDetailPage() {
 
       // Fetch personas for this Eye
       try {
-        const personasRes = await fetch(`${API_URL}/api/personas/${eyeId}`);
+        const personasRes = await fetch(`${API_BASE_URL}/api/personas/${eyeId}`);
         if (personasRes.ok) {
           const result = await personasRes.json();
           setPersonas(result.data?.versions || []);
@@ -109,7 +109,7 @@ export default function EyeDetailPage() {
 
       // Fetch routing configuration
       try {
-        const routingRes = await fetch(`${API_URL}/api/routing`);
+        const routingRes = await fetch(`${API_BASE_URL}/api/routing`);
         if (routingRes.ok) {
           const result = await routingRes.json();
           const eyeRouting = result.data?.find((r: EyeRouting) => r.eye === eyeId);
@@ -138,8 +138,7 @@ export default function EyeDetailPage() {
     }
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/eyes/${eyeId}/name`, {
+      const response = await fetch(`${API_BASE_URL}/api/eyes/${eyeId}/name`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ displayName: editedName.trim() }),
@@ -166,8 +165,7 @@ export default function EyeDetailPage() {
 
   const savePersona = async () => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/personas/${eyeId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/personas/${eyeId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: personaContent }),
@@ -187,8 +185,7 @@ export default function EyeDetailPage() {
 
   const activatePersona = async (version: number) => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/personas/${eyeId}/activate/${version}`, {
+      const response = await fetch(`${API_BASE_URL}/api/personas/${eyeId}/activate/${version}`, {
         method: 'PATCH',
       });
 
@@ -282,14 +279,14 @@ export default function EyeDetailPage() {
       {/* Alerts */}
       {error && (
         <div className="mx-auto max-w-7xl px-6 pt-4">
-          <div className="rounded-xl border border-red-500/50 bg-red-500/10 p-4 text-red-400">
+          <div className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} p-4 ${STATUS_TEXT_COLORS.error}`}>
             {error}
           </div>
         </div>
       )}
       {success && (
         <div className="mx-auto max-w-7xl px-6 pt-4">
-          <div className="rounded-xl border border-green-500/50 bg-green-500/10 p-4 text-green-400">
+          <div className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success} p-4 ${STATUS_TEXT_COLORS.success}`}>
             {success}
           </div>
         </div>
@@ -381,7 +378,7 @@ export default function EyeDetailPage() {
               <div>
                 <label className="block text-sm font-medium text-brand-outline mb-2">Source</label>
                 <span className={`inline-block rounded-full px-3 py-1 text-sm ${
-                  eye.source === 'built-in' ? 'bg-white/20 text-brand-foreground' : 'bg-green-500/30 text-green-100'
+                  eye.source === 'built-in' ? 'bg-white/20 text-brand-foreground' : `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success}`
                 }`}>
                   {eye.source}
                 </span>
@@ -449,7 +446,7 @@ export default function EyeDetailPage() {
                           <h3 className="font-semibold text-brand-foreground">
                             Version {persona.version}
                             {persona.active && (
-                              <span className="ml-2 rounded-full bg-green-500/20 px-2 py-1 text-xs text-green-400">
+                              <span className={`ml-2 rounded-full ${STATUS_BG_COLORS_SUBTLE.success} px-2 py-1 text-xs ${STATUS_TEXT_COLORS.success}`}>
                                 Active
                               </span>
                             )}
@@ -461,7 +458,7 @@ export default function EyeDetailPage() {
                         {!persona.active && (
                           <button
                             onClick={() => activatePersona(persona.version)}
-                            className="rounded-full border border-green-600/50 px-4 py-1.5 text-xs font-semibold text-green-400 transition hover:bg-green-600/20"
+                            className={`rounded-full border ${STATUS_BORDER_COLORS_SUBTLE.success} px-4 py-1.5 text-xs font-semibold ${STATUS_TEXT_COLORS.success} transition hover:${STATUS_BG_COLORS_SUBTLE.success}`}
                           >
                             Activate
                           </button>

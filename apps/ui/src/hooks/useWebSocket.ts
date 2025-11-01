@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { WS_BASE_URL } from '@/consts/api';
 
 export interface WSMessage {
   type: string;
@@ -49,8 +50,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     }
 
     // Build WebSocket URL - ensure we always have /ws/monitor path for session monitoring
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://127.0.0.1:7070';
-    const url = sessionId ? `${wsUrl}/ws/monitor?sessionId=${sessionId}` : `${wsUrl}/ws/monitor`;
+    const url = sessionId ? `${WS_BASE_URL}/ws/monitor?sessionId=${sessionId}` : `${WS_BASE_URL}/ws/monitor`;
 
     try {
       setConnectionStatus('reconnecting');

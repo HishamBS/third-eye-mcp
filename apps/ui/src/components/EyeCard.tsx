@@ -40,20 +40,33 @@ const eyeLabels: Record<string, string> = {
   BYAKUGAN: 'Byakugan',
 };
 
-const eyeColors: Record<string, string> = {
-  SHARINGAN: 'border-rose-500/40 bg-rose-500/5',
-  PROMPT_HELPER: 'border-purple-500/40 bg-purple-500/5',
-  JOGAN: 'border-cyan-500/40 bg-cyan-500/5',
-  RINNEGAN_PLAN: 'border-indigo-500/40 bg-indigo-500/5',
-  RINNEGAN_REVIEW: 'border-indigo-500/40 bg-indigo-500/5',
-  RINNEGAN_FINAL: 'border-indigo-500/40 bg-indigo-500/5',
-  MANGEKYO_SCAFFOLD: 'border-red-500/40 bg-red-500/5',
-  MANGEKYO_IMPL: 'border-red-500/40 bg-red-500/5',
-  MANGEKYO_TESTS: 'border-red-500/40 bg-red-500/5',
-  MANGEKYO_DOCS: 'border-red-500/40 bg-red-500/5',
-  TENSEIGAN: 'border-blue-500/40 bg-blue-500/5',
-  BYAKUGAN: 'border-slate-400/40 bg-slate-400/5',
-};
+/**
+ * Maps eye type keys to their corresponding eye color tokens from theme
+ * Uses eye color tokens with opacity modifiers for borders and backgrounds
+ */
+function getEyeColorClasses(eyeKey: string): string {
+  const eyeTypeMap: Record<string, string> = {
+    SHARINGAN: 'sharingan',
+    PROMPT_HELPER: 'kyuubi',
+    JOGAN: 'jogan',
+    RINNEGAN_PLAN: 'rinnegan',
+    RINNEGAN_REVIEW: 'rinnegan',
+    RINNEGAN_FINAL: 'rinnegan',
+    MANGEKYO_SCAFFOLD: 'mangekyo',
+    MANGEKYO_IMPL: 'mangekyo',
+    MANGEKYO_TESTS: 'mangekyo',
+    MANGEKYO_DOCS: 'mangekyo',
+    TENSEIGAN: 'tenseigan',
+    BYAKUGAN: 'byakugan',
+  };
+
+  const eyeType = eyeTypeMap[eyeKey];
+  if (!eyeType) {
+    return 'border-brand-outline/40 bg-brand-paper-elev/5';
+  }
+
+  return `border-eye-${eyeType}/40 bg-eye-${eyeType}/5`;
+}
 
 export interface EyeCardProps {
   state: EyeState;
@@ -64,12 +77,12 @@ export default function EyeCard({ state, onClick }: EyeCardProps) {
   const eyeKey = state.eye?.toUpperCase().replace(/\s+/g, '_') || 'SHARINGAN';
   const asset = eyeAssets[eyeKey as keyof typeof eyeAssets];
   const label = eyeLabels[eyeKey] || state.eye || 'Unknown';
-  const colorClass = eyeColors[eyeKey] || 'border-slate-500/40 bg-slate-500/5';
+  const colorClass = getEyeColorClasses(eyeKey);
 
-  const statusColor = state.ok === true 
-    ? 'text-emerald-400' 
-    : state.ok === false 
-    ? 'text-rose-400' 
+  const statusColor = state.ok === true
+    ? 'text-semantic-success'
+    : state.ok === false
+    ? 'text-semantic-error'
     : 'text-brand-outline';
 
   return (

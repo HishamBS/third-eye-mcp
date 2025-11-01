@@ -4,6 +4,7 @@ import { useUI } from '@/contexts/UIContext';
 import { Sliders, Shield, AlertTriangle, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { STRICTNESS_PRESETS } from '@third-eye/types';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 export function StrictnessControls() {
   const { strictness, setStrictness, applyStrictnessProfile } = useUI();
@@ -32,10 +33,10 @@ export function StrictnessControls() {
           {/* Casual */}
           <button
             onClick={() => applyStrictnessProfile('casual')}
-            className="group rounded-xl border border-brand-outline/40 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 p-6 text-left transition-all hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/20"
+            className="group rounded-xl border border-brand-outline/40 bg-gradient-to-br from-semantic-success/10 to-semantic-success/5 p-6 text-left transition-all hover:border-semantic-success/50 hover:shadow-lg hover:shadow-semantic-success/20"
           >
             <div className="mb-3 flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-emerald-400" />
+              <Sparkles className="h-5 w-5 ${STATUS_TEXT_COLORS.success}" />
               <h4 className="font-semibold text-brand-foreground">Casual</h4>
             </div>
             <p className="mb-4 text-sm text-brand-outline">
@@ -51,10 +52,10 @@ export function StrictnessControls() {
           {/* Enterprise */}
           <button
             onClick={() => applyStrictnessProfile('enterprise')}
-            className="group rounded-xl border border-brand-outline/40 bg-gradient-to-br from-blue-500/10 to-blue-600/5 p-6 text-left transition-all hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/20"
+            className="group rounded-xl border border-brand-outline/40 bg-gradient-to-br from-blue-500/10 to-blue-600/5 p-6 text-left transition-all hover:${STATUS_BORDER_COLORS_SUBTLE.info} hover:shadow-lg hover:shadow-blue-500/20"
           >
             <div className="mb-3 flex items-center gap-2">
-              <Shield className="h-5 w-5 text-blue-400" />
+              <Shield className="h-5 w-5 ${STATUS_TEXT_COLORS.info}" />
               <h4 className="font-semibold text-brand-foreground">Enterprise</h4>
             </div>
             <p className="mb-4 text-sm text-brand-outline">
@@ -70,10 +71,10 @@ export function StrictnessControls() {
           {/* Security */}
           <button
             onClick={() => applyStrictnessProfile('security')}
-            className="group rounded-xl border border-brand-outline/40 bg-gradient-to-br from-red-500/10 to-red-600/5 p-6 text-left transition-all hover:border-red-500/50 hover:shadow-lg hover:shadow-red-500/20"
+            className="group rounded-xl border border-brand-outline/40 bg-gradient-to-br from-red-500/10 to-red-600/5 p-6 text-left transition-all hover:${STATUS_BORDER_COLORS_SUBTLE.error} hover:shadow-lg hover:shadow-red-500/20"
           >
             <div className="mb-3 flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-400" />
+              <AlertTriangle className="h-5 w-5 ${STATUS_TEXT_COLORS.error}" />
               <h4 className="font-semibold text-brand-foreground">Security</h4>
             </div>
             <p className="mb-4 text-sm text-brand-outline">

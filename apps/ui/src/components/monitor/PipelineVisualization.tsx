@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { ANIMATION_DURATION } from '@/constants/timing';
 
 interface EyeStatus {
   name: string;
@@ -161,7 +163,7 @@ export function PipelineVisualization({ sessionId, events, isLive = false }: Pip
           <p className="text-xs text-brand-outline">
             Active Eyes: {currentFlow.length} |
             {isLive && <span className="ml-2 inline-flex items-center">
-              <div className="mr-1 h-2 w-2 animate-pulse rounded-full bg-green-400"></div>
+              <div className="mr-1 h-2 w-2 animate-pulse rounded-full ${STATUS_TEXT_COLORS.success}"></div>
               LIVE
             </span>}
           </p>
@@ -237,7 +239,7 @@ export function PipelineVisualization({ sessionId, events, isLive = false }: Pip
             >
               {/* Eye Node */}
               <div
-                className="relative flex h-12 w-12 items-center justify-center rounded-full border-2 shadow-lg transition-all duration-300"
+                className={`relative flex h-12 w-12 items-center justify-center rounded-full border-2 shadow-lg transition-all ${ANIMATION_DURATION.NORMAL}`}
                 style={{
                   backgroundColor: getEyeStatusColor(status),
                   borderColor: getEyeStatusColor(status),
@@ -298,15 +300,15 @@ export function PipelineVisualization({ sessionId, events, isLive = false }: Pip
               <span className="text-brand-outline">Idle</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+              <div className="h-2 w-2 rounded-full ${STATUS_BG_COLORS.info}"></div>
               <span className="text-brand-outline">Running</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="h-2 w-2 rounded-full bg-green-500"></div>
+              <div className="h-2 w-2 rounded-full ${STATUS_BG_COLORS.success}"></div>
               <span className="text-brand-outline">Approved</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="h-2 w-2 rounded-full bg-red-500"></div>
+              <div className="h-2 w-2 rounded-full ${STATUS_BG_COLORS.error}"></div>
               <span className="text-brand-outline">Rejected</span>
             </div>
           </div>

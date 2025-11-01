@@ -4,6 +4,7 @@ import React, { useState, useCallback } from 'react';
 import type { WizardStepProps } from '@/types/persona-form';
 import { FIELD_LABELS, PLACEHOLDERS, HELP_TEXT, ARRAY_ACTIONS } from '../constants';
 import { X, Plus } from 'lucide-react';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 /**
  * EnvelopeStep - Envelope contract configuration
@@ -127,12 +128,12 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
           {state.envelopeContract.requiredDataKeys.map((key, index) => (
             <div
               key={index}
-              className="flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-600 border border-blue-500/30"
+              className="flex items-center gap-2 px-3 py-1 rounded-full ${STATUS_BG_COLORS_SUBTLE.info} ${STATUS_TEXT_COLORS.info} border ${STATUS_BORDER_COLORS_SUBTLE.info}"
             >
               <span className="text-sm font-mono">{key}</span>
               <button
                 onClick={() => handleRemoveKey('requiredDataKeys', index)}
-                className="hover:bg-blue-500/30 rounded-full p-0.5 transition-colors"
+                className="hover:${STATUS_BG_COLORS_SUBTLE.info} rounded-full p-0.5 transition-colors"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -170,12 +171,12 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
           {state.envelopeContract.requiredUiKeys.map((key, index) => (
             <div
               key={index}
-              className="flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 text-purple-600 border border-purple-500/30"
+              className="flex items-center gap-2 px-3 py-1 rounded-full ${STATUS_BG_COLORS_SUBTLE.info} ${STATUS_TEXT_COLORS.info} border ${STATUS_BORDER_COLORS_SUBTLE.info}"
             >
               <span className="text-sm font-mono">{key}</span>
               <button
                 onClick={() => handleRemoveKey('requiredUiKeys', index)}
-                className="hover:bg-purple-500/30 rounded-full p-0.5 transition-colors"
+                className="hover:${STATUS_BG_COLORS_SUBTLE.info} rounded-full p-0.5 transition-colors"
               >
                 <X className="w-3 h-3" />
               </button>

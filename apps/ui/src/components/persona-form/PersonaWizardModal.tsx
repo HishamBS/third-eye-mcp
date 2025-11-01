@@ -5,6 +5,7 @@ import { PersonaWizard } from './PersonaWizard';
 import type { PersonaFormState } from '@/types/persona-form';
 import { X } from 'lucide-react';
 import { UI_HELP_TEXT } from '@third-eye/constants';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 /**
  * PersonaWizardModal - Modal wrapper for PersonaWizard
@@ -241,7 +242,7 @@ export function PersonaWizardModal({
 
           {/* Error Display */}
           {error && (
-            <div className="mb-4 rounded-lg border border-red-500/50 bg-red-500/10 p-4 text-red-400">
+            <div className="mb-4 rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} p-4 ${STATUS_TEXT_COLORS.error}">
               {error}
             </div>
           )}

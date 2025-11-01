@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { useUI } from '@/contexts/UIContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { API_BASE_URL } from '@/consts/api';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE, STATUS_BG_COLORS } from '@/constants/color-mappings';
+import { TIMING } from '@/constants/timing';
 
 // API response session (before normalization)
 interface RawSession {
@@ -50,8 +53,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
   const fetchActiveSessions = async () => {
     try {
       setLoading(true);
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/session/active`);
+            const response = await fetch(`${API_BASE_URL}/api/session/active`);
 
       if (response.ok) {
         const result = await response.json();
@@ -105,8 +107,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
     if (!confirm('Delete this session?')) return;
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/session/bulk`, {
+            const response = await fetch(`${API_BASE_URL}/api/session/bulk`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionIds: [sessionId] }),
@@ -126,7 +127,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
           }
         }
         // Refresh to confirm
-        setTimeout(() => fetchActiveSessions(), 300);
+        setTimeout(() => fetchActiveSessions(), TIMING.POLL_DEBOUNCE_MS);
       } else {
         alert('Failed to delete session');
       }
@@ -139,8 +140,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
   const handleDeleteAllSessions = async () => {
     try {
       setDeleting(true);
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-
+      
       // Get all session IDs to delete
       const sessionIds = sessions.map(s => s.sessionId);
 
@@ -150,7 +150,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
         return;
       }
 
-      const response = await fetch(`${API_URL}/api/session/bulk`, {
+      const response = await fetch(`${API_BASE_URL}/api/session/bulk`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionIds }),
@@ -175,11 +175,11 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
         // Show success only if we actually deleted something
         if (deletedCount > 0) {
           setDeleteSuccess(true);
-          setTimeout(() => setDeleteSuccess(false), 3000);
+          setTimeout(() => setDeleteSuccess(false), TIMING.DELETE_SUCCESS_MS);
         }
 
         // Refresh from server to confirm
-        setTimeout(() => fetchActiveSessions(), 500);
+        setTimeout(() => fetchActiveSessions(), TIMING.POLL_RETRY_MS);
       } else {
         console.error('Failed to delete sessions');
         alert('Failed to delete sessions. Please try again.');
@@ -199,7 +199,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
         className="flex items-center gap-3 rounded-xl border border-brand-outline/40 bg-brand-paper/80 px-4 py-2.5 text-sm transition-all hover:border-brand-accent/60 hover:bg-brand-paper min-w-[180px]"
       >
         <div className="flex items-center gap-2">
-          <div className={`h-2 w-2 rounded-full ${selectedSession ? 'bg-green-400 animate-pulse' : 'bg-slate-500'}`} />
+          <div className={`h-2 w-2 rounded-full ${selectedSession ? `${STATUS_BG_COLORS.success} animate-pulse` : 'bg-brand-outline'}`} />
           <span className="font-medium text-brand-foreground">
             {selectedSession
               ? `${selectedSession.displayName.substring(0, 24)}${selectedSession.displayName.length > 24 ? '…' : ''}`
@@ -289,7 +289,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <div className={`h-2 w-2 rounded-full ${isRecent ? 'bg-green-400 animate-pulse' : 'bg-yellow-400'}`} />
+                              <div className={`h-2 w-2 rounded-full ${isRecent ? `${STATUS_BG_COLORS.success} animate-pulse` : STATUS_BG_COLORS.warning}`} />
                               <span className="truncate text-sm font-medium text-brand-foreground">
                                 {session.displayName}
                               </span>
@@ -307,7 +307,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={(e) => handleDeleteSession(session.sessionId, e)}
-                              className="rounded p-1 text-brand-outline hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                              className={`rounded p-1 text-brand-outline ${STATUS_BG_COLORS_SUBTLE.error} hover:${STATUS_TEXT_COLORS.error} transition-colors`}
                               title="Delete session"
                             >
                               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -352,7 +352,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="w-full rounded-lg px-3 py-2 text-sm text-red-400 transition-colors hover:bg-red-500/10 hover:text-red-300"
+                  className={`w-full rounded-lg px-3 py-2 text-sm ${STATUS_TEXT_COLORS.error} transition-colors hover:${STATUS_BG_COLORS_SUBTLE.error} hover:opacity-90`}
                 >
                   Delete All Sessions
                 </button>
@@ -397,7 +397,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                 <button
                   onClick={handleDeleteAllSessions}
                   disabled={deleting}
-                  className="flex-1 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-red-600 disabled:opacity-50"
+                  className={`flex-1 rounded-lg ${STATUS_BG_COLORS.error} px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:opacity-90 disabled:opacity-50`}
                 >
                   {deleting ? 'Deleting...' : 'Delete All'}
                 </button>
@@ -414,13 +414,13 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-6 right-6 z-50 rounded-lg border border-green-500/40 bg-green-500/10 px-6 py-3 shadow-lg backdrop-blur-sm"
+            className={`fixed bottom-6 right-6 z-50 rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success} px-6 py-3 shadow-lg backdrop-blur-sm`}
           >
             <div className="flex items-center gap-3">
-              <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+              <svg className={`h-5 w-5 ${STATUS_TEXT_COLORS.success}`} fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              <span className="text-sm font-medium text-green-400">All sessions deleted successfully</span>
+              <span className={`text-sm font-medium ${STATUS_TEXT_COLORS.success}`}>All sessions deleted successfully</span>
             </div>
           </motion.div>
         )}

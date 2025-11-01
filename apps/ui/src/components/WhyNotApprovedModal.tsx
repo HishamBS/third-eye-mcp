@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import type { EyeState } from '../types/pipeline';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 export interface WhyNotApprovedModalProps {
   eyeState: EyeState | null;
@@ -74,11 +75,11 @@ export function WhyNotApprovedModal({ eyeState, open, onClose, onResubmit }: Why
   const fixes = useMemo(() => getMarkdown(eyeState, 'fix_instructions_md'), [eyeState]);
 
   const categoryColors: Record<string, string> = {
-    'Security': 'border-rose-500/40 bg-rose-500/10',
-    'Performance': 'border-amber-500/40 bg-amber-500/10',
-    'Quality': 'border-blue-500/40 bg-blue-500/10',
-    'Documentation': 'border-purple-500/40 bg-purple-500/10',
-    'General': 'border-slate-500/40 bg-slate-500/10',
+    'Security': '${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error}',
+    'Performance': '${STATUS_BORDER_COLORS_SUBTLE.warning} ${STATUS_BG_COLORS_SUBTLE.warning}',
+    'Quality': '${STATUS_BORDER_COLORS_SUBTLE.info} ${STATUS_BG_COLORS_SUBTLE.info}',
+    'Documentation': '${STATUS_BORDER_COLORS_SUBTLE.info} ${STATUS_BG_COLORS_SUBTLE.info}',
+    'General': '${STATUS_BORDER_COLORS_SUBTLE.idle} ${STATUS_BG_COLORS_SUBTLE.idle}',
   };
 
   return (
@@ -127,7 +128,7 @@ export function WhyNotApprovedModal({ eyeState, open, onClose, onResubmit }: Why
                           <div className="text-xs font-semibold text-brand-foreground">{issue.category}</div>
                           <div className="mt-1 text-xs text-brand-outline">{issue.description}</div>
                           {issue.fix && (
-                            <div className="mt-2 rounded bg-brand-paper/60 p-2 text-xs text-emerald-400">
+                            <div className="mt-2 rounded bg-brand-paper/60 p-2 text-xs ${STATUS_TEXT_COLORS.success}">
                               <span className="font-semibold">💡 Fix:</span> {issue.fix}
                             </div>
                           )}

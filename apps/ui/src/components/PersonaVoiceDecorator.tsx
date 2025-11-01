@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EyeIcon } from '@/components/EyeIcon';
 import type { ReactNode } from 'react';
+import { ANIMATION_DURATION } from '@/constants/timing';
 
 type EyeName = 'sharingan' | 'rinnegan' | 'byakugan' | 'tenseigan' | 'mangekyo' | 'jogan' | 'overseer';
 
@@ -17,51 +18,51 @@ interface PersonaTheme {
 
 const PERSONA_THEMES: Record<EyeName, PersonaTheme> = {
   sharingan: {
-    gradient: 'from-red-500/20 via-red-600/10 to-transparent',
-    accent: 'text-red-400',
-    glow: 'shadow-red-500/30',
+    gradient: 'from-semantic-error/20 via-semantic-error/10 to-transparent',
+    accent: 'text-semantic-error',
+    glow: 'shadow-semantic-error/30',
     eyeName: 'sharingan',
     voice: 'Analytical and questioning, seeking clarity',
   },
   rinnegan: {
-    gradient: 'from-purple-500/20 via-purple-600/10 to-transparent',
-    accent: 'text-purple-400',
-    glow: 'shadow-purple-500/30',
+    gradient: 'from-semantic-info/20 via-semantic-info/10 to-transparent',
+    accent: 'text-semantic-info',
+    glow: 'shadow-semantic-info/30',
     eyeName: 'rinnegan',
     voice: 'Authoritative and decisive, guarding standards',
   },
   byakugan: {
-    gradient: 'from-blue-500/20 via-blue-600/10 to-transparent',
-    accent: 'text-blue-400',
-    glow: 'shadow-blue-500/30',
+    gradient: 'from-brand-primary/20 via-brand-primary/10 to-transparent',
+    accent: 'text-brand-primary',
+    glow: 'shadow-brand-primary/30',
     eyeName: 'byakugan',
     voice: 'Methodical and thorough, detecting inconsistencies',
   },
   tenseigan: {
-    gradient: 'from-cyan-500/20 via-cyan-600/10 to-transparent',
-    accent: 'text-cyan-400',
-    glow: 'shadow-cyan-500/30',
+    gradient: 'from-brand-accent/20 via-brand-accent/10 to-transparent',
+    accent: 'text-brand-accent',
+    glow: 'shadow-brand-accent/30',
     eyeName: 'tenseigan',
     voice: 'Evidence-focused and precise, validating claims',
   },
   mangekyo: {
-    gradient: 'from-amber-500/20 via-amber-600/10 to-transparent',
-    accent: 'text-amber-400',
-    glow: 'shadow-amber-500/30',
+    gradient: 'from-semantic-warning/20 via-semantic-warning/10 to-transparent',
+    accent: 'text-semantic-warning',
+    glow: 'shadow-semantic-warning/30',
     eyeName: 'mangekyo',
     voice: 'Technical and critical, reviewing code quality',
   },
   jogan: {
-    gradient: 'from-pink-500/20 via-pink-600/10 to-transparent',
-    accent: 'text-pink-400',
-    glow: 'shadow-pink-500/30',
+    gradient: 'from-brand-gold/20 via-brand-gold/10 to-transparent',
+    accent: 'text-brand-gold',
+    glow: 'shadow-brand-gold/30',
     eyeName: 'jogan',
     voice: 'Strategic and coordinating, routing intelligently',
   },
   overseer: {
-    gradient: 'from-yellow-500/20 via-yellow-600/10 to-transparent',
-    accent: 'text-yellow-400',
-    glow: 'shadow-yellow-500/30',
+    gradient: 'from-semantic-warning/20 via-semantic-warning/10 to-transparent',
+    accent: 'text-semantic-warning',
+    glow: 'shadow-semantic-warning/30',
     eyeName: 'overseer',
     voice: 'Commanding and orchestrating, overseeing all',
   },
@@ -202,7 +203,7 @@ export function PersonaVoiceDecorator({
 
       {/* Content with Persona Styling */}
       <div
-        className={`relative z-10 transition-all duration-500 ${
+        className={`relative z-10 transition-all ${ANIMATION_DURATION.SLOW} ${
           theme ? `persona-${activeEye}` : ''
         } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
       >

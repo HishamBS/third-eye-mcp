@@ -5,6 +5,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { API_BASE_URL } from '@/consts/api';
 
 export interface PersonaBlueprintUI {
   id: string;
@@ -50,8 +51,7 @@ export interface PersonaBlueprintUI {
 export async function GET() {
   try {
     // Proxy to server API to avoid bun:sqlite import issues in Next.js
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-    const serverResponse = await fetch(`${API_URL}/api/personas/blueprints`);
+    const serverResponse = await fetch(`${API_BASE_URL}/api/personas/blueprints`);
     
     if (!serverResponse.ok) {
       throw new Error(`Server API returned ${serverResponse.status}`);

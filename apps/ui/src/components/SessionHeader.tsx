@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import clsx from 'clsx';
 import type { SessionSettingsPayload, SessionOverview } from '../types/pipeline';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 function formatTimestamp(value: string | null | undefined): string {
   if (!value) return '—';
@@ -13,11 +14,11 @@ function formatTimestamp(value: string | null | undefined): string {
 function sessionStatusTone(status: SessionOverview['status']): string {
   switch (status) {
     case 'approved':
-      return 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/40';
+      return '${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success} border ${STATUS_BORDER_COLORS_SUBTLE.success}';
     case 'blocked':
-      return 'bg-rose-500/20 text-rose-200 border border-rose-400/40';
+      return '${STATUS_BG_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error} border ${STATUS_BORDER_COLORS_SUBTLE.error}';
     default:
-      return 'bg-slate-500/20 text-brand-outline border border-slate-400/30';
+      return '${STATUS_BG_COLORS_SUBTLE.idle} text-brand-outline border ${STATUS_BORDER_COLORS_SUBTLE.idle}';
   }
 }
 
@@ -134,7 +135,7 @@ export function SessionHeader({
           </p>
         </div>
         <div className="flex flex-col items-end gap-2 text-xs">
-          <span className={clsx('rounded-full border px-3 py-1 font-medium', connected ? 'border-emerald-400/50 text-emerald-300' : 'border-rose-400/60 text-rose-300')}>
+          <span className={clsx('rounded-full border px-3 py-1 font-medium', connected ? '${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success}' : '${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error}')}>
             {connected ? 'Realtime Connected' : 'Disconnected'}
           </span>
           {connectionAttempts > 0 && (
@@ -192,7 +193,7 @@ export function SessionHeader({
                 </button>
               </div>
             )}
-            {sessionsError && <p className="text-xs text-rose-300">{sessionsError}</p>}
+            {sessionsError && <p className="text-xs ${STATUS_TEXT_COLORS.error}">{sessionsError}</p>}
             {sessionMeta && !showSessionSkeleton && (
               <dl className="grid gap-3 rounded-xl border border-brand-outline/40 bg-brand-paper/70 px-3 py-2 text-xs text-brand-outline sm:grid-cols-3">
                 <div>

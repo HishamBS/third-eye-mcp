@@ -5,6 +5,7 @@ import { Settings } from 'lucide-react';
 import { NODE_EDIT_TEXT } from './constants';
 import { UI_HELP_TEXT, PHASE_CONFIG_TEXT } from '@third-eye/constants';
 import type { PipelineNode, EyeNodeData } from '@/types/pipeline';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 /**
  * Node Edit Modal Props
@@ -360,7 +361,7 @@ export const NodeEditModal = memo(function NodeEditModal({
               <button
                 onClick={() => setEnableGuidance(!enableGuidance)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  enableGuidance ? 'bg-blue-500' : 'bg-brand-outline/40'
+                  enableGuidance ? STATUS_BG_COLORS.info : 'bg-brand-outline/40'
                 }`}
               >
                 <span
@@ -384,7 +385,7 @@ export const NodeEditModal = memo(function NodeEditModal({
               <button
                 onClick={() => setEnableValidation(!enableValidation)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  enableValidation ? 'bg-green-500' : 'bg-brand-outline/40'
+                  enableValidation ? STATUS_BG_COLORS.success : 'bg-brand-outline/40'
                 }`}
               >
                 <span
@@ -397,7 +398,7 @@ export const NodeEditModal = memo(function NodeEditModal({
 
             {/* Warning if both disabled */}
             {!enableGuidance && !enableValidation && (
-              <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+              <div className="flex items-center gap-2 p-3 rounded-lg ${STATUS_BG_COLORS_SUBTLE.error} border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error} text-sm">
                 <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
@@ -444,12 +445,12 @@ export const NodeEditModal = memo(function NodeEditModal({
                   rows={8}
                   className={`w-full px-3 py-2 bg-brand-paperElev border rounded-md text-brand-ink placeholder-brand-ink/50 focus:outline-none focus:ring-2 font-mono text-sm ${
                     jsonError
-                      ? 'border-red-500 focus:ring-red-500'
+                      ? 'border-semantic-error focus:ring-semantic-error'
                       : 'border-brand-outline focus:ring-brand-primary'
                   }`}
                 />
                 {jsonError && (
-                  <div className="mt-1 text-sm text-red-500">{jsonError}</div>
+                  <div className="mt-1 text-sm ${STATUS_TEXT_COLORS.error}">{jsonError}</div>
                 )}
                 <div className="mt-2 text-xs text-brand-ink/60">
                   Direct JSON editing. Changes here will override form values above.
@@ -463,7 +464,7 @@ export const NodeEditModal = memo(function NodeEditModal({
         <div className="flex items-center justify-between px-6 py-4 border-t border-brand-outline">
           <button
             onClick={handleDelete}
-            className="px-4 py-2 bg-red-600 text-brand-foreground rounded-md font-medium text-sm hover:bg-red-700 transition-colors"
+            className="px-4 py-2 bg-semantic-error text-brand-foreground rounded-md font-medium text-sm hover:bg-semantic-error transition-colors"
           >
             {NODE_EDIT_TEXT.DELETE}
           </button>

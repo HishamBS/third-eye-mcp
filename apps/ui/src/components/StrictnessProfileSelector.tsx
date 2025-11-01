@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '@/consts/api';
+import { STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 interface StrictnessProfile {
   id: string;
@@ -55,8 +57,7 @@ export function StrictnessProfileSelector({
 
   useEffect(() => {
     // Load custom profiles from API
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-    fetch(`${API_URL}/api/strictness`)
+    fetch(`${API_BASE_URL}/api/strictness`)
       .then((res) => res.json())
       .then((data) => {
         if (data.profiles) {
@@ -75,8 +76,7 @@ export function StrictnessProfileSelector({
     } else {
       // Fetch full profile data from API
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-        const res = await fetch(`${API_URL}/api/strictness/${profile.id}`);
+        const res = await fetch(`${API_BASE_URL}/api/strictness/${profile.id}`);
         const data = await res.json();
         if (onProfileSelect) {
           onProfileSelect(data.profile);
@@ -98,10 +98,10 @@ export function StrictnessProfileSelector({
 
   const getProfileColor = (name: string) => {
     switch (name) {
-      case 'Casual': return 'border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20';
-      case 'Enterprise': return 'border-blue-500/40 bg-blue-500/10 hover:bg-blue-500/20';
-      case 'Security': return 'border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20';
-      default: return 'border-slate-500/40 bg-slate-500/10 hover:bg-slate-500/20';
+      case 'Casual': return `${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success} hover:bg-semantic-success/20`;
+      case 'Enterprise': return `${STATUS_BORDER_COLORS_SUBTLE.info} ${STATUS_BG_COLORS_SUBTLE.info} hover:bg-semantic-info/20`;
+      case 'Security': return `${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} hover:bg-semantic-error/20`;
+      default: return `${STATUS_BORDER_COLORS_SUBTLE.idle} ${STATUS_BG_COLORS_SUBTLE.idle} hover:bg-brand-paper-elev/20`;
     }
   };
 

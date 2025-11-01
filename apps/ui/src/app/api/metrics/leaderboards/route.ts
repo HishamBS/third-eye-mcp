@@ -1,7 +1,6 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+import { API_BASE_URL } from '@/consts/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

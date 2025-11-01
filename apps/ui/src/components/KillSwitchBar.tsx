@@ -2,6 +2,7 @@ import { useState } from 'react';
 import clsx from 'clsx';
 import { postKillSwitch } from '../lib/api';
 import type { PipelineEvent } from '../types/pipeline';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 export interface KillSwitchBarProps {
   sessionId: string;
@@ -46,7 +47,7 @@ export function KillSwitchBar({ sessionId, apiKey, latestDraft, latestEvent }: K
   };
 
   return (
-    <section className={clsx('rounded-2xl border p-5 text-sm', status === 'error' ? 'border-rose-500/50 bg-rose-500/10 text-rose-100' : 'border-brand-outline/40 bg-brand-paperElev/70 text-brand-outline')}>
+    <section className={clsx('rounded-2xl border p-5 text-sm', status === 'error' ? '${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error}' : 'border-brand-outline/40 bg-brand-paperElev/70 text-brand-outline')}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Hallucination Kill Switch</p>

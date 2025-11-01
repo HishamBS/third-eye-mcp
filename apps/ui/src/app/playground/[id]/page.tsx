@@ -11,6 +11,8 @@ import { StrictnessControls } from '@/components/StrictnessControls';
 import type { PipelineEvent } from '@/types/pipeline';
 import type { Envelope } from '@third-eye/types';
 import { TOOL_NAME } from '@third-eye/types';
+import { getApiUrl, WS_BASE_URL } from '@/consts/api';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE, STATUS_BG_COLORS } from '@/constants/color-mappings';
 
 interface Run {
   id: string;
@@ -43,6 +45,7 @@ export default function PlaygroundPage() {
   const params = useParams();
   const sessionId = params.id as string;
   const { strictness, setSelectedSession, viewMode } = useUI();
+  const API_BASE_URL = getApiUrl();
 
   const [session, setSession] = useState<Session | null>(null);
   const [runs, setRuns] = useState<Run[]>([]);
@@ -68,8 +71,7 @@ export default function PlaygroundPage() {
   useEffect(() => {
     const loadEyes = async () => {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-        const response = await fetch(`${API_URL}/api/eyes/all`);
+        const response = await fetch(`${API_BASE_URL}/api/eyes/all`);
         if (!response.ok) {
           return;
         }
@@ -105,8 +107,7 @@ export default function PlaygroundPage() {
 
   const fetchSession = async () => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/session/${sessionId}`);
+      const response = await fetch(`${API_BASE_URL}/api/session/${sessionId}`);
       if (response.ok) {
         const data = await response.json();
         setSession(data.data);
@@ -118,8 +119,7 @@ export default function PlaygroundPage() {
 
   // WebSocket connection for real-time updates with ping/pong
   useEffect(() => {
-    const baseWsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://127.0.0.1:7070';
-    const wsUrl = `${baseWsUrl.replace(/\/$/, '')}/ws/monitor?sessionId=${sessionId}`;
+    const wsUrl = `${WS_BASE_URL.replace(/\/$/, '')}/ws/monitor?sessionId=${sessionId}`;
     const ws = new WebSocket(wsUrl);
     let pingInterval: NodeJS.Timeout;
 
@@ -259,8 +259,7 @@ export default function PlaygroundPage() {
     setEyeError(null);
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/eyes/${selectedEye}/test`, {
+      const response = await fetch(`${API_BASE_URL}/api/eyes/${selectedEye}/test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -301,7 +300,7 @@ export default function PlaygroundPage() {
   return (
     <div className="min-h-screen bg-brand-paper dark:bg-brand-ink">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-brand-outline/40 dark:border-gray-700">
+      <div className="bg-brand-paper-elev dark:bg-brand-ink border-b border-brand-outline/40">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -316,8 +315,8 @@ export default function PlaygroundPage() {
               </h1>
               <span className={`px-2 py-1 rounded text-xs ${
                 wsConnected
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                  : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                  ? `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success}`
+                  : `${STATUS_BG_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error}`
               }`}>
                 {wsConnected ? '● Connected' : '○ Disconnected'}
               </span>
@@ -327,14 +326,14 @@ export default function PlaygroundPage() {
               <ViewModeToggle />
               <button
                 onClick={() => setShowStrictness(!showStrictness)}
-                className="flex items-center gap-2 px-3 py-2 bg-purple-500 text-brand-foreground rounded hover:bg-purple-600"
+                className="flex items-center gap-2 px-3 py-2 bg-brand-primary text-brand-foreground rounded hover:bg-brand-primary-hover"
               >
                 <Settings className="h-4 w-4" />
                 Strictness
               </button>
               <Link
                 href={`/monitor?sessionId=${sessionId}`}
-                className="flex items-center gap-2 px-3 py-2 bg-blue-500 text-brand-foreground rounded hover:bg-blue-600"
+                className="flex items-center gap-2 px-3 py-2 bg-brand-primary text-brand-foreground rounded hover:bg-brand-primary-hover"
               >
                 <BarChart3 className="h-4 w-4" />
                 Monitor
@@ -358,7 +357,7 @@ export default function PlaygroundPage() {
           {/* Left: Task Input */}
           <div className="lg:col-span-2 space-y-6">
             {/* Task Submission */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="bg-brand-paper-elev dark:bg-brand-ink rounded-lg shadow p-6">
               <h2 className="text-xl font-bold mb-4 text-brand-ink dark:text-gray-100">
                 Run Overseer Pipeline
               </h2>
@@ -372,14 +371,14 @@ export default function PlaygroundPage() {
                   value={taskInput}
                   onChange={(e) => setTaskInput(e.target.value)}
                   placeholder="Describe what you need (e.g., 'Create a palm care guide', 'Analyze this data', 'Write a function to...')"
-                  className="w-full px-4 py-3 bg-brand-paper dark:bg-brand-ink border border-brand-outline/50 dark:border-gray-700 rounded-lg text-brand-ink dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 bg-brand-paper dark:bg-brand-ink border border-brand-outline/50 rounded-lg text-brand-ink dark:text-gray-100 placeholder-brand-outline dark:placeholder-brand-outline resize-none focus:outline-none focus:ring-2 focus:ring-brand-primary"
                   rows={6}
                   disabled={loading}
                 />
                 <button
                   type="submit"
                   disabled={loading || !taskInput.trim()}
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-gray-400 disabled:to-gray-500 text-brand-foreground py-3 px-6 rounded-lg font-semibold transition-all disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 bg-brand-primary hover:bg-brand-primary-hover disabled:bg-semantic-muted text-brand-foreground py-3 px-6 rounded-lg font-semibold transition-all disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <>
@@ -397,7 +396,7 @@ export default function PlaygroundPage() {
             </div>
 
             {/* Individual Eye Testing */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="bg-brand-paper-elev dark:bg-brand-ink rounded-lg shadow p-6">
               <h2 className="text-xl font-bold mb-4 text-brand-ink dark:text-gray-100">
                 Test Individual Eye
               </h2>
@@ -412,7 +411,7 @@ export default function PlaygroundPage() {
                     Eye
                   </label>
                   <select
-                    className="w-full rounded-lg border border-brand-outline/50 bg-white px-3 py-2 text-sm dark:border-gray-700 dark:bg-brand-ink dark:text-gray-100"
+                    className="w-full rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm dark:bg-brand-ink dark:text-gray-100"
                     value={selectedEye}
                     onChange={(e) => setSelectedEye(e.target.value)}
                     disabled={eyes.length === 0 || eyeLoading}
@@ -436,14 +435,14 @@ export default function PlaygroundPage() {
                     value={eyeInput}
                     onChange={(e) => setEyeInput(e.target.value)}
                     placeholder="Provide the exact prompt or payload this Eye should handle."
-                    className="w-full px-4 py-3 bg-brand-paper dark:bg-brand-ink border border-brand-outline/50 dark:border-gray-700 rounded-lg text-brand-ink dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-brand-paper dark:bg-brand-ink border border-brand-outline/50 rounded-lg text-brand-ink dark:text-gray-100 placeholder-brand-outline dark:placeholder-brand-outline resize-none focus:outline-none focus:ring-2 focus:ring-brand-primary"
                     rows={4}
                     disabled={eyeLoading}
                   />
                 </div>
 
                 {eyeError && (
-                  <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-500 dark:text-red-300">
+                  <div className={`rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} px-3 py-2 text-sm ${STATUS_TEXT_COLORS.error}`}>
                     {eyeError}
                   </div>
                 )}
@@ -451,7 +450,7 @@ export default function PlaygroundPage() {
                 <button
                   type="submit"
                   disabled={eyeLoading || !selectedEye || !eyeInput.trim()}
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-sky-500 hover:from-emerald-600 hover:to-sky-600 disabled:from-gray-400 disabled:to-gray-500 text-brand-foreground py-3 px-6 rounded-lg font-semibold transition-all disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 bg-brand-primary hover:bg-brand-primary-hover disabled:bg-semantic-muted text-brand-foreground py-3 px-6 rounded-lg font-semibold transition-all disabled:cursor-not-allowed"
                 >
                   {eyeLoading ? (
                     <>
@@ -468,7 +467,7 @@ export default function PlaygroundPage() {
               </form>
 
               {eyeResult && (
-                <div className="mt-6 rounded-lg border border-brand-outline/40 bg-brand-paper p-4 text-sm dark:border-gray-700 dark:bg-brand-ink">
+                <div className="mt-6 rounded-lg border border-brand-outline/40 bg-brand-paper p-4 text-sm dark:bg-brand-ink">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-semibold text-brand-ink dark:text-gray-100">
@@ -484,10 +483,10 @@ export default function PlaygroundPage() {
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-semibold ${
                           eyeResult.verdict === 'APPROVED'
-                            ? 'bg-green-500/20 text-green-600 dark:text-green-300'
+                            ? `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success}`
                             : eyeResult.verdict === 'NEEDS_INPUT'
-                              ? 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-300'
-                              : 'bg-red-500/20 text-red-600 dark:text-red-300'
+                              ? `${STATUS_BG_COLORS_SUBTLE.warning} ${STATUS_TEXT_COLORS.warning}`
+                              : `${STATUS_BG_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error}`
                         }`}
                       >
                         {eyeResult.verdict}
@@ -511,7 +510,7 @@ export default function PlaygroundPage() {
             </div>
 
             {/* Pipeline History */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="bg-brand-paper-elev dark:bg-brand-ink rounded-lg shadow p-6">
               <h2 className="text-xl font-bold mb-4 text-brand-ink dark:text-gray-100">
                 Pipeline History ({runs.length})
               </h2>
@@ -525,11 +524,11 @@ export default function PlaygroundPage() {
                   {runs.slice().reverse().map((run) => (
                     <div
                       key={run.id}
-                      className="border border-brand-outline/40 dark:border-gray-700 rounded-lg p-4"
+                      className="border border-brand-outline/40 rounded-lg p-4"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center space-x-2">
-                          <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-mono">
+                          <span className={`px-2 py-1 ${STATUS_BG_COLORS_SUBTLE.info} ${STATUS_TEXT_COLORS.info} rounded text-xs font-mono`}>
                             {run.eye}
                           </span>
                           <span className="text-xs text-brand-outline dark:text-brand-outline">

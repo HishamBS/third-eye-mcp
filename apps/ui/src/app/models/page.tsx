@@ -7,6 +7,9 @@ import { CheckCircle2, XCircle } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { EyeIcon } from '@/components/EyeIcon';
 import type { ReactNode } from 'react';
+import { API_BASE_URL } from '@/consts/api';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { TIMING } from '@/constants/timing';
 
 interface ModelInfo {
   name: string;
@@ -50,8 +53,6 @@ export default function ModelsPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-
   useEffect(() => {
     loadAllData();
   }, []);
@@ -67,7 +68,7 @@ export default function ModelsPage() {
 
   const fetchHealth = async () => {
     try {
-      const response = await fetch(`${API_URL}/health`);
+      const response = await fetch(`${API_BASE_URL}/health`);
       if (response.ok) {
         const data = await response.json();
         setHealth(data.providers || {});
@@ -79,7 +80,7 @@ export default function ModelsPage() {
 
   const fetchAllEyes = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/eyes/all`);
+      const response = await fetch(`${API_BASE_URL}/api/eyes/all`);
       if (response.ok) {
         const result = await response.json();
         const eyesData = result.data || [];
@@ -93,7 +94,7 @@ export default function ModelsPage() {
 
   const fetchRouting = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/routing`);
+      const response = await fetch(`${API_BASE_URL}/api/routing`);
       if (response.ok) {
         const result = await response.json();
         const routingData = result.data?.routings || [];
@@ -106,7 +107,7 @@ export default function ModelsPage() {
 
   const loadCachedModels = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/models`);
+      const response = await fetch(`${API_BASE_URL}/api/models`);
       if (response.ok) {
         const result = await response.json();
         setModels(result.data?.modelsByProvider || {});
@@ -121,7 +122,7 @@ export default function ModelsPage() {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/api/models/${providerId}/refresh`, {
+      const response = await fetch(`${API_BASE_URL}/api/models/${providerId}/refresh`, {
         method: 'POST',
       });
 
@@ -160,7 +161,7 @@ export default function ModelsPage() {
         const currentRouting = routing.find(r => r.eye === eye);
         const fullRouting = { ...currentRouting, ...updates, eye };
 
-        const response = await fetch(`${API_URL}/api/routing`, {
+        const response = await fetch(`${API_BASE_URL}/api/routing`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(fullRouting),
@@ -205,14 +206,14 @@ export default function ModelsPage() {
 
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => setError(null), 5000);
+      const timer = setTimeout(() => setError(null), TIMING.MESSAGE_AUTO_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [error]);
 
   useEffect(() => {
     if (success) {
-      const timer = setTimeout(() => setSuccess(null), 5000);
+      const timer = setTimeout(() => setSuccess(null), TIMING.MESSAGE_AUTO_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [success]);
@@ -245,7 +246,7 @@ export default function ModelsPage() {
 
       {error && (
         <div className="mx-auto max-w-7xl px-6 pt-4">
-          <div className="rounded-xl border border-red-500/50 bg-red-500/10 p-4 text-red-400">
+          <div className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} p-4 ${STATUS_TEXT_COLORS.error}`}>
             {error}
           </div>
         </div>
@@ -253,7 +254,7 @@ export default function ModelsPage() {
 
       {success && (
         <div className="mx-auto max-w-7xl px-6 pt-4">
-          <div className="rounded-xl border border-green-500/50 bg-green-500/10 p-4 text-green-400">
+          <div className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success} p-4 ${STATUS_TEXT_COLORS.success}`}>
             {success}
           </div>
         </div>
@@ -261,14 +262,14 @@ export default function ModelsPage() {
 
       <div className="mx-auto max-w-7xl space-y-8 px-6 py-8">
         <GlassCard>
-          <div className="rounded-xl border border-blue-500/40 bg-blue-500/10 p-5">
+          <div className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.info} ${STATUS_BG_COLORS_SUBTLE.info} p-5`}>
             <div className="mb-2 flex items-center gap-2">
-              <span className="text-blue-400">ℹ️</span>
-              <span className="font-medium text-blue-300">API Keys Configuration</span>
+              <span className={STATUS_TEXT_COLORS.info}>ℹ️</span>
+              <span className={`font-medium ${STATUS_TEXT_COLORS.info}`}>API Keys Configuration</span>
             </div>
-            <p className="text-sm text-blue-100">
+            <p className={`text-sm ${STATUS_TEXT_COLORS.info}`}>
               Provider API keys are managed in the{' '}
-              <Link href="/settings" className="font-semibold underline hover:text-blue-200">
+              <Link href="/settings" className={`font-semibold underline hover:${STATUS_TEXT_COLORS.info}`}>
                 Settings page
               </Link>
               . Configure Groq, OpenRouter, Ollama, or LM Studio to load models.
@@ -290,7 +291,7 @@ export default function ModelsPage() {
                       <h3 className="text-lg font-semibold text-brand-foreground">{provider.name}</h3>
                       {isHealthy !== undefined && (
                         <span
-                          className={`flex items-center ${isHealthy ? 'text-green-400' : 'text-red-400'}`}
+                          className={`flex items-center ${isHealthy ? STATUS_TEXT_COLORS.success : STATUS_TEXT_COLORS.error}`}
                           title={isHealthy ? 'Online' : 'Offline'}
                         >
                           {isHealthy ? <CheckCircle2 className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
@@ -326,17 +327,17 @@ export default function ModelsPage() {
                           {model.capability && (
                             <div className="mt-1 flex flex-wrap gap-1">
                               {model.capability.ctx && (
-                                <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-xs text-blue-300">
+                                <span className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.info} px-2 py-0.5 text-xs ${STATUS_TEXT_COLORS.info}`}>
                                   {model.capability.ctx}k ctx
                                 </span>
                               )}
                               {model.capability.vision && (
-                                <span className="rounded-full bg-purple-500/20 px-2 py-0.5 text-xs text-purple-300">
+                                <span className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.info} px-2 py-0.5 text-xs ${STATUS_TEXT_COLORS.info}`}>
                                   Vision
                                 </span>
                               )}
                               {model.capability.jsonMode && (
-                                <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-300">
+                                <span className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.success} px-2 py-0.5 text-xs ${STATUS_TEXT_COLORS.success}`}>
                                   JSON
                                 </span>
                               )}

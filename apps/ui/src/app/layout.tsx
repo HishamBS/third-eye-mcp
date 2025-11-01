@@ -37,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" data-theme="overseer" data-mode="dark" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any" />

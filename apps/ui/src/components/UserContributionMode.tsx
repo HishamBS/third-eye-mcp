@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, Send, User, Lightbulb, CheckCircle } from 'lucide-react';
+import { API_BASE_URL } from '@/consts/api';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 interface ContributionPrompt {
   id: string;
@@ -42,8 +44,7 @@ export function UserContributionMode({
 
     const fetchPrompts = async () => {
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-        const response = await fetch(`${API_URL}/api/session/${sessionId}/contribution-prompts`);
+        const response = await fetch(`${API_BASE_URL}/api/session/${sessionId}/contribution-prompts`);
 
         if (response.ok) {
           const data = await response.json();
@@ -73,8 +74,7 @@ export function UserContributionMode({
     setSubmitting(new Set(submitting.add(prompt.id)));
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/session/${sessionId}/contributions`, {
+      const response = await fetch(`${API_BASE_URL}/api/session/${sessionId}/contributions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -113,26 +113,26 @@ export function UserContributionMode({
   const getPromptIcon = (type: ContributionPrompt['type']) => {
     switch (type) {
       case 'missing_context':
-        return <Lightbulb className="h-5 w-5 text-amber-400" />;
+        return <Lightbulb className={`h-5 w-5 ${STATUS_TEXT_COLORS.warning}`} />;
       case 'clarification':
-        return <MessageCircle className="h-5 w-5 text-blue-400" />;
+        return <MessageCircle className={`h-5 w-5 ${STATUS_TEXT_COLORS.info}`} />;
       case 'evidence':
-        return <CheckCircle className="h-5 w-5 text-emerald-400" />;
+        return <CheckCircle className={`h-5 w-5 ${STATUS_TEXT_COLORS.success}`} />;
       case 'approval':
-        return <User className="h-5 w-5 text-purple-400" />;
+        return <User className={`h-5 w-5 ${STATUS_TEXT_COLORS.info}`} />;
     }
   };
 
   const getPromptColor = (type: ContributionPrompt['type']) => {
     switch (type) {
       case 'missing_context':
-        return 'border-amber-500/40 bg-amber-500/10';
+        return `${STATUS_BORDER_COLORS_SUBTLE.warning} ${STATUS_BG_COLORS_SUBTLE.warning}`;
       case 'clarification':
-        return 'border-blue-500/40 bg-blue-500/10';
+        return `${STATUS_BORDER_COLORS_SUBTLE.info} ${STATUS_BG_COLORS_SUBTLE.info}`;
       case 'evidence':
-        return 'border-emerald-500/40 bg-emerald-500/10';
+        return `${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success}`;
       case 'approval':
-        return 'border-purple-500/40 bg-purple-500/10';
+        return `${STATUS_BORDER_COLORS_SUBTLE.info} ${STATUS_BG_COLORS_SUBTLE.info}`;
     }
   };
 
@@ -205,7 +205,7 @@ export function UserContributionMode({
             exit={{ opacity: 0, y: -10 }}
             className="rounded-2xl border border-brand-outline/40 bg-brand-paper/60 p-12 text-center"
           >
-            <CheckCircle className="mx-auto h-12 w-12 text-emerald-400" />
+            <CheckCircle className={`mx-auto h-12 w-12 ${STATUS_TEXT_COLORS.success}`} />
             <p className="mt-3 text-sm text-brand-outline">All caught up!</p>
             <p className="mt-1 text-xs text-brand-outline">No pending contribution prompts.</p>
           </motion.div>
@@ -255,7 +255,7 @@ export function UserContributionMode({
                       onChange={(e) => handleAnswerChange(prompt.id, e.target.value)}
                       placeholder="Type your answer here..."
                       disabled={isSubmitting}
-                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
+                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
                       rows={3}
                     />
 
@@ -282,9 +282,9 @@ export function UserContributionMode({
                 )}
 
                 {isSubmitted && (
-                  <div className="flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-3">
-                    <CheckCircle className="h-4 w-4 text-emerald-400" />
-                    <p className="text-sm text-emerald-300">Contribution submitted successfully!</p>
+                  <div className={`flex items-center gap-2 rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success} p-3`}>
+                    <CheckCircle className={`h-4 w-4 ${STATUS_TEXT_COLORS.success}`} />
+                    <p className={`text-sm ${STATUS_TEXT_COLORS.success}`}>Contribution submitted successfully!</p>
                   </div>
                 )}
               </motion.div>

@@ -1,4 +1,5 @@
 import type { PipelineEvent } from '../types/pipeline';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 export interface DuelResultsProps {
   events: PipelineEvent[];
@@ -43,7 +44,7 @@ export function DuelResults({ events }: DuelResultsProps) {
               {agentEvents.slice(-6).map((event, index) => (
                 <li key={`${event.eye}-${event.ts}-${index}`} className="flex items-center justify-between">
                   <span>{event.eye}</span>
-                  <span className={event.ok ? 'text-emerald-400' : event.ok === false ? 'text-rose-400' : 'text-amber-300'}>
+                  <span className={event.ok ? '${STATUS_TEXT_COLORS.success}' : event.ok === false ? '${STATUS_TEXT_COLORS.error}' : '${STATUS_TEXT_COLORS.warning}'}>
                     {event.code ?? '—'}
                   </span>
                 </li>

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
+import { API_BASE_URL } from '@/consts/api';
 
 export async function GET(req: NextRequest) {
   try {
-    const response = await fetch(`${API_URL}/eyes`, {
+    const response = await fetch(`${API_BASE_URL}/eyes`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -26,7 +25,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const response = await fetch(`${API_URL}/eyes`, {
+    const response = await fetch(`${API_BASE_URL}/eyes`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

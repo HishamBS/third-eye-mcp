@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AlertCircle, CheckCircle, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 interface ClarificationQuestion {
   id: string;
@@ -56,15 +57,15 @@ export function AdaptiveClarification({
 
   // Color scheme based on ambiguity score
   const getScoreColor = () => {
-    if (ambiguityScore < 30) return 'text-emerald-400';
-    if (ambiguityScore < 60) return 'text-yellow-400';
-    return 'text-red-400';
+    if (ambiguityScore < 30) return STATUS_TEXT_COLORS.success;
+    if (ambiguityScore < 60) return STATUS_TEXT_COLORS.warning;
+    return STATUS_TEXT_COLORS.error;
   };
 
   const getScoreBgColor = () => {
-    if (ambiguityScore < 30) return 'bg-emerald-500';
-    if (ambiguityScore < 60) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (ambiguityScore < 30) return STATUS_BG_COLORS.success;
+    if (ambiguityScore < 60) return STATUS_BG_COLORS.warning;
+    return STATUS_BG_COLORS.error;
   };
 
   const getScoreLabel = () => {
@@ -118,7 +119,7 @@ export function AdaptiveClarification({
               {ambiguousTerms.map((term, idx) => (
                 <span
                   key={idx}
-                  className="rounded-full bg-yellow-500/20 px-3 py-1 text-xs text-yellow-300 border border-yellow-500/30"
+                  className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.warning} px-3 py-1 text-xs ${STATUS_TEXT_COLORS.warning} border ${STATUS_BORDER_COLORS_SUBTLE.warning}`}
                 >
                   {term}
                 </span>
@@ -134,7 +135,7 @@ export function AdaptiveClarification({
             <ul className="space-y-1 text-sm text-brand-outline">
               {missingContext.map((context, idx) => (
                 <li key={idx} className="flex items-start gap-2">
-                  <span className="text-red-400">•</span>
+                  <span className={STATUS_TEXT_COLORS.error}>•</span>
                   <span>{context}</span>
                 </li>
               ))}
@@ -165,7 +166,7 @@ export function AdaptiveClarification({
                   idx === currentQuestionIndex
                     ? 'bg-brand-accent'
                     : answers[idx]?.trim()
-                    ? 'bg-emerald-500'
+                    ? STATUS_BG_COLORS.success
                     : 'bg-brand-outline/40'
                 }`}
               />
@@ -193,7 +194,7 @@ export function AdaptiveClarification({
                 value={currentAnswer}
                 onChange={(e) => handleAnswerChange(currentQuestionIndex, e.target.value)}
                 placeholder="Type your answer here..."
-                className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                 rows={4}
               />
 
@@ -219,7 +220,7 @@ export function AdaptiveClarification({
                   <button
                     onClick={handleSubmit}
                     disabled={!isAllAnswered}
-                    className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-emerald-600 disabled:opacity-50"
+                    className={`rounded-full ${STATUS_BG_COLORS.success} px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:opacity-90 disabled:opacity-50`}
                   >
                     Submit Answers ✓
                   </button>
@@ -242,12 +243,12 @@ export function AdaptiveClarification({
 
       {/* Auto-proceed message for low scores */}
       {ambiguityScore < 30 && (
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+        <div className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success} p-4`}>
           <div className="flex items-start gap-3">
-            <CheckCircle className="h-5 w-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+            <CheckCircle className={`h-5 w-5 ${STATUS_TEXT_COLORS.success} flex-shrink-0 mt-0.5`} />
             <div>
-              <p className="font-medium text-emerald-300">Input is clear!</p>
-              <p className="mt-1 text-sm text-emerald-400/80">
+              <p className={`font-medium ${STATUS_TEXT_COLORS.success}`}>Input is clear!</p>
+              <p className={`mt-1 text-sm ${STATUS_TEXT_COLORS.success} opacity-80`}>
                 No clarification needed. Proceeding to next Eye automatically.
               </p>
             </div>

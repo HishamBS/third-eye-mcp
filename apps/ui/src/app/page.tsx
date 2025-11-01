@@ -12,6 +12,9 @@ import {
 } from 'lucide-react';
 import { PROVIDERS } from '@third-eye/types/enums';
 import { UI_HELP_TEXT, PLATFORM_HIGHLIGHTS } from '@third-eye/constants';
+import { API_BASE_URL } from '@/consts/api';
+import { ANIMATION_DURATION } from '@/constants/timing';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS } from '@/constants/color-mappings';
 
 interface RealtimeStats {
   sessions: number;
@@ -72,8 +75,7 @@ export default function HomePage() {
 
       // Fetch health via backend server (CORS fixed)
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-        const healthRes = await fetch(`${API_URL}/health`);
+        const healthRes = await fetch(`${API_BASE_URL}/health`);
         if (healthRes.ok) {
           const health = await healthRes.json();
           const providers = [...PROVIDERS]; // Use SSOT constant from @third-eye/types
@@ -165,9 +167,9 @@ export default function HomePage() {
             </h2>
             <div className="flex items-center space-x-4">
               {loading ? (
-                <div className="h-2 w-2 rounded-full bg-yellow-400 animate-pulse" />
+                <div className={`h-2 w-2 rounded-full ${STATUS_TEXT_COLORS.warning} animate-pulse`} />
               ) : (
-                <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+                <div className={`h-2 w-2 rounded-full ${STATUS_TEXT_COLORS.success} animate-pulse`} />
               )}
               <span className="text-sm text-brand-outline">Real-time</span>
             </div>
@@ -184,11 +186,11 @@ export default function HomePage() {
             </div>
             <div className="rounded-lg border border-brand-outline/30 bg-brand-paper/40 p-4">
               <div className="text-sm text-brand-outline">Success Rate</div>
-              <div className="text-3xl font-bold text-green-400 mt-1">{stats.successRate}%</div>
+              <div className={`text-3xl font-bold ${STATUS_TEXT_COLORS.success} mt-1`}>{stats.successRate}%</div>
             </div>
             <div className="rounded-lg border border-brand-outline/30 bg-brand-paper/40 p-4">
               <div className="text-sm text-brand-outline">Avg Latency</div>
-              <div className="text-3xl font-bold text-cyan-400 mt-1">{stats.avgLatency}ms</div>
+              <div className={`text-3xl font-bold ${STATUS_TEXT_COLORS.info} mt-1`}>{stats.avgLatency}ms</div>
             </div>
             <div className="rounded-lg border border-brand-outline/30 bg-brand-paper/40 p-4">
               <div className="text-sm text-brand-outline mb-2">Providers</div>
@@ -197,7 +199,7 @@ export default function HomePage() {
                   <div
                     key={p.id}
                     className={`h-3 w-3 rounded-full ${
-                      p.status === 'online' ? 'bg-green-400' : 'bg-gray-600'
+                      p.status === 'online' ? STATUS_BG_COLORS.success : STATUS_BG_COLORS.muted
                     }`}
                     title={`${p.id}: ${p.status}`}
                   />
@@ -210,7 +212,7 @@ export default function HomePage() {
             <div className="flex items-center justify-center space-x-3 text-brand-outline">
               <Cpu className="h-5 w-5 animate-spin" style={{ animationDuration: '3s' }} />
               <span>Monitoring pipeline executions...</span>
-              <CheckCircle2 className="h-5 w-5 text-green-400" />
+              <CheckCircle2 className={`h-5 w-5 ${STATUS_TEXT_COLORS.success}`} />
             </div>
           </div>
         </GlassCard>
@@ -233,7 +235,7 @@ export default function HomePage() {
               transition={{ delay: index * 0.1 }}
             >
               <Link href={feature.href}>
-                <GlassCard className="group cursor-pointer hover:border-brand-accent/60 transition-all duration-300 p-6 h-full">
+                <GlassCard className={`group cursor-pointer hover:border-brand-accent/60 transition-all ${ANIMATION_DURATION.NORMAL} p-6 h-full`}>
                   <div className={`inline-flex rounded-xl bg-gradient-to-br ${feature.color} p-3 text-brand-foreground mb-4`}>
                     {ICON_MAP[feature.iconName]}
                   </div>

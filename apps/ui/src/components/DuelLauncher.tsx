@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import clsx from 'clsx';
+import { getApiUrl } from '@/consts/api';
+import { STATUS_TEXT_COLORS } from '@/constants/color-mappings';
 
 async function launchDuel(
   eye: string,
   prompt: string,
   configs: Array<{ provider: string; model: string; label?: string }>
 ): Promise<Response> {
-  const base = (process.env.NEXT_PUBLIC_API_URL as string | undefined)?.replace(/\/$/, '') || 'http://localhost:7070';
-  return fetch(`${base}/api/duel`, {
+  return fetch(`${getApiUrl()}/api/duel`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -217,7 +218,7 @@ export function DuelLauncher({
           Add Configuration
         </button>
 
-        {selectionError && <p className="text-xs text-rose-300">{selectionError}</p>}
+        {selectionError && <p className={`text-xs ${STATUS_TEXT_COLORS.error}`}>{selectionError}</p>}
 
         <button
           type="submit"
@@ -231,7 +232,7 @@ export function DuelLauncher({
         </button>
       </form>
       {message && (
-        <p className={clsx('mt-3 text-xs', status === 'error' ? 'text-rose-300' : 'text-brand-outline')}>{message}</p>
+        <p className={clsx('mt-3 text-xs', status === 'error' ? STATUS_TEXT_COLORS.error : 'text-brand-outline')}>{message}</p>
       )}
     </section>
   );

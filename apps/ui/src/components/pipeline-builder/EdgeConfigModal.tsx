@@ -10,6 +10,7 @@ import {
   type EdgeConditionType,
 } from './constants';
 import type { PipelineEdge, EdgeConditionData } from '@/types/pipeline';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 /**
  * Edge Config Modal Props
@@ -243,7 +244,7 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
         <div className="flex items-center justify-between px-6 py-4 border-t border-brand-outline">
           <button
             onClick={handleDelete}
-            className="px-4 py-2 bg-red-600 text-brand-foreground rounded-md font-medium text-sm hover:bg-red-700 transition-colors"
+            className="px-4 py-2 bg-semantic-error text-brand-foreground rounded-md font-medium text-sm hover:bg-semantic-error transition-colors"
           >
             {EDGE_TEXT.DELETE}
           </button>

@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { API_BASE_URL } from '@/consts/api';
 
 /**
  * Proxy to backend server for MCP run execution
  * POST /api/mcp/run
  */
 export async function POST(request: NextRequest) {
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-
   try {
     const body = await request.json();
 
-    const response = await fetch(`${API_URL}/api/mcp/run`, {
+    const response = await fetch(`${API_BASE_URL}/api/mcp/run`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

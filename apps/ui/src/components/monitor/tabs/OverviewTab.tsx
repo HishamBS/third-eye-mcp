@@ -20,12 +20,12 @@ export function OverviewTab({ summary, sessionId, apiKey, latestPlanMd, loading 
         <h3 className="text-lg font-semibold text-brand-foreground">Session Snapshot</h3>
         {showSkeleton ? (
           <div className="mt-4 space-y-3">
-            <div className="h-4 w-32 animate-pulse rounded-full bg-slate-600/40" />
+            <div className="h-4 w-32 animate-pulse rounded-full bg-brand-outline/40" />
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 3 }).map((_, index) => (
                 <div key={index} className="space-y-2 rounded-xl border border-surface-outline/30 bg-surface-base/40 p-4">
-                  <div className="h-3 w-20 animate-pulse rounded-full bg-slate-500/50" />
-                  <div className="h-4 w-24 animate-pulse rounded-full bg-slate-400/40" />
+                  <div className="h-3 w-20 animate-pulse rounded-full bg-brand-outline/50" />
+                  <div className="h-4 w-24 animate-pulse rounded-full bg-brand-outline/40" />
                 </div>
               ))}
             </div>

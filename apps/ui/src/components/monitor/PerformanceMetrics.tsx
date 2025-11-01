@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Target, Zap, BarChart3, Eye, ArrowDownToLine, ArrowUpFromLine, Brain, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 interface MetricCardProps {
   title: string;
@@ -211,7 +212,7 @@ export function PerformanceMetrics({ events, runs = [] }: PerformanceMetricsProp
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="h-2 w-2 animate-pulse rounded-full bg-green-400"></div>
+            <div className="h-2 w-2 animate-pulse rounded-full ${STATUS_TEXT_COLORS.success}"></div>
             <p className="text-sm font-medium text-brand-outline">Pipeline Activity</p>
           </div>
           <p className="text-xs text-brand-outline">Last 24 hours</p>

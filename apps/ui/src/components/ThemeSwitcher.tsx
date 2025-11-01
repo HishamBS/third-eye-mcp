@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { type ThemeName, THEME_METADATA } from '@third-eye/theme';
 import { useUI } from '@/contexts/UIContext';
 import { ARIA_LABELS } from '@/constants/accessibility';
+import { STATUS_TEXT_COLORS } from '@/constants/color-mappings';
 
 export function ThemeSwitcher() {
   const { theme, setTheme, darkMode, setDarkMode } = useUI();
@@ -109,7 +110,7 @@ export function ThemeSwitcher() {
       >
         {!darkMode ? (
           <svg
-            className="h-4 w-4 text-yellow-400"
+            className={`h-4 w-4 ${STATUS_TEXT_COLORS.warning}`}
             fill="currentColor"
             viewBox="0 0 20 20"
             aria-hidden="true"
@@ -118,7 +119,7 @@ export function ThemeSwitcher() {
           </svg>
         ) : (
           <svg
-            className="h-4 w-4 text-blue-400"
+            className={`h-4 w-4 ${STATUS_TEXT_COLORS.info}`}
             fill="currentColor"
             viewBox="0 0 20 20"
             aria-hidden="true"

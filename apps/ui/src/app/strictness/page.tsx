@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useDialog } from '@/hooks/useDialog';
 import { UI_HELP_TEXT } from '@third-eye/constants';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE, STATUS_BG_COLORS } from '@/constants/color-mappings';
 
 interface StrictnessProfile {
   id: string;
@@ -187,7 +188,7 @@ export default function StrictnessPage() {
 
   const getProfileColor = (profile: StrictnessProfile) => {
     if (profile.isBuiltIn) {
-      if (profile.name === 'Casual') return 'border-green-500/40 bg-green-500/5';
+      if (profile.name === 'Casual') return `${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success}`;
       if (profile.name === 'Enterprise') return 'border-eye-jogan/40 bg-eye-jogan/5';
       if (profile.name === 'Security') return 'border-brand-primary/40 bg-brand-primary/5';
     }
@@ -345,7 +346,7 @@ export default function StrictnessPage() {
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                       placeholder={UI_HELP_TEXT.STRICTNESS_PLACEHOLDER_NAME}
                     />
                   </div>
@@ -357,7 +358,7 @@ export default function StrictnessPage() {
                     <textarea
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="h-24 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                      className="h-24 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                       placeholder={UI_HELP_TEXT.STRICTNESS_PLACEHOLDER_DESCRIPTION}
                     />
                   </div>
@@ -436,9 +437,9 @@ export default function StrictnessPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-yellow-700/50 bg-yellow-900/10 p-5">
-                    <h4 className="font-medium text-yellow-300">{UI_HELP_TEXT.STRICTNESS_GUIDELINES_TITLE}</h4>
-                    <ul className="mt-3 space-y-1 text-sm text-yellow-100">
+                  <div className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.warning} ${STATUS_BG_COLORS_SUBTLE.warning} p-5`}>
+                    <h4 className={`font-medium ${STATUS_TEXT_COLORS.warning}`}>{UI_HELP_TEXT.STRICTNESS_GUIDELINES_TITLE}</h4>
+                    <ul className={`mt-3 space-y-1 text-sm ${STATUS_TEXT_COLORS.warning}`}>
                       <li>{UI_HELP_TEXT.STRICTNESS_GUIDELINES_CASUAL}</li>
                       <li>{UI_HELP_TEXT.STRICTNESS_GUIDELINES_ENTERPRISE}</li>
                       <li>{UI_HELP_TEXT.STRICTNESS_GUIDELINES_SECURITY}</li>
@@ -476,7 +477,7 @@ export default function StrictnessPage() {
                         </button>
                         <button
                           onClick={() => handleDelete(selectedProfile)}
-                          className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-red-700"
+                          className={`rounded-full ${STATUS_BG_COLORS.error} px-4 py-2 text-sm font-semibold text-brand-foreground transition hover:opacity-90`}
                         >
                           {UI_HELP_TEXT.STRICTNESS_BUTTON_DELETE}
                         </button>
@@ -511,7 +512,7 @@ export default function StrictnessPage() {
                   <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/50 p-5">
                     <h3 className="mb-2 font-semibold text-brand-foreground">{UI_HELP_TEXT.STRICTNESS_DETAIL_CONSISTENCY}</h3>
                     <div className="flex items-end gap-2">
-                      <span className="text-4xl font-bold text-green-400">{selectedProfile.consistencyTolerance}</span>
+                      <span className={`text-4xl font-bold ${STATUS_TEXT_COLORS.success}`}>{selectedProfile.consistencyTolerance}</span>
                       <span className="mb-1 text-xl text-brand-outline">%</span>
                     </div>
                     <p className="mt-2 text-sm text-brand-outline">
@@ -530,9 +531,9 @@ export default function StrictnessPage() {
                   </div>
                 </div>
 
-                <div className="mt-6 rounded-xl border border-yellow-700/50 bg-yellow-900/10 p-5">
-                  <h4 className="font-medium text-yellow-300">{UI_HELP_TEXT.STRICTNESS_APPLIED_TITLE}</h4>
-                  <p className="mt-2 text-sm text-yellow-100">
+                <div className={`mt-6 rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.warning} ${STATUS_BG_COLORS_SUBTLE.warning} p-5`}>
+                  <h4 className={`font-medium ${STATUS_TEXT_COLORS.warning}`}>{UI_HELP_TEXT.STRICTNESS_APPLIED_TITLE}</h4>
+                  <p className={`mt-2 text-sm ${STATUS_TEXT_COLORS.warning}`}>
                     {UI_HELP_TEXT.STRICTNESS_APPLIED_DESC}
                   </p>
                 </div>

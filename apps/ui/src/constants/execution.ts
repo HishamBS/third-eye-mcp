@@ -42,23 +42,25 @@ export const EXECUTION_STATUS_LABELS = {
 } as const;
 
 // Status Display Colors (Tailwind classes)
+// Uses semantic color tokens from @/constants/color-mappings (SSOT)
 export const STATUS_COLORS = {
-  [EXECUTION_STATUS.PENDING]: 'text-brand-outline bg-slate-500/10',
-  [EXECUTION_STATUS.RUNNING]: 'text-blue-400 bg-blue-500/10',
-  [EXECUTION_STATUS.SUCCESS]: 'text-green-400 bg-green-500/10',
-  [EXECUTION_STATUS.ERROR]: 'text-red-400 bg-red-500/10',
-  [EXECUTION_STATUS.AWAITING_INPUT]: 'text-yellow-400 bg-yellow-500/10',
-  [EXECUTION_STATUS.PAUSED]: 'text-orange-400 bg-orange-500/10',
-  [EXECUTION_STATUS.COMPLETED]: 'text-green-400 bg-green-500/10',
-  [EXECUTION_STATUS.FAILED]: 'text-red-400 bg-red-500/10',
+  [EXECUTION_STATUS.PENDING]: 'text-brand-outline bg-brand-outline/10',
+  [EXECUTION_STATUS.RUNNING]: 'text-semantic-info bg-semantic-info/10',
+  [EXECUTION_STATUS.SUCCESS]: 'text-semantic-success bg-semantic-success/10',
+  [EXECUTION_STATUS.ERROR]: 'text-semantic-error bg-semantic-error/10',
+  [EXECUTION_STATUS.AWAITING_INPUT]: 'text-semantic-warning bg-semantic-warning/10',
+  [EXECUTION_STATUS.PAUSED]: 'text-semantic-warning bg-semantic-warning/10',
+  [EXECUTION_STATUS.COMPLETED]: 'text-semantic-success bg-semantic-success/10',
+  [EXECUTION_STATUS.FAILED]: 'text-semantic-error bg-semantic-error/10',
 } as const;
 
 // Node Status Gradient Styles (for CustomNode)
+// Uses semantic color tokens from theme system (SSOT)
 export const NODE_STATUS_GRADIENTS = {
-  [NODE_STATUS.RUNNING]: 'bg-gradient-to-br from-blue-500/30 to-blue-600/20 border-blue-400 shadow-blue-500/40 animate-pulse',
-  [NODE_STATUS.SUCCESS]: 'bg-gradient-to-br from-green-500/30 to-green-600/20 border-green-400 shadow-green-500/40',
-  [NODE_STATUS.ERROR]: 'bg-gradient-to-br from-red-500/30 to-red-600/20 border-red-400 shadow-red-500/40',
-  [NODE_STATUS.AWAITING_INPUT]: 'bg-gradient-to-br from-yellow-500/30 to-yellow-600/20 border-yellow-400 shadow-yellow-500/40',
+  [NODE_STATUS.RUNNING]: 'bg-gradient-to-br from-semantic-info/30 to-semantic-info/20 border-semantic-info shadow-semantic-info/40 animate-pulse',
+  [NODE_STATUS.SUCCESS]: 'bg-gradient-to-br from-semantic-success/30 to-semantic-success/20 border-semantic-success shadow-semantic-success/40',
+  [NODE_STATUS.ERROR]: 'bg-gradient-to-br from-semantic-error/30 to-semantic-error/20 border-semantic-error shadow-semantic-error/40',
+  [NODE_STATUS.AWAITING_INPUT]: 'bg-gradient-to-br from-semantic-warning/30 to-semantic-warning/20 border-semantic-warning shadow-semantic-warning/40',
 } as const;
 
 // API Endpoints

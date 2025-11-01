@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { EyeIcon } from '@/components/EyeIcon';
 import type { ReactNode } from 'react';
+import { API_BASE_URL } from '@/consts/api';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 interface PriorRun {
   id: string;
@@ -35,8 +37,7 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
   const fetchPriorRuns = async () => {
     setLoading(true);
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/session/${sessionId}/runs?limit=${maxResults}`);
+            const response = await fetch(`${API_BASE_URL}/api/session/${sessionId}/runs?limit=${maxResults}`);
       if (response.ok) {
         const data = await response.json();
         // Calculate relevance if current input is provided
@@ -76,13 +77,13 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
   const getVerdictColor = (verdict: string) => {
     switch (verdict?.toUpperCase()) {
       case 'APPROVED':
-        return 'text-emerald-400 bg-emerald-500/20 border-emerald-500/30';
+        return `${STATUS_TEXT_COLORS.success} ${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_BORDER_COLORS_SUBTLE.success}`;
       case 'REJECTED':
-        return 'text-red-400 bg-red-500/20 border-red-500/30';
+        return `${STATUS_TEXT_COLORS.error} ${STATUS_BG_COLORS_SUBTLE.error} ${STATUS_BORDER_COLORS_SUBTLE.error}`;
       case 'NEEDS_INPUT':
-        return 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30';
+        return `${STATUS_TEXT_COLORS.warning} ${STATUS_BG_COLORS_SUBTLE.warning} ${STATUS_BORDER_COLORS_SUBTLE.warning}`;
       default:
-        return 'text-brand-outline bg-slate-500/20 border-slate-500/30';
+        return `text-brand-outline ${STATUS_BG_COLORS_SUBTLE.idle} ${STATUS_BORDER_COLORS_SUBTLE.idle}`;
     }
   };
 
@@ -107,7 +108,7 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
     <div className="rounded-2xl border border-brand-outline/40 bg-brand-paper/60 p-6">
       <div className="mb-6 flex items-center justify-between">
         <h3 className="flex items-center gap-2 text-lg font-semibold text-brand-foreground">
-          <Brain className="h-5 w-5 text-purple-400" />
+          <Brain className={`h-5 w-5 ${STATUS_TEXT_COLORS.info}`} />
           Session Memory
         </h3>
         <div className="flex items-center gap-2 text-sm text-brand-outline">
@@ -157,7 +158,7 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
 
                     <div className="flex items-center gap-2">
                       {run.relevanceScore !== undefined && run.relevanceScore > 0.3 && (
-                        <span className="rounded-full bg-purple-500/20 px-2 py-0.5 text-xs text-purple-300">
+                        <span className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.info} px-2 py-0.5 text-xs ${STATUS_TEXT_COLORS.info}`}>
                           {Math.round(run.relevanceScore * 100)}% match
                         </span>
                       )}
@@ -207,8 +208,8 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
             </button>
           )}
 
-          <div className="mt-4 rounded-lg border border-purple-500/30 bg-purple-500/10 p-3">
-            <p className="text-xs text-purple-300">
+          <div className={`mt-4 rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.info} ${STATUS_BG_COLORS_SUBTLE.info} p-3`}>
+            <p className={`text-xs ${STATUS_TEXT_COLORS.info}`}>
               <strong>Byakugan Consistency Check:</strong> References these prior runs to detect
               contradictions and ensure logical consistency across your session.
             </p>

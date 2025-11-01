@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DEFAULT_API_URL } from '@third-eye/config/constants';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL;
+import { API_BASE_URL } from '@/consts/api';
 
 const BACKEND_ROUTES = {
   EYES_CUSTOM: '/api/eyes/custom',
@@ -9,7 +7,7 @@ const BACKEND_ROUTES = {
 
 export async function GET() {
   try {
-    const response = await fetch(`${API_URL}${BACKEND_ROUTES.EYES_CUSTOM}`, {
+    const response = await fetch(`${API_BASE_URL}${BACKEND_ROUTES.EYES_CUSTOM}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -39,9 +37,9 @@ export async function POST(req: NextRequest) {
       outputSchema: typeof body.outputSchema,
       personaId: typeof body.personaId,
     });
-    console.log('[Custom Eye API] Target URL:', `${API_URL}${BACKEND_ROUTES.EYES_CUSTOM}`);
+    console.log('[Custom Eye API] Target URL:', `${API_BASE_URL}${BACKEND_ROUTES.EYES_CUSTOM}`);
 
-    const response = await fetch(`${API_URL}${BACKEND_ROUTES.EYES_CUSTOM}`, {
+    const response = await fetch(`${API_BASE_URL}${BACKEND_ROUTES.EYES_CUSTOM}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { Run } from '@/types/api';
+import { API_BASE_URL } from '@/consts/api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -7,10 +8,8 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     // Proxy to the server API which has database access
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-
     // Fetch sessions data with stats
-    const sessionsResponse = await fetch(`${API_URL}/api/session/active`);
+    const sessionsResponse = await fetch(`${API_BASE_URL}/api/session/active`);
     if (!sessionsResponse.ok) {
       throw new Error(`Server returned ${sessionsResponse.status}`);
     }
@@ -26,7 +25,7 @@ export async function GET() {
 
     for (const session of sessions) {
       try {
-        const runsResponse = await fetch(`${API_URL}/api/session/${session.sessionId || session.id}/runs`);
+        const runsResponse = await fetch(`${API_BASE_URL}/api/session/${session.sessionId || session.id}/runs`);
         if (runsResponse.ok) {
           const runsData = await runsResponse.json();
           const runsPayload = runsData?.data ?? runsData;

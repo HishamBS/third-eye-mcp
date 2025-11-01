@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Settings, Key, Bot, Eye, Users, FileText, Play, BarChart3 } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { API_BASE_URL } from '@/consts/api';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 // Table icon mapping (SSOT) - Returns icon components instead of emojis
 const TABLE_ICONS: Record<string, ReactNode> = Object.freeze({
@@ -49,8 +51,6 @@ export default function DatabasePage() {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(50);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-
   useEffect(() => {
     fetchData();
   }, []);
@@ -58,7 +58,7 @@ export default function DatabasePage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/database/tables`);
+      const response = await fetch(`${API_BASE_URL}/api/database/tables`);
       if (response.ok) {
         const result = await response.json();
         const tables = result.data?.tables || result.tables || result;
@@ -228,7 +228,7 @@ export default function DatabasePage() {
               </Link>
               <button
                 onClick={fetchData}
-                className="bg-brand-accent hover:bg-purple-700 text-brand-foreground px-3 py-1 rounded text-sm transition-colors"
+                className="bg-brand-accent hover:opacity-90 text-brand-foreground px-3 py-1 rounded text-sm transition-colors"
               >
                 Refresh
               </button>
@@ -250,7 +250,7 @@ export default function DatabasePage() {
                   className={`w-full text-left p-3 rounded-lg transition-colors ${
                     selectedTable === tableName
                       ? 'bg-brand-accent text-brand-foreground'
-                      : 'bg-slate-700 text-brand-outline hover:bg-slate-600'
+                      : 'bg-brand-paper text-brand-outline hover:bg-brand-paper-elev'
                   }`}
                 >
                   <div className="flex items-center space-x-3">
@@ -271,16 +271,16 @@ export default function DatabasePage() {
           {/* Table Content */}
           <div className="lg:col-span-3">
             {currentTable ? (
-              <div className="bg-slate-800/50 border border-slate-700 rounded-lg overflow-hidden">
+              <div className="bg-brand-paper/50 border border-brand-outline rounded-lg overflow-hidden">
                 {/* Table Header */}
-                <div className="p-6 border-b border-slate-700">
+                <div className="p-6 border-b border-brand-outline">
                   <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold text-brand-foreground">
                       {currentTable.name}
                     </h2>
                     <div className="flex items-center space-x-4">
                       {!currentTable.editable && (
-                        <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded">
+                        <span className={`px-2 py-1 ${STATUS_BG_COLORS_SUBTLE.warning} ${STATUS_TEXT_COLORS.warning} text-xs rounded`}>
                           Read Only
                         </span>
                       )}
@@ -296,12 +296,12 @@ export default function DatabasePage() {
                       placeholder="Filter rows..."
                       value={filter}
                       onChange={(e) => setFilter(e.target.value)}
-                      className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded text-brand-foreground placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="flex-1 px-3 py-2 bg-brand-paper border border-brand-outline rounded text-brand-foreground placeholder-brand-outline focus:outline-none focus:ring-2 focus:ring-brand-accent"
                     />
                     <select
                       value={rowsPerPage}
                       onChange={(e) => setRowsPerPage(Number(e.target.value))}
-                      className="px-3 py-2 bg-slate-700 border border-slate-600 rounded text-brand-foreground focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="px-3 py-2 bg-brand-paper border border-brand-outline rounded text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
                     >
                       <option value={25}>25 rows</option>
                       <option value={50}>50 rows</option>
@@ -314,14 +314,14 @@ export default function DatabasePage() {
                 {/* Table Data */}
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-slate-700/50">
+                    <thead className="bg-brand-paper/50">
                       <tr>
                         {currentTable.schema
                           .filter(col => !col.hidden)
                           .map(col => (
                             <th key={col.name} className="px-4 py-3 text-left text-brand-foreground font-medium">
                               {col.name}
-                              {col.primary && <span className="ml-1 text-yellow-400">*</span>}
+                              {col.primary && <span className={`ml-1 ${STATUS_TEXT_COLORS.warning}`}>*</span>}
                             </th>
                           ))}
                         {currentTable.editable && (
@@ -335,7 +335,7 @@ export default function DatabasePage() {
                         const isEditing = editingRow === rowKey;
 
                         return (
-                          <tr key={rowKey} className="border-t border-slate-700">
+                          <tr key={rowKey} className="border-t border-brand-outline">
                             {currentTable.schema
                               .filter(col => !col.hidden)
                               .map(col => (
@@ -352,7 +352,7 @@ export default function DatabasePage() {
                                             // Invalid JSON, keep as string for now
                                           }
                                         }}
-                                        className="w-full px-2 py-1 bg-slate-600 border border-slate-500 rounded text-brand-foreground text-sm resize-none"
+                                        className="w-full px-2 py-1 bg-brand-paper-elev border border-brand-outline rounded text-brand-foreground text-sm resize-none"
                                         rows={3}
                                       />
                                     ) : (
@@ -360,7 +360,7 @@ export default function DatabasePage() {
                                         type="text"
                                         value={editValues[col.name] || ''}
                                         onChange={(e) => setEditValues(prev => ({ ...prev, [col.name]: e.target.value }))}
-                                        className="w-full px-2 py-1 bg-slate-600 border border-slate-500 rounded text-brand-foreground text-sm"
+                                        className="w-full px-2 py-1 bg-brand-paper-elev border border-brand-outline rounded text-brand-foreground text-sm"
                                       />
                                     )
                                   ) : (
@@ -376,13 +376,13 @@ export default function DatabasePage() {
                                   <div className="flex justify-end space-x-2">
                                     <button
                                       onClick={() => handleSave(selectedTable)}
-                                      className="bg-green-600 hover:bg-green-700 text-brand-foreground px-2 py-1 rounded text-xs transition-colors"
+                                      className="bg-semantic-success hover:bg-semantic-success/80 text-brand-foreground px-2 py-1 rounded text-xs transition-colors"
                                     >
                                       Save
                                     </button>
                                     <button
                                       onClick={handleCancel}
-                                      className="bg-slate-600 hover:bg-slate-700 text-brand-foreground px-2 py-1 rounded text-xs transition-colors"
+                                      className="bg-brand-paper hover:bg-brand-paper-elev text-brand-foreground px-2 py-1 rounded text-xs transition-colors"
                                     >
                                       Cancel
                                     </button>
@@ -391,13 +391,13 @@ export default function DatabasePage() {
                                   <div className="flex justify-end space-x-2">
                                     <button
                                       onClick={() => handleEdit(rowKey, row)}
-                                      className="bg-blue-600 hover:bg-blue-700 text-brand-foreground px-2 py-1 rounded text-xs transition-colors"
+                                      className="bg-semantic-info hover:bg-semantic-info/80 text-brand-foreground px-2 py-1 rounded text-xs transition-colors"
                                     >
                                       Edit
                                     </button>
                                     <button
                                       onClick={() => handleDelete(selectedTable, rowKey, row)}
-                                      className="bg-red-600 hover:bg-red-700 text-brand-foreground px-2 py-1 rounded text-xs transition-colors"
+                                      className="bg-semantic-error hover:bg-semantic-error/80 text-brand-foreground px-2 py-1 rounded text-xs transition-colors"
                                     >
                                       Delete
                                     </button>
@@ -420,7 +420,7 @@ export default function DatabasePage() {
 
                 {/* Pagination Controls */}
                 {filteredData(currentTable).length > rowsPerPage && (
-                  <div className="flex items-center justify-between border-t border-slate-700 p-4">
+                  <div className="flex items-center justify-between border-t border-brand-outline p-4">
                     <div className="text-sm text-brand-outline">
                       Showing {Math.min((page - 1) * rowsPerPage + 1, filteredData(currentTable).length)} to{' '}
                       {Math.min(page * rowsPerPage, filteredData(currentTable).length)} of{' '}
@@ -430,7 +430,7 @@ export default function DatabasePage() {
                       <button
                         onClick={() => setPage(Math.max(1, page - 1))}
                         disabled={page === 1}
-                        className="px-3 py-1 bg-slate-700 text-brand-foreground rounded hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1 bg-brand-paper text-brand-foreground rounded hover:bg-brand-paper-elev disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Previous
                       </button>
@@ -454,7 +454,7 @@ export default function DatabasePage() {
                                 className={`px-3 py-1 rounded ${
                                   page === p
                                     ? 'bg-brand-accent text-brand-foreground'
-                                    : 'bg-slate-700 text-brand-foreground hover:bg-slate-600'
+                                    : 'bg-brand-paper text-brand-foreground hover:bg-brand-paper-elev'
                                 }`}
                               >
                                 {p}
@@ -465,7 +465,7 @@ export default function DatabasePage() {
                       <button
                         onClick={() => setPage(Math.min(totalPages(currentTable), page + 1))}
                         disabled={page === totalPages(currentTable)}
-                        className="px-3 py-1 bg-slate-700 text-brand-foreground rounded hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-3 py-1 bg-brand-paper text-brand-foreground rounded hover:bg-brand-paper-elev disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Next
                       </button>
@@ -474,7 +474,7 @@ export default function DatabasePage() {
                 )}
               </div>
             ) : (
-              <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-12 text-center">
+              <div className="bg-brand-paper/50 border border-brand-outline rounded-lg p-12 text-center">
                 <h2 className="text-2xl font-bold text-brand-foreground mb-4">Database Browser</h2>
                 <p className="text-brand-outline text-lg">
                   Select a table from the left to view its contents

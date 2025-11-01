@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useDialog } from '@/hooks/useDialog';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE, STATUS_BG_COLORS } from '@/constants/color-mappings';
+import { TIMING } from '@/constants/timing';
 
 interface Prompt {
   id: string;
@@ -239,14 +241,14 @@ export default function PromptsPage() {
 
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => setError(null), 5000);
+      const timer = setTimeout(() => setError(null), TIMING.MESSAGE_AUTO_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [error]);
 
   useEffect(() => {
     if (success) {
-      const timer = setTimeout(() => setSuccess(null), 5000);
+      const timer = setTimeout(() => setSuccess(null), TIMING.MESSAGE_AUTO_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [success]);
@@ -286,7 +288,7 @@ export default function PromptsPage() {
 
       {error && (
         <div className="mx-auto max-w-7xl px-6 pt-4">
-          <div className="rounded-xl border border-red-500/50 bg-red-500/10 p-4 text-red-400">
+          <div className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} p-4 ${STATUS_TEXT_COLORS.error}`}>
             {error}
           </div>
         </div>
@@ -294,7 +296,7 @@ export default function PromptsPage() {
 
       {success && (
         <div className="mx-auto max-w-7xl px-6 pt-4">
-          <div className="rounded-xl border border-green-500/50 bg-green-500/10 p-4 text-green-400">
+          <div className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success} p-4 ${STATUS_TEXT_COLORS.success}`}>
             {success}
           </div>
         </div>
@@ -373,7 +375,7 @@ export default function PromptsPage() {
                           <h3 className="text-lg font-semibold text-brand-foreground">{ver.name} v{ver.version}</h3>
                           <div className="mt-1 flex items-center gap-2">
                             <span className={`rounded-full px-2 py-0.5 text-xs ${
-                              ver.active ? 'bg-green-500/20 text-green-400' : 'bg-brand-paper0/20 text-brand-outline'
+                              ver.active ? `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success}` : `${STATUS_BG_COLORS_SUBTLE.muted} ${STATUS_TEXT_COLORS.muted}`
                             }`}>
                               {ver.active ? 'Active' : 'Inactive'}
                             </span>
@@ -386,8 +388,8 @@ export default function PromptsPage() {
                           onClick={() => toggleActivate(ver.id, ver.active)}
                           className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                             ver.active
-                              ? 'border border-red-500/50 text-red-400 hover:bg-red-500/10'
-                              : 'bg-green-600 text-brand-foreground hover:bg-green-700'
+                              ? `border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error} hover:${STATUS_BG_COLORS_SUBTLE.error}`
+                              : `${STATUS_BG_COLORS.success} text-brand-foreground hover:opacity-90`
                           }`}
                         >
                           {ver.active ? 'Deactivate' : 'Activate'}
@@ -434,7 +436,7 @@ export default function PromptsPage() {
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="Enter prompt name..."
-                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                       disabled={isEditing}
                     />
                   </div>
@@ -511,14 +513,14 @@ export default function PromptsPage() {
                       value={formData.content}
                       onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                       placeholder="Enter prompt content... Use {{variable_name}} for variables"
-                      className="h-96 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                      className="h-96 w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                     />
                   </div>
 
-                  <div className="rounded-xl border border-yellow-700/50 bg-yellow-900/10 p-5">
-                    <h4 className="font-medium text-yellow-300">Variable Syntax</h4>
-                    <ul className="mt-3 space-y-1 text-sm text-yellow-100">
-                      <li>• Use <code className="rounded bg-yellow-900/40 px-1">{`{{variable_name}}`}</code> in content</li>
+                  <div className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.warning} ${STATUS_BG_COLORS_SUBTLE.warning} p-5`}>
+                    <h4 className={`font-medium ${STATUS_TEXT_COLORS.warning}`}>Variable Syntax</h4>
+                    <ul className={`mt-3 space-y-1 text-sm ${STATUS_TEXT_COLORS.warning}`}>
+                      <li>• Use <code className={`rounded ${STATUS_BG_COLORS_SUBTLE.warning} px-1`}>{`{{variable_name}}`}</code> in content</li>
                       <li>• Variables will be interpolated when prompt is used</li>
                       <li>• Add variables above to track which ones are expected</li>
                     </ul>
@@ -555,7 +557,7 @@ export default function PromptsPage() {
                                 v{prompt.version}
                               </span>
                               <span className={`rounded-full px-2 py-0.5 text-xs ${
-                                prompt.active ? 'bg-green-500/20 text-green-400' : 'bg-brand-paper0/20 text-brand-outline'
+                                prompt.active ? `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success}` : `${STATUS_BG_COLORS_SUBTLE.muted} ${STATUS_TEXT_COLORS.muted}`
                               }`}>
                                 {prompt.active ? 'Active' : 'Inactive'}
                               </span>
@@ -580,8 +582,8 @@ export default function PromptsPage() {
                               onClick={() => toggleActivate(prompt.id, prompt.active)}
                               className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
                                 prompt.active
-                                  ? 'border border-red-500/50 text-red-400 hover:bg-red-500/10'
-                                  : 'bg-green-600 text-brand-foreground hover:bg-green-700'
+                                  ? `border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error} hover:${STATUS_BG_COLORS_SUBTLE.error}`
+                                  : `${STATUS_BG_COLORS.success} text-brand-foreground hover:opacity-90`
                               }`}
                             >
                               {prompt.active ? 'Deactivate' : 'Activate'}

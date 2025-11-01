@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { FIELD_LABELS, BUTTON_LABELS, PLACEHOLDERS } from './constants';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 /**
  * SchemaBuilder Component - Phase 19.3 (PROPER)
@@ -107,7 +108,7 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
                     value={property.name}
                     onChange={(e) => handleUpdateProperty(index, 'name', e.target.value)}
                     placeholder={PLACEHOLDERS.NAME}
-                    className="w-full rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                    className="w-full rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                   />
                 </div>
 
@@ -141,7 +142,7 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
                     value={property.description}
                     onChange={(e) => handleUpdateProperty(index, 'description', e.target.value)}
                     placeholder="What is this property for?"
-                    className="w-full rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
+                    className="w-full rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                   />
                 </div>
 
@@ -158,7 +159,7 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
                   </label>
                   <button
                     onClick={() => handleRemoveProperty(index)}
-                    className="rounded-lg border border-red-500/50 bg-red-500/10 p-2 text-red-400 transition-all hover:bg-red-500/20 hover:border-red-500"
+                    className="rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} p-2 ${STATUS_TEXT_COLORS.error} transition-all hover:${STATUS_BG_COLORS_SUBTLE.error} hover:border-semantic-error"
                     aria-label="Remove property"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -176,7 +177,7 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
           <summary className="cursor-pointer text-sm font-medium text-brand-accent">
             Show Generated Schema (for developers)
           </summary>
-          <pre className="mt-3 overflow-x-auto rounded-lg bg-brand-ink p-3 text-xs text-green-400">
+          <pre className="mt-3 overflow-x-auto rounded-lg bg-brand-ink p-3 text-xs ${STATUS_TEXT_COLORS.success}">
             {JSON.stringify(
               {
                 type: 'object',

@@ -8,6 +8,9 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { useDialog } from '@/hooks/useDialog';
 import { THEME_METADATA } from '@third-eye/theme';
 import { UI_HELP_TEXT } from '@third-eye/constants';
+import { API_BASE_URL } from '@/consts/api';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE, STATUS_BG_COLORS } from '@/constants/color-mappings';
+import { TIMING } from '@/constants/timing';
 
 interface ProviderKey {
   id: number;
@@ -48,8 +51,6 @@ export default function SettingsPage() {
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-
   useEffect(() => {
     loadProviderKeys();
     loadHealth();
@@ -59,7 +60,7 @@ export default function SettingsPage() {
 
   const loadProviderKeys = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/provider-keys`);
+      const response = await fetch(`${API_BASE_URL}/api/provider-keys`);
       if (response.ok) {
         const result = await response.json();
         setProviderKeys(result.data || []);
@@ -71,7 +72,7 @@ export default function SettingsPage() {
 
   const loadHealth = async () => {
     try {
-      const response = await fetch(`${API_URL}/health`);
+      const response = await fetch(`${API_BASE_URL}/health`);
       if (response.ok) {
         const data = await response.json();
         setHealth(data);
@@ -83,7 +84,7 @@ export default function SettingsPage() {
 
   const loadDbPath = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/database/info`);
+      const response = await fetch(`${API_BASE_URL}/api/database/info`);
       if (response.ok) {
         const result = await response.json();
         setDbPath(result.data?.path || '~/.third-eye-mcp/mcp.db');
@@ -97,7 +98,7 @@ export default function SettingsPage() {
 
   const loadTelemetrySetting = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/app-settings/telemetry`);
+      const response = await fetch(`${API_BASE_URL}/api/app-settings/telemetry`);
       if (response.ok) {
         const result = await response.json();
         setTelemetry(result.data?.value === true || result.data?.value === 'true');
@@ -117,7 +118,7 @@ export default function SettingsPage() {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/api/provider-keys`, {
+      const response = await fetch(`${API_BASE_URL}/api/provider-keys`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -167,7 +168,7 @@ export default function SettingsPage() {
         body.apiKey = editForm.apiKey;
       }
 
-      const response = await fetch(`${API_URL}/api/provider-keys/${editingKey.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/provider-keys/${editingKey.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -195,7 +196,7 @@ export default function SettingsPage() {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/api/models/${provider}/refresh`, {
+      const response = await fetch(`${API_BASE_URL}/api/models/${provider}/refresh`, {
         method: 'POST',
       });
 
@@ -222,7 +223,7 @@ export default function SettingsPage() {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/api/provider-keys/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/provider-keys/${id}`, {
         method: 'DELETE',
       });
 
@@ -244,7 +245,7 @@ export default function SettingsPage() {
     setTelemetry(enabled);
 
     try {
-      const response = await fetch(`${API_URL}/api/app-settings/telemetry`, {
+      const response = await fetch(`${API_BASE_URL}/api/app-settings/telemetry`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ value: enabled }),
@@ -264,7 +265,7 @@ export default function SettingsPage() {
 
   const downloadBackup = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/database/ops/backup`, {
+      const response = await fetch(`${API_BASE_URL}/api/database/ops/backup`, {
         method: 'POST',
       });
 
@@ -298,14 +299,14 @@ export default function SettingsPage() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(`${API_URL}/api/database/ops/restore`, {
+      const response = await fetch(`${API_BASE_URL}/api/database/ops/restore`, {
         method: 'POST',
         body: formData,
       });
 
       if (response.ok) {
         setSuccess(UI_HELP_TEXT.SUCCESS_SETTINGS_DB_RESTORED);
-        setTimeout(() => window.location.reload(), 2000);
+        setTimeout(() => window.location.reload(), TIMING.RELOAD_DELAY_MS);
       } else {
         setError(UI_HELP_TEXT.ERROR_SETTINGS_DB_RESTORE_FAILED);
       }
@@ -321,14 +322,14 @@ export default function SettingsPage() {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/api/database/ops/reset`, {
+      const response = await fetch(`${API_BASE_URL}/api/database/ops/reset`, {
         method: 'POST',
       });
 
       if (response.ok) {
         setSuccess(UI_HELP_TEXT.SUCCESS_SETTINGS_DB_RESET);
         setShowResetConfirm(false);
-        setTimeout(() => window.location.reload(), 2000);
+        setTimeout(() => window.location.reload(), TIMING.RELOAD_DELAY_MS);
       } else {
         setError(UI_HELP_TEXT.ERROR_SETTINGS_DB_RESET_FAILED);
       }
@@ -341,14 +342,14 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => setError(null), 5000);
+      const timer = setTimeout(() => setError(null), TIMING.MESSAGE_AUTO_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [error]);
 
   useEffect(() => {
     if (success) {
-      const timer = setTimeout(() => setSuccess(null), 5000);
+      const timer = setTimeout(() => setSuccess(null), TIMING.MESSAGE_AUTO_DISMISS_MS);
       return () => clearTimeout(timer);
     }
   }, [success]);
@@ -373,7 +374,7 @@ export default function SettingsPage() {
 
       {error && (
         <div className="mx-auto max-w-7xl px-6 pt-4">
-          <div className="rounded-xl border border-red-500/50 bg-red-500/10 p-4 text-red-400">
+          <div className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} p-4 ${STATUS_TEXT_COLORS.error}`}>
             {error}
           </div>
         </div>
@@ -381,7 +382,7 @@ export default function SettingsPage() {
 
       {success && (
         <div className="mx-auto max-w-7xl px-6 pt-4">
-          <div className="rounded-xl border border-green-500/50 bg-green-500/10 p-4 text-green-400">
+          <div className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success} p-4 ${STATUS_TEXT_COLORS.success}`}>
             {success}
           </div>
         </div>
@@ -421,7 +422,7 @@ export default function SettingsPage() {
                 <button
                   onClick={() => setDarkMode(!darkMode)}
                   className={`relative h-7 w-12 rounded-full transition-colors ${
-                    darkMode ? 'bg-brand-accent' : 'bg-gray-600'
+                    darkMode ? 'bg-brand-accent' : 'bg-brand-outline'
                   }`}
                 >
                   <div
@@ -446,7 +447,7 @@ export default function SettingsPage() {
                 <button
                   onClick={() => setAutoOpenSessions(!autoOpenSessions)}
                   className={`relative h-7 w-12 rounded-full transition-colors ${
-                    autoOpenSessions ? 'bg-brand-accent' : 'bg-gray-600'
+                    autoOpenSessions ? 'bg-brand-accent' : 'bg-brand-outline'
                   }`}
                 >
                   <div
@@ -465,7 +466,7 @@ export default function SettingsPage() {
                 <button
                   onClick={() => toggleTelemetry(!telemetry)}
                   className={`relative h-7 w-12 rounded-full transition-colors ${
-                    telemetry ? 'bg-brand-accent' : 'bg-gray-600'
+                    telemetry ? 'bg-brand-accent' : 'bg-brand-outline'
                   }`}
                 >
                   <div
@@ -512,7 +513,7 @@ export default function SettingsPage() {
                       value={newKey.label}
                       onChange={(e) => setNewKey({ ...newKey, label: e.target.value })}
                       placeholder="My API Key"
-                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none"
                     />
                   </div>
                   <div>
@@ -522,7 +523,7 @@ export default function SettingsPage() {
                       value={newKey.apiKey}
                       onChange={(e) => setNewKey({ ...newKey, apiKey: e.target.value })}
                       placeholder="sk-..."
-                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none"
                     />
                   </div>
                   <div className="flex gap-3">
@@ -545,7 +546,7 @@ export default function SettingsPage() {
             )}
 
             {editingKey && (
-              <div className="mb-6 rounded-xl border border-yellow-500/40 bg-yellow-500/5 p-6">
+              <div className={`mb-6 rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.warning} ${STATUS_BG_COLORS_SUBTLE.warning} p-6`}>
                 <h3 className="mb-4 font-semibold text-brand-foreground">Edit {editingKey.provider} Key</h3>
                 <div className="space-y-4">
                   <div>
@@ -555,7 +556,7 @@ export default function SettingsPage() {
                       value={editForm.label}
                       onChange={(e) => setEditForm({ ...editForm, label: e.target.value })}
                       placeholder="My API Key"
-                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none"
                     />
                   </div>
                   <div>
@@ -567,7 +568,7 @@ export default function SettingsPage() {
                       value={editForm.apiKey}
                       onChange={(e) => setEditForm({ ...editForm, apiKey: e.target.value })}
                       placeholder="sk-... (optional)"
-                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none"
+                      className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 font-mono text-sm text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none"
                     />
                   </div>
                   <div className="flex gap-3">
@@ -580,7 +581,7 @@ export default function SettingsPage() {
                     <button
                       onClick={updateProviderKey}
                       disabled={loading || !editForm.label}
-                      className="rounded-full bg-yellow-500 px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-yellow-600 disabled:opacity-50"
+                      className={`rounded-full ${STATUS_BG_COLORS.warning} px-5 py-2 text-sm font-semibold text-brand-ink transition hover:opacity-90 disabled:opacity-50`}
                     >
                       {loading ? 'Updating...' : 'Update Key'}
                     </button>
@@ -607,12 +608,12 @@ export default function SettingsPage() {
                         <span className="text-sm text-brand-outline">•</span>
                         <span className="text-sm text-brand-outline">{key.label}</span>
                         {health?.checks?.providers[key.provider] && (
-                          <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-400">
+                          <span className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.success} px-2 py-0.5 text-xs ${STATUS_TEXT_COLORS.success}`}>
                             Connected
                           </span>
                         )}
                         {health?.checks?.providers[key.provider] === false && (
-                          <span className="rounded-full bg-red-500/20 px-2 py-0.5 text-xs text-red-400">
+                          <span className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.error} px-2 py-0.5 text-xs ${STATUS_TEXT_COLORS.error}`}>
                             Offline
                           </span>
                         )}
@@ -625,19 +626,19 @@ export default function SettingsPage() {
                       <button
                         onClick={() => testProviderKey(key.id, key.provider)}
                         disabled={testingKeyId === key.id}
-                        className="rounded-full border border-blue-500/50 px-3 py-1.5 text-sm text-blue-400 transition hover:bg-blue-500/10 disabled:opacity-50"
+                        className={`rounded-full border ${STATUS_BORDER_COLORS_SUBTLE.info} px-3 py-1.5 text-sm ${STATUS_TEXT_COLORS.info} transition hover:${STATUS_BG_COLORS_SUBTLE.info} disabled:opacity-50`}
                       >
                         {testingKeyId === key.id ? 'Testing...' : 'Test'}
                       </button>
                       <button
                         onClick={() => startEditKey(key)}
-                        className="rounded-full border border-yellow-500/50 px-3 py-1.5 text-sm text-yellow-400 transition hover:bg-yellow-500/10"
+                        className={`rounded-full border ${STATUS_BORDER_COLORS_SUBTLE.warning} px-3 py-1.5 text-sm ${STATUS_TEXT_COLORS.warning} transition hover:${STATUS_BG_COLORS_SUBTLE.warning}`}
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => deleteProviderKey(key.id)}
-                        className="rounded-full border border-red-500/50 px-3 py-1.5 text-sm text-red-400 transition hover:bg-red-500/10"
+                        className={`rounded-full border ${STATUS_BORDER_COLORS_SUBTLE.error} px-3 py-1.5 text-sm ${STATUS_TEXT_COLORS.error} transition hover:${STATUS_BG_COLORS_SUBTLE.error}`}
                       >
                         Delete
                       </button>
@@ -681,16 +682,16 @@ export default function SettingsPage() {
 
                 <button
                   onClick={() => setShowResetConfirm(true)}
-                  className="rounded-xl border border-red-500/50 px-5 py-3 font-semibold text-red-400 transition hover:bg-red-500/10"
+                  className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.error} px-5 py-3 font-semibold ${STATUS_TEXT_COLORS.error} transition hover:${STATUS_BG_COLORS_SUBTLE.error}`}
                 >
                   Reset Database
                 </button>
               </div>
 
               {showResetConfirm && (
-                <div className="rounded-xl border border-red-500/50 bg-red-500/10 p-6">
-                  <h3 className="font-semibold text-red-400">⚠️ Confirm Database Reset</h3>
-                  <p className="mt-2 text-sm text-red-300">
+                <div className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} p-6`}>
+                  <h3 className={`font-semibold ${STATUS_TEXT_COLORS.error}`}>⚠️ Confirm Database Reset</h3>
+                  <p className={`mt-2 text-sm ${STATUS_TEXT_COLORS.error}`}>
                     This will delete ALL data including provider keys, sessions, runs, and settings. This action cannot be undone.
                   </p>
                   <div className="mt-4 flex gap-3">
@@ -703,7 +704,7 @@ export default function SettingsPage() {
                     <button
                       onClick={resetDatabase}
                       disabled={loading}
-                      className="rounded-full bg-red-500 px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-red-600 disabled:opacity-50"
+                      className={`rounded-full ${STATUS_BG_COLORS.error} px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:opacity-90 disabled:opacity-50`}
                     >
                       {loading ? 'Resetting...' : 'Yes, Reset Everything'}
                     </button>

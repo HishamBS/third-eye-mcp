@@ -4,8 +4,9 @@
  */
 
 import { useCallback, useMemo } from 'react';
-import { DEFAULT_API_URL, REQUEST_TIMEOUT, ERROR_MESSAGES } from '@third-eye/config/constants';
+import { REQUEST_TIMEOUT, ERROR_MESSAGES } from '@third-eye/config/constants';
 import type { ProblemJson } from '@third-eye/types';
+import { API_BASE_URL } from '@/consts/api';
 
 export interface APIError extends Error {
   status?: number;
@@ -18,7 +19,7 @@ export interface FetchOptions extends RequestInit {
 
 export function useAPI() {
   const apiUrl = useMemo(() => {
-    return process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL;
+    return API_BASE_URL;
   }, []);
 
   const fetchWithTimeout = useCallback(async (
@@ -146,6 +147,5 @@ export function useAPI() {
  * Build full API URL
  */
 export function getAPIUrl(endpoint: string): string {
-  const base = process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL;
-  return endpoint.startsWith('http') ? endpoint : `${base}${endpoint}`;
+  return endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
 }

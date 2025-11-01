@@ -3,6 +3,7 @@
 import { useUI } from '@/contexts/UIContext';
 import { Eye, Code2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 export function ViewModeToggle() {
   const { viewMode, toggleViewMode } = useUI();
@@ -49,8 +50,8 @@ export function ViewModeDescription() {
 
   if (viewMode === 'novice') {
     return (
-      <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-4">
-        <p className="text-sm text-blue-300">
+      <div className={`rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.info} ${STATUS_BG_COLORS_SUBTLE.info} p-4`}>
+        <p className={`text-sm ${STATUS_TEXT_COLORS.info}`}>
           <strong>Novice Mode:</strong> Simplified view with plain language explanations.
           Technical details and JSON envelopes are hidden for easier understanding.
         </p>
@@ -59,8 +60,8 @@ export function ViewModeDescription() {
   }
 
   return (
-    <div className="rounded-lg border border-purple-500/30 bg-purple-500/10 p-4">
-      <p className="text-sm text-purple-300">
+    <div className={`rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.info} ${STATUS_BG_COLORS_SUBTLE.info} p-4`}>
+      <p className={`text-sm ${STATUS_TEXT_COLORS.info}`}>
         <strong>Expert Mode:</strong> Full technical view with raw JSON envelopes, metrics,
         and detailed diagnostic information.
       </p>

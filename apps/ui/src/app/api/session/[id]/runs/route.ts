@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { API_BASE_URL } from '@/consts/api';
 
 /**
  * Proxy to backend server for session runs
@@ -9,10 +10,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-
   try {
-    const response = await fetch(`${API_URL}/api/session/${id}/runs`, {
+    const response = await fetch(`${API_BASE_URL}/api/session/${id}/runs`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

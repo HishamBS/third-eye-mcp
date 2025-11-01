@@ -31,6 +31,7 @@ import {
 } from './steps/PlaceholderSteps';
 import { TemplateSelector } from './TemplateSelector';
 import type { PersonaTemplate } from '@/lib/persona-templates';
+import { ANIMATION_DURATION } from '@/constants/timing';
 
 /**
  * PersonaWizard - Multi-step form for persona configuration
@@ -351,7 +352,7 @@ export function PersonaWizard({
           {/* Progress Bar */}
           <div className="h-2 bg-brand-outline/20 rounded-full overflow-hidden">
             <div
-              className="h-full bg-brand-accent transition-all duration-300"
+              className={`h-full bg-brand-accent transition-all ${ANIMATION_DURATION.NORMAL}`}
               style={{
                 width: `${((state.currentStep + 1) / TOTAL_STEPS) * 100}%`,
               }}

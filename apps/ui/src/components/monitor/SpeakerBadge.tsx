@@ -9,6 +9,7 @@ import { DynamicIcon } from '@/components/ui/DynamicIcon';
 import { SPEAKER_ICONS, SPEAKER_COLOR_TOKENS, type Speaker, SpeakerType } from '@third-eye/constants';
 import { EYE_COLORS } from '@third-eye/config/constants';
 import type { EyeName } from '@third-eye/types';
+import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
 export interface SpeakerBadgeProps {
   readonly speaker: Speaker;
@@ -29,9 +30,9 @@ function getSpeakerColorClass(speaker: Speaker): string {
   if (speaker in SpeakerType) {
     const token = SPEAKER_COLOR_TOKENS[speaker as SpeakerType];
     // Map tokens to Tailwind classes
-    if (token === 'success') return 'bg-green-500';
-    if (token === 'warning') return 'bg-amber-500';
-    if (token === 'muted') return 'bg-slate-500';
+    if (token === 'success') return STATUS_BG_COLORS.success;
+    if (token === 'warning') return STATUS_BG_COLORS.warning;
+    if (token === 'muted') return 'bg-brand-outline';
     if (token === 'eye-overseer') return 'bg-indigo-500';
   }
 
@@ -44,7 +45,7 @@ function getSpeakerColorClass(speaker: Speaker): string {
   }
 
   // Fallback
-  return 'bg-purple-500';
+  return STATUS_BG_COLORS.info;
 }
 
 const SIZE_CLASSES = {
