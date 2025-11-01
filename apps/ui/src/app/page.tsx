@@ -110,11 +110,9 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-ink">
+    <div className="min-h-screen bg-brand-paper">
       <section className="relative overflow-hidden py-20">
-        {theme !== THEME_NAMES.OVERSEER && (
-          <div className={`absolute inset-0 bg-gradient-to-br ${GRADIENT.heroBackground}`} />
-        )}
+        <div className={`absolute inset-0 bg-gradient-to-br ${GRADIENT.heroBackground}`} />
 
         <div className="relative mx-auto max-w-7xl px-6 text-center">
           <motion.div
@@ -183,23 +181,23 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <div className="rounded-lg border border-brand-outline/30 bg-brand-paper/40 p-4">
+            <div className="rounded-lg border border-brand-outline/30 bg-brand-paperElev p-4">
               <div className="text-sm text-brand-outline">Sessions</div>
               <div className="text-3xl font-bold text-brand-foreground mt-1">{stats.sessions}</div>
             </div>
-            <div className="rounded-lg border border-brand-outline/30 bg-brand-paper/40 p-4">
+            <div className="rounded-lg border border-brand-outline/30 bg-brand-paperElev p-4">
               <div className="text-sm text-brand-outline">Runs</div>
               <div className="text-3xl font-bold text-brand-foreground mt-1">{stats.runs}</div>
             </div>
-            <div className="rounded-lg border border-brand-outline/30 bg-brand-paper/40 p-4">
+            <div className="rounded-lg border border-brand-outline/30 bg-brand-paperElev p-4">
               <div className="text-sm text-brand-outline">Success Rate</div>
               <div className={`text-3xl font-bold ${STATUS_TEXT_COLORS.success} mt-1`}>{stats.successRate}%</div>
             </div>
-            <div className="rounded-lg border border-brand-outline/30 bg-brand-paper/40 p-4">
+            <div className="rounded-lg border border-brand-outline/30 bg-brand-paperElev p-4">
               <div className="text-sm text-brand-outline">Avg Latency</div>
               <div className={`text-3xl font-bold ${STATUS_TEXT_COLORS.info} mt-1`}>{stats.avgLatency}ms</div>
             </div>
-            <div className="rounded-lg border border-brand-outline/30 bg-brand-paper/40 p-4">
+            <div className="rounded-lg border border-brand-outline/30 bg-brand-paperElev p-4">
               <div className="text-sm text-brand-outline mb-2">Providers</div>
               <div className="flex items-center space-x-1">
                 {stats.providers.map(p => (
@@ -215,7 +213,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-brand-outline/30 bg-brand-ink/40 p-6">
+          <div className="rounded-xl border border-brand-outline/30 bg-brand-paperElev p-6">
             <div className="flex items-center justify-center space-x-3 text-brand-outline">
               <Cpu className="h-5 w-5 animate-spin" style={{ animationDuration: '3s' }} />
               <span>Monitoring pipeline executions...</span>
