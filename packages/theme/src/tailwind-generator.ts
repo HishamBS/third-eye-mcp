@@ -64,8 +64,8 @@ export function generateTailwindThemeVariables(): Record<string, Record<string, 
     for (const mode of modes) {
       const theme = THEMES[themeName][mode];
       const selector = mode === 'dark'
-        ? `:root[data-theme="${themeName}"].dark`
-        : `:root[data-theme="${themeName}"]:not(.dark)`;
+        ? `:root[data-theme="${themeName}"][data-mode="dark"]`
+        : `:root[data-theme="${themeName}"][data-mode="light"]`;
 
       cssVariables[selector] = {
         // Brand colors
