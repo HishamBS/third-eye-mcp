@@ -6,6 +6,7 @@ import { Book, Brain, CheckCircle2, AlertTriangle, Search, FileText, Check, X } 
 import { EyeIcon } from '@/components/EyeIcon';
 import type { ReactNode } from 'react';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { EVIDENCE_COLORS } from '@/constants/design-tokens';
 
 interface Evidence {
   id: string;
@@ -163,14 +164,20 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
   };
 
   const getEvidenceColor = (type: string, verified: boolean = true) => {
-    const colors = {
-      citation: verified ? '#3B82F6' : '#6B7280',
-      analysis: verified ? '#8B5CF6' : '#6B7280',
-      validation: verified ? '#10B981' : '#EF4444',
-      contradiction: '#F59E0B',
-      fact: verified ? '#14B8A6' : '#EF4444'
-    };
-    return colors[type as keyof typeof colors] || '#6B7280';
+    switch (type) {
+      case 'citation':
+        return verified ? EVIDENCE_COLORS.citation.verified : EVIDENCE_COLORS.citation.unverified;
+      case 'analysis':
+        return verified ? EVIDENCE_COLORS.analysis.verified : EVIDENCE_COLORS.analysis.unverified;
+      case 'validation':
+        return verified ? EVIDENCE_COLORS.validation.verified : EVIDENCE_COLORS.validation.unverified;
+      case 'contradiction':
+        return EVIDENCE_COLORS.contradiction;
+      case 'fact':
+        return verified ? EVIDENCE_COLORS.fact.verified : EVIDENCE_COLORS.fact.unverified;
+      default:
+        return EVIDENCE_COLORS.default;
+    }
   };
 
   const getEyeIcon = (eye: string): ReactNode => {

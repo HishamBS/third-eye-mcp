@@ -11,6 +11,7 @@ import { UI_HELP_TEXT } from '@third-eye/constants';
 import { API_BASE_URL } from '@/consts/api';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE, STATUS_BG_COLORS } from '@/constants/color-mappings';
 import { TIMING } from '@/constants/timing';
+import { TOGGLE_KNOB_CLASS } from '@/constants/design-tokens';
 
 interface ProviderKey {
   id: number;
@@ -426,7 +427,7 @@ export default function SettingsPage() {
                   }`}
                 >
                   <div
-                    className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${
+                    className={`absolute top-1 h-5 w-5 rounded-full ${TOGGLE_KNOB_CLASS} transition-transform ${
                       darkMode ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
@@ -451,7 +452,7 @@ export default function SettingsPage() {
                   }`}
                 >
                   <div
-                    className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${
+                    className={`absolute top-1 h-5 w-5 rounded-full ${TOGGLE_KNOB_CLASS} transition-transform ${
                       autoOpenSessions ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
@@ -470,7 +471,7 @@ export default function SettingsPage() {
                   }`}
                 >
                   <div
-                    className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${
+                    className={`absolute top-1 h-5 w-5 rounded-full ${TOGGLE_KNOB_CLASS} transition-transform ${
                       telemetry ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />

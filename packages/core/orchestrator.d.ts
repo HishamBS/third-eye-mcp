@@ -80,9 +80,10 @@ export declare class EyeOrchestrator {
      * Get session runs with pagination
      */
     getSessionRuns(sessionId: string, limit?: number, offset?: number): Promise<{
-        id: string;
         sessionId: string;
         eye: string;
+        id: string;
+        createdAt: Date;
         provider: string;
         model: string;
         inputMd: string;
@@ -90,7 +91,6 @@ export declare class EyeOrchestrator {
         tokensIn: number | null;
         tokensOut: number | null;
         latencyMs: number | null;
-        createdAt: Date;
     }[]>;
 }
 export {};

@@ -7,6 +7,7 @@ import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { ARIA_LABELS, ARIA_DESCRIPTIONS } from '@/constants/accessibility';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 import { TIMING } from '@/constants/timing';
+import { MODAL_OVERLAY_CLASS } from '@/constants/design-tokens';
 
 interface WelcomeStep {
   title: string;
@@ -95,7 +96,7 @@ export function WelcomeModal() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          className={`fixed inset-0 z-50 flex items-center justify-center ${MODAL_OVERLAY_CLASS} backdrop-blur-sm`}
           onClick={(e) => {
             if (e.target === e.currentTarget) handleClose();
           }}

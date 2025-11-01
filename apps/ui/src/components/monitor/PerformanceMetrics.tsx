@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Target, Zap, BarChart3, Eye, ArrowDownToLine, ArrowUpFromLine, Brain, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { METRIC_COLORS } from '@/constants/design-tokens';
 
 interface MetricCardProps {
   title: string;
@@ -21,12 +22,12 @@ interface PerformanceMetricsProps {
   runs?: Array<Record<string, unknown>>;
 }
 
-function MetricCard({ title, value, unit, trend, trendValue, icon, color = '#3B82F6' }: MetricCardProps) {
+function MetricCard({ title, value, unit, trend, trendValue, icon, color = METRIC_COLORS.info }: MetricCardProps) {
   const getTrendColor = () => {
     switch (trend) {
-      case 'up': return '#10B981';
-      case 'down': return '#EF4444';
-      default: return '#6B7280';
+      case 'up': return METRIC_COLORS.success;
+      case 'down': return METRIC_COLORS.error;
+      default: return METRIC_COLORS.muted;
     }
   };
 
@@ -135,8 +136,8 @@ export function PerformanceMetrics({ events, runs = [] }: PerformanceMetricsProp
           title="Success Rate"
           value={metrics.successRate}
           unit="%"
-          icon={<Target className="h-5 w-5" style={{ color: metrics.successRate >= 80 ? '#10B981' : metrics.successRate >= 60 ? '#F59E0B' : '#EF4444' }} />}
-          color={metrics.successRate >= 80 ? '#10B981' : metrics.successRate >= 60 ? '#F59E0B' : '#EF4444'}
+          icon={<Target className="h-5 w-5" style={{ color: metrics.successRate >= 80 ? METRIC_COLORS.success : metrics.successRate >= 60 ? METRIC_COLORS.warning : METRIC_COLORS.error }} />}
+          color={metrics.successRate >= 80 ? METRIC_COLORS.success : metrics.successRate >= 60 ? METRIC_COLORS.warning : METRIC_COLORS.error}
           trend={metrics.successRate >= 80 ? 'up' : metrics.successRate >= 60 ? 'neutral' : 'down'}
           trendValue={`${metrics.totalRuns} runs`}
         />
@@ -145,8 +146,8 @@ export function PerformanceMetrics({ events, runs = [] }: PerformanceMetricsProp
           title="Avg Latency"
           value={metrics.avgLatency}
           unit="ms"
-          icon={<Zap className="h-5 w-5" style={{ color: metrics.avgLatency <= 1000 ? '#10B981' : metrics.avgLatency <= 3000 ? '#F59E0B' : '#EF4444' }} />}
-          color={metrics.avgLatency <= 1000 ? '#10B981' : metrics.avgLatency <= 3000 ? '#F59E0B' : '#EF4444'}
+          icon={<Zap className="h-5 w-5" style={{ color: metrics.avgLatency <= 1000 ? METRIC_COLORS.success : metrics.avgLatency <= 3000 ? METRIC_COLORS.warning : METRIC_COLORS.error }} />}
+          color={metrics.avgLatency <= 1000 ? METRIC_COLORS.success : metrics.avgLatency <= 3000 ? METRIC_COLORS.warning : METRIC_COLORS.error}
           trend={metrics.avgLatency <= 1000 ? 'up' : 'down'}
           trendValue={`${metrics.totalRuns} samples`}
         />
@@ -154,8 +155,8 @@ export function PerformanceMetrics({ events, runs = [] }: PerformanceMetricsProp
         <MetricCard
           title="Events/Hour"
           value={metrics.eventsPerHour}
-          icon={<BarChart3 className="h-5 w-5" style={{ color: '#3B82F6' }} />}
-          color="#3B82F6"
+          icon={<BarChart3 className="h-5 w-5" style={{ color: METRIC_COLORS.info }} />}
+          color={METRIC_COLORS.info}
           trend="neutral"
           trendValue="last hour"
         />
@@ -164,8 +165,8 @@ export function PerformanceMetrics({ events, runs = [] }: PerformanceMetricsProp
           title="Active Eyes"
           value={metrics.uniqueEyes}
           unit="eyes"
-          icon={<Eye className="h-5 w-5" style={{ color: '#8B5CF6' }} />}
-          color="#8B5CF6"
+          icon={<Eye className="h-5 w-5" style={{ color: METRIC_COLORS.primary }} />}
+          color={METRIC_COLORS.primary}
           trend="neutral"
           trendValue={`${metrics.totalEvents} events`}
         />
@@ -176,8 +177,8 @@ export function PerformanceMetrics({ events, runs = [] }: PerformanceMetricsProp
         <MetricCard
           title="Tokens In"
           value={metrics.totalTokensIn.toLocaleString()}
-          icon={<ArrowDownToLine className="h-5 w-5" style={{ color: '#14B8A6' }} />}
-          color="#14B8A6"
+          icon={<ArrowDownToLine className="h-5 w-5" style={{ color: METRIC_COLORS.accent }} />}
+          color={METRIC_COLORS.accent}
           trend="neutral"
           trendValue="total input"
         />
@@ -185,8 +186,8 @@ export function PerformanceMetrics({ events, runs = [] }: PerformanceMetricsProp
         <MetricCard
           title="Tokens Out"
           value={metrics.totalTokensOut.toLocaleString()}
-          icon={<ArrowUpFromLine className="h-5 w-5" style={{ color: '#F97316' }} />}
-          color="#F97316"
+          icon={<ArrowUpFromLine className="h-5 w-5" style={{ color: METRIC_COLORS.warning }} />}
+          color={METRIC_COLORS.warning}
           trend="neutral"
           trendValue="total output"
         />
@@ -196,8 +197,8 @@ export function PerformanceMetrics({ events, runs = [] }: PerformanceMetricsProp
             title="Avg Confidence"
             value={metrics.avgConfidence}
             unit="%"
-            icon={<Brain className="h-5 w-5" style={{ color: metrics.avgConfidence >= 80 ? '#10B981' : metrics.avgConfidence >= 60 ? '#F59E0B' : '#EF4444' }} />}
-            color={metrics.avgConfidence >= 80 ? '#10B981' : metrics.avgConfidence >= 60 ? '#F59E0B' : '#EF4444'}
+            icon={<Brain className="h-5 w-5" style={{ color: metrics.avgConfidence >= 80 ? METRIC_COLORS.success : metrics.avgConfidence >= 60 ? METRIC_COLORS.warning : METRIC_COLORS.error }} />}
+            color={metrics.avgConfidence >= 80 ? METRIC_COLORS.success : metrics.avgConfidence >= 60 ? METRIC_COLORS.warning : METRIC_COLORS.error}
             trend={metrics.avgConfidence >= 80 ? 'up' : 'down'}
             trendValue="model confidence"
           />

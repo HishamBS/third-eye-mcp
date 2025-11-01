@@ -4,6 +4,7 @@ import { EyeIconPaths, getEyeIconPath } from '@third-eye/constants/eye-icons';
 import { EyeId } from '@third-eye/constants/taxonomy';
 import { SHARED_EYE_COLORS } from '@third-eye/theme';
 import { API_BASE_URL } from '@/consts/api';
+import { METRIC_COLORS } from '@/constants/design-tokens';
 
 interface EyeIconProps {
   eye: string;
@@ -106,7 +107,7 @@ export function EyeIcon({ eye, size = 24, className = '', customSvg }: EyeIconPr
  */
 export function getEyeColor(eye: string): string {
   const eyeLower = eye.toLowerCase() as keyof typeof SHARED_EYE_COLORS;
-  return SHARED_EYE_COLORS[eyeLower] || '#64b5f6'; // Fallback to blue if eye not found
+  return SHARED_EYE_COLORS[eyeLower] || METRIC_COLORS.info; // Fallback to SSOT info color if eye not found
 }
 
 // Helper function to get eye name

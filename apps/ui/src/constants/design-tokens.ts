@@ -107,3 +107,54 @@ export const TOAST_STYLE = {
   backdropFilter: BACKDROP_BLUR.md,
   color: 'rgb(var(--color-ink))',
 } as const;
+
+/**
+ * Modal overlay class
+ * Theme-aware overlay for modals, drawers, and dialogs
+ */
+export const MODAL_OVERLAY_CLASS = 'bg-brand-ink/70' as const;
+
+/**
+ * Toggle switch knob class
+ * Theme-aware knob color for toggle switches
+ */
+export const TOGGLE_KNOB_CLASS = 'bg-brand-foreground' as const;
+
+/**
+ * Evidence type colors (for EvidenceTrail component)
+ * Maps evidence types to semantic theme colors
+ */
+export const EVIDENCE_COLORS = {
+  citation: {
+    verified: 'rgb(var(--color-info))',
+    unverified: 'rgb(var(--color-muted))',
+  },
+  analysis: {
+    verified: 'rgb(var(--color-primary))',
+    unverified: 'rgb(var(--color-muted))',
+  },
+  validation: {
+    verified: 'rgb(var(--color-success))',
+    unverified: 'rgb(var(--color-error))',
+  },
+  contradiction: 'rgb(var(--color-warning))',
+  fact: {
+    verified: 'rgb(var(--color-success))',
+    unverified: 'rgb(var(--color-error))',
+  },
+  default: 'rgb(var(--color-muted))',
+} as const;
+
+/**
+ * Metric threshold colors
+ * For performance metrics with success/warning/error states
+ */
+export const METRIC_COLORS = {
+  success: 'rgb(var(--color-success))',
+  warning: 'rgb(var(--color-warning))',
+  error: 'rgb(var(--color-error))',
+  info: 'rgb(var(--color-info))',
+  primary: 'rgb(var(--color-primary))',
+  accent: 'rgb(var(--color-accent))',
+  muted: 'rgb(var(--color-muted))',
+} as const;

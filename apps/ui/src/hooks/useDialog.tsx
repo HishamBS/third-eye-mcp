@@ -7,6 +7,7 @@
 import * as React from 'react';
 import { create } from 'zustand';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MODAL_OVERLAY_CLASS } from '@/constants/design-tokens';
 
 interface DialogState {
   isOpen: boolean;
@@ -142,7 +143,7 @@ export function DialogProvider() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleCancel}
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+            className={`fixed inset-0 z-50 ${MODAL_OVERLAY_CLASS} backdrop-blur-sm`}
           />
 
           {/* Dialog */}
