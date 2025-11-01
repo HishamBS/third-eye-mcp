@@ -35,6 +35,10 @@ export const SHADOW = {
   xl: '0 20px 25px rgb(var(--color-ink) / 0.2)',
   glass: '0 10px 30px rgb(var(--color-ink) / 0.35)',
   'glass-light': '0 10px 30px rgb(var(--color-ink) / 0.15)',
+  glow: '0 20px 45px rgb(var(--color-primary) / 0.35)',
+  success: '0 10px 20px rgb(var(--color-success) / 0.2)',
+  error: '0 10px 20px rgb(var(--color-error) / 0.2)',
+  info: '0 10px 20px rgb(var(--color-info) / 0.2)',
 } as const;
 
 /**
@@ -44,6 +48,9 @@ export const SHADOW = {
 export const GRADIENT = {
   brandPrimary: 'from-brand-primary via-brand-accent to-brand-primary',
   brandSubtle: 'from-brand-primary/20 via-brand-accent/10 to-transparent',
+  hero: 'from-brand-accent via-brand-primary to-brand-info',
+  heroBackground: 'from-brand-accent/20 via-brand-primary/10 to-transparent',
+  avatar: 'from-brand-info to-brand-primary',
   success: 'from-semantic-success/10 to-semantic-success/5',
   error: 'from-semantic-error/10 to-semantic-error/5',
   info: 'from-semantic-info/10 to-semantic-info/5',
@@ -157,4 +164,23 @@ export const METRIC_COLORS = {
   primary: 'rgb(var(--color-primary))',
   accent: 'rgb(var(--color-accent))',
   muted: 'rgb(var(--color-muted))',
+} as const;
+
+/**
+ * Label and tooltip background classes
+ * Theme-aware backgrounds for overlays, labels, and tooltips
+ */
+export const LABEL_BG_CLASS = {
+  tooltip: 'bg-brand-ink/90',
+  label: 'bg-brand-ink/80',
+  badge: 'bg-brand-foreground',
+} as const;
+
+/**
+ * Grid pattern for visualizations
+ * Theme-aware grid lines using CSS variables
+ */
+export const GRID_PATTERN = {
+  color: 'rgb(var(--color-info) / 0.1)',
+  size: 20,
 } as const;

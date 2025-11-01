@@ -13,6 +13,7 @@ import { SessionSelector } from './SessionSelector';
 import { ThemeSwitcher } from './ThemeSwitcher';
 import { ViewModeToggle } from './ViewModeToggle';
 import { ANIMATION_DURATION } from '@/constants/timing';
+import { GRADIENT } from '@/constants/design-tokens';
 
 interface DropdownItem {
   href: string;
@@ -163,7 +164,7 @@ export function GlobalNav() {
             >
               <Settings className="h-5 w-5" />
             </Link>
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-brand-foreground text-sm font-semibold">
+            <div className={`h-8 w-8 rounded-full bg-gradient-to-br ${GRADIENT.avatar} flex items-center justify-center text-brand-foreground text-sm font-semibold`}>
               AI
             </div>
           </div>

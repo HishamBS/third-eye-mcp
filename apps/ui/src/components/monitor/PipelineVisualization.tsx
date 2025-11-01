@@ -5,6 +5,7 @@ import { SHARED_EYE_COLORS } from '@third-eye/theme';
 import { motion, AnimatePresence } from 'framer-motion';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 import { ANIMATION_DURATION } from '@/constants/timing';
+import { GRID_PATTERN, LABEL_BG_CLASS } from '@/constants/design-tokens';
 
 interface EyeStatus {
   name: string;
@@ -142,10 +143,10 @@ export function PipelineVisualization({ sessionId, events, isLive = false }: Pip
       <div className="absolute inset-0 opacity-10">
         <div className="h-full w-full" style={{
           backgroundImage: `
-            linear-gradient(rgba(147, 197, 253, 0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(147, 197, 253, 0.1) 1px, transparent 1px)
+            linear-gradient(${GRID_PATTERN.color} 1px, transparent 1px),
+            linear-gradient(90deg, ${GRID_PATTERN.color} 1px, transparent 1px)
           `,
-          backgroundSize: '20px 20px'
+          backgroundSize: `${GRID_PATTERN.size}px ${GRID_PATTERN.size}px`
         }} />
       </div>
 
@@ -254,7 +255,7 @@ export function PipelineVisualization({ sessionId, events, isLive = false }: Pip
                 {/* Confidence Indicator */}
                 {status.confidence !== undefined && (
                   <div
-                    className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-xs font-bold text-brand-foreground"
+                    className={`absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full ${LABEL_BG_CLASS.badge} text-xs font-bold text-brand-ink`}
                     title={`Confidence: ${status.confidence}%`}
                   >
                     {Math.round(status.confidence)}
@@ -263,12 +264,12 @@ export function PipelineVisualization({ sessionId, events, isLive = false }: Pip
               </div>
 
               {/* Eye Name Label */}
-              <div className="absolute top-14 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-black/80 px-2 py-1 text-xs text-brand-foreground">
+              <div className={`absolute top-14 left-1/2 -translate-x-1/2 whitespace-nowrap rounded ${LABEL_BG_CLASS.label} px-2 py-1 text-xs text-brand-foreground`}>
                 {eyeName}
               </div>
 
               {/* Tooltip on Hover */}
-              <div className="absolute bottom-16 left-1/2 z-20 hidden -translate-x-1/2 rounded-lg bg-black/90 px-3 py-2 text-xs text-brand-foreground shadow-xl hover:block group-hover:block">
+              <div className={`absolute bottom-16 left-1/2 z-20 hidden -translate-x-1/2 rounded-lg ${LABEL_BG_CLASS.tooltip} px-3 py-2 text-xs text-brand-foreground shadow-xl hover:block group-hover:block`}>
                 <p className="font-semibold">{eyeName}</p>
                 <p className="text-brand-outline">Status: {status.status}</p>
                 {status.verdict && <p className="text-brand-outline">Verdict: {status.verdict}</p>}

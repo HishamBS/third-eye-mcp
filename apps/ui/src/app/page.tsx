@@ -15,6 +15,7 @@ import { UI_HELP_TEXT, PLATFORM_HIGHLIGHTS } from '@third-eye/constants';
 import { API_BASE_URL } from '@/consts/api';
 import { ANIMATION_DURATION } from '@/constants/timing';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS } from '@/constants/color-mappings';
+import { GRADIENT, SHADOW } from '@/constants/design-tokens';
 
 interface RealtimeStats {
   sessions: number;
@@ -108,7 +109,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-brand-ink">
       <section className="relative overflow-hidden py-20">
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-accent/20 via-purple-500/10 to-transparent" />
+        <div className={`absolute inset-0 bg-gradient-to-br ${GRADIENT.heroBackground}`} />
 
         <div className="relative mx-auto max-w-7xl px-6 text-center">
           <motion.div
@@ -123,9 +124,10 @@ export default function HomePage() {
                 width={320}
                 height={320}
                 priority
-                className="h-32 w-auto drop-shadow-[0_20px_45px_rgba(88,28,135,0.35)]"
+                className="h-32 w-auto"
+                style={{ filter: `drop-shadow(${SHADOW.glow})` }}
               />
-              <h1 className="text-6xl font-bold bg-gradient-to-r from-brand-accent via-purple-400 to-cyan-400 bg-clip-text text-transparent">
+              <h1 className={`text-6xl font-bold bg-gradient-to-r ${GRADIENT.hero} bg-clip-text text-transparent`}>
                 Third Eye MCP
               </h1>
             </div>
@@ -219,7 +221,7 @@ export default function HomePage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-6 py-12">
-        <h2 className="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-brand-accent to-purple-400 bg-clip-text text-transparent">
+        <h2 className={`text-4xl font-bold text-center mb-4 bg-gradient-to-r ${GRADIENT.brandPrimary} bg-clip-text text-transparent`}>
           {UI_HELP_TEXT.DASHBOARD_PLATFORM_HIGHLIGHTS_TITLE}
         </h2>
         <p className="text-center text-brand-outline mb-12 max-w-2xl mx-auto">
