@@ -55,41 +55,47 @@ export function UIProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setMounted(true);
 
+    // 1. READ LOCALSTORAGE FIRST (highest priority - "remember last selection")
+    const savedMode = localStorage.getItem(STORAGE_KEYS.VIEW_MODE) as ViewMode;
+    if (savedMode) setViewModeState(savedMode);
+
+    const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) as ThemeName;
+    if (savedTheme) setThemeState(savedTheme);
+
+    const savedDarkMode = localStorage.getItem(STORAGE_KEYS.THEME_MODE);
+    if (savedDarkMode !== null) setDarkModeState(savedDarkMode === 'dark');
+
+    const savedStrictness = localStorage.getItem(STORAGE_KEYS.STRICTNESS);
+    if (savedStrictness) {
+      try {
+        setStrictnessState(JSON.parse(savedStrictness));
+      } catch (e) {
+        console.error('Failed to parse strictness settings', e);
+      }
+    }
+
+    const savedAutoOpen = localStorage.getItem(STORAGE_KEYS.AUTO_OPEN);
+    if (savedAutoOpen !== null) setAutoOpenSessionsState(savedAutoOpen === 'true');
+
+    const savedPersonaVoice = localStorage.getItem(STORAGE_KEYS.PERSONA_VOICE);
+    if (savedPersonaVoice !== null) setShowPersonaVoiceState(savedPersonaVoice === 'true');
+
+    const savedSessionId = localStorage.getItem(STORAGE_KEYS.SELECTED_SESSION);
+    if (savedSessionId) setSelectedSessionIdState(savedSessionId);
+
+    // 2. FETCH FROM API IN BACKGROUND (only update if localStorage was empty)
     fetch(`${API_BASE_URL}/api/app-settings`)
       .then(res => res.json())
       .then(response => {
         const data = response.data || response;
-        if (data.theme) setThemeState(data.theme);
-        if (data.darkMode !== undefined) setDarkModeState(data.darkMode);
-        if (data.auto_open !== undefined) setAutoOpenSessionsState(data.auto_open);
+        // Only update from API if localStorage didn't have a value
+        if (!savedTheme && data.theme) setThemeState(data.theme);
+        if (savedDarkMode === null && data.darkMode !== undefined) setDarkModeState(data.darkMode);
+        if (!savedAutoOpen && data.auto_open !== undefined) setAutoOpenSessionsState(data.auto_open);
       })
       .catch(() => {
-        const savedMode = localStorage.getItem(STORAGE_KEYS.VIEW_MODE) as ViewMode;
-        if (savedMode) setViewModeState(savedMode);
-
-        const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) as ThemeName;
-        if (savedTheme) setThemeState(savedTheme);
-
-        const savedDarkMode = localStorage.getItem(STORAGE_KEYS.THEME_MODE);
-        if (savedDarkMode !== null) setDarkModeState(savedDarkMode === 'dark');
-
-        const savedStrictness = localStorage.getItem(STORAGE_KEYS.STRICTNESS);
-        if (savedStrictness) {
-          try {
-            setStrictnessState(JSON.parse(savedStrictness));
-          } catch (e) {
-            console.error('Failed to parse strictness settings', e);
-          }
-        }
-
-        const savedAutoOpen = localStorage.getItem(STORAGE_KEYS.AUTO_OPEN);
-        if (savedAutoOpen !== null) setAutoOpenSessionsState(savedAutoOpen === 'true');
-
-        const savedPersonaVoice = localStorage.getItem(STORAGE_KEYS.PERSONA_VOICE);
-        if (savedPersonaVoice !== null) setShowPersonaVoiceState(savedPersonaVoice === 'true');
-
-        const savedSessionId = localStorage.getItem(STORAGE_KEYS.SELECTED_SESSION);
-        if (savedSessionId) setSelectedSessionIdState(savedSessionId);
+        // API fetch failed, but we already have localStorage values loaded
+        console.debug('Failed to fetch settings from API, using localStorage');
       });
   }, []);
 

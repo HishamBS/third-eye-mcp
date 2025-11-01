@@ -50,7 +50,7 @@ export function ThemeSwitcher() {
           <>
             {/* Backdrop */}
             <div
-              className="fixed inset-0 z-40"
+              className="fixed inset-0 z-40 bg-brand-ink/20 backdrop-blur-sm"
               onClick={() => setIsOpen(false)}
             />
 
