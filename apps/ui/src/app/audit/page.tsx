@@ -53,7 +53,7 @@ export default function AuditPage() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-ink">
+    <div className="min-h-screen bg-brand-paper">
       {/* Header */}
       <div className="border-b border-brand-outline/60 bg-brand-paperElev/50">
         <div className="mx-auto max-w-7xl px-6 py-6">

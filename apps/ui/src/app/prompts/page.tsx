@@ -254,7 +254,7 @@ export default function PromptsPage() {
   }, [success]);
 
   return (
-    <div className="min-h-screen bg-brand-ink">
+    <div className="min-h-screen bg-brand-paper">
       {/* Header */}
       <div className="border-b border-brand-outline/60 bg-brand-paperElev/50">
         <div className="mx-auto max-w-7xl px-6 py-6">
@@ -395,7 +395,7 @@ export default function PromptsPage() {
                           {ver.active ? 'Deactivate' : 'Activate'}
                         </button>
                       </div>
-                      <div className="rounded-xl bg-brand-ink/50 p-3">
+                      <div className="rounded-xl bg-brand-paperElev/50 p-3">
                         <pre className="whitespace-pre-wrap font-mono text-sm text-brand-outline">
                           {ver.content.length > 200 ? ver.content.substring(0, 200) + '...' : ver.content}
                         </pre>

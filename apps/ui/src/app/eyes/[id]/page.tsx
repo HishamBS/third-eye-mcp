@@ -213,7 +213,7 @@ export default function EyeDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-brand-ink flex items-center justify-center">
+      <div className="min-h-screen bg-brand-paper flex items-center justify-center">
         <p className="text-brand-foreground">Loading Eye details...</p>
       </div>
     );
@@ -221,7 +221,7 @@ export default function EyeDetailPage() {
 
   if (!eye) {
     return (
-      <div className="min-h-screen bg-brand-ink flex items-center justify-center">
+      <div className="min-h-screen bg-brand-paper flex items-center justify-center">
         <div className="text-center">
           <p className="text-brand-foreground mb-4">Eye not found</p>
           <Link href="/eyes" className="text-brand-accent hover:underline">← Back to Eyes</Link>
@@ -231,7 +231,7 @@ export default function EyeDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-ink">
+    <div className="min-h-screen bg-brand-paper">
       {/* Header */}
       <div className="border-b border-brand-outline/60 bg-brand-paperElev/50">
         <div className="mx-auto max-w-7xl px-6 py-6">

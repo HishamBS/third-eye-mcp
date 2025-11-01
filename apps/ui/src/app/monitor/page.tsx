@@ -416,7 +416,7 @@ function MonitorContent() {
 
   if (!sessionId) {
     return (
-      <div className="min-h-screen bg-brand-ink">
+      <div className="min-h-screen bg-brand-paper">
         <div className="border-b border-brand-outline/60 bg-brand-paperElev/50">
           <div className="mx-auto max-w-7xl px-6 py-6">
             <div className="flex items-center gap-6">
@@ -450,7 +450,7 @@ function MonitorContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-brand-ink">
+      <div className="min-h-screen bg-brand-paper">
         <div className="border-b border-brand-outline/60 bg-brand-paperElev/50">
           <div className="mx-auto max-w-7xl px-6 py-6">
             <div className="flex items-center gap-6">
@@ -478,7 +478,7 @@ function MonitorContent() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-ink">
+    <div className="min-h-screen bg-brand-paper">
       <div className="border-b border-brand-outline/60 bg-brand-paperElev/50">
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
@@ -737,7 +737,7 @@ function MonitorContent() {
                       />
                     </div>
                     {intentData.confirmationPrompt && (
-                      <div className="mt-4 rounded-lg border border-brand-outline/30 bg-brand-ink/50 p-3">
+                      <div className="mt-4 rounded-lg border border-brand-outline/30 bg-brand-paperElev/50 p-3">
                         <p className="text-xs text-brand-outline mb-1">Confirmation Prompt:</p>
                         <p className="text-sm text-brand-outline">{intentData.confirmationPrompt}</p>
                       </div>
@@ -777,7 +777,7 @@ function MonitorContent() {
                             <span className="text-sm text-brand-foreground">Quality Score</span>
                             <span className={`text-lg font-semibold ${STATUS_TEXT_COLORS.success}`}>{evidenceData.mangekyo.qualityScore}/100</span>
                           </div>
-                          <div className="h-2 w-full rounded-full bg-brand-ink">
+                          <div className="h-2 w-full rounded-full bg-brand-paperElev">
                             <div className={`h-2 rounded-full ${STATUS_BG_COLORS.success}`} style={{ width: `${evidenceData.mangekyo.qualityScore}%` }} />
                           </div>
                         </>
@@ -878,7 +878,7 @@ function MonitorContent() {
                     <p className="text-sm text-brand-outline">No events yet</p>
                   </div>
                 ) : (
-                  <pre className="rounded-xl border border-brand-outline/30 bg-brand-ink p-4 text-xs text-brand-outline overflow-x-auto">
+                  <pre className="rounded-xl border border-brand-outline/30 bg-brand-paperElev p-4 text-xs text-brand-outline overflow-x-auto">
                     {JSON.stringify(entries, null, 2)}
                   </pre>
                 )}
@@ -894,7 +894,7 @@ function MonitorContent() {
 export default function MonitorPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-brand-ink flex items-center justify-center">
+      <div className="min-h-screen bg-brand-paper flex items-center justify-center">
         <div className="text-brand-foreground">Loading monitor...</div>
       </div>
     }>

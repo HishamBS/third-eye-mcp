@@ -97,14 +97,14 @@ export default function SessionsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-brand-ink flex items-center justify-center">
+      <div className="min-h-screen bg-brand-paper flex items-center justify-center">
         <div className="text-brand-foreground text-xl">Loading sessions...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-brand-ink">
+    <div className="min-h-screen bg-brand-paper">
       <div className="border-b border-brand-outline/60 bg-brand-paperElev/50">
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
@@ -169,7 +169,7 @@ export default function SessionsPage() {
         ) : (
           <div className="bg-brand-paper border border-brand-outline/50 rounded-xl overflow-hidden">
             <table className="w-full">
-              <thead className="bg-brand-ink/50 border-b border-brand-outline/50">
+              <thead className="bg-brand-paperElev/50 border-b border-brand-outline/50">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-brand-outline uppercase tracking-wider">
                     Session ID
@@ -195,7 +195,7 @@ export default function SessionsPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.02 }}
-                    className="hover:bg-brand-ink/30 transition-colors"
+                    className="hover:bg-brand-paperElev/30 transition-colors"
                   >
                     <td className="px-6 py-4">
                       <code className="text-brand-accent font-mono text-sm">

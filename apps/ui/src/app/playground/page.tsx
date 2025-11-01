@@ -16,7 +16,7 @@ export default function PlaygroundIndexPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-brand-ink flex items-center justify-center">
+    <div className="min-h-screen bg-brand-paper flex items-center justify-center">
       <div className="text-center">
         <div className="mb-4 flex justify-center">
           <EyeIcon eye="overseer" size={64} />

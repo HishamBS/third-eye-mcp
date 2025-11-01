@@ -460,7 +460,7 @@ export default function EyesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-ink">
+    <div className="min-h-screen bg-brand-paper">
       {/* Header */}
       <div className="border-b border-brand-outline/60 bg-brand-paperElev/50">
         <div className="mx-auto max-w-7xl px-6 py-6">
@@ -618,7 +618,7 @@ export default function EyesPage() {
                       </div>
                       <div>
                         <p className="mb-2 text-sm font-medium text-brand-outline">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_RESULT_RESPONSE}</p>
-                        <pre className={`overflow-x-auto rounded-lg bg-brand-ink p-4 text-xs ${STATUS_TEXT_COLORS.success}`}>
+                        <pre className={`overflow-x-auto rounded-lg bg-brand-paperElev p-4 text-xs ${STATUS_TEXT_COLORS.success}`}>
                           {JSON.stringify(testResult.response, null, 2)}
                         </pre>
                       </div>
@@ -662,7 +662,7 @@ export default function EyesPage() {
                     {/* Input Schema */}
                     <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
                       <h3 className="mb-3 text-lg font-semibold text-brand-foreground">Input Schema</h3>
-                      <pre className={`overflow-x-auto rounded-lg bg-brand-ink p-4 text-xs ${STATUS_TEXT_COLORS.success}`}>
+                      <pre className={`overflow-x-auto rounded-lg bg-brand-paperElev p-4 text-xs ${STATUS_TEXT_COLORS.success}`}>
                         {JSON.stringify(JSON.parse(selectedEye.inputSchema || '{}'), null, 2)}
                       </pre>
                     </div>
@@ -670,7 +670,7 @@ export default function EyesPage() {
                     {/* Output Schema */}
                     <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
                       <h3 className="mb-3 text-lg font-semibold text-brand-foreground">Output Schema</h3>
-                      <pre className={`overflow-x-auto rounded-lg bg-brand-ink p-4 text-xs ${STATUS_TEXT_COLORS.success}`}>
+                      <pre className={`overflow-x-auto rounded-lg bg-brand-paperElev p-4 text-xs ${STATUS_TEXT_COLORS.success}`}>
                         {JSON.stringify(JSON.parse(selectedEye.outputSchema || '{}'), null, 2)}
                       </pre>
                     </div>

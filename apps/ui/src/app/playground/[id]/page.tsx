@@ -501,7 +501,7 @@ export default function PlaygroundPage() {
                   )}
 
                   {viewMode === 'expert' && (
-                    <pre className="mt-4 max-h-64 overflow-x-auto overflow-y-auto rounded bg-brand-ink/90 p-3 text-xs text-brand-foreground">
+                    <pre className="mt-4 max-h-64 overflow-x-auto overflow-y-auto rounded bg-brand-paperElev p-3 text-xs text-brand-foreground">
                       {JSON.stringify(eyeResult, null, 2)}
                     </pre>
                   )}
