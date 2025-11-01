@@ -828,6 +828,7 @@ async function startServices() {
   }
 
   let uiHealthy = false;
+  let uiProcess: ChildProcess | null = null;
   if (!args.noUi) {
     const uiStartTime = Date.now();
 
@@ -836,7 +837,7 @@ async function startServices() {
       ? `bun run --cwd apps/ui dev --port ${args.uiPort || UI_PORT}`
       : `bun run --cwd apps/ui dev --port ${args.uiPort || UI_PORT} >> ${UI_LOG_FILE} 2>&1`;
 
-    const uiProcess = args.foreground
+    uiProcess = args.foreground
       ? spawn('bun', ['run', '--cwd', 'apps/ui', 'dev', '--port', String(args.uiPort || UI_PORT)], {
           cwd: projectRoot,
           stdio: 'inherit',
