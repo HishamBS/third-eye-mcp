@@ -551,8 +551,8 @@ export class EyeOrchestrator {
         model: successfulModel,
         inputMd: input,
         outputJson: envelope,
-        tokensIn: completion.usage.prompt_tokens ?? 0,
-        tokensOut: completion.usage.completion_tokens ?? 0,
+        tokensIn: completion.usage?.prompt_tokens ?? completion.tokensIn ?? 0,
+        tokensOut: completion.usage?.completion_tokens ?? completion.tokensOut ?? 0,
         latencyMs,
         createdAt: new Date(),
       });
@@ -601,8 +601,8 @@ export class EyeOrchestrator {
             status: 'completed',
             envelope,
             metrics: {
-              tokensIn: completion.usage.prompt_tokens ?? 0,
-              tokensOut: completion.usage.completion_tokens ?? 0,
+              tokensIn: completion.usage?.prompt_tokens ?? completion.tokensIn ?? 0,
+              tokensOut: completion.usage?.completion_tokens ?? completion.tokensOut ?? 0,
               latencyMs,
               provider: successfulProviderType,
               providerLabel,
@@ -623,8 +623,8 @@ export class EyeOrchestrator {
             eye: eyeName,
             status: 'completed',
             metrics: {
-              tokensIn: completion.usage.prompt_tokens ?? 0,
-              tokensOut: completion.usage.completion_tokens ?? 0,
+              tokensIn: completion.usage?.prompt_tokens ?? completion.tokensIn ?? 0,
+              tokensOut: completion.usage?.completion_tokens ?? completion.tokensOut ?? 0,
               latencyMs,
               provider: successfulProviderType,
               providerLabel,

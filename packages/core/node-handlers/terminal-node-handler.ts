@@ -4,33 +4,34 @@
  * Terminal nodes mark the end of a pipeline and set the final verdict
  */
 
-import type { PipelineDagNode } from '../../types/dist/pipeline';
+import type { PipelineDagNode } from '@third-eye/types';
 import type { NodeHandler, ExecutionContext, NodeExecutionResult } from './base-handler';
 
 export class TerminalNodeHandler implements NodeHandler {
   canHandle(node: PipelineDagNode): boolean {
-    return node.type === 'Terminal';
+    return node.type === 'terminal';
   }
 
   async execute(node: PipelineDagNode, context: ExecutionContext): Promise<NodeExecutionResult> {
-    if (node.type !== 'Terminal') {
+    if (node.type !== 'terminal') {
       throw new Error(`TerminalNodeHandler cannot handle node type: ${node.type}`);
     }
 
     // Terminal nodes execute instantly and return their verdict
+    const verdict = node.verdict || 'END';
     return {
       nodeId: node.id,
       status: 'success',
-      verdict: node.verdict,
+      verdict,
       output: {
         type: 'terminal',
-        verdict: node.verdict,
-        message: this.getVerdictMessage(node.verdict),
+        verdict,
+        message: this.getVerdictMessage(verdict),
       },
       latencyMs: 0,
       metadata: {
         terminal: true,
-        finalVerdict: node.verdict,
+        finalVerdict: verdict,
       },
     };
   }
@@ -38,7 +39,10 @@ export class TerminalNodeHandler implements NodeHandler {
   /**
    * Get human-readable message for verdict
    */
-  private getVerdictMessage(verdict: string): string {
+  private getVerdictMessage(verdict: string | undefined): string {
+    if (!verdict) {
+      return 'Pipeline execution ended';
+    }
     const messages: Record<string, string> = {
       OK: 'Pipeline completed successfully',
       APPROVED: 'Pipeline approved',

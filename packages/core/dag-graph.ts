@@ -9,7 +9,7 @@
  * - Dependency resolution
  */
 
-import type { PipelineDagNode, PipelineDagEdge } from '../types/dist/pipeline';
+import type { PipelineDagNode, PipelineDagEdge } from '@third-eye/types';
 
 // ============================================================================
 // Types
@@ -71,7 +71,7 @@ export class DagGraphBuilder {
     for (const edge of edges) {
       const edgeInfo: DagEdgeInfo = {
         targetNodeId: edge.to,
-        condition: edge.on,
+        condition: edge.on ?? '',
         loop: edge.loop ?? false,
       };
 
@@ -84,7 +84,7 @@ export class DagGraphBuilder {
       const toEdges = reverseAdjacencyList.get(edge.to) ?? [];
       toEdges.push({
         targetNodeId: edge.from,
-        condition: edge.on,
+        condition: edge.on ?? '',
         loop: edge.loop ?? false,
       });
       reverseAdjacencyList.set(edge.to, toEdges);

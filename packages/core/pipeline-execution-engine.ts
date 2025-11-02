@@ -11,7 +11,7 @@
  * - Handle errors & retries
  */
 
-import type { PipelineDag, PipelineDagNode, PipelineDagEdge } from '../types/dist/pipeline';
+import type { PipelineDag, PipelineDagNode, PipelineDagEdge } from '@third-eye/types';
 import { DagGraphBuilder, type DagGraph } from './dag-graph';
 import {
   EyeNodeHandler,
@@ -97,7 +97,11 @@ export class PipelineExecutionEngine {
       this.dag = dag;
 
       // Build DAG graph
-      let fullGraph = DagGraphBuilder.buildGraph(dag.nodes, dag.edges, dag.entry);
+      const entryNodeId = dag.entryNodeId || dag.nodes[0]?.id;
+      if (!entryNodeId) {
+        throw new Error('Pipeline DAG must have at least one node and an entryNodeId');
+      }
+      let fullGraph = DagGraphBuilder.buildGraph(dag.nodes, dag.edges, entryNodeId);
 
       // Intelligent routing: prune graph if recommendedEyes provided
       if (config.recommendedEyes && config.recommendedEyes.length > 0 && !config.bypassRouting) {
@@ -300,7 +304,7 @@ export class PipelineExecutionEngine {
     }
 
     // Check if terminal node
-    if (node.type === 'Terminal') {
+    if (node.type === 'terminal') {
       this.state.status = 'completed';
       this.state.completedAt = Date.now();
       this.emitEvent('pipeline_completed', {
@@ -339,7 +343,7 @@ export class PipelineExecutionEngine {
 
     // Special handling for Condition nodes
     const currentNode = this.graph.nodes.get(currentNodeId);
-    if (currentNode?.type === 'Condition' && result.metadata?.selectedNext) {
+    if (currentNode?.type === 'condition' && result.metadata?.selectedNext) {
       return [result.metadata.selectedNext as string];
     }
 

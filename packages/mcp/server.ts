@@ -210,7 +210,7 @@ export function createMCPServer(): Server {
   );
 
   // Handle initialize request to capture client metadata
-  server.setRequestHandler(InitializeRequestSchema, async (request) => {
+  server.setRequestHandler(InitializeRequestSchema, async (request: { params: { protocolVersion?: string; capabilities?: unknown; clientInfo?: { name?: string; version?: string } } }) => {
     const params = request.params as MCPInitializeParams;
     const { clientInfo, clientCapabilities } = params;
     const handshakeMeta = params._meta;
@@ -272,13 +272,29 @@ export function createMCPServer(): Server {
   });
 
   // Call tool handler
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  server.setRequestHandler(CallToolRequestSchema, async (request: { params: { name: string; arguments?: unknown } }) => {
     const { name, arguments: args } = request.params;
 
     // Handle overseer tool - main entry point
     if (name === MCP_TOOL_NAME) {
       const toolArgs = args as MCPToolArguments;
       const task = toolArgs.task;
+      if (!task) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                status: "error",
+                code: "E_MISSING_TASK",
+                verdict: "REJECTED",
+                summary: "Task parameter is required",
+              }),
+            },
+          ],
+          isError: true,
+        };
+      }
 
       // NO rejection logic - let Overseer LLM decide everything
 
@@ -334,7 +350,12 @@ export function createMCPServer(): Server {
 
       try {
         // Always execute the full pipeline (simplified - no analyze mode for agents)
-        const result = await autoRouter.executeFlow(task, undefined, providedSessionId, {
+        // executeFlow accepts optional string (providedSessionId?: string)
+        const result = await autoRouter.executeFlow(
+          task,
+          undefined,
+          providedSessionId,
+          {
           strictness: strictnessOptions,
           context: contextOptions,
         });

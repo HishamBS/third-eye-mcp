@@ -7,22 +7,26 @@
  * - "last.tokensUsed > 1000"
  */
 
-import type { PipelineDagNode } from '../../types/dist/pipeline';
+import type { PipelineDagNode } from '@third-eye/types';
 import type { NodeHandler, ExecutionContext, NodeExecutionResult } from './base-handler';
 
 export class ConditionNodeHandler implements NodeHandler {
   canHandle(node: PipelineDagNode): boolean {
-    return node.type === 'Condition';
+    return node.type === 'condition';
   }
 
   async execute(node: PipelineDagNode, context: ExecutionContext): Promise<NodeExecutionResult> {
-    if (node.type !== 'Condition') {
+    if (node.type !== 'condition') {
       throw new Error(`ConditionNodeHandler cannot handle node type: ${node.type}`);
     }
 
     try {
       // Evaluate condition expression
-      const conditionMet = this.evaluateExpression(node.expression, context);
+      const expression = node.expression;
+      if (!expression) {
+        throw new Error('Condition node must have an expression property');
+      }
+      const conditionMet = this.evaluateExpression(expression, context);
 
       // Return result - execution engine will use edges to determine next node
       return {
@@ -31,7 +35,7 @@ export class ConditionNodeHandler implements NodeHandler {
         verdict: conditionMet ? 'TRUE' : 'FALSE',
         output: {
           type: 'condition',
-          expression: node.expression,
+          expression: expression,
           result: conditionMet,
         },
         latencyMs: 0,

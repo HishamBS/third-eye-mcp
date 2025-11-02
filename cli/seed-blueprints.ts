@@ -3,17 +3,25 @@
  * 
  * Seeds persona blueprints into the database from the TypeScript registry.
  * Can be called from CLI without cross-package TypeScript compilation issues.
+ * 
+ * @param personaBlueprints - Table object from schema.personaBlueprints - MUST be from the same
+ *                           schema instance that initialized drizzle to avoid schema mismatch errors.
  */
 
-export async function seedBlueprintsCLI(): Promise<boolean> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function seedBlueprintsCLI(personaBlueprints: any): Promise<boolean> {
   try {
     // Dynamic imports avoid TypeScript compilation issues
-    const [{ getDb }, { personaBlueprints }, { count }, { BLUEPRINT_REGISTRY }] = await Promise.all([
+    const [{ getDb }, { count }, { BLUEPRINT_REGISTRY }] = await Promise.all([
       import('@third-eye/db'),
-      import('@third-eye/db/schema'),
       import('drizzle-orm'),
       import('@third-eye/eyes'),
     ]);
+    
+    // Validate personaBlueprints was provided
+    if (!personaBlueprints) {
+      throw new Error('personaBlueprints is required - must be from schema.personaBlueprints of the same module instance that initialized drizzle');
+    }
 
     const { db } = getDb();
 
@@ -60,6 +68,9 @@ export async function seedBlueprintsCLI(): Promise<boolean> {
     return seeded > 0;
   } catch (error) {
     console.error(`   ✗ Failed to seed blueprints: ${error}`);
+    if (error instanceof Error && error.message) {
+      console.error(`   Error details: ${error.message}`);
+    }
     return false;
   }
 }

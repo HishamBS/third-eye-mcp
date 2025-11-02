@@ -249,7 +249,7 @@ async function prepareDatabase(verbose: boolean) {
   const start = Date.now();
 
   try {
-    const [{ getDb, personas, mcpIntegrations }, { count }, { seedDefaults }] = await Promise.all([
+    const [{ getDb, personas, mcpIntegrations, schema }, { count }, { seedDefaults }] = await Promise.all([
       import('@third-eye/db'),
       import('drizzle-orm'),
       import('../packages/db/defaults/index.ts')
@@ -260,11 +260,12 @@ async function prepareDatabase(verbose: boolean) {
     const report = await seedDefaults({ log: scopedLog });
 
     // Seed blueprints after defaults (separate due to cross-package imports)
+    // Use personaBlueprints from schema object - guaranteed same instance as drizzle initialization
     if (verbose) {
       scopedLog('Seeding blueprints...');
     }
     const { seedBlueprintsCLI } = await import('./seed-blueprints.ts');
-    const blueprintsSeeded = await seedBlueprintsCLI();
+    const blueprintsSeeded = await seedBlueprintsCLI(schema.personaBlueprints);
     if (verbose && blueprintsSeeded) {
       scopedLog('✓ Blueprints seeded');
     }

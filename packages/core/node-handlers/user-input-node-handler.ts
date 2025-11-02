@@ -4,16 +4,16 @@
  * Pauses pipeline execution and waits for user to provide input via API
  */
 
-import type { PipelineDagNode } from '../../types/dist/pipeline';
+import type { PipelineDagNode } from '@third-eye/types';
 import type { NodeHandler, ExecutionContext, NodeExecutionResult } from './base-handler';
 
 export class UserInputNodeHandler implements NodeHandler {
   canHandle(node: PipelineDagNode): boolean {
-    return node.type === 'UserInput';
+    return node.type === 'user_input';
   }
 
   async execute(node: PipelineDagNode, context: ExecutionContext): Promise<NodeExecutionResult> {
-    if (node.type !== 'UserInput') {
+    if (node.type !== 'user_input') {
       throw new Error(`UserInputNodeHandler cannot handle node type: ${node.type}`);
     }
 

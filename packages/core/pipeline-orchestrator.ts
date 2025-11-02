@@ -527,7 +527,7 @@ export class PipelineOrchestrator {
   private getIntelligentSuggestions(
     lastEye: EyeName,
     lastResult: BaseEnvelope,
-    history: BaseEnvelope[]
+    history: Array<{ inputMd?: string; outputJson?: unknown }>
   ): { eyes: EyeName[]; reasoning: string; canAutoRoute: boolean } {
     // Smart suggestions based on Eye responses and context
     switch (lastEye) {

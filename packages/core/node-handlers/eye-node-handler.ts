@@ -8,7 +8,8 @@
  * - WebSocket event emission
  */
 
-import type { PipelineDagNode } from '../../types/dist/pipeline';
+import type { PipelineDagNode } from '@third-eye/types';
+import type { ProviderType } from '@third-eye/providers';
 import type { NodeHandler, ExecutionContext, NodeExecutionResult } from './base-handler';
 import { EyeOrchestrator } from '../orchestrator';
 
@@ -36,12 +37,21 @@ export class EyeNodeHandler implements NodeHandler {
       const inputMd = typeof inputData === 'string' ? inputData : JSON.stringify(inputData);
 
       // Execute Eye via EyeOrchestrator
+      if (!node.eyeId) {
+        throw new Error('Eye node must have an eyeId property');
+      }
+      const providerOverride = node.providerOverride
+        ? {
+            provider: node.providerOverride.provider as ProviderType,
+            model: node.providerOverride.model,
+          }
+        : undefined;
       const result = await this.orchestrator.runEye(
         node.eyeId,
         inputMd,
         context.sessionId,
         {
-          providerOverride: node.providerOverride || undefined,
+          providerOverride,
           // TODO: Map strictnessOverride to options when supported
         }
       );

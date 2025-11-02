@@ -117,9 +117,9 @@ export function getWorkflowGuidance(request: GuidanceRequest): GuidanceResponse 
     workflowPath = WORKFLOW_PATHS.clarification;
   }
 
-  // Find current position in workflow
-  const currentTool = lastEyeResponse?.tool || null;
-  const currentIndex = currentTool ? workflowPath.indexOf(currentTool) : -1;
+  // Find current position in workflow using tag property
+  const currentTag = lastEyeResponse?.tag ? `third_eye_${lastEyeResponse.tag}` : null;
+  const currentIndex = currentTag ? workflowPath.indexOf(currentTag) : -1;
 
   // Recommend next tool
   const recommendedTool =
@@ -242,39 +242,44 @@ function detectValidationTask(description: string): boolean {
  * Determine current workflow stage
  */
 function determineWorkflowStage(currentState?: string, lastResponse?: EyeResponse): string {
-  if (lastResponse?.code === 'APPROVED' || lastResponse?.data?.approved) {
+  // Check for approval status using proper enum comparison
+  if (lastResponse?.ok === true || lastResponse?.data?.approved === true) {
     return WorkflowStage.APPROVAL;
   }
 
-  if (lastResponse?.tool?.includes('rinnegan_final_approval')) {
+  // Use tag property instead of non-existent tool property
+  const tag = lastResponse?.tag?.toLowerCase() || '';
+  const nextAction = typeof lastResponse?.next === 'string' ? lastResponse.next.toLowerCase() : Array.isArray(lastResponse?.next) ? lastResponse.next.join(' ').toLowerCase() : '';
+
+  // Check tag for eye type
+  if (tag === 'byakugan' && nextAction.includes('final')) {
     return WorkflowStage.COMPLETE;
   }
 
-  if (lastResponse?.tool?.includes('mangekyo_review_docs')) {
-    return WorkflowStage.DOCUMENTATION;
+  if (tag === 'mangekyo') {
+    if (nextAction.includes('docs') || nextAction.includes('documentation')) {
+      return WorkflowStage.DOCUMENTATION;
+    }
+    if (nextAction.includes('test') || nextAction.includes('testing')) {
+      return WorkflowStage.TESTING;
+    }
+    if (nextAction.includes('impl') || nextAction.includes('implementation')) {
+      return WorkflowStage.IMPLEMENTATION;
+    }
+    if (nextAction.includes('scaffold')) {
+      return WorkflowStage.SCAFFOLD;
+    }
   }
 
-  if (lastResponse?.tool?.includes('mangekyo_review_tests')) {
-    return WorkflowStage.TESTING;
-  }
-
-  if (lastResponse?.tool?.includes('mangekyo_review_impl')) {
-    return WorkflowStage.IMPLEMENTATION;
-  }
-
-  if (lastResponse?.tool?.includes('mangekyo_review_scaffold')) {
-    return WorkflowStage.SCAFFOLD;
-  }
-
-  if (lastResponse?.tool?.includes('rinnegan')) {
+  if (tag === 'rinnegan') {
     return WorkflowStage.PLANNING;
   }
 
-  if (lastResponse?.tool?.includes('jogan')) {
+  if (tag === 'jogan') {
     return WorkflowStage.INTENT_VALIDATION;
   }
 
-  if (lastResponse?.tool?.includes('helper')) {
+  if (tag === 'kyuubi' || tag === 'prompt-helper') {
     return WorkflowStage.CLARIFICATION;
   }
 
@@ -344,7 +349,8 @@ function generateNextSteps(tool: string, stage: string, lastResponse?: EyeRespon
   if (tool === 'third_eye_sharingan_clarify') {
     steps.push('Submit your task description to Sharingan for classification');
     steps.push('Answer any clarifying questions that emerge');
-    if (lastResponse?.data?.questions) {
+    // Type guard for questions array
+    if (lastResponse?.data?.questions && Array.isArray(lastResponse.data.questions)) {
       steps.push(`Prepare answers for ${lastResponse.data.questions.length} questions`);
     }
   }
@@ -387,8 +393,10 @@ function generateNextSteps(tool: string, stage: string, lastResponse?: EyeRespon
  */
 export function shouldDelegate(eyeResponse: EyeResponse): { delegate: boolean; toEye?: string } {
   // Check if response has "next" field suggesting delegation
-  if (eyeResponse.next && eyeResponse.next !== 'COMPLETE') {
-    return { delegate: true, toEye: eyeResponse.next };
+  // Handle both string and string[] types for next property
+  const nextValue = Array.isArray(eyeResponse.next) ? eyeResponse.next[0] : eyeResponse.next;
+  if (nextValue && typeof nextValue === 'string' && nextValue !== 'COMPLETE') {
+    return { delegate: true, toEye: nextValue };
   }
 
   // Check ambiguity flag from Sharingan

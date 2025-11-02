@@ -80,4 +80,10 @@ export type {
   CustomEye,
 } from './interfaces';
 
+export type {
+  PipelineDagNode,
+  PipelineDagEdge,
+  PipelineDag,
+} from './pipeline';
+
 export { z } from 'zod';

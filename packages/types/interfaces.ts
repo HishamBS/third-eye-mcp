@@ -68,17 +68,8 @@ export interface CompletionRequest {
   jsonMode?: boolean;
 }
 
-/**
- * Completion Response
- */
-export interface CompletionResponse {
-  content: string;
-  tokensIn: number;
-  tokensOut: number;
-  latencyMs: number;
-  model: string;
-  finishReason?: string;
-}
+// CompletionResponse is now exported from providers.ts (SSOT)
+// Removed duplicate definition to comply with R01 (SSOT & DRY)
 
 /**
  * Session Configuration

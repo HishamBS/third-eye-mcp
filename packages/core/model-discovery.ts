@@ -22,9 +22,17 @@ const CapabilitySchema = z
   })
   .optional();
 
-type ProviderModel = Awaited<ReturnType<BaseProvider['listModels']>> extends Array<infer Item>
-  ? Item
-  : never;
+// Type for model returned from provider.listModels()
+type ProviderModel = {
+  id: string;
+  name?: string;
+  context_window?: number;
+  family?: string;
+  pricing?: {
+    prompt: number;
+    completion: number;
+  };
+};
 
 type ModelCapability = {
   ctx?: number;
@@ -145,24 +153,35 @@ export class ModelDiscoveryService {
   /**
    * Cache discovered models in the database
    */
-  private normalizeModel(model: ProviderModel): NormalizedModel {
-    const capability: ModelCapability = {};
-
-    if (typeof model.context_window === 'number') {
-      capability.ctx = model.context_window;
+  private normalizeModel(model: unknown): NormalizedModel {
+    // Type guard to ensure model has required properties
+    if (
+      !model ||
+      typeof model !== 'object' ||
+      !('id' in model) ||
+      typeof (model as { id: unknown }).id !== 'string'
+    ) {
+      throw new Error('Invalid model format: missing required id property');
     }
 
-    const displayName = typeof model.name === 'string' ? model.name : model.id;
+    const modelObj = model as ProviderModel;
+    const capability: ModelCapability = {};
+
+    if (typeof modelObj.context_window === 'number') {
+      capability.ctx = modelObj.context_window;
+    }
+
+    const displayName = typeof modelObj.name === 'string' ? modelObj.name : modelObj.id;
 
     return {
-      id: model.id,
+      id: modelObj.id,
       displayName,
-      family: null,
+      family: modelObj.family ?? null,
       capability,
     };
   }
 
-  private async cacheModels(providerId: ProviderId, models: ProviderModel[]): Promise<void> {
+  private async cacheModels(providerId: ProviderId, models: unknown[]): Promise<void> {
     const { db } = getDb();
     const now = new Date();
 

@@ -4,7 +4,7 @@
  * Strategy pattern for handling different node types in pipeline execution
  */
 
-import type { PipelineDagNode } from '../../types/dist/pipeline';
+import type { PipelineDagNode } from '@third-eye/types';
 
 export interface ExecutionContext {
   runId: string;

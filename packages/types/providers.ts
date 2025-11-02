@@ -42,9 +42,19 @@ export type CompletionRequest = z.infer<typeof CompletionRequestSchema>;
 
 /**
  * Completion response format
+ * Matches the actual provider implementations in packages/providers/src/base.ts
  */
 export const CompletionResponseSchema = z.object({
-  text: z.string(),
+  id: z.string().optional(),
+  model: z.string().optional(),
+  content: z.string(),
+  usage: z.object({
+    prompt_tokens: z.number(),
+    completion_tokens: z.number(),
+    total_tokens: z.number(),
+  }).optional(),
+  finish_reason: z.enum(['stop', 'length', 'content_filter', 'tool_calls']).optional(),
+  // Legacy fields for backward compatibility
   tokensIn: z.number().optional(),
   tokensOut: z.number().optional(),
   latencyMs: z.number().optional(),
