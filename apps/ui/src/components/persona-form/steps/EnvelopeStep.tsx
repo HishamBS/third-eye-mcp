@@ -59,7 +59,7 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
     <div className="space-y-8">
       {/* Required Keys */}
       <div>
-        <label className="block text-sm font-medium text-brand-ink mb-2">
+        <label className="block text-sm font-medium text-brand-foreground mb-2">
           {FIELD_LABELS.REQUIRED_KEYS}
         </label>
         <div className="flex gap-2 mb-3">
@@ -71,7 +71,7 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
               e.key === 'Enter' && handleAddKey('requiredKeys', requiredKeyInput)
             }
             placeholder={PLACEHOLDERS.KEY}
-            className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent"
+            className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
           />
           <button
             onClick={() => handleAddKey('requiredKeys', requiredKeyInput)}
@@ -97,12 +97,12 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
             </div>
           ))}
         </div>
-        <p className="text-xs text-brand-ink/60">{HELP_TEXT.REQUIRED_KEYS}</p>
+        <p className="text-xs text-semantic-muted">{HELP_TEXT.REQUIRED_KEYS}</p>
       </div>
 
       {/* Required Data Keys */}
       <div>
-        <label className="block text-sm font-medium text-brand-ink mb-2">
+        <label className="block text-sm font-medium text-brand-foreground mb-2">
           {FIELD_LABELS.REQUIRED_DATA_KEYS}
         </label>
         <div className="flex gap-2 mb-3">
@@ -114,7 +114,7 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
               e.key === 'Enter' && handleAddKey('requiredDataKeys', dataKeyInput)
             }
             placeholder={PLACEHOLDERS.KEY}
-            className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent"
+            className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
           />
           <button
             onClick={() => handleAddKey('requiredDataKeys', dataKeyInput)}
@@ -140,12 +140,12 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
             </div>
           ))}
         </div>
-        <p className="text-xs text-brand-ink/60">{HELP_TEXT.REQUIRED_DATA_KEYS}</p>
+        <p className="text-xs text-semantic-muted">{HELP_TEXT.REQUIRED_DATA_KEYS}</p>
       </div>
 
       {/* Required UI Keys */}
       <div>
-        <label className="block text-sm font-medium text-brand-ink mb-2">
+        <label className="block text-sm font-medium text-brand-foreground mb-2">
           {FIELD_LABELS.REQUIRED_UI_KEYS}
         </label>
         <div className="flex gap-2 mb-3">
@@ -157,7 +157,7 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
               e.key === 'Enter' && handleAddKey('requiredUiKeys', uiKeyInput)
             }
             placeholder={PLACEHOLDERS.KEY}
-            className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent"
+            className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
           />
           <button
             onClick={() => handleAddKey('requiredUiKeys', uiKeyInput)}
@@ -183,7 +183,7 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
             </div>
           ))}
         </div>
-        <p className="text-xs text-brand-ink/60">{HELP_TEXT.REQUIRED_UI_KEYS}</p>
+        <p className="text-xs text-semantic-muted">{HELP_TEXT.REQUIRED_UI_KEYS}</p>
       </div>
     </div>
   );

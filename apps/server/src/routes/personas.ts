@@ -158,7 +158,30 @@ app.put('/blueprints/:eyeId', async (c) => {
 
 // Zod schemas for validation
 const createPersonaSchema = z.object({
-  content: z.string().min(1),
+  name: z.string().min(1),
+  metadata_json: z.object({
+    eyeId: z.string(),
+    name: z.string(),
+    description: z.string(),
+    version: z.number(),
+    capabilities: z.array(z.string()),
+  }),
+  mission: z.string().min(1),
+  guidance_json: z.record(z.unknown()).nullable().optional(),
+  validation_json: z.record(z.unknown()).nullable().optional(),
+  envelope_json: z.object({
+    requiredKeys: z.array(z.string()).optional(),
+    requiredDataKeys: z.array(z.string()).optional(),
+    requiredUiKeys: z.array(z.string()).optional(),
+  }),
+  reminders_json: z.array(z.string()),
+  notes: z.string().nullable().optional(),
+  llm_config_json: z.object({
+    temperature: z.number(),
+    top_p: z.number(),
+    response_format: z.string(),
+    max_tokens: z.number(),
+  }),
 });
 
 // Get all personas for all Eyes - returns flat array with name field
@@ -264,7 +287,17 @@ app.get('/:eye/active', async (c) => {
 app.post('/:eye', validateBodyWithEnvelope(createPersonaSchema), async (c) => {
   try {
     const eye = c.req.param('eye');
-    const { content } = c.get('validatedBody');
+    const {
+      name,
+      metadata_json,
+      mission,
+      guidance_json,
+      validation_json,
+      envelope_json,
+      reminders_json,
+      notes,
+      llm_config_json
+    } = c.get('validatedBody');
 
     const { db } = getDb();
 
@@ -278,10 +311,6 @@ app.post('/:eye', validateBodyWithEnvelope(createPersonaSchema), async (c) => {
 
     const newVersion = (latest?.version || 0) + 1;
 
-    // Get Eye name for persona
-    const definition = DEFAULT_PERSONA_MAP[eye];
-    const eyeName = definition?.name || eye;
-
     // Generate persona ID
     const personaId = `${eye}_v${newVersion}`;
 
@@ -289,9 +318,16 @@ app.post('/:eye', validateBodyWithEnvelope(createPersonaSchema), async (c) => {
     const newPersona = {
       id: personaId,
       eye,
-      name: eyeName,
+      name,
       version: newVersion,
-      content,
+      metadata_json,
+      mission,
+      guidance_json,
+      validation_json,
+      envelope_json,
+      reminders_json,
+      notes,
+      llm_config_json,
       active: false,
       createdAt: new Date(),
     };

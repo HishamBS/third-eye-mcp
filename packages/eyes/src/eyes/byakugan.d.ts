@@ -8,14 +8,14 @@ export declare const Inconsistency: z.ZodObject<{
     suggestion: z.ZodString;
 }, "strip", z.ZodTypeAny, {
     type: "logical" | "temporal" | "factual" | "scope" | "assumption";
-    severity: "minor" | "moderate" | "major" | "critical";
     description: string;
+    severity: "minor" | "moderate" | "major" | "critical";
     conflictingStatements: string[];
     suggestion: string;
 }, {
     type: "logical" | "temporal" | "factual" | "scope" | "assumption";
-    severity: "minor" | "moderate" | "major" | "critical";
     description: string;
+    severity: "minor" | "moderate" | "major" | "critical";
     conflictingStatements: string[];
     suggestion: string;
 }>;
@@ -32,14 +32,14 @@ export declare const ByakuganMetadata: z.ZodObject<{
         suggestion: z.ZodString;
     }, "strip", z.ZodTypeAny, {
         type: "logical" | "temporal" | "factual" | "scope" | "assumption";
-        severity: "minor" | "moderate" | "major" | "critical";
         description: string;
+        severity: "minor" | "moderate" | "major" | "critical";
         conflictingStatements: string[];
         suggestion: string;
     }, {
         type: "logical" | "temporal" | "factual" | "scope" | "assumption";
-        severity: "minor" | "moderate" | "major" | "critical";
         description: string;
+        severity: "minor" | "moderate" | "major" | "critical";
         conflictingStatements: string[];
         suggestion: string;
     }>, "many">;
@@ -52,8 +52,8 @@ export declare const ByakuganMetadata: z.ZodObject<{
     inconsistenciesBySeverity: Record<string, number>;
     inconsistencies: {
         type: "logical" | "temporal" | "factual" | "scope" | "assumption";
-        severity: "minor" | "moderate" | "major" | "critical";
         description: string;
+        severity: "minor" | "moderate" | "major" | "critical";
         conflictingStatements: string[];
         suggestion: string;
     }[];
@@ -66,8 +66,8 @@ export declare const ByakuganMetadata: z.ZodObject<{
     inconsistenciesBySeverity: Record<string, number>;
     inconsistencies: {
         type: "logical" | "temporal" | "factual" | "scope" | "assumption";
-        severity: "minor" | "moderate" | "major" | "critical";
         description: string;
+        severity: "minor" | "moderate" | "major" | "critical";
         conflictingStatements: string[];
         suggestion: string;
     }[];

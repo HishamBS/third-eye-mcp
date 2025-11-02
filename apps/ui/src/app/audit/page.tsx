@@ -59,7 +59,7 @@ export default function AuditPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent">
+              <Link href="/" className="text-semantic-muted transition-colors hover:text-brand-accent">
                 ← Home
               </Link>
               <div>
@@ -80,7 +80,7 @@ export default function AuditPage() {
             <form onSubmit={handleSubmit}>
               <div className="grid gap-4 md:grid-cols-4">
                 <label className="flex flex-col gap-2">
-                  <span className="text-xs font-medium uppercase tracking-[0.2em] text-brand-outline">Since</span>
+                  <span className="text-xs font-medium uppercase tracking-[0.2em] text-semantic-muted">Since</span>
                   <input
                     type="datetime-local"
                     value={since}
@@ -89,7 +89,7 @@ export default function AuditPage() {
                   />
                 </label>
                 <label className="flex flex-col gap-2">
-                  <span className="text-xs font-medium uppercase tracking-[0.2em] text-brand-outline">Until</span>
+                  <span className="text-xs font-medium uppercase tracking-[0.2em] text-semantic-muted">Until</span>
                   <input
                     type="datetime-local"
                     value={until}
@@ -98,7 +98,7 @@ export default function AuditPage() {
                   />
                 </label>
                 <label className="flex flex-col gap-2">
-                  <span className="text-xs font-medium uppercase tracking-[0.2em] text-brand-outline">Tenant</span>
+                  <span className="text-xs font-medium uppercase tracking-[0.2em] text-semantic-muted">Tenant</span>
                   <input
                     value={tenant}
                     onChange={(event) => setTenant(event.target.value)}
@@ -109,7 +109,7 @@ export default function AuditPage() {
                 <div className="flex items-end">
                   <button
                     type="submit"
-                    className="w-full rounded-full bg-brand-accent px-4 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
+                    className="w-full rounded-full bg-brand-accent px-4 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
                   >
                     Apply filters
                   </button>

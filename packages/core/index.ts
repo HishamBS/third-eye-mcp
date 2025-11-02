@@ -28,5 +28,14 @@ export type { WebSocketBridge } from './websocket-registry';
 // Guidance functions
 export { getWorkflowGuidance, shouldDelegate } from './guidance';
 
+// Dynamic routing (Phase 17)
+export { DynamicRouter, dynamicRouter } from './routing/dynamic-router';
+export type {
+  EyeRouteStep,
+  EyeSequence,
+  ValidationResult,
+  SessionContext
+} from './routing/dynamic-router';
+
 // Re-export Eyes for convenience
 export * from '@third-eye/eyes';

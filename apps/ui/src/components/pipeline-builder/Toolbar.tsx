@@ -79,7 +79,7 @@ export const Toolbar = memo(function Toolbar({
         <div className="relative">
           <button
             onClick={() => setShowPipelineMenu(!showPipelineMenu)}
-            className="px-4 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-ink font-medium text-sm hover:bg-brand-outline/10 transition-colors flex items-center gap-2"
+            className="px-4 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-foreground font-medium text-sm hover:bg-brand-outline/10 transition-colors flex items-center gap-2"
           >
             <span>{activePipeline?.name || TOOLBAR_TEXT.SYSTEM_DEFAULT}</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -98,17 +98,17 @@ export const Toolbar = memo(function Toolbar({
                     className={`w-full text-left px-4 py-2 text-sm hover:bg-brand-outline/10 transition-colors ${
                       activePipeline?.id === pipeline.id
                         ? 'bg-brand-primary/10 text-brand-primary font-medium'
-                        : 'text-brand-ink'
+                        : 'text-brand-foreground'
                     }`}
                   >
                     <div className="font-medium">{pipeline.name}</div>
                     {pipeline.description && (
-                      <div className="text-xs text-brand-ink/60 mt-0.5">{pipeline.description}</div>
+                      <div className="text-xs text-semantic-muted mt-0.5">{pipeline.description}</div>
                     )}
                   </button>
                 ))
               ) : (
-                <div className="px-4 py-3 text-sm text-brand-ink/50 text-center">No saved pipelines</div>
+                <div className="px-4 py-3 text-sm text-semantic-muted text-center">No saved pipelines</div>
               )}
             </div>
           )}
@@ -147,21 +147,21 @@ export const Toolbar = memo(function Toolbar({
         {/* Always Visible Actions */}
         <button
           onClick={onValidate}
-          className="px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-ink text-sm hover:bg-brand-outline/10 transition-colors"
+          className="px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-foreground text-sm hover:bg-brand-outline/10 transition-colors"
         >
           {TOOLBAR_TEXT.VALIDATE}
         </button>
 
         <button
           onClick={onAutoLayout}
-          className="px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-ink text-sm hover:bg-brand-outline/10 transition-colors"
+          className="px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-foreground text-sm hover:bg-brand-outline/10 transition-colors"
         >
           {TOOLBAR_TEXT.AUTO_LAYOUT}
         </button>
 
         <button
           onClick={onZoomFit}
-          className="px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-ink text-sm hover:bg-brand-outline/10 transition-colors"
+          className="px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-foreground text-sm hover:bg-brand-outline/10 transition-colors"
         >
           {TOOLBAR_TEXT.ZOOM_FIT}
         </button>
@@ -171,14 +171,14 @@ export const Toolbar = memo(function Toolbar({
           <>
             <button
               onClick={onExport}
-              className="px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-ink text-sm hover:bg-brand-outline/10 transition-colors"
+              className="px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-foreground text-sm hover:bg-brand-outline/10 transition-colors"
             >
               {TOOLBAR_TEXT.EXPORT}
             </button>
 
             <button
               onClick={onImport}
-              className="px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-ink text-sm hover:bg-brand-outline/10 transition-colors"
+              className="px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-foreground text-sm hover:bg-brand-outline/10 transition-colors"
             >
               {TOOLBAR_TEXT.IMPORT}
             </button>
@@ -195,7 +195,7 @@ export const Toolbar = memo(function Toolbar({
               className={`px-3 py-2 border rounded-md text-sm transition-colors ${
                 showMinimap
                   ? 'bg-brand-primary text-brand-foreground border-brand-primary'
-                  : 'bg-brand-paper text-brand-ink border-brand-outline hover:bg-brand-outline/10'
+                  : 'bg-brand-paper text-brand-foreground border-brand-outline hover:bg-brand-outline/10'
               }`}
             >
               {TOOLBAR_TEXT.TOGGLE_MINIMAP}
@@ -206,7 +206,7 @@ export const Toolbar = memo(function Toolbar({
               className={`px-3 py-2 border rounded-md text-sm transition-colors ${
                 showGrid
                   ? 'bg-brand-primary text-brand-foreground border-brand-primary'
-                  : 'bg-brand-paper text-brand-ink border-brand-outline hover:bg-brand-outline/10'
+                  : 'bg-brand-paper text-brand-foreground border-brand-outline hover:bg-brand-outline/10'
               }`}
             >
               {TOOLBAR_TEXT.TOGGLE_GRID}
@@ -217,7 +217,7 @@ export const Toolbar = memo(function Toolbar({
         {/* Expand/Collapse Toggle */}
         <button
           onClick={() => setExpanded(!expanded)}
-          className="px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-ink text-sm hover:bg-brand-outline/10 transition-colors"
+          className="px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-foreground text-sm hover:bg-brand-outline/10 transition-colors"
           title={expanded ? 'Show Less' : TOOLBAR_TEXT.MORE_ACTIONS}
         >
           <svg

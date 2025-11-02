@@ -77,7 +77,7 @@ export async function storeIntentConfirmation(sessionId, intentAnalysis, confirm
     const newConfirmation = {
         id,
         sessionId,
-        intentAnalysis: intentAnalysis,
+        intentAnalysis,
         confirmationPrompt,
         response: null,
         userIdentity: null,

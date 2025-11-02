@@ -48,7 +48,7 @@ export function Tooltip({ helpTextKey, helpTextMap, children, position = 'top' }
             role="tooltip"
           >
             <div className="rounded-lg bg-brand-paperElev border border-brand-outline/50 px-3 py-2 shadow-xl backdrop-blur-sm max-w-xs">
-              <p className="text-sm text-brand-outline leading-relaxed">
+              <p className="text-sm text-semantic-muted leading-relaxed">
                 {helpTextMap[helpTextKey]}
               </p>
             </div>

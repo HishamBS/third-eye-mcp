@@ -12,6 +12,7 @@ import { SkeletonCard } from '@/components/ui/Skeleton';
 import { UI_HELP_TEXT } from '@third-eye/constants';
 import { PersonaWizardModal } from '@/components/persona-form/PersonaWizardModal';
 import { CustomEyeWizard } from '@/components/custom-eye-form/CustomEyeWizard';
+import { EyeWizardModal } from '@/components/eye-wizard/EyeWizardModal';
 import { API_BASE_URL } from '@/consts/api';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BG_COLORS, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 import { TIMING, ANIMATION_DURATION } from '@/constants/timing';
@@ -82,6 +83,10 @@ export default function EyesPage() {
   // Phase 15: Persona configuration modal
   const [isPersonaModalOpen, setIsPersonaModalOpen] = useState(false);
   const [selectedPersonaEye, setSelectedPersonaEye] = useState<{ id: string; name: string } | null>(null);
+
+  // Eye editing wizard modal
+  const [isEyeWizardOpen, setIsEyeWizardOpen] = useState(false);
+  const [selectedEyeForEdit, setSelectedEyeForEdit] = useState<{ id: string; name: string } | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -459,6 +464,22 @@ export default function EyesPage() {
     fetchEyes(); // Refresh eyes list to show updated persona status
   };
 
+  // Eye wizard handlers
+  const openEyeWizard = (eye: Eye) => {
+    setSelectedEyeForEdit({ id: eye.id, name: eye.name });
+    setIsEyeWizardOpen(true);
+  };
+
+  const closeEyeWizard = () => {
+    setIsEyeWizardOpen(false);
+    setSelectedEyeForEdit(null);
+  };
+
+  const handleEyeSaved = () => {
+    setSuccess(UI_HELP_TEXT.EYES_SUCCESS_UPDATED);
+    fetchEyes(); // Refresh eyes list
+  };
+
   return (
     <div className="min-h-screen bg-brand-paper">
       {/* Header */}
@@ -466,7 +487,7 @@ export default function EyesPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent" aria-label={UI_HELP_TEXT.ARIA_NAV_HOME}>
+              <Link href="/" className="text-semantic-muted transition-colors hover:text-brand-accent" aria-label={UI_HELP_TEXT.ARIA_NAV_HOME}>
                 {UI_HELP_TEXT.EYES_NAV_HOME}
               </Link>
               <div>
@@ -478,17 +499,17 @@ export default function EyesPage() {
               </div>
             </div>
             <div className="flex gap-4">
-              <Link href="/prompts" className="text-sm text-brand-outline transition-colors hover:text-brand-foreground" aria-label={UI_HELP_TEXT.ARIA_NAV_PROMPTS}>
+              <Link href="/prompts" className="text-sm text-semantic-muted transition-colors hover:text-brand-foreground" aria-label={UI_HELP_TEXT.ARIA_NAV_PROMPTS}>
                 {UI_HELP_TEXT.EYES_NAV_PROMPTS}
               </Link>
-              <Link href="/personas" className="text-sm text-brand-outline transition-colors hover:text-brand-foreground" aria-label={UI_HELP_TEXT.ARIA_NAV_PERSONAS}>
+              <Link href="/personas" className="text-sm text-semantic-muted transition-colors hover:text-brand-foreground" aria-label={UI_HELP_TEXT.ARIA_NAV_PERSONAS}>
                 {UI_HELP_TEXT.EYES_NAV_PERSONAS}
               </Link>
               <div className="flex items-center gap-2">
                 <button
                   onClick={startCreating}
                   aria-label={UI_HELP_TEXT.ARIA_CREATE_EYE}
-                  className={`rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition-all ${ANIMATION_DURATION.FAST} hover:bg-brand-primary hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink active:scale-95`}
+                  className={`rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-foreground transition-all ${ANIMATION_DURATION.FAST} hover:bg-brand-primary hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink active:scale-95`}
                 >
                   {UI_HELP_TEXT.EYES_BUTTON_CREATE}
                 </button>
@@ -554,7 +575,7 @@ export default function EyesPage() {
                     <button
                       onClick={cancelForm}
                       aria-label={UI_HELP_TEXT.ARIA_CLOSE_TEST}
-                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       {UI_HELP_TEXT.EYES_BUTTON_CLOSE_TEST}
                     </button>
@@ -571,7 +592,7 @@ export default function EyesPage() {
                   /* View mode for custom eyes */
                   <>
                     <button
-                      onClick={() => setIsEditing(true)}
+                      onClick={() => selectedEye && openEyeWizard(selectedEye)}
                       aria-label={UI_HELP_TEXT.ARIA_EDIT_EYE}
                       className="rounded-full border border-brand-accent px-5 py-2 text-sm font-semibold text-brand-accent transition hover:bg-brand-accent/10"
                     >
@@ -600,7 +621,7 @@ export default function EyesPage() {
               /* Test Panel */
               <div className="space-y-6">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-brand-outline">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_INPUT}</label>
+                  <label className="mb-2 block text-sm font-medium text-semantic-muted">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_INPUT}</label>
                   <textarea
                     value={testInput}
                     onChange={(e) => setTestInput(e.target.value)}
@@ -614,10 +635,10 @@ export default function EyesPage() {
                     <h3 className="mb-3 text-lg font-semibold text-brand-foreground">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_RESULT}</h3>
                     <div className="space-y-3">
                       <div>
-                        <p className="text-sm font-medium text-brand-outline">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_RESULT_EYE} {testResult.eyeName}</p>
+                        <p className="text-sm font-medium text-semantic-muted">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_RESULT_EYE} {testResult.eyeName}</p>
                       </div>
                       <div>
-                        <p className="mb-2 text-sm font-medium text-brand-outline">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_RESULT_RESPONSE}</p>
+                        <p className="mb-2 text-sm font-medium text-semantic-muted">{UI_HELP_TEXT.EYES_FORM_LABEL_TEST_RESULT_RESPONSE}</p>
                         <pre className={`overflow-x-auto rounded-lg bg-brand-paperElev p-4 text-xs ${STATUS_TEXT_COLORS.success}`}>
                           {JSON.stringify(testResult.response, null, 2)}
                         </pre>
@@ -636,16 +657,16 @@ export default function EyesPage() {
                       <h3 className="mb-3 text-lg font-semibold text-brand-foreground">Basic Information</h3>
                       <dl className="space-y-2">
                         <div>
-                          <dt className="text-sm font-medium text-brand-outline">Eye Name</dt>
+                          <dt className="text-sm font-medium text-semantic-muted">Eye Name</dt>
                           <dd className="mt-1 text-brand-foreground">{selectedEye.name}</dd>
                         </div>
                         <div>
-                          <dt className="text-sm font-medium text-brand-outline">Description</dt>
+                          <dt className="text-sm font-medium text-semantic-muted">Description</dt>
                           <dd className="mt-1 text-brand-foreground">{selectedEye.description}</dd>
                         </div>
                         {selectedEye.iconSvg && (
                           <div>
-                            <dt className="text-sm font-medium text-brand-outline">Icon</dt>
+                            <dt className="text-sm font-medium text-semantic-muted">Icon</dt>
                             <dd className="mt-2">
                               <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-brand-outline/50 bg-brand-paperElev p-2">
                                 <div
@@ -690,8 +711,8 @@ export default function EyesPage() {
                   aria-label={UI_HELP_TEXT.ARIA_FILTER_ALL}
                   className={`rounded-full px-5 py-2 text-sm font-semibold transition-all ${ANIMATION_DURATION.FAST} ${
                     viewMode === 'all'
-                      ? 'bg-brand-accent text-brand-ink scale-105'
-                      : 'border border-brand-outline/40 text-brand-outline hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
+                      ? 'bg-brand-accent text-brand-foreground scale-105'
+                      : 'border border-brand-outline/40 text-semantic-muted hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
                   } focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink`}
                 >
                   {UI_HELP_TEXT.EYES_FILTER_ALL.replace('{count}', eyes.length.toString())}
@@ -704,8 +725,8 @@ export default function EyesPage() {
                   aria-label={UI_HELP_TEXT.ARIA_FILTER_BUILTIN}
                   className={`rounded-full px-5 py-2 text-sm font-semibold transition-all ${ANIMATION_DURATION.FAST} ${
                     viewMode === 'built-in'
-                      ? 'bg-brand-accent text-brand-ink scale-105'
-                      : 'border border-brand-outline/40 text-brand-outline hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
+                      ? 'bg-brand-accent text-brand-foreground scale-105'
+                      : 'border border-brand-outline/40 text-semantic-muted hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
                   } focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink`}
                 >
                   {UI_HELP_TEXT.EYES_FILTER_BUILTIN.replace('{count}', builtInEyes.length.toString())}
@@ -718,8 +739,8 @@ export default function EyesPage() {
                   aria-label={UI_HELP_TEXT.ARIA_FILTER_CUSTOM}
                   className={`rounded-full px-5 py-2 text-sm font-semibold transition-all ${ANIMATION_DURATION.FAST} ${
                     viewMode === 'custom'
-                      ? 'bg-brand-accent text-brand-ink scale-105'
-                      : 'border border-brand-outline/40 text-brand-outline hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
+                      ? 'bg-brand-accent text-brand-foreground scale-105'
+                      : 'border border-brand-outline/40 text-semantic-muted hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
                   } focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink`}
                 >
                   {UI_HELP_TEXT.EYES_FILTER_CUSTOM.replace('{count}', customEyes.length.toString())}
@@ -853,6 +874,17 @@ export default function EyesPage() {
           eyeName={selectedPersonaEye.name}
           onClose={closePersonaConfig}
           onSave={handlePersonaSaved}
+        />
+      )}
+
+      {/* Eye Editing Wizard Modal */}
+      {selectedEyeForEdit && (
+        <EyeWizardModal
+          isOpen={isEyeWizardOpen}
+          eyeId={selectedEyeForEdit.id}
+          eyeName={selectedEyeForEdit.name}
+          onClose={closeEyeWizard}
+          onSuccess={handleEyeSaved}
         />
       )}
     </div>

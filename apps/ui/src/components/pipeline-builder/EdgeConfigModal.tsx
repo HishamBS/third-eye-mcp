@@ -132,12 +132,12 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-brand-outline">
-          <h2 className="text-xl font-semibold text-brand-ink">{EDGE_TEXT.TITLE}</h2>
+          <h2 className="text-xl font-semibold text-brand-foreground">{EDGE_TEXT.TITLE}</h2>
           <button
             onClick={onClose}
             className="p-1 hover:bg-brand-outline/20 rounded-md transition-colors"
           >
-            <svg className="w-5 h-5 text-brand-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-brand-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -147,7 +147,7 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
         <div className="px-6 py-4 space-y-6">
           {/* Enabled Toggle */}
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-brand-ink">
+            <label className="text-sm font-medium text-brand-foreground">
               {EDGE_TEXT.ENABLED_LABEL}
             </label>
             <button
@@ -166,13 +166,13 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
 
           {/* Condition Type */}
           <div>
-            <label className="block text-sm font-medium text-brand-ink mb-2">
+            <label className="block text-sm font-medium text-brand-foreground mb-2">
               {EDGE_TEXT.CONDITION_LABEL}
             </label>
             <select
               value={formData.condition}
               onChange={(e) => handleConditionChange(e.target.value as EdgeConditionType)}
-              className="w-full px-3 py-2 bg-brand-paperElev border border-brand-outline rounded-md text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-primary"
+              className="w-full px-3 py-2 bg-brand-paperElev border border-brand-outline rounded-md text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-primary"
             >
               {Object.entries(EDGE_CONDITION_LABELS).map(([key, label]) => (
                 <option key={key} value={key}>
@@ -180,7 +180,7 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
                 </option>
               ))}
             </select>
-            <div className="mt-1 text-xs text-brand-ink/60">
+            <div className="mt-1 text-xs text-semantic-muted">
               {EDGE_CONDITION_DESCRIPTIONS[formData.condition]}
             </div>
           </div>
@@ -188,7 +188,7 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
           {/* Threshold Input (conditional) */}
           {showThresholdInput && (
             <div>
-              <label className="block text-sm font-medium text-brand-ink mb-2">
+              <label className="block text-sm font-medium text-brand-foreground mb-2">
                 {EDGE_TEXT.THRESHOLD_LABEL}
               </label>
               <input
@@ -197,9 +197,9 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
                 onChange={(e) => handleThresholdChange(Number(e.target.value))}
                 min={PIPELINE_DEFAULTS.MIN_THRESHOLD}
                 max={PIPELINE_DEFAULTS.MAX_THRESHOLD}
-                className="w-full px-3 py-2 bg-brand-paperElev border border-brand-outline rounded-md text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                className="w-full px-3 py-2 bg-brand-paperElev border border-brand-outline rounded-md text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-primary"
               />
-              <div className="mt-1 text-xs text-brand-ink/60">
+              <div className="mt-1 text-xs text-semantic-muted">
                 {EDGE_TEXT.THRESHOLD_HINT}
               </div>
             </div>
@@ -208,7 +208,7 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
           {/* Max Iterations Input (conditional) */}
           {showIterationsInput && (
             <div>
-              <label className="block text-sm font-medium text-brand-ink mb-2">
+              <label className="block text-sm font-medium text-brand-foreground mb-2">
                 {EDGE_TEXT.MAX_ITERATIONS_LABEL}
               </label>
               <input
@@ -217,9 +217,9 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
                 onChange={(e) => handleMaxIterationsChange(Number(e.target.value))}
                 min={PIPELINE_DEFAULTS.MIN_ITERATIONS}
                 max={PIPELINE_DEFAULTS.MAX_ITERATIONS}
-                className="w-full px-3 py-2 bg-brand-paperElev border border-brand-outline rounded-md text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                className="w-full px-3 py-2 bg-brand-paperElev border border-brand-outline rounded-md text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-primary"
               />
-              <div className="mt-1 text-xs text-brand-ink/60">
+              <div className="mt-1 text-xs text-semantic-muted">
                 {EDGE_TEXT.MAX_ITERATIONS_HINT}
               </div>
             </div>
@@ -227,7 +227,7 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-brand-ink mb-2">
+            <label className="block text-sm font-medium text-brand-foreground mb-2">
               {EDGE_TEXT.DESCRIPTION_LABEL}
             </label>
             <textarea
@@ -235,7 +235,7 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
               onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
               placeholder="Optional description for this connection"
               rows={3}
-              className="w-full px-3 py-2 bg-brand-paperElev border border-brand-outline rounded-md text-brand-ink placeholder-brand-ink/50 focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
+              className="w-full px-3 py-2 bg-brand-paperElev border border-brand-outline rounded-md text-brand-foreground placeholder-brand-ink/50 focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
             />
           </div>
         </div>
@@ -251,7 +251,7 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-brand-outline/20 text-brand-ink rounded-md font-medium text-sm hover:bg-brand-outline/30 transition-colors"
+              className="px-4 py-2 bg-brand-outline/20 text-brand-foreground rounded-md font-medium text-sm hover:bg-brand-outline/30 transition-colors"
             >
               {EDGE_TEXT.CANCEL}
             </button>

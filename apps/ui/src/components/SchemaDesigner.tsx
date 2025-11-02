@@ -164,7 +164,7 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
                   >
                     {/* Type Selection */}
                     <div>
-                      <label className="mb-2 block text-xs text-brand-outline">Type</label>
+                      <label className="mb-2 block text-xs text-semantic-muted">Type</label>
                       <select
                         value={field.type}
                         onChange={(e) => updateField(name, { type: e.target.value as SchemaField['type'] })}
@@ -180,7 +180,7 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
 
                     {/* Description */}
                     <div>
-                      <label className="mb-2 block text-xs text-brand-outline">Description</label>
+                      <label className="mb-2 block text-xs text-semantic-muted">Description</label>
                       <textarea
                         value={field.description || ''}
                         onChange={(e) => updateField(name, { description: e.target.value })}
@@ -199,7 +199,7 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
                         onChange={(e) => updateField(name, { required: e.target.checked })}
                         className="h-4 w-4 rounded border-brand-outline/50 bg-brand-ink text-brand-accent focus:ring-2 focus:ring-brand-accent/40"
                       />
-                      <label htmlFor={`required-${name}`} className="text-sm text-brand-outline">
+                      <label htmlFor={`required-${name}`} className="text-sm text-semantic-muted">
                         Required field
                       </label>
                     </div>
@@ -207,7 +207,7 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
                     {/* Enum Values (for string type) */}
                     {field.type === 'string' && (
                       <div>
-                        <label className="mb-2 block text-xs text-brand-outline">
+                        <label className="mb-2 block text-xs text-semantic-muted">
                           Allowed Values (comma-separated, optional)
                         </label>
                         <input
@@ -230,7 +230,7 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
 
                 {/* Quick Summary (when not editing) */}
                 {editingField !== name && (
-                  <div className="text-xs text-brand-outline">
+                  <div className="text-xs text-semantic-muted">
                     <span className="capitalize">{field.type}</span>
                     {field.description && ` • ${field.description.slice(0, 60)}${field.description.length > 60 ? '...' : ''}`}
                     {field.enum && ` • Values: ${field.enum.join(', ')}`}
@@ -243,7 +243,7 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
 
         {Object.keys(fields).length === 0 && (
           <div className="rounded-xl border border-dashed border-brand-outline/40 p-8 text-center">
-            <p className="text-brand-outline">No fields defined yet. Add a field to get started.</p>
+            <p className="text-semantic-muted">No fields defined yet. Add a field to get started.</p>
           </div>
         )}
       </div>

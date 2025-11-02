@@ -178,12 +178,12 @@ export const NodeEditModal = memo(function NodeEditModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-brand-outline">
-          <h2 className="text-xl font-semibold text-brand-ink">{NODE_EDIT_TEXT.TITLE}</h2>
+          <h2 className="text-xl font-semibold text-brand-foreground">{NODE_EDIT_TEXT.TITLE}</h2>
           <button
             onClick={onClose}
             className="p-1 hover:bg-brand-outline/20 rounded-md transition-colors"
           >
-            <svg className="w-5 h-5 text-brand-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-brand-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -193,10 +193,10 @@ export const NodeEditModal = memo(function NodeEditModal({
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
           {/* Eye Info (Read-only) */}
           <div>
-            <label className="block text-sm font-medium text-brand-ink mb-2">
+            <label className="block text-sm font-medium text-brand-foreground mb-2">
               {NODE_EDIT_TEXT.EYE_LABEL}
             </label>
-            <div className="px-3 py-2 bg-brand-paperElev border border-brand-outline rounded-md text-brand-ink/70 text-sm">
+            <div className="px-3 py-2 bg-brand-paperElev border border-brand-outline rounded-md text-semantic-muted text-sm">
               {formData.displayName || formData.eyeId}
               {formData.isCustom && (
                 <span className="ml-2 text-xs bg-brand-accent/20 text-brand-accent px-2 py-0.5 rounded-full">
@@ -218,14 +218,14 @@ export const NodeEditModal = memo(function NodeEditModal({
               <Settings className="h-4 w-4" />
               {UI_HELP_TEXT.PIPELINE_BUTTON_CONFIGURE_PERSONA}
             </button>
-            <div className="mt-1 text-xs text-brand-ink/60 text-center">
+            <div className="mt-1 text-xs text-semantic-muted text-center">
               {UI_HELP_TEXT.PIPELINE_PERSONA_CONFIG_HINT}
             </div>
           </div>
 
           {/* Capabilities */}
           <div>
-            <label className="block text-sm font-medium text-brand-ink mb-2">
+            <label className="block text-sm font-medium text-brand-foreground mb-2">
               {NODE_EDIT_TEXT.CAPABILITIES_LABEL}
             </label>
             <div className="space-y-2">
@@ -251,7 +251,7 @@ export const NodeEditModal = memo(function NodeEditModal({
                   ))}
                 </div>
               ) : (
-                <div className="text-sm text-brand-ink/50 italic">No capabilities defined</div>
+                <div className="text-sm text-semantic-muted italic">No capabilities defined</div>
               )}
 
               {/* Add capability input */}
@@ -267,7 +267,7 @@ export const NodeEditModal = memo(function NodeEditModal({
                     }
                   }}
                   placeholder="Enter capability name"
-                  className="flex-1 px-3 py-2 bg-brand-paperElev border border-brand-outline rounded-md text-brand-ink placeholder-brand-ink/50 focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
+                  className="flex-1 px-3 py-2 bg-brand-paperElev border border-brand-outline rounded-md text-brand-foreground placeholder-brand-ink/50 focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
                 />
                 <button
                   onClick={handleAddCapability}
@@ -282,13 +282,13 @@ export const NodeEditModal = memo(function NodeEditModal({
 
           {/* Basic Configuration Forms */}
           <div className="space-y-4 p-4 bg-brand-paperElev rounded-lg border border-brand-outline">
-            <h3 className="text-sm font-semibold text-brand-ink uppercase tracking-wider">
+            <h3 className="text-sm font-semibold text-brand-foreground uppercase tracking-wider">
               Configuration
             </h3>
 
             {/* Node Name */}
             <div>
-              <label className="block text-sm font-medium text-brand-ink mb-2">
+              <label className="block text-sm font-medium text-brand-foreground mb-2">
                 Node Name
               </label>
               <input
@@ -296,16 +296,16 @@ export const NodeEditModal = memo(function NodeEditModal({
                 value={nodeName}
                 onChange={(e) => setNodeName(e.target.value)}
                 placeholder="Optional display name for this node"
-                className="w-full px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-ink placeholder-brand-ink/50 focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
+                className="w-full px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-foreground placeholder-brand-ink/50 focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
               />
-              <div className="mt-1 text-xs text-brand-ink/60">
+              <div className="mt-1 text-xs text-semantic-muted">
                 Custom name to identify this node in the pipeline
               </div>
             </div>
 
             {/* Node Description */}
             <div>
-              <label className="block text-sm font-medium text-brand-ink mb-2">
+              <label className="block text-sm font-medium text-brand-foreground mb-2">
                 Description
               </label>
               <textarea
@@ -313,13 +313,13 @@ export const NodeEditModal = memo(function NodeEditModal({
                 onChange={(e) => setNodeDescription(e.target.value)}
                 placeholder="Optional description of this node's purpose"
                 rows={3}
-                className="w-full px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-ink placeholder-brand-ink/50 focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
+                className="w-full px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-foreground placeholder-brand-ink/50 focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
               />
             </div>
 
             {/* Enabled Toggle */}
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-brand-ink">
+              <label className="text-sm font-medium text-brand-foreground">
                 Enabled
               </label>
               <button
@@ -340,10 +340,10 @@ export const NodeEditModal = memo(function NodeEditModal({
           {/* Phase 18: Phase Configuration */}
           <div className="space-y-4 p-4 bg-brand-paperElev rounded-lg border border-brand-outline">
             <div>
-              <h3 className="text-sm font-semibold text-brand-ink uppercase tracking-wider">
+              <h3 className="text-sm font-semibold text-brand-foreground uppercase tracking-wider">
                 {PHASE_CONFIG_TEXT.SECTION_TITLE}
               </h3>
-              <p className="text-xs text-brand-ink/60 mt-1">
+              <p className="text-xs text-semantic-muted mt-1">
                 {PHASE_CONFIG_TEXT.SECTION_DESCRIPTION}
               </p>
             </div>
@@ -351,17 +351,17 @@ export const NodeEditModal = memo(function NodeEditModal({
             {/* Enable Guidance Phase */}
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                <label className="text-sm font-medium text-brand-ink">
+                <label className="text-sm font-medium text-brand-foreground">
                   {PHASE_CONFIG_TEXT.ENABLE_GUIDANCE_LABEL}
                 </label>
-                <p className="text-xs text-brand-ink/60 mt-0.5">
+                <p className="text-xs text-semantic-muted mt-0.5">
                   {PHASE_CONFIG_TEXT.ENABLE_GUIDANCE_HELP}
                 </p>
               </div>
               <button
                 onClick={() => setEnableGuidance(!enableGuidance)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  enableGuidance ? STATUS_BG_COLORS.info : 'bg-brand-outline/40'
+                  enableGuidance ? STATUS_BG_COLORS_SUBTLE.info : 'bg-brand-outline/40'
                 }`}
               >
                 <span
@@ -375,17 +375,17 @@ export const NodeEditModal = memo(function NodeEditModal({
             {/* Enable Validation Phase */}
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                <label className="text-sm font-medium text-brand-ink">
+                <label className="text-sm font-medium text-brand-foreground">
                   {PHASE_CONFIG_TEXT.ENABLE_VALIDATION_LABEL}
                 </label>
-                <p className="text-xs text-brand-ink/60 mt-0.5">
+                <p className="text-xs text-semantic-muted mt-0.5">
                   {PHASE_CONFIG_TEXT.ENABLE_VALIDATION_HELP}
                 </p>
               </div>
               <button
                 onClick={() => setEnableValidation(!enableValidation)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  enableValidation ? STATUS_BG_COLORS.success : 'bg-brand-outline/40'
+                  enableValidation ? STATUS_BG_COLORS_SUBTLE.success : 'bg-brand-outline/40'
                 }`}
               >
                 <span
@@ -415,7 +415,7 @@ export const NodeEditModal = memo(function NodeEditModal({
             >
               <div className="flex items-center gap-2">
                 <svg
-                  className={`w-4 h-4 text-brand-ink transition-transform ${
+                  className={`w-4 h-4 text-brand-foreground transition-transform ${
                     showAdvanced ? 'rotate-90' : ''
                   }`}
                   fill="none"
@@ -424,18 +424,18 @@ export const NodeEditModal = memo(function NodeEditModal({
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-                <span className="text-sm font-semibold text-brand-ink uppercase tracking-wider">
+                <span className="text-sm font-semibold text-brand-foreground uppercase tracking-wider">
                   Advanced Configuration
                 </span>
               </div>
-              <span className="text-xs text-brand-ink/60">
+              <span className="text-xs text-semantic-muted">
                 JSON Editor (Power Users)
               </span>
             </button>
 
             {showAdvanced && (
               <div className="px-4 py-3 bg-brand-paper border-t border-brand-outline">
-                <label className="block text-sm font-medium text-brand-ink mb-2">
+                <label className="block text-sm font-medium text-brand-foreground mb-2">
                   {NODE_EDIT_TEXT.CONFIG_LABEL}
                 </label>
                 <textarea
@@ -443,7 +443,7 @@ export const NodeEditModal = memo(function NodeEditModal({
                   onChange={(e) => handleConfigChange(e.target.value)}
                   placeholder={NODE_EDIT_TEXT.CONFIG_JSON_HINT}
                   rows={8}
-                  className={`w-full px-3 py-2 bg-brand-paperElev border rounded-md text-brand-ink placeholder-brand-ink/50 focus:outline-none focus:ring-2 font-mono text-sm ${
+                  className={`w-full px-3 py-2 bg-brand-paperElev border rounded-md text-brand-foreground placeholder-brand-ink/50 focus:outline-none focus:ring-2 font-mono text-sm ${
                     jsonError
                       ? 'border-semantic-error focus:ring-semantic-error'
                       : 'border-brand-outline focus:ring-brand-primary'
@@ -452,7 +452,7 @@ export const NodeEditModal = memo(function NodeEditModal({
                 {jsonError && (
                   <div className="mt-1 text-sm ${STATUS_TEXT_COLORS.error}">{jsonError}</div>
                 )}
-                <div className="mt-2 text-xs text-brand-ink/60">
+                <div className="mt-2 text-xs text-semantic-muted">
                   Direct JSON editing. Changes here will override form values above.
                 </div>
               </div>
@@ -471,7 +471,7 @@ export const NodeEditModal = memo(function NodeEditModal({
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-brand-outline/20 text-brand-ink rounded-md font-medium text-sm hover:bg-brand-outline/30 transition-colors"
+              className="px-4 py-2 bg-brand-outline/20 text-brand-foreground rounded-md font-medium text-sm hover:bg-brand-outline/30 transition-colors"
             >
               {NODE_EDIT_TEXT.CANCEL}
             </button>

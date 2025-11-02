@@ -47,8 +47,8 @@ export function SessionNotifier() {
             </div>
             <div className="flex-1">
               <p className="font-semibold text-brand-foreground">New Session Started</p>
-              <p className="mt-0.5 text-sm text-brand-outline">{displayName}</p>
-              <p className="mt-0.5 text-xs text-brand-outline">{model}</p>
+              <p className="mt-0.5 text-sm text-semantic-muted">{displayName}</p>
+              <p className="mt-0.5 text-xs text-semantic-muted">{model}</p>
             </div>
           </div>,
           {

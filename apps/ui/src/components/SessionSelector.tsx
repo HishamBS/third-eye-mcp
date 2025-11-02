@@ -214,7 +214,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
         )}
 
         <svg
-          className={`h-4 w-4 text-brand-outline transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 text-semantic-muted transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -238,7 +238,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                 <button
                   onClick={fetchActiveSessions}
                   disabled={loading}
-                  className="rounded-lg p-1 text-brand-outline transition-colors hover:bg-brand-paper hover:text-brand-accent disabled:opacity-50"
+                  className="rounded-lg p-1 text-semantic-muted transition-colors hover:bg-brand-paper hover:text-brand-accent disabled:opacity-50"
                 >
                   <svg
                     className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
@@ -255,8 +255,8 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
             <div className="max-h-96 overflow-y-auto p-2">
               {sessions.length === 0 ? (
                 <div className="py-8 text-center">
-                  <p className="text-sm text-brand-outline">No active sessions</p>
-                  <p className="mt-1 text-xs text-brand-outline">
+                  <p className="text-sm text-semantic-muted">No active sessions</p>
+                  <p className="mt-1 text-xs text-semantic-muted">
                     Connect an MCP agent to start a session
                   </p>
                 </div>
@@ -295,9 +295,9 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                               </span>
                             </div>
                             {session.agentName && session.agentName !== session.displayName && (
-                              <p className="mt-1 text-xs text-brand-outline truncate">{session.agentName}</p>
+                              <p className="mt-1 text-xs text-semantic-muted truncate">{session.agentName}</p>
                             )}
-                            <div className="mt-1 flex items-center gap-2 text-xs text-brand-outline">
+                            <div className="mt-1 flex items-center gap-2 text-xs text-semantic-muted">
                               <span className="truncate">{session.model}</span>
                               <span>•</span>
                               <span>{session.eventCount} events</span>
@@ -307,7 +307,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={(e) => handleDeleteSession(session.sessionId, e)}
-                              className={`rounded p-1 text-brand-outline ${STATUS_BG_COLORS_SUBTLE.error} hover:${STATUS_TEXT_COLORS.error} transition-colors`}
+                              className={`rounded p-1 text-semantic-muted ${STATUS_BG_COLORS_SUBTLE.error} hover:${STATUS_TEXT_COLORS.error} transition-colors`}
                               title="Delete session"
                             >
                               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -322,7 +322,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                           </div>
                         </div>
 
-                        <div className="mt-2 text-xs text-brand-outline">
+                        <div className="mt-2 text-xs text-semantic-muted">
                           ID: {session.sessionId.substring(0, 8)}...
                         </div>
                       </div>
@@ -346,7 +346,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                       router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
                     }
                   }}
-                  className="w-full rounded-lg px-3 py-2 text-sm text-brand-outline transition-colors hover:bg-brand-paper hover:text-brand-foreground"
+                  className="w-full rounded-lg px-3 py-2 text-sm text-semantic-muted transition-colors hover:bg-brand-paper hover:text-brand-foreground"
                 >
                   Clear Selection
                 </button>
@@ -381,7 +381,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
             >
               <div className="mb-4">
                 <h3 className="text-lg font-semibold text-brand-foreground">Delete All Sessions?</h3>
-                <p className="mt-2 text-sm text-brand-outline">
+                <p className="mt-2 text-sm text-semantic-muted">
                   This will permanently delete all {sessions.length} session{sessions.length !== 1 ? 's' : ''} and their associated data. This action cannot be undone.
                 </p>
               </div>

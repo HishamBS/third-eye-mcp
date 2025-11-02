@@ -153,8 +153,8 @@ export function PipelineVisualization({ sessionId, events, isLive = false }: Pip
       {/* Session Info */}
       <div className="absolute top-4 left-4 z-10">
         <div className="rounded-lg bg-brand-paper/80 px-3 py-2 backdrop-blur-sm">
-          <p className="text-xs font-medium text-brand-outline">Session: {sessionId}</p>
-          <p className="text-xs text-brand-outline">
+          <p className="text-xs font-medium text-semantic-muted">Session: {sessionId}</p>
+          <p className="text-xs text-semantic-muted">
             Active Eyes: {currentFlow.length} |
             {isLive && <span className="ml-2 inline-flex items-center">
               <div className="mr-1 h-2 w-2 animate-pulse rounded-full ${STATUS_TEXT_COLORS.success}"></div>
@@ -255,7 +255,7 @@ export function PipelineVisualization({ sessionId, events, isLive = false }: Pip
                 {/* Confidence Indicator */}
                 {status.confidence !== undefined && (
                   <div
-                    className={`absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full ${LABEL_BG_CLASS.badge} text-xs font-bold text-brand-ink`}
+                    className={`absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full ${LABEL_BG_CLASS.badge} text-xs font-bold text-brand-foreground`}
                     title={`Confidence: ${status.confidence}%`}
                   >
                     {Math.round(status.confidence)}
@@ -271,11 +271,11 @@ export function PipelineVisualization({ sessionId, events, isLive = false }: Pip
               {/* Tooltip on Hover */}
               <div className={`absolute bottom-16 left-1/2 z-20 hidden -translate-x-1/2 rounded-lg ${LABEL_BG_CLASS.tooltip} px-3 py-2 text-xs text-brand-foreground shadow-xl hover:block group-hover:block`}>
                 <p className="font-semibold">{eyeName}</p>
-                <p className="text-brand-outline">Status: {status.status}</p>
-                {status.verdict && <p className="text-brand-outline">Verdict: {status.verdict}</p>}
-                {status.latency && <p className="text-brand-outline">Latency: {status.latency}ms</p>}
+                <p className="text-semantic-muted">Status: {status.status}</p>
+                {status.verdict && <p className="text-semantic-muted">Verdict: {status.verdict}</p>}
+                {status.latency && <p className="text-semantic-muted">Latency: {status.latency}ms</p>}
                 {status.output && (
-                  <p className="mt-1 max-w-xs truncate text-brand-outline">
+                  <p className="mt-1 max-w-xs truncate text-semantic-muted">
                     {status.output}
                   </p>
                 )}
@@ -291,19 +291,19 @@ export function PipelineVisualization({ sessionId, events, isLive = false }: Pip
           <div className="flex space-x-4 text-xs">
             <div className="flex items-center space-x-1">
               <div className="h-2 w-2 rounded-full bg-brand-paper0"></div>
-              <span className="text-brand-outline">Idle</span>
+              <span className="text-semantic-muted">Idle</span>
             </div>
             <div className="flex items-center space-x-1">
               <div className="h-2 w-2 rounded-full ${STATUS_BG_COLORS.info}"></div>
-              <span className="text-brand-outline">Running</span>
+              <span className="text-semantic-muted">Running</span>
             </div>
             <div className="flex items-center space-x-1">
               <div className="h-2 w-2 rounded-full ${STATUS_BG_COLORS.success}"></div>
-              <span className="text-brand-outline">Approved</span>
+              <span className="text-semantic-muted">Approved</span>
             </div>
             <div className="flex items-center space-x-1">
               <div className="h-2 w-2 rounded-full ${STATUS_BG_COLORS.error}"></div>
-              <span className="text-brand-outline">Rejected</span>
+              <span className="text-semantic-muted">Rejected</span>
             </div>
           </div>
         </div>

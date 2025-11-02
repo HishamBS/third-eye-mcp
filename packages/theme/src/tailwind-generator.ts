@@ -41,6 +41,8 @@ export function generateTailwindThemeVariables(): Record<string, Record<string, 
   // This ensures colors exist before JavaScript applies data-theme attribute
   // Prevents FOUC (Flash of Unstyled Content) on initial page load
   const overseerDark = THEMES.overseer.dark;
+  // Mode-aware foreground: light text for dark mode, dark text for light mode
+  const rootForeground = overseerDark.mode === 'dark' ? '#F8FAFC' : overseerDark.colors.brand.ink;
   cssVariables[':root'] = {
     '--color-primary': hexToRgb(overseerDark.colors.brand.primary),
     '--color-accent': hexToRgb(overseerDark.colors.brand.accent),
@@ -48,7 +50,7 @@ export function generateTailwindThemeVariables(): Record<string, Record<string, 
     '--color-paper': hexToRgb(overseerDark.colors.brand.paper),
     '--color-paper-elev': hexToRgb(overseerDark.colors.brand.paperElev),
     '--color-outline': hexToRgb(overseerDark.colors.brand.outline),
-    '--color-foreground': hexToRgb(overseerDark.colors.brand.ink),
+    '--color-foreground': hexToRgb(rootForeground),
     '--color-success': hexToRgb(overseerDark.colors.semantic.success),
     '--color-warning': hexToRgb(overseerDark.colors.semantic.warning),
     '--color-error': hexToRgb(overseerDark.colors.semantic.error),
@@ -67,6 +69,9 @@ export function generateTailwindThemeVariables(): Record<string, Record<string, 
         ? `:root[data-theme="${themeName}"][data-mode="dark"]`
         : `:root[data-theme="${themeName}"][data-mode="light"]`;
 
+      // Mode-aware foreground: light text for dark mode, dark text for light mode
+      const foregroundColor = theme.mode === 'dark' ? '#F8FAFC' : theme.colors.brand.ink;
+
       cssVariables[selector] = {
         // Brand colors
         '--color-primary': hexToRgb(theme.colors.brand.primary),
@@ -75,7 +80,7 @@ export function generateTailwindThemeVariables(): Record<string, Record<string, 
         '--color-paper': hexToRgb(theme.colors.brand.paper),
         '--color-paper-elev': hexToRgb(theme.colors.brand.paperElev),
         '--color-outline': hexToRgb(theme.colors.brand.outline),
-        '--color-foreground': hexToRgb(theme.colors.brand.ink),
+        '--color-foreground': hexToRgb(foregroundColor),
 
         // Semantic colors
         '--color-success': hexToRgb(theme.colors.semantic.success),

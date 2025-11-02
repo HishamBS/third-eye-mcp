@@ -37,11 +37,11 @@ export function ReviewStep({ state }: WizardStepProps) {
         <h3 className="mb-3 text-lg font-semibold text-brand-foreground">Basic Information</h3>
         <dl className="space-y-2">
           <div>
-            <dt className="text-sm font-medium text-brand-outline">Eye Name</dt>
+            <dt className="text-sm font-medium text-semantic-muted">Eye Name</dt>
             <dd className="mt-1 text-brand-foreground">{state.formData.name || '(Not set)'}</dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-brand-outline">Description</dt>
+            <dt className="text-sm font-medium text-semantic-muted">Description</dt>
             <dd className="mt-1 text-brand-foreground">{state.formData.description || '(Not set)'}</dd>
           </div>
         </dl>
@@ -51,7 +51,7 @@ export function ReviewStep({ state }: WizardStepProps) {
       <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
         <h3 className="mb-3 text-lg font-semibold text-brand-foreground">Input Schema</h3>
         {inputProps.length === 0 ? (
-          <p className="text-brand-outline">No input properties defined</p>
+          <p className="text-semantic-muted">No input properties defined</p>
         ) : (
           <ul className="space-y-2">
             {inputProps.map((prop) => (
@@ -75,7 +75,7 @@ export function ReviewStep({ state }: WizardStepProps) {
       <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
         <h3 className="mb-3 text-lg font-semibold text-brand-foreground">Output Schema</h3>
         {outputProps.length === 0 ? (
-          <p className="text-brand-outline">No output properties defined</p>
+          <p className="text-semantic-muted">No output properties defined</p>
         ) : (
           <ul className="space-y-2">
             {outputProps.map((prop) => (

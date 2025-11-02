@@ -47,7 +47,7 @@ export function KillSwitchBar({ sessionId, apiKey, latestDraft, latestEvent }: K
   };
 
   return (
-    <section className={clsx('rounded-2xl border p-5 text-sm', status === 'error' ? '${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error}' : 'border-brand-outline/40 bg-brand-paperElev/70 text-brand-outline')}>
+    <section className={clsx('rounded-2xl border p-5 text-sm', status === 'error' ? '${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error}' : 'border-brand-outline/40 bg-brand-paperElev/70 text-semantic-muted')}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Hallucination Kill Switch</p>
@@ -57,12 +57,12 @@ export function KillSwitchBar({ sessionId, apiKey, latestDraft, latestEvent }: K
           type="button"
           disabled={disabled}
           onClick={handleClick}
-          className="rounded-full bg-brand-accent px-4 py-2 text-xs font-semibold text-brand-ink transition hover:bg-brand-primary disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full bg-brand-accent px-4 py-2 text-xs font-semibold text-brand-foreground transition hover:bg-brand-primary disabled:cursor-not-allowed disabled:opacity-50"
         >
           {status === 'running' ? 'Revalidating…' : 'Re-run validation'}
         </button>
       </div>
-      {message && <p className="mt-3 text-xs text-brand-outline">{message}</p>}
+      {message && <p className="mt-3 text-xs text-semantic-muted">{message}</p>}
     </section>
   );
 }

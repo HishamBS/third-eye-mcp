@@ -62,7 +62,7 @@ export function OperationsTab({
           <DuelResults events={events} />
         )}
       </div>
-      {resubmitMessage && <p className="rounded-xl border border-brand-outline/40 bg-brand-paper/80 p-3 text-xs text-brand-outline">{resubmitMessage}</p>}
+      {resubmitMessage && <p className="rounded-xl border border-brand-outline/40 bg-brand-paper/80 p-3 text-xs text-semantic-muted">{resubmitMessage}</p>}
     </div>
   );
 }

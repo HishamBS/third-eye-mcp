@@ -18,7 +18,7 @@ function sessionStatusTone(status: SessionOverview['status']): string {
     case 'blocked':
       return '${STATUS_BG_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error} border ${STATUS_BORDER_COLORS_SUBTLE.error}';
     default:
-      return '${STATUS_BG_COLORS_SUBTLE.idle} text-brand-outline border ${STATUS_BORDER_COLORS_SUBTLE.idle}';
+      return '${STATUS_BG_COLORS_SUBTLE.idle} text-semantic-muted border ${STATUS_BORDER_COLORS_SUBTLE.idle}';
   }
 }
 
@@ -125,12 +125,12 @@ export function SessionHeader({
   };
 
   return (
-    <section className="rounded-2xl border border-brand-outline/60 bg-brand-paperElev/80 px-6 py-6 text-sm text-brand-outline shadow-glass md:px-8 md:py-7">
+    <section className="rounded-2xl border border-brand-outline/60 bg-brand-paperElev/80 px-6 py-6 text-sm text-semantic-muted shadow-glass md:px-8 md:py-7">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.32em] text-brand-accent">Session Controls</p>
           <h1 className="text-2xl font-semibold text-brand-foreground">Truth Monitor</h1>
-          <p className="mt-2 text-sm text-brand-outline">
+          <p className="mt-2 text-sm text-semantic-muted">
             Connect to a live Overseer session to stream Eye envelopes in real time. API keys are never stored remotely; they live in your browser storage only.
           </p>
         </div>
@@ -139,7 +139,7 @@ export function SessionHeader({
             {connected ? 'Realtime Connected' : 'Disconnected'}
           </span>
           {connectionAttempts > 0 && (
-            <span className="text-brand-outline">Retries: {connectionAttempts}</span>
+            <span className="text-semantic-muted">Retries: {connectionAttempts}</span>
           )}
         </div>
       </header>
@@ -152,7 +152,7 @@ export function SessionHeader({
         }}
       >
         <div className="flex flex-col gap-2">
-          <label className="text-xs uppercase tracking-[0.2em] text-brand-outline" htmlFor="session-selector">
+          <label className="text-xs uppercase tracking-[0.2em] text-semantic-muted" htmlFor="session-selector">
             Session
           </label>
           <div className="flex flex-col gap-2">
@@ -195,9 +195,9 @@ export function SessionHeader({
             )}
             {sessionsError && <p className="text-xs ${STATUS_TEXT_COLORS.error}">{sessionsError}</p>}
             {sessionMeta && !showSessionSkeleton && (
-              <dl className="grid gap-3 rounded-xl border border-brand-outline/40 bg-brand-paper/70 px-3 py-2 text-xs text-brand-outline sm:grid-cols-3">
+              <dl className="grid gap-3 rounded-xl border border-brand-outline/40 bg-brand-paper/70 px-3 py-2 text-xs text-semantic-muted sm:grid-cols-3">
                 <div>
-                  <dt className="uppercase tracking-[0.2em] text-brand-outline">Status</dt>
+                  <dt className="uppercase tracking-[0.2em] text-semantic-muted">Status</dt>
                   <dd>
                     <span className={clsx('inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold', sessionStatusTone(sessionMeta.status))}>
                       {sessionStatusLabel(sessionMeta.status)}
@@ -205,19 +205,19 @@ export function SessionHeader({
                   </dd>
                 </div>
                 <div>
-                  <dt className="uppercase tracking-[0.2em] text-brand-outline">Tenant</dt>
-                  <dd className="mt-1 text-brand-outline">{sessionMeta.tenant ?? '—'}</dd>
+                  <dt className="uppercase tracking-[0.2em] text-semantic-muted">Tenant</dt>
+                  <dd className="mt-1 text-semantic-muted">{sessionMeta.tenant ?? '—'}</dd>
                 </div>
                 <div>
-                  <dt className="uppercase tracking-[0.2em] text-brand-outline">Last activity</dt>
-                  <dd className="mt-1 text-brand-outline">{formatTimestamp(sessionMeta.last_event_at ?? sessionMeta.created_at)}</dd>
+                  <dt className="uppercase tracking-[0.2em] text-semantic-muted">Last activity</dt>
+                  <dd className="mt-1 text-semantic-muted">{formatTimestamp(sessionMeta.last_event_at ?? sessionMeta.created_at)}</dd>
                 </div>
               </dl>
             )}
           </div>
         </div>
         <label className="flex flex-col gap-2">
-          <span className="text-xs uppercase tracking-[0.2em] text-brand-outline">API Key</span>
+          <span className="text-xs uppercase tracking-[0.2em] text-semantic-muted">API Key</span>
           <input
             value={apiKey}
             required
@@ -231,7 +231,7 @@ export function SessionHeader({
         <div className="flex items-end">
           <button
             type="submit"
-            className="inline-flex w-full items-center justify-center rounded-full bg-brand-accent px-4 py-2 text-xs font-semibold text-brand-ink transition hover:bg-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50"
+            className="inline-flex w-full items-center justify-center rounded-full bg-brand-accent px-4 py-2 text-xs font-semibold text-brand-foreground transition hover:bg-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50"
           >
             Connect
           </button>
@@ -275,9 +275,9 @@ export function SessionHeader({
 
         <form className="rounded-xl border border-brand-outline/40 bg-brand-paper/80 p-4" onSubmit={handleSettingsSubmit}>
           <h3 className="text-sm font-semibold text-brand-foreground">Session Settings</h3>
-          <p className="mt-1 text-xs text-brand-outline">Tune Overseer strictness per session.</p>
+          <p className="mt-1 text-xs text-semantic-muted">Tune Overseer strictness per session.</p>
 
-          <label className="mt-3 flex flex-col gap-2 text-xs text-brand-outline">
+          <label className="mt-3 flex flex-col gap-2 text-xs text-semantic-muted">
             Strictness profile
             <select
               className="rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
@@ -370,12 +370,12 @@ export function SessionHeader({
           >
             {settingsSaving ? 'Saving…' : 'Save settings'}
           </button>
-          {feedback && <p className="mt-2 text-xs text-brand-outline">{feedback}</p>}
+          {feedback && <p className="mt-2 text-xs text-semantic-muted">{feedback}</p>}
         </form>
 
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/80 p-4">
           <h3 className="text-sm font-semibold text-brand-foreground">Legend</h3>
-          <ul className="mt-2 space-y-2 text-xs text-brand-outline">
+          <ul className="mt-2 space-y-2 text-xs text-semantic-muted">
             <li>✅ Green chip — Eye approved; proceed.</li>
             <li>🟥 Red chip — Blocked; open drawer for issues & fixes.</li>
             <li>🟡 Amber chip — Awaiting response or pending clarifications.</li>

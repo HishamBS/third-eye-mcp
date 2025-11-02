@@ -81,7 +81,7 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
 
   if (!nodes.length && !fileImpacts.length) {
     return (
-      <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-brand-outline">
+      <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-semantic-muted">
         No plan detected. Once Rinnegan issues a scaffold, it will render here.
       </section>
     );
@@ -116,7 +116,7 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
   };
 
   return (
-    <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-brand-outline">
+    <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-semantic-muted">
       <header className="mb-4 flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Visual Plan</p>
@@ -125,19 +125,19 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
         <div className="flex gap-2">
           <button
             onClick={() => setView('plan')}
-            className={`px-3 py-1 rounded text-xs ${view === 'plan' ? 'bg-brand-accent text-brand-foreground' : 'text-brand-outline hover:text-brand-foreground'}`}
+            className={`px-3 py-1 rounded text-xs ${view === 'plan' ? 'bg-brand-accent text-brand-foreground' : 'text-semantic-muted hover:text-brand-foreground'}`}
           >
             Plan
           </button>
           <button
             onClick={() => setView('files')}
-            className={`px-3 py-1 rounded text-xs ${view === 'files' ? 'bg-brand-accent text-brand-foreground' : 'text-brand-outline hover:text-brand-foreground'}`}
+            className={`px-3 py-1 rounded text-xs ${view === 'files' ? 'bg-brand-accent text-brand-foreground' : 'text-semantic-muted hover:text-brand-foreground'}`}
           >
             Files ({fileImpacts.length})
           </button>
           <button
             onClick={() => setView('kanban')}
-            className={`px-3 py-1 rounded text-xs ${view === 'kanban' ? 'bg-brand-accent text-brand-foreground' : 'text-brand-outline hover:text-brand-foreground'}`}
+            className={`px-3 py-1 rounded text-xs ${view === 'kanban' ? 'bg-brand-accent text-brand-foreground' : 'text-semantic-muted hover:text-brand-foreground'}`}
           >
             Kanban
           </button>
@@ -149,7 +149,7 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
           {nodes.map((node) => (
             <article key={node.title} className="rounded-xl border border-brand-outline/30 bg-brand-paper/80 p-3">
               <h4 className="text-sm font-semibold text-brand-foreground">{node.title}</h4>
-              <ul className="mt-2 space-y-1 text-xs text-brand-outline">
+              <ul className="mt-2 space-y-1 text-xs text-semantic-muted">
                 {node.items.map((item, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <span className="mt-1 text-brand-accent">•</span>
@@ -172,7 +172,7 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
               >
                 <span>{expandedDirs.has(dir) ? '▼' : '▶'}</span>
                 <span>📁 {dir}</span>
-                <span className="text-brand-outline">({impacts.length})</span>
+                <span className="text-semantic-muted">({impacts.length})</span>
               </button>
               {expandedDirs.has(dir) && (
                 <ul className="mt-2 ml-6 space-y-1">
@@ -181,7 +181,7 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
                       <span className={`font-bold ${getActionColor(impact.action)}`}>
                         {getActionIcon(impact.action)}
                       </span>
-                      <span className="text-brand-outline">{impact.path.split('/').pop()}</span>
+                      <span className="text-semantic-muted">{impact.path.split('/').pop()}</span>
                       <span className={`ml-auto ${getActionColor(impact.action)}`}>
                         {impact.action}
                       </span>
@@ -217,7 +217,7 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
                       <div className={`font-semibold ${getActionColor(impact.action)}`}>
                         {impact.path.split('/').pop()}
                       </div>
-                      <div className="text-brand-outline text-[10px] mt-0.5">{impact.action}</div>
+                      <div className="text-semantic-muted text-[10px] mt-0.5">{impact.action}</div>
                     </div>
                   ))}
               </div>

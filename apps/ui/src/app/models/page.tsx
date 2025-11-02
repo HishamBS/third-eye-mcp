@@ -224,7 +224,7 @@ export default function ModelsPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent">
+              <Link href="/" className="text-semantic-muted transition-colors hover:text-brand-accent">
                 ← Home
               </Link>
               <div>
@@ -233,10 +233,10 @@ export default function ModelsPage() {
               </div>
             </div>
             <div className="flex gap-4">
-              <Link href="/personas" className="text-sm text-brand-outline transition-colors hover:text-brand-foreground">
+              <Link href="/personas" className="text-sm text-semantic-muted transition-colors hover:text-brand-foreground">
                 Personas
               </Link>
-              <Link href="/settings" className="text-sm text-brand-outline transition-colors hover:text-brand-foreground">
+              <Link href="/settings" className="text-sm text-semantic-muted transition-colors hover:text-brand-foreground">
                 Settings
               </Link>
             </div>
@@ -309,7 +309,7 @@ export default function ModelsPage() {
 
                   <div className="max-h-80 space-y-2 overflow-y-auto">
                     {providerModels.length === 0 ? (
-                      <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4 text-center text-sm text-brand-outline">
+                      <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4 text-center text-sm text-semantic-muted">
                         {provider.requiresKey ? 'Add API key in Settings' : 'Click refresh to load models'}
                       </div>
                     ) : (
@@ -322,7 +322,7 @@ export default function ModelsPage() {
                             {model.displayName || model.name}
                           </div>
                           {model.family && (
-                            <div className="mt-1 text-xs text-brand-outline">Family: {model.family}</div>
+                            <div className="mt-1 text-xs text-semantic-muted">Family: {model.family}</div>
                           )}
                           {model.capability && (
                             <div className="mt-1 flex flex-wrap gap-1">
@@ -344,7 +344,7 @@ export default function ModelsPage() {
                             </div>
                           )}
                           {model.lastSeen && (
-                            <div className="mt-1 text-xs text-brand-outline">
+                            <div className="mt-1 text-xs text-semantic-muted">
                               Last seen: {new Date(model.lastSeen).toLocaleString()}
                             </div>
                           )}
@@ -379,7 +379,7 @@ export default function ModelsPage() {
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-3">
-                      <h4 className="font-medium text-brand-outline">Primary</h4>
+                      <h4 className="font-medium text-semantic-muted">Primary</h4>
                       <div className="space-y-2">
                         <select
                           value={eyeRouting?.primaryProvider || ''}
@@ -420,7 +420,7 @@ export default function ModelsPage() {
                     </div>
 
                     <div className="space-y-3">
-                      <h4 className="font-medium text-brand-outline">Fallback</h4>
+                      <h4 className="font-medium text-semantic-muted">Fallback</h4>
                       <div className="space-y-2">
                         <select
                           value={eyeRouting?.fallbackProvider || ''}
@@ -484,7 +484,7 @@ export default function ModelsPage() {
                 <button
                   onClick={discardRoutingChanges}
                   disabled={savingRouting}
-                  className="rounded-lg border border-brand-outline/40 bg-brand-paper px-4 py-2 text-sm font-medium text-brand-outline transition hover:bg-brand-paperElev disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-lg border border-brand-outline/40 bg-brand-paper px-4 py-2 text-sm font-medium text-semantic-muted transition hover:bg-brand-paperElev disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Discard Changes
                 </button>

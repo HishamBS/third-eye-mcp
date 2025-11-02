@@ -146,12 +146,12 @@ export function DuelLauncher({
   const launchDisabled = submitting || !prompt.trim() || selectedConfigs.length < 2;
 
   return (
-    <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-5 text-sm text-brand-outline">
+    <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-5 text-sm text-semantic-muted">
       <h3 className="text-lg font-semibold text-brand-foreground">Duel Mode</h3>
-      <p className="mt-2 text-sm text-brand-outline">Compare multiple LLM providers/models side-by-side with identical prompts.</p>
+      <p className="mt-2 text-sm text-semantic-muted">Compare multiple LLM providers/models side-by-side with identical prompts.</p>
       <form onSubmit={handleSubmit} className="mt-3 space-y-4">
         <div>
-          <label className="block text-xs uppercase tracking-[0.2em] text-brand-outline mb-2">
+          <label className="block text-xs uppercase tracking-[0.2em] text-semantic-muted mb-2">
             Prompt
           </label>
           <textarea
@@ -179,19 +179,19 @@ export function DuelLauncher({
                       onChange={() => toggleConfig(config)}
                       className="h-4 w-4 rounded border border-brand-outline/60 bg-brand-paper accent-brand-accent"
                     />
-                    <span className="font-mono text-xs text-brand-outline">{label}</span>
+                    <span className="font-mono text-xs text-semantic-muted">{label}</span>
                   </label>
                 );
               })}
             </div>
           ) : (
-            <p className="text-xs text-brand-outline">No configurations available. Add custom configurations below.</p>
+            <p className="text-xs text-semantic-muted">No configurations available. Add custom configurations below.</p>
           )}
-          <p className="text-xs text-brand-outline">Select between 2 and 4 model configurations.</p>
+          <p className="text-xs text-semantic-muted">Select between 2 and 4 model configurations.</p>
         </fieldset>
 
         <div className="grid grid-cols-2 gap-2">
-          <label className="text-xs uppercase tracking-[0.2em] text-brand-outline">
+          <label className="text-xs uppercase tracking-[0.2em] text-semantic-muted">
             Provider
             <input
               value={customProvider}
@@ -200,7 +200,7 @@ export function DuelLauncher({
               className="mt-1 w-full rounded-lg border border-brand-outline/40 bg-brand-paper px-3 py-2 text-sm text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
             />
           </label>
-          <label className="text-xs uppercase tracking-[0.2em] text-brand-outline">
+          <label className="text-xs uppercase tracking-[0.2em] text-semantic-muted">
             Model
             <input
               value={customModel}
@@ -224,7 +224,7 @@ export function DuelLauncher({
           type="submit"
           className={clsx(
             'inline-flex items-center rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50',
-            submitting ? 'bg-brand-accent/40 text-brand-ink' : launchDisabled ? 'bg-brand-accent/40 text-brand-ink opacity-70' : 'bg-brand-accent text-brand-ink hover:bg-brand-primary',
+            submitting ? 'bg-brand-accent/40 text-brand-foreground' : launchDisabled ? 'bg-brand-accent/40 text-brand-foreground opacity-70' : 'bg-brand-accent text-brand-foreground hover:bg-brand-primary',
           )}
           disabled={launchDisabled}
         >
@@ -232,7 +232,7 @@ export function DuelLauncher({
         </button>
       </form>
       {message && (
-        <p className={clsx('mt-3 text-xs', status === 'error' ? STATUS_TEXT_COLORS.error : 'text-brand-outline')}>{message}</p>
+        <p className={clsx('mt-3 text-xs', status === 'error' ? STATUS_TEXT_COLORS.error : 'text-semantic-muted')}>{message}</p>
       )}
     </section>
   );

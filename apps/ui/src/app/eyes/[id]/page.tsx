@@ -56,6 +56,14 @@ export default function EyeDetailPage() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
 
+  // Full eye editing state
+  const [isEditingEye, setIsEditingEye] = useState(false);
+  const [editedEye, setEditedEye] = useState<{
+    name: string;
+    description: string;
+    capabilities: string[];
+  }>({ name: '', description: '', capabilities: [] });
+
   useEffect(() => {
     fetchEyeData();
   }, [eyeId]);
@@ -157,6 +165,46 @@ export default function EyeDetailPage() {
     }
   };
 
+  const startEditingEye = () => {
+    if (!eye) return;
+    setEditedEye({
+      name: eye.name,
+      description: eye.description,
+      capabilities: eye.capabilities || [],
+    });
+    setIsEditingEye(true);
+  };
+
+  const saveEye = async () => {
+    if (!editedEye.name.trim()) {
+      setError('Eye name cannot be empty');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/eyes/${eyeId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          displayName: editedEye.name.trim(),
+          description: editedEye.description.trim(),
+          capabilities: editedEye.capabilities.filter(c => c.trim()),
+        }),
+      });
+
+      if (response.ok) {
+        setSuccess('Eye updated successfully');
+        setIsEditingEye(false);
+        await fetchEyeData();
+      } else {
+        const result = await response.json();
+        setError(result.error?.detail || 'Failed to update Eye');
+      }
+    } catch (err) {
+      setError('Failed to update Eye');
+    }
+  };
+
   const startEditingPersona = () => {
     const activePersona = personas.find(p => p.active);
     setPersonaContent(activePersona?.content || '');
@@ -237,7 +285,7 @@ export default function EyeDetailPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/eyes" className="text-brand-outline transition-colors hover:text-brand-accent">
+              <Link href="/eyes" className="text-semantic-muted transition-colors hover:text-brand-accent">
                 ← Back to Eyes
               </Link>
               <div className="flex items-center gap-4">
@@ -303,7 +351,7 @@ export default function EyeDetailPage() {
                 className={`border-b-2 px-2 py-4 text-sm font-semibold capitalize transition ${
                   activeTab === tab
                     ? 'border-brand-accent text-brand-foreground'
-                    : 'border-transparent text-brand-outline hover:text-brand-foreground'
+                    : 'border-transparent text-semantic-muted hover:text-brand-foreground'
                 }`}
               >
                 {tab}
@@ -318,72 +366,107 @@ export default function EyeDetailPage() {
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <GlassCard>
-            <h2 className="mb-6 text-xl font-semibold text-brand-foreground">Eye Overview</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-brand-outline mb-2">Name</label>
-                {isEditingName ? (
-                  <div className="flex gap-3">
-                    <input
-                      type="text"
-                      value={editedName}
-                      onChange={(e) => setEditedName(e.target.value)}
-                      className="flex-1 rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground focus:border-brand-accent focus:outline-none"
-                      placeholder="Enter Eye name"
-                    />
-                    <button
-                      onClick={saveName}
-                      className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => setIsEditingName(false)}
-                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3">
-                    <p className="text-brand-foreground capitalize flex-1">{eye.name}</p>
-                    <button
-                      onClick={startEditingName}
-                      className="rounded-full border border-brand-outline/50 px-4 py-1.5 text-xs font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
-                    >
-                      Edit Name
-                    </button>
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-brand-foreground">Eye Overview</h2>
+              {!isEditingEye && (
+                <button
+                  onClick={startEditingEye}
+                  className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
+                >
+                  Edit Eye
+                </button>
+              )}
+            </div>
+
+            {isEditingEye ? (
+              <div className="space-y-4">
+                {/* Name */}
+                <div>
+                  <label className="block text-sm font-medium text-semantic-muted mb-2">Name</label>
+                  <input
+                    type="text"
+                    value={editedEye.name}
+                    onChange={(e) => setEditedEye({ ...editedEye, name: e.target.value })}
+                    className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground focus:border-brand-accent focus:outline-none"
+                    placeholder="Enter Eye name"
+                  />
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium text-semantic-muted mb-2">Description</label>
+                  <textarea
+                    value={editedEye.description}
+                    onChange={(e) => setEditedEye({ ...editedEye, description: e.target.value })}
+                    className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground focus:border-brand-accent focus:outline-none"
+                    placeholder="Enter Eye description"
+                    rows={3}
+                  />
+                </div>
+
+                {/* Capabilities */}
+                <div>
+                  <label className="block text-sm font-medium text-semantic-muted mb-2">Capabilities (comma-separated)</label>
+                  <input
+                    type="text"
+                    value={editedEye.capabilities.join(', ')}
+                    onChange={(e) => setEditedEye({ ...editedEye, capabilities: e.target.value.split(',').map(c => c.trim()) })}
+                    className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground focus:border-brand-accent focus:outline-none"
+                    placeholder="e.g., vision, analysis, detection"
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={saveEye}
+                    className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-primary"
+                  >
+                    Save Changes
+                  </button>
+                  <button
+                    onClick={() => setIsEditingEye(false)}
+                    className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-semantic-muted mb-2">Name</label>
+                  <p className="text-brand-foreground capitalize">{eye.name}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-semantic-muted mb-2">Description</label>
+                  <p className="text-brand-foreground">{eye.description}</p>
+                </div>
+                {eye.capabilities && eye.capabilities.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-semantic-muted mb-2">Capabilities</label>
+                    <div className="flex flex-wrap gap-2">
+                      {eye.capabilities.map((cap, idx) => (
+                        <span
+                          key={idx}
+                          className="rounded-full bg-brand-accent/20 px-3 py-1 text-sm text-brand-accent"
+                        >
+                          {toHumanReadable(cap)}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-brand-outline mb-2">Description</label>
-                <p className="text-brand-foreground">{eye.description}</p>
-              </div>
-              {eye.capabilities && eye.capabilities.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-brand-outline mb-2">Capabilities</label>
-                  <div className="flex flex-wrap gap-2">
-                    {eye.capabilities.map((cap, idx) => (
-                      <span 
-                        key={idx} 
-                        className="rounded-full bg-brand-accent/20 px-3 py-1 text-sm text-brand-accent"
-                      >
-                        {toHumanReadable(cap)}
-                      </span>
-                    ))}
-                  </div>
+                  <label className="block text-sm font-medium text-semantic-muted mb-2">Source</label>
+                  <span className={`inline-block rounded-full px-3 py-1 text-sm ${
+                    eye.source === 'built-in' ? 'bg-white/20 text-brand-foreground' : `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success}`
+                  }`}>
+                    {eye.source}
+                  </span>
                 </div>
-              )}
-              <div>
-                <label className="block text-sm font-medium text-brand-outline mb-2">Source</label>
-                <span className={`inline-block rounded-full px-3 py-1 text-sm ${
-                  eye.source === 'built-in' ? 'bg-white/20 text-brand-foreground' : `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success}`
-                }`}>
-                  {eye.source}
-                </span>
               </div>
-            </div>
+            )}
           </GlassCard>
         )}
 
@@ -395,7 +478,7 @@ export default function EyeDetailPage() {
               {!isEditingPersona && (
                 <button
                   onClick={startEditingPersona}
-                  className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary"
+                  className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-primary"
                 >
                   Create New Version
                 </button>
@@ -405,7 +488,7 @@ export default function EyeDetailPage() {
             {isEditingPersona ? (
               <div className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-brand-outline">Persona Content</label>
+                  <label className="mb-2 block text-sm font-medium text-semantic-muted">Persona Content</label>
                   <textarea
                     value={personaContent}
                     onChange={(e) => setPersonaContent(e.target.value)}
@@ -415,13 +498,13 @@ export default function EyeDetailPage() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setIsEditingPersona(false)}
-                    className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
+                    className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={savePersona}
-                    className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary"
+                    className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-primary"
                   >
                     Save Persona
                   </button>
@@ -430,7 +513,7 @@ export default function EyeDetailPage() {
             ) : (
               <div className="space-y-4">
                 {personas.length === 0 ? (
-                  <p className="text-brand-outline">No personas found</p>
+                  <p className="text-semantic-muted">No personas found</p>
                 ) : (
                   personas.map((persona) => (
                     <div
@@ -451,7 +534,7 @@ export default function EyeDetailPage() {
                               </span>
                             )}
                           </h3>
-                          <p className="text-sm text-brand-outline">
+                          <p className="text-sm text-semantic-muted">
                             {new Date(persona.createdAt).toLocaleString()}
                           </p>
                         </div>
@@ -465,8 +548,8 @@ export default function EyeDetailPage() {
                         )}
                       </div>
                       <div className="rounded-lg bg-brand-paper/70 p-3">
-                        <pre className="max-h-48 overflow-auto whitespace-pre-wrap text-xs text-brand-outline">
-                          {persona.content.substring(0, 500)}...
+                        <pre className="max-h-48 overflow-auto whitespace-pre-wrap text-xs text-semantic-muted">
+                          {(persona.content ?? 'No content available').substring(0, 500)}...
                         </pre>
                       </div>
                     </div>
@@ -484,24 +567,24 @@ export default function EyeDetailPage() {
             {routing ? (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-brand-outline mb-2">Primary Provider</label>
+                  <label className="block text-sm font-medium text-semantic-muted mb-2">Primary Provider</label>
                   <p className="text-brand-foreground">{routing.primaryProvider || 'Not configured'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-brand-outline mb-2">Primary Model</label>
+                  <label className="block text-sm font-medium text-semantic-muted mb-2">Primary Model</label>
                   <p className="text-brand-foreground">{routing.primaryModel || 'Not configured'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-brand-outline mb-2">Fallback Provider</label>
+                  <label className="block text-sm font-medium text-semantic-muted mb-2">Fallback Provider</label>
                   <p className="text-brand-foreground">{routing.fallbackProvider || 'Not configured'}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-brand-outline mb-2">Fallback Model</label>
+                  <label className="block text-sm font-medium text-semantic-muted mb-2">Fallback Model</label>
                   <p className="text-brand-foreground">{routing.fallbackModel || 'Not configured'}</p>
                 </div>
               </div>
             ) : (
-              <p className="text-brand-outline">No routing configuration found</p>
+              <p className="text-semantic-muted">No routing configuration found</p>
             )}
           </GlassCard>
         )}
@@ -510,7 +593,7 @@ export default function EyeDetailPage() {
         {activeTab === 'test' && (
           <GlassCard>
             <h2 className="mb-6 text-xl font-semibold text-brand-foreground">Test Eye</h2>
-            <p className="text-brand-outline">Test functionality coming soon...</p>
+            <p className="text-semantic-muted">Test functionality coming soon...</p>
           </GlassCard>
         )}
       </div>

@@ -21,14 +21,14 @@ export function Timeline({ events, selectedIndex, onSelect, onFocusEye }: Timeli
 
   if (!ordered.length) {
     return (
-      <div className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-5 text-sm text-brand-outline">
+      <div className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-5 text-sm text-semantic-muted">
         Awaiting pipeline activity.
       </div>
     );
   }
 
   return (
-    <ol className="max-h-[24rem] space-y-2 overflow-y-auto rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-brand-outline">
+    <ol className="max-h-[24rem] space-y-2 overflow-y-auto rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-semantic-muted">
       {ordered.map((event, index) => {
         const isSelected = selectedIndex === index;
         const idx = events.length - 1 - index;
@@ -44,11 +44,11 @@ export function Timeline({ events, selectedIndex, onSelect, onFocusEye }: Timeli
                 isSelected ? 'border-brand-accent/70 bg-brand-accent/10 text-brand-foreground' : 'hover:border-brand-accent/60 hover:bg-brand-accent/5',
               )}
             >
-              <div className="flex items-center justify-between text-xs text-brand-outline">
+              <div className="flex items-center justify-between text-xs text-semantic-muted">
                 <span>{formatTimestamp(event.ts)}</span>
                 <span>{event.eye ?? event.type}</span>
               </div>
-              <p className="mt-1 text-sm text-brand-outline">{event.code ?? event.type}</p>
+              <p className="mt-1 text-sm text-semantic-muted">{event.code ?? event.type}</p>
             </button>
           </li>
         );

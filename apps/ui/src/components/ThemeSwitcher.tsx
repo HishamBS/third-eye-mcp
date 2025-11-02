@@ -35,7 +35,7 @@ export function ThemeSwitcher() {
           />
           <span className="text-brand-foreground">{currentTheme.label}</span>
           <svg
-            className="h-4 w-4 text-brand-outline shrink-0"
+            className="h-4 w-4 text-semantic-muted shrink-0"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -61,7 +61,7 @@ export function ThemeSwitcher() {
               aria-label="Theme options"
             >
               <div className="p-2">
-                <div className="mb-2 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-outline">
+                <div className="mb-2 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-semantic-muted">
                   Select Theme
                 </div>
                 {THEME_METADATA.map((t) => (
@@ -71,7 +71,7 @@ export function ThemeSwitcher() {
                     className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                       theme === t.value
                         ? 'bg-brand-accent text-brand-foreground'
-                        : 'text-brand-outline hover:bg-brand-paperElev hover:text-brand-foreground'
+                        : 'text-semantic-muted hover:bg-brand-paperElev hover:text-brand-foreground'
                     }`}
                     role="menuitem"
                     aria-label={`Select ${t.label} theme`}

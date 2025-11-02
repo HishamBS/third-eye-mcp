@@ -48,7 +48,7 @@ export function ExportBar({ sessionId }: ExportBarProps) {
   };
 
   return (
-    <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-brand-outline">
+    <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-semantic-muted">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Session Export</p>
@@ -57,7 +57,7 @@ export function ExportBar({ sessionId }: ExportBarProps) {
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            className={clsx('rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50', disabled ? 'cursor-not-allowed bg-brand-outline/40 text-brand-outline' : 'bg-brand-accent text-brand-ink hover:bg-brand-primary')}
+            className={clsx('rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50', disabled ? 'cursor-not-allowed bg-brand-outline/40 text-semantic-muted' : 'bg-brand-accent text-brand-foreground hover:bg-brand-primary')}
             disabled={disabled}
             onClick={() => triggerDownload('pdf')}
           >
@@ -65,7 +65,7 @@ export function ExportBar({ sessionId }: ExportBarProps) {
           </button>
           <button
             type="button"
-            className={clsx('rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50', disabled ? 'cursor-not-allowed bg-brand-outline/40 text-brand-outline' : 'border border-brand-outline/60 text-brand-outline hover:border-brand-accent hover:text-brand-accent')}
+            className={clsx('rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50', disabled ? 'cursor-not-allowed bg-brand-outline/40 text-semantic-muted' : 'border border-brand-outline/60 text-semantic-muted hover:border-brand-accent hover:text-brand-accent')}
             disabled={disabled}
             onClick={() => triggerDownload('html')}
           >
@@ -73,7 +73,7 @@ export function ExportBar({ sessionId }: ExportBarProps) {
           </button>
           <button
             type="button"
-            className={clsx('rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50', disabled ? 'cursor-not-allowed bg-brand-outline/40 text-brand-outline' : 'border border-brand-outline/60 text-brand-outline hover:border-brand-accent hover:text-brand-accent')}
+            className={clsx('rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50', disabled ? 'cursor-not-allowed bg-brand-outline/40 text-semantic-muted' : 'border border-brand-outline/60 text-semantic-muted hover:border-brand-accent hover:text-brand-accent')}
             disabled={disabled}
             onClick={() => triggerDownload('json')}
           >
@@ -81,7 +81,7 @@ export function ExportBar({ sessionId }: ExportBarProps) {
           </button>
           <button
             type="button"
-            className={clsx('rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50', disabled ? 'cursor-not-allowed bg-brand-outline/40 text-brand-outline' : 'border border-brand-outline/60 text-brand-outline hover:border-brand-accent hover:text-brand-accent')}
+            className={clsx('rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50', disabled ? 'cursor-not-allowed bg-brand-outline/40 text-semantic-muted' : 'border border-brand-outline/60 text-semantic-muted hover:border-brand-accent hover:text-brand-accent')}
             disabled={disabled}
             onClick={() => triggerDownload('md')}
           >
@@ -89,7 +89,7 @@ export function ExportBar({ sessionId }: ExportBarProps) {
           </button>
         </div>
       </div>
-      {disabled && <p className="mt-2 text-xs text-brand-outline">Select a session to enable exports.</p>}
+      {disabled && <p className="mt-2 text-xs text-semantic-muted">Select a session to enable exports.</p>}
     </section>
   );
 }

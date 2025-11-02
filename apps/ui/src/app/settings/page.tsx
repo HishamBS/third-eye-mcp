@@ -361,7 +361,7 @@ export default function SettingsPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent">
+              <Link href="/" className="text-semantic-muted transition-colors hover:text-brand-accent">
                 ← Home
               </Link>
               <div>
@@ -396,7 +396,7 @@ export default function SettingsPage() {
 
             <div className="space-y-6">
               <div>
-                <label className="mb-3 block text-sm font-medium text-brand-outline">Theme</label>
+                <label className="mb-3 block text-sm font-medium text-semantic-muted">Theme</label>
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                   {THEME_METADATA.map((themeOption) => (
                     <button
@@ -409,7 +409,7 @@ export default function SettingsPage() {
                       }`}
                     >
                       <div className="font-semibold text-brand-foreground">{themeOption.label}</div>
-                      <div className="mt-1 text-xs text-brand-outline">{themeOption.description}</div>
+                      <div className="mt-1 text-xs text-semantic-muted">{themeOption.description}</div>
                     </button>
                   ))}
                 </div>
@@ -418,7 +418,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between rounded-xl border border-brand-outline/40 p-4">
                 <div>
                   <div className="font-medium text-brand-foreground">Dark Mode</div>
-                  <div className="text-sm text-brand-outline">Use dark color scheme</div>
+                  <div className="text-sm text-semantic-muted">Use dark color scheme</div>
                 </div>
                 <button
                   onClick={() => setDarkMode(!darkMode)}
@@ -443,7 +443,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between rounded-xl border border-brand-outline/40 p-4">
                 <div>
                   <div className="font-medium text-brand-foreground">Auto-open Sessions</div>
-                  <div className="text-sm text-brand-outline">Automatically open new sessions in browser</div>
+                  <div className="text-sm text-semantic-muted">Automatically open new sessions in browser</div>
                 </div>
                 <button
                   onClick={() => setAutoOpenSessions(!autoOpenSessions)}
@@ -462,7 +462,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between rounded-xl border border-brand-outline/40 p-4">
                 <div>
                   <div className="font-medium text-brand-foreground">Telemetry</div>
-                  <div className="text-sm text-brand-outline">Send anonymous usage data to improve the app</div>
+                  <div className="text-sm text-semantic-muted">Send anonymous usage data to improve the app</div>
                 </div>
                 <button
                   onClick={() => toggleTelemetry(!telemetry)}
@@ -485,7 +485,7 @@ export default function SettingsPage() {
               <h2 className="text-xl font-semibold text-brand-foreground">Provider Keys</h2>
               <button
                 onClick={() => setShowAddKey(!showAddKey)}
-                className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary"
+                className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-primary"
               >
                 + Add Key
               </button>
@@ -495,7 +495,7 @@ export default function SettingsPage() {
               <div className="mb-6 rounded-xl border border-brand-accent/40 bg-brand-accent/5 p-6">
                 <div className="space-y-4">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-brand-outline">Provider</label>
+                    <label className="mb-2 block text-sm font-medium text-semantic-muted">Provider</label>
                     <select
                       value={newKey.provider}
                       onChange={(e) => setNewKey({ ...newKey, provider: e.target.value })}
@@ -508,7 +508,7 @@ export default function SettingsPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-brand-outline">Label</label>
+                    <label className="mb-2 block text-sm font-medium text-semantic-muted">Label</label>
                     <input
                       type="text"
                       value={newKey.label}
@@ -518,7 +518,7 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-brand-outline">API Key</label>
+                    <label className="mb-2 block text-sm font-medium text-semantic-muted">API Key</label>
                     <input
                       type="password"
                       value={newKey.apiKey}
@@ -530,14 +530,14 @@ export default function SettingsPage() {
                   <div className="flex gap-3">
                     <button
                       onClick={() => setShowAddKey(false)}
-                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={addProviderKey}
                       disabled={loading || !newKey.label || !newKey.apiKey}
-                      className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary disabled:opacity-50"
+                      className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-primary disabled:opacity-50"
                     >
                       {loading ? 'Adding...' : 'Add Key'}
                     </button>
@@ -551,7 +551,7 @@ export default function SettingsPage() {
                 <h3 className="mb-4 font-semibold text-brand-foreground">Edit {editingKey.provider} Key</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-brand-outline">Label</label>
+                    <label className="mb-2 block text-sm font-medium text-semantic-muted">Label</label>
                     <input
                       type="text"
                       value={editForm.label}
@@ -561,7 +561,7 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-brand-outline">
+                    <label className="mb-2 block text-sm font-medium text-semantic-muted">
                       New API Key (leave empty to keep current)
                     </label>
                     <input
@@ -575,14 +575,14 @@ export default function SettingsPage() {
                   <div className="flex gap-3">
                     <button
                       onClick={cancelEdit}
-                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={updateProviderKey}
                       disabled={loading || !editForm.label}
-                      className={`rounded-full ${STATUS_BG_COLORS.warning} px-5 py-2 text-sm font-semibold text-brand-ink transition hover:opacity-90 disabled:opacity-50`}
+                      className={`rounded-full ${STATUS_BG_COLORS.warning} px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:opacity-90 disabled:opacity-50`}
                     >
                       {loading ? 'Updating...' : 'Update Key'}
                     </button>
@@ -594,8 +594,8 @@ export default function SettingsPage() {
             <div className="space-y-3">
               {providerKeys.length === 0 ? (
                 <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/50 p-8 text-center">
-                  <p className="text-brand-outline">No provider keys configured</p>
-                  <p className="mt-2 text-sm text-brand-outline">Add API keys to enable LLM providers</p>
+                  <p className="text-semantic-muted">No provider keys configured</p>
+                  <p className="mt-2 text-sm text-semantic-muted">Add API keys to enable LLM providers</p>
                 </div>
               ) : (
                 providerKeys.map((key) => (
@@ -606,8 +606,8 @@ export default function SettingsPage() {
                     <div>
                       <div className="flex items-center gap-3">
                         <span className="font-semibold capitalize text-brand-foreground">{key.provider}</span>
-                        <span className="text-sm text-brand-outline">•</span>
-                        <span className="text-sm text-brand-outline">{key.label}</span>
+                        <span className="text-sm text-semantic-muted">•</span>
+                        <span className="text-sm text-semantic-muted">{key.label}</span>
                         {health?.checks?.providers[key.provider] && (
                           <span className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.success} px-2 py-0.5 text-xs ${STATUS_TEXT_COLORS.success}`}>
                             Connected
@@ -619,7 +619,7 @@ export default function SettingsPage() {
                           </span>
                         )}
                       </div>
-                      <div className="mt-1 text-xs text-brand-outline">
+                      <div className="mt-1 text-xs text-semantic-muted">
                         Added {new Date(key.createdAt).toLocaleDateString()} • Encrypted 🔒
                       </div>
                     </div>
@@ -655,7 +655,7 @@ export default function SettingsPage() {
 
             <div className="space-y-6">
               <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/50 p-4">
-                <div className="text-sm text-brand-outline">Database Path</div>
+                <div className="text-sm text-semantic-muted">Database Path</div>
                 <div className="mt-1 font-mono text-sm text-brand-foreground">{dbPath}</div>
               </div>
 
@@ -667,7 +667,7 @@ export default function SettingsPage() {
                   Backup Database
                 </button>
 
-                <label className="cursor-pointer rounded-xl border border-brand-outline/40 px-5 py-3 text-center font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent">
+                <label className="cursor-pointer rounded-xl border border-brand-outline/40 px-5 py-3 text-center font-semibold text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent">
                   Restore Database
                   <input
                     type="file"
@@ -698,7 +698,7 @@ export default function SettingsPage() {
                   <div className="mt-4 flex gap-3">
                     <button
                       onClick={() => setShowResetConfirm(false)}
-                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       Cancel
                     </button>

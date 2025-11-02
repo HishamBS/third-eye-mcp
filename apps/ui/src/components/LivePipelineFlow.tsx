@@ -210,7 +210,7 @@ export function LivePipelineFlow({ sessionId, initialEvents = [] }: LivePipeline
         <div className={`flex items-center space-x-2 rounded-full px-3 py-1 text-xs font-medium ${
           isConnected
             ? `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success} border ${STATUS_BORDER_COLORS_SUBTLE.success}`
-            : `${STATUS_BG_COLORS_SUBTLE.muted} text-brand-outline border ${STATUS_BORDER_COLORS_SUBTLE.muted}`
+            : `${STATUS_BG_COLORS_SUBTLE.muted} text-semantic-muted border ${STATUS_BORDER_COLORS_SUBTLE.muted}`
         }`}>
           <div className={`h-2 w-2 rounded-full ${isConnected ? `${STATUS_TEXT_COLORS.success} animate-pulse` : STATUS_TEXT_COLORS.muted}`} />
           <span>{isConnected ? 'Live' : 'Disconnected'}</span>
@@ -226,7 +226,7 @@ export function LivePipelineFlow({ sessionId, initialEvents = [] }: LivePipeline
 
       {/* Event Feed */}
       <div className="mt-4 max-h-64 overflow-y-auto rounded-lg bg-brand-paper/50 p-4">
-        <h3 className="mb-2 text-sm font-semibold text-brand-outline">Event Feed</h3>
+        <h3 className="mb-2 text-sm font-semibold text-semantic-muted">Event Feed</h3>
         <div className="space-y-2">
           {events.slice(-10).reverse().map((event, index) => (
             <div
@@ -240,19 +240,19 @@ export function LivePipelineFlow({ sessionId, initialEvents = [] }: LivePipeline
               }`} />
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-brand-outline">{event.eye || 'System'}</span>
-                  <span className="text-brand-outline">
+                  <span className="font-medium text-semantic-muted">{event.eye || 'System'}</span>
+                  <span className="text-semantic-muted">
                     {new Date(event.createdAt || Date.now()).toLocaleTimeString()}
                   </span>
                 </div>
-                <p className="mt-1 text-brand-outline">
+                <p className="mt-1 text-semantic-muted">
                   {event.code || event.type}: {event.md || event.message || 'Event received'}
                 </p>
               </div>
             </div>
           ))}
           {events.length === 0 && (
-            <p className="text-center text-brand-outline">No events yet. Waiting for pipeline activity...</p>
+            <p className="text-center text-semantic-muted">No events yet. Waiting for pipeline activity...</p>
           )}
         </div>
       </div>

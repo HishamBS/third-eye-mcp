@@ -144,17 +144,17 @@ export function CustomEyeWizard({ initialData, eyeId, onSave, onCancel }: Custom
         {/* Header */}
         <div className="mb-8">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-brand-ink mb-2">
+            <h1 className="text-4xl font-bold text-brand-foreground mb-2">
               {state.isEditing ? WIZARD_TEXT.TITLE_EDIT : WIZARD_TEXT.TITLE_CREATE}
             </h1>
-            <p className="text-lg text-brand-ink/70">{WIZARD_TEXT.SUBTITLE}</p>
+            <p className="text-lg text-semantic-muted">{WIZARD_TEXT.SUBTITLE}</p>
           </div>
         </div>
 
         {/* Progress */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-brand-ink/70">
+            <span className="text-sm font-medium text-semantic-muted">
               {WIZARD_TEXT.PROGRESS_LABEL
                 .replace('{current}', String(state.currentStep + 1))
                 .replace('{total}', String(SIMPLE_TOTAL_STEPS))}
@@ -173,8 +173,8 @@ export function CustomEyeWizard({ initialData, eyeId, onSave, onCancel }: Custom
         {/* Step Content */}
         <GlassCard className="mb-8 min-h-[400px]">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-brand-ink mb-2">{currentStepInfo?.title}</h2>
-            <p className="text-brand-ink/70">{currentStepInfo?.description}</p>
+            <h2 className="text-2xl font-bold text-brand-foreground mb-2">{currentStepInfo?.title}</h2>
+            <p className="text-semantic-muted">{currentStepInfo?.description}</p>
           </div>
 
           <div className="py-4">
@@ -196,7 +196,7 @@ export function CustomEyeWizard({ initialData, eyeId, onSave, onCancel }: Custom
             {!isFirstStep && (
               <button
                 onClick={handlePrevious}
-                className="flex items-center gap-2 px-6 py-3 rounded-lg border border-brand-outline text-brand-ink hover:bg-brand-paperElev transition-colors"
+                className="flex items-center gap-2 px-6 py-3 rounded-lg border border-brand-outline text-brand-foreground hover:bg-brand-paperElev transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
                 {BUTTON_LABELS.PREVIOUS}
@@ -207,7 +207,7 @@ export function CustomEyeWizard({ initialData, eyeId, onSave, onCancel }: Custom
           <div className="flex gap-3">
             <button
               onClick={handleCancel}
-              className="flex items-center gap-2 px-6 py-3 rounded-lg border border-brand-outline text-brand-ink hover:bg-brand-paperElev transition-colors"
+              className="flex items-center gap-2 px-6 py-3 rounded-lg border border-brand-outline text-brand-foreground hover:bg-brand-paperElev transition-colors"
             >
               <X className="w-4 h-4" />
               {BUTTON_LABELS.CANCEL}

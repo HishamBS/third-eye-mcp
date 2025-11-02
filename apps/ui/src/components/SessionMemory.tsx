@@ -83,7 +83,7 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
       case 'NEEDS_INPUT':
         return `${STATUS_TEXT_COLORS.warning} ${STATUS_BG_COLORS_SUBTLE.warning} ${STATUS_BORDER_COLORS_SUBTLE.warning}`;
       default:
-        return `text-brand-outline ${STATUS_BG_COLORS_SUBTLE.idle} ${STATUS_BORDER_COLORS_SUBTLE.idle}`;
+        return `text-semantic-muted ${STATUS_BG_COLORS_SUBTLE.idle} ${STATUS_BORDER_COLORS_SUBTLE.idle}`;
     }
   };
 
@@ -111,7 +111,7 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
           <Brain className={`h-5 w-5 ${STATUS_TEXT_COLORS.info}`} />
           Session Memory
         </h3>
-        <div className="flex items-center gap-2 text-sm text-brand-outline">
+        <div className="flex items-center gap-2 text-sm text-semantic-muted">
           <Clock className="h-4 w-4" />
           {priorRuns.length} runs
         </div>
@@ -128,9 +128,9 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
         </div>
       ) : priorRuns.length === 0 ? (
         <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-8 text-center">
-          <Brain className="mx-auto h-12 w-12 text-brand-outline" />
-          <p className="mt-3 text-brand-outline">No prior runs in this session yet</p>
-          <p className="mt-1 text-xs text-brand-outline">
+          <Brain className="mx-auto h-12 w-12 text-semantic-muted" />
+          <p className="mt-3 text-semantic-muted">No prior runs in this session yet</p>
+          <p className="mt-1 text-xs text-semantic-muted">
             Byakugan will reference past validations for consistency checking
           </p>
         </div>
@@ -152,7 +152,7 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
                       {getEyeIcon(run.eye)}
                       <div>
                         <h4 className="font-medium capitalize text-brand-foreground">{run.eye}</h4>
-                        <p className="text-xs text-brand-outline">{formatTimeAgo(run.createdAt)}</p>
+                        <p className="text-xs text-semantic-muted">{formatTimeAgo(run.createdAt)}</p>
                       </div>
                     </div>
 
@@ -172,12 +172,12 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
                     </div>
                   </div>
 
-                  <p className="mb-2 line-clamp-2 text-sm text-brand-outline">
+                  <p className="mb-2 line-clamp-2 text-sm text-semantic-muted">
                     {run.inputMd}
                   </p>
 
                   {run.outputJson?.summary && (
-                    <p className="line-clamp-1 text-xs text-brand-outline">
+                    <p className="line-clamp-1 text-xs text-semantic-muted">
                       {run.outputJson.summary}
                     </p>
                   )}
@@ -197,7 +197,7 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
           {priorRuns.length > 5 && (
             <button
               onClick={() => setExpanded(!expanded)}
-              className="mt-4 flex w-full items-center justify-center gap-1 rounded-full border border-brand-outline/40 py-2 text-sm font-medium text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
+              className="mt-4 flex w-full items-center justify-center gap-1 rounded-full border border-brand-outline/40 py-2 text-sm font-medium text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
             >
               {expanded ? 'Show Less' : `Show ${priorRuns.length - 5} More`}
               <ChevronRight

@@ -60,7 +60,7 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
     <div className="space-y-6">
       {/* Eye ID */}
       <div>
-        <label className="block text-sm font-medium text-brand-ink mb-2">
+        <label className="block text-sm font-medium text-brand-foreground mb-2">
           {FIELD_LABELS.EYE_ID} *
         </label>
         <input
@@ -73,16 +73,16 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
             })
           }
           placeholder={PLACEHOLDERS.EYE_ID}
-          className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent"
+          className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
           minLength={CHAR_LIMITS.EYE_ID_MIN}
           maxLength={CHAR_LIMITS.EYE_ID_MAX}
         />
-        <p className="text-xs text-brand-ink/60 mt-1">{HELP_TEXT.EYE_ID}</p>
+        <p className="text-xs text-semantic-muted mt-1">{HELP_TEXT.EYE_ID}</p>
       </div>
 
       {/* Eye Name */}
       <div>
-        <label className="block text-sm font-medium text-brand-ink mb-2">
+        <label className="block text-sm font-medium text-brand-foreground mb-2">
           {FIELD_LABELS.EYE_NAME} *
         </label>
         <input
@@ -95,16 +95,16 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
             })
           }
           placeholder={PLACEHOLDERS.EYE_NAME}
-          className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent"
+          className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
           minLength={CHAR_LIMITS.NAME_MIN}
           maxLength={CHAR_LIMITS.NAME_MAX}
         />
-        <p className="text-xs text-brand-ink/60 mt-1">{HELP_TEXT.EYE_NAME}</p>
+        <p className="text-xs text-semantic-muted mt-1">{HELP_TEXT.EYE_NAME}</p>
       </div>
 
       {/* Description */}
       <div>
-        <label className="block text-sm font-medium text-brand-ink mb-2">
+        <label className="block text-sm font-medium text-brand-foreground mb-2">
           {FIELD_LABELS.DESCRIPTION} *
         </label>
         <textarea
@@ -117,13 +117,13 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
           }
           placeholder={PLACEHOLDERS.DESCRIPTION}
           rows={4}
-          className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
+          className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
           minLength={CHAR_LIMITS.DESCRIPTION_MIN}
           maxLength={CHAR_LIMITS.DESCRIPTION_MAX}
         />
         <div className="flex justify-between items-center mt-1">
-          <p className="text-xs text-brand-ink/60">{HELP_TEXT.DESCRIPTION}</p>
-          <span className="text-xs text-brand-ink/50">
+          <p className="text-xs text-semantic-muted">{HELP_TEXT.DESCRIPTION}</p>
+          <span className="text-xs text-semantic-muted">
             {state.metadata.description.length}/{CHAR_LIMITS.DESCRIPTION_MAX}
           </span>
         </div>
@@ -131,7 +131,7 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
 
       {/* Version */}
       <div>
-        <label className="block text-sm font-medium text-brand-ink mb-2">
+        <label className="block text-sm font-medium text-brand-foreground mb-2">
           {FIELD_LABELS.VERSION} *
         </label>
         <input
@@ -144,14 +144,14 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
             })
           }
           min={1}
-          className="w-32 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent"
+          className="w-32 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
         />
-        <p className="text-xs text-brand-ink/60 mt-1">{HELP_TEXT.VERSION}</p>
+        <p className="text-xs text-semantic-muted mt-1">{HELP_TEXT.VERSION}</p>
       </div>
 
       {/* Capabilities */}
       <div>
-        <label className="block text-sm font-medium text-brand-ink mb-2">
+        <label className="block text-sm font-medium text-brand-foreground mb-2">
           {FIELD_LABELS.CAPABILITIES}
         </label>
         <div className="flex gap-2 mb-3">
@@ -161,7 +161,7 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
             onChange={(e) => setCapabilityInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleAddCapability()}
             placeholder={PLACEHOLDERS.CAPABILITY}
-            className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent"
+            className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
           />
           <button
             onClick={handleAddCapability}
@@ -194,12 +194,12 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
         </div>
 
         {state.metadata.capabilities.length === 0 && (
-          <p className="text-sm text-brand-ink/50 italic mt-2">
+          <p className="text-sm text-semantic-muted italic mt-2">
             No capabilities added yet
           </p>
         )}
 
-        <p className="text-xs text-brand-ink/60 mt-2">{HELP_TEXT.CAPABILITIES}</p>
+        <p className="text-xs text-semantic-muted mt-2">{HELP_TEXT.CAPABILITIES}</p>
       </div>
     </div>
   );

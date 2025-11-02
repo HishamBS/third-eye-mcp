@@ -222,12 +222,12 @@ const OVERSEER_DARK: Theme = Object.freeze({
   mode: 'dark',
   colors: Object.freeze({
     brand: {
-      primary: '#FB923C',    // Orange-400 - Naruto orange (7.2:1 on black)
-      accent: '#EF4444',     // Red-500 - Sharingan red (7.1:1)
-      ink: '#FAFAF9',        // Stone-50 - Off-white text (16.5:1)
-      paper: '#0A0A0A',      // Near-black background
-      paperElev: '#1C1C1C',  // Elevated black surfaces
-      outline: '#78350F',    // Orange-900 - Muted orange borders (10.2:1)
+      primary: '#D9463B',    // rgb(217, 70, 59) - Main branch muted red
+      accent: '#F7B500',     // rgb(247, 181, 0) - Main branch golden amber
+      ink: '#0F0F12',        // rgb(15, 15, 18) - Main branch text color
+      paper: '#0B0B0D',      // rgb(11, 11, 13) - Main branch background
+      paperElev: '#15161A',  // rgb(21, 22, 26) - Main branch elevated surfaces
+      outline: '#2A2B32',    // rgb(42, 43, 50) - Main branch borders
     },
     semantic: {
       success: '#6EE7B7',    // Emerald-300

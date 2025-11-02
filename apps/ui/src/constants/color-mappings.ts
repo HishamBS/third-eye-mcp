@@ -24,11 +24,11 @@ export const STATUS_TEXT_COLORS = {
   warning: 'text-semantic-warning',
   info: 'text-semantic-info',
   muted: 'text-semantic-muted',
-  pending: 'text-brand-outline',
+  pending: 'text-semantic-muted',
   running: 'text-semantic-info',
   completed: 'text-semantic-success',
   failed: 'text-semantic-error',
-  idle: 'text-brand-outline',
+  idle: 'text-semantic-muted',
   active: 'text-brand-primary',
 } as const;
 

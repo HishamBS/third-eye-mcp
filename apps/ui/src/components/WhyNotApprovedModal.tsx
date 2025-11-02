@@ -92,7 +92,7 @@ export function WhyNotApprovedModal({ eyeState, open, onClose, onResubmit }: Why
           exit={{ opacity: 0 }}
         >
           <motion.div
-            className="w-full max-w-2xl rounded-2xl border border-brand-outline/60 bg-brand-paperElev/90 p-6 text-sm text-brand-outline shadow-xl"
+            className="w-full max-w-2xl rounded-2xl border border-brand-outline/60 bg-brand-paperElev/90 p-6 text-sm text-semantic-muted shadow-xl"
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
@@ -102,7 +102,7 @@ export function WhyNotApprovedModal({ eyeState, open, onClose, onResubmit }: Why
                 <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Why not approved</p>
                 <h2 className="text-xl font-semibold text-brand-foreground">{eyeState.eye}</h2>
                 {eyeState.code && (
-                  <p className="mt-1 text-xs text-brand-outline">
+                  <p className="mt-1 text-xs text-semantic-muted">
                     Status code <span className="font-mono text-brand-accent">{eyeState.code}</span>
                   </p>
                 )}
@@ -110,7 +110,7 @@ export function WhyNotApprovedModal({ eyeState, open, onClose, onResubmit }: Why
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-full border border-brand-outline/60 px-3 py-1 text-xs text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
+                className="rounded-full border border-brand-outline/60 px-3 py-1 text-xs text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
               >
                 Close
               </button>
@@ -126,7 +126,7 @@ export function WhyNotApprovedModal({ eyeState, open, onClose, onResubmit }: Why
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                           <div className="text-xs font-semibold text-brand-foreground">{issue.category}</div>
-                          <div className="mt-1 text-xs text-brand-outline">{issue.description}</div>
+                          <div className="mt-1 text-xs text-semantic-muted">{issue.description}</div>
                           {issue.fix && (
                             <div className="mt-2 rounded bg-brand-paper/60 p-2 text-xs ${STATUS_TEXT_COLORS.success}">
                               <span className="font-semibold">💡 Fix:</span> {issue.fix}
@@ -142,7 +142,7 @@ export function WhyNotApprovedModal({ eyeState, open, onClose, onResubmit }: Why
               {fixes !== 'No details provided.' && (
                 <article className="rounded-xl border border-brand-outline/40 bg-brand-paper/80 p-4 mt-4">
                   <h3 className="text-sm font-semibold text-brand-foreground">General Fix Instructions</h3>
-                  <p className="mt-2 whitespace-pre-line text-xs text-brand-outline">{fixes}</p>
+                  <p className="mt-2 whitespace-pre-line text-xs text-semantic-muted">{fixes}</p>
                 </article>
               )}
             </section>
@@ -151,14 +151,14 @@ export function WhyNotApprovedModal({ eyeState, open, onClose, onResubmit }: Why
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-full border border-brand-outline/50 px-4 py-2 text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
+                className="rounded-full border border-brand-outline/50 px-4 py-2 text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
               >
                 Dismiss
               </button>
               <button
                 type="button"
                 onClick={() => onResubmit?.()}
-                className={clsx('rounded-full bg-brand-accent px-4 py-2 font-semibold text-brand-ink transition hover:bg-brand-primary', !onResubmit && 'cursor-not-allowed opacity-50')}
+                className={clsx('rounded-full bg-brand-accent px-4 py-2 font-semibold text-brand-foreground transition hover:bg-brand-primary', !onResubmit && 'cursor-not-allowed opacity-50')}
                 disabled={!onResubmit}
               >
                 Resubmit to host agent

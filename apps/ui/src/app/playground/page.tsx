@@ -22,7 +22,7 @@ export default function PlaygroundIndexPage() {
           <EyeIcon eye="overseer" size={64} />
         </div>
         <h1 className="text-2xl font-semibold text-brand-foreground mb-2">Creating Playground Session...</h1>
-        <p className="text-brand-outline">Redirecting you to the playground</p>
+        <p className="text-semantic-muted">Redirecting you to the playground</p>
       </div>
     </div>
   );

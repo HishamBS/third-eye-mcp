@@ -25,7 +25,7 @@ export function ViewModeToggle() {
       <div className="relative z-10 flex items-center gap-4">
         <div
           className={`flex items-center gap-1.5 transition-colors ${
-            viewMode === 'novice' ? 'text-brand-accent' : 'text-brand-outline'
+            viewMode === 'novice' ? 'text-brand-accent' : 'text-semantic-muted'
           }`}
         >
           <Eye className="h-4 w-4" />
@@ -34,7 +34,7 @@ export function ViewModeToggle() {
 
         <div
           className={`flex items-center gap-1.5 transition-colors ${
-            viewMode === 'expert' ? 'text-brand-accent' : 'text-brand-outline'
+            viewMode === 'expert' ? 'text-brand-accent' : 'text-semantic-muted'
           }`}
         >
           <Code2 className="h-4 w-4" />

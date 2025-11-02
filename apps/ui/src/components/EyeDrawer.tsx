@@ -107,7 +107,7 @@ export function EyeDrawer({ isOpen, onClose, state, noviceMode = false, personaM
                   </p>
                 ) : null}
                 {state?.code && (
-                  <p className="mt-2 text-sm text-brand-outline">
+                  <p className="mt-2 text-sm text-semantic-muted">
                     Status code <span className="font-mono text-brand-accent">{state.code}</span>
                   </p>
                 )}
@@ -115,7 +115,7 @@ export function EyeDrawer({ isOpen, onClose, state, noviceMode = false, personaM
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-full border border-brand-outline/60 px-3 py-1 text-sm text-brand-outline transition hover:border-brand-accent hover:text-brand-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/40"
+                className="rounded-full border border-brand-outline/60 px-3 py-1 text-sm text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/40"
               >
                 Close
               </button>
@@ -133,7 +133,7 @@ export function EyeDrawer({ isOpen, onClose, state, noviceMode = false, personaM
                       'rounded-full px-4 py-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/40',
                       isActive
                         ? 'bg-brand-accent/20 text-brand-accent shadow-inner shadow-brand-accent/50'
-                        : 'border border-brand-outline/60 text-brand-outline hover:border-brand-accent hover:text-brand-accent',
+                        : 'border border-brand-outline/60 text-semantic-muted hover:border-brand-accent hover:text-brand-accent',
                     )}
                     onClick={() => setActiveTab(tab.id)}
                   >

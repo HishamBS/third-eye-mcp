@@ -52,7 +52,7 @@ export function ClarificationsPanel({ sessionId, apiKey, questions, onSubmitted,
   };
 
   return (
-    <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-6 text-sm text-brand-outline">
+    <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-6 text-sm text-semantic-muted">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Adaptive Clarification</p>
@@ -66,12 +66,12 @@ export function ClarificationsPanel({ sessionId, apiKey, questions, onSubmitted,
       </header>
 
       {!questions.length ? (
-        <p className="mt-4 text-sm text-brand-outline">No clarifications required. Sharingan marked this request as clear.</p>
+        <p className="mt-4 text-sm text-semantic-muted">No clarifications required. Sharingan marked this request as clear.</p>
       ) : (
         <form className="mt-4 space-y-4" onSubmit={handleSubmit}>
           {questions.map((question, index) => (
             <label key={question.id} className="block space-y-2">
-              <span className="text-sm font-medium text-brand-outline">Q{index + 1}. {question.text}</span>
+              <span className="text-sm font-medium text-semantic-muted">Q{index + 1}. {question.text}</span>
               <textarea
                 required
                 minLength={3}
@@ -86,11 +86,11 @@ export function ClarificationsPanel({ sessionId, apiKey, questions, onSubmitted,
           {error && <p className="text-sm ${STATUS_TEXT_COLORS.error}">{error}</p>}
 
           <div className="flex items-center justify-between">
-            <p className="text-xs text-brand-outline">Responses forward to Kyuubi for rewrite.</p>
+            <p className="text-xs text-semantic-muted">Responses forward to Kyuubi for rewrite.</p>
             <button
               type="submit"
               disabled={disabled}
-              className="inline-flex items-center gap-2 rounded-full bg-brand-accent px-4 py-2 text-xs font-semibold text-brand-ink transition hover:bg-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-full bg-brand-accent px-4 py-2 text-xs font-semibold text-brand-foreground transition hover:bg-brand-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting ? 'Submitting…' : 'Submit answers'}
             </button>

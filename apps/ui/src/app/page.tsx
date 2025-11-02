@@ -134,7 +134,7 @@ export default function HomePage() {
                 Third Eye MCP
               </h1>
             </div>
-            <p className="mt-6 text-xl text-brand-outline">
+            <p className="mt-6 text-xl text-semantic-muted">
               Local-first AI orchestration with multi-Eye validation
             </p>
             <div className="mt-10 flex justify-center space-x-4">
@@ -176,29 +176,29 @@ export default function HomePage() {
               ) : (
                 <div className={`h-2 w-2 rounded-full ${STATUS_TEXT_COLORS.success} animate-pulse`} />
               )}
-              <span className="text-sm text-brand-outline">Real-time</span>
+              <span className="text-sm text-semantic-muted">Real-time</span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
             <div className="rounded-lg border border-brand-outline/30 bg-brand-paperElev p-4">
-              <div className="text-sm text-brand-outline">Sessions</div>
+              <div className="text-sm text-semantic-muted">Sessions</div>
               <div className="text-3xl font-bold text-brand-foreground mt-1">{stats.sessions}</div>
             </div>
             <div className="rounded-lg border border-brand-outline/30 bg-brand-paperElev p-4">
-              <div className="text-sm text-brand-outline">Runs</div>
+              <div className="text-sm text-semantic-muted">Runs</div>
               <div className="text-3xl font-bold text-brand-foreground mt-1">{stats.runs}</div>
             </div>
             <div className="rounded-lg border border-brand-outline/30 bg-brand-paperElev p-4">
-              <div className="text-sm text-brand-outline">Success Rate</div>
+              <div className="text-sm text-semantic-muted">Success Rate</div>
               <div className={`text-3xl font-bold ${STATUS_TEXT_COLORS.success} mt-1`}>{stats.successRate}%</div>
             </div>
             <div className="rounded-lg border border-brand-outline/30 bg-brand-paperElev p-4">
-              <div className="text-sm text-brand-outline">Avg Latency</div>
+              <div className="text-sm text-semantic-muted">Avg Latency</div>
               <div className={`text-3xl font-bold ${STATUS_TEXT_COLORS.info} mt-1`}>{stats.avgLatency}ms</div>
             </div>
             <div className="rounded-lg border border-brand-outline/30 bg-brand-paperElev p-4">
-              <div className="text-sm text-brand-outline mb-2">Providers</div>
+              <div className="text-sm text-semantic-muted mb-2">Providers</div>
               <div className="flex items-center space-x-1">
                 {stats.providers.map(p => (
                   <div
@@ -214,7 +214,7 @@ export default function HomePage() {
           </div>
 
           <div className="rounded-xl border border-brand-outline/30 bg-brand-paperElev p-6">
-            <div className="flex items-center justify-center space-x-3 text-brand-outline">
+            <div className="flex items-center justify-center space-x-3 text-semantic-muted">
               <Cpu className="h-5 w-5 animate-spin" style={{ animationDuration: '3s' }} />
               <span>Monitoring pipeline executions...</span>
               <CheckCircle2 className={`h-5 w-5 ${STATUS_TEXT_COLORS.success}`} />
@@ -227,7 +227,7 @@ export default function HomePage() {
         <h2 className={`text-4xl font-bold text-center mb-4 bg-gradient-to-r ${GRADIENT.brandPrimary} bg-clip-text text-transparent`}>
           {UI_HELP_TEXT.DASHBOARD_PLATFORM_HIGHLIGHTS_TITLE}
         </h2>
-        <p className="text-center text-brand-outline mb-12 max-w-2xl mx-auto">
+        <p className="text-center text-semantic-muted mb-12 max-w-2xl mx-auto">
           {UI_HELP_TEXT.DASHBOARD_PLATFORM_HIGHLIGHTS_SUBTITLE}
         </p>
 
@@ -247,10 +247,10 @@ export default function HomePage() {
                   <h3 className="text-xl font-semibold text-brand-foreground mb-2 group-hover:text-brand-accent transition-colors">
                     {feature.title}
                   </h3>
-                  <p className="text-sm text-brand-outline mb-4">{feature.description}</p>
+                  <p className="text-sm text-semantic-muted mb-4">{feature.description}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-brand-accent font-mono">{feature.demo}</span>
-                    <ArrowRight className="h-4 w-4 text-brand-outline group-hover:text-brand-accent group-hover:translate-x-1 transition-all" />
+                    <ArrowRight className="h-4 w-4 text-semantic-muted group-hover:text-brand-accent group-hover:translate-x-1 transition-all" />
                   </div>
                 </GlassCard>
               </Link>
@@ -270,7 +270,7 @@ export default function HomePage() {
               <GlassCard className="group cursor-pointer hover:border-brand-accent/60 transition-all p-8 text-center h-full">
                 <Beaker className="h-12 w-12 mx-auto mb-4 text-brand-accent group-hover:scale-110 transition-transform" />
                 <h3 className="text-xl font-semibold text-brand-foreground mb-2">Playground</h3>
-                <p className="text-sm text-brand-outline mb-4">
+                <p className="text-sm text-semantic-muted mb-4">
                   Test individual Eyes with custom inputs
                 </p>
                 <div className="inline-flex items-center space-x-2 text-brand-accent text-sm font-medium">
@@ -290,7 +290,7 @@ export default function HomePage() {
               <GlassCard className="group cursor-pointer hover:border-brand-accent/60 transition-all p-8 text-center h-full">
                 <Monitor className="h-12 w-12 mx-auto mb-4 text-brand-accent group-hover:scale-110 transition-transform" />
                 <h3 className="text-xl font-semibold text-brand-foreground mb-2">Monitor</h3>
-                <p className="text-sm text-brand-outline mb-4">
+                <p className="text-sm text-semantic-muted mb-4">
                   Watch real-time agent conversations
                 </p>
                 <div className="inline-flex items-center space-x-2 text-brand-accent text-sm font-medium">
@@ -310,7 +310,7 @@ export default function HomePage() {
               <GlassCard className="group cursor-pointer hover:border-brand-accent/60 transition-all p-8 text-center h-full">
                 <Activity className="h-12 w-12 mx-auto mb-4 text-brand-accent group-hover:scale-110 transition-transform" />
                 <h3 className="text-xl font-semibold text-brand-foreground mb-2">Connect</h3>
-                <p className="text-sm text-brand-outline mb-4">
+                <p className="text-sm text-semantic-muted mb-4">
                   Link your AI agent via MCP
                 </p>
                 <div className="inline-flex items-center space-x-2 text-brand-accent text-sm font-medium">

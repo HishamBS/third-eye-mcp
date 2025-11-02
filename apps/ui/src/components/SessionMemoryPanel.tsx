@@ -38,7 +38,7 @@ function formatSimilarity(value?: number) {
 export function SessionMemoryPanel({ byakuganEvents = [] }: SessionMemoryPanelProps) {
   if (!byakuganEvents.length) {
     return (
-      <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-brand-outline">
+      <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-semantic-muted">
         No historical references yet. Once Byakugan flags contradictions, they will appear here.
       </section>
     );
@@ -49,7 +49,7 @@ export function SessionMemoryPanel({ byakuganEvents = [] }: SessionMemoryPanelPr
 
   if (!references.length) {
     return (
-      <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-brand-outline">
+      <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-semantic-muted">
         Latest Byakugan review did not surface prior-session contradictions.
       </section>
     );
@@ -62,13 +62,13 @@ export function SessionMemoryPanel({ byakuganEvents = [] }: SessionMemoryPanelPr
           <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Session Memory</p>
           <h3 className="text-lg font-semibold text-brand-foreground">Byakugan historical references</h3>
         </div>
-        {latest.ts && <span className="text-xs text-brand-outline">{new Date(latest.ts).toLocaleString()}</span>}
+        {latest.ts && <span className="text-xs text-semantic-muted">{new Date(latest.ts).toLocaleString()}</span>}
       </header>
       <ul className="mt-4 space-y-3">
         {references.map((ref, index) => (
           <li key={`${ref.session_id ?? 'ref'}-${index}`} className="rounded-xl border border-brand-outline/30 bg-brand-paper/80 p-3">
-            <p className="text-sm text-brand-outline">{ref.excerpt ?? 'No excerpt provided.'}</p>
-            <div className="mt-2 flex items-center gap-4 text-xs text-brand-outline">
+            <p className="text-sm text-semantic-muted">{ref.excerpt ?? 'No excerpt provided.'}</p>
+            <div className="mt-2 flex items-center gap-4 text-xs text-semantic-muted">
               <span>Session: {ref.session_id ?? 'unknown'}</span>
               <span>Similarity: {formatSimilarity(ref.similarity)}</span>
               {ref.ts && <span>{new Date(ref.ts).toLocaleDateString()}</span>}

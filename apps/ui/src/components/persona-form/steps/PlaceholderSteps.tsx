@@ -17,9 +17,9 @@ function PlaceholderStep({ title, description }: { title: string; description: s
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <Construction className="w-16 h-16 text-brand-accent/50 mb-4" />
-      <h3 className="text-xl font-semibold text-brand-ink mb-2">{title}</h3>
-      <p className="text-brand-ink/70 max-w-md">{description}</p>
-      <p className="text-sm text-brand-ink/50 mt-4">
+      <h3 className="text-xl font-semibold text-brand-foreground mb-2">{title}</h3>
+      <p className="text-semantic-muted max-w-md">{description}</p>
+      <p className="text-sm text-semantic-muted mt-4">
         Advanced features coming in future updates
       </p>
     </div>
@@ -84,8 +84,8 @@ export function GuidanceStep({ state, dispatch }: WizardStepProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between p-4 rounded-lg bg-brand-paperElev border border-brand-outline">
         <div>
-          <h4 className="font-semibold text-brand-ink">Enable Guidance Phase</h4>
-          <p className="text-xs text-brand-ink/60 mt-1">
+          <h4 className="font-semibold text-brand-foreground">Enable Guidance Phase</h4>
+          <p className="text-xs text-semantic-muted mt-1">
             Configure phase-specific mission, checks, and examples
           </p>
         </div>
@@ -106,7 +106,7 @@ export function GuidanceStep({ state, dispatch }: WizardStepProps) {
       {isEnabled && state.guidancePhase && (
         <>
           <div>
-            <label className="block text-sm font-medium text-brand-ink mb-2">
+            <label className="block text-sm font-medium text-brand-foreground mb-2">
               {FIELD_LABELS.PHASE_MISSION} *
             </label>
             <textarea
@@ -114,13 +114,13 @@ export function GuidanceStep({ state, dispatch }: WizardStepProps) {
               onChange={(e) => handleUpdateField('mission', e.target.value)}
               placeholder={PLACEHOLDERS.PHASE_MISSION}
               rows={5}
-              className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
+              className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
             />
-            <p className="text-xs text-brand-ink/60 mt-1">{HELP_TEXT.PHASE_MISSION}</p>
+            <p className="text-xs text-semantic-muted mt-1">{HELP_TEXT.PHASE_MISSION}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-brand-ink mb-2">
+            <label className="block text-sm font-medium text-brand-foreground mb-2">
               {FIELD_LABELS.CHECK_LOGIC} *
             </label>
             <textarea
@@ -128,13 +128,13 @@ export function GuidanceStep({ state, dispatch }: WizardStepProps) {
               onChange={(e) => handleUpdateField('check', e.target.value)}
               placeholder={PLACEHOLDERS.CHECK_LOGIC}
               rows={4}
-              className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
+              className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
             />
-            <p className="text-xs text-brand-ink/60 mt-1">{HELP_TEXT.CHECK_LOGIC}</p>
+            <p className="text-xs text-semantic-muted mt-1">{HELP_TEXT.CHECK_LOGIC}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-brand-ink mb-2">
+            <label className="block text-sm font-medium text-brand-foreground mb-2">
               {FIELD_LABELS.PHASE_REMINDERS}
             </label>
             <div className="flex gap-2 mb-4">
@@ -144,7 +144,7 @@ export function GuidanceStep({ state, dispatch }: WizardStepProps) {
                 onChange={(e) => setReminderInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleAddReminder()}
                 placeholder={PLACEHOLDERS.REMINDER}
-                className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
               />
               <button
                 onClick={handleAddReminder}
@@ -161,10 +161,10 @@ export function GuidanceStep({ state, dispatch }: WizardStepProps) {
                   key={index}
                   className="flex items-center justify-between p-3 rounded-lg bg-brand-paperElev border border-brand-outline"
                 >
-                  <span className="text-sm text-brand-ink">{reminder}</span>
+                  <span className="text-sm text-brand-foreground">{reminder}</span>
                   <button
                     onClick={() => handleRemoveReminder(index)}
-                    className={`text-brand-ink/40 hover:${STATUS_TEXT_COLORS.error} transition-colors`}
+                    className={`text-brand-foreground/40 hover:${STATUS_TEXT_COLORS.error} transition-colors`}
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -173,12 +173,12 @@ export function GuidanceStep({ state, dispatch }: WizardStepProps) {
             </div>
 
             {state.guidancePhase.reminders.length === 0 && (
-              <p className="text-sm text-brand-ink/50 italic">No phase reminders added yet</p>
+              <p className="text-sm text-semantic-muted italic">No phase reminders added yet</p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-brand-ink mb-2">
+            <label className="block text-sm font-medium text-brand-foreground mb-2">
               {FIELD_LABELS.EXAMPLE_JSON}
             </label>
             <textarea
@@ -186,9 +186,9 @@ export function GuidanceStep({ state, dispatch }: WizardStepProps) {
               onChange={(e) => handleUpdateField('example', e.target.value)}
               placeholder={PLACEHOLDERS.EXAMPLE_JSON}
               rows={6}
-              className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
+              className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
             />
-            <p className="text-xs text-brand-ink/60 mt-1">{HELP_TEXT.EXAMPLE_JSON}</p>
+            <p className="text-xs text-semantic-muted mt-1">{HELP_TEXT.EXAMPLE_JSON}</p>
           </div>
         </>
       )}
@@ -254,8 +254,8 @@ export function ValidationStep({ state, dispatch }: WizardStepProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between p-4 rounded-lg bg-brand-paperElev border border-brand-outline">
         <div>
-          <h4 className="font-semibold text-brand-ink">Enable Validation Phase</h4>
-          <p className="text-xs text-brand-ink/60 mt-1">
+          <h4 className="font-semibold text-brand-foreground">Enable Validation Phase</h4>
+          <p className="text-xs text-semantic-muted mt-1">
             Optional validation phase with mission, checks, and examples
           </p>
         </div>
@@ -276,7 +276,7 @@ export function ValidationStep({ state, dispatch }: WizardStepProps) {
       {isEnabled && state.validationPhase && (
         <>
           <div>
-            <label className="block text-sm font-medium text-brand-ink mb-2">
+            <label className="block text-sm font-medium text-brand-foreground mb-2">
               {FIELD_LABELS.PHASE_MISSION} *
             </label>
             <textarea
@@ -284,13 +284,13 @@ export function ValidationStep({ state, dispatch }: WizardStepProps) {
               onChange={(e) => handleUpdateField('mission', e.target.value)}
               placeholder={PLACEHOLDERS.PHASE_MISSION}
               rows={5}
-              className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
+              className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
             />
-            <p className="text-xs text-brand-ink/60 mt-1">{HELP_TEXT.PHASE_MISSION}</p>
+            <p className="text-xs text-semantic-muted mt-1">{HELP_TEXT.PHASE_MISSION}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-brand-ink mb-2">
+            <label className="block text-sm font-medium text-brand-foreground mb-2">
               {FIELD_LABELS.CHECK_LOGIC} *
             </label>
             <textarea
@@ -298,13 +298,13 @@ export function ValidationStep({ state, dispatch }: WizardStepProps) {
               onChange={(e) => handleUpdateField('check', e.target.value)}
               placeholder={PLACEHOLDERS.CHECK_LOGIC}
               rows={4}
-              className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
+              className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
             />
-            <p className="text-xs text-brand-ink/60 mt-1">{HELP_TEXT.CHECK_LOGIC}</p>
+            <p className="text-xs text-semantic-muted mt-1">{HELP_TEXT.CHECK_LOGIC}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-brand-ink mb-2">
+            <label className="block text-sm font-medium text-brand-foreground mb-2">
               {FIELD_LABELS.PHASE_REMINDERS}
             </label>
             <div className="flex gap-2 mb-4">
@@ -314,7 +314,7 @@ export function ValidationStep({ state, dispatch }: WizardStepProps) {
                 onChange={(e) => setReminderInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleAddReminder()}
                 placeholder={PLACEHOLDERS.REMINDER}
-                className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
               />
               <button
                 onClick={handleAddReminder}
@@ -331,10 +331,10 @@ export function ValidationStep({ state, dispatch }: WizardStepProps) {
                   key={index}
                   className="flex items-center justify-between p-3 rounded-lg bg-brand-paperElev border border-brand-outline"
                 >
-                  <span className="text-sm text-brand-ink">{reminder}</span>
+                  <span className="text-sm text-brand-foreground">{reminder}</span>
                   <button
                     onClick={() => handleRemoveReminder(index)}
-                    className={`text-brand-ink/40 hover:${STATUS_TEXT_COLORS.error} transition-colors`}
+                    className={`text-brand-foreground/40 hover:${STATUS_TEXT_COLORS.error} transition-colors`}
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -343,12 +343,12 @@ export function ValidationStep({ state, dispatch }: WizardStepProps) {
             </div>
 
             {state.validationPhase.reminders.length === 0 && (
-              <p className="text-sm text-brand-ink/50 italic">No phase reminders added yet</p>
+              <p className="text-sm text-semantic-muted italic">No phase reminders added yet</p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-brand-ink mb-2">
+            <label className="block text-sm font-medium text-brand-foreground mb-2">
               {FIELD_LABELS.EXAMPLE_JSON}
             </label>
             <textarea
@@ -356,9 +356,9 @@ export function ValidationStep({ state, dispatch }: WizardStepProps) {
               onChange={(e) => handleUpdateField('example', e.target.value)}
               placeholder={PLACEHOLDERS.EXAMPLE_JSON}
               rows={6}
-              className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
+              className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground font-mono text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
             />
-            <p className="text-xs text-brand-ink/60 mt-1">{HELP_TEXT.EXAMPLE_JSON}</p>
+            <p className="text-xs text-semantic-muted mt-1">{HELP_TEXT.EXAMPLE_JSON}</p>
           </div>
         </>
       )}
@@ -404,7 +404,7 @@ export function RemindersStep({ state, dispatch }: WizardStepProps) {
   return (
     <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-brand-ink mb-2">
+        <label className="block text-sm font-medium text-brand-foreground mb-2">
           {FIELD_LABELS.GENERAL_REMINDERS}
         </label>
         <div className="flex gap-2 mb-4">
@@ -414,7 +414,7 @@ export function RemindersStep({ state, dispatch }: WizardStepProps) {
             onChange={(e) => setReminderInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleAddReminder()}
             placeholder={PLACEHOLDERS.REMINDER}
-            className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent"
+            className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
           />
           <button
             onClick={handleAddReminder}
@@ -431,10 +431,10 @@ export function RemindersStep({ state, dispatch }: WizardStepProps) {
               key={index}
               className="flex items-center justify-between p-3 rounded-lg bg-brand-paperElev border border-brand-outline"
             >
-              <span className="text-sm text-brand-ink">{reminder}</span>
+              <span className="text-sm text-brand-foreground">{reminder}</span>
               <button
                 onClick={() => handleRemoveReminder(index)}
-                className="text-brand-ink/40 hover:${STATUS_TEXT_COLORS.error} transition-colors"
+                className="text-brand-foreground/40 hover:${STATUS_TEXT_COLORS.error} transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -443,7 +443,7 @@ export function RemindersStep({ state, dispatch }: WizardStepProps) {
         </div>
 
         {state.reminders.length === 0 && (
-          <p className="text-sm text-brand-ink/50 italic mb-4">
+          <p className="text-sm text-semantic-muted italic mb-4">
             No reminders added yet
           </p>
         )}
@@ -458,7 +458,7 @@ export function RemindersStep({ state, dispatch }: WizardStepProps) {
                 key={index}
                 onClick={() => handleAddTemplate(template)}
                 disabled={state.reminders.includes(template)}
-                className="block w-full text-left text-sm py-2 px-3 rounded-lg hover:bg-brand-paperElev border border-transparent hover:border-brand-outline transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-brand-ink"
+                className="block w-full text-left text-sm py-2 px-3 rounded-lg hover:bg-brand-paperElev border border-transparent hover:border-brand-outline transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-brand-foreground"
               >
                 {template}
               </button>
@@ -511,13 +511,13 @@ export function ReviewStep({ state }: WizardStepProps) {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-brand-ink">
+        <h3 className="text-lg font-semibold text-brand-foreground">
           {FIELD_LABELS.REVIEW_TITLE}
         </h3>
         <div className="flex gap-2">
           <button
             onClick={() => setShowJSON(!showJSON)}
-            className="px-4 py-2 rounded-lg border border-brand-outline text-brand-ink hover:bg-brand-paperElev transition-colors text-sm"
+            className="px-4 py-2 rounded-lg border border-brand-outline text-brand-foreground hover:bg-brand-paperElev transition-colors text-sm"
           >
             {showJSON ? 'Hide' : 'Show'} JSON
           </button>
@@ -533,61 +533,61 @@ export function ReviewStep({ state }: WizardStepProps) {
 
       {showJSON ? (
         <div className="relative">
-          <pre className="p-4 rounded-lg bg-brand-paper border border-brand-outline text-sm font-mono text-brand-ink overflow-x-auto max-h-[500px] overflow-y-auto">
+          <pre className="p-4 rounded-lg bg-brand-paper border border-brand-outline text-sm font-mono text-brand-foreground overflow-x-auto max-h-[500px] overflow-y-auto">
             {personaJSON}
           </pre>
         </div>
       ) : (
         <div className="space-y-4">
           <div className="p-4 rounded-lg bg-brand-paperElev border border-brand-outline">
-            <h4 className="font-semibold text-brand-ink mb-2">Metadata</h4>
-            <p className="text-sm text-brand-ink/70">
+            <h4 className="font-semibold text-brand-foreground mb-2">Metadata</h4>
+            <p className="text-sm text-semantic-muted">
               <strong>Eye ID:</strong> {state.metadata.eyeId || '(not set)'}
             </p>
-            <p className="text-sm text-brand-ink/70">
+            <p className="text-sm text-semantic-muted">
               <strong>Name:</strong> {state.metadata.name || '(not set)'}
             </p>
-            <p className="text-sm text-brand-ink/70">
+            <p className="text-sm text-semantic-muted">
               <strong>Capabilities:</strong> {state.metadata.capabilities.length} capabilities
             </p>
           </div>
 
           <div className="p-4 rounded-lg bg-brand-paperElev border border-brand-outline">
-            <h4 className="font-semibold text-brand-ink mb-2">Mission</h4>
-            <p className="text-sm text-brand-ink/70">
+            <h4 className="font-semibold text-brand-foreground mb-2">Mission</h4>
+            <p className="text-sm text-semantic-muted">
               {state.mission || '(not set)'} ({state.mission.length} chars)
             </p>
           </div>
 
           <div className="p-4 rounded-lg bg-brand-paperElev border border-brand-outline">
-            <h4 className="font-semibold text-brand-ink mb-2">Envelope Contract</h4>
-            <p className="text-sm text-brand-ink/70">
+            <h4 className="font-semibold text-brand-foreground mb-2">Envelope Contract</h4>
+            <p className="text-sm text-semantic-muted">
               <strong>Required Keys:</strong> {state.envelopeContract.requiredKeys.length}
             </p>
-            <p className="text-sm text-brand-ink/70">
+            <p className="text-sm text-semantic-muted">
               <strong>Data Keys:</strong> {state.envelopeContract.requiredDataKeys.length}
             </p>
-            <p className="text-sm text-brand-ink/70">
+            <p className="text-sm text-semantic-muted">
               <strong>UI Keys:</strong> {state.envelopeContract.requiredUiKeys.length}
             </p>
           </div>
 
           <div className="p-4 rounded-lg bg-brand-paperElev border border-brand-outline">
-            <h4 className="font-semibold text-brand-ink mb-2">Reminders</h4>
-            <p className="text-sm text-brand-ink/70">
+            <h4 className="font-semibold text-brand-foreground mb-2">Reminders</h4>
+            <p className="text-sm text-semantic-muted">
               {state.reminders.length} reminders configured
             </p>
           </div>
 
           <div className="p-4 rounded-lg bg-brand-paperElev border border-brand-outline">
-            <h4 className="font-semibold text-brand-ink mb-2">LLM Configuration</h4>
-            <p className="text-sm text-brand-ink/70">
+            <h4 className="font-semibold text-brand-foreground mb-2">LLM Configuration</h4>
+            <p className="text-sm text-semantic-muted">
               <strong>Temperature:</strong> {state.llmConfig.temperature}
             </p>
-            <p className="text-sm text-brand-ink/70">
+            <p className="text-sm text-semantic-muted">
               <strong>Top P:</strong> {state.llmConfig.top_p}
             </p>
-            <p className="text-sm text-brand-ink/70">
+            <p className="text-sm text-semantic-muted">
               <strong>Max Tokens:</strong> {state.llmConfig.max_tokens}
             </p>
           </div>

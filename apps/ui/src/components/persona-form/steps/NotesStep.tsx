@@ -17,7 +17,7 @@ export function NotesStep({ state, dispatch }: WizardStepProps) {
   return (
     <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-brand-ink mb-2">
+        <label className="block text-sm font-medium text-brand-foreground mb-2">
           {FIELD_LABELS.NOTES} (Optional)
         </label>
         <textarea
@@ -25,19 +25,19 @@ export function NotesStep({ state, dispatch }: WizardStepProps) {
           onChange={(e) => dispatch({ type: 'SET_NOTES', notes: e.target.value })}
           placeholder={PLACEHOLDERS.NOTES}
           rows={10}
-          className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none font-mono text-sm"
+          className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none font-mono text-sm"
           maxLength={CHAR_LIMITS.NOTES_MAX}
         />
         <div className="flex justify-between items-center mt-2">
-          <p className="text-xs text-brand-ink/60">{HELP_TEXT.NOTES}</p>
-          <span className="text-xs text-brand-ink/50">
+          <p className="text-xs text-semantic-muted">{HELP_TEXT.NOTES}</p>
+          <span className="text-xs text-semantic-muted">
             {charCount}/{CHAR_LIMITS.NOTES_MAX}
           </span>
         </div>
       </div>
 
       <div className="p-4 rounded-lg bg-brand-paperElev border border-brand-outline">
-        <p className="text-sm text-brand-ink/70">
+        <p className="text-sm text-semantic-muted">
           <strong>Note:</strong> These notes are for internal documentation only.
           They will not be sent to the LLM or included in the persona execution.
         </p>

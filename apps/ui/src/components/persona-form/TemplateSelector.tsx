@@ -66,14 +66,14 @@ export function TemplateSelector({ onSelect, onClose }: TemplateSelectorProps) {
         <div className="p-6 border-b border-brand-outline">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-2xl font-bold text-brand-ink">
+              <h2 className="text-2xl font-bold text-brand-foreground">
                 {TEMPLATE_SELECTOR_TEXT.TITLE}
               </h2>
-              <p className="text-brand-ink/70 mt-1">{TEMPLATE_SELECTOR_TEXT.SUBTITLE}</p>
+              <p className="text-semantic-muted mt-1">{TEMPLATE_SELECTOR_TEXT.SUBTITLE}</p>
             </div>
             <button
               onClick={onClose}
-              className="text-brand-ink/50 hover:text-brand-ink transition-colors"
+              className="text-semantic-muted hover:text-brand-foreground transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
@@ -82,20 +82,20 @@ export function TemplateSelector({ onSelect, onClose }: TemplateSelectorProps) {
           {/* Search and Filters */}
           <div className="flex gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-brand-ink/40" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-brand-foreground/40" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={TEMPLATE_SELECTOR_TEXT.SEARCH_PLACEHOLDER}
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-brand-outline bg-brand-paperElev text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-brand-outline bg-brand-paperElev text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
               />
             </div>
 
             <select
               value={selectedCategory || ''}
               onChange={(e) => setSelectedCategory(e.target.value || null)}
-              className="px-4 py-2 rounded-lg border border-brand-outline bg-brand-paperElev text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent"
+              className="px-4 py-2 rounded-lg border border-brand-outline bg-brand-paperElev text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
             >
               <option value="">{TEMPLATE_SELECTOR_TEXT.ALL_CATEGORIES}</option>
               {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
@@ -110,7 +110,7 @@ export function TemplateSelector({ onSelect, onClose }: TemplateSelectorProps) {
         {/* Template Grid */}
         <div className="flex-1 overflow-y-auto p-6">
           {filteredTemplates.length === 0 ? (
-            <div className="text-center py-12 text-brand-ink/50">
+            <div className="text-center py-12 text-semantic-muted">
               {TEMPLATE_SELECTOR_TEXT.NO_RESULTS}
             </div>
           ) : (
@@ -124,7 +124,7 @@ export function TemplateSelector({ onSelect, onClose }: TemplateSelectorProps) {
                   <div className="flex items-start gap-3 mb-3">
                     <span className="text-3xl">{template.icon}</span>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-brand-ink group-hover:text-brand-accent transition-colors">
+                      <h3 className="font-semibold text-brand-foreground group-hover:text-brand-accent transition-colors">
                         {template.name}
                       </h3>
                       <span className="text-xs px-2 py-0.5 rounded-full bg-brand-accent/10 text-brand-accent inline-block mt-1">
@@ -132,7 +132,7 @@ export function TemplateSelector({ onSelect, onClose }: TemplateSelectorProps) {
                       </span>
                     </div>
                   </div>
-                  <p className="text-sm text-brand-ink/70 line-clamp-2">
+                  <p className="text-sm text-semantic-muted line-clamp-2">
                     {template.description}
                   </p>
                 </button>

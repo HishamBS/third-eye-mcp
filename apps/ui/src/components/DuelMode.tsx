@@ -217,7 +217,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
       case 'NEEDS_INPUT':
         return <span className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.warning} px-2 py-1 text-xs ${STATUS_TEXT_COLORS.warning}`}>⚠ Needs Input</span>;
       default:
-        return <span className="rounded-full bg-brand-paper/20 px-2 py-1 text-xs text-brand-outline">Unknown</span>;
+        return <span className="rounded-full bg-brand-paper/20 px-2 py-1 text-xs text-semantic-muted">Unknown</span>;
     }
   };
 
@@ -226,7 +226,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-brand-foreground">⚔️ Duel Mode</h2>
-          <p className="mt-1 text-sm text-brand-outline">Compare 2-4 models side-by-side</p>
+          <p className="mt-1 text-sm text-semantic-muted">Compare 2-4 models side-by-side</p>
         </div>
         <button
           onClick={runDuel}
@@ -253,7 +253,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
 
       {/* Model Selection */}
       <div className="mb-6">
-        <h3 className="mb-3 text-sm font-semibold text-brand-outline">Selected Models ({selectedConfigs.length}/4)</h3>
+        <h3 className="mb-3 text-sm font-semibold text-semantic-muted">Selected Models ({selectedConfigs.length}/4)</h3>
         <div className="grid grid-cols-2 gap-3">
           {selectedConfigs.map((config, index) => (
             <motion.div
@@ -264,8 +264,8 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
               className="flex items-center justify-between rounded-lg border border-brand-outline/40 bg-brand-ink/60 p-3"
             >
               <div>
-                <p className="text-sm font-medium text-brand-outline">{formatProviderName(config.provider)}</p>
-                <p className="text-xs text-brand-outline">{config.model}</p>
+                <p className="text-sm font-medium text-semantic-muted">{formatProviderName(config.provider)}</p>
+                <p className="text-xs text-semantic-muted">{config.model}</p>
               </div>
               <button
                 onClick={() => removeConfig(index)}
@@ -279,12 +279,12 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
 
         {selectedConfigs.length < 4 && (
           <div className="mt-4 space-y-3">
-            <h4 className="text-xs font-semibold uppercase text-brand-outline">Configure competitor</h4>
+            <h4 className="text-xs font-semibold uppercase text-semantic-muted">Configure competitor</h4>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-medium text-brand-outline">Provider</label>
+                <label className="mb-1 block text-xs font-medium text-semantic-muted">Provider</label>
                 <select
-                  className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-sm text-brand-outline focus:border-brand-accent focus:outline-none"
+                  className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-sm text-semantic-muted focus:border-brand-accent focus:outline-none"
                   value={stagedProvider}
                   onChange={(e) => setStagedProvider(e.target.value)}
                   disabled={loadingProviders || Object.keys(availableProviders).length === 0 || isRunning}
@@ -298,9 +298,9 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-brand-outline">Model</label>
+                <label className="mb-1 block text-xs font-medium text-semantic-muted">Model</label>
                 <select
-                  className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-sm text-brand-outline focus:border-brand-accent focus:outline-none"
+                  className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-sm text-semantic-muted focus:border-brand-accent focus:outline-none"
                   value={stagedModel}
                   onChange={(e) => setStagedModel(e.target.value)}
                   disabled={
@@ -319,7 +319,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
               </div>
             </div>
             {loadingProviders && (
-              <p className="text-xs text-brand-outline">Loading provider models...</p>
+              <p className="text-xs text-semantic-muted">Loading provider models...</p>
             )}
             <button
               type="button"
@@ -370,7 +370,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
                       <div className="mt-1 flex items-center space-x-2">
                         {getVerdictBadge(result.verdict)}
                         {result.confidence !== undefined && (
-                          <span className="text-xs text-brand-outline">Confidence: {result.confidence}%</span>
+                          <span className="text-xs text-semantic-muted">Confidence: {result.confidence}%</span>
                         )}
                       </div>
                     </div>
@@ -384,30 +384,30 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
                   <div className="flex items-center space-x-2">
                     <Clock className={`h-4 w-4 ${STATUS_TEXT_COLORS.info}`} />
                     <div>
-                      <p className="text-brand-outline">Latency</p>
-                      <p className="font-semibold text-brand-outline">{result.latency}ms</p>
+                      <p className="text-semantic-muted">Latency</p>
+                      <p className="font-semibold text-semantic-muted">{result.latency}ms</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Zap className={`h-4 w-4 ${STATUS_TEXT_COLORS.warning}`} />
                     <div>
-                      <p className="text-brand-outline">Tokens</p>
-                      <p className="font-semibold text-brand-outline">
+                      <p className="text-semantic-muted">Tokens</p>
+                      <p className="font-semibold text-semantic-muted">
                         {result.tokens.input} / {result.tokens.output}
                       </p>
                     </div>
                   </div>
                   {result.cost !== undefined && (
                     <div>
-                      <p className="text-brand-outline">Cost</p>
-                      <p className="font-semibold text-brand-outline">${result.cost.toFixed(4)}</p>
+                      <p className="text-semantic-muted">Cost</p>
+                      <p className="font-semibold text-semantic-muted">${result.cost.toFixed(4)}</p>
                     </div>
                   )}
                 </div>
 
                 <div className="mt-3 rounded-lg bg-brand-ink/60 p-3">
-                  <p className="mb-1 text-xs font-semibold text-brand-outline">Output:</p>
-                  <p className="text-sm text-brand-outline">{result.output || 'No output available'}</p>
+                  <p className="mb-1 text-xs font-semibold text-semantic-muted">Output:</p>
+                  <p className="text-sm text-semantic-muted">{result.output || 'No output available'}</p>
                 </div>
               </motion.div>
             ))}
@@ -419,7 +419,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-brand-accent border-t-transparent mx-auto" />
-            <p className="text-brand-outline">Running duel across {selectedConfigs.length} models...</p>
+            <p className="text-semantic-muted">Running duel across {selectedConfigs.length} models...</p>
           </div>
         </div>
       )}

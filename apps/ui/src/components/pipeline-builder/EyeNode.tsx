@@ -54,7 +54,7 @@ function EyeNodeComponent({ data, selected, dragging }: NodeProps<EyeNodeData>) 
       case 'BOTH':
         return 'text-brand-accent';
       default:
-        return 'text-brand-outline';
+        return 'text-semantic-muted';
     }
   };
 
@@ -77,7 +77,7 @@ function EyeNodeComponent({ data, selected, dragging }: NodeProps<EyeNodeData>) 
       />
 
       {/* Badge */}
-      <div className="absolute top-2 right-2 text-xs font-semibold text-brand-outline uppercase tracking-wider">
+      <div className="absolute top-2 right-2 text-xs font-semibold text-semantic-muted uppercase tracking-wider">
         {badge}
       </div>
 
@@ -87,7 +87,7 @@ function EyeNodeComponent({ data, selected, dragging }: NodeProps<EyeNodeData>) 
       </div>
 
       {/* Name */}
-      <div className="text-center font-semibold text-base text-brand-ink mb-1">
+      <div className="text-center font-semibold text-base text-brand-foreground mb-1">
         {displayName}
       </div>
 

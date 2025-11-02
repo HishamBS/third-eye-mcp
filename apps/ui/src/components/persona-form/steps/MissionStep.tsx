@@ -35,7 +35,7 @@ export function MissionStep({ state, dispatch }: WizardStepProps) {
     <div className="space-y-6">
       <div>
         <div className="flex justify-between items-center mb-2">
-          <label className="block text-sm font-medium text-brand-ink">
+          <label className="block text-sm font-medium text-brand-foreground">
             {FIELD_LABELS.MISSION} *
           </label>
           <button
@@ -49,19 +49,19 @@ export function MissionStep({ state, dispatch }: WizardStepProps) {
 
         {showTemplates && (
           <div className="mb-4 p-4 rounded-lg bg-brand-paperElev border border-brand-outline space-y-2">
-            <p className="text-xs font-medium text-brand-ink/70 mb-2">
+            <p className="text-xs font-medium text-semantic-muted mb-2">
               Select a template to get started:
             </p>
             {Object.entries(MISSION_TEMPLATES).map(([key, template]) => (
               <button
                 key={key}
                 onClick={() => handleTemplateSelect(template)}
-                className="block w-full text-left p-3 rounded-lg bg-brand-paper hover:bg-brand-accent/10 border border-brand-outline hover:border-brand-accent transition-colors text-sm text-brand-ink"
+                className="block w-full text-left p-3 rounded-lg bg-brand-paper hover:bg-brand-accent/10 border border-brand-outline hover:border-brand-accent transition-colors text-sm text-brand-foreground"
               >
                 <div className="font-medium text-brand-accent mb-1">
                   {key.charAt(0) + key.slice(1).toLowerCase()}
                 </div>
-                <div className="text-xs text-brand-ink/70">{template}</div>
+                <div className="text-xs text-semantic-muted">{template}</div>
               </button>
             ))}
           </div>
@@ -72,7 +72,7 @@ export function MissionStep({ state, dispatch }: WizardStepProps) {
           onChange={(e) => dispatch({ type: 'SET_MISSION', mission: e.target.value })}
           placeholder={PLACEHOLDERS.MISSION}
           rows={8}
-          className={`w-full px-4 py-2 rounded-lg border bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none ${
+          className={`w-full px-4 py-2 rounded-lg border bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none ${
             !isValid && charCount > 0
               ? '${STATUS_BORDER_COLORS_SUBTLE.error}'
               : 'border-brand-outline'
@@ -82,10 +82,10 @@ export function MissionStep({ state, dispatch }: WizardStepProps) {
         />
 
         <div className="flex justify-between items-center mt-2">
-          <p className="text-xs text-brand-ink/60">{HELP_TEXT.MISSION}</p>
+          <p className="text-xs text-semantic-muted">{HELP_TEXT.MISSION}</p>
           <span
             className={`text-xs ${
-              isValid ? 'text-brand-ink/50' : '${STATUS_TEXT_COLORS.error}'
+              isValid ? 'text-semantic-muted' : '${STATUS_TEXT_COLORS.error}'
             }`}
           >
             {charCount}/{CHAR_LIMITS.MISSION_MAX} (min: {CHAR_LIMITS.MISSION_MIN})

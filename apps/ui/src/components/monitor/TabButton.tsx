@@ -24,7 +24,7 @@ export function TabButton({ tab, isActive, onClick }: TabButtonProps) {
       className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all ${
         isActive
           ? 'border-b-2 border-brand-accent text-brand-accent'
-          : 'text-brand-outline hover:text-brand-foreground'
+          : 'text-semantic-muted hover:text-brand-foreground'
       }`}
       aria-selected={isActive}
       role="tab"

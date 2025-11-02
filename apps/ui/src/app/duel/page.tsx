@@ -27,7 +27,7 @@ export default function DuelPage() {
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-brand-foreground">Duel Mode</h1>
-          <p className="mt-2 text-lg text-brand-outline">
+          <p className="mt-2 text-lg text-semantic-muted">
             Compare multiple AI models side-by-side with the same prompt
           </p>
         </div>
@@ -35,7 +35,7 @@ export default function DuelPage() {
         {!showDuel ? (
           <div className="rounded-2xl border border-brand-outline/40 bg-brand-paper/50 p-8">
             <div className="mb-6">
-              <label htmlFor="prompt" className="mb-2 block text-sm font-semibold text-brand-outline">
+              <label htmlFor="prompt" className="mb-2 block text-sm font-semibold text-semantic-muted">
                 Enter Your Prompt
               </label>
               <textarea
@@ -49,7 +49,7 @@ export default function DuelPage() {
             </div>
 
             <div className="flex items-center justify-between">
-              <div className="text-sm text-brand-outline">
+              <div className="text-sm text-semantic-muted">
                 <p>Tips:</p>
                 <ul className="mt-1 list-inside list-disc space-y-1">
                   <li>Compare 2-4 models at once</li>
@@ -64,7 +64,7 @@ export default function DuelPage() {
                 className={`rounded-lg px-6 py-3 font-semibold transition ${
                   prompt.trim()
                     ? 'bg-brand-accent text-brand-foreground hover:bg-brand-accent/90'
-                    : 'cursor-not-allowed bg-brand-paper text-brand-outline'
+                    : 'cursor-not-allowed bg-brand-paper text-semantic-muted'
                 }`}
               >
                 Configure Duel
@@ -75,12 +75,12 @@ export default function DuelPage() {
           <div>
             <div className="mb-4 flex items-center justify-between">
               <div className="rounded-lg border border-brand-outline/40 bg-brand-paper/50 p-4 flex-1 mr-4">
-                <p className="text-xs font-semibold uppercase text-brand-outline">Prompt</p>
-                <p className="mt-1 text-sm text-brand-outline">{prompt}</p>
+                <p className="text-xs font-semibold uppercase text-semantic-muted">Prompt</p>
+                <p className="mt-1 text-sm text-semantic-muted">{prompt}</p>
               </div>
               <button
                 onClick={handleReset}
-                className="rounded-lg border border-brand-outline/40 bg-brand-paper/50 px-4 py-2 text-sm font-semibold text-brand-outline hover:bg-brand-paperElev/60"
+                className="rounded-lg border border-brand-outline/40 bg-brand-paper/50 px-4 py-2 text-sm font-semibold text-semantic-muted hover:bg-brand-paperElev/60"
               >
                 New Duel
               </button>

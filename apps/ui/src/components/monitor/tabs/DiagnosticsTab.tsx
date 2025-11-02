@@ -19,9 +19,9 @@ export function DiagnosticsTab({ events, selectedEvent, sessionId, apiKey, summa
       {loading ? (
         <div className="h-32 animate-pulse rounded-2xl border border-surface-outline/40 bg-surface-raised/60" />
       ) : (
-        <section className="rounded-2xl border border-surface-outline/40 bg-surface-raised/80 p-5 text-sm text-brand-outline">
+        <section className="rounded-2xl border border-surface-outline/40 bg-surface-raised/80 p-5 text-sm text-semantic-muted">
           <h3 className="text-lg font-semibold text-brand-foreground">Connection Diagnostics</h3>
-          <div className="mt-3 grid gap-3 text-xs text-brand-outline sm:grid-cols-3">
+          <div className="mt-3 grid gap-3 text-xs text-semantic-muted sm:grid-cols-3">
             <div>
               <p>Status</p>
               <p className="text-brand-foreground">{connected ? 'Connected' : 'Disconnected'}</p>

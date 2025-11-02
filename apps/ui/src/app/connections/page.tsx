@@ -385,7 +385,7 @@ export default function ConnectionsPage() {
               {UI_HELP_TEXT.CONNECTIONS_BUTTON_ADD}
             </button>
           </div>
-          <p className="text-brand-outline mb-8">
+          <p className="text-semantic-muted mb-8">
             {UI_HELP_TEXT.CONNECTIONS_SUBTITLE}
           </p>
         </motion.div>
@@ -427,7 +427,7 @@ export default function ConnectionsPage() {
                       )}
                       <div className="text-left">
                         <h3 className="font-semibold text-lg text-brand-foreground">{integration.name}</h3>
-                        <p className="text-sm text-brand-outline">{integration.description}</p>
+                        <p className="text-sm text-semantic-muted">{integration.description}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -462,9 +462,9 @@ export default function ConnectionsPage() {
                         ))}
                       </div>
                       {isExpanded ? (
-                        <ChevronUp className="w-5 h-5 text-brand-outline" />
+                        <ChevronUp className="w-5 h-5 text-semantic-muted" />
                       ) : (
-                        <ChevronDown className="w-5 h-5 text-brand-outline" />
+                        <ChevronDown className="w-5 h-5 text-semantic-muted" />
                       )}
                     </div>
                   </button>
@@ -486,7 +486,7 @@ export default function ConnectionsPage() {
                               <span className="font-mono bg-brand-accent/10 text-brand-accent px-2 py-1 rounded">
                                 {file.path}
                               </span>
-                              <span className="text-brand-outline ml-2">({getPlatformLabel(file.platform)})</span>
+                              <span className="text-semantic-muted ml-2">({getPlatformLabel(file.platform)})</span>
                             </div>
                           ))}
                         </div>
@@ -513,7 +513,7 @@ export default function ConnectionsPage() {
                                 )}
                               </button>
                             </div>
-                            <pre className="bg-brand-ink text-brand-outline p-4 rounded overflow-x-auto text-sm border border-brand-accent/20">
+                            <pre className="bg-brand-ink text-semantic-muted p-4 rounded overflow-x-auto text-sm border border-brand-accent/20">
                               {config.config}
                             </pre>
                           </div>
@@ -531,7 +531,7 @@ export default function ConnectionsPage() {
                                   </span>
                                   <div>
                                     <p className="font-medium text-brand-foreground">{step.title}</p>
-                                    <p className="text-sm text-brand-outline">{step.description}</p>
+                                    <p className="text-sm text-semantic-muted">{step.description}</p>
                                   </div>
                                 </li>
                               ))}
@@ -563,7 +563,7 @@ export default function ConnectionsPage() {
         </div>
 
         {integrations.length === 0 && (
-          <div className="text-center py-12 text-brand-outline">
+          <div className="text-center py-12 text-semantic-muted">
             {UI_HELP_TEXT.CONNECTIONS_EMPTY_MESSAGE}
           </div>
         )}
@@ -597,7 +597,7 @@ export default function ConnectionsPage() {
                     </h2>
                     <button
                       onClick={closeModal}
-                      className="text-brand-outline hover:text-brand-foreground transition"
+                      className="text-semantic-muted hover:text-brand-foreground transition"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -608,7 +608,7 @@ export default function ConnectionsPage() {
                     <div className="space-y-4">
                       {/* Name */}
                       <div>
-                        <label className="block text-sm font-medium text-brand-outline mb-1">
+                        <label className="block text-sm font-medium text-semantic-muted mb-1">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_NAME} <span className={STATUS_TEXT_COLORS.error}>*</span>
                         </label>
                         <input
@@ -625,7 +625,7 @@ export default function ConnectionsPage() {
 
                       {/* Slug */}
                       <div>
-                        <label className="block text-sm font-medium text-brand-outline mb-1">
+                        <label className="block text-sm font-medium text-semantic-muted mb-1">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_SLUG} <span className={STATUS_TEXT_COLORS.error}>*</span>
                         </label>
                         <input
@@ -642,7 +642,7 @@ export default function ConnectionsPage() {
 
                       {/* Logo URL */}
                       <div>
-                        <label className="block text-sm font-medium text-brand-outline mb-1">
+                        <label className="block text-sm font-medium text-semantic-muted mb-1">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_LOGO_URL}
                         </label>
                         <input
@@ -656,7 +656,7 @@ export default function ConnectionsPage() {
 
                       {/* Description */}
                       <div>
-                        <label className="block text-sm font-medium text-brand-outline mb-1">
+                        <label className="block text-sm font-medium text-semantic-muted mb-1">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_DESCRIPTION}
                         </label>
                         <textarea
@@ -670,7 +670,7 @@ export default function ConnectionsPage() {
 
                       {/* Config Type */}
                       <div>
-                        <label className="block text-sm font-medium text-brand-outline mb-1">
+                        <label className="block text-sm font-medium text-semantic-muted mb-1">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_CONFIG_TYPE}
                         </label>
                         <select
@@ -686,7 +686,7 @@ export default function ConnectionsPage() {
 
                       {/* Config Files (JSON) */}
                       <div>
-                        <label className="block text-sm font-medium text-brand-outline mb-1">
+                        <label className="block text-sm font-medium text-semantic-muted mb-1">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_CONFIG_FILES}
                         </label>
                         <textarea
@@ -703,7 +703,7 @@ export default function ConnectionsPage() {
 
                       {/* Config Template */}
                       <div>
-                        <label className="block text-sm font-medium text-brand-outline mb-1">
+                        <label className="block text-sm font-medium text-semantic-muted mb-1">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_CONFIG_TEMPLATE} <span className={STATUS_TEXT_COLORS.error}>*</span>
                         </label>
                         <textarea
@@ -720,7 +720,7 @@ export default function ConnectionsPage() {
 
                       {/* Setup Steps (JSON) */}
                       <div>
-                        <label className="block text-sm font-medium text-brand-outline mb-1">
+                        <label className="block text-sm font-medium text-semantic-muted mb-1">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_SETUP_STEPS}
                         </label>
                         <textarea
@@ -737,7 +737,7 @@ export default function ConnectionsPage() {
 
                       {/* Docs URL */}
                       <div>
-                        <label className="block text-sm font-medium text-brand-outline mb-1">
+                        <label className="block text-sm font-medium text-semantic-muted mb-1">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_DOCS_URL}
                         </label>
                         <input
@@ -758,7 +758,7 @@ export default function ConnectionsPage() {
                           onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
                           className="w-4 h-4 rounded border-brand-outline/50 bg-brand-paper text-brand-accent focus:ring-brand-accent"
                         />
-                        <label htmlFor="enabled" className="text-sm text-brand-outline">
+                        <label htmlFor="enabled" className="text-sm text-semantic-muted">
                           {UI_HELP_TEXT.CONNECTIONS_LABEL_ENABLED}
                         </label>
                       </div>
@@ -769,7 +769,7 @@ export default function ConnectionsPage() {
                   <div className="flex items-center justify-end gap-3 border-t border-brand-outline/50 px-6 py-4">
                     <button
                       onClick={closeModal}
-                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       {UI_HELP_TEXT.CONNECTIONS_BUTTON_CANCEL}
                     </button>

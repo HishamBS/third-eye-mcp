@@ -56,7 +56,7 @@ export function EmptyState({ icon: Icon, title, description, actions, illustrati
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
-        className="text-base text-brand-outline mb-8 text-center max-w-md leading-relaxed"
+        className="text-base text-semantic-muted mb-8 text-center max-w-md leading-relaxed"
       >
         {description}
       </motion.p>

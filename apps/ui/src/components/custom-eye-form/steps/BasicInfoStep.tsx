@@ -15,7 +15,7 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
   return (
     <div className="space-y-6">
       <div>
-        <label className="mb-2 block text-sm font-medium text-brand-outline">
+        <label className="mb-2 block text-sm font-medium text-semantic-muted">
           {FIELD_LABELS.NAME}
         </label>
         <input
@@ -27,11 +27,11 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
           placeholder={PLACEHOLDERS.NAME}
           className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
         />
-        <p className="mt-1 text-xs text-brand-outline">{HELP_TEXT.NAME}</p>
+        <p className="mt-1 text-xs text-semantic-muted">{HELP_TEXT.NAME}</p>
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-brand-outline">
+        <label className="mb-2 block text-sm font-medium text-semantic-muted">
           {FIELD_LABELS.DESCRIPTION}
         </label>
         <textarea
@@ -43,11 +43,11 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
           rows={4}
           className="w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
         />
-        <p className="mt-1 text-xs text-brand-outline">{HELP_TEXT.DESCRIPTION}</p>
+        <p className="mt-1 text-xs text-semantic-muted">{HELP_TEXT.DESCRIPTION}</p>
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-brand-outline">
+        <label className="mb-2 block text-sm font-medium text-semantic-muted">
           {FIELD_LABELS.ICON_SVG}
         </label>
         <input
@@ -75,7 +75,7 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
             <span>SVG uploaded successfully</span>
           </div>
         )}
-        <p className="mt-1 text-xs text-brand-outline">{HELP_TEXT.ICON_SVG}</p>
+        <p className="mt-1 text-xs text-semantic-muted">{HELP_TEXT.ICON_SVG}</p>
       </div>
     </div>
   );

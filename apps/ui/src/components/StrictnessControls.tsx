@@ -40,10 +40,10 @@ export function StrictnessControls() {
               <Sparkles className="h-5 w-5 ${STATUS_TEXT_COLORS.success}" />
               <h4 className="font-semibold text-brand-foreground">Casual</h4>
             </div>
-            <p className="mb-4 text-sm text-brand-outline">
+            <p className="mb-4 text-sm text-semantic-muted">
               Relaxed validation for quick iterations and brainstorming.
             </p>
-            <div className="space-y-1 text-xs text-brand-outline">
+            <div className="space-y-1 text-xs text-semantic-muted">
               <p>• Ambiguity: {casual.ambiguityThreshold}/100</p>
               <p>• Citation: {casual.citationCutoff}%</p>
               <p>• Code Review: {casual.mangekyoStrictness}%</p>
@@ -60,10 +60,10 @@ export function StrictnessControls() {
               <Shield className="h-5 w-5 ${STATUS_TEXT_COLORS.info}" />
               <h4 className="font-semibold text-brand-foreground">Enterprise</h4>
             </div>
-            <p className="mb-4 text-sm text-brand-outline">
+            <p className="mb-4 text-sm text-semantic-muted">
               Balanced validation for production-grade work.
             </p>
-            <div className="space-y-1 text-xs text-brand-outline">
+            <div className="space-y-1 text-xs text-semantic-muted">
               <p>• Ambiguity: {enterprise.ambiguityThreshold}/100</p>
               <p>• Citation: {enterprise.citationCutoff}%</p>
               <p>• Code Review: {enterprise.mangekyoStrictness}%</p>
@@ -80,10 +80,10 @@ export function StrictnessControls() {
               <AlertTriangle className="h-5 w-5 ${STATUS_TEXT_COLORS.error}" />
               <h4 className="font-semibold text-brand-foreground">Security</h4>
             </div>
-            <p className="mb-4 text-sm text-brand-outline">
+            <p className="mb-4 text-sm text-semantic-muted">
               Maximum validation for security-critical code.
             </p>
-            <div className="space-y-1 text-xs text-brand-outline">
+            <div className="space-y-1 text-xs text-semantic-muted">
               <p>• Ambiguity: {security.ambiguityThreshold}/100</p>
               <p>• Citation: {security.citationCutoff}%</p>
               <p>• Code Review: {security.mangekyoStrictness}%</p>
@@ -102,7 +102,7 @@ export function StrictnessControls() {
             <Sliders className="h-5 w-5 text-brand-accent" />
             Advanced Settings
           </h3>
-          <span className="text-sm text-brand-outline">
+          <span className="text-sm text-semantic-muted">
             {showAdvanced ? 'Hide' : 'Show'}
           </span>
         </button>
@@ -112,7 +112,7 @@ export function StrictnessControls() {
             {/* Ambiguity Threshold */}
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <label className="text-sm font-medium text-brand-outline">
+                <label className="text-sm font-medium text-semantic-muted">
                   Ambiguity Threshold
                 </label>
                 <span className="text-sm font-bold text-brand-accent">
@@ -128,7 +128,7 @@ export function StrictnessControls() {
                 onChange={(e) => handleSliderChange('ambiguityThreshold', parseInt(e.target.value))}
                 className="w-full accent-brand-accent"
               />
-              <p className="mt-1 text-xs text-brand-outline">
+              <p className="mt-1 text-xs text-semantic-muted">
                 Lower values are stricter. Scores above this threshold trigger clarification.
               </p>
             </div>
@@ -136,7 +136,7 @@ export function StrictnessControls() {
             {/* Citation Cutoff */}
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <label className="text-sm font-medium text-brand-outline">
+                <label className="text-sm font-medium text-semantic-muted">
                   Citation Confidence Cutoff
                 </label>
                 <span className="text-sm font-bold text-brand-accent">
@@ -152,7 +152,7 @@ export function StrictnessControls() {
                 onChange={(e) => handleSliderChange('citationCutoff', parseInt(e.target.value))}
                 className="w-full accent-brand-accent"
               />
-              <p className="mt-1 text-xs text-brand-outline">
+              <p className="mt-1 text-xs text-semantic-muted">
                 Minimum confidence required for evidence citations to be accepted.
               </p>
             </div>
@@ -160,7 +160,7 @@ export function StrictnessControls() {
             {/* Consistency Tolerance */}
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <label className="text-sm font-medium text-brand-outline">
+                <label className="text-sm font-medium text-semantic-muted">
                   Consistency Tolerance
                 </label>
                 <span className="text-sm font-bold text-brand-accent">
@@ -176,7 +176,7 @@ export function StrictnessControls() {
                 onChange={(e) => handleSliderChange('consistencyTolerance', parseInt(e.target.value))}
                 className="w-full accent-brand-accent"
               />
-              <p className="mt-1 text-xs text-brand-outline">
+              <p className="mt-1 text-xs text-semantic-muted">
                 Lower values are stricter. Controls how much inconsistency is tolerated.
               </p>
             </div>
@@ -184,7 +184,7 @@ export function StrictnessControls() {
             {/* Mangekyō Strictness */}
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <label className="text-sm font-medium text-brand-outline">
+                <label className="text-sm font-medium text-semantic-muted">
                   Code Review Strictness (Mangekyō)
                 </label>
                 <span className="text-sm font-bold text-brand-accent">
@@ -200,7 +200,7 @@ export function StrictnessControls() {
                 onChange={(e) => handleSliderChange('mangekyoStrictness', parseInt(e.target.value))}
                 className="w-full accent-brand-accent"
               />
-              <p className="mt-1 text-xs text-brand-outline">
+              <p className="mt-1 text-xs text-semantic-muted">
                 Minimum passing score for code review gates (Implementation, Tests, Docs, Security).
               </p>
             </div>
@@ -208,7 +208,7 @@ export function StrictnessControls() {
             {/* Reset Button */}
             <button
               onClick={() => applyStrictnessProfile('enterprise')}
-              className="w-full rounded-full border border-brand-outline/50 px-4 py-2 text-sm font-medium text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
+              className="w-full rounded-full border border-brand-outline/50 px-4 py-2 text-sm font-medium text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
             >
               Reset to Enterprise Defaults
             </button>

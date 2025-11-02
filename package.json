@@ -69,7 +69,8 @@
     "release:prepare": "bun run clean && bun run lint && bun run test:coverage && bun run build && npm pack",
     "release:prepare:dry": "bun run release:prepare && npm publish --dry-run",
     "release:publish": "bun run release:prepare && npm publish --access public",
-    "prepublishOnly": "bun run release:prepare"
+    "prepublishOnly": "bun run release:prepare",
+    "prepare": "husky"
   },
   "keywords": [
     "ai",

@@ -44,7 +44,7 @@ export const EXECUTION_STATUS_LABELS = {
 // Status Display Colors (Tailwind classes)
 // Uses semantic color tokens from @/constants/color-mappings (SSOT)
 export const STATUS_COLORS = {
-  [EXECUTION_STATUS.PENDING]: 'text-brand-outline bg-brand-outline/10',
+  [EXECUTION_STATUS.PENDING]: 'text-semantic-muted bg-brand-outline/10',
   [EXECUTION_STATUS.RUNNING]: 'text-semantic-info bg-semantic-info/10',
   [EXECUTION_STATUS.SUCCESS]: 'text-semantic-success bg-semantic-success/10',
   [EXECUTION_STATUS.ERROR]: 'text-semantic-error bg-semantic-error/10',

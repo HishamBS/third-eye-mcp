@@ -117,7 +117,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
   if (totalEvents === 0) {
     return (
       <div className="rounded-2xl border border-brand-outline/40 bg-brand-paper/50 p-12 text-center">
-        <p className="text-brand-outline">No events available for replay</p>
+        <p className="text-semantic-muted">No events available for replay</p>
       </div>
     );
   }
@@ -128,12 +128,12 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-brand-foreground">🎬 Replay Theater</h2>
-          <p className="mt-1 text-sm text-brand-outline">
+          <p className="mt-1 text-sm text-semantic-muted">
             Session: {sessionId} • {totalEvents} events
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-brand-outline">Event {currentIndex + 1} / {totalEvents}</span>
+          <span className="text-sm text-semantic-muted">Event {currentIndex + 1} / {totalEvents}</span>
         </div>
       </div>
 
@@ -156,14 +156,14 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
                 {currentEvent.type}
               </span>
             </div>
-            <span className="text-sm text-brand-outline">
+            <span className="text-sm text-semantic-muted">
               {formatTimestamp(currentEvent.createdAt)}
             </span>
           </div>
 
           {currentEvent.code && (
             <div className="mb-3">
-              <span className="rounded bg-brand-paperElev px-2 py-1 font-mono text-xs text-brand-outline">
+              <span className="rounded bg-brand-paperElev px-2 py-1 font-mono text-xs text-semantic-muted">
                 {currentEvent.code}
               </span>
             </div>
@@ -171,16 +171,16 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
 
           {currentEvent.md && (
             <div className="rounded-lg bg-brand-paper/50 p-4">
-              <p className="text-sm leading-relaxed text-brand-outline">{currentEvent.md}</p>
+              <p className="text-sm leading-relaxed text-semantic-muted">{currentEvent.md}</p>
             </div>
           )}
 
           {currentEvent.dataJson && Object.keys(currentEvent.dataJson).length > 0 && (
             <details className="mt-3">
-              <summary className="cursor-pointer text-xs font-semibold uppercase text-brand-outline hover:text-brand-outline">
+              <summary className="cursor-pointer text-xs font-semibold uppercase text-semantic-muted hover:text-semantic-muted">
                 Data JSON
               </summary>
-              <pre className="mt-2 overflow-x-auto rounded-lg bg-brand-ink p-3 text-xs text-brand-outline">
+              <pre className="mt-2 overflow-x-auto rounded-lg bg-brand-ink p-3 text-xs text-semantic-muted">
                 {JSON.stringify(currentEvent.dataJson, null, 2)}
               </pre>
             </details>
@@ -202,7 +202,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
               background: `linear-gradient(to right, rgb(124 58 237) 0%, rgb(124 58 237) ${progress}%, rgb(51 65 85) ${progress}%, rgb(51 65 85) 100%)`
             }}
           />
-          <div className="absolute inset-x-0 top-full mt-1 flex justify-between text-xs text-brand-outline">
+          <div className="absolute inset-x-0 top-full mt-1 flex justify-between text-xs text-semantic-muted">
             <span>Start</span>
             <span>End</span>
           </div>
@@ -217,7 +217,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
               className={`h-8 min-w-[32px] flex-shrink-0 rounded text-xs font-medium transition ${
                 index === currentIndex
                   ? 'bg-brand-accent text-brand-foreground'
-                  : 'bg-brand-paperElev text-brand-outline hover:bg-brand-outline/80'
+                  : 'bg-brand-paperElev text-semantic-muted hover:bg-brand-outline/80'
               }`}
               title={`${event.eye || 'System'} - ${event.type}`}
             >
@@ -232,7 +232,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
         <div className="flex items-center space-x-2">
           <button
             onClick={handleReset}
-            className="rounded-lg bg-brand-paperElev p-2 text-brand-outline transition hover:bg-brand-outline/80"
+            className="rounded-lg bg-brand-paperElev p-2 text-semantic-muted transition hover:bg-brand-outline/80"
             title="Reset to start"
           >
             <SkipBack className="h-5 w-5" />
@@ -240,7 +240,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
 
           <button
             onClick={handleSkipBackward}
-            className="rounded-lg bg-brand-paperElev p-2 text-brand-outline transition hover:bg-brand-outline/80"
+            className="rounded-lg bg-brand-paperElev p-2 text-semantic-muted transition hover:bg-brand-outline/80"
             title="Previous event"
           >
             <Rewind className="h-5 w-5" />
@@ -256,7 +256,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
 
           <button
             onClick={handleSkipForward}
-            className="rounded-lg bg-brand-paperElev p-2 text-brand-outline transition hover:bg-brand-outline/80"
+            className="rounded-lg bg-brand-paperElev p-2 text-semantic-muted transition hover:bg-brand-outline/80"
             title="Next event"
           >
             <FastForward className="h-5 w-5" />
@@ -264,7 +264,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
 
           <button
             onClick={() => setCurrentIndex(totalEvents - 1)}
-            className="rounded-lg bg-brand-paperElev p-2 text-brand-outline transition hover:bg-brand-outline/80"
+            className="rounded-lg bg-brand-paperElev p-2 text-semantic-muted transition hover:bg-brand-outline/80"
             title="Skip to end"
           >
             <SkipForward className="h-5 w-5" />
@@ -273,7 +273,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
 
         <button
           onClick={handleSpeedChange}
-          className="rounded-lg bg-brand-paperElev px-4 py-2 font-semibold text-brand-outline transition hover:bg-brand-outline/80"
+          className="rounded-lg bg-brand-paperElev px-4 py-2 font-semibold text-semantic-muted transition hover:bg-brand-outline/80"
           title="Change playback speed"
         >
           {speed}x
@@ -284,23 +284,23 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
       <div className="mt-4 flex items-center justify-center space-x-4 text-xs">
         <div className="flex items-center space-x-1">
           <div className="h-2 w-2 rounded-full ${STATUS_BG_COLORS.success}"></div>
-          <span className="text-brand-outline">OK</span>
+          <span className="text-semantic-muted">OK</span>
         </div>
         <div className="flex items-center space-x-1">
           <div className="h-2 w-2 rounded-full ${STATUS_BG_COLORS.error}"></div>
-          <span className="text-brand-outline">Reject</span>
+          <span className="text-semantic-muted">Reject</span>
         </div>
         <div className="flex items-center space-x-1">
           <div className="h-2 w-2 rounded-full ${STATUS_BG_COLORS.warning}"></div>
-          <span className="text-brand-outline">Need Input</span>
+          <span className="text-semantic-muted">Need Input</span>
         </div>
         <div className="flex items-center space-x-1">
           <div className="h-2 w-2 rounded-full ${STATUS_BG_COLORS.info}"></div>
-          <span className="text-brand-outline">Running</span>
+          <span className="text-semantic-muted">Running</span>
         </div>
         <div className="flex items-center space-x-1">
           <div className="h-2 w-2 rounded-full bg-brand-paper0"></div>
-          <span className="text-brand-outline">Other</span>
+          <span className="text-semantic-muted">Other</span>
         </div>
       </div>
     </div>

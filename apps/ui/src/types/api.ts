@@ -284,9 +284,33 @@ export type GetIntegrationConfigResponse = ApiEnvelope<{
 // ============================================================================
 
 export interface Persona {
+  id: string;
   eye: string;
+  name: string;
   version: number;
-  content: string;
+  metadata_json: {
+    eyeId: string;
+    name: string;
+    description: string;
+    version: number;
+    capabilities: string[];
+  };
+  mission: string;
+  guidance_json: Record<string, unknown> | null;
+  validation_json: Record<string, unknown> | null;
+  envelope_json: {
+    requiredKeys?: string[];
+    requiredDataKeys?: string[];
+    requiredUiKeys?: string[];
+  };
+  reminders_json: string[];
+  notes: string | null;
+  llm_config_json: {
+    temperature: number;
+    top_p: number;
+    response_format: string;
+    max_tokens: number;
+  };
   active: boolean;
   createdAt: string | Date;
 }

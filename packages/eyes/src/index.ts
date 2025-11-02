@@ -23,9 +23,6 @@ export * from './blueprints';
 // Guards
 export * from './guards';
 
-// Routing (Phase 17)
-export * from './routing/dynamic-router';
-
 // Eye Registry
 import { overseer } from './eyes/overseer';
 import { sharingan } from './eyes/sharingan';

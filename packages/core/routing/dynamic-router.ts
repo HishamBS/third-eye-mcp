@@ -8,9 +8,9 @@
  * Per R13: Interfaces exported for SSOT
  */
 
-import type { EyeName } from '../types';
-import type { RoutingDecision as CoreRoutingDecision, AutoRouterOptions } from '@third-eye/core/auto-router';
-import { autoRouter } from '@third-eye/core/auto-router';
+import type { EyeName } from '@third-eye/eyes';
+import type { RoutingDecision as CoreRoutingDecision, AutoRouterOptions } from '../auto-router';
+import { autoRouter } from '../auto-router';
 
 /**
  * Eye Route Step - Single step in pipeline sequence

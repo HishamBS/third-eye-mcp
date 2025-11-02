@@ -117,7 +117,7 @@ export function WelcomeModal() {
             {/* Close button */}
             <button
               onClick={handleClose}
-              className="absolute top-4 right-4 rounded-lg p-2 text-brand-outline hover:text-brand-foreground hover:bg-brand-outline/20 transition-colors z-10"
+              className="absolute top-4 right-4 rounded-lg p-2 text-semantic-muted hover:text-brand-foreground hover:bg-brand-outline/20 transition-colors z-10"
               aria-label={ARIA_LABELS.CLOSE_WELCOME}
             >
               <X className="h-5 w-5" />
@@ -154,7 +154,7 @@ export function WelcomeModal() {
                 </h2>
                 <p
                   id="welcome-modal-description"
-                  className="text-base text-brand-outline leading-relaxed max-w-xl mx-auto"
+                  className="text-base text-semantic-muted leading-relaxed max-w-xl mx-auto"
                 >
                   {currentStepData.description}
                 </p>
@@ -188,7 +188,7 @@ export function WelcomeModal() {
               <div className="flex items-center justify-between">
                 <button
                   onClick={handleSkip}
-                  className="text-sm text-brand-outline hover:text-brand-foreground transition-colors"
+                  className="text-sm text-semantic-muted hover:text-brand-foreground transition-colors"
                 >
                   Skip tour
                 </button>
@@ -234,7 +234,7 @@ export function WelcomeModal() {
                     onChange={(e) => setNeverShow(e.target.checked)}
                     className="h-4 w-4 rounded border-brand-outline/50 bg-brand-ink text-brand-accent focus:ring-brand-accent focus:ring-offset-brand-ink"
                   />
-                  <label htmlFor="never-show" className="text-sm text-brand-outline cursor-pointer">
+                  <label htmlFor="never-show" className="text-sm text-semantic-muted cursor-pointer">
                     Don&apos;t show this again
                   </label>
                 </motion.div>

@@ -260,7 +260,7 @@ export default function PromptsPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent">
+              <Link href="/" className="text-semantic-muted transition-colors hover:text-brand-accent">
                 ← Home
               </Link>
               <div>
@@ -269,15 +269,15 @@ export default function PromptsPage() {
               </div>
             </div>
             <div className="flex gap-4">
-              <Link href="/personas" className="text-sm text-brand-outline transition-colors hover:text-brand-foreground">
+              <Link href="/personas" className="text-sm text-semantic-muted transition-colors hover:text-brand-foreground">
                 Personas
               </Link>
-              <Link href="/models" className="text-sm text-brand-outline transition-colors hover:text-brand-foreground">
+              <Link href="/models" className="text-sm text-semantic-muted transition-colors hover:text-brand-foreground">
                 Models
               </Link>
               <button
                 onClick={startCreating}
-                className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
+                className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
               >
                 + New Prompt
               </button>
@@ -311,7 +311,7 @@ export default function PromptsPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-brand-outline">Category</label>
+                  <label className="mb-2 block text-sm font-medium text-semantic-muted">Category</label>
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
@@ -327,7 +327,7 @@ export default function PromptsPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-brand-outline">Tag</label>
+                  <label className="mb-2 block text-sm font-medium text-semantic-muted">Tag</label>
                   <select
                     value={selectedTag}
                     onChange={(e) => setSelectedTag(e.target.value)}
@@ -343,7 +343,7 @@ export default function PromptsPage() {
                 </div>
 
                 <div className="border-t border-brand-outline/40 pt-4">
-                  <div className="text-sm text-brand-outline">
+                  <div className="text-sm text-semantic-muted">
                     <div>Total: {prompts.length}</div>
                     <div>Filtered: {filteredPrompts.length}</div>
                   </div>
@@ -361,7 +361,7 @@ export default function PromptsPage() {
                   <h2 className="text-xl font-semibold text-brand-foreground">Version History</h2>
                   <button
                     onClick={() => setShowVersions(false)}
-                    className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
+                    className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
                   >
                     Back to Library
                   </button>
@@ -379,7 +379,7 @@ export default function PromptsPage() {
                             }`}>
                               {ver.active ? 'Active' : 'Inactive'}
                             </span>
-                            <span className="text-xs text-brand-outline">
+                            <span className="text-xs text-semantic-muted">
                               {new Date(ver.createdAt).toLocaleDateString()}
                             </span>
                           </div>
@@ -396,7 +396,7 @@ export default function PromptsPage() {
                         </button>
                       </div>
                       <div className="rounded-xl bg-brand-paperElev/50 p-3">
-                        <pre className="whitespace-pre-wrap font-mono text-sm text-brand-outline">
+                        <pre className="whitespace-pre-wrap font-mono text-sm text-semantic-muted">
                           {ver.content.length > 200 ? ver.content.substring(0, 200) + '...' : ver.content}
                         </pre>
                       </div>
@@ -414,14 +414,14 @@ export default function PromptsPage() {
                   <div className="flex gap-3">
                     <button
                       onClick={cancelForm}
-                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={savePrompt}
                       disabled={loading || !formData.name || !formData.content}
-                      className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary disabled:opacity-50"
+                      className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-primary disabled:opacity-50"
                     >
                       {loading ? 'Saving...' : isEditing ? 'Update (New Version)' : 'Create'}
                     </button>
@@ -430,7 +430,7 @@ export default function PromptsPage() {
 
                 <div className="space-y-6">
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-brand-outline">Name</label>
+                    <label className="mb-2 block text-sm font-medium text-semantic-muted">Name</label>
                     <input
                       type="text"
                       value={formData.name}
@@ -442,7 +442,7 @@ export default function PromptsPage() {
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-brand-outline">Category</label>
+                    <label className="mb-2 block text-sm font-medium text-semantic-muted">Category</label>
                     <select
                       value={formData.category}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -455,7 +455,7 @@ export default function PromptsPage() {
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-brand-outline">
+                    <label className="mb-2 block text-sm font-medium text-semantic-muted">
                       Variables {formData.variables.length > 0 && `(${formData.variables.length})`}
                     </label>
                     <div className="mb-2 flex flex-wrap gap-2">
@@ -476,14 +476,14 @@ export default function PromptsPage() {
                     </div>
                     <button
                       onClick={addVariable}
-                      className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       + Add Variable
                     </button>
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-brand-outline">
+                    <label className="mb-2 block text-sm font-medium text-semantic-muted">
                       Tags {formData.tags.length > 0 && `(${formData.tags.length})`}
                     </label>
                     <div className="mb-2 flex flex-wrap gap-2">
@@ -501,14 +501,14 @@ export default function PromptsPage() {
                     </div>
                     <button
                       onClick={addTag}
-                      className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
+                      className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       + Add Tag
                     </button>
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-brand-outline">Prompt Content</label>
+                    <label className="mb-2 block text-sm font-medium text-semantic-muted">Prompt Content</label>
                     <textarea
                       value={formData.content}
                       onChange={(e) => setFormData({ ...formData, content: e.target.value })}
@@ -532,10 +532,10 @@ export default function PromptsPage() {
               <div className="space-y-4">
                 {filteredPrompts.length === 0 ? (
                   <GlassCard className="py-12 text-center">
-                    <p className="mb-4 text-lg text-brand-outline">No prompts found</p>
+                    <p className="mb-4 text-lg text-semantic-muted">No prompts found</p>
                     <button
                       onClick={startCreating}
-                      className="rounded-full bg-brand-accent px-6 py-2.5 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary"
+                      className="rounded-full bg-brand-accent px-6 py-2.5 text-sm font-semibold text-brand-foreground transition hover:bg-brand-primary"
                     >
                       Create First Prompt
                     </button>
@@ -553,7 +553,7 @@ export default function PromptsPage() {
                           <div>
                             <h3 className="text-lg font-semibold text-brand-foreground">{prompt.name}</h3>
                             <div className="mt-1 flex items-center gap-3">
-                              <span className="text-sm text-brand-outline">
+                              <span className="text-sm text-semantic-muted">
                                 v{prompt.version}
                               </span>
                               <span className={`rounded-full px-2 py-0.5 text-xs ${
@@ -565,7 +565,7 @@ export default function PromptsPage() {
                                 {prompt.category}
                               </span>
                               {prompt.variablesJson && prompt.variablesJson.length > 0 && (
-                                <span className="text-xs text-brand-outline">
+                                <span className="text-xs text-semantic-muted">
                                   {prompt.variablesJson.length} variable{prompt.variablesJson.length > 1 ? 's' : ''}
                                 </span>
                               )}
@@ -574,7 +574,7 @@ export default function PromptsPage() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => viewVersions(prompt.name)}
-                              className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
+                              className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
                             >
                               Versions
                             </button>
@@ -590,7 +590,7 @@ export default function PromptsPage() {
                             </button>
                             <button
                               onClick={() => startEditing(prompt)}
-                              className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
+                              className="rounded-full border border-brand-outline/40 px-3 py-1 text-sm text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
                             >
                               Edit
                             </button>
@@ -598,7 +598,7 @@ export default function PromptsPage() {
                         </div>
 
                         <div className="mb-3 rounded-xl bg-brand-paper/70 p-4">
-                          <pre className="whitespace-pre-wrap font-mono text-sm text-brand-outline">
+                          <pre className="whitespace-pre-wrap font-mono text-sm text-semantic-muted">
                             {prompt.content.length > 300
                               ? prompt.content.substring(0, 300) + '...'
                               : prompt.content}

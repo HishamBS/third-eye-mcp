@@ -4,7 +4,7 @@ export function StatusBadge({ status }: { status: string }) {
   const colors = {
     approved: `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success} ${STATUS_BORDER_COLORS_SUBTLE.success}`,
     blocked: `${STATUS_BG_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error} ${STATUS_BORDER_COLORS_SUBTLE.error}`,
-    pending: `${STATUS_BG_COLORS_SUBTLE.idle} text-brand-outline ${STATUS_BORDER_COLORS_SUBTLE.idle}`,
+    pending: `${STATUS_BG_COLORS_SUBTLE.idle} text-semantic-muted ${STATUS_BORDER_COLORS_SUBTLE.idle}`,
   };
 
   return (

@@ -57,7 +57,7 @@ function ReplayContent() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent">
+              <Link href="/" className="text-semantic-muted transition-colors hover:text-brand-accent">
                 ← Home
               </Link>
               <div>
@@ -145,7 +145,7 @@ function ReplayContent() {
           >
             <GlassCard className="bg-brand-paperElev/50 p-12 text-center">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-accent border-t-transparent"></div>
-              <p className="mt-4 text-sm text-brand-outline">Loading session events...</p>
+              <p className="mt-4 text-sm text-semantic-muted">Loading session events...</p>
             </GlassCard>
           </motion.div>
         ) : error ? (
@@ -184,7 +184,7 @@ export default function ReplayPage() {
           <div className="border-b border-brand-outline/60 bg-brand-paperElev/50">
             <div className="mx-auto max-w-7xl px-6 py-6">
               <div className="flex items-center gap-6">
-                <Link href="/" className="text-brand-outline transition-colors hover:text-brand-accent">
+                <Link href="/" className="text-semantic-muted transition-colors hover:text-brand-accent">
                   ← Home
                 </Link>
                 <div>
@@ -197,7 +197,7 @@ export default function ReplayPage() {
           <div className="mx-auto max-w-7xl space-y-6 px-6 py-8">
             <GlassCard className="bg-brand-paperElev/50 p-12 text-center">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-accent border-t-transparent"></div>
-              <p className="mt-4 text-sm text-brand-outline">Initializing replay theater...</p>
+              <p className="mt-4 text-sm text-semantic-muted">Initializing replay theater...</p>
             </GlassCard>
           </div>
         </div>

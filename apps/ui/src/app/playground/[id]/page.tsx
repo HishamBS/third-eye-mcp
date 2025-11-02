@@ -306,11 +306,11 @@ export default function PlaygroundPage() {
             <div className="flex items-center space-x-4">
               <Link
                 href="/"
-                className="text-brand-outline dark:text-brand-outline hover:text-brand-ink dark:hover:text-gray-100"
+                className="text-semantic-muted dark:text-semantic-muted hover:text-brand-foreground dark:hover:text-gray-100"
               >
                 ← Back
               </Link>
-              <h1 className="text-2xl font-bold text-brand-ink dark:text-gray-100">
+              <h1 className="text-2xl font-bold text-brand-foreground dark:text-gray-100">
                 Session: {session?.agentName || sessionId.slice(0, 8)}
               </h1>
               <span className={`px-2 py-1 rounded text-xs ${
@@ -358,10 +358,10 @@ export default function PlaygroundPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Task Submission */}
             <div className="bg-brand-paper-elev dark:bg-brand-ink rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4 text-brand-ink dark:text-gray-100">
+              <h2 className="text-xl font-bold mb-4 text-brand-foreground dark:text-gray-100">
                 Run Overseer Pipeline
               </h2>
-              <p className="text-sm text-brand-outline dark:text-brand-outline mb-4">
+              <p className="text-sm text-semantic-muted dark:text-semantic-muted mb-4">
                 Send a full task through <code className="font-mono text-xs">{TOOL_NAME}</code>. Overseer analyzes the request,
                 selects the Eye sequence, and records every step in this playground session.
               </p>
@@ -371,7 +371,7 @@ export default function PlaygroundPage() {
                   value={taskInput}
                   onChange={(e) => setTaskInput(e.target.value)}
                   placeholder="Describe what you need (e.g., 'Create a palm care guide', 'Analyze this data', 'Write a function to...')"
-                  className="w-full px-4 py-3 bg-brand-paper dark:bg-brand-ink border border-brand-outline/50 rounded-lg text-brand-ink dark:text-gray-100 placeholder-brand-outline dark:placeholder-brand-outline resize-none focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                  className="w-full px-4 py-3 bg-brand-paper dark:bg-brand-ink border border-brand-outline/50 rounded-lg text-brand-foreground dark:text-gray-100 placeholder-brand-outline dark:placeholder-brand-outline resize-none focus:outline-none focus:ring-2 focus:ring-brand-primary"
                   rows={6}
                   disabled={loading}
                 />
@@ -397,17 +397,17 @@ export default function PlaygroundPage() {
 
             {/* Individual Eye Testing */}
             <div className="bg-brand-paper-elev dark:bg-brand-ink rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4 text-brand-ink dark:text-gray-100">
+              <h2 className="text-xl font-bold mb-4 text-brand-foreground dark:text-gray-100">
                 Test Individual Eye
               </h2>
-              <p className="text-sm text-brand-outline dark:text-brand-outline mb-4">
+              <p className="text-sm text-semantic-muted dark:text-semantic-muted mb-4">
                 Run a single Eye directly to validate personas and prompts before wiring them into a pipeline.
                 Results are logged to this session so you can inspect them in the monitor.
               </p>
 
               <form onSubmit={runEyeTest} className="space-y-4">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-brand-foreground dark:text-brand-outline">
+                  <label className="mb-1 block text-sm font-medium text-brand-foreground dark:text-semantic-muted">
                     Eye
                   </label>
                   <select
@@ -428,14 +428,14 @@ export default function PlaygroundPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-brand-foreground dark:text-brand-outline">
+                  <label className="mb-1 block text-sm font-medium text-brand-foreground dark:text-semantic-muted">
                     Input
                   </label>
                   <textarea
                     value={eyeInput}
                     onChange={(e) => setEyeInput(e.target.value)}
                     placeholder="Provide the exact prompt or payload this Eye should handle."
-                    className="w-full px-4 py-3 bg-brand-paper dark:bg-brand-ink border border-brand-outline/50 rounded-lg text-brand-ink dark:text-gray-100 placeholder-brand-outline dark:placeholder-brand-outline resize-none focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                    className="w-full px-4 py-3 bg-brand-paper dark:bg-brand-ink border border-brand-outline/50 rounded-lg text-brand-foreground dark:text-gray-100 placeholder-brand-outline dark:placeholder-brand-outline resize-none focus:outline-none focus:ring-2 focus:ring-brand-primary"
                     rows={4}
                     disabled={eyeLoading}
                   />
@@ -470,11 +470,11 @@ export default function PlaygroundPage() {
                 <div className="mt-6 rounded-lg border border-brand-outline/40 bg-brand-paper p-4 text-sm dark:bg-brand-ink">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-semibold text-brand-ink dark:text-gray-100">
+                      <p className="font-semibold text-brand-foreground dark:text-gray-100">
                         {eyeResult.eye || selectedEye} &middot; {eyeResult.code}
                       </p>
                       {eyeResult.summary && (
-                        <p className="mt-1 text-brand-outline dark:text-brand-outline">
+                        <p className="mt-1 text-semantic-muted dark:text-semantic-muted">
                           {eyeResult.summary}
                         </p>
                       )}
@@ -495,7 +495,7 @@ export default function PlaygroundPage() {
                   </div>
 
                   {eyeResult.md && (
-                    <p className="mt-3 text-brand-foreground dark:text-brand-outline whitespace-pre-wrap">
+                    <p className="mt-3 text-brand-foreground dark:text-semantic-muted whitespace-pre-wrap">
                       {eyeResult.md}
                     </p>
                   )}
@@ -511,12 +511,12 @@ export default function PlaygroundPage() {
 
             {/* Pipeline History */}
             <div className="bg-brand-paper-elev dark:bg-brand-ink rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4 text-brand-ink dark:text-gray-100">
+              <h2 className="text-xl font-bold mb-4 text-brand-foreground dark:text-gray-100">
                 Pipeline History ({runs.length})
               </h2>
 
               {runs.length === 0 ? (
-                <p className="text-brand-outline dark:text-brand-outline text-center py-8">
+                <p className="text-semantic-muted dark:text-semantic-muted text-center py-8">
                   No runs yet. Submit a task above to get started.
                 </p>
               ) : (
@@ -531,12 +531,12 @@ export default function PlaygroundPage() {
                           <span className={`px-2 py-1 ${STATUS_BG_COLORS_SUBTLE.info} ${STATUS_TEXT_COLORS.info} rounded text-xs font-mono`}>
                             {run.eye}
                           </span>
-                          <span className="text-xs text-brand-outline dark:text-brand-outline">
+                          <span className="text-xs text-semantic-muted dark:text-semantic-muted">
                             {new Date(run.createdAt).toLocaleString()}
                           </span>
                         </div>
                         {viewMode === 'expert' && (
-                          <div className="text-xs text-brand-outline dark:text-brand-outline">
+                          <div className="text-xs text-semantic-muted dark:text-semantic-muted">
                             {run.tokensIn && run.tokensOut && (
                               <span>{run.tokensIn}→{run.tokensOut} tokens • </span>
                             )}
@@ -547,7 +547,7 @@ export default function PlaygroundPage() {
 
                       <div className="text-sm">
                         <details className="cursor-pointer">
-                          <summary className="font-semibold text-brand-foreground dark:text-brand-outline hover:text-brand-ink dark:hover:text-gray-100">
+                          <summary className="font-semibold text-brand-foreground dark:text-semantic-muted hover:text-brand-foreground dark:hover:text-gray-100">
                             Input
                           </summary>
                           <pre className="mt-2 p-2 bg-brand-paper dark:bg-brand-ink rounded text-xs overflow-x-auto">
@@ -556,7 +556,7 @@ export default function PlaygroundPage() {
                         </details>
 
                         <details className="mt-2 cursor-pointer">
-                          <summary className="font-semibold text-brand-foreground dark:text-brand-outline hover:text-brand-ink dark:hover:text-gray-100">
+                          <summary className="font-semibold text-brand-foreground dark:text-semantic-muted hover:text-brand-foreground dark:hover:text-gray-100">
                             Output
                           </summary>
                           <pre className="mt-2 p-2 bg-brand-paper dark:bg-brand-ink rounded text-xs overflow-x-auto">

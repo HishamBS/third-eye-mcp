@@ -227,13 +227,13 @@ export function PersonaWizardModal({
               <h2 className="text-2xl font-bold text-brand-foreground">
                 {UI_HELP_TEXT.EYES_PERSONA_MODAL_TITLE.replace('{eyeName}', eyeName)}
               </h2>
-              <p className="mt-1 text-sm text-brand-ink/70">
+              <p className="mt-1 text-sm text-semantic-muted">
                 {UI_HELP_TEXT.EYES_PERSONA_MODAL_SUBTITLE}
               </p>
             </div>
             <button
               onClick={handleCancel}
-              className="rounded-full p-2 text-brand-ink/60 transition-colors hover:bg-brand-paper hover:text-brand-ink"
+              className="rounded-full p-2 text-semantic-muted transition-colors hover:bg-brand-paper hover:text-brand-foreground"
               aria-label="Close modal"
             >
               <X className="h-6 w-6" />
@@ -251,7 +251,7 @@ export function PersonaWizardModal({
           {loading && !initialData ? (
             <div className="rounded-2xl bg-brand-paperElev border border-brand-outline p-12 text-center">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-accent border-t-transparent"></div>
-              <p className="mt-4 text-brand-ink/70">Loading persona configuration...</p>
+              <p className="mt-4 text-semantic-muted">Loading persona configuration...</p>
             </div>
           ) : (
             /* PersonaWizard */

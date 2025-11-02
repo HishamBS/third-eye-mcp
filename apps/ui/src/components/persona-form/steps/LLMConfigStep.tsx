@@ -23,7 +23,7 @@ export function LLMConfigStep({ state, dispatch }: WizardStepProps) {
       {/* Temperature */}
       <div>
         <div className="flex justify-between items-center mb-2">
-          <label className="block text-sm font-medium text-brand-ink">
+          <label className="block text-sm font-medium text-brand-foreground">
             {FIELD_LABELS.TEMPERATURE}
           </label>
           <span className="text-sm font-mono text-brand-accent">
@@ -47,13 +47,13 @@ export function LLMConfigStep({ state, dispatch }: WizardStepProps) {
           }
           className="w-full h-2 bg-brand-outline rounded-lg appearance-none cursor-pointer accent-brand-accent"
         />
-        <p className="text-xs text-brand-ink/60 mt-2">{HELP_TEXT.TEMPERATURE}</p>
+        <p className="text-xs text-semantic-muted mt-2">{HELP_TEXT.TEMPERATURE}</p>
       </div>
 
       {/* Top P */}
       <div>
         <div className="flex justify-between items-center mb-2">
-          <label className="block text-sm font-medium text-brand-ink">
+          <label className="block text-sm font-medium text-brand-foreground">
             {FIELD_LABELS.TOP_P}
           </label>
           <span className="text-sm font-mono text-brand-accent">
@@ -77,12 +77,12 @@ export function LLMConfigStep({ state, dispatch }: WizardStepProps) {
           }
           className="w-full h-2 bg-brand-outline rounded-lg appearance-none cursor-pointer accent-brand-accent"
         />
-        <p className="text-xs text-brand-ink/60 mt-2">{HELP_TEXT.TOP_P}</p>
+        <p className="text-xs text-semantic-muted mt-2">{HELP_TEXT.TOP_P}</p>
       </div>
 
       {/* Response Format */}
       <div>
-        <label className="block text-sm font-medium text-brand-ink mb-2">
+        <label className="block text-sm font-medium text-brand-foreground mb-2">
           {FIELD_LABELS.RESPONSE_FORMAT}
         </label>
         <select
@@ -96,7 +96,7 @@ export function LLMConfigStep({ state, dispatch }: WizardStepProps) {
               },
             })
           }
-          className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-ink focus:outline-none focus:ring-2 focus:ring-brand-accent"
+          className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
         >
           <option value={RESPONSE_FORMATS.JSON_OBJECT}>
             {RESPONSE_FORMAT_LABELS[RESPONSE_FORMATS.JSON_OBJECT]}
@@ -105,13 +105,13 @@ export function LLMConfigStep({ state, dispatch }: WizardStepProps) {
             {RESPONSE_FORMAT_LABELS[RESPONSE_FORMATS.TEXT]}
           </option>
         </select>
-        <p className="text-xs text-brand-ink/60 mt-2">{HELP_TEXT.RESPONSE_FORMAT}</p>
+        <p className="text-xs text-semantic-muted mt-2">{HELP_TEXT.RESPONSE_FORMAT}</p>
       </div>
 
       {/* Max Tokens */}
       <div>
         <div className="flex justify-between items-center mb-2">
-          <label className="block text-sm font-medium text-brand-ink">
+          <label className="block text-sm font-medium text-brand-foreground">
             {FIELD_LABELS.MAX_TOKENS}
           </label>
           <span className="text-sm font-mono text-brand-accent">
@@ -135,7 +135,7 @@ export function LLMConfigStep({ state, dispatch }: WizardStepProps) {
           }
           className="w-full h-2 bg-brand-outline rounded-lg appearance-none cursor-pointer accent-brand-accent"
         />
-        <p className="text-xs text-brand-ink/60 mt-2">{HELP_TEXT.MAX_TOKENS}</p>
+        <p className="text-xs text-semantic-muted mt-2">{HELP_TEXT.MAX_TOKENS}</p>
       </div>
     </div>
   );

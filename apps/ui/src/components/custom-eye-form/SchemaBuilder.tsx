@@ -88,7 +88,7 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
 
       {localProperties.length === 0 ? (
         <div className="rounded-lg border-2 border-dashed border-brand-outline/40 bg-brand-paper/50 p-8 text-center">
-          <p className="text-brand-ink/60">No properties defined yet. Click &quot;Add Property&quot; to get started.</p>
+          <p className="text-semantic-muted">No properties defined yet. Click &quot;Add Property&quot; to get started.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -100,7 +100,7 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
               <div className="grid gap-4 md:grid-cols-12">
                 {/* Property Name */}
                 <div className="md:col-span-3">
-                  <label className="mb-1 block text-xs font-medium text-brand-outline">
+                  <label className="mb-1 block text-xs font-medium text-semantic-muted">
                     Property Name
                   </label>
                   <input
@@ -114,7 +114,7 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
 
                 {/* Property Type */}
                 <div className="md:col-span-2">
-                  <label className="mb-1 block text-xs font-medium text-brand-outline">
+                  <label className="mb-1 block text-xs font-medium text-semantic-muted">
                     Type
                   </label>
                   <select
@@ -134,7 +134,7 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
 
                 {/* Description */}
                 <div className="md:col-span-5">
-                  <label className="mb-1 block text-xs font-medium text-brand-outline">
+                  <label className="mb-1 block text-xs font-medium text-semantic-muted">
                     Description
                   </label>
                   <input
@@ -155,7 +155,7 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
                       onChange={(e) => handleUpdateProperty(index, 'required', e.target.checked)}
                       className="h-4 w-4 rounded border-brand-outline/50 bg-brand-paper text-brand-accent focus:ring-2 focus:ring-brand-accent/40 focus:ring-offset-0"
                     />
-                    <span className="text-xs font-medium text-brand-outline">Required</span>
+                    <span className="text-xs font-medium text-semantic-muted">Required</span>
                   </label>
                   <button
                     onClick={() => handleRemoveProperty(index)}

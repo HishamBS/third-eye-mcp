@@ -109,7 +109,7 @@ export default function SessionsPage() {
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-brand-outline hover:text-brand-accent transition-colors">
+              <Link href="/" className="text-semantic-muted hover:text-brand-accent transition-colors">
                 Back
               </Link>
               <div>
@@ -118,13 +118,13 @@ export default function SessionsPage() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="text-brand-outline text-sm">
+              <div className="text-semantic-muted text-sm">
                 {filteredSessions.length} of {sessions.length} sessions
               </div>
               <ViewModeToggle />
               <button
                 onClick={fetchSessions}
-                className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary"
+                className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-primary"
               >
                 Refresh
               </button>
@@ -159,8 +159,8 @@ export default function SessionsPage() {
 
         {filteredSessions.length === 0 ? (
           <div className="bg-brand-paper border border-brand-outline/50 rounded-xl p-12 text-center">
-            <p className="text-brand-outline text-lg mb-2">No sessions found</p>
-            <p className="text-brand-outline text-sm">
+            <p className="text-semantic-muted text-lg mb-2">No sessions found</p>
+            <p className="text-semantic-muted text-sm">
               {sessions.length === 0
                 ? 'Sessions will appear here when agents connect via MCP'
                 : 'Try adjusting your filters'}
@@ -171,19 +171,19 @@ export default function SessionsPage() {
             <table className="w-full">
               <thead className="bg-brand-paperElev/50 border-b border-brand-outline/50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-brand-outline uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-semantic-muted uppercase tracking-wider">
                     Session ID
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-brand-outline uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-semantic-muted uppercase tracking-wider">
                     Agent / Model
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-brand-outline uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-semantic-muted uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-brand-outline uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-semantic-muted uppercase tracking-wider">
                     Created
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-brand-outline uppercase tracking-wider">
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-semantic-muted uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -207,7 +207,7 @@ export default function SessionsPage() {
                         {session.agentName || 'Unknown Agent'}
                       </div>
                       {viewMode === 'expert' && session.model && (
-                        <div className="text-brand-outline text-xs font-mono mt-1">
+                        <div className="text-semantic-muted text-xs font-mono mt-1">
                           {session.model}
                         </div>
                       )}
@@ -217,7 +217,7 @@ export default function SessionsPage() {
                         {session.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-brand-outline text-sm">
+                    <td className="px-6 py-4 text-semantic-muted text-sm">
                       {formatDate(session.createdAt)}
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -237,17 +237,17 @@ export default function SessionsPage() {
 
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-brand-paper border border-brand-outline/50 rounded-xl p-4">
-            <div className="text-xs uppercase tracking-wider text-brand-outline mb-1">Total Sessions</div>
+            <div className="text-xs uppercase tracking-wider text-semantic-muted mb-1">Total Sessions</div>
             <div className="text-2xl font-bold text-brand-foreground">{sessions.length}</div>
           </div>
           <div className="bg-brand-paper border border-brand-outline/50 rounded-xl p-4">
-            <div className="text-xs uppercase tracking-wider text-brand-outline mb-1">Active</div>
+            <div className="text-xs uppercase tracking-wider text-semantic-muted mb-1">Active</div>
             <div className={`text-2xl font-bold ${STATUS_TEXT_COLORS.success}`}>
               {sessions.filter(s => s.status === 'active').length}
             </div>
           </div>
           <div className="bg-brand-paper border border-brand-outline/50 rounded-xl p-4">
-            <div className="text-xs uppercase tracking-wider text-brand-outline mb-1">Completed</div>
+            <div className="text-xs uppercase tracking-wider text-semantic-muted mb-1">Completed</div>
             <div className={`text-2xl font-bold ${STATUS_TEXT_COLORS.info}`}>
               {sessions.filter(s => s.status === 'completed').length}
             </div>

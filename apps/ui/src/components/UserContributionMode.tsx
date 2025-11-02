@@ -144,16 +144,16 @@ export function UserContributionMode({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-brand-outline/40 bg-brand-ink/60">
-              <User className="h-6 w-6 text-brand-outline" />
+              <User className="h-6 w-6 text-semantic-muted" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-brand-foreground">User Contribution Mode</h3>
-              <p className="text-sm text-brand-outline">Answer prompts inline to assist Eyes</p>
+              <p className="text-sm text-semantic-muted">Answer prompts inline to assist Eyes</p>
             </div>
           </div>
           <button
             onClick={() => setIsEnabled(true)}
-            className="rounded-full bg-brand-accent px-4 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary"
+            className="rounded-full bg-brand-accent px-4 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-primary"
           >
             Enable
           </button>
@@ -167,7 +167,7 @@ export function UserContributionMode({
       <div className="rounded-2xl border border-brand-outline/40 bg-brand-paper/60 p-6">
         <div className="flex items-center gap-3">
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-brand-accent border-t-transparent" />
-          <p className="text-sm text-brand-outline">Loading contribution prompts...</p>
+          <p className="text-sm text-semantic-muted">Loading contribution prompts...</p>
         </div>
       </div>
     );
@@ -183,14 +183,14 @@ export function UserContributionMode({
           </div>
           <div>
             <h3 className="font-semibold text-brand-foreground">User Contribution Mode</h3>
-            <p className="text-xs text-brand-outline">
+            <p className="text-xs text-semantic-muted">
               {activePrompts.length} {activePrompts.length === 1 ? 'prompt' : 'prompts'} waiting
             </p>
           </div>
         </div>
         <button
           onClick={() => setIsEnabled(false)}
-          className="rounded-full border border-brand-outline/50 px-3 py-1 text-xs text-brand-outline transition hover:border-brand-accent hover:text-brand-accent"
+          className="rounded-full border border-brand-outline/50 px-3 py-1 text-xs text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
         >
           Disable
         </button>
@@ -206,8 +206,8 @@ export function UserContributionMode({
             className="rounded-2xl border border-brand-outline/40 bg-brand-paper/60 p-12 text-center"
           >
             <CheckCircle className={`mx-auto h-12 w-12 ${STATUS_TEXT_COLORS.success}`} />
-            <p className="mt-3 text-sm text-brand-outline">All caught up!</p>
-            <p className="mt-1 text-xs text-brand-outline">No pending contribution prompts.</p>
+            <p className="mt-3 text-sm text-semantic-muted">All caught up!</p>
+            <p className="mt-1 text-xs text-semantic-muted">No pending contribution prompts.</p>
           </motion.div>
         ) : (
           activePrompts.map((prompt, index) => {
@@ -230,19 +230,19 @@ export function UserContributionMode({
                     {getPromptIcon(prompt.type)}
                     <div>
                       <div className="mb-1 flex items-center gap-2">
-                        <span className="text-xs font-semibold uppercase tracking-wider text-brand-outline">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-semantic-muted">
                           {prompt.type.replace('_', ' ')}
                         </span>
-                        <span className="text-xs text-brand-outline">•</span>
-                        <span className="text-xs capitalize text-brand-outline">{prompt.eye}</span>
+                        <span className="text-xs text-semantic-muted">•</span>
+                        <span className="text-xs capitalize text-semantic-muted">{prompt.eye}</span>
                       </div>
                       <p className="text-base font-medium text-brand-foreground">{prompt.question}</p>
                       {prompt.context && (
-                        <p className="mt-2 text-sm text-brand-outline">{prompt.context}</p>
+                        <p className="mt-2 text-sm text-semantic-muted">{prompt.context}</p>
                       )}
                     </div>
                   </div>
-                  <span className="text-xs text-brand-outline">
+                  <span className="text-xs text-semantic-muted">
                     {new Date(prompt.createdAt).toLocaleTimeString()}
                   </span>
                 </div>
@@ -263,7 +263,7 @@ export function UserContributionMode({
                       <button
                         onClick={() => handleSubmit(prompt)}
                         disabled={!answer.trim() || isSubmitting}
-                        className="flex items-center gap-2 rounded-full bg-brand-accent px-4 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex items-center gap-2 rounded-full bg-brand-accent px-4 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-primary disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {isSubmitting ? (
                           <>

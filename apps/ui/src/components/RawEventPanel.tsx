@@ -14,14 +14,14 @@ export function RawEventPanel({ event }: RawEventPanelProps) {
 
   if (!event) {
     return (
-      <div className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/60 p-4 text-xs text-brand-outline">
+      <div className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/60 p-4 text-xs text-semantic-muted">
         Select a timeline item to view the raw envelope.
       </div>
     );
   }
 
   return (
-    <div className="space-y-3 rounded-2xl border border-brand-outline/40 bg-brand-paperElev/60 p-4 text-xs text-brand-outline">
+    <div className="space-y-3 rounded-2xl border border-brand-outline/40 bg-brand-paperElev/60 p-4 text-xs text-semantic-muted">
       {event.md && (
         <div className="rounded-lg border border-brand-outline/30 bg-brand-paper p-3" dangerouslySetInnerHTML={{ __html: renderMarkdown(event.md) }} />
       )}

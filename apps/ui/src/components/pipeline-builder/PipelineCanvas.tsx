@@ -18,8 +18,8 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { getEyeColor } from '@/components/EyeIcon';
 import { EyeNode, type EyeNodeData } from './EyeNode';
-import {
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import {
   CANVAS_SETTINGS,
   PIPELINE_UI_TEXT,
 } from './constants';

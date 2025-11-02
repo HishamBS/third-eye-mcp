@@ -48,7 +48,7 @@ function MetricCard({ title, value, unit, trend, trendValue, icon, color = METRI
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           {icon && <div className="flex items-center">{icon}</div>}
-          <p className="text-sm font-medium text-brand-outline">{title}</p>
+          <p className="text-sm font-medium text-semantic-muted">{title}</p>
         </div>
         {trend && trendValue && (
           <div className="flex items-center space-x-1 text-xs" style={{ color: getTrendColor() }}>
@@ -61,7 +61,7 @@ function MetricCard({ title, value, unit, trend, trendValue, icon, color = METRI
         <span className="text-2xl font-bold text-brand-foreground" style={{ color }}>
           {value}
         </span>
-        {unit && <span className="text-sm text-brand-outline">{unit}</span>}
+        {unit && <span className="text-sm text-semantic-muted">{unit}</span>}
       </div>
     </motion.div>
   );
@@ -214,9 +214,9 @@ export function PerformanceMetrics({ events, runs = [] }: PerformanceMetricsProp
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className="h-2 w-2 animate-pulse rounded-full ${STATUS_TEXT_COLORS.success}"></div>
-            <p className="text-sm font-medium text-brand-outline">Pipeline Activity</p>
+            <p className="text-sm font-medium text-semantic-muted">Pipeline Activity</p>
           </div>
-          <p className="text-xs text-brand-outline">Last 24 hours</p>
+          <p className="text-xs text-semantic-muted">Last 24 hours</p>
         </div>
 
         <div className="mt-3 flex space-x-1">
@@ -243,7 +243,7 @@ export function PerformanceMetrics({ events, runs = [] }: PerformanceMetricsProp
           })}
         </div>
 
-        <div className="mt-2 flex justify-between text-xs text-brand-outline">
+        <div className="mt-2 flex justify-between text-xs text-semantic-muted">
           <span>24h ago</span>
           <span>Now</span>
         </div>

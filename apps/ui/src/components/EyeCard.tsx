@@ -83,7 +83,7 @@ export default function EyeCard({ state, onClick }: EyeCardProps) {
     ? 'text-semantic-success'
     : state.ok === false
     ? 'text-semantic-error'
-    : 'text-brand-outline';
+    : 'text-semantic-muted';
 
   return (
     <motion.button
@@ -115,7 +115,7 @@ export default function EyeCard({ state, onClick }: EyeCardProps) {
             {state.code || (state.ok === true ? 'Approved' : state.ok === false ? 'Blocked' : 'Pending')}
           </p>
           {state.ts && (
-            <p className="text-[10px] text-brand-outline mt-1">
+            <p className="text-[10px] text-semantic-muted mt-1">
               {new Date(state.ts).toLocaleTimeString()}
             </p>
           )}

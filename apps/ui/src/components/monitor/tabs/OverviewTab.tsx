@@ -16,7 +16,7 @@ export function OverviewTab({ summary, sessionId, apiKey, latestPlanMd, loading 
 
   return (
     <div className="space-y-6">
-      <section className="rounded-2xl border border-surface-outline/40 bg-surface-raised/80 p-6 text-sm text-brand-outline">
+      <section className="rounded-2xl border border-surface-outline/40 bg-surface-raised/80 p-6 text-sm text-semantic-muted">
         <h3 className="text-lg font-semibold text-brand-foreground">Session Snapshot</h3>
         {showSkeleton ? (
           <div className="mt-4 space-y-3">
@@ -31,7 +31,7 @@ export function OverviewTab({ summary, sessionId, apiKey, latestPlanMd, loading 
             </div>
           </div>
         ) : summary ? (
-          <dl className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-xs text-brand-outline">
+          <dl className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-xs text-semantic-muted">
             <div>
               <dt>Status</dt>
               <dd className="text-brand-foreground">{summary.status ?? 'Unknown'}</dd>
@@ -46,7 +46,7 @@ export function OverviewTab({ summary, sessionId, apiKey, latestPlanMd, loading 
             </div>
           </dl>
         ) : (
-          <p className="mt-2 text-xs text-brand-outline">Summary data will appear once the stream is active.</p>
+          <p className="mt-2 text-xs text-semantic-muted">Summary data will appear once the stream is active.</p>
         )}
       </section>
 

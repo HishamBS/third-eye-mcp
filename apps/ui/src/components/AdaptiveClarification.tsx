@@ -93,7 +93,7 @@ export function AdaptiveClarification({
         {/* Score Bar */}
         <div className="mb-6">
           <div className="mb-2 flex items-center justify-between text-sm">
-            <span className="text-brand-outline">Ambiguity Score</span>
+            <span className="text-semantic-muted">Ambiguity Score</span>
             <span className={`font-bold ${getScoreColor()}`}>{ambiguityScore}/100</span>
           </div>
           <div className="h-3 overflow-hidden rounded-full bg-brand-paper">
@@ -104,7 +104,7 @@ export function AdaptiveClarification({
               className={`h-full ${getScoreBgColor()} rounded-full`}
             />
           </div>
-          <div className="mt-2 flex justify-between text-xs text-brand-outline">
+          <div className="mt-2 flex justify-between text-xs text-semantic-muted">
             <span>Clear (0-29)</span>
             <span>Needs Input (30-59)</span>
             <span>Rejected (60-100)</span>
@@ -114,7 +114,7 @@ export function AdaptiveClarification({
         {/* Ambiguous Terms */}
         {ambiguousTerms.length > 0 && (
           <div className="mb-4">
-            <h4 className="mb-2 text-sm font-medium text-brand-outline">Ambiguous Terms Found</h4>
+            <h4 className="mb-2 text-sm font-medium text-semantic-muted">Ambiguous Terms Found</h4>
             <div className="flex flex-wrap gap-2">
               {ambiguousTerms.map((term, idx) => (
                 <span
@@ -131,8 +131,8 @@ export function AdaptiveClarification({
         {/* Missing Context */}
         {missingContext.length > 0 && (
           <div>
-            <h4 className="mb-2 text-sm font-medium text-brand-outline">Missing Context</h4>
-            <ul className="space-y-1 text-sm text-brand-outline">
+            <h4 className="mb-2 text-sm font-medium text-semantic-muted">Missing Context</h4>
+            <ul className="space-y-1 text-sm text-semantic-muted">
               {missingContext.map((context, idx) => (
                 <li key={idx} className="flex items-start gap-2">
                   <span className={STATUS_TEXT_COLORS.error}>•</span>
@@ -152,7 +152,7 @@ export function AdaptiveClarification({
               <HelpCircle className="h-5 w-5 text-brand-accent" />
               Clarifying Questions
             </h3>
-            <span className="text-sm text-brand-outline">
+            <span className="text-sm text-semantic-muted">
               {Object.keys(answers).filter(k => answers[k]?.trim()).length} / {clarifyingQuestions.length} answered
             </span>
           </div>
@@ -184,7 +184,7 @@ export function AdaptiveClarification({
               className="space-y-4"
             >
               <div className="rounded-xl border border-brand-accent/30 bg-brand-accent/5 p-4">
-                <p className="text-sm font-medium text-brand-outline">
+                <p className="text-sm font-medium text-semantic-muted">
                   Question {currentQuestionIndex + 1} of {clarifyingQuestions.length}
                 </p>
                 <p className="mt-2 text-base text-brand-foreground">{clarifyingQuestions[currentQuestionIndex]}</p>
@@ -203,7 +203,7 @@ export function AdaptiveClarification({
                 <button
                   onClick={handlePrevious}
                   disabled={currentQuestionIndex === 0}
-                  className="rounded-full border border-brand-outline/50 px-4 py-2 text-sm font-medium text-brand-outline transition hover:border-brand-accent hover:text-brand-accent disabled:opacity-30 disabled:hover:border-brand-outline/50 disabled:hover:text-brand-outline"
+                  className="rounded-full border border-brand-outline/50 px-4 py-2 text-sm font-medium text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent disabled:opacity-30 disabled:hover:border-brand-outline/50 disabled:hover:text-semantic-muted"
                 >
                   ← Previous
                 </button>
@@ -212,7 +212,7 @@ export function AdaptiveClarification({
                   <button
                     onClick={handleNext}
                     disabled={!currentAnswer.trim()}
-                    className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-ink transition hover:bg-brand-primary disabled:opacity-50"
+                    className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-primary disabled:opacity-50"
                   >
                     Next →
                   </button>
@@ -233,7 +233,7 @@ export function AdaptiveClarification({
           <div className="mt-6 border-t border-brand-outline/30 pt-4 text-center">
             <button
               onClick={onSkip}
-              className="text-sm text-brand-outline transition hover:text-brand-outline"
+              className="text-sm text-semantic-muted transition hover:text-semantic-muted"
             >
               Skip clarification and continue anyway
             </button>

@@ -159,7 +159,7 @@ export const EyePalette = memo(function EyePalette({
           className="p-2 hover:bg-brand-outline/20 rounded-md transition-colors"
           title={PALETTE_TEXT.EXPAND}
         >
-          <svg className="w-5 h-5 text-brand-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-brand-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
@@ -175,13 +175,13 @@ export const EyePalette = memo(function EyePalette({
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-brand-outline">
-        <h2 className="text-lg font-semibold text-brand-ink">{PALETTE_TEXT.TITLE}</h2>
+        <h2 className="text-lg font-semibold text-brand-foreground">{PALETTE_TEXT.TITLE}</h2>
         <button
           onClick={onToggleCollapse}
           className="p-1 hover:bg-brand-outline/20 rounded-md transition-colors"
           title={PALETTE_TEXT.COLLAPSE}
         >
-          <svg className="w-5 h-5 text-brand-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-brand-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
@@ -194,7 +194,7 @@ export const EyePalette = memo(function EyePalette({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={PALETTE_TEXT.SEARCH_PLACEHOLDER}
-          className="w-full px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-ink placeholder-brand-ink/50 focus:outline-none focus:ring-2 focus:ring-brand-primary"
+          className="w-full px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-foreground placeholder-brand-ink/50 focus:outline-none focus:ring-2 focus:ring-brand-primary"
         />
       </div>
 
@@ -202,7 +202,7 @@ export const EyePalette = memo(function EyePalette({
       <div className="flex-1 overflow-y-auto">
         {/* Built-in Eyes */}
         <div className="p-4">
-          <h3 className="text-sm font-semibold text-brand-ink/70 uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-semantic-muted uppercase tracking-wider mb-3">
             {PALETTE_TEXT.BUILTIN_SECTION}
           </h3>
           {filteredBuiltIn.length > 0 ? (
@@ -218,24 +218,24 @@ export const EyePalette = memo(function EyePalette({
                     <EyeIcon eye={eye.id} size={32} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-brand-ink">{eye.name}</div>
-                    <div className="text-xs text-brand-ink/60 mt-0.5">{eye.description}</div>
+                    <div className="text-sm font-semibold text-brand-foreground">{eye.name}</div>
+                    <div className="text-xs text-semantic-muted mt-0.5">{eye.description}</div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-sm text-brand-ink/50 text-center py-4">{PALETTE_TEXT.NO_RESULTS}</div>
+            <div className="text-sm text-semantic-muted text-center py-4">{PALETTE_TEXT.NO_RESULTS}</div>
           )}
         </div>
 
         {/* Custom Eyes */}
         <div className="p-4 border-t border-brand-outline">
-          <h3 className="text-sm font-semibold text-brand-ink/70 uppercase tracking-wider mb-3">
+          <h3 className="text-sm font-semibold text-semantic-muted uppercase tracking-wider mb-3">
             {PALETTE_TEXT.CUSTOM_SECTION}
           </h3>
           {loading ? (
-            <div className="text-sm text-brand-ink/50 text-center py-4">Loading custom eyes...</div>
+            <div className="text-sm text-semantic-muted text-center py-4">Loading custom eyes...</div>
           ) : filteredCustom.length > 0 ? (
             <div className="space-y-2">
               {filteredCustom.map((eye) => (
@@ -258,15 +258,15 @@ export const EyePalette = memo(function EyePalette({
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-brand-ink">{eye.name}</div>
-                    <div className="text-xs text-brand-ink/60 mt-0.5">{eye.description}</div>
+                    <div className="text-sm font-semibold text-brand-foreground">{eye.name}</div>
+                    <div className="text-xs text-semantic-muted mt-0.5">{eye.description}</div>
                     <div className="text-xs text-brand-accent mt-1">v{eye.version}</div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-sm text-brand-ink/50 text-center py-4">{PALETTE_TEXT.NO_CUSTOM}</div>
+            <div className="text-sm text-semantic-muted text-center py-4">{PALETTE_TEXT.NO_CUSTOM}</div>
           )}
         </div>
       </div>

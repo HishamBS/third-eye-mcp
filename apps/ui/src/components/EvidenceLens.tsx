@@ -43,14 +43,14 @@ export function buildEvidenceSegments(draft: string, claims: EvidenceClaim[]): S
 
 export function EvidenceLens({ draft, claims, expertMode = true }: EvidenceLensProps) {
   if (!draft) {
-    return <p className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4 text-sm text-brand-outline">No draft available.</p>;
+    return <p className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4 text-sm text-semantic-muted">No draft available.</p>;
   }
 
   if (!expertMode) {
     return (
-      <article className="rounded-xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm leading-relaxed text-brand-outline">
+      <article className="rounded-xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm leading-relaxed text-semantic-muted">
         <p>{draft}</p>
-        <p className="mt-4 rounded-lg border border-brand-outline/30 bg-brand-paper/60 p-3 text-xs text-brand-outline">
+        <p className="mt-4 rounded-lg border border-brand-outline/30 bg-brand-paper/60 p-3 text-xs text-semantic-muted">
           Enable Expert Mode to see citation confidence highlights and raw claim metadata.
         </p>
       </article>
@@ -60,7 +60,7 @@ export function EvidenceLens({ draft, claims, expertMode = true }: EvidenceLensP
   const segments = buildEvidenceSegments(draft, claims);
   if (!segments.length) {
     return (
-      <article className="rounded-xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm leading-relaxed text-brand-outline">
+      <article className="rounded-xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm leading-relaxed text-semantic-muted">
         <p>{draft}</p>
       </article>
     );
@@ -92,12 +92,12 @@ export function EvidenceLens({ draft, claims, expertMode = true }: EvidenceLensP
                 {segment.cited ? (
                   <>
                     <div className="${STATUS_TEXT_COLORS.success} font-semibold">✓ Cited ({confidence}% confidence)</div>
-                    <div className="text-brand-outline mt-1 max-w-xs whitespace-normal">{segment.citation || 'Citation available'}</div>
+                    <div className="text-semantic-muted mt-1 max-w-xs whitespace-normal">{segment.citation || 'Citation available'}</div>
                   </>
                 ) : (
                   <>
                     <div className="${STATUS_TEXT_COLORS.error} font-semibold">⚠ Missing Citation</div>
-                    <div className="text-brand-outline mt-1">This claim needs evidence</div>
+                    <div className="text-semantic-muted mt-1">This claim needs evidence</div>
                   </>
                 )}
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-slate-900"></div>

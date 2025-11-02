@@ -163,7 +163,7 @@ export function DialogProvider() {
               )}
 
               {/* Message */}
-              <p className="mb-6 text-brand-outline">
+              <p className="mb-6 text-semantic-muted">
                 {message}
               </p>
 
@@ -184,7 +184,7 @@ export function DialogProvider() {
                 {type !== 'alert' && (
                   <button
                     onClick={handleCancel}
-                    className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-brand-outline transition hover:border-brand-accent hover:text-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
+                    className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
                   >
                     {cancelText || 'Cancel'}
                   </button>

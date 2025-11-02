@@ -201,7 +201,7 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
             onClick={() => setSelectedType(selectedType === type ? 'all' : type)}
           >
             <div className="text-lg">{getEvidenceIcon(type)}</div>
-            <div className="mt-1 text-xs font-medium capitalize text-brand-outline">{type}</div>
+            <div className="mt-1 text-xs font-medium capitalize text-semantic-muted">{type}</div>
             <div className="text-lg font-bold text-brand-foreground">{count}</div>
           </motion.div>
         ))}
@@ -223,7 +223,7 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
             setSelectedType('all');
             setSearchTerm('');
           }}
-          className="rounded-lg border border-brand-outline/40 bg-brand-paper/60 px-4 py-2 text-sm text-brand-outline hover:bg-brand-paper/80"
+          className="rounded-lg border border-brand-outline/40 bg-brand-paper/60 px-4 py-2 text-sm text-semantic-muted hover:bg-brand-paper/80"
         >
           Clear
         </button>
@@ -238,7 +238,7 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
               animate={{ opacity: 1 }}
               className="rounded-xl border border-brand-outline/30 bg-brand-paper/60 p-8 text-center"
             >
-              <p className="text-brand-outline">
+              <p className="text-semantic-muted">
                 {evidenceItems.length === 0
                   ? 'No evidence collected yet.'
                   : 'No evidence matches your filters.'}
@@ -271,31 +271,31 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
                         <span className="text-sm font-medium capitalize text-brand-foreground">
                           {evidence.type}
                         </span>
-                        <span className="text-xs text-brand-outline">•</span>
+                        <span className="text-xs text-semantic-muted">•</span>
                         <div className="flex items-center space-x-1">
                           <span className="text-xs">{getEyeIcon(evidence.eyeSource)}</span>
-                          <span className="text-xs text-brand-outline">{evidence.eyeSource}</span>
+                          <span className="text-xs text-semantic-muted">{evidence.eyeSource}</span>
                         </div>
                         {evidence.confidence !== undefined && (
                           <>
-                            <span className="text-xs text-brand-outline">•</span>
-                            <span className="text-xs text-brand-outline">
+                            <span className="text-xs text-semantic-muted">•</span>
+                            <span className="text-xs text-semantic-muted">
                               {Math.round(evidence.confidence)}% confidence
                             </span>
                           </>
                         )}
                       </div>
 
-                      <p className="mt-2 text-sm text-brand-outline leading-relaxed">
+                      <p className="mt-2 text-sm text-semantic-muted leading-relaxed">
                         {evidence.content}
                       </p>
 
                       {evidence.metadata && Object.keys(evidence.metadata).length > 0 && (
                         <details className="mt-2">
-                          <summary className="cursor-pointer text-xs text-brand-outline hover:text-brand-outline">
+                          <summary className="cursor-pointer text-xs text-semantic-muted hover:text-semantic-muted">
                             View metadata
                           </summary>
-                          <pre className="mt-1 overflow-x-auto rounded bg-black/40 p-2 text-xs text-brand-outline">
+                          <pre className="mt-1 overflow-x-auto rounded bg-black/40 p-2 text-xs text-semantic-muted">
                             {JSON.stringify(evidence.metadata, null, 2)}
                           </pre>
                         </details>
@@ -304,7 +304,7 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
                   </div>
 
                   <div className="flex flex-col items-end space-y-1">
-                    <span className="text-xs text-brand-outline">
+                    <span className="text-xs text-semantic-muted">
                       {new Date(evidence.timestamp).toLocaleTimeString()}
                     </span>
                     {evidence.verified !== undefined && (
@@ -331,11 +331,11 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
           <h3 className="text-sm font-medium text-brand-foreground mb-3">Evidence Summary</h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-brand-outline">Total Evidence Items</p>
+              <p className="text-semantic-muted">Total Evidence Items</p>
               <p className="text-lg font-bold text-brand-foreground">{evidenceItems.length}</p>
             </div>
             <div>
-              <p className="text-brand-outline">Verification Rate</p>
+              <p className="text-semantic-muted">Verification Rate</p>
               <p className="text-lg font-bold text-brand-foreground">
                 {Math.round(
                   (evidenceItems.filter(e => e.verified).length / evidenceItems.length) * 100
@@ -345,7 +345,7 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
           </div>
 
           <div className="mt-3 pt-3 border-t border-brand-outline/30">
-            <p className="text-xs text-brand-outline">
+            <p className="text-xs text-semantic-muted">
               Evidence is automatically collected from Eyes as they process your requests.
               Tenseigan validates facts, Byakugan checks consistency, and other Eyes contribute analysis.
             </p>

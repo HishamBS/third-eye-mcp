@@ -5,7 +5,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const query = searchParams.toString();
-    const url = `${API_BASE_URL}/personas${query ? `?${query}` : ''}`;
+    const url = `${API_BASE_URL}/api/personas${query ? `?${query}` : ''}`;
 
     const response = await fetch(url, {
       method: 'GET',
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const response = await fetch(`${API_BASE_URL}/personas`, {
+    const response = await fetch(`${API_BASE_URL}/api/personas`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

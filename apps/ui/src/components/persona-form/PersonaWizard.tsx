@@ -301,10 +301,10 @@ export function PersonaWizard({
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div className="text-center flex-1">
-              <h1 className="text-4xl font-bold text-brand-ink mb-2">
+              <h1 className="text-4xl font-bold text-brand-foreground mb-2">
                 {WIZARD_TEXT.TITLE}
               </h1>
-              <p className="text-lg text-brand-ink/70">
+              <p className="text-lg text-semantic-muted">
                 {WIZARD_TEXT.SUBTITLE}
               </p>
             </div>
@@ -318,7 +318,7 @@ export function PersonaWizard({
               </button>
               <button
                 onClick={handleImportClick}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-brand-outline text-brand-ink hover:bg-brand-paperElev transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-brand-outline text-brand-foreground hover:bg-brand-paperElev transition-colors"
                 title={BUTTON_LABELS.IMPORT_JSON}
               >
                 <Upload className="w-4 h-4" />
@@ -331,7 +331,7 @@ export function PersonaWizard({
         {/* Progress Indicator */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-brand-ink/70">
+            <span className="text-sm font-medium text-semantic-muted">
               {WIZARD_TEXT.PROGRESS_LABEL
                 .replace('{current}', String(state.currentStep + 1))
                 .replace('{total}', String(TOTAL_STEPS))}
@@ -339,7 +339,7 @@ export function PersonaWizard({
             <span className="text-sm font-medium text-brand-accent">
               {currentStepInfo?.title}
               {canSkip && (
-                <span className="ml-2 text-xs text-brand-ink/50">
+                <span className="ml-2 text-xs text-semantic-muted">
                   (Optional)
                 </span>
               )}
@@ -369,12 +369,12 @@ export function PersonaWizard({
                       ? 'bg-brand-accent text-brand-foreground'
                       : step.id < state.currentStep
                       ? 'bg-brand-accent/50 text-brand-foreground'
-                      : 'bg-brand-outline/30 text-brand-ink/40'
+                      : 'bg-brand-outline/30 text-brand-foreground/40'
                   }`}
                 >
                   {step.id + 1}
                 </div>
-                <span className="text-xs text-brand-ink/50 max-w-[80px] text-center">
+                <span className="text-xs text-semantic-muted max-w-[80px] text-center">
                   {step.title}
                 </span>
               </div>
@@ -385,10 +385,10 @@ export function PersonaWizard({
         {/* Step Content */}
         <GlassCard className="mb-8 min-h-[400px]">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-brand-ink mb-2">
+            <h2 className="text-2xl font-bold text-brand-foreground mb-2">
               {currentStepInfo?.title}
             </h2>
-            <p className="text-brand-ink/70">
+            <p className="text-semantic-muted">
               {currentStepInfo?.description}
             </p>
           </div>
@@ -476,7 +476,7 @@ export function PersonaWizard({
             {!isFirstStep && (
               <button
                 onClick={handlePrevious}
-                className="flex items-center gap-2 px-6 py-3 rounded-lg border border-brand-outline text-brand-ink hover:bg-brand-paperElev transition-colors"
+                className="flex items-center gap-2 px-6 py-3 rounded-lg border border-brand-outline text-brand-foreground hover:bg-brand-paperElev transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
                 {BUTTON_LABELS.PREVIOUS}
@@ -486,7 +486,7 @@ export function PersonaWizard({
             {canSkip && !isLastStep && (
               <button
                 onClick={handleNext}
-                className="px-6 py-3 rounded-lg border border-brand-outline text-brand-ink/60 hover:bg-brand-paperElev transition-colors"
+                className="px-6 py-3 rounded-lg border border-brand-outline text-semantic-muted hover:bg-brand-paperElev transition-colors"
               >
                 {BUTTON_LABELS.SKIP}
               </button>
@@ -496,7 +496,7 @@ export function PersonaWizard({
           <div className="flex gap-3">
             <button
               onClick={handleCancel}
-              className="flex items-center gap-2 px-6 py-3 rounded-lg border border-brand-outline text-brand-ink hover:bg-brand-paperElev transition-colors"
+              className="flex items-center gap-2 px-6 py-3 rounded-lg border border-brand-outline text-brand-foreground hover:bg-brand-paperElev transition-colors"
             >
               <X className="w-4 h-4" />
               {BUTTON_LABELS.CANCEL}

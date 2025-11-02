@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { WS_BASE_URL } from '@/consts/api';
 
 export interface WSMessage {
@@ -36,6 +36,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const missedEventsRef = useRef<WSMessage[]>([]);
+  const subscribersRef = useRef<Array<(message: WSMessage) => void>>([]);
 
   const getReconnectDelay = () => {
     // Exponential backoff: 1s, 2s, 4s, 8s, 16s (max)
@@ -109,6 +110,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
           setLastMessage(message);
           onMessage?.(message);
+
+          // Notify all subscribers
+          subscribersRef.current.forEach((callback) => {
+            try {
+              callback(message);
+            } catch (error) {
+              console.error('[WebSocket] Subscriber callback error:', error);
+            }
+          });
         } catch (error) {
           console.error('[WebSocket] Failed to parse message:', error);
         }
@@ -190,6 +200,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     }
   };
 
+  const subscribe = useCallback((callback: (message: WSMessage) => void) => {
+    subscribersRef.current.push(callback);
+
+    // Return unsubscribe function
+    return () => {
+      subscribersRef.current = subscribersRef.current.filter(cb => cb !== callback);
+    };
+  }, []);
+
   useEffect(() => {
     connect();
 
@@ -205,5 +224,6 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     send,
     connect,
     disconnect,
+    subscribe,
   };
 }
