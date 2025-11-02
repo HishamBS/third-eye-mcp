@@ -621,51 +621,59 @@ function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
     const packages = readdirSync(packagesDir);
     for (const pkg of packages) {
       const distPath = resolve(packagesDir, pkg, 'dist');
-      if (existsSync(distPath)) {
-        // Check if any .ts file is newer than the dist folder
-        const srcPath = resolve(packagesDir, pkg, 'src');
-        if (existsSync(srcPath)) {
-          try {
-            // Get the newest file in dist/ (not folder timestamp)
-            const distFiles = readdirSync(distPath, { recursive: true })
-              .filter(f => typeof f === 'string' && (f.endsWith('.js') || f.endsWith('.d.ts')))
-              .map(f => resolve(distPath, f));
+      const srcPath = resolve(packagesDir, pkg, 'src');
 
-            const distMtime = distFiles.length > 0
-              ? Math.max(...distFiles.map(f => {
-                  try {
-                    return statSync(f).mtimeMs;
-                  } catch {
-                    return 0;
-                  }
-                }))
-              : 0; // Force rebuild if no dist files exist
+      // Skip if no src directory (not a buildable package)
+      if (!existsSync(srcPath)) {
+        continue;
+      }
 
-            const srcFiles = readdirSync(srcPath, { recursive: true }).filter(f =>
-              typeof f === 'string' && f.endsWith('.ts')
-            );
+      // If dist doesn't exist, we need to build
+      if (!existsSync(distPath)) {
+        packagesToRebuild.push(pkg);
+        continue;
+      }
 
-            const hasNewerSource = srcFiles.some(file => {
-              const srcFile = resolve(srcPath, file);
+      // dist exists, check if any .ts file is newer than the dist folder
+      try {
+        // Get the newest file in dist/ (not folder timestamp)
+        const distFiles = readdirSync(distPath, { recursive: true })
+          .filter(f => typeof f === 'string' && (f.endsWith('.js') || f.endsWith('.d.ts')))
+          .map(f => resolve(distPath, f));
+
+        const distMtime = distFiles.length > 0
+          ? Math.max(...distFiles.map(f => {
               try {
-                return statSync(srcFile).mtimeMs > distMtime;
+                return statSync(f).mtimeMs;
               } catch {
-                return false;
+                return 0;
               }
-            });
+            }))
+          : 0; // Force rebuild if no dist files exist
 
-            if (hasNewerSource) {
-              rmSync(distPath, { recursive: true, force: true });
-              cleaned.push(`packages/${pkg}/dist`);
-              packagesToRebuild.push(pkg);
-            }
+        const srcFiles = readdirSync(srcPath, { recursive: true }).filter(f =>
+          typeof f === 'string' && f.endsWith('.ts')
+        );
+
+        const hasNewerSource = srcFiles.some(file => {
+          const srcFile = resolve(srcPath, file);
+          try {
+            return statSync(srcFile).mtimeMs > distMtime;
           } catch {
-            // If we can't stat, better to clean it
-            rmSync(distPath, { recursive: true, force: true });
-            cleaned.push(`packages/${pkg}/dist`);
-            packagesToRebuild.push(pkg);
+            return false;
           }
+        });
+
+        if (hasNewerSource) {
+          rmSync(distPath, { recursive: true, force: true });
+          cleaned.push(`packages/${pkg}/dist`);
+          packagesToRebuild.push(pkg);
         }
+      } catch {
+        // If we can't stat, better to clean it
+        rmSync(distPath, { recursive: true, force: true });
+        cleaned.push(`packages/${pkg}/dist`);
+        packagesToRebuild.push(pkg);
       }
     }
   }
@@ -714,26 +722,24 @@ function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
       }
     };
 
-    buildLog(`Starting rebuild of ${packagesToRebuild.length} package(s): ${packagesToRebuild.join(', ')}`);
+    buildLog(`Detected stale package(s): ${packagesToRebuild.join(', ')}`);
+    buildLog(`Rebuilding ALL packages to ensure correct dependency order...`);
 
-    for (const pkg of packagesToRebuild) {
-      try {
-        buildLog(`Building ${pkg}...`);
-        execSync(`bun run --cwd packages/${pkg} build`, {
-          cwd: projectRoot,
-          stdio: quiet ? 'pipe' : 'inherit',
-        });
-        buildLog(`✓ Successfully built ${pkg}`);
-      } catch (err) {
-        const errorMsg = kleur.red(`✗ FATAL: Failed to rebuild package '${pkg}'`);
-        const hintMsg = kleur.dim(`  Run manually: bun run build:${pkg}`);
-        buildLog(errorMsg, true);
-        buildLog(hintMsg, true);
-        buildLog(`Error details: ${err instanceof Error ? err.message : String(err)}`, true);
+    try {
+      execSync(`bun run build:packages`, {
+        cwd: projectRoot,
+        stdio: quiet ? 'pipe' : 'inherit',
+      });
+      buildLog(`✓ Successfully rebuilt all packages`);
+    } catch (err) {
+      const errorMsg = kleur.red(`✗ FATAL: Failed to rebuild packages`);
+      const hintMsg = kleur.dim(`  Run manually: bun run build:packages`);
+      buildLog(errorMsg, true);
+      buildLog(hintMsg, true);
+      buildLog(`Error details: ${err instanceof Error ? err.message : String(err)}`, true);
 
-        // CRITICAL: Throw error to prevent starting with stale packages
-        throw new Error(`Package rebuild failed: ${pkg}. Cannot start services with stale builds.`);
-      }
+      // CRITICAL: Throw error to prevent starting with stale packages
+      throw new Error(`Package rebuild failed. Cannot start services with stale builds.`);
     }
 
     // Verify all rebuilds succeeded by checking dist directories exist
