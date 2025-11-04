@@ -62,8 +62,10 @@ export function runMigrations(db: ReturnType<typeof createDb>['db'], sqlite: Dat
       console.log('📋 No tables found - applying initial schema...');
       
       // Single consolidated migration file for V1 release (R17 - SSOT)
-      const projectRoot = resolve(process.cwd());
-      const migrationFile = resolve(projectRoot, 'packages/db/migrations/0000_v1_release.sql');
+      // Always use source directory for migrations (not dist)
+      // Migration SQL files are not compiled, they must be read from source
+      const sourceRoot = resolve(__dirname, '../../../../'); // From dist/packages/db to project root
+      const migrationFile = resolve(sourceRoot, 'packages/db/migrations/0000_v1_release.sql');
       
       if (existsSync(migrationFile)) {
         // Read and execute SQL directly (bypass drizzle-orm migrate() which has SERIAL bug)
