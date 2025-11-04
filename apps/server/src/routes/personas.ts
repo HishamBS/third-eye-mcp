@@ -6,7 +6,8 @@ import { personaBlueprints } from '@third-eye/db/schema';
 // DEFAULT_PERSONA_MAP removed - all personas in database
 import { getEyeIconPath, EyeId } from '@third-eye/constants';
 import { eq, and, desc } from 'drizzle-orm';
-import { getEyeIdByName, getEyeNameById, generateId } from '@third-eye/db/utils/lookups';
+import { getEyeIdByName, getEyeNameById } from '@third-eye/db/utils/lookups';
+import { generateId } from '@third-eye/db/utils/uuid';
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,

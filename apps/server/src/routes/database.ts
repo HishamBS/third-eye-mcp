@@ -9,7 +9,8 @@ import {
   mcpIntegrations
 } from '@third-eye/db/schema';
 import { eq, desc } from 'drizzle-orm';
-import { getEyeIdByName, generateId } from '@third-eye/db/utils/lookups';
+import { getEyeIdByName } from '@third-eye/db/utils/lookups';
+import { generateId } from '@third-eye/db/utils/uuid';
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
