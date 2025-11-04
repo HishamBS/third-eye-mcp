@@ -1,15 +1,8 @@
--- ============================================================================
--- Third Eye MCP - Release V1 Consolidated Migration
--- ============================================================================
--- Single Source of Truth for database schema (R01, R17)
--- 
--- This file handles BOTH:
--- 1. Fresh installations (CREATE TABLE IF NOT EXISTS)
--- 2. Existing database migration (graceful ALTER TABLE with checks)
---
--- All entities use UUIDs as primary keys
--- All foreign keys reference UUIDs with proper constraints
--- ============================================================================
+-- Third Eye MCP - V1 Release Schema
+-- Generated from: packages/db/schema.ts (SSOT for all field names)
+-- Generator: drizzle-kit generate
+-- Convention: camelCase in TypeScript → snake_case in SQL (Drizzle handles mapping)
+-- DO NOT hand-edit this file - regenerate from schema using: drizzle-kit generate
 
 CREATE TABLE `app_settings` (
 	`id` text PRIMARY KEY NOT NULL,
