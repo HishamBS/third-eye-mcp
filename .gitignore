@@ -83,3 +83,14 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Temporary analysis and test files
+PERSONA_ENGINEERING_ANALYSIS.md
+PERSONA_ENGINEERING_DEEP_ANALYSIS.md
+UUID_MIGRATION_PHASE*.md
+VISION_ACHIEVEMENT_PLAN.md
+persona-test-results.json
+pipeline-e2e-test-results.json
+*-test-results.json
+scripts/test-*.ts
+scripts/analyze-*.ts
