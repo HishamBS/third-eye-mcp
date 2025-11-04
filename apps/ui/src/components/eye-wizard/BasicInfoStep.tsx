@@ -124,6 +124,53 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
     }
   }, [state.formData.iconSvg, validateIconSvg]);
 
+  // Handle drag and drop
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+
+      const files = Array.from(e.dataTransfer.files);
+      const svgFile = files.find((file) => file.type === 'image/svg+xml' || file.name.endsWith('.svg'));
+
+      if (!svgFile) {
+        setErrors((prev) => ({ ...prev, iconSvg: 'Please drop an SVG file' }));
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const svgContent = event.target?.result as string;
+        handleIconSvgChange(svgContent);
+        // Validate immediately
+        const error = validateIconSvg(svgContent);
+        if (error) {
+          setErrors((prev) => ({ ...prev, iconSvg: error }));
+        }
+      };
+      reader.onerror = () => {
+        setErrors((prev) => ({ ...prev, iconSvg: 'Failed to read SVG file' }));
+      };
+      reader.readAsText(svgFile);
+    },
+    [handleIconSvgChange, validateIconSvg]
+  );
+
   const { name, description, iconSvg } = state.formData;
 
   return (
@@ -186,22 +233,38 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
         </div>
       </div>
 
-      {/* Icon SVG Field (Optional) */}
+      {/* Icon SVG Field (Optional) with Drag & Drop */}
       <div>
         <label className="mb-2 block text-sm font-medium text-semantic-muted">
           {BASIC_INFO_LABELS.ICON_SVG_LABEL}
         </label>
-        <textarea
-          value={iconSvg}
-          onChange={(e) => handleIconSvgChange(e.target.value)}
-          onBlur={handleIconSvgBlur}
-          placeholder={BASIC_INFO_LABELS.ICON_SVG_PLACEHOLDER}
-          rows={6}
-          className={`font-mono text-sm w-full rounded-xl border ${
-            errors.iconSvg ? 'border-status-error' : 'border-brand-outline/50'
-          } bg-brand-paper px-4 py-2 text-brand-foreground transition focus:border-brand-accent focus:outline-none`}
-          maxLength={CHAR_LIMITS.ICON_SVG_MAX}
-        />
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className={`relative rounded-xl border-2 transition-all ${
+            isDragging
+              ? 'border-brand-accent bg-brand-accent/10 border-dashed'
+              : errors.iconSvg
+              ? 'border-status-error'
+              : 'border-brand-outline/50'
+          }`}
+        >
+          {isDragging && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-brand-accent/20 backdrop-blur-sm">
+              <p className="text-lg font-semibold text-brand-accent">Drop SVG file here</p>
+            </div>
+          )}
+          <textarea
+            value={iconSvg}
+            onChange={(e) => handleIconSvgChange(e.target.value)}
+            onBlur={handleIconSvgBlur}
+            placeholder={`${BASIC_INFO_LABELS.ICON_SVG_PLACEHOLDER}\n\nOr drag and drop an SVG file here...`}
+            rows={6}
+            className="font-mono text-sm w-full rounded-xl bg-transparent px-4 py-2 text-brand-foreground transition focus:outline-none resize-none"
+            maxLength={CHAR_LIMITS.ICON_SVG_MAX}
+          />
+        </div>
         <div className="mt-1 flex items-center justify-between">
           {errors.iconSvg ? (
             <p className="text-xs text-status-error">{errors.iconSvg}</p>

@@ -743,13 +743,85 @@ function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
       throw new Error(`Package rebuild failed. Cannot start services with stale builds.`);
     }
 
-    // Verify all rebuilds succeeded by checking dist directories exist
+    // Verify all rebuilds succeeded by checking dist directories exist AND contain files
     for (const pkg of packagesToRebuild) {
       const distPath = resolve(packagesDir, pkg, 'dist');
+      const tsbuildInfoPath = resolve(packagesDir, pkg, 'tsconfig.tsbuildinfo');
+      
+      // Check if dist exists
       if (!existsSync(distPath)) {
-        const errorMsg = kleur.red(`✗ FATAL: Rebuild verification failed for '${pkg}' - dist directory missing`);
+        // If tsbuildinfo exists but dist doesn't, TypeScript thinks it's up to date
+        // Force clean rebuild by removing tsbuildinfo
+        if (existsSync(tsbuildInfoPath)) {
+          buildLog(`⚠ Warning: ${pkg}/dist missing but tsbuildinfo exists - forcing clean rebuild`, true);
+          try {
+            rmSync(tsbuildInfoPath, { force: true });
+          } catch {
+            // Ignore cleanup errors
+          }
+        }
+        
+        // Try to force rebuild this package
+        buildLog(`Attempting forced rebuild of ${pkg}...`, true);
+        try {
+          execSync(`bun run tsc --build packages/${pkg}`, {
+            cwd: projectRoot,
+            stdio: quiet ? 'pipe' : 'inherit',
+          });
+        } catch (err) {
+          const errorMsg = kleur.red(`✗ FATAL: Rebuild verification failed for '${pkg}' - dist directory missing`);
+          buildLog(errorMsg, true);
+          buildLog(`Error: ${err instanceof Error ? err.message : String(err)}`, true);
+          throw new Error(`Rebuild verification failed: ${pkg}/dist does not exist after build`);
+        }
+      }
+      
+      // Verify dist actually contains compiled files (not just empty directory)
+      try {
+        const distFiles = readdirSync(distPath, { recursive: true })
+          .filter(f => typeof f === 'string' && (f.endsWith('.js') || f.endsWith('.d.ts')));
+        
+        if (distFiles.length === 0) {
+          buildLog(`⚠ Warning: ${pkg}/dist exists but is empty - forcing clean rebuild`, true);
+          // Remove dist and tsbuildinfo to force full rebuild
+          try {
+            rmSync(distPath, { recursive: true, force: true });
+            if (existsSync(tsbuildInfoPath)) {
+              rmSync(tsbuildInfoPath, { force: true });
+            }
+          } catch {
+            // Ignore cleanup errors
+          }
+          
+          // Retry build
+          buildLog(`Attempting forced rebuild of ${pkg}...`, true);
+          try {
+            execSync(`bun run tsc --build packages/${pkg}`, {
+              cwd: projectRoot,
+              stdio: quiet ? 'pipe' : 'inherit',
+            });
+            
+            // Verify again after rebuild
+            const retryFiles = readdirSync(distPath, { recursive: true })
+              .filter(f => typeof f === 'string' && (f.endsWith('.js') || f.endsWith('.d.ts')));
+            
+            if (retryFiles.length === 0) {
+              const errorMsg = kleur.red(`✗ FATAL: Rebuild verification failed for '${pkg}' - dist directory is empty after rebuild`);
+              buildLog(errorMsg, true);
+              throw new Error(`Rebuild verification failed: ${pkg}/dist is empty after build`);
+            }
+          } catch (err) {
+            const errorMsg = kleur.red(`✗ FATAL: Rebuild verification failed for '${pkg}' - could not rebuild`);
+            buildLog(errorMsg, true);
+            buildLog(`Error: ${err instanceof Error ? err.message : String(err)}`, true);
+            throw new Error(`Rebuild verification failed: ${pkg}/dist could not be rebuilt`);
+          }
+        }
+      } catch (statErr) {
+        // If we can't read dist, something is wrong
+        const errorMsg = kleur.red(`✗ FATAL: Rebuild verification failed for '${pkg}' - cannot read dist directory`);
         buildLog(errorMsg, true);
-        throw new Error(`Rebuild verification failed: ${pkg}/dist does not exist after build`);
+        throw new Error(`Rebuild verification failed: ${pkg}/dist cannot be read`);
       }
     }
 

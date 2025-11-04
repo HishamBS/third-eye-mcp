@@ -51,6 +51,8 @@ export default function SettingsPage() {
   const [telemetry, setTelemetry] = useState(false);
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showFactoryResetConfirm, setShowFactoryResetConfirm] = useState(false);
+  const [factoryResetInput, setFactoryResetInput] = useState('');
 
   useEffect(() => {
     loadProviderKeys();
@@ -336,6 +338,39 @@ export default function SettingsPage() {
       }
     } catch (err) {
       setError(UI_HELP_TEXT.ERROR_SETTINGS_DB_RESET_FAILED);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const factoryReset = async () => {
+    if (factoryResetInput !== 'DELETE') {
+      setError('Please type DELETE to confirm factory reset');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/system/factory-reset`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setSuccess(result.message || 'Database deleted. Please restart the app to restore defaults.');
+        setShowFactoryResetConfirm(false);
+        setFactoryResetInput('');
+        setTimeout(() => {
+          alert('Please close and restart the application to complete the factory reset.');
+        }, 1000);
+      } else {
+        const result = await response.json();
+        setError(result.error || 'Factory reset failed');
+      }
+    } catch (err) {
+      setError('Factory reset failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -680,39 +715,65 @@ export default function SettingsPage() {
                     className="hidden"
                   />
                 </label>
-
-                <button
-                  onClick={() => setShowResetConfirm(true)}
-                  className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.error} px-5 py-3 font-semibold ${STATUS_TEXT_COLORS.error} transition hover:${STATUS_BG_COLORS_SUBTLE.error}`}
-                >
-                  Reset Database
-                </button>
               </div>
+            </div>
+          </GlassCard>
 
-              {showResetConfirm && (
-                <div className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} p-6`}>
-                  <h3 className={`font-semibold ${STATUS_TEXT_COLORS.error}`}>⚠️ Confirm Database Reset</h3>
-                  <p className={`mt-2 text-sm ${STATUS_TEXT_COLORS.error}`}>
-                    This will delete ALL data including provider keys, sessions, runs, and settings. This action cannot be undone.
-                  </p>
-                  <div className="mt-4 flex gap-3">
+          <GlassCard>
+            <section className="rounded-xl border-2 border-red-500/50 bg-red-500/10 p-6">
+              <h3 className="text-xl font-semibold text-red-400 mb-3">⚠️ Factory Reset</h3>
+              <p className="text-slate-300 mb-4">
+                Delete the database file completely and restore all default personas, eyes, and pipelines.
+                This will permanently delete ALL custom eyes, personas, pipelines, and integrations.
+              </p>
+              
+              {!showFactoryResetConfirm ? (
+                <button
+                  onClick={() => setShowFactoryResetConfirm(true)}
+                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-semibold transition"
+                >
+                  Delete Database & Reset to Defaults
+                </button>
+              ) : (
+                <div className="mt-4 space-y-4 rounded-xl border border-red-500/60 bg-red-500/20 p-6">
+                  <div>
+                    <h4 className="font-semibold text-red-300 mb-2">⚠️ Confirm Factory Reset</h4>
+                    <p className="text-sm text-red-200 mb-4">
+                      This will permanently delete ALL custom eyes, personas, pipelines, and integrations.
+                      Built-in defaults will be restored on next app start. This action cannot be undone.
+                    </p>
+                    <p className="text-sm text-red-200 mb-3 font-semibold">
+                      Type <span className="font-mono bg-red-900/50 px-2 py-1 rounded">DELETE</span> to confirm:
+                    </p>
+                    <input
+                      type="text"
+                      value={factoryResetInput}
+                      onChange={(e) => setFactoryResetInput(e.target.value)}
+                      placeholder="Type DELETE"
+                      className="w-full rounded-xl border border-red-500/50 bg-red-950/50 px-4 py-3 text-red-100 placeholder-red-400/50 focus:border-red-400 focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex gap-3">
                     <button
-                      onClick={() => setShowResetConfirm(false)}
+                      onClick={() => {
+                        setShowFactoryResetConfirm(false);
+                        setFactoryResetInput('');
+                      }}
                       className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
                     >
                       Cancel
                     </button>
                     <button
-                      onClick={resetDatabase}
-                      disabled={loading}
-                      className={`rounded-full ${STATUS_BG_COLORS.error} px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:opacity-90 disabled:opacity-50`}
+                      onClick={factoryReset}
+                      disabled={loading || factoryResetInput !== 'DELETE'}
+                      className="rounded-full bg-red-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {loading ? 'Resetting...' : 'Yes, Reset Everything'}
+                      {loading ? 'Resetting...' : 'Yes, Factory Reset Everything'}
                     </button>
                   </div>
                 </div>
               )}
-            </div>
+            </section>
           </GlassCard>
         </div>
       </div>

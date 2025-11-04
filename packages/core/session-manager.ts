@@ -7,8 +7,9 @@
 import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
 import { sessions, runs } from '@third-eye/db';
+import { getEyeNameById } from '@third-eye/db/utils/lookups';
 import { eq, desc, and } from 'drizzle-orm';
-import type { EyeName } from '@third-eye/eyes';
+import type { EyeName } from '@third-eye/types';
 import { orderGuard, type PipelineState } from './order-guard';
 import { TOOL_NAME } from '@third-eye/types';
 
@@ -331,11 +332,14 @@ export class SessionManager {
     const totalLatency = successfulRuns.reduce((sum, run) => sum + (run.latencyMs || 0), 0);
     const averageLatency = successfulRuns.length > 0 ? totalLatency / successfulRuns.length : 0;
 
-    // Eye usage statistics
+    // Eye usage statistics - convert eyeIds to names
     const eyeUsageStats: Record<string, number> = {};
-    allRuns.forEach(run => {
-      eyeUsageStats[run.eye] = (eyeUsageStats[run.eye] || 0) + 1;
-    });
+    for (const run of allRuns) {
+      const eyeName = await getEyeNameById(run.eyeId);
+      if (eyeName) {
+        eyeUsageStats[eyeName] = (eyeUsageStats[eyeName] || 0) + 1;
+      }
+    }
 
     return {
       totalRuns: allRuns.length,

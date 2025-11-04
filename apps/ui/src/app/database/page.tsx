@@ -141,7 +141,10 @@ export default function DatabasePage() {
 
     switch (type) {
       case 'timestamp':
-        return new Date(value).toLocaleString();
+        if (typeof value === 'string' || typeof value === 'number' || value instanceof Date) {
+          return new Date(value).toLocaleString();
+        }
+        return 'Invalid date';
       case 'json':
         return JSON.stringify(value, null, 2);
       case 'boolean':
@@ -358,7 +361,7 @@ export default function DatabasePage() {
                                     ) : (
                                       <input
                                         type="text"
-                                        value={editValues[col.name] || ''}
+                                        value={typeof editValues[col.name] === 'string' || typeof editValues[col.name] === 'number' ? String(editValues[col.name]) : ''}
                                         onChange={(e) => setEditValues(prev => ({ ...prev, [col.name]: e.target.value }))}
                                         className="w-full px-2 py-1 bg-brand-paper-elev border border-brand-outline rounded text-brand-foreground text-sm"
                                       />

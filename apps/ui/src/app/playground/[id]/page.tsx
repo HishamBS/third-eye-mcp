@@ -11,7 +11,7 @@ import { StrictnessControls } from '@/components/StrictnessControls';
 import type { PipelineEvent } from '@/types/pipeline';
 import type { Envelope } from '@third-eye/types';
 import { TOOL_NAME } from '@third-eye/types';
-import { getApiUrl, WS_BASE_URL } from '@/consts/api';
+import { getApiUrl, WS_BASE_URL, API_BASE_URL } from '@/consts/api';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE, STATUS_BG_COLORS } from '@/constants/color-mappings';
 
 interface Run {
@@ -179,7 +179,7 @@ export default function PlaygroundPage() {
   const fetchRuns = async () => {
     if (!sessionId) return;
     try {
-      const response = await fetch(`/api/session/${sessionId}/runs`);
+      const response = await fetch(`${API_BASE_URL}/api/session/${sessionId}/runs`);
       if (response.ok) {
         const runsData = await response.json();
         setRuns(runsData);
@@ -192,7 +192,7 @@ export default function PlaygroundPage() {
   const fetchSessionEvents = async () => {
     if (!sessionId) return;
     try {
-      const response = await fetch(`/api/session/${sessionId}/events`);
+      const response = await fetch(`${API_BASE_URL}/api/session/${sessionId}/events`);
       if (!response.ok) {
         return;
       }
@@ -221,7 +221,7 @@ export default function PlaygroundPage() {
 
     try {
       // Submit task to MCP - Overseer will auto-route through pipeline
-      const response = await fetch('/api/mcp/run', {
+      const response = await fetch(`${API_BASE_URL}/api/mcp/run`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { getDb } from '@third-eye/db';
 import { runs } from '@third-eye/db';
 import { sql, eq, and, gt, desc } from 'drizzle-orm';
+import { getEyeIdByName } from '@third-eye/db/utils/lookups';
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
@@ -54,7 +55,12 @@ app.get('/:category', async (c) => {
     // Build base query conditions
     const conditions = [gt(runs.createdAt, dateThreshold)];
     if (eye) {
-      conditions.push(eq(runs.eye, eye));
+      // Convert eye name to UUID
+      const eyeId = await getEyeIdByName(eye);
+      if (!eyeId) {
+        return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
+      }
+      conditions.push(eq(runs.eyeId, eyeId));
     }
 
     // Fetch all runs in time range

@@ -5,11 +5,10 @@
  */
 
 export const API_ROUTES = {
-  // Eyes
+  // Eyes (unified - no built-in vs custom distinction)
   EYES: '/api/eyes',
-  EYES_CUSTOM: '/api/eyes/custom',
+  EYES_ALL: '/api/eyes/all',
   EYES_BY_ID: (id: string) => `/api/eyes/${id}`,
-  EYES_CUSTOM_BY_ID: (id: string) => `/api/eyes/custom/${id}`,
 
   // Personas
   PERSONAS: '/api/personas',
@@ -31,6 +30,10 @@ export const API_ROUTES = {
   SESSION_RUNS: (id: string) => `/api/session/${id}/runs`,
   SESSION_EVENTS: (id: string) => `/api/session/${id}/events`,
   SESSION_KILL: (id: string) => `/api/session/${id}/kill`,
+  SESSION_CLARIFICATIONS: (id: string) => `/api/session/${id}/clarifications`,
+  SESSION_INTENT_CONFIRMATIONS: (id: string) => `/api/session/${id}/intent-confirmations`,
+  SESSION_ROUTING: (id: string) => `/api/session/${id}/routing`,
+  SESSION_CONTEXT: (id: string) => `/api/session/${id}/context`,
 
   // Routing
   ROUTING: '/api/routing',

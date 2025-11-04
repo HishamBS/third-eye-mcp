@@ -19,17 +19,50 @@ interface EyeIconProps {
  *
  * Priority:
  * 1. customSvg prop (if provided)
- * 2. Database SVG (fetched via API)
+ * 2. Database SVG (fetched via API) - ONLY for custom eyes without default icons
  * 3. Default SVG from /public/eyes/
  */
 export function EyeIcon({ eye, size = 24, className = '', customSvg }: EyeIconProps) {
-  const eyeLower = eye.toLowerCase();
+  // Early return if eye name is invalid
+  if (!eye || typeof eye !== 'string') {
+    return (
+      <div
+        className={`inline-flex items-center justify-center bg-brand-paper rounded-full ${className}`}
+        style={{ width: size, height: size }}
+        title="Invalid eye name"
+      >
+        <span className="text-xs text-semantic-muted dark:text-semantic-muted">?</span>
+      </div>
+    );
+  }
+
+  const eyeLower = eye.toLowerCase().trim();
+  
+  // Early return if eye name is empty after trimming
+  if (!eyeLower) {
+    return (
+      <div
+        className={`inline-flex items-center justify-center bg-brand-paper rounded-full ${className}`}
+        style={{ width: size, height: size }}
+        title="Empty eye name"
+      >
+        <span className="text-xs text-semantic-muted dark:text-semantic-muted">?</span>
+      </div>
+    );
+  }
+
+  // Check if default icon exists FIRST
+  const hasDefaultIcon = EyeIconPaths[eyeLower as EyeId] !== undefined;
+  
   const [dbSvg, setDbSvg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch custom SVG from database if not provided as prop
+  // Only fetch from DB if:
+  // 1. No customSvg prop provided
+  // 2. No default icon exists (custom eye)
+  // This prevents 404s for built-in eyes (overseer, sharingan, etc.)
   useEffect(() => {
-    if (customSvg) return; // Skip fetch if SVG already provided
+    if (customSvg || hasDefaultIcon) return; // Skip fetch if we have default or custom SVG
 
     const fetchSvg = async () => {
       setLoading(true);
@@ -37,19 +70,24 @@ export function EyeIcon({ eye, size = 24, className = '', customSvg }: EyeIconPr
         const response = await fetch(`${API_BASE_URL}/api/eyes/${eyeLower}/icon`);
         if (response.ok) {
           const data = await response.json();
-          if (data.iconSvg) {
-            setDbSvg(data.iconSvg);
+          if (data.data?.iconSvg) {
+            setDbSvg(data.data.iconSvg);
           }
+        } else if (response.status !== 404) {
+          // Only log non-404 errors (network errors, 500s, etc.)
+          console.warn(`[EyeIcon] Failed to fetch icon for ${eye}: ${response.status}`);
         }
+        // 404 is expected for custom eyes without icons - silent fail
       } catch (error) {
-        console.debug(`[EyeIcon] No custom SVG for ${eye}`);
+        // Only log actual network errors
+        console.debug(`[EyeIcon] Network error fetching icon for ${eye}:`, error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchSvg();
-  }, [eye, eyeLower, customSvg]);
+  }, [eye, eyeLower, customSvg, hasDefaultIcon]);
 
   // Use custom SVG if available (prop > database > default)
   const svgContent = customSvg || dbSvg;

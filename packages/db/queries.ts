@@ -1,12 +1,14 @@
 import { getDb } from './index';
 import { runs, eyeLeaderboard } from './schema';
 import { eq, sql, and, gte } from 'drizzle-orm';
+import { getEyeIdByName } from './utils/lookups';
 
 /**
  * Calculate Eye trend from runs data
  * Compares last 7 days vs previous 7 days
  * @param eyeName Name of the Eye
  * @returns Trend object with direction and percentage change
+ * V1: Uses UUID lookup for eye identification
  */
 export async function calculateEyeTrend(eyeName: string): Promise<{
   trend: 'up' | 'down' | 'stable';
@@ -16,6 +18,12 @@ export async function calculateEyeTrend(eyeName: string): Promise<{
 }> {
   const { db } = getDb();
   const now = new Date();
+
+  // Lookup eye UUID by name
+  const eyeId = await getEyeIdByName(eyeName);
+  if (!eyeId) {
+    throw new Error(`Eye not found: ${eyeName}`);
+  }
 
   // Define time ranges
   const currentWeekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -27,7 +35,7 @@ export async function calculateEyeTrend(eyeName: string): Promise<{
     .from(runs)
     .where(
       and(
-        eq(runs.eye, eyeName),
+        eq(runs.eyeId, eyeId),
         gte(runs.createdAt, previousWeekStart)
       )
     )
@@ -105,10 +113,17 @@ export async function calculateEyeTrend(eyeName: string): Promise<{
 /**
  * Update Eye leaderboard cache
  * @param eyeName Name of the Eye
+ * V1: Uses UUID lookup for eye identification
  */
 export async function updateEyeLeaderboard(eyeName: string): Promise<void> {
   const { db } = getDb();
   const now = new Date();
+
+  // Lookup eye UUID by name
+  const eyeId = await getEyeIdByName(eyeName);
+  if (!eyeId) {
+    throw new Error(`Eye not found: ${eyeName}`);
+  }
 
   // Get all runs for this Eye in last 14 days
   const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
@@ -118,7 +133,7 @@ export async function updateEyeLeaderboard(eyeName: string): Promise<void> {
     .from(runs)
     .where(
       and(
-        eq(runs.eye, eyeName),
+        eq(runs.eyeId, eyeId),
         gte(runs.createdAt, fourteenDaysAgo)
       )
     )
@@ -185,7 +200,7 @@ export async function updateEyeLeaderboard(eyeName: string): Promise<void> {
   const existing = await db
     .select()
     .from(eyeLeaderboard)
-    .where(eq(eyeLeaderboard.eye, eyeName))
+    .where(eq(eyeLeaderboard.eyeId, eyeId))
     .get();
 
   if (existing) {
@@ -198,13 +213,15 @@ export async function updateEyeLeaderboard(eyeName: string): Promise<void> {
         trendData,
         lastUpdated: now,
       })
-      .where(eq(eyeLeaderboard.eye, eyeName))
+      .where(eq(eyeLeaderboard.eyeId, eyeId))
       .run();
   } else {
+    const { generateId } = await import('./utils/uuid');
     await db
       .insert(eyeLeaderboard)
       .values({
-        eye: eyeName,
+        id: generateId(),
+        eyeId,
         totalRuns: eyeRuns.length,
         approvalRate,
         avgLatency,
@@ -217,6 +234,7 @@ export async function updateEyeLeaderboard(eyeName: string): Promise<void> {
 
 /**
  * Get leaderboard data for all Eyes
+ * V1: Uses UUID internally but returns eye names for display
  */
 export async function getEyeLeaderboards(): Promise<Array<{
   eye: string;
@@ -227,15 +245,19 @@ export async function getEyeLeaderboards(): Promise<Array<{
   trendData?: Array<{ day: string; runs: number; approvals: number }>;
 }>> {
   const { db } = getDb();
+  const { getEyeNameById } = await import('./utils/lookups');
 
   const leaderboards = await db.select().from(eyeLeaderboard).all();
 
   // Calculate trends for each Eye
   const results = await Promise.all(
     leaderboards.map(async (board) => {
-      const trendInfo = await calculateEyeTrend(board.eye);
+      const eyeName = await getEyeNameById(board.eyeId);
+      if (!eyeName) return null;
+      
+      const trendInfo = await calculateEyeTrend(eyeName);
       return {
-        eye: board.eye,
+        eye: eyeName,
         totalRuns: board.totalRuns,
         approvalRate: board.approvalRate,
         avgLatency: board.avgLatency,
@@ -245,7 +267,7 @@ export async function getEyeLeaderboards(): Promise<Array<{
     })
   );
 
-  return results;
+  return results.filter((r): r is NonNullable<typeof r> => r !== null);
 }
 
 /**

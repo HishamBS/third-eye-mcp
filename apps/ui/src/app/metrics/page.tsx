@@ -6,6 +6,7 @@ import Link from 'next/link';
 import MetricsOverview from '@/components/MetricsOverview';
 import type { MetricsData } from '@/components/MetricsOverview';
 import { UI_HELP_TEXT } from '@third-eye/constants';
+import { API_BASE_URL } from '@/consts/api';
 
 export default function MetricsPage() {
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
@@ -16,11 +17,21 @@ export default function MetricsPage() {
     setLoadingMetrics(true);
     setError(null);
     try {
-      const response = await fetch('/api/metrics');
+      const response = await fetch(`${API_BASE_URL}/api/metrics`);
       if (!response.ok) throw new Error('Failed to fetch metrics');
 
-      const data = await response.json();
-      setMetrics(data);
+      const result = await response.json();
+      // Handle wrapped response from createSuccessResponse
+      const apiData = result.data || result;
+      
+      // Transform API response to MetricsData format
+      setMetrics({
+        providers: [], // Not provided by current API
+        totalCalls: apiData.totalCalls || apiData.totalRuns || 0,
+        totalTokens: 0, // Not provided by current API
+        uptime: 0, // Not provided by current API
+        approvalRate: apiData.approvalRate || 0,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : UI_HELP_TEXT.ERROR_METRICS_FETCH_FAILED);
     } finally {

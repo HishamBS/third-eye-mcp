@@ -9,6 +9,7 @@
 import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
 import { rateLimitTracking } from '@third-eye/db';
+import { getEyeIdByName } from '@third-eye/db/utils/lookups';
 import { lt } from 'drizzle-orm';
 import {
   RATE_LIMIT_CONFIG,
@@ -216,11 +217,17 @@ export class RateLimiter {
     const now = new Date();
     const windowStart = new Date(now.getTime() - (now.getTime() % RATE_LIMIT_CONFIG.WINDOW_SIZE_MS));
 
+    // Convert eye name to UUID
+    let eyeId: string | null = null;
+    if (eye) {
+      eyeId = await getEyeIdByName(eye);
+    }
+
     try {
       await this.db.insert(rateLimitTracking).values({
         id: nanoid(),
         provider,
-        eye: eye ?? null,
+        eyeId: eyeId,
         windowStart,
         requestCount: 1,
         tokensConsumed: tokens,

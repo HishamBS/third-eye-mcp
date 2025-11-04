@@ -175,19 +175,25 @@ export interface StrictnessProfile {
 }
 
 /**
- * Custom Eye Definition
+ * Eye Definition (Unified)
+ * All eyes use the same structure - no distinction between seeded and user-created
+ * Database is single source of truth
  */
-export interface CustomEye {
+export interface Eye {
   id: string;
   name: string;
   description: string;
-  source: 'built-in' | 'custom';
   inputSchema: Record<string, unknown>;
   outputSchema: Record<string, unknown>;
   personaTemplate?: string;
   defaultRouting?: EyeRouting;
   createdAt: string;
 }
+
+/**
+ * @deprecated Use Eye interface instead. All eyes are unified.
+ */
+export type CustomEye = Eye;
 
 /**
  * Pipeline Definition
@@ -350,3 +356,4 @@ export interface MetricsSummary {
     avgLatency: number;
   }>;
 }
+

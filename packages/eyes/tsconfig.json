@@ -5,14 +5,25 @@
     "rootDir": ".",
     "composite": true,
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "skipLibCheck": true
   },
-  "include": ["*.ts", "**/*.ts"],
-  "exclude": ["dist", "node_modules", "**/__tests__/**/*", "**/*.test.ts"],
+  "include": ["src/**/*.ts", "utils/**/*.ts", "index.ts", "blueprint-client.ts"],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "**/__tests__",
+    "**/*.test.ts",
+    "**/*.d.ts",
+    "**/*.js",
+    "**/*.js.map",
+    "**/*.d.ts.map"
+  ],
   "references": [
+    { "path": "../constants" },
     { "path": "../types" },
     { "path": "../config" },
-    { "path": "../db" },
-    { "path": "../providers" }
+    { "path": "../providers" },
+    { "path": "../db" }
   ]
 }

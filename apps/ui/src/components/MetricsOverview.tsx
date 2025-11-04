@@ -47,11 +47,11 @@ export default function MetricsOverview({ metrics, loading }: MetricsOverviewPro
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4">
           <p className="text-xs uppercase tracking-[0.2em] text-semantic-muted">Total Calls</p>
-          <p className="mt-2 text-2xl font-semibold text-brand-foreground">{metrics.totalCalls.toLocaleString()}</p>
+          <p className="mt-2 text-2xl font-semibold text-brand-foreground">{(metrics.totalCalls || 0).toLocaleString()}</p>
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4">
           <p className="text-xs uppercase tracking-[0.2em] text-semantic-muted">Total Tokens</p>
-          <p className="mt-2 text-2xl font-semibold text-brand-foreground">{metrics.totalTokens.toLocaleString()}</p>
+          <p className="mt-2 text-2xl font-semibold text-brand-foreground">{(metrics.totalTokens || 0).toLocaleString()}</p>
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4">
           <p className="text-xs uppercase tracking-[0.2em] text-semantic-muted">Tokens/Session</p>
@@ -63,7 +63,7 @@ export default function MetricsOverview({ metrics, loading }: MetricsOverviewPro
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4">
           <p className="text-xs uppercase tracking-[0.2em] text-semantic-muted">Uptime</p>
-          <p className="mt-2 text-2xl font-semibold text-brand-foreground">{(metrics.uptime / 3600).toFixed(1)}h</p>
+          <p className="mt-2 text-2xl font-semibold text-brand-foreground">{metrics.uptime > 0 ? (metrics.uptime / 3600).toFixed(1) + 'h' : 'N/A'}</p>
         </div>
       </div>
 
@@ -93,6 +93,7 @@ export default function MetricsOverview({ metrics, loading }: MetricsOverviewPro
         </div>
       )}
 
+      {metrics.providers && metrics.providers.length > 0 && (
       <div className="space-y-3">
         <h2 className="text-lg font-semibold text-brand-foreground">Provider Performance</h2>
         {metrics.providers.map((provider) => (
@@ -115,6 +116,7 @@ export default function MetricsOverview({ metrics, loading }: MetricsOverviewPro
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 }

@@ -44,6 +44,11 @@ export const ARIA_LABELS = {
   ADD_ITEM: (item: string) => `Add ${item}`,
   EDIT_ITEM: (item: string) => `Edit ${item}`,
   DELETE_ITEM: (item: string) => `Delete ${item}`,
+
+  // Session selector
+  SELECT_AND_VIEW_SESSION: 'Select and view session',
+  DELETE_SESSION: 'Delete session',
+  CLEAR_SELECTION: 'Clear selection',
 } as const;
 
 /**

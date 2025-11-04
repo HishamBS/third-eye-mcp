@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
 import { getDb } from '@third-eye/db';
-import { eyesRouting } from '@third-eye/db';
-import { getAllEyeNames } from '@third-eye/eyes';
+import { eyesRouting, eyes } from '@third-eye/db';
+import { getEyeIdByName, getEyeNameById } from '@third-eye/db/utils/lookups';
+import { generateId } from '@third-eye/db/utils/uuid';
 import { eq } from 'drizzle-orm';
 import { schemas } from '../middleware/validation';
 import {
@@ -39,21 +40,27 @@ app.get('/', async (c) => {
     const { db } = getDb();
     const routings = await db.select().from(eyesRouting).all();
 
-    // Return routing configs with registered eyes info
-    const eyeNames = getAllEyeNames();
+    // Fetch all active eyes from database (unified source of truth)
+    const allEyes = await db
+      .select({ id: eyes.id, name: eyes.name })
+      .from(eyes)
+      .where(eq(eyes.active, true))
+      .all();
 
-    const result = eyeNames.map(eye => {
-      const routing = routings.find(r => r.eye === eye);
+    const result = await Promise.all(allEyes.map(async (eye) => {
+      // Find routing by eyeId (UUID)
+      const routing = routings.find(r => r.eyeId === eye.id);
       if (routing) {
-        return routing;
+        return { ...routing, eye: eye.name }; // Return with eye name for frontend
       }
 
       // Return default routing if not configured
       return {
-        eye,
+        eye: eye.name,
+        eyeId: eye.id,
         ...defaultRouting,
       };
-    });
+    }));
 
     return createSuccessResponse(c, { routings: result });
   } catch (error) {
@@ -65,22 +72,29 @@ app.get('/', async (c) => {
 // Get routing for specific Eye
 app.get('/:eye', async (c) => {
   try {
-    const eye = c.req.param('eye');
+    const eyeName = c.req.param('eye');
     const { db } = getDb();
+
+    // Look up eye UUID by name
+    const eyeId = await getEyeIdByName(eyeName);
+    if (!eyeId) {
+      return createNotFoundResponse(c, `Eye '${eyeName}' not found`);
+    }
 
     const routing = await db
       .select()
       .from(eyesRouting)
-      .where(eq(eyesRouting.eye, eye))
+      .where(eq(eyesRouting.eyeId, eyeId))
       .get();
 
     if (routing) {
-      return createSuccessResponse(c, routing);
+      return createSuccessResponse(c, { ...routing, eye: eyeName });
     }
 
     // Return default if not configured
     return createSuccessResponse(c, {
-      eye,
+      eye: eyeName,
+      eyeId,
       ...defaultRouting,
     });
   } catch (error) {
@@ -92,15 +106,22 @@ app.get('/:eye', async (c) => {
 // Create or update routing configuration
 app.post('/', validateBodyWithEnvelope(schemas.routingCreate), async (c) => {
   try {
+    // Eye name is already normalized to lowercase by validation middleware
     const { eye, primaryProvider, primaryModel, fallbackProvider, fallbackModel } = c.get('validatedBody');
 
     const { db } = getDb();
+
+    // Look up eye UUID by name
+    const eyeId = await getEyeIdByName(eye);
+    if (!eyeId) {
+      return createNotFoundResponse(c, `Eye '${eye}' not found`);
+    }
 
     // Check if routing exists
     const existing = await db
       .select()
       .from(eyesRouting)
-      .where(eq(eyesRouting.eye, eye))
+      .where(eq(eyesRouting.eyeId, eyeId))
       .get();
 
     if (existing) {
@@ -113,23 +134,25 @@ app.post('/', validateBodyWithEnvelope(schemas.routingCreate), async (c) => {
           fallbackProvider: fallbackProvider || null,
           fallbackModel: fallbackModel || null,
         })
-        .where(eq(eyesRouting.eye, eye))
+        .where(eq(eyesRouting.eyeId, eyeId))
         .run();
     } else {
       // Insert new
       await db.insert(eyesRouting).values({
-        eye,
+        id: generateId(),
+        eyeId,
         primaryProvider,
         primaryModel,
         fallbackProvider: fallbackProvider || null,
         fallbackModel: fallbackModel || null,
+        createdAt: new Date(),
       }).run();
     }
 
     const updated = await db
       .select()
       .from(eyesRouting)
-      .where(eq(eyesRouting.eye, eye))
+      .where(eq(eyesRouting.eyeId, eyeId))
       .get();
 
     // Broadcast routing change via WebSocket
@@ -138,15 +161,22 @@ app.post('/', validateBodyWithEnvelope(schemas.routingCreate), async (c) => {
       wsManager.broadcastToAll({
         type: 'routing_updated',
         eye,
-        routing: updated,
+        routing: { ...updated, eye }, // Include eye name for frontend
       });
     } catch (e) {
       console.debug('WebSocket broadcast skipped:', e);
     }
 
-    return createSuccessResponse(c, updated);
+    return createSuccessResponse(c, { ...updated, eye });
   } catch (error) {
     console.error('Failed to update routing:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        requestBody: c.req.raw instanceof Request ? 'N/A' : c.req.raw,
+      });
+    }
     return createInternalErrorResponse(c, 'Failed to update routing');
   }
 });
@@ -154,17 +184,23 @@ app.post('/', validateBodyWithEnvelope(schemas.routingCreate), async (c) => {
 // Delete routing configuration (revert to defaults)
 app.delete('/:eye', async (c) => {
   try {
-    const eye = c.req.param('eye');
+    const eyeName = c.req.param('eye');
     const { db } = getDb();
 
-    await db.delete(eyesRouting).where(eq(eyesRouting.eye, eye)).run();
+    // Look up eye UUID by name
+    const eyeId = await getEyeIdByName(eyeName);
+    if (!eyeId) {
+      return createNotFoundResponse(c, `Eye '${eyeName}' not found`);
+    }
+
+    await db.delete(eyesRouting).where(eq(eyesRouting.eyeId, eyeId)).run();
 
     // Broadcast routing change via WebSocket
     try {
       const { wsManager } = await import('../websocket');
       wsManager.broadcastToAll({
         type: 'routing_deleted',
-        eye,
+        eye: eyeName,
       });
     } catch (e) {
       console.debug('WebSocket broadcast skipped:', e);

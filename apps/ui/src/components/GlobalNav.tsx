@@ -42,7 +42,6 @@ const NAVIGATION_SECTIONS: DropdownSection[] = [
     items: [
       { href: '/pipelines', label: 'Pipelines', icon: <GitBranch className="h-4 w-4" />, description: 'Visual builder' },
       { href: '/strictness', label: 'Strictness', icon: <Shield className="h-4 w-4" />, description: 'Profiles + sliders' },
-      { href: '/prompts', label: 'Prompts', icon: <FileText className="h-4 w-4" />, description: 'Library' },
       { href: '/duel', label: 'Duel Mode', icon: <Swords className="h-4 w-4" />, description: 'Compare models' },
       { href: '/playground', label: 'Playground', icon: <FlaskConical className="h-4 w-4" />, description: 'Test Eyes manually' },
     ],

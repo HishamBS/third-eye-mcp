@@ -202,16 +202,23 @@ export const schemas = {
   providerKeyCreate: z.object({
     provider: z.enum(PROVIDERS),
     label: z.string().min(1).max(100),
-    apiKey: z.string().min(1),
+    apiKey: z.string().optional(),
     metadata: z.object({
       baseUrl: z.string().url().optional(),
       description: z.string().optional(),
     }).optional(),
+  }).refine((data) => {
+    // Ollama and LM Studio are local providers - no API key needed
+    const requiresKey = !['ollama', 'lmstudio'].includes(data.provider.toLowerCase());
+    return !requiresKey || (data.apiKey && data.apiKey.length > 0);
+  }, {
+    message: "API key is required for cloud providers (not needed for Ollama/LM Studio)",
+    path: ["apiKey"],
   }),
 
   providerKeyUpdate: z.object({
     label: z.string().min(1).max(100).optional(),
-    apiKey: z.string().min(1).optional(),
+    apiKey: z.string().optional(),
     metadata: z.object({
       baseUrl: z.string().url().optional(),
       description: z.string().optional(),
@@ -271,25 +278,6 @@ export const schemas = {
       taskType: z.enum(['code', 'text', 'analysis']).optional(),
       complexity: z.enum(['simple', 'medium', 'complex']).optional(),
     }).optional(),
-    active: z.boolean().optional(),
-  }),
-
-  // Prompts
-  promptCreate: z.object({
-    name: z.string().min(1).max(100),
-    description: z.string().max(500).optional(),
-    content: z.string().min(10),
-    tags: z.array(z.string()).optional(),
-    category: z.enum(['code', 'text', 'analysis', 'general']).optional(),
-    active: z.boolean().default(true),
-  }),
-
-  promptUpdate: z.object({
-    name: z.string().min(1).max(100).optional(),
-    description: z.string().max(500).optional(),
-    content: z.string().min(10).optional(),
-    tags: z.array(z.string()).optional(),
-    category: z.enum(['code', 'text', 'analysis', 'general']).optional(),
     active: z.boolean().optional(),
   }),
 

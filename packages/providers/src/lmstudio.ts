@@ -71,17 +71,27 @@ export class LMStudioProvider extends BaseProvider {
 
   async complete(request: CompletionRequest): Promise<CompletionResponse> {
     try {
+      // LM Studio doesn't support 'json_object' type - omit response_format for JSON mode
+      // The model will still return JSON when instructed in the prompt
+      const requestBody: Record<string, unknown> = {
+        model: request.model,
+        messages: request.messages,
+        temperature: request.temperature ?? 0.7,
+        max_tokens: request.max_tokens,
+        top_p: request.top_p,
+        stop: request.stop,
+      };
+      
+      // Only include response_format if it's 'text' (LM Studio doesn't support 'json_object')
+      if (request.response_format && request.response_format.type === 'text') {
+        requestBody.response_format = request.response_format;
+      }
+      // If json_object is requested, we omit response_format and rely on prompt instructions
+      
       const response = await this.fetchWithRetry(`${this.baseUrl}/chat/completions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: request.model,
-          messages: request.messages,
-          temperature: request.temperature ?? 0.7,
-          max_tokens: request.max_tokens,
-          top_p: request.top_p,
-          stop: request.stop,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {

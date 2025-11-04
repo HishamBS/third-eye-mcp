@@ -4,7 +4,7 @@ import { modelsCache, providerKeys } from '@third-eye/db';
 import { ProviderFactory } from '@third-eye/providers';
 import { getConfig } from '@third-eye/config';
 import { decryptFromStorage } from '@third-eye/core';
-import type { ProviderId } from '@third-eye/types';
+import { PROVIDERS, type ProviderId } from '@third-eye/types';
 import { eq, desc } from 'drizzle-orm';
 import {
   createSuccessResponse,
@@ -71,33 +71,40 @@ app.get('/:provider', async (c) => {
   }
 });
 
+const LOCAL_PROVIDERS: readonly ProviderId[] = [PROVIDERS[2], PROVIDERS[3]] as const; // ollama, lmstudio
+
 app.post('/:provider/refresh', async (c) => {
   const providerId = c.req.param('provider') as ProviderId;
+  const isLocalProvider = LOCAL_PROVIDERS.includes(providerId);
 
   try {
     const { db } = getDb();
-
-    const keys = await db
-      .select()
-      .from(providerKeys)
-      .where(eq(providerKeys.provider, providerId))
-      .limit(1);
-
-    if (keys.length === 0) {
-      return createErrorResponse(c, {
-        title: 'Provider Key Not Found',
-        status: 404,
-        detail: `No API key configured for provider ${providerId}`
-      });
-    }
-
-    const decryptedApiKey = decryptFromStorage(keys[0].encryptedKey);
-
     const config = getConfig();
-    const providerConfig = {
-      ...config.providers[providerId],
-      apiKey: decryptedApiKey
-    };
+
+    let providerConfig = config.providers[providerId];
+
+    // Only lookup API key for non-local providers
+    if (!isLocalProvider) {
+      const keys = await db
+        .select()
+        .from(providerKeys)
+        .where(eq(providerKeys.provider, providerId))
+        .limit(1);
+
+      if (keys.length === 0) {
+        return createErrorResponse(c, {
+          title: 'Provider Key Not Found',
+          status: 404,
+          detail: `No API key configured for provider ${providerId}`
+        });
+      }
+
+      const decryptedApiKey = decryptFromStorage(keys[0].encryptedKey);
+      providerConfig = {
+        ...providerConfig,
+        apiKey: decryptedApiKey
+      };
+    }
 
     const provider = ProviderFactory.create(providerId, providerConfig);
     const models = await provider.listModels();

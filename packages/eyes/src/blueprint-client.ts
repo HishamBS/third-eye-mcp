@@ -6,5 +6,5 @@
  */
 
 export { BLUEPRINT_REGISTRY, getPersonaBlueprint } from './blueprints';
-export type { PersonaBlueprint } from './interfaces/persona-blueprint';
+export type { PersonaBlueprint } from '@third-eye/constants/blueprints-data';
 

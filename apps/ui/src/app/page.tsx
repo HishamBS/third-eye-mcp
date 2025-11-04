@@ -12,12 +12,10 @@ import {
 } from 'lucide-react';
 import { PROVIDERS } from '@third-eye/types/enums';
 import { UI_HELP_TEXT, PLATFORM_HIGHLIGHTS } from '@third-eye/constants';
-import { THEME_NAMES } from '@third-eye/theme';
 import { API_BASE_URL } from '@/consts/api';
 import { ANIMATION_DURATION } from '@/constants/timing';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS } from '@/constants/color-mappings';
 import { GRADIENT, SHADOW } from '@/constants/design-tokens';
-import { useUI } from '@/contexts/UIContext';
 
 interface RealtimeStats {
   sessions: number;
@@ -41,7 +39,6 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 };
 
 export default function HomePage() {
-  const { theme } = useUI();
   const [stats, setStats] = useState<RealtimeStats>({
     sessions: 0,
     runs: 0,
@@ -62,9 +59,11 @@ export default function HomePage() {
       // Use Next.js API routes (same-origin, no CORS issues)
       // Fetch metrics
       try {
-        const metricsRes = await fetch('/api/metrics');
+        const metricsRes = await fetch(`${API_BASE_URL}/api/metrics`);
         if (metricsRes.ok) {
-          const metrics = await metricsRes.json();
+          const result = await metricsRes.json();
+          // Handle wrapped response from createSuccessResponse
+          const metrics = result.data || result;
           setStats(prev => ({
             ...prev,
             sessions: metrics.totalSessions || 0,

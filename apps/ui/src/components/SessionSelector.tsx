@@ -1,12 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useUI } from '@/contexts/UIContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { API_BASE_URL } from '@/consts/api';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE, STATUS_BG_COLORS } from '@/constants/color-mappings';
 import { TIMING } from '@/constants/timing';
+import { ROUTES } from '@/constants/routes';
+import { ARIA_LABELS } from '@/constants/accessibility';
+import { MESSAGES } from '@/constants/messages';
 
 // API response session (before normalization)
 interface RawSession {
@@ -49,6 +52,8 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const fetchActiveSessions = async () => {
     try {
@@ -99,12 +104,39 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
     }
   }, [selectedSessionId, sessions, hasUserInteracted, setSelectedSession]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isOpen &&
+        popoverRef.current &&
+        !popoverRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen]);
+
   const selectedSession = sessions.find(s => s.sessionId === selectedSessionId);
+
+  const handleSelectAndNavigate = (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedSession(sessionId);
+    setIsOpen(false);
+    setHasUserInteracted(true);
+    router.push(`${ROUTES.MONITOR}?sessionId=${sessionId}`);
+  };
 
   const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent session selection
 
-    if (!confirm('Delete this session?')) return;
+    if (!confirm(MESSAGES.CONFIRM_DELETE_SESSION)) return;
 
     try {
             const response = await fetch(`${API_BASE_URL}/api/session/bulk`, {
@@ -119,7 +151,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
         if (selectedSessionId === sessionId) {
           setSelectedSession(null);
           setHasUserInteracted(true);
-          if (pathname === '/monitor') {
+          if (pathname === ROUTES.MONITOR) {
             const params = new URLSearchParams(searchParams ? Array.from(searchParams.entries()) : []);
             params.delete('sessionId');
             const next = params.toString();
@@ -129,11 +161,11 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
         // Refresh to confirm
         setTimeout(() => fetchActiveSessions(), TIMING.POLL_DEBOUNCE_MS);
       } else {
-        alert('Failed to delete session');
+        alert(MESSAGES.ERROR_DELETE_SESSION);
       }
     } catch (error) {
       console.error('Error deleting session:', error);
-      alert('Error deleting session');
+      alert(MESSAGES.ERROR_DELETE_SESSION_GENERIC);
     }
   };
 
@@ -165,7 +197,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
         setSelectedSession(null);
         setHasUserInteracted(true);
         setShowDeleteConfirm(false);
-        if (pathname === '/monitor') {
+        if (pathname === ROUTES.MONITOR) {
           const params = new URLSearchParams(searchParams ? Array.from(searchParams.entries()) : []);
           params.delete('sessionId');
           const next = params.toString();
@@ -182,11 +214,11 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
         setTimeout(() => fetchActiveSessions(), TIMING.POLL_RETRY_MS);
       } else {
         console.error('Failed to delete sessions');
-        alert('Failed to delete sessions. Please try again.');
+        alert(MESSAGES.ERROR_DELETE_SESSIONS);
       }
     } catch (error) {
       console.error('Error deleting sessions:', error);
-      alert('Error deleting sessions. Please check console.');
+      alert(MESSAGES.ERROR_DELETE_SESSIONS_GENERIC);
     } finally {
       setDeleting(false);
     }
@@ -195,6 +227,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
   return (
     <div className={`relative ${className}`}>
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-3 rounded-xl border border-brand-outline/40 bg-brand-paper/80 px-4 py-2.5 text-sm transition-all hover:border-brand-accent/60 hover:bg-brand-paper min-w-[180px]"
       >
@@ -213,19 +246,60 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
           </span>
         )}
 
-        <svg
-          className={`h-4 w-4 text-semantic-muted transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
+        {selectedSessionId ? (
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedSession(null);
+              setIsOpen(false);
+              setHasUserInteracted(true);
+              if (pathname === ROUTES.MONITOR) {
+                const params = new URLSearchParams(searchParams ? Array.from(searchParams.entries()) : []);
+                params.delete('sessionId');
+                const next = params.toString();
+                router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+              }
+            }}
+            className="h-4 w-4 text-semantic-muted hover:text-brand-foreground transition-colors cursor-pointer flex items-center justify-center"
+            title={ARIA_LABELS.CLEAR_SELECTION}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                setSelectedSession(null);
+                setIsOpen(false);
+                setHasUserInteracted(true);
+                if (pathname === ROUTES.MONITOR) {
+                  const params = new URLSearchParams(searchParams ? Array.from(searchParams.entries()) : []);
+                  params.delete('sessionId');
+                  const next = params.toString();
+                  router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+                }
+              }
+            }}
+          >
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+        ) : (
+          <svg
+            className={`h-4 w-4 text-semantic-muted transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        )}
       </button>
 
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            ref={popoverRef}
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -274,7 +348,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                         setHasUserInteracted(true);
                         setSelectedSession(session.sessionId);
                         setIsOpen(false);
-                        if (pathname === '/monitor') {
+                        if (pathname === ROUTES.MONITOR) {
                           const params = new URLSearchParams(searchParams ? Array.from(searchParams.entries()) : []);
                           params.set('sessionId', session.sessionId);
                           router.replace(`${pathname}?${params.toString()}`, { scroll: false });
@@ -306,9 +380,18 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
 
                           <div className="flex items-center gap-2">
                             <button
+                              onClick={(e) => handleSelectAndNavigate(session.sessionId, e)}
+                              className="rounded p-1 text-semantic-muted hover:text-brand-accent transition-colors"
+                              title={ARIA_LABELS.SELECT_AND_VIEW_SESSION}
+                            >
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                            </button>
+                            <button
                               onClick={(e) => handleDeleteSession(session.sessionId, e)}
                               className={`rounded p-1 text-semantic-muted ${STATUS_BG_COLORS_SUBTLE.error} hover:${STATUS_TEXT_COLORS.error} transition-colors`}
-                              title="Delete session"
+                              title={ARIA_LABELS.DELETE_SESSION}
                             >
                               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -333,23 +416,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
             </div>
 
             {sessions.length > 0 && (
-              <div className="border-t border-brand-outline/30 p-2 space-y-1">
-                <button
-                  onClick={() => {
-                    setSelectedSession(null);
-                    setIsOpen(false);
-                    setHasUserInteracted(true);
-                    if (pathname === '/monitor') {
-                      const params = new URLSearchParams(searchParams ? Array.from(searchParams.entries()) : []);
-                      params.delete('sessionId');
-                      const next = params.toString();
-                      router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
-                    }
-                  }}
-                  className="w-full rounded-lg px-3 py-2 text-sm text-semantic-muted transition-colors hover:bg-brand-paper hover:text-brand-foreground"
-                >
-                  Clear Selection
-                </button>
+              <div className="border-t border-brand-outline/30 p-2">
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
                   className={`w-full rounded-lg px-3 py-2 text-sm ${STATUS_TEXT_COLORS.error} transition-colors hover:${STATUS_BG_COLORS_SUBTLE.error} hover:opacity-90`}
@@ -399,7 +466,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                   disabled={deleting}
                   className={`flex-1 rounded-lg ${STATUS_BG_COLORS.error} px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:opacity-90 disabled:opacity-50`}
                 >
-                  {deleting ? 'Deleting...' : 'Delete All'}
+                  {deleting ? MESSAGES.DELETING : MESSAGES.DELETE_ALL}
                 </button>
               </div>
             </motion.div>

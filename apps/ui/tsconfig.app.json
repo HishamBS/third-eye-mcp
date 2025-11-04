@@ -9,6 +9,7 @@
     "skipLibCheck": true,
     "baseUrl": "./",
     "paths": {
+      "@/*": ["./src/*"],
       "@root/*": ["../../*"]
     },
 
@@ -17,7 +18,9 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
-    "noEmit": true,
+    "composite": true,
+    "emitDeclarationOnly": true,
+    "declaration": true,
     "jsx": "react-jsx",
 
     /* Linting */

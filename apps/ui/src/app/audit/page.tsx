@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
 import AuditTrail from '@/components/AuditTrail';
 import type { AuditRecord } from '@/components/AuditTrail';
+import { API_BASE_URL } from '@/consts/api';
 
 export default function AuditPage() {
   const [audit, setAudit] = useState<AuditRecord[]>([]);
@@ -26,7 +27,7 @@ export default function AuditPage() {
       if (filters?.until) params.set('until', filters.until.toString());
       if (filters?.tenant) params.set('tenant', filters.tenant);
 
-      const response = await fetch(`/api/audit?${params}`);
+      const response = await fetch(`${API_BASE_URL}/api/audit?${params}`);
       if (!response.ok) throw new Error('Failed to fetch audit records');
 
       const data = await response.json();

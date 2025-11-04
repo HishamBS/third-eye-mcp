@@ -183,12 +183,14 @@ export class ModelDiscoveryService {
 
   private async cacheModels(providerId: ProviderId, models: unknown[]): Promise<void> {
     const { db } = getDb();
+    const { generateId } = await import('@third-eye/db/utils/uuid');
     const now = new Date();
 
     // Prepare data for batch insert
     const cacheEntries = models.map(model => {
       const normalized = this.normalizeModel(model);
       return {
+        id: generateId(), // UUID for cache entry
         provider: providerId,
         model: normalized.id,
         displayName: normalized.displayName,

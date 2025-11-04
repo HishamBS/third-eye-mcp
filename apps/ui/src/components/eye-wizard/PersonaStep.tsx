@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { WizardStepProps } from '@/types/eye-wizard';
 import type { Persona } from '@/types/api';
 import { PERSONA_LABELS } from './constants';
+import { API_BASE_URL } from '@/consts/api';
 import { STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE, STATUS_TEXT_COLORS } from '@/constants/color-mappings';
 
 /**
@@ -22,7 +23,7 @@ export function PersonaStep({ state, dispatch }: WizardStepProps) {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await fetch('/api/personas');
+        const response = await fetch(`${API_BASE_URL}/api/personas`);
 
         if (!response.ok) {
           throw new Error('Failed to fetch personas');

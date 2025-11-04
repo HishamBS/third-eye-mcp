@@ -2,10 +2,12 @@ import { Buffer } from 'node:buffer';
 import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
 import { runs, sessions, personas, eyesRouting, providerKeys, providerFailovers } from '@third-eye/db';
+import { getEyeIdByName, getEyeNameById } from '@third-eye/db/utils/lookups';
 import { ProviderFactory, type CompletionResponse } from '@third-eye/providers';
 import type { ProviderType } from '@third-eye/providers';
-import { getEye, getAllEyeNames, type EyeName, type EyeResponse, type BaseEnvelope, type PersonaPrompt } from '@third-eye/eyes';
-import { PROVIDERS } from '@third-eye/types';
+import { getEye, type EyeResponse, type BaseEnvelope, type PersonaPrompt, BaseEnvelopeSchema } from '@third-eye/eyes';
+import type { EyeName } from '@third-eye/types';
+import { PROVIDERS, EYES } from '@third-eye/types';
 import { eq, and, desc } from 'drizzle-orm';
 import { orderGuard, type OrderViolation } from './order-guard';
 import { getWebSocketBridge } from './websocket-registry';
@@ -30,7 +32,7 @@ function hasBaseUrl(value: unknown): value is { baseUrl?: unknown } {
   return typeof value === 'object' && value !== null && 'baseUrl' in value;
 }
 
-const VALID_EYE_NAMES = new Set<string>(getAllEyeNames());
+const VALID_EYE_NAMES = new Set<string>(EYES);
 
 function isEyeName(value: string): value is EyeName {
   return VALID_EYE_NAMES.has(value);
@@ -123,6 +125,18 @@ export class EyeOrchestrator {
       return this.createErrorEnvelope(
         eyeName,
         `Eye not found: ${eyeName}`,
+        runId,
+        actualSessionId,
+        startTime
+      );
+    }
+
+    // Look up eyeId (UUID) for database operations
+    const eyeId = await getEyeIdByName(eyeName);
+    if (!eyeId) {
+      return this.createErrorEnvelope(
+        eyeName,
+        `Eye ID not found for: ${eyeName}`,
         runId,
         actualSessionId,
         startTime
@@ -260,7 +274,8 @@ export class EyeOrchestrator {
       let providerAttemptIndex = 0;
 
       // 5. Build persona prompt using blueprint renderer (done once, used for all providers)
-      const blueprint = getPersonaBlueprint(eyeName);
+      // Query database first (SSOT), fallback to defaults
+      const blueprint = await getPersonaBlueprint(eyeName);
       if (!blueprint) {
         return this.createErrorEnvelope(
           eyeName,
@@ -434,14 +449,22 @@ export class EyeOrchestrator {
                 (envelope as BaseEnvelope & { next: string | string[] }).next = envelope.next_action;
               }
 
-              if (!eye.validate(envelope)) {
+              // Enhanced schema validation with detailed error logging
+              const validationResult = BaseEnvelopeSchema.safeParse(envelope);
+              if (!validationResult.success) {
+                const errorDetails = validationResult.error.errors.map((e: { path: (string | number)[]; message: string }) => 
+                  `${e.path.join('.')}: ${e.message}`
+                ).join('; ');
+                console.warn(`⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Schema validation failed`);
+                console.warn(`   Validation errors: ${errorDetails}`);
+                console.warn(`   Received envelope: ${JSON.stringify(envelope, null, 2).substring(0, 500)}`);
+                
                 if (attempt < MAX_PERSONA_RETRIES) {
-                  console.warn(`⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Schema validation failed`);
-                  enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\nYour previous response failed schema validation. Review the envelope schema in your prompt and ensure all required fields are present with correct types.`;
+                  enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\nYour previous response failed schema validation: ${errorDetails}\n\nReview the envelope schema in your prompt and ensure all required fields are present with correct types:\n- tag: string (required)\n- ok: boolean (required)\n- code: EyeStatusCode enum (required)\n- md: string (required, min 1 char)\n- data: object (required)\n- next: string or string[] (required)\n- ui: object (optional)\n\nYour response must be valid JSON matching this schema exactly.`;
                   envelope = null;
                   continue;
                 } else {
-                  throw new Error(`LLM response does not match Eye's envelope schema after ${MAX_PERSONA_RETRIES} attempts`);
+                  throw new Error(`LLM response does not match Eye's envelope schema after ${MAX_PERSONA_RETRIES} attempts. Errors: ${errorDetails}`);
                 }
               }
 
@@ -501,19 +524,22 @@ export class EyeOrchestrator {
             // Log failover event to database
             if (FALLBACK_CONFIG.LOG_FAILOVER_EVENTS && !isPrimary) {
               try {
-                await this.db.insert(providerFailovers).values({
-                  id: nanoid(),
-                  sessionId: actualSessionId,
-                  eye: eyeName,
-                  primaryProvider: providerChain[0].provider,
-                  primaryModel: providerChain[0].model,
-                  failedReason: errorReason,
-                  fallbackProvider: targetProvider,
-                  fallbackModel: targetModel,
-                  fallbackSuccess: false,
-                  errorDetails: JSON.stringify({ error: String(providerError) }),
-                  createdAt: new Date(),
-                });
+                const eyeId = await getEyeIdByName(eyeName);
+                if (eyeId) {
+                  await this.db.insert(providerFailovers).values({
+                    id: nanoid(),
+                    sessionId: actualSessionId,
+                    eyeId,
+                    primaryProvider: providerChain[0].provider,
+                    primaryModel: providerChain[0].model,
+                    failedReason: errorReason,
+                    fallbackProvider: targetProvider,
+                    fallbackModel: targetModel,
+                    fallbackSuccess: false,
+                    errorDetails: JSON.stringify({ error: String(providerError) }),
+                    createdAt: new Date(),
+                  });
+                }
               } catch (dbError) {
                 console.error('Failed to log failover event:', dbError);
               }
@@ -546,7 +572,7 @@ export class EyeOrchestrator {
       await this.persistRun({
         id: runId,
         sessionId: actualSessionId,
-        eye: eyeName,
+        eyeId,
         provider: successfulProviderType,
         model: successfulModel,
         inputMd: input,
@@ -580,7 +606,7 @@ export class EyeOrchestrator {
       await this.db.insert(pipelineEvents).values({
         id: nanoid(),
         sessionId: actualSessionId,
-        eye: eyeName,
+        eyeId,
         type: 'eye_call',
         code: envelope.code,
         md: envelope.md,
@@ -709,10 +735,16 @@ export class EyeOrchestrator {
    * Get routing configuration for an Eye
    */
   private async getEyeRouting(eye: string): Promise<typeof eyesRouting.$inferSelect | null> {
+    // Look up eyeId from eye name
+    const eyeId = await getEyeIdByName(eye);
+    if (!eyeId) {
+      return null;
+    }
+
     const result = await this.db
       .select()
       .from(eyesRouting)
-      .where(eq(eyesRouting.eye, eye))
+      .where(eq(eyesRouting.eyeId, eyeId))
       .limit(1);
 
     return result[0] || null;
@@ -769,6 +801,9 @@ export class EyeOrchestrator {
     sessionId: string,
     startTime: number
   ): Promise<EyeResponse> {
+    // Look up eyeId (UUID) for database operations
+    const eyeId = await getEyeIdByName(eye);
+    
     // Log server-side only (for debugging)
     console.error(`[ORDER GUARD] Violation in session ${sessionId}:`, {
       attemptedEye: eye,
@@ -803,19 +838,21 @@ export class EyeOrchestrator {
     };
 
     // Persist violation run with internal details (server-side only)
-    await this.persistRun({
-      id: runId,
-      sessionId,
-      eye,
-      provider: 'order-guard',
-      model: 'validation',
-      inputMd: `[INTERNAL] ${violation.violation} | Expected: ${violation.expectedNext.join(', ')}`,
-      outputJson: envelope,
-      tokensIn: 0,
-      tokensOut: 0,
-      latencyMs: Date.now() - startTime,
-      createdAt: new Date(),
-    });
+    if (eyeId) {
+      await this.persistRun({
+        id: runId,
+        sessionId,
+        eyeId,
+        provider: 'order-guard',
+        model: 'validation',
+        inputMd: `[INTERNAL] ${violation.violation} | Expected: ${violation.expectedNext.join(', ')}`,
+        outputJson: envelope,
+        tokensIn: 0,
+        tokensOut: 0,
+        latencyMs: Date.now() - startTime,
+        createdAt: new Date(),
+      });
+    }
 
     return envelope;
   }
@@ -847,6 +884,9 @@ export class EyeOrchestrator {
     sessionId: string,
     startTime: number
   ): Promise<EyeResponse> {
+    // Look up eyeId (UUID) for database operations
+    const eyeId = await getEyeIdByName(eye);
+    
     const envelope: EyeResponse = {
       tag: eye,
       ok: false,
@@ -860,19 +900,21 @@ export class EyeOrchestrator {
     };
 
     // Persist error run
-    await this.persistRun({
-      id: runId,
-      sessionId,
-      eye,
-      provider: 'error',
-      model: 'error',
-      inputMd: message,
-      outputJson: envelope,
-      tokensIn: 0,
-      tokensOut: 0,
-      latencyMs: Date.now() - startTime,
-      createdAt: new Date(),
-    });
+    if (eyeId) {
+      await this.persistRun({
+        id: runId,
+        sessionId,
+        eyeId,
+        provider: 'error',
+        model: 'error',
+        inputMd: message,
+        outputJson: envelope,
+        tokensIn: 0,
+        tokensOut: 0,
+        latencyMs: Date.now() - startTime,
+        createdAt: new Date(),
+      });
+    }
 
     return envelope;
   }
@@ -902,11 +944,18 @@ export class EyeOrchestrator {
     const { personas } = await import('@third-eye/db/schema');
     const { eq, and } = await import('drizzle-orm');
 
+    // Look up eyeId from eye name
+    const eyeId = await getEyeIdByName(eyeName);
+    if (!eyeId) {
+      console.warn(`⚠️ Eye ID not found for ${eyeName}`);
+      return '';
+    }
+
     const persona = await this.db
       .select()
       .from(personas)
       .where(and(
-        eq(personas.eye, eyeName),
+        eq(personas.eyeId, eyeId),
         eq(personas.active, true)
       ))
       .get();

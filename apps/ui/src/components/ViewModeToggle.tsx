@@ -12,17 +12,7 @@ export function ViewModeToggle() {
     <button
       onClick={toggleViewMode}
       className="group relative z-30 flex items-center gap-2 rounded-full border border-brand-outline/50 bg-brand-paper px-4 py-2 transition-all hover:border-brand-accent min-w-[180px]"
-    >
-      <motion.div
-        initial={false}
-        animate={{
-          x: viewMode === 'novice' ? 0 : '100%',
-        }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="absolute inset-0 rounded-full bg-brand-accent/10"
-      />
-
-      <div className="relative z-10 flex items-center gap-4">
+    >      <div className="relative z-10 flex items-center gap-4">
         <div
           className={`flex items-center gap-1.5 transition-colors ${
             viewMode === 'novice' ? 'text-brand-accent' : 'text-semantic-muted'

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import type { WizardStepProps } from '@/types/persona-form';
 import {
   FIELD_LABELS,
@@ -11,6 +11,7 @@ import {
 } from '../constants';
 import { X, Plus } from 'lucide-react';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { API_BASE_URL } from '@/consts/api';
 
 /**
  * MetadataStep - Eye identity configuration
@@ -22,6 +23,28 @@ import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTL
 export function MetadataStep({ state, dispatch }: WizardStepProps) {
   const [capabilityInput, setCapabilityInput] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [availableEyes, setAvailableEyes] = useState<{
+    id: string;
+    name: string;
+    description: string;
+  }[]>([]);
+  const [loadingEyes, setLoadingEyes] = useState(true);
+
+  // Fetch available eyes
+  useEffect(() => {
+    const fetchEyes = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/eyes/all`);
+        const data = await response.json();
+        setAvailableEyes(data.data || []);
+      } catch (error) {
+        console.error('Failed to fetch eyes:', error);
+      } finally {
+        setLoadingEyes(false);
+      }
+    };
+    fetchEyes();
+  }, []);
 
   const handleAddCapability = useCallback(() => {
     const trimmed = capabilityInput.trim();
@@ -58,26 +81,36 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
 
   return (
     <div className="space-y-6">
-      {/* Eye ID */}
+      {/* Eye ID - Dropdown */}
       <div>
         <label className="block text-sm font-medium text-brand-foreground mb-2">
           {FIELD_LABELS.EYE_ID} *
         </label>
-        <input
-          type="text"
-          value={state.metadata.eyeId}
-          onChange={(e) =>
-            dispatch({
-              type: 'SET_METADATA',
-              metadata: { ...state.metadata, eyeId: e.target.value },
-            })
-          }
-          placeholder={PLACEHOLDERS.EYE_ID}
-          className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
-          minLength={CHAR_LIMITS.EYE_ID_MIN}
-          maxLength={CHAR_LIMITS.EYE_ID_MAX}
-        />
-        <p className="text-xs text-semantic-muted mt-1">{HELP_TEXT.EYE_ID}</p>
+        {loadingEyes ? (
+          <div className="text-semantic-muted text-sm py-2">Loading eyes...</div>
+        ) : (
+          <select
+            value={state.metadata.eyeId}
+            onChange={(e) =>
+              dispatch({
+                type: 'SET_METADATA',
+                metadata: { ...state.metadata, eyeId: e.target.value },
+              })
+            }
+            className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
+            required
+          >
+            <option value="">Select an Eye</option>
+            {availableEyes.map((eye) => (
+              <option key={eye.id} value={eye.id}>
+                {eye.name} - {eye.description}
+              </option>
+            ))}
+          </select>
+        )}
+        <p className="text-xs text-semantic-muted mt-1">
+          Select which Eye this persona belongs to
+        </p>
       </div>
 
       {/* Eye Name */}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { type ThemeName, THEME_METADATA } from '@third-eye/theme';
+import { type ThemeName, THEME_METADATA, DEFAULT_THEME } from '@third-eye/theme';
 import { useUI } from '@/contexts/UIContext';
 import { ARIA_LABELS } from '@/constants/accessibility';
 import { STATUS_TEXT_COLORS } from '@/constants/color-mappings';
@@ -15,7 +15,10 @@ export function ThemeSwitcher() {
     setIsOpen(false);
   };
 
-  const currentTheme = THEME_METADATA.find(t => t.value === theme)!;
+  // Safely get current theme with fallback to default or first theme
+  const currentTheme = THEME_METADATA.find(t => t.value === theme) 
+    || THEME_METADATA.find(t => t.value === DEFAULT_THEME)
+    || THEME_METADATA[0];
 
   return (
     <div className="flex items-center gap-4 shrink-0">

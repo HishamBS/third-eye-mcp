@@ -8,6 +8,7 @@ import { formDataToPayload, eyeToFormData } from '@/types/eye-wizard';
 import type { Eye } from '@/types/api';
 import { EyeWizard } from './EyeWizard';
 import { SUCCESS_MESSAGES } from './constants';
+import { API_BASE_URL } from '@/consts/api';
 
 /**
  * EyeWizardModal - Wrapper component for EyeWizard
@@ -37,19 +38,34 @@ export function EyeWizardModal({
         setIsLoading(true);
         setLoadError(null);
 
-        const response = await fetch(`/api/eyes/${eyeId}`);
+        console.log('[EyeWizardModal] Fetching eye data for ID:', eyeId);
+        const response = await fetch(`${API_BASE_URL}/api/eyes/${eyeId}`);
+        console.log('[EyeWizardModal] Response status:', response.status);
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch Eye data');
+          const errorText = await response.text();
+          console.error('[EyeWizardModal] Error response:', errorText);
+          throw new Error(`Failed to fetch Eye data: ${response.status}`);
         }
 
         const result = await response.json();
-        const eye: Eye = result.data;
+        console.log('[EyeWizardModal] Response data:', result);
+        
+        // Handle both {data: eye} and direct eye response formats
+        const eye: Eye = result.data || result;
+        
+        if (!eye || !eye.id) {
+          console.error('[EyeWizardModal] Invalid eye data:', eye);
+          throw new Error('Invalid Eye data received from server');
+        }
 
+        console.log('[EyeWizardModal] Converting eye to form data:', eye);
         // Convert Eye to form data
         const formData = eyeToFormData(eye);
+        console.log('[EyeWizardModal] Form data:', formData);
         setInitialData(formData);
       } catch (error) {
-        console.error('Failed to fetch Eye data:', error);
+        console.error('[EyeWizardModal] Failed to fetch Eye data:', error);
         setLoadError(error instanceof Error ? error.message : 'Failed to load Eye data');
       } finally {
         setIsLoading(false);
@@ -70,7 +86,7 @@ export function EyeWizardModal({
           throw new Error('Eye ID is required');
         }
 
-        const response = await fetch(`/api/eyes/custom/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/eyes/${id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

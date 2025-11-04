@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { getDb } from '@third-eye/db';
+import { getDb, getDbPath } from '@third-eye/db';
 import {
   providerKeys,
   eyesRouting,
@@ -9,6 +9,7 @@ import {
   mcpIntegrations
 } from '@third-eye/db/schema';
 import { eq, desc } from 'drizzle-orm';
+import { getEyeIdByName, generateId } from '@third-eye/db/utils/lookups';
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
@@ -47,7 +48,7 @@ app.get('/tables', async (c) => {
     ] = await Promise.all([
       db.select().from(providerKeys),
       db.select().from(eyesRouting),
-      db.select().from(personas).orderBy(personas.eye, desc(personas.version)),
+      db.select().from(personas).orderBy(personas.eyeId, desc(personas.version)),
       db.select().from(sessions).orderBy(desc(sessions.createdAt)).limit(100),
       db.select().from(runs).orderBy(desc(runs.createdAt)).limit(1000),
       db.select().from(mcpIntegrations).orderBy(mcpIntegrations.displayOrder)
@@ -76,7 +77,8 @@ app.get('/tables', async (c) => {
           data: eyesRoutingData,
           editable: true,
           schema: [
-            { name: 'eye', type: 'text', primary: true },
+            { name: 'id', type: 'text', primary: true },
+            { name: 'eyeId', type: 'text' },
             { name: 'primaryProvider', type: 'text' },
             { name: 'primaryModel', type: 'text' },
             { name: 'fallbackProvider', type: 'text' },
@@ -88,7 +90,8 @@ app.get('/tables', async (c) => {
           data: personasData,
           editable: false,
           schema: [
-            { name: 'eye', type: 'text' },
+            { name: 'id', type: 'text', primary: true },
+            { name: 'eyeId', type: 'text' },
             { name: 'version', type: 'integer' },
             { name: 'content', type: 'text' },
             { name: 'active', type: 'boolean' },
@@ -149,15 +152,21 @@ app.get('/tables', async (c) => {
 // Update eyes routing
 app.put('/eyes-routing/:eye', async (c) => {
   const { db } = getDb();
-  const eye = c.req.param('eye');
+  const eyeName = c.req.param('eye');
   const data = await c.req.json();
 
   try {
+    // Convert eye name to UUID
+    const eyeId = await getEyeIdByName(eyeName);
+    if (!eyeId) {
+      return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
+    }
+
     await db
       .insert(eyesRouting)
-      .values({ eye, ...data })
+      .values({ id: generateId(), eyeId, ...data })
       .onConflictDoUpdate({
-        target: eyesRouting.eye,
+        target: eyesRouting.eyeId,
         set: data
       });
 
@@ -171,10 +180,16 @@ app.put('/eyes-routing/:eye', async (c) => {
 // Delete eyes routing
 app.delete('/eyes-routing/:eye', async (c) => {
   const { db } = getDb();
-  const eye = c.req.param('eye');
+  const eyeName = c.req.param('eye');
 
   try {
-    await db.delete(eyesRouting).where(eq(eyesRouting.eye, eye));
+    // Convert eye name to UUID
+    const eyeId = await getEyeIdByName(eyeName);
+    if (!eyeId) {
+      return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
+    }
+
+    await db.delete(eyesRouting).where(eq(eyesRouting.eyeId, eyeId));
     return createSuccessResponse(c, { success: true });
   } catch (error) {
     console.error('Delete eyes routing error:', error);
@@ -194,6 +209,19 @@ app.get('/schema', async (c) => {
       'runs'
     ]
   });
+});
+
+// Get database information (path, etc.)
+app.get('/info', async (c) => {
+  try {
+    const dbPath = getDbPath();
+    return createSuccessResponse(c, {
+      path: dbPath,
+    });
+  } catch (error) {
+    console.error('Failed to get database info:', error);
+    return createInternalErrorResponse(c, 'Failed to get database info');
+  }
 });
 
 export default app;

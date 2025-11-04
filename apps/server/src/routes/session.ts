@@ -5,6 +5,7 @@ import { sessions, runs, pipelineEvents } from '@third-eye/db';
 import { getConfig } from '@third-eye/config';
 import { eq, desc, count, sql, or, gte } from 'drizzle-orm';
 import { validateBody, schemas, rateLimit } from '../middleware/validation';
+import { getEyeNameById, getEyeIdByName } from '@third-eye/db/utils/lookups';
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
@@ -550,18 +551,23 @@ app.get('/:id/summary', async (c) => {
       .where(eq(pipelineEvents.sessionId, sessionId))
       .get();
 
-    const uniqueEyes = await db
-      .select({ eye: pipelineEvents.eye })
+    const uniqueEyeIds = await db
+      .select({ eyeId: pipelineEvents.eyeId })
       .from(pipelineEvents)
       .where(eq(pipelineEvents.sessionId, sessionId))
-      .groupBy(pipelineEvents.eye)
+      .groupBy(pipelineEvents.eyeId)
       .all();
+
+    // Convert eyeIds to eye names
+    const eyeNames = await Promise.all(
+      uniqueEyeIds.map(async (e) => await getEyeNameById(e.eyeId))
+    );
 
     return createSuccessResponse(c, {
       sessionId,
       status: session.status,
       eventCount: eventCount?.count || 0,
-      eyes: uniqueEyes.map(e => e.eye).filter(Boolean),
+      eyes: eyeNames.filter(Boolean) as string[],
       createdAt: session.createdAt,
     });
   } catch (error) {
@@ -673,7 +679,11 @@ app.post('/:id/kill', async (c) => {
       return runTime > fiveMinutesAgo;
     });
 
-    const stoppedEyes = potentiallyActiveRuns.map((run) => run.eye);
+    // Convert eyeIds to eye names for display
+    const stoppedEyeIds = potentiallyActiveRuns.map((run) => run.eyeId);
+    const stoppedEyes = await Promise.all(
+      stoppedEyeIds.map(async (eyeId) => await getEyeNameById(eyeId))
+    ).then((names) => names.filter(Boolean) as string[]);
 
     // Update session status to 'killed'
     await db
@@ -1012,7 +1022,8 @@ app.get('/:id/export', async (c) => {
       markdown += `## Timeline\n\n`;
       for (const event of events) {
         const timestamp = new Date(event.createdAt).toISOString();
-        markdown += `### ${event.eye || 'System'} - ${event.code}\n`;
+        const eyeName = event.eyeId ? await getEyeNameById(event.eyeId) : null;
+        markdown += `### ${eyeName || 'System'} - ${event.code}\n`;
         markdown += `**Time:** ${timestamp}\n\n`;
         if (event.md) {
           markdown += `${event.md}\n\n`;
@@ -1022,7 +1033,8 @@ app.get('/:id/export', async (c) => {
 
       markdown += `## Runs Summary\n\n`;
       for (const run of sessionRuns) {
-        markdown += `### ${run.eye}\n`;
+        const eyeName = await getEyeNameById(run.eyeId);
+        markdown += `### ${eyeName || 'Unknown Eye'}\n`;
         markdown += `- **Model:** ${run.model || 'N/A'}\n`;
         markdown += `- **Latency:** ${run.latencyMs || 'N/A'}ms\n`;
         markdown += `- **Tokens In:** ${run.tokensIn || 0}\n`;
@@ -1054,8 +1066,9 @@ app.get('/:id/export', async (c) => {
           : run.outputJson;
 
         const verdict = output?.verdict || 'UNKNOWN';
+        const eyeName = await getEyeNameById(run.eyeId);
 
-        csv += `${run.eye},${run.model || 'N/A'},${run.latencyMs || 0},${run.tokensIn || 0},${run.tokensOut || 0},${verdict},${new Date(run.createdAt).toISOString()}\n`;
+        csv += `${eyeName || 'Unknown'},${run.model || 'N/A'},${run.latencyMs || 0},${run.tokensIn || 0},${run.tokensOut || 0},${verdict},${new Date(run.createdAt).toISOString()}\n`;
       }
 
       c.header('Content-Type', 'text/csv');
@@ -1249,6 +1262,83 @@ app.get('/:sessionId/intent-confirmations', async (c) => {
   } catch (error) {
     console.error('Failed to fetch intent confirmations:', error);
     return createInternalErrorResponse(c, 'Failed to fetch intent confirmations');
+  }
+});
+
+// Get routing decision for a session
+app.get('/:id/routing', async (c) => {
+  try {
+    const sessionId = c.req.param('id');
+    const { db } = getDb();
+
+    // Get session
+    const session = await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.id, sessionId))
+      .get();
+
+    if (!session) {
+      return createErrorResponse(c, {
+        title: 'Session Not Found',
+        status: 404,
+        detail: 'Session not found'
+      });
+    }
+
+    // Try to extract routing from session context first
+    const context = typeof session.configJson === 'string'
+      ? JSON.parse(session.configJson)
+      : session.configJson || {};
+
+    // Check if routing is stored in context (from overseer/mcp routes)
+    if (context.routing && typeof context.routing === 'object') {
+      const routing = context.routing;
+      return createSuccessResponse(c, {
+        routing: {
+          flow: Array.isArray(routing.flow) ? routing.flow : routing.recommendedFlow || [],
+          taskType: routing.taskType,
+          reasoning: routing.reasoning,
+          recommendedEye: routing.recommendedEye || (Array.isArray(routing.flow) ? routing.flow[0] : null),
+        }
+      });
+    }
+
+    // Fallback: Look for first Overseer event in pipeline events
+    const overseerEyeId = await getEyeIdByName('overseer');
+    const overseerEvent = overseerEyeId
+      ? await db
+          .select()
+          .from(pipelineEvents)
+          .where(eq(pipelineEvents.sessionId, sessionId))
+          .where(eq(pipelineEvents.eyeId, overseerEyeId))
+          .orderBy(pipelineEvents.createdAt)
+          .limit(1)
+          .get()
+      : null;
+
+    if (overseerEvent && overseerEvent.dataJson && typeof overseerEvent.dataJson === 'object') {
+      const data = overseerEvent.dataJson as Record<string, unknown>;
+      if (data.routing && typeof data.routing === 'object') {
+        const routing = data.routing as Record<string, unknown>;
+        return createSuccessResponse(c, {
+          routing: {
+            flow: Array.isArray(routing.flow) ? routing.flow : [],
+            taskType: typeof routing.taskType === 'string' ? routing.taskType : undefined,
+            reasoning: typeof routing.reasoning === 'string' ? routing.reasoning : undefined,
+            recommendedEye: typeof routing.recommendedEye === 'string' ? routing.recommendedEye : null,
+          }
+        });
+      }
+    }
+
+    // No routing found - return null
+    return createSuccessResponse(c, {
+      routing: null
+    });
+  } catch (error) {
+    console.error('Failed to fetch routing decision:', error);
+    return createInternalErrorResponse(c, 'Failed to fetch routing decision');
   }
 });
 

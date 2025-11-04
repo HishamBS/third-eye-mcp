@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { EyeWizardModal } from '@/components/eye-wizard/EyeWizardModal';
 import { API_BASE_URL } from '@/consts/api';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
@@ -56,13 +57,8 @@ export default function EyeDetailPage() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
 
-  // Full eye editing state
-  const [isEditingEye, setIsEditingEye] = useState(false);
-  const [editedEye, setEditedEye] = useState<{
-    name: string;
-    description: string;
-    capabilities: string[];
-  }>({ name: '', description: '', capabilities: [] });
+  // Eye wizard modal state
+  const [isEyeWizardOpen, setIsEyeWizardOpen] = useState(false);
 
   useEffect(() => {
     fetchEyeData();
@@ -73,7 +69,7 @@ export default function EyeDetailPage() {
     setError(null);
     try {
       // Fetch Eye details from direct eye endpoint
-      const eyeRes = await fetch(`/api/eyes/${eyeId}`);
+      const eyeRes = await fetch(`${API_BASE_URL}/api/eyes/${eyeId}`);
       if (eyeRes.ok) {
         const result = await eyeRes.json();
         const foundEye = result.data || result;
@@ -165,44 +161,18 @@ export default function EyeDetailPage() {
     }
   };
 
-  const startEditingEye = () => {
-    if (!eye) return;
-    setEditedEye({
-      name: eye.name,
-      description: eye.description,
-      capabilities: eye.capabilities || [],
-    });
-    setIsEditingEye(true);
+  const openEyeWizard = () => {
+    setIsEyeWizardOpen(true);
   };
 
-  const saveEye = async () => {
-    if (!editedEye.name.trim()) {
-      setError('Eye name cannot be empty');
-      return;
-    }
+  const closeEyeWizard = () => {
+    setIsEyeWizardOpen(false);
+  };
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/eyes/${eyeId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          displayName: editedEye.name.trim(),
-          description: editedEye.description.trim(),
-          capabilities: editedEye.capabilities.filter(c => c.trim()),
-        }),
-      });
-
-      if (response.ok) {
-        setSuccess('Eye updated successfully');
-        setIsEditingEye(false);
-        await fetchEyeData();
-      } else {
-        const result = await response.json();
-        setError(result.error?.detail || 'Failed to update Eye');
-      }
-    } catch (err) {
-      setError('Failed to update Eye');
-    }
+  const handleEyeSaved = async () => {
+    setSuccess('Eye updated successfully');
+    closeEyeWizard();
+    await fetchEyeData();
   };
 
   const startEditingPersona = () => {
@@ -368,105 +338,47 @@ export default function EyeDetailPage() {
           <GlassCard>
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-brand-foreground">Eye Overview</h2>
-              {!isEditingEye && (
-                <button
-                  onClick={startEditingEye}
-                  className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
-                >
-                  Edit Eye
-                </button>
-              )}
+              <button
+                onClick={openEyeWizard}
+                className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
+              >
+                Edit Eye
+              </button>
             </div>
 
-            {isEditingEye ? (
-              <div className="space-y-4">
-                {/* Name */}
-                <div>
-                  <label className="block text-sm font-medium text-semantic-muted mb-2">Name</label>
-                  <input
-                    type="text"
-                    value={editedEye.name}
-                    onChange={(e) => setEditedEye({ ...editedEye, name: e.target.value })}
-                    className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground focus:border-brand-accent focus:outline-none"
-                    placeholder="Enter Eye name"
-                  />
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label className="block text-sm font-medium text-semantic-muted mb-2">Description</label>
-                  <textarea
-                    value={editedEye.description}
-                    onChange={(e) => setEditedEye({ ...editedEye, description: e.target.value })}
-                    className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground focus:border-brand-accent focus:outline-none"
-                    placeholder="Enter Eye description"
-                    rows={3}
-                  />
-                </div>
-
-                {/* Capabilities */}
-                <div>
-                  <label className="block text-sm font-medium text-semantic-muted mb-2">Capabilities (comma-separated)</label>
-                  <input
-                    type="text"
-                    value={editedEye.capabilities.join(', ')}
-                    onChange={(e) => setEditedEye({ ...editedEye, capabilities: e.target.value.split(',').map(c => c.trim()) })}
-                    className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-2 text-brand-foreground focus:border-brand-accent focus:outline-none"
-                    placeholder="e.g., vision, analysis, detection"
-                  />
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <button
-                    onClick={saveEye}
-                    className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-primary"
-                  >
-                    Save Changes
-                  </button>
-                  <button
-                    onClick={() => setIsEditingEye(false)}
-                    className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
-                  >
-                    Cancel
-                  </button>
-                </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-semantic-muted mb-2">Name</label>
+                <p className="text-brand-foreground capitalize">{eye.name}</p>
               </div>
-            ) : (
-              <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-semantic-muted mb-2">Description</label>
+                <p className="text-brand-foreground">{eye.description}</p>
+              </div>
+              {eye.capabilities && eye.capabilities.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-semantic-muted mb-2">Name</label>
-                  <p className="text-brand-foreground capitalize">{eye.name}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-semantic-muted mb-2">Description</label>
-                  <p className="text-brand-foreground">{eye.description}</p>
-                </div>
-                {eye.capabilities && eye.capabilities.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-medium text-semantic-muted mb-2">Capabilities</label>
-                    <div className="flex flex-wrap gap-2">
-                      {eye.capabilities.map((cap, idx) => (
-                        <span
-                          key={idx}
-                          className="rounded-full bg-brand-accent/20 px-3 py-1 text-sm text-brand-accent"
-                        >
-                          {toHumanReadable(cap)}
-                        </span>
-                      ))}
-                    </div>
+                  <label className="block text-sm font-medium text-semantic-muted mb-2">Capabilities</label>
+                  <div className="flex flex-wrap gap-2">
+                    {eye.capabilities.map((cap, idx) => (
+                      <span
+                        key={idx}
+                        className="rounded-full bg-brand-accent/20 px-3 py-1 text-sm text-brand-accent"
+                      >
+                        {toHumanReadable(cap)}
+                      </span>
+                    ))}
                   </div>
-                )}
-                <div>
-                  <label className="block text-sm font-medium text-semantic-muted mb-2">Source</label>
-                  <span className={`inline-block rounded-full px-3 py-1 text-sm ${
-                    eye.source === 'built-in' ? 'bg-white/20 text-brand-foreground' : `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success}`
-                  }`}>
-                    {eye.source}
-                  </span>
                 </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-semantic-muted mb-2">Source</label>
+                <span className={`inline-block rounded-full px-3 py-1 text-sm ${
+                  eye.source === 'built-in' ? 'bg-white/20 text-brand-foreground' : `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success}`
+                }`}>
+                  {eye.source}
+                </span>
               </div>
-            )}
+            </div>
           </GlassCard>
         )}
 
@@ -597,6 +509,17 @@ export default function EyeDetailPage() {
           </GlassCard>
         )}
       </div>
+
+      {/* Eye Wizard Modal */}
+      {eye && (
+        <EyeWizardModal
+          isOpen={isEyeWizardOpen}
+          eyeId={eye.id}
+          eyeName={eye.name}
+          onClose={closeEyeWizard}
+          onSuccess={handleEyeSaved}
+        />
+      )}
     </div>
   );
 }

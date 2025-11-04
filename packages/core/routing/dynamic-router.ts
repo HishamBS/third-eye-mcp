@@ -8,7 +8,7 @@
  * Per R13: Interfaces exported for SSOT
  */
 
-import type { EyeName } from '@third-eye/eyes';
+import type { EyeName } from '@third-eye/types';
 import type { RoutingDecision as CoreRoutingDecision, AutoRouterOptions } from '../auto-router';
 import { autoRouter } from '../auto-router';
 

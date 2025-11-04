@@ -1,11 +1,11 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio";
+import { Server } from "@modelcontextprotocol/sdk/server";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
   InitializeRequestSchema,
   Tool,
-} from "@modelcontextprotocol/sdk/types";
+} from "@modelcontextprotocol/sdk/types.js";
 import { autoRouter } from "../core/auto-router";
 import { TOOL_NAME } from "@third-eye/types";
 import { z } from "zod";
@@ -468,6 +468,24 @@ export function createMCPServer(): Server {
  * Start MCP server with stdio transport
  */
 export async function startMCPServer() {
+  // Seed database with defaults (eyes, personas, pipelines, routing, etc.)
+  // This ensures MCP server works with fresh or in-memory databases
+  const { seedDefaults } = await import('@third-eye/db/defaults');
+  const { getDb } = await import('@third-eye/db');
+  
+  // Initialize database (creates tables if needed)
+  const { db } = getDb();
+  
+  // Seed defaults silently (only logs if verbose)
+  try {
+    await seedDefaults({
+      log: () => {}, // Silent seeding for MCP server
+    });
+  } catch (error) {
+    // Log error but don't fail startup (database might already be seeded)
+    console.error('[MCP Server] Seeding warning:', error instanceof Error ? error.message : String(error));
+  }
+
   const server = createMCPServer();
   const transport = new StdioServerTransport();
 

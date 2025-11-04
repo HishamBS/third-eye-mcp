@@ -5,8 +5,7 @@
  * Includes stage summary, skeleton JSON, behavior checklist, and example.
  */
 
-import type { PersonaBlueprint } from '../interfaces/persona-blueprint';
-import type { PhaseSpec } from '../interfaces/persona-blueprint';
+import type { PersonaBlueprint, PhaseSpec } from '@third-eye/constants/blueprints-data';
 import { EyeStageToken, EyeStatusCode, PromptSection, SelfCheckItem, ErrorMessage, ResponseFormatType, TypeString } from '@third-eye/constants';
 import { getStageTemplate, type StageEnvelopeTemplate } from '@third-eye/constants';
 

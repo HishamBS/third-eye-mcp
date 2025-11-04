@@ -33,19 +33,6 @@ export const EYE_DESCRIPTIONS: Record<EyeName, string> = {
   byakugan: 'Final Approval',
 } as const;
 
-/**
- * Eye Badges - Category identifiers
- */
-export const EYE_BADGES: Record<EyeName, string> = {
-  overseer: 'BUILT-IN',
-  sharingan: 'BUILT-IN',
-  kyuubi: 'BUILT-IN',
-  jogan: 'BUILT-IN',
-  rinnegan: 'BUILT-IN',
-  mangekyo: 'BUILT-IN',
-  tenseigan: 'BUILT-IN',
-  byakugan: 'BUILT-IN',
-} as const;
 
 /**
  * Eye Stages - GUIDANCE or VALIDATION phase

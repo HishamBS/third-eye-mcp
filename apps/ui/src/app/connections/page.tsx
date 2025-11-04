@@ -404,9 +404,9 @@ export default function ConnectionsPage() {
               >
                 <GlassCard className="overflow-hidden">
                   {/* Header */}
-                  <button
+                  <div
                     onClick={() => toggleExpanded(integration.id)}
-                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-brand-accent/5 transition-colors"
+                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-brand-accent/5 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-4">
                       {integration.logoUrl ? (
@@ -467,7 +467,7 @@ export default function ConnectionsPage() {
                         <ChevronDown className="w-5 h-5 text-semantic-muted" />
                       )}
                     </div>
-                  </button>
+                  </div>
 
                   {/* Expanded Content */}
                   {isExpanded && (

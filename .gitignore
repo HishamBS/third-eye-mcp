@@ -54,9 +54,19 @@ out/
 *.tsbuildinfo
 .turbo/
 
-# TypeScript
+# TypeScript compiled output (should not be tracked - only source .ts files)
 *.tsbuildinfo
 next-env.d.ts
+*.js
+*.js.map
+*.d.ts
+*.d.ts.map
+!*.config.js
+!next.config.js
+!tailwind.config.js
+!postcss.config.js
+!vitest.config.js
+!drizzle.config.js
 
 # Production builds
 dist/

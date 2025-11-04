@@ -1,15 +1,15 @@
 import { Database } from 'bun:sqlite';
 import { drizzle } from 'drizzle-orm/bun-sqlite';
-import { migrate } from 'drizzle-orm/bun-sqlite/migrator';
 import * as schema from './schema';
 import { resolve } from 'path';
 import { homedir } from 'os';
-import { mkdirSync, existsSync } from 'fs';
+import { mkdirSync, existsSync, readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
 export * from './schema';
 export { schema }; // Export the exact schema object used by drizzle initialization
+export * from './defaults';
 
 // Default database path: ~/.third-eye-mcp/mcp.db (following prompt.md spec)
 export function getDbPath(): string {
@@ -50,34 +50,48 @@ export function createDb(dbPath?: string) {
 }
 
 export function runMigrations(db: ReturnType<typeof createDb>['db'], sqlite: Database) {
-  // Always resolve from project root for migrations
-  const projectRoot = resolve(process.cwd());
-  const migrationsFolder = resolve(projectRoot, 'packages/db/migrations');
-  
-  console.log(`🔍 Migration path: ${migrationsFolder}`);
-
+  /**
+   * PRE-V1: Apply schema directly from SQL file (no drizzle migrate tracking)
+   * Post-v1: Will use proper migration system with versioning
+   */
   try {
-    // Only run migrations if folder exists
-    if (existsSync(migrationsFolder)) {
-      // Drizzle-kit tracks migrations in __drizzle_migrations table
-      // Just run the migrate command - it will handle which ones to apply
-      migrate(db, { migrationsFolder });
-
-      // Verify migrations ran
-      const tables = sqlite.query("SELECT name FROM sqlite_master WHERE type='table'").all();
-      if (tables.length === 0) {
-        throw new Error('Migrations ran but no tables created - migration files may be empty');
+    // Check if tables exist
+    const tables = sqlite.query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all();
+    
+    if (tables.length === 0) {
+      console.log('📋 No tables found - applying initial schema...');
+      
+      // Resolve migration SQL file
+      const projectRoot = resolve(process.cwd());
+      const migrationFile = resolve(projectRoot, 'packages/db/migrations/0000_initial_schema.sql');
+      
+      if (existsSync(migrationFile)) {
+        // Read and execute SQL directly (bypass drizzle-orm migrate() which has SERIAL bug)
+        const sql = readFileSync(migrationFile, 'utf-8');
+        const statements = sql
+          .split('--> statement-breakpoint')
+          .map(s => s.trim())
+          .filter(s => s.length > 0);
+        
+        console.log(`📝 Executing ${statements.length} SQL statements...`);
+        
+        for (const statement of statements) {
+          sqlite.exec(statement);
+        }
+        
+        console.log('✅ Schema created successfully');
+      } else {
+        console.warn(`⚠️  Migration file not found: ${migrationFile}`);
+        console.warn('⚠️  Database will be empty - seed defaults to populate');
       }
     } else {
-      console.warn(`⚠️  Migrations folder not found: ${migrationsFolder}`);
+      console.log(`✅ Database initialized with ${tables.length} tables`);
     }
   } catch (err: unknown) {
-    // Ignore "table already exists" errors during migration
     const message = err instanceof Error ? err.message : String(err);
-    const causeMessage = err instanceof Error && err.cause instanceof Error ? err.cause.message : undefined;
-
-    if (!message?.includes('already exists') && !causeMessage?.includes('already exists')) {
-      console.error('❌ Migration error:', message);
+    // Ignore "table already exists" errors
+    if (!message?.includes('already exists')) {
+      console.error('❌ Schema application error:', message);
       throw err;
     }
   }

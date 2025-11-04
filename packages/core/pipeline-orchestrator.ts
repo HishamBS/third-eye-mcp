@@ -11,9 +11,11 @@
 import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
 import { pipelines, pipelineRuns, sessions, runs, type PipelineRun } from '@third-eye/db/schema';
+import { getEyeNameById } from '@third-eye/db/utils/lookups';
 import { eq, and, desc } from 'drizzle-orm';
 import { EyeOrchestrator } from './orchestrator';
-import type { EyeName, EyeResponse, BaseEnvelope } from '@third-eye/eyes';
+import type { EyeName } from '@third-eye/types';
+import type { EyeResponse, BaseEnvelope } from '@third-eye/eyes';
 
 // Workflow JSON structure stored in database
 interface WorkflowJson {
@@ -322,7 +324,15 @@ export class PipelineOrchestrator {
     }
 
     const lastRun = recentRuns[0];
-    const lastEye = lastRun.eye as EyeName;
+    const lastEyeName = await getEyeNameById(lastRun.eyeId);
+    if (!lastEyeName) {
+      return {
+        suggested: ['overseer'],
+        reasoning: 'Could not determine last Eye. Starting with overseer.',
+        canAutoRoute: true
+      };
+    }
+    const lastEye = lastEyeName as EyeName;
     const lastResult = lastRun.outputJson as BaseEnvelope;
 
     // Intelligent suggestions based on last Eye result
@@ -393,15 +403,17 @@ export class PipelineOrchestrator {
 
   /**
    * Get available pipelines for a task type
+   * Database is SSOT - always queries database first
+   * DEFAULT_PIPELINES only used as fallback if database is empty (shouldn't happen after seeding)
    */
   async getAvailablePipelines(taskType: 'code' | 'text' | 'general'): Promise<PipelineDefinition[]> {
-    // Get custom pipelines from database
-    const customPipelines = await this.db
+    // Query all active pipelines from database (SSOT)
+    const dbPipelines = await this.db
       .select()
       .from(pipelines)
       .where(eq(pipelines.active, true));
 
-    const dbPipelines: PipelineDefinition[] = customPipelines
+    const pipelinesFromDb: PipelineDefinition[] = dbPipelines
       .map(p => {
         const workflow = p.workflowJson as WorkflowJson;
         return {
@@ -416,10 +428,16 @@ export class PipelineOrchestrator {
       })
       .filter(p => p.taskTypes.includes(taskType));
 
-    // Combine with default pipelines
-    const defaultPipelines = DEFAULT_PIPELINES.filter(p => p.taskTypes.includes(taskType));
+    // If database has pipelines, return them (SSOT)
+    if (pipelinesFromDb.length > 0) {
+      return pipelinesFromDb;
+    }
 
-    return [...defaultPipelines, ...dbPipelines];
+    // Fallback to defaults only if database is empty (first run before seeding)
+    // This should rarely happen after initial seeding
+    console.warn('[PipelineOrchestrator] No pipelines in database, using fallback defaults. Run seeding if this persists.');
+    const defaultPipelines = DEFAULT_PIPELINES.filter(p => p.taskTypes.includes(taskType));
+    return defaultPipelines;
   }
 
   // Private helper methods
@@ -466,7 +484,17 @@ export class PipelineOrchestrator {
     const availablePipelines = await this.getAvailablePipelines(taskType);
     const defaultPipeline = availablePipelines.find(p => p.isDefault);
 
-    return defaultPipeline || availablePipelines[0] || DEFAULT_PIPELINES[2]; // Fallback to quick-review
+    if (defaultPipeline) {
+      return defaultPipeline;
+    }
+    
+    if (availablePipelines.length > 0) {
+      return availablePipelines[0];
+    }
+
+    // Last resort fallback - should never happen after seeding
+    console.error('[PipelineOrchestrator] No pipelines available, using emergency fallback');
+    return DEFAULT_PIPELINES.find(p => p.taskTypes.includes(taskType)) || DEFAULT_PIPELINES[0];
   }
 
   private shouldExecuteStep(step: PipelineStep, previousResults: EyeResponse[]): boolean {

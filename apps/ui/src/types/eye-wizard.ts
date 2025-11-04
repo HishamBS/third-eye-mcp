@@ -114,12 +114,23 @@ export function formDataToPayload(formData: EyeFormData): UpdateEyePayload {
  * Convert Eye to form data
  */
 export function eyeToFormData(eye: Eye): EyeFormData {
+  // Helper to safely convert schema to string
+  const schemaToString = (schema: unknown): string => {
+    if (typeof schema === 'string') {
+      return schema;
+    }
+    if (schema && typeof schema === 'object') {
+      return JSON.stringify(schema, null, 2);
+    }
+    return '{}';
+  };
+
   return {
     name: eye.name || '',
     description: eye.description || '',
-    iconSvg: '', // TODO: Add iconSvg field to Eye type if available
-    inputSchema: eye.inputSchema ? JSON.stringify(eye.inputSchema, null, 2) : '{}',
-    outputSchema: eye.outputSchema ? JSON.stringify(eye.outputSchema, null, 2) : '{}',
+    iconSvg: (eye as { iconSvg?: string }).iconSvg || '', // Cast to access iconSvg (may not be in all Eye types)
+    inputSchema: schemaToString(eye.inputSchema),
+    outputSchema: schemaToString(eye.outputSchema),
     personaId: eye.personaId || '',
   };
 }

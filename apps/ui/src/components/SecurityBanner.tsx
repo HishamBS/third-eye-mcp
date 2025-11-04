@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { STATUS_BG_COLORS_SUBTLE, STATUS_TEXT_COLORS } from '@/constants/color-mappings';
+import { API_BASE_URL } from '@/consts/api';
 
 /**
  * Security Warning Banner
@@ -28,7 +29,7 @@ export function SecurityBanner() {
     // Fetch server health to check bind address
     async function checkServerBind() {
       try {
-        const response = await fetch('/api/health');
+        const response = await fetch(`${API_BASE_URL}/health`);
         const data = await response.json();
 
         // Health endpoint should return bind address

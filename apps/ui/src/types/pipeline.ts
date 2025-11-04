@@ -175,12 +175,12 @@ export interface SessionSummary {
  * Per R07: Strict typing with precise types
  */
 export interface EyeNodeData {
-  eyeId: EyeName | string; // string for custom eyes
+  eyeId: EyeName | string;
   displayName?: string;
   capabilities?: string[];
   customConfig?: Record<string, unknown>;
-  isCustom?: boolean;
   iconSvg?: string; // Custom SVG content from database
+  stage?: 'GUIDANCE' | 'VALIDATION' | 'ROUTER' | 'BOTH';
 }
 
 /**
@@ -237,7 +237,6 @@ export interface CapabilityMapping {
   eyeId: string;
   inputCapabilities: string[];
   outputCapabilities: string[];
-  isCustom: boolean;
 }
 
 /**
@@ -258,25 +257,17 @@ export interface PipelineValidationResult {
 }
 
 /**
- * Eye Definition - Unified type for built-in and custom eyes
- * Per R07: Union type with discriminator
+ * Eye Definition - Unified type for ALL eyes (no built-in vs custom distinction)
+ * Per R07: Single interface, all fields optional where appropriate
  */
-export type EyeDefinition = {
+export interface EyeDefinition {
   id: string;
   name: string;
   description: string;
   iconSvg?: string;
   capabilities: string[];
-  isCustom: false;
-  stage: 'GUIDANCE' | 'VALIDATION' | 'ROUTER' | 'BOTH';
-} | {
-  id: string;
-  name: string;
-  description: string;
-  iconSvg?: string;
-  capabilities: string[];
-  isCustom: true;
-  version: number;
-  inputSchema: Record<string, unknown>;
-  outputSchema: Record<string, unknown>;
-};
+  version?: number;
+  stage?: 'GUIDANCE' | 'VALIDATION' | 'ROUTER' | 'BOTH';
+  inputSchema?: Record<string, unknown>;
+  outputSchema?: Record<string, unknown>;
+}

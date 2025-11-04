@@ -6,6 +6,7 @@ import type { PersonaFormState } from '@/types/persona-form';
 import { X } from 'lucide-react';
 import { UI_HELP_TEXT } from '@third-eye/constants';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { API_BASE_URL } from '@/consts/api';
 
 /**
  * PersonaWizardModal - Modal wrapper for PersonaWizard
@@ -88,7 +89,7 @@ export function PersonaWizardModal({
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/personas/blueprints/${eyeId}`);
+      const response = await fetch(`${API_BASE_URL}/api/personas/blueprints/${eyeId}`);
 
       if (response.status === 404) {
         // No persona exists yet - use defaults with eyeId pre-filled
@@ -190,7 +191,7 @@ export function PersonaWizardModal({
         notes: state.notes,
       };
 
-      const response = await fetch(`/api/personas/blueprints/${eyeId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/personas/blueprints/${eyeId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dbPayload),

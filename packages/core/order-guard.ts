@@ -5,7 +5,7 @@
  * Returns E_PIPELINE_ORDER when illegal calls are made
  */
 
-import type { EyeName } from '@third-eye/eyes';
+import type { EyeName } from '@third-eye/types';
 
 export interface PipelineState {
   sessionId: string;

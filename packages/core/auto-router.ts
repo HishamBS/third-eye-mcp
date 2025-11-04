@@ -4,7 +4,8 @@
  * Analyzes freeform tasks and routes them through the optimal Eye sequence
  */
 
-import type { EyeName, BaseEnvelope } from '@third-eye/eyes';
+import type { EyeName } from '@third-eye/types';
+import type { BaseEnvelope } from '@third-eye/eyes';
 import { isRejected } from '@third-eye/eyes';
 import { EyeOrchestrator } from './orchestrator';
 import { orderGuard } from './order-guard';

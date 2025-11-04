@@ -24,6 +24,8 @@ import { ViewModeDescription } from '@/components/ViewModeToggle';
 import { RoutingDecisionPanel } from '@/components/monitor/RoutingDecisionPanel';
 import type { EyeName } from '@third-eye/types';
 import { EYE_DISPLAY_NAMES } from '@third-eye/config/constants';
+import { API_BASE_URL } from '@/consts/api';
+import { API_ROUTES } from '@/constants/api-routes';
 import {
   MONITOR_TABS,
   MonitorTabId,
@@ -266,16 +268,20 @@ function MonitorContent() {
         setError(null);
 
         const [summaryRes, eventsRes] = await Promise.all([
-          fetch(`/api/sessions/${sessionId}`),
-          fetch(`/api/sessions/${sessionId}/events`),
+          fetch(`${API_BASE_URL}${API_ROUTES.SESSION_BY_ID(sessionId)}`),
+          fetch(`${API_BASE_URL}${API_ROUTES.SESSION_EVENTS(sessionId)}`),
         ]);
 
         if (!summaryRes.ok || !eventsRes.ok) {
           throw new Error('Failed to load session data');
         }
 
-        const summaryData = await summaryRes.json();
-        const eventsData = await eventsRes.json();
+        const summaryResult = await summaryRes.json();
+        const eventsResult = await eventsRes.json();
+        
+        // Handle wrapped response from createSuccessResponse
+        const summaryData = summaryResult.data || summaryResult;
+        const eventsData = eventsResult.data || eventsResult;
 
         setSummary({
           sessionId: summaryData.id || sessionId,
@@ -326,19 +332,23 @@ function MonitorContent() {
   const fetchClarifications = async () => {
     if (!sessionId) return;
     try {
-      const res = await fetch(`/api/sessions/${sessionId}/clarifications`);
+      const res = await fetch(`${API_BASE_URL}${API_ROUTES.SESSION_CLARIFICATIONS(sessionId)}`);
       if (res.ok) {
-        const data = await res.json();
-        if (data.questions && Array.isArray(data.questions)) {
-          const outstanding: ClarificationItem[] = [];
-          const resolved: ResolvedClarificationItem[] = [];
+        const result = await res.json();
+        // Backend returns array directly (wrapped in createSuccessResponse)
+        const data = result.data || result;
+        const clarificationsArray = Array.isArray(data) ? data : [];
+        
+        const outstanding: ClarificationItem[] = [];
+        const resolved: ResolvedClarificationItem[] = [];
 
-          for (const q of data.questions) {
+        for (const q of clarificationsArray) {
+          if (q && typeof q === 'object') {
             if (q.answer) {
               resolved.push({
                 id: q.id || crypto.randomUUID(),
                 field: q.field || 'unknown',
-                question: q.text || '',
+                question: q.text || q.question || '',
                 answer: q.answer,
                 answeredAt: new Date(q.answeredAt || Date.now()),
                 status: 'resolved',
@@ -347,14 +357,14 @@ function MonitorContent() {
               outstanding.push({
                 id: q.id || crypto.randomUUID(),
                 field: q.field || 'unknown',
-                question: q.text || '',
+                question: q.text || q.question || '',
                 status: 'pending',
               });
             }
           }
-
-          setClarifications({ outstanding, resolved });
         }
+
+        setClarifications({ outstanding, resolved });
       }
     } catch (err) {
       console.error('Failed to fetch clarifications:', err);
@@ -364,15 +374,20 @@ function MonitorContent() {
   const fetchIntentConfirmations = async () => {
     if (!sessionId) return;
     try {
-      const res = await fetch(`/api/sessions/${sessionId}/intent`);
+      const res = await fetch(`${API_BASE_URL}${API_ROUTES.SESSION_INTENT_CONFIRMATIONS(sessionId)}`);
       if (res.ok) {
-        const data = await res.json();
-        setIntentData({
-          intentAnalysis: data.intentAnalysis,
-          confirmationPrompt: data.confirmationPrompt,
-          response: data.response,
-          userIdentity: data.userIdentity,
-        });
+        const result = await res.json();
+        // Backend returns single object or null (wrapped in createSuccessResponse)
+        const data = result.data !== undefined ? result.data : result;
+        
+        if (data && typeof data === 'object') {
+          setIntentData({
+            intentAnalysis: data.intentAnalysis as Record<string, unknown> | undefined,
+            confirmationPrompt: typeof data.confirmationPrompt === 'string' ? data.confirmationPrompt : undefined,
+            response: typeof data.response === 'string' ? data.response : undefined,
+            userIdentity: typeof data.userIdentity === 'string' ? data.userIdentity : undefined,
+          });
+        }
       }
     } catch (err) {
       console.error('Failed to fetch intent confirmations:', err);
@@ -382,10 +397,12 @@ function MonitorContent() {
   const fetchRoutingDecision = async () => {
     if (!sessionId) return;
     try {
-      const res = await fetch(`/api/sessions/${sessionId}/routing`);
+      const res = await fetch(`${API_BASE_URL}${API_ROUTES.SESSION_ROUTING(sessionId)}`);
       if (res.ok) {
-        const data = await res.json();
-        if (data.routing) {
+        const result = await res.json();
+        // Backend returns { routing: { flow, taskType, reasoning, recommendedEye } } or { routing: null }
+        const data = result.data || result;
+        if (data && data.routing) {
           setRoutingDecision(data.routing);
         }
       }

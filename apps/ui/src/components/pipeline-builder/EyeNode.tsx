@@ -5,7 +5,6 @@ import { Handle, Position, type NodeProps } from 'reactflow';
 import { EyeIcon, getEyeColor } from '@/components/EyeIcon';
 import {
   EYE_DISPLAY_NAMES,
-  EYE_BADGES,
   EYE_STAGES,
   type EyeStage,
 } from './constants';
@@ -33,11 +32,10 @@ export interface EyeNodeData {
  * - Expandable capabilities (on selected)
  */
 function EyeNodeComponent({ data, selected, dragging }: NodeProps<EyeNodeData>) {
-  const { eyeId, capabilities = [] } = data;
+  const { eyeId, capabilities = [], stage: dataStage, displayName: dataDisplayName } = data;
 
-  const displayName = EYE_DISPLAY_NAMES[eyeId];
-  const badge = EYE_BADGES[eyeId];
-  const stage = EYE_STAGES[eyeId];
+  const displayName = dataDisplayName || EYE_DISPLAY_NAMES[eyeId] || eyeId;
+  const stage = dataStage || EYE_STAGES[eyeId];
 
   // Get Eye-specific color from theme SSOT
   const eyeColor = getEyeColor(eyeId);
@@ -75,11 +73,6 @@ function EyeNodeComponent({ data, selected, dragging }: NodeProps<EyeNodeData>) 
         className="!w-3 !h-3 !border-2 !border-brand-paper"
         style={{ background: eyeColor }}
       />
-
-      {/* Badge */}
-      <div className="absolute top-2 right-2 text-xs font-semibold text-semantic-muted uppercase tracking-wider">
-        {badge}
-      </div>
 
       {/* Icon - SVG from SSOT */}
       <div className="flex justify-center items-center mb-2">

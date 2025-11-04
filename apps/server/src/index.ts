@@ -16,7 +16,6 @@ import mcpRoutes from './routes/mcp';
 import overseerRoutes from './routes/overseer';
 import eyesRoutes from './routes/eyes';
 import guidanceRoutes from './routes/guidance';
-import promptsRoutes from './routes/prompts';
 import pipelinesRoutes from './routes/pipelines';
 import pipelineExecutionRoutes from './routes/pipeline-execution';
 import strictnessRoutes from './routes/strictness';
@@ -27,6 +26,8 @@ import integrationsRoutes from './routes/integrations';
 import appSettingsRoutes from './routes/app-settings';
 import databaseOpsRoutes from './routes/database-ops';
 import modelsRoutes from './routes/models';
+import systemRoutes from './routes/system';
+import metricsRoutes from './routes/metrics';
 
 /**
  * Third Eye MCP Bun Server
@@ -81,7 +82,6 @@ app.route('/api/routing', routingRoutes);
 app.route('/api/personas', personasRoutes);
 app.route('/api/session', sessionRoutes);
 app.route('/api/guidance', guidanceRoutes);
-app.route('/api/prompts', promptsRoutes);
 app.route('/api/pipelines', pipelinesRoutes);
 app.route('/api/pipeline-execution', pipelineExecutionRoutes);
 app.route('/api/strictness', strictnessRoutes);
@@ -92,6 +92,8 @@ app.route('/api/export', exportRoutes);
 app.route('/api/integrations', integrationsRoutes);
 app.route('/api/app-settings', appSettingsRoutes);
 app.route('/api/models', modelsRoutes);
+app.route('/api/system', systemRoutes);
+app.route('/api/metrics', metricsRoutes);
 
 // Eyes API Routes - Read-only endpoints enabled for UI
 // Note: Direct Eye EXECUTION is blocked (violates Golden Rule #1)

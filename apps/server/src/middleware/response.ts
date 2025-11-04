@@ -275,6 +275,13 @@ export function validateBodyWithEnvelope<T extends z.ZodSchema>(schema: T) {
   return async (c: Context, next: Function) => {
     try {
       const body = await c.req.json();
+      
+      // Normalize eye name to lowercase if present (for routing endpoints)
+      // TODO: Phase 2 - Migrate to UUID-based identifiers instead of names
+      if (body && typeof body === 'object' && 'eye' in body && typeof body.eye === 'string') {
+        body.eye = body.eye.toLowerCase();
+      }
+      
       const validated = schema.parse(body);
       c.set('validatedBody', validated);
       await next();

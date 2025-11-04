@@ -22,7 +22,6 @@ interface Eye {
   name: string;
   version: string;
   description: string;
-  source: 'built-in' | 'custom';
   capabilities?: string[];
   personaTemplate?: string;
   inputSchema?: Record<string, unknown>;
@@ -65,14 +64,11 @@ interface EyeTestResult {
 export default function EyesPage() {
   const dialog = useDialog();
   const [eyes, setEyes] = useState<Eye[]>([]);
-  const [builtInEyes, setBuiltInEyes] = useState<Eye[]>([]);
-  const [customEyes, setCustomEyes] = useState<Eye[]>([]);
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [selectedEye, setSelectedEye] = useState<Eye | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<'all' | 'built-in' | 'custom'>('all');
   const [isTesting, setIsTesting] = useState(false);
   const [testInput, setTestInput] = useState('');
   const [testResult, setTestResult] = useState<EyeTestResult | null>(null);
@@ -148,21 +144,6 @@ export default function EyesPage() {
           : [];
 
       if (allEyesData.length === 0) {
-        // Fallback: pull built-in registry so UI never renders empty during outages
-        const registryResponse = await fetch(`${API_BASE_URL}/api/eyes/registry`);
-        if (registryResponse.ok) {
-          const registryPayload = await registryResponse.json();
-          const registryEyes: Eye[] = Array.isArray(registryPayload?.data)
-            ? registryPayload.data
-            : [];
-          allEyesData = registryEyes.map((eye) => ({
-            ...eye,
-            source: eye.source ?? 'built-in',
-          }));
-        }
-      }
-
-      if (allEyesData.length === 0) {
         setError(UI_HELP_TEXT.ERROR_EYES_NO_REGISTRY);
       } else {
         setError(null);
@@ -189,21 +170,11 @@ export default function EyesPage() {
       );
 
       setEyes(enrichedEyesData);
-      setBuiltInEyes(enrichedEyesData.filter((e: Eye) => (e.source ?? 'built-in') === 'built-in'));
-      setCustomEyes(enrichedEyesData.filter((e: Eye) => e.source === 'custom'));
     } catch (error) {
       console.error('Failed to fetch eyes:', error);
       setError(UI_HELP_TEXT.ERROR_EYES_LOAD_FAILED);
       setEyes([]);
-      setBuiltInEyes([]);
-      setCustomEyes([]);
     }
-  };
-
-  const getFilteredEyes = () => {
-    if (viewMode === 'built-in') return builtInEyes;
-    if (viewMode === 'custom') return customEyes;
-    return eyes;
   };
 
   const startCreating = () => {
@@ -231,19 +202,18 @@ export default function EyesPage() {
     setTestResult(null);
     setHasUnsavedChanges(false);
 
-    if (eye.source === 'custom') {
-      const data = {
-        name: eye.name,
-        description: eye.description,
-        iconSvg: (eye as any).iconSvg || '',
-        inputSchema: JSON.stringify(eye.inputSchema, null, 2),
-        outputSchema: JSON.stringify(eye.outputSchema, null, 2),
-        personaTemplate: eye.personaTemplate || '',
-        personaId: eye.personaId || '',
-      };
-      setFormData(data);
-      setOriginalFormData(data);
-    }
+    // All eyes are now editable
+    const data = {
+      name: eye.name,
+      description: eye.description,
+      iconSvg: (eye as any).iconSvg || '',
+      inputSchema: JSON.stringify(eye.inputSchema, null, 2),
+      outputSchema: JSON.stringify(eye.outputSchema, null, 2),
+      personaTemplate: eye.personaTemplate || '',
+      personaId: eye.personaId || '',
+    };
+    setFormData(data);
+    setOriginalFormData(data);
   };
 
   const discardChanges = () => {
@@ -294,7 +264,7 @@ export default function EyesPage() {
         ...(formData.personaId && { personaId: formData.personaId }),
       };
 
-      const response = await fetch('/api/eyes/custom', {
+      const response = await fetch(`${API_BASE_URL}/api/eyes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -499,9 +469,6 @@ export default function EyesPage() {
               </div>
             </div>
             <div className="flex gap-4">
-              <Link href="/prompts" className="text-sm text-semantic-muted transition-colors hover:text-brand-foreground" aria-label={UI_HELP_TEXT.ARIA_NAV_PROMPTS}>
-                {UI_HELP_TEXT.EYES_NAV_PROMPTS}
-              </Link>
               <Link href="/personas" className="text-sm text-semantic-muted transition-colors hover:text-brand-foreground" aria-label={UI_HELP_TEXT.ARIA_NAV_PERSONAS}>
                 {UI_HELP_TEXT.EYES_NAV_PERSONAS}
               </Link>
@@ -562,7 +529,7 @@ export default function EyesPage() {
             }}
             onCancel={cancelForm}
           />
-        ) : isTesting || (selectedEye && selectedEye.source === 'custom' && !isCreating && !isEditing && !isTesting) ? (
+        ) : isTesting || (selectedEye && !isCreating && !isEditing && !isTesting) ? (
           /* Test Panel and View Mode */
           <GlassCard>
             <div className="mb-6 flex items-center justify-between">
@@ -703,51 +670,6 @@ export default function EyesPage() {
         ) : (
           /* Eyes Grid */
           <div>
-            {/* View Mode Tabs */}
-            <div className="mb-6 flex gap-3">
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => setViewMode('all')}
-                  aria-label={UI_HELP_TEXT.ARIA_FILTER_ALL}
-                  className={`rounded-full px-5 py-2 text-sm font-semibold transition-all ${ANIMATION_DURATION.FAST} ${
-                    viewMode === 'all'
-                      ? 'bg-brand-accent text-brand-foreground scale-105'
-                      : 'border border-brand-outline/40 text-semantic-muted hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
-                  } focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink`}
-                >
-                  {UI_HELP_TEXT.EYES_FILTER_ALL.replace('{count}', eyes.length.toString())}
-                </button>
-                <HelpIcon helpTextKey="EYES_ALL_FILTER" size="sm" />
-              </div>
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => setViewMode('built-in')}
-                  aria-label={UI_HELP_TEXT.ARIA_FILTER_BUILTIN}
-                  className={`rounded-full px-5 py-2 text-sm font-semibold transition-all ${ANIMATION_DURATION.FAST} ${
-                    viewMode === 'built-in'
-                      ? 'bg-brand-accent text-brand-foreground scale-105'
-                      : 'border border-brand-outline/40 text-semantic-muted hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
-                  } focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink`}
-                >
-                  {UI_HELP_TEXT.EYES_FILTER_BUILTIN.replace('{count}', builtInEyes.length.toString())}
-                </button>
-                <HelpIcon helpTextKey="EYES_BUILTIN_FILTER" size="sm" />
-              </div>
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => setViewMode('custom')}
-                  aria-label={UI_HELP_TEXT.ARIA_FILTER_CUSTOM}
-                  className={`rounded-full px-5 py-2 text-sm font-semibold transition-all ${ANIMATION_DURATION.FAST} ${
-                    viewMode === 'custom'
-                      ? 'bg-brand-accent text-brand-foreground scale-105'
-                      : 'border border-brand-outline/40 text-semantic-muted hover:border-brand-accent hover:text-brand-accent hover:scale-105 active:scale-95'
-                  } focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-ink`}
-                >
-                  {UI_HELP_TEXT.EYES_FILTER_CUSTOM.replace('{count}', customEyes.length.toString())}
-                </button>
-                <HelpIcon helpTextKey="EYES_CUSTOM_FILTER" size="sm" />
-              </div>
-            </div>
 
             {/* Eyes Grid */}
             {loading ? (
@@ -761,7 +683,7 @@ export default function EyesPage() {
               </div>
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {getFilteredEyes().map((eye, index) => (
+                {eyes.map((eye, index) => (
                   <motion.div
                     key={eye.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -785,15 +707,6 @@ export default function EyesPage() {
                         <h3 className="mb-1 text-xl font-bold text-brand-foreground">{eye.name}</h3>
                         <div className="mb-2 flex items-center justify-center gap-2">
                           <span className="text-sm text-brand-foreground/80">v{eye.version}</span>
-                          <span
-                            className={`rounded-full px-2 py-0.5 text-xs ${
-                              eye.source === 'built-in'
-                                ? 'bg-white/20 text-brand-foreground'
-                                : `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success}`
-                            }`}
-                          >
-                            {eye.source}
-                          </span>
                         </div>
 
                         {/* Capabilities pills if available */}
@@ -829,37 +742,17 @@ export default function EyesPage() {
                         {UI_HELP_TEXT.EYES_BUTTON_CONFIGURE_PERSONA}
                       </button>
                     </div>
-
-                    {eye.source === 'custom' && (
-                      <div className="mt-2 text-center">
-                        <span className="text-xs text-brand-foreground/70">
-                          {UI_HELP_TEXT.EYES_CREATED_PREFIX} {new Date(eye.createdAt!).toLocaleDateString()}
-                        </span>
-                      </div>
-                    )}
                   </motion.div>
               ))}
               </div>
             )}
 
-            {!loading && getFilteredEyes().length === 0 && (
+            {!loading && eyes.length === 0 && (
               <EmptyState
-                icon={viewMode === 'custom' ? Sparkles : EyeIcon}
-                title={viewMode === 'custom' ? UI_HELP_TEXT.EYES_EMPTY_CUSTOM_TITLE : viewMode === 'built-in' ? UI_HELP_TEXT.EYES_EMPTY_BUILTIN_TITLE : UI_HELP_TEXT.EYES_EMPTY_ALL_TITLE}
-                description={
-                  viewMode === 'custom'
-                    ? UI_HELP_TEXT.EYES_EMPTY_CUSTOM_DESCRIPTION
-                    : viewMode === 'built-in'
-                    ? UI_HELP_TEXT.EYES_EMPTY_BUILTIN_DESCRIPTION
-                    : UI_HELP_TEXT.EYES_EMPTY_ALL_DESCRIPTION
-                }
-                actions={
-                  viewMode === 'custom'
-                    ? [{ label: UI_HELP_TEXT.EYES_EMPTY_ACTION_CREATE, onClick: startCreating, variant: 'primary' }]
-                    : viewMode === 'all'
-                    ? [{ label: UI_HELP_TEXT.EYES_EMPTY_ACTION_VIEW_BUILTIN, onClick: () => setViewMode('built-in'), variant: 'secondary' }]
-                    : []
-                }
+                icon={EyeIcon}
+                title={UI_HELP_TEXT.EYES_EMPTY_ALL_TITLE}
+                description={UI_HELP_TEXT.EYES_EMPTY_ALL_DESCRIPTION}
+                actions={[{ label: UI_HELP_TEXT.EYES_EMPTY_ACTION_CREATE, onClick: startCreating, variant: 'primary' }]}
               />
             )}
           </div>

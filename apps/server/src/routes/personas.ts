@@ -3,9 +3,10 @@ import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
 import { personas, personaVersions } from '@third-eye/db';
 import { personaBlueprints } from '@third-eye/db/schema';
-import { DEFAULT_PERSONA_MAP } from '@third-eye/db/defaults';
+// DEFAULT_PERSONA_MAP removed - all personas in database
 import { getEyeIconPath, EyeId } from '@third-eye/constants';
 import { eq, and, desc } from 'drizzle-orm';
+import { getEyeIdByName, getEyeNameById, generateId } from '@third-eye/db/utils/lookups';
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
@@ -194,11 +195,17 @@ app.get('/', async (c) => {
       .orderBy(desc(personas.createdAt))
       .all();
 
-    // Ensure all personas have the name field populated
-    const personasWithNames = allPersonas.map((persona) => ({
-      ...persona,
-      name: persona.name || DEFAULT_PERSONA_MAP[persona.eye]?.name || persona.eye,
-    }));
+    // Ensure all personas have the name field populated and convert eyeId to eyeName
+    const personasWithNames = await Promise.all(
+      allPersonas.map(async (persona) => {
+        const eyeName = await getEyeNameById(persona.eyeId);
+        return {
+          ...persona,
+          name: persona.name || eyeName || 'unknown',
+          eyeName, // Include for backward compatibility
+        };
+      })
+    );
 
     return createSuccessResponse(c, personasWithNames);
   } catch (error) {
@@ -210,34 +217,31 @@ app.get('/', async (c) => {
 // Get personas for specific Eye
 app.get('/:eye', async (c) => {
   try {
-    const eye = c.req.param('eye');
+    const eyeName = c.req.param('eye');
     const { db } = getDb();
+
+    // Convert eye name to UUID
+    const eyeId = await getEyeIdByName(eyeName);
+    if (!eyeId) {
+      return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
+    }
 
     const eyePersonas = await db
       .select()
       .from(personas)
-      .where(eq(personas.eye, eye))
+      .where(eq(personas.eyeId, eyeId))
       .orderBy(desc(personas.version))
       .all();
 
     if (eyePersonas.length === 0) {
-      // Return default persona template if none exist
-      const definition = DEFAULT_PERSONA_MAP[eye];
-      if (definition) {
-        return createSuccessResponse(c, {
-          eye,
-          versions: [],
-          activeVersion: null,
-          defaultTemplate: definition.content,
-        });
-      }
+      // All personas should exist in database (seeded on startup)
       return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
     }
 
     const active = eyePersonas.find(p => p.active);
 
     return createSuccessResponse(c, {
-      eye,
+      eye: eyeName,
       versions: eyePersonas,
       activeVersion: active?.version || null,
     });
@@ -250,33 +254,27 @@ app.get('/:eye', async (c) => {
 // Get active persona for specific Eye
 app.get('/:eye/active', async (c) => {
   try {
-    const eye = c.req.param('eye');
+    const eyeName = c.req.param('eye');
     const { db } = getDb();
+
+    // Convert eye name to UUID
+    const eyeId = await getEyeIdByName(eyeName);
+    if (!eyeId) {
+      return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
+    }
 
     const active = await db
       .select()
       .from(personas)
-      .where(and(eq(personas.eye, eye), eq(personas.active, true)))
+      .where(and(eq(personas.eyeId, eyeId), eq(personas.active, true)))
       .get();
 
     if (active) {
       return createSuccessResponse(c, active);
     }
 
-    // Return default persona template
-    const definition = DEFAULT_PERSONA_MAP[eye];
-    if (definition) {
-      return createSuccessResponse(c, {
-        eye,
-        version: definition.version,
-        content: definition.content,
-        active: false,
-        createdAt: new Date(),
-        isDefault: true,
-      });
-    }
-
-    return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
+    // All personas should exist in database (seeded on startup)
+    return createErrorResponse(c, { title: 'Persona Not Found', status: 404, detail: `No active persona for ${eyeName}` });
   } catch (error) {
     console.error('Failed to fetch active persona:', error);
     return createInternalErrorResponse(c, 'Failed to fetch active persona');
@@ -286,7 +284,7 @@ app.get('/:eye/active', async (c) => {
 // Create new persona version (staged, not active)
 app.post('/:eye', validateBodyWithEnvelope(createPersonaSchema), async (c) => {
   try {
-    const eye = c.req.param('eye');
+    const eyeName = c.req.param('eye');
     const {
       name,
       metadata_json,
@@ -301,23 +299,29 @@ app.post('/:eye', validateBodyWithEnvelope(createPersonaSchema), async (c) => {
 
     const { db } = getDb();
 
+    // Convert eye name to UUID
+    const eyeId = await getEyeIdByName(eyeName);
+    if (!eyeId) {
+      return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
+    }
+
     // Get latest version number
     const latest = await db
       .select()
       .from(personas)
-      .where(eq(personas.eye, eye))
+      .where(eq(personas.eyeId, eyeId))
       .orderBy(desc(personas.version))
       .get();
 
     const newVersion = (latest?.version || 0) + 1;
 
-    // Generate persona ID
-    const personaId = `${eye}_v${newVersion}`;
+    // Generate persona ID as UUID
+    const personaId = generateId();
 
     // Insert new persona version (inactive by default)
     const newPersona = {
       id: personaId,
-      eye,
+      eyeId,
       name,
       version: newVersion,
       metadata_json,
@@ -337,7 +341,7 @@ app.post('/:eye', validateBodyWithEnvelope(createPersonaSchema), async (c) => {
     const inserted = await db
       .select()
       .from(personas)
-      .where(and(eq(personas.eye, eye), eq(personas.version, newVersion)))
+      .where(and(eq(personas.eyeId, eyeId), eq(personas.version, newVersion)))
       .get();
 
     return createSuccessResponse(c, {
@@ -354,16 +358,22 @@ app.post('/:eye', validateBodyWithEnvelope(createPersonaSchema), async (c) => {
 // Activate a specific persona version
 app.patch('/:eye/activate/:version', async (c) => {
   try {
-    const eye = c.req.param('eye');
+    const eyeName = c.req.param('eye');
     const version = parseInt(c.req.param('version'));
 
     const { db } = getDb();
+
+    // Convert eye name to UUID
+    const eyeId = await getEyeIdByName(eyeName);
+    if (!eyeId) {
+      return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
+    }
 
     // Check if version exists
     const targetPersona = await db
       .select()
       .from(personas)
-      .where(and(eq(personas.eye, eye), eq(personas.version, version)))
+      .where(and(eq(personas.eyeId, eyeId), eq(personas.version, version)))
       .get();
 
     if (!targetPersona) {
@@ -374,20 +384,20 @@ app.patch('/:eye/activate/:version', async (c) => {
     await db
       .update(personas)
       .set({ active: false })
-      .where(eq(personas.eye, eye))
+      .where(eq(personas.eyeId, eyeId))
       .run();
 
     // Activate target version
     await db
       .update(personas)
       .set({ active: true })
-      .where(and(eq(personas.eye, eye), eq(personas.version, version)))
+      .where(and(eq(personas.eyeId, eyeId), eq(personas.version, version)))
       .run();
 
     const activated = await db
       .select()
       .from(personas)
-      .where(and(eq(personas.eye, eye), eq(personas.version, version)))
+      .where(and(eq(personas.eyeId, eyeId), eq(personas.version, version)))
       .get();
 
     // Broadcast persona change via WebSocket
@@ -395,7 +405,8 @@ app.patch('/:eye/activate/:version', async (c) => {
       const { wsManager } = await import('../websocket');
       wsManager.broadcast({
         type: 'persona_activated',
-        eye,
+        eye: eyeName, // Send eye name for frontend
+        eyeId, // Include UUID
         version,
         persona: activated,
       });
@@ -405,7 +416,7 @@ app.patch('/:eye/activate/:version', async (c) => {
 
     return createSuccessResponse(c, {
       success: true,
-      message: `Persona version ${version} activated for ${eye}`,
+      message: `Persona version ${version} activated for ${eyeName}`,
       persona: activated,
     });
   } catch (error) {
@@ -417,15 +428,21 @@ app.patch('/:eye/activate/:version', async (c) => {
 // Delete a persona version (cannot delete active version)
 app.delete('/:eye/:version', async (c) => {
   try {
-    const eye = c.req.param('eye');
+    const eyeName = c.req.param('eye');
     const version = parseInt(c.req.param('version'));
 
     const { db } = getDb();
 
+    // Convert eye name to UUID
+    const eyeId = await getEyeIdByName(eyeName);
+    if (!eyeId) {
+      return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
+    }
+
     const targetPersona = await db
       .select()
       .from(personas)
-      .where(and(eq(personas.eye, eye), eq(personas.version, version)))
+      .where(and(eq(personas.eyeId, eyeId), eq(personas.version, version)))
       .get();
 
     if (!targetPersona) {
@@ -438,7 +455,7 @@ app.delete('/:eye/:version', async (c) => {
 
     await db
       .delete(personas)
-      .where(and(eq(personas.eye, eye), eq(personas.version, version)))
+      .where(and(eq(personas.eyeId, eyeId), eq(personas.version, version)))
       .run();
 
     return createSuccessResponse(c, {

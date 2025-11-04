@@ -5,7 +5,7 @@
  * Integrates with orchestrator retry loop without heuristics.
  */
 
-import type { PersonaBlueprint } from '../interfaces/persona-blueprint';
+import type { PersonaBlueprint } from '@third-eye/constants/blueprints-data';
 import { EyeStatusCode } from '@third-eye/constants';
 import { EnvelopeField, ErrorMessage } from '@third-eye/constants';
 

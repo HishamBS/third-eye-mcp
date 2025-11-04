@@ -1,11 +1,10 @@
 import { Hono } from 'hono';
 import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
-import { pipelineEvents, eyesCustom, eyesRouting, personas } from '@third-eye/db';
+import { pipelineEvents, eyes, personaBlueprints, eyesRouting, personas } from '@third-eye/db';
 import { EyeOrchestrator } from '@third-eye/core';
 import { sessionManager } from '@third-eye/core/session-manager';
-import { eq, desc, inArray, and } from 'drizzle-orm';
-import { DEFAULT_PERSONAS, DEFAULT_PERSONA_MAP } from '@third-eye/db/defaults';
+import { eq, desc, inArray, and, sql } from 'drizzle-orm';
 import type { Envelope } from '@third-eye/types';
 import {
   validateBodyWithEnvelope,
@@ -18,42 +17,45 @@ import {
 import { z } from 'zod';
 
 /**
- * Eyes API Routes
+ * Eyes API Routes - Data-Driven Unified System
  *
- * All Eyes now route through the orchestrator which:
+ * ARCHITECTURE CHANGE (v1):
+ * - All eyes are database rows (no distinction between seeded and custom)
+ * - Eyes are seeded from blueprints/data.ts on startup
+ * - No hardcoded checks or DEFAULT_PERSONA_MAP lookups
+ * - Database is the single source of truth
+ *
+ * All Eyes route through the orchestrator which:
  * 1. Loads the persona from database
  * 2. Calls the configured LLM provider
  * 3. Returns the structured envelope response
- *
- * This makes Eyes true LLM-powered personas instead of hardcoded algorithms.
  */
 
 const app = new Hono();
 const orchestrator = new EyeOrchestrator();
 
-const BUILT_IN_EYE_IDS = DEFAULT_PERSONAS.map((persona) => persona.eye);
-
-async function getActivePersonasMap(db: ReturnType<typeof getDb>['db'], eyes: string[]) {
-  if (eyes.length === 0) {
+async function getActivePersonasMap(db: ReturnType<typeof getDb>['db'], eyeIds: string[]) {
+  if (eyeIds.length === 0) {
     return new Map<string, typeof personas.$inferSelect>();
   }
 
   const rows = await db
     .select()
     .from(personas)
-    .where(inArray(personas.eye, eyes))
+    .where(inArray(personas.eyeId, eyeIds))
     .orderBy(desc(personas.version))
     .all();
 
   const map = new Map<string, typeof personas.$inferSelect>();
   for (const row of rows) {
+    // Map by eyeId for lookup
     if (row.active) {
-      map.set(row.eye, row);
+      map.set(row.eyeId, row);
       continue;
     }
 
-    if (!map.has(row.eye)) {
-      map.set(row.eye, row);
+    if (!map.has(row.eyeId)) {
+      map.set(row.eyeId, row);
     }
   }
 
@@ -222,99 +224,84 @@ app.post('/:id/test', async (c) => {
 });
 
 /**
- * GET /eyes/registry - Get all built-in Eyes from registry
- */
-app.get('/registry', async (c) => {
-  const { db } = getDb();
-  const activePersonaMap = await getActivePersonasMap(db, BUILT_IN_EYE_IDS);
-
-  const payload = DEFAULT_PERSONAS.map((definition) => {
-    const active = activePersonaMap.get(definition.eye);
-    return {
-      id: definition.eye,
-      name: definition.name,
-      version: active?.version ?? definition.version,
-      description: definition.description,
-      source: 'built-in' as const,
-      personaTemplate: active?.content ?? definition.content,
-    };
-  });
-
-  return createSuccessResponse(c, payload);
-});
-
-/**
- * GET /eyes/custom - Get all user-created custom Eyes
- */
-app.get('/custom', async (c) => {
-  const { db } = getDb();
-  const customEyes = await db
-    .select()
-    .from(eyesCustom)
-    .where(eq(eyesCustom.active, true))
-    .orderBy(desc(eyesCustom.createdAt))
-    .all();
-
-  return createSuccessResponse(c,
-    customEyes.map((eye) => ({
-      id: eye.id,
-      name: eye.name,
-      version: eye.version,
-      description: eye.description,
-      source: 'custom',
-      inputSchema: eye.inputSchemaJson,
-      outputSchema: eye.outputSchemaJson,
-      personaId: eye.personaId,
-      defaultRouting: eye.defaultRouting,
-      createdAt: eye.createdAt,
-    }))
-  );
-});
-
-/**
- * GET /eyes/all - Get ALL Eyes (built-in + custom) - NO HARDCODING
+ * GET /eyes/all - Get ALL Eyes from unified database table
+ * NO hardcoded checks, NO DEFAULT_PERSONA_MAP, NO built-in vs custom distinction
+ * Database is the only source of truth
  */
 app.get('/all', async (c) => {
   const { db } = getDb();
 
-  const activePersonaMap = await getActivePersonasMap(db, BUILT_IN_EYE_IDS);
-  const builtInEyes = DEFAULT_PERSONAS.map((definition) => {
-    const active = activePersonaMap.get(definition.eye);
-    return {
-      id: definition.eye,
-      name: definition.name,
-      version: active?.version ?? definition.version,
-      description: definition.description,
-      source: 'built-in' as const,
-      personaTemplate: active?.content ?? definition.content,
-    };
-  });
-
-  const customEyes = await db
+  const allEyes = await db
     .select()
-    .from(eyesCustom)
-    .where(eq(eyesCustom.active, true))
-    .orderBy(desc(eyesCustom.createdAt))
+    .from(eyes)
+    .where(eq(eyes.active, true))
+    .orderBy(desc(eyes.createdAt))
     .all();
 
-  const customEyesFormatted = customEyes.map((eye) => ({
-    id: eye.id,
-    name: eye.name,
-    version: eye.version.toString(),
-    description: eye.description,
-    source: 'custom' as const,
-    inputSchema: eye.inputSchemaJson,
-    outputSchema: eye.outputSchemaJson,
-    personaId: eye.personaId,
-    defaultRouting: eye.defaultRouting,
-    createdAt: eye.createdAt,
-  }));
+  // Fetch capabilities from blueprints
+  const eyeData = await Promise.all(
+    allEyes.map(async (eye) => {
+      const blueprint = await db
+        .select()
+        .from(personaBlueprints)
+        .where(eq(personaBlueprints.eyeId, eye.id))
+        .get();
 
-  return createSuccessResponse(c, [...builtInEyes, ...customEyesFormatted]);
+      return {
+        id: eye.id,
+        name: eye.name,
+        version: eye.version,
+        description: eye.description,
+        capabilities: blueprint ? JSON.parse(blueprint.capabilities as string) : [],
+        inputSchema: eye.inputSchemaJson,
+        outputSchema: eye.outputSchemaJson,
+        personaId: eye.personaId,
+        iconSvg: eye.iconSvg,
+        createdAt: eye.createdAt,
+      };
+    })
+  );
+
+  return createSuccessResponse(c, eyeData);
 });
 
 /**
- * GET /eyes/:id - Get specific Eye by ID with complete details
+ * GET /eyes/:name/icon - Get icon SVG for an Eye by name
+ * Used by EyeIcon component to fetch custom SVG icons
+ */
+app.get('/:name/icon', async (c) => {
+  const eyeName = c.req.param('name');
+
+  try {
+    const { db } = getDb();
+
+    // Find eye by name (case-insensitive, match active eyes first)
+    const eye = await db
+      .select()
+      .from(eyes)
+      .where(sql`LOWER(${eyes.name}) = LOWER(${eyeName})`)
+      .orderBy(desc(eyes.active), desc(eyes.createdAt))
+      .get();
+
+    if (!eye || !eye.iconSvg) {
+      return createErrorResponse(c, {
+        title: 'Eye Icon Not Found',
+        status: 404,
+        detail: `Icon for eye ${eyeName} not found`,
+      });
+    }
+
+    return createSuccessResponse(c, {
+      iconSvg: eye.iconSvg,
+    });
+  } catch (error) {
+    return createInternalErrorResponse(c, `Failed to fetch eye icon: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+});
+
+/**
+ * GET /eyes/:id - Get specific Eye by ID from unified database table
+ * NO hardcoded checks, database is the only source of truth
  */
 app.get('/:id', async (c) => {
   const eyeId = c.req.param('id');
@@ -322,53 +309,38 @@ app.get('/:id', async (c) => {
   try {
     const { db } = getDb();
 
-    // Check if it's a built-in Eye first
-    const builtInDefinition = DEFAULT_PERSONA_MAP[eyeId];
-    if (builtInDefinition) {
-      const activePersona = await db
-        .select()
-        .from(personas)
-        .where(and(eq(personas.eye, eyeId), eq(personas.active, true)))
-        .get();
-
-      return createSuccessResponse(c, {
-        id: eyeId,
-        name: builtInDefinition.name,
-        version: activePersona?.version ?? builtInDefinition.version,
-        description: builtInDefinition.description,
-        source: 'built-in' as const,
-        personaTemplate: activePersona?.content ?? builtInDefinition.content,
-      });
-    }
-
-    // Check if it's a custom Eye
-    const customEye = await db
+    const eye = await db
       .select()
-      .from(eyesCustom)
-      .where(eq(eyesCustom.id, eyeId))
-      .limit(1)
-      .all();
+      .from(eyes)
+      .where(eq(eyes.id, eyeId))
+      .get();
 
-    if (customEye.length > 0) {
-      const eye = customEye[0];
-      return createSuccessResponse(c, {
-        id: eye.id,
-        name: eye.name,
-        version: eye.version.toString(),
-        description: eye.description,
-        source: 'custom',
-        inputSchema: eye.inputSchemaJson,
-        outputSchema: eye.outputSchemaJson,
-        personaId: eye.personaId,
-        defaultRouting: eye.defaultRouting,
-        createdAt: eye.createdAt,
+    if (!eye) {
+      return createErrorResponse(c, {
+        title: 'Eye Not Found',
+        status: 404,
+        detail: `Eye ${eyeId} not found`,
       });
     }
 
-    return createErrorResponse(c, {
-      title: 'Eye Not Found',
-      status: 404,
-      detail: `Eye with id ${eyeId} not found`
+    // Fetch blueprint for capabilities
+    const blueprint = await db
+      .select()
+      .from(personaBlueprints)
+      .where(eq(personaBlueprints.eyeId, eyeId))
+      .get();
+
+    return createSuccessResponse(c, {
+      id: eye.id,
+      name: eye.name,
+      version: eye.version,
+      description: eye.description,
+      capabilities: blueprint ? JSON.parse(blueprint.capabilities as string) : [],
+      inputSchema: eye.inputSchemaJson,
+      outputSchema: eye.outputSchemaJson,
+      personaId: eye.personaId,
+      iconSvg: eye.iconSvg,
+      createdAt: eye.createdAt,
     });
   } catch (error) {
     return createInternalErrorResponse(c, `Failed to fetch Eye: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -386,7 +358,7 @@ app.get('/:id/personas', async (c) => {
     const eyePersonas = await db
       .select()
       .from(personas)
-      .where(eq(personas.eye, eyeId))
+      .where(eq(personas.eyeId, eyeId))
       .orderBy(desc(personas.version))
       .all();
 
@@ -404,6 +376,7 @@ app.get('/:id/personas', async (c) => {
 
 /**
  * PATCH /eyes/:id/name - Update Eye display name
+ * SSOT: Updates eyes.description directly (database is single source of truth)
  */
 app.patch('/:id/name', async (c) => {
   try {
@@ -420,38 +393,30 @@ app.patch('/:id/name', async (c) => {
     }
 
     const { db } = getDb();
-    const { eyeSettings } = await import('@third-eye/db/schema');
-    const { eq } = await import('drizzle-orm');
 
-    // Check if Eye settings exist
+    // Check if Eye exists
     const existing = await db
       .select()
-      .from(eyeSettings)
-      .where(eq(eyeSettings.eye, eyeId))
+      .from(eyes)
+      .where(eq(eyes.id, eyeId))
       .get();
 
-    if (existing) {
-      // Update existing
-      await db
-        .update(eyeSettings)
-        .set({
-          displayName: displayName.trim(),
-          updatedAt: new Date(),
-        })
-        .where(eq(eyeSettings.eye, eyeId))
-        .run();
-    } else {
-      // Insert new
-      await db
-        .insert(eyeSettings)
-        .values({
-          eye: eyeId,
-          displayName: displayName.trim(),
-          description: null,
-          updatedAt: new Date(),
-        })
-        .run();
+    if (!existing) {
+      return createErrorResponse(c, {
+        title: 'Eye Not Found',
+        status: 404,
+        detail: `Eye with id ${eyeId} not found`
+      });
     }
+
+    // Update description field in eyes table (SSOT)
+    await db
+      .update(eyes)
+      .set({
+        description: displayName.trim(),
+      })
+      .where(eq(eyes.id, eyeId))
+      .run();
 
     return createSuccessResponse(c, {
       eye: eyeId,
@@ -465,62 +430,125 @@ app.patch('/:id/name', async (c) => {
 });
 
 /**
- * POST /eyes/custom - Create new custom Eye
+ * POST /eyes/custom - Create new Eye
+ * Unified endpoint - all eyes use same creation flow (seeded on first run, user-created after)
  */
 app.post('/custom', validateBodyWithEnvelope(createCustomEyeSchema), async (c) => {
   try {
     const { name, description, inputSchema, outputSchema, personaId, defaultRouting } = c.get('validatedBody');
-    console.log('[Custom Eye] Creating with data:', { name, description, hasInputSchema: !!inputSchema, hasOutputSchema: !!outputSchema });
+    console.log('[Eye] Creating with data:', { name, description, hasInputSchema: !!inputSchema, hasOutputSchema: !!outputSchema });
 
     const { db } = getDb();
 
-  // Check if Eye with this name already exists
-  const existing = await db
-    .select()
-    .from(eyesCustom)
-    .where(eq(eyesCustom.name, name))
-    .orderBy(desc(eyesCustom.version))
-    .limit(1)
-    .all();
+    // Check if Eye with this name already exists
+    const existing = await db
+      .select()
+      .from(eyes)
+      .where(eq(eyes.name, name))
+      .orderBy(desc(eyes.version))
+      .limit(1)
+      .all();
 
-  const nextVersion = existing.length > 0 ? existing[0].version + 1 : 1;
+    const nextVersion = existing.length > 0 ? existing[0].version + 1 : 1;
 
-  const id = nanoid();
-  const now = new Date();
+    const id = nanoid();
+    const now = new Date();
 
-  // Deactivate previous versions
-  if (existing.length > 0) {
-    await db
-      .update(eyesCustom)
-      .set({ active: false })
-      .where(eq(eyesCustom.name, name))
-      .run();
-  }
+    // Deactivate previous versions
+    if (existing.length > 0) {
+      await db
+        .update(eyes)
+        .set({ active: false })
+        .where(eq(eyes.name, name))
+        .run();
+    }
 
-  // Insert new version
-  await db.insert(eyesCustom).values({
-    id,
-    name,
-    version: nextVersion,
-    description,
-    inputSchemaJson: inputSchema,
-    outputSchemaJson: outputSchema,
-    personaId: personaId || null,
-    defaultRouting: defaultRouting || null,
-    active: true,
-    createdAt: now,
-  }).run();
+    // Insert new version
+    await db.insert(eyes).values({
+      id,
+      name,
+      version: nextVersion,
+      description,
+      inputSchemaJson: inputSchema,
+      outputSchemaJson: outputSchema,
+      personaId: personaId || null,
+      iconSvg: '',
+      active: true,
+      createdAt: now,
+    }).run();
 
-    console.log('[Custom Eye] Successfully created:', { id, name, version: nextVersion });
-    return createSuccessResponse(c, { id, version: nextVersion, message: 'Custom Eye created successfully' }, { status: 201 });
+    // Auto-create routing entry if it doesn't exist
+    const existingRouting = await db
+      .select()
+      .from(eyesRouting)
+      .where(eq(eyesRouting.eyeId, id))
+      .get();
+
+    if (!existingRouting) {
+      const defaultRouting = {
+        primaryProvider: 'groq',
+        primaryModel: 'llama-3.3-70b-versatile',
+        fallbackProvider: 'openrouter',
+        fallbackModel: 'anthropic/claude-3.5-sonnet',
+      };
+
+      await db.insert(eyesRouting).values({
+        id: nanoid(),
+        eyeId: id,
+        primaryProvider: defaultRouting.primaryProvider,
+        primaryModel: defaultRouting.primaryModel,
+        fallbackProvider: defaultRouting.fallbackProvider,
+        fallbackModel: defaultRouting.fallbackModel,
+      }).run();
+      console.log(`[Eye] Auto-created routing for ${name}`);
+    }
+
+    // Auto-create persona blueprint if it doesn't exist
+    const existingBlueprint = await db
+      .select()
+      .from(personaBlueprints)
+      .where(eq(personaBlueprints.eyeId, name))
+      .get();
+
+    if (!existingBlueprint) {
+      // Create minimal blueprint with basic structure
+      const minimalBlueprint = {
+        eyeId: name,
+        name: name,
+        description: description,
+        version: String(nextVersion),
+        capabilities: JSON.stringify([]), // Empty capabilities array - user can add later
+        mission: `Mission for ${name}: ${description}`,
+        phases: JSON.stringify({
+          guidance: null,
+          validation: null,
+        }),
+        envelopeContract: JSON.stringify({
+          requiredKeys: ['tag', 'ok', 'code', 'data', 'ui', 'next'],
+          requiredDataKeys: [],
+          requiredUiKeys: ['title', 'summary', 'details', 'icon', 'color'],
+        }),
+        reminders: JSON.stringify([]),
+        notes: null,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      await db.insert(personaBlueprints).values(minimalBlueprint).run();
+      console.log(`[Eye] Auto-created persona blueprint for ${name}`);
+    }
+
+    console.log('[Eye] Successfully created:', { id, name, version: nextVersion });
+    return createSuccessResponse(c, { id, version: nextVersion, message: 'Eye created successfully' }, { status: 201 });
   } catch (error) {
-    console.error('[Custom Eye] Creation failed:', error);
-    return createInternalErrorResponse(c, `Failed to create custom eye: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error('[Eye] Creation failed:', error);
+    return createInternalErrorResponse(c, `Failed to create eye: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
 
 /**
- * PUT /eyes/custom/:id - Update existing custom Eye
+ * PUT /eyes/custom/:id - Update existing Eye
+ * Unified endpoint - all eyes use same update flow
  */
 app.put('/custom/:id', validateBodyWithEnvelope(createCustomEyeSchema), async (c) => {
   const id = c.req.param('id');
@@ -531,8 +559,8 @@ app.put('/custom/:id', validateBodyWithEnvelope(createCustomEyeSchema), async (c
   // Check if Eye exists
   const existing = await db
     .select()
-    .from(eyesCustom)
-    .where(eq(eyesCustom.id, id))
+    .from(eyes)
+    .where(eq(eyes.id, id))
     .limit(1)
     .all();
 
@@ -540,28 +568,29 @@ app.put('/custom/:id', validateBodyWithEnvelope(createCustomEyeSchema), async (c
     return createErrorResponse(c, {
       title: 'Eye Not Found',
       status: 404,
-      detail: `Custom Eye with id ${id} not found`
+      detail: `Eye with id ${id} not found`
     });
   }
 
   // Update the Eye
   await db
-    .update(eyesCustom)
+    .update(eyes)
     .set({
       description,
       inputSchemaJson: inputSchema,
       outputSchemaJson: outputSchema,
       personaId: personaId || null,
-      defaultRouting: defaultRouting || null,
+      iconSvg: '',
     })
-    .where(eq(eyesCustom.id, id))
+      .where(eq(eyes.id, id))
     .run();
 
   return createSuccessResponse(c, { id, message: 'Custom Eye updated successfully' });
 });
 
 /**
- * DELETE /eyes/custom/:id - Delete (deactivate) custom Eye
+ * DELETE /eyes/custom/:id - Delete (deactivate) Eye
+ * Unified endpoint - all eyes use same deletion flow
  */
 app.delete('/custom/:id', async (c) => {
   const id = c.req.param('id');
@@ -570,8 +599,8 @@ app.delete('/custom/:id', async (c) => {
 
   const existing = await db
     .select()
-    .from(eyesCustom)
-    .where(eq(eyesCustom.id, id))
+    .from(eyes)
+    .where(eq(eyes.id, id))
     .limit(1)
     .all();
 
@@ -579,21 +608,22 @@ app.delete('/custom/:id', async (c) => {
     return createErrorResponse(c, {
       title: 'Eye Not Found',
       status: 404,
-      detail: `Custom Eye with id ${id} not found`
+      detail: `Eye with id ${id} not found`
     });
   }
 
   await db
-    .update(eyesCustom)
+    .update(eyes)
     .set({ active: false })
-    .where(eq(eyesCustom.id, id))
+      .where(eq(eyes.id, id))
     .run();
 
-  return createSuccessResponse(c, { message: 'Custom Eye deleted successfully' });
+  return createSuccessResponse(c, { message: 'Eye deleted successfully' });
 });
 
 /**
- * POST /eyes/custom/:id/test - Test a custom Eye with sample input
+ * POST /eyes/custom/:id/test - Test an Eye with sample input
+ * Unified endpoint - all eyes use same test flow
  */
 app.post('/custom/:id/test', async (c) => {
   const id = c.req.param('id');
@@ -610,28 +640,28 @@ app.post('/custom/:id/test', async (c) => {
 
   const { db } = getDb();
 
-  const customEye = await db
+  const eye = await db
     .select()
-    .from(eyesCustom)
-    .where(eq(eyesCustom.id, id))
+    .from(eyes)
+    .where(eq(eyes.id, id))
     .limit(1)
     .all();
 
-  if (customEye.length === 0) {
+  if (eye.length === 0) {
     return createErrorResponse(c, {
       title: 'Eye Not Found',
       status: 404,
-      detail: `Custom Eye with id ${id} not found`
+      detail: `Eye with id ${id} not found`
     });
   }
 
-  const eye = customEye[0];
+  const eyeData = eye[0];
   const sessionId = nanoid();
 
   try {
-    const response = await orchestrator.runEye(eye.name, testInput, sessionId);
+    const response = await orchestrator.runEye(eyeData.name, testInput, sessionId);
     return createSuccessResponse(c, {
-      eyeName: eye.name,
+      eyeName: eyeData.name,
       testInput,
       response,
     });

@@ -7,6 +7,7 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { useDialog } from '@/hooks/useDialog';
 import { UI_HELP_TEXT } from '@third-eye/constants';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE, STATUS_BG_COLORS } from '@/constants/color-mappings';
+import { API_BASE_URL } from '@/consts/api';
 
 interface StrictnessProfile {
   id: string;
@@ -43,10 +44,10 @@ export default function StrictnessPage() {
 
   const fetchProfiles = async () => {
     try {
-      const response = await fetch('/api/strictness');
+      const response = await fetch(`${API_BASE_URL}/api/strictness`);
       if (response.ok) {
         const data = await response.json();
-        setProfiles(data);
+        setProfiles(data.data || data || []);
       }
     } catch (error) {
       console.error('Failed to fetch strictness profiles:', error);
@@ -109,7 +110,7 @@ export default function StrictnessPage() {
     setLoading(true);
     try {
       if (isCreating) {
-        const response = await fetch('/api/strictness', {
+        const response = await fetch(`${API_BASE_URL}/api/strictness`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -125,7 +126,7 @@ export default function StrictnessPage() {
           await dialog.alert(UI_HELP_TEXT.STRICTNESS_DIALOG_CREATE_FAILED_TITLE, UI_HELP_TEXT.STRICTNESS_DIALOG_CREATE_FAILED_MESSAGE.replace('{error}', error.error || UI_HELP_TEXT.STRICTNESS_ERROR_UNKNOWN));
         }
       } else if (isEditing && selectedProfile) {
-        const response = await fetch(`/api/strictness/${selectedProfile.id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/strictness/${selectedProfile.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -167,7 +168,7 @@ export default function StrictnessPage() {
     }
 
     try {
-      const response = await fetch(`/api/strictness/${profile.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/strictness/${profile.id}`, {
         method: 'DELETE',
       });
 
