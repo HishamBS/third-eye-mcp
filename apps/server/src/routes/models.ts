@@ -6,6 +6,7 @@ import { getConfig } from '@third-eye/config';
 import { decryptFromStorage } from '@third-eye/core';
 import { PROVIDERS, type ProviderId } from '@third-eye/types';
 import { eq, desc } from 'drizzle-orm';
+import { nanoid } from 'nanoid';
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -40,8 +41,9 @@ app.get('/:provider', async (c) => {
     const { db } = getDb();
     for (const model of models) {
       await db.insert(modelsCache).values({
+        id: nanoid(),
         provider: providerId,
-        model: model.name,
+        model: model.id,
         displayName: model.name,
         family: model.family,
         capabilityJson: model.capability,

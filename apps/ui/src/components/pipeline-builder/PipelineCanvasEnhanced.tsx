@@ -96,6 +96,12 @@ export function PipelineCanvasEnhanced() {
   const handleNodeClick = useCallback(
     (event: React.MouseEvent, node: PipelineNode) => {
       event.stopPropagation();
+
+      if (!node.position) {
+        console.warn('[PipelineCanvas] Node has no position:', node.id);
+        return;
+      }
+
       reactFlowInstance.setCenter(
         node.position.x + (node.width || CANVAS_SETTINGS.NODE_SPACING) / 2,
         node.position.y + (node.height || CANVAS_SETTINGS.NODE_SPACING) / 2,
