@@ -3,6 +3,7 @@ import { getDb } from '@third-eye/db';
 import { runs } from '@third-eye/db';
 import { sql, eq, and, gt, desc } from 'drizzle-orm';
 import { getEyeIdByName } from '@third-eye/db/utils/lookups';
+import { LEADERBOARD_CATEGORIES, type LeaderboardCategory } from '@third-eye/constants';
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
@@ -23,8 +24,6 @@ const app = new Hono();
 
 app.use('*', requestIdMiddleware());
 app.use('*', errorHandler());
-
-type LeaderboardCategory = 'fastest' | 'cheapest' | 'reliable' | 'popular' | 'quality';
 
 interface LeaderboardEntry {
   rank: number;

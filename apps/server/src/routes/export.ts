@@ -11,6 +11,7 @@ import {
   errorHandler
 } from '../middleware/response';
 import { z } from 'zod';
+import { type ExportFormat } from '@third-eye/constants';
 
 /**
  * Export API
@@ -22,8 +23,6 @@ const app = new Hono();
 
 app.use('*', requestIdMiddleware());
 app.use('*', errorHandler());
-
-type ExportFormat = 'pdf' | 'html' | 'json' | 'md';
 
 interface ExportData {
   session: Session;
