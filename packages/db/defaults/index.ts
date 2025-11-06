@@ -83,51 +83,27 @@ async function seedEyes(
   log: (message: string) => void,
   force: boolean
 ): Promise<boolean> {
-  log(`  🚀 seedEyes CALLED (start of function)`);
-
   const existing = await db.select({ id: eyes.id }).from(eyes).limit(1);
   const shouldSeed = force || existing.length === 0;
 
-  log(`  🔍 seedEyes: existing.length=${existing.length}, force=${force}, shouldSeed=${shouldSeed}`);
-
   if (!shouldSeed) {
     // Eyes already exist - populate map from database instead
-    log(`  📌 TAKING EXISTING PATH: Eyes already exist, populating EYE_NAME_TO_UUID_MAP from database...`);
-    console.log('[DEBUG-EXISTING] Eyes already exist, populating map from database');
     const allEyes = await db.select({ id: eyes.id, name: eyes.name }).from(eyes).all();
-    console.log('[DEBUG-EXISTING] Found eyes in database:', allEyes.length);
 
     // Build reverse lookup: display name -> EyeId constant
-    // We need to match display names to EyeId constants
     for (const eye of allEyes) {
-      console.log(`[DEBUG-EXISTING] Matching eye from DB: "${eye.name}" (id: ${eye.id})`);
-      // Find matching EyeId by comparing display name to blueprint metadata name
       const matchingEyeId = Object.entries(DEFAULT_BLUEPRINTS as any).find(
-        ([eyeId, blueprint]: [string, any]) => {
-          const matches = blueprint.metadata.name === eye.name;
-          console.log(`[DEBUG-EXISTING]   Checking eyeId="${eyeId}", blueprint.name="${blueprint.metadata.name}", matches=${matches}`);
-          return matches;
-        }
+        ([eyeId, blueprint]: [string, any]) => blueprint.metadata.name === eye.name
       );
 
       if (matchingEyeId) {
         const [eyeId] = matchingEyeId;
         EYE_NAME_TO_UUID_MAP.set(eyeId, eye.id);
-        console.log(`[DEBUG-EXISTING] ✓ Mapped ${eyeId} -> ${eye.id}`);
-        log(`  ✓ Mapped ${eyeId} -> ${eye.id.substring(0, 8)}... (${eye.name})`);
-      } else {
-        console.log(`[DEBUG-EXISTING] ✗ Could not find matching eyeId for: "${eye.name}"`);
-        log(`  ⚠ Could not find EyeId for eye: ${eye.name} (id: ${eye.id})`);
       }
     }
-    
-    const mapKeysAfterPopulate = Array.from(EYE_NAME_TO_UUID_MAP.keys());
-    log(`  📋 EYE_NAME_TO_UUID_MAP populated from DB: ${mapKeysAfterPopulate.length} entries: ${mapKeysAfterPopulate.join(', ')}`);
-    
+
     return false;
   }
-
-  log(`  📌 TAKING FRESH SEEDING PATH: Creating new eyes...`);
 
   if (force) {
     await db.delete(eyes).run(); // Delete ALL eyes
@@ -135,38 +111,26 @@ async function seedEyes(
   }
 
   let eyeEntries: NewEye[] = [];
-  
+
   try {
-    
     const now = new Date();
     // Construct path to SVG files (relative to workspace root)
     const svgBasePath = join(process.cwd(), 'apps', 'ui', 'public', 'eyes');
-    
+
     // Validate DEFAULT_BLUEPRINTS exists and has entries
     if (!DEFAULT_BLUEPRINTS || typeof DEFAULT_BLUEPRINTS !== 'object') {
       throw new Error('DEFAULT_BLUEPRINTS is not an object');
     }
-    
+
     const blueprintKeys = Object.keys(DEFAULT_BLUEPRINTS);
     if (blueprintKeys.length === 0) {
       throw new Error('DEFAULT_BLUEPRINTS is empty - no blueprints to seed');
     }
-    
+
     log(`  📋 Found ${blueprintKeys.length} blueprints: ${blueprintKeys.join(', ')}`);
-    
-    // CRITICAL: Verify jogan and mangekyo are in the keys
-    const hasJogan = blueprintKeys.includes('jogan');
-    const hasMangekyo = blueprintKeys.includes('mangekyo');
-    console.error(`[CRITICAL] blueprintKeys has jogan: ${hasJogan}, has mangekyo: ${hasMangekyo}`);
-    console.error(`[CRITICAL] All blueprintKeys: ${blueprintKeys.join(', ')}`);
-    
-    console.log('[DEBUG-FRESH-SEED] About to process DEFAULT_BLUEPRINTS entries');
-    console.log('[DEBUG-FRESH-SEED] Keys:', Object.keys(DEFAULT_BLUEPRINTS));
 
     eyeEntries = Object.entries(DEFAULT_BLUEPRINTS as any)
       .map(([eyeId, blueprint]: [string, any]) => {
-        console.log(`[DEBUG-FRESH-SEED] Processing eyeId: "${eyeId}"`);
-
         // Validate eyeId is not null/undefined
         if (!eyeId || typeof eyeId !== 'string' || eyeId.trim() === '') {
           log(`  ✗ Invalid eyeId: ${eyeId} (type: ${typeof eyeId})`);
@@ -180,15 +144,7 @@ async function seedEyes(
         }
 
         const eyeUuid = generateId(); // Generate UUID
-        // Use eyeId directly (e.g., 'jogan', 'mangekyo') instead of display name ('Jōgan', 'Mangekyō')
-        // This ensures consistent lookup without special characters
-        EYE_NAME_TO_UUID_MAP.set(eyeId, eyeUuid); // Store mapping
-        console.log(`[DEBUG-FRESH-SEED] SET MAP: "${eyeId}" -> ${eyeUuid.substring(0, 8)}`);
-
-        // Debug: Log jogan and mangekyo specifically
-        if (eyeId === 'jogan' || eyeId === 'mangekyo') {
-          log(`  ✓ MAP_SET: ${eyeId} -> ${eyeUuid.substring(0, 8)}...`);
-        }
+        EYE_NAME_TO_UUID_MAP.set(eyeId, eyeUuid);
         
         // Read SVG file content from public/eyes directory
         let iconSvg = '';
@@ -340,8 +296,6 @@ async function seedPersonas(
   log: (message: string) => void,
   force: boolean
 ): Promise<boolean> {
-  log(`  🚀 seedPersonas CALLED (start of function)`);
-
   const existing = await db.select({ id: personas.id }).from(personas).limit(1);
   const shouldSeed = force || existing.length === 0;
   if (!shouldSeed) {
