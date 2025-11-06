@@ -53,9 +53,10 @@ export async function loadDynamicCapabilities(db: ReturnType<typeof getDb>['db']
     const registry: CapabilityRegistry = {};
 
     for (const eye of allEyes) {
-      const blueprint = personas.find((p) => p.eyeId === eye.name);
+      // Match blueprint by eyeId (UUID) - SSOT: use UUID for FK relationships
+      const blueprint = personas.find((p) => p.eyeId === eye.id);
       if (!blueprint) {
-        console.warn(`[CapabilityLoader] No blueprint found for eye: ${eye.name}`);
+        console.warn(`[CapabilityLoader] No blueprint found for eye: ${eye.name} (id: ${eye.id})`);
         continue;
       }
 

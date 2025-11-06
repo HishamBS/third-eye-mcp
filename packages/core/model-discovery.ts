@@ -88,13 +88,13 @@ export class ModelDiscoveryService {
     console.log('🔍 Starting model discovery for all providers...');
 
     const results = await Promise.allSettled(
-      providers.map(providerId => this.discoverProviderModels(providerId))
+      providers.map((providerId: string) => this.discoverProviderModels(providerId as ProviderId))
     );
 
     let successful = 0;
     let failed = 0;
 
-    results.forEach((result, index) => {
+    results.forEach((result: PromiseSettledResult<number>, index: number) => {
       const providerId = providers[index];
       if (result.status === 'fulfilled') {
         successful++;

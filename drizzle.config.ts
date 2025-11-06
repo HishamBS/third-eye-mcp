@@ -7,4 +7,5 @@ export default defineConfig({
   dbCredentials: {
     url: './packages/db/overseer.db',
   },
+  casing: 'snake_case', // Map camelCase schema fields to snake_case database columns
 });

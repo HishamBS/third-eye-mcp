@@ -249,26 +249,120 @@ async function prepareDatabase(verbose: boolean) {
   const start = Date.now();
 
   try {
-    const [{ getDb, personas, mcpIntegrations, schema }, { count }, { seedDefaults }] = await Promise.all([
+    const [{ getDb, getDbPath, personas, mcpIntegrations, schema }, { count }, { seedDefaults }] = await Promise.all([
       import('@third-eye/db'),
       import('drizzle-orm'),
-      import('../packages/db/defaults/index.ts')
+      import('@third-eye/db/defaults')
     ]);
 
-    const { db, dbPath } = getDb();
+    // Clean up stale WAL files before database initialization
+    // This prevents disk I/O errors when database was manually deleted but WAL files remain
+    const dbPath = getDbPath();
+    const walFile = `${dbPath}-wal`;
+    const shmFile = `${dbPath}-shm`;
+    
+    // Close any existing database connection first to release file locks
+    try {
+      const { closeDb } = await import('@third-eye/db');
+      closeDb();
+    } catch (err) {
+      // Ignore if closeDb doesn't exist or fails
+    }
+    
+    // Clean up WAL/SHM files if database doesn't exist OR if they're stale
+    // These files can lock the directory even when the DB file is missing
+    // Also check for stale WAL files when DB exists (they may be corrupted)
+    const dbExists = existsSync(dbPath);
+    const walExists = existsSync(walFile);
+    const shmExists = existsSync(shmFile);
+    
+    if (!dbExists) {
+      // Database doesn't exist - clean up orphaned WAL files
+      if (walExists) {
+        try {
+          rmSync(walFile, { force: true });
+          if (verbose) {
+            console.log(`   🧹 Cleaned orphaned WAL file`);
+          }
+        } catch (err) {
+          if (verbose) {
+            console.log(`   ⚠️  Could not remove WAL file (may be locked): ${err instanceof Error ? err.message : String(err)}`);
+          }
+        }
+      }
+      
+      if (shmExists) {
+        try {
+          rmSync(shmFile, { force: true });
+          if (verbose) {
+            console.log(`   🧹 Cleaned orphaned SHM file`);
+          }
+        } catch (err) {
+          if (verbose) {
+            console.log(`   ⚠️  Could not remove SHM file (may be locked): ${err instanceof Error ? err.message : String(err)}`);
+          }
+        }
+      }
+    } else if (walExists || shmExists) {
+      // Database exists - check if WAL files are stale (older than DB or empty)
+      // Empty WAL files (0 bytes) are often corrupted
+      try {
+        const dbStats = statSync(dbPath);
+        let shouldClean = false;
+        
+        if (walExists) {
+          const walStats = statSync(walFile);
+          // Clean if WAL is empty (0 bytes) or older than DB (indicates stale state)
+          if (walStats.size === 0 || walStats.mtimeMs < dbStats.mtimeMs) {
+            shouldClean = true;
+          }
+        }
+        
+        if (shmExists) {
+          const shmStats = statSync(shmFile);
+          // Clean if SHM is older than DB (indicates stale state)
+          if (shmStats.mtimeMs < dbStats.mtimeMs) {
+            shouldClean = true;
+          }
+        }
+        
+        if (shouldClean) {
+          // Actively remove stale/corrupted WAL files before database access
+          // This prevents disk I/O errors during PRAGMA journal_mode = WAL
+          if (walExists) {
+            try {
+              rmSync(walFile, { force: true });
+              if (verbose) {
+                console.log(`   🧹 Removed stale/corrupted WAL file`);
+              }
+            } catch (err) {
+              if (verbose) {
+                console.warn(`   ⚠️  Could not remove WAL file: ${err instanceof Error ? err.message : String(err)}`);
+              }
+            }
+          }
+          
+          if (shmExists) {
+            try {
+              rmSync(shmFile, { force: true });
+              if (verbose) {
+                console.log(`   🧹 Removed stale SHM file`);
+              }
+            } catch (err) {
+              if (verbose) {
+                console.warn(`   ⚠️  Could not remove SHM file: ${err instanceof Error ? err.message : String(err)}`);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        // Ignore stat errors - will rely on retry logic in createDb()
+      }
+    }
+
+    const { db } = getDb();
     const scopedLog = verbose ? (message: string) => console.log(`   ${message}`) : () => {};
     const report = await seedDefaults({ log: scopedLog });
-
-    // Seed blueprints after defaults (separate due to cross-package imports)
-    // Use personaBlueprints from schema object - guaranteed same instance as drizzle initialization
-    if (verbose) {
-      scopedLog('Seeding blueprints...');
-    }
-    const { seedBlueprintsCLI } = await import('./seed-blueprints.ts');
-    const blueprintsSeeded = await seedBlueprintsCLI(schema.personaBlueprints);
-    if (verbose && blueprintsSeeded) {
-      scopedLog('✓ Blueprints seeded');
-    }
 
     const personaCounts = await db
       .select({ value: count() })
@@ -287,7 +381,7 @@ async function prepareDatabase(verbose: boolean) {
       console.log('\n🗄  Database ready');
       console.log(`   Path: ${dbPath}`);
       console.log(`   Personas: ${report.personas ? 'seeded defaults' : personaCount}`);
-      console.log(`   Blueprints: ${blueprintsSeeded ? 'seeded' : 'already exists'}`);
+      console.log(`   Blueprints: ${report.blueprints ? 'seeded' : 'already exists'}`);
       console.log(`   Integrations: ${report.integrations ? 'seeded defaults' : integrationCount}`);
       console.log(`   Prep time: ${duration}s\n`);
     }

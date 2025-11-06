@@ -1,4 +1,5 @@
 import { getDb } from '../index';
+import type { Database } from 'bun:sqlite';
 import {
   personas,
   eyes,
@@ -18,7 +19,6 @@ import {
   type NewMcpIntegration,
 } from '../schema';
 import { eq, inArray } from 'drizzle-orm';
-import type { Database } from 'bun:sqlite';
 import { DEFAULT_PERSONAS, DEFAULT_PERSONA_MAP } from './personas';
 import { DEFAULT_INTEGRATIONS } from './integrations';
 import { DEFAULT_PIPELINES } from './pipelines';
@@ -28,6 +28,8 @@ import {
 } from '@third-eye/types';
 import { DEFAULT_BLUEPRINTS } from '@third-eye/constants/blueprints-data';
 import { generateId } from '../utils/uuid';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 // Map eye names to UUIDs during seeding
 // This will be populated by seedEyes and used by other seed functions
@@ -77,46 +79,191 @@ function generatePersonaId(eyeName: string, version: number) {
  */
 async function seedEyes(
   db: ReturnType<typeof getDb>['db'],
+  sqlite: Database,
   log: (message: string) => void,
   force: boolean
 ): Promise<boolean> {
+  log(`  🚀 seedEyes CALLED (start of function)`);
+
   const existing = await db.select({ id: eyes.id }).from(eyes).limit(1);
   const shouldSeed = force || existing.length === 0;
+
+  log(`  🔍 seedEyes: existing.length=${existing.length}, force=${force}, shouldSeed=${shouldSeed}`);
+
   if (!shouldSeed) {
+    // Eyes already exist - populate map from database instead
+    log(`  📌 TAKING EXISTING PATH: Eyes already exist, populating EYE_NAME_TO_UUID_MAP from database...`);
+    console.log('[DEBUG-EXISTING] Eyes already exist, populating map from database');
+    const allEyes = await db.select({ id: eyes.id, name: eyes.name }).from(eyes).all();
+    console.log('[DEBUG-EXISTING] Found eyes in database:', allEyes.length);
+
+    // Build reverse lookup: display name -> EyeId constant
+    // We need to match display names to EyeId constants
+    for (const eye of allEyes) {
+      console.log(`[DEBUG-EXISTING] Matching eye from DB: "${eye.name}" (id: ${eye.id})`);
+      // Find matching EyeId by comparing display name to blueprint metadata name
+      const matchingEyeId = Object.entries(DEFAULT_BLUEPRINTS as any).find(
+        ([eyeId, blueprint]: [string, any]) => {
+          const matches = blueprint.metadata.name === eye.name;
+          console.log(`[DEBUG-EXISTING]   Checking eyeId="${eyeId}", blueprint.name="${blueprint.metadata.name}", matches=${matches}`);
+          return matches;
+        }
+      );
+
+      if (matchingEyeId) {
+        const [eyeId] = matchingEyeId;
+        EYE_NAME_TO_UUID_MAP.set(eyeId, eye.id);
+        console.log(`[DEBUG-EXISTING] ✓ Mapped ${eyeId} -> ${eye.id}`);
+        log(`  ✓ Mapped ${eyeId} -> ${eye.id.substring(0, 8)}... (${eye.name})`);
+      } else {
+        console.log(`[DEBUG-EXISTING] ✗ Could not find matching eyeId for: "${eye.name}"`);
+        log(`  ⚠ Could not find EyeId for eye: ${eye.name} (id: ${eye.id})`);
+      }
+    }
+    
+    const mapKeysAfterPopulate = Array.from(EYE_NAME_TO_UUID_MAP.keys());
+    log(`  📋 EYE_NAME_TO_UUID_MAP populated from DB: ${mapKeysAfterPopulate.length} entries: ${mapKeysAfterPopulate.join(', ')}`);
+    
     return false;
   }
+
+  log(`  📌 TAKING FRESH SEEDING PATH: Creating new eyes...`);
 
   if (force) {
     await db.delete(eyes).run(); // Delete ALL eyes
     EYE_NAME_TO_UUID_MAP.clear();
   }
 
+  let eyeEntries: NewEye[] = [];
+  
   try {
+    
     const now = new Date();
-    const eyeEntries: NewEye[] = Object.entries(DEFAULT_BLUEPRINTS as any).map(([_eyeName, blueprint]: [string, any]) => {
-      const eyeUuid = generateId(); // Generate UUID
-      const eyeName = blueprint.metadata.name.toLowerCase();
-      EYE_NAME_TO_UUID_MAP.set(eyeName, eyeUuid); // Store mapping
-      
-      return {
-        id: eyeUuid, // UUID instead of name
-        name: blueprint.metadata.name,
-        version: 1,
-        description: blueprint.metadata.description,
-        iconSvg: '',
-        inputSchemaJson: {},
-        outputSchemaJson: {},
-        personaId: null, // Will be set later if needed
-        active: true,
-        createdAt: now,
-      };
+    // Construct path to SVG files (relative to workspace root)
+    const svgBasePath = join(process.cwd(), 'apps', 'ui', 'public', 'eyes');
+    
+    // Validate DEFAULT_BLUEPRINTS exists and has entries
+    if (!DEFAULT_BLUEPRINTS || typeof DEFAULT_BLUEPRINTS !== 'object') {
+      throw new Error('DEFAULT_BLUEPRINTS is not an object');
+    }
+    
+    const blueprintKeys = Object.keys(DEFAULT_BLUEPRINTS);
+    if (blueprintKeys.length === 0) {
+      throw new Error('DEFAULT_BLUEPRINTS is empty - no blueprints to seed');
+    }
+    
+    log(`  📋 Found ${blueprintKeys.length} blueprints: ${blueprintKeys.join(', ')}`);
+    
+    // CRITICAL: Verify jogan and mangekyo are in the keys
+    const hasJogan = blueprintKeys.includes('jogan');
+    const hasMangekyo = blueprintKeys.includes('mangekyo');
+    console.error(`[CRITICAL] blueprintKeys has jogan: ${hasJogan}, has mangekyo: ${hasMangekyo}`);
+    console.error(`[CRITICAL] All blueprintKeys: ${blueprintKeys.join(', ')}`);
+    
+    console.log('[DEBUG-FRESH-SEED] About to process DEFAULT_BLUEPRINTS entries');
+    console.log('[DEBUG-FRESH-SEED] Keys:', Object.keys(DEFAULT_BLUEPRINTS));
+
+    eyeEntries = Object.entries(DEFAULT_BLUEPRINTS as any)
+      .map(([eyeId, blueprint]: [string, any]) => {
+        console.log(`[DEBUG-FRESH-SEED] Processing eyeId: "${eyeId}"`);
+
+        // Validate eyeId is not null/undefined
+        if (!eyeId || typeof eyeId !== 'string' || eyeId.trim() === '') {
+          log(`  ✗ Invalid eyeId: ${eyeId} (type: ${typeof eyeId})`);
+          throw new Error(`Invalid eyeId found in DEFAULT_BLUEPRINTS: ${eyeId}`);
+        }
+
+        // Validate blueprint structure
+        if (!blueprint || !blueprint.metadata || !blueprint.metadata.name) {
+          log(`  ✗ Invalid blueprint structure for eyeId: ${eyeId}`);
+          throw new Error(`Invalid blueprint structure for eyeId: ${eyeId}`);
+        }
+
+        const eyeUuid = generateId(); // Generate UUID
+        // Use eyeId directly (e.g., 'jogan', 'mangekyo') instead of display name ('Jōgan', 'Mangekyō')
+        // This ensures consistent lookup without special characters
+        EYE_NAME_TO_UUID_MAP.set(eyeId, eyeUuid); // Store mapping
+        console.log(`[DEBUG-FRESH-SEED] SET MAP: "${eyeId}" -> ${eyeUuid.substring(0, 8)}`);
+
+        // Debug: Log jogan and mangekyo specifically
+        if (eyeId === 'jogan' || eyeId === 'mangekyo') {
+          log(`  ✓ MAP_SET: ${eyeId} -> ${eyeUuid.substring(0, 8)}...`);
+        }
+        
+        // Read SVG file content from public/eyes directory
+        let iconSvg = '';
+        try {
+          const svgPath = join(svgBasePath, `${eyeId}.svg`);
+          iconSvg = readFileSync(svgPath, 'utf-8');
+        } catch (error) {
+          log(`  ⚠ Warning: Could not read SVG file for ${eyeId}: ${error}`);
+          // Continue with empty SVG - will be handled by EyeIcon component placeholder
+        }
+        
+        const entry: NewEye = {
+          id: eyeUuid, // UUID instead of name
+          name: blueprint.metadata.name, // Display name (e.g., 'Overseer', 'Jōgan')
+          version: 1,
+          description: blueprint.metadata.description || '',
+          iconSvg: iconSvg || null, // Store full SVG content from file - database is SSOT
+          inputSchemaJson: {},
+          outputSchemaJson: {},
+          personaId: null, // Will be set later if needed
+          active: true,
+          createdAt: now,
+        };
+        
+        return entry;
+      })
+      .filter((entry): entry is NewEye => entry !== null && entry !== undefined);
+
+    // Log entries before insertion
+    log(`  📝 Prepared ${eyeEntries.length} eye entries for insertion`);
+    eyeEntries.forEach((entry, idx) => {
+      const entryLog = `${idx + 1}. ${entry.name} (id: ${entry.id})`;
+      log(`    ${entryLog}`);
     });
 
-    await db.insert(eyes).values(eyeEntries).run();
+    // Insert entries one by one to identify which one fails
+    for (let i = 0; i < eyeEntries.length; i++) {
+      const entry = eyeEntries[i];
+      
+      try {
+        await db.insert(eyes).values([entry]).run();
+        log(`  ✓ Inserted eye ${i + 1}/${eyeEntries.length}: ${entry.name}`);
+      } catch (insertErr) {
+        const errMsg = insertErr instanceof Error ? insertErr.message : String(insertErr);
+        log(`  ✗ Failed to insert eye ${i + 1}/${eyeEntries.length}: ${entry.name}`);
+        log(`    Error: ${errMsg}`);
+        log(`    Entry data: id=${entry.id}, name="${entry.name}"`);
+        throw new Error(`Failed to insert eye ${entry.name}: ${errMsg}`);
+      }
+    }
     log(`  • Eyes seeded (${eyeEntries.length} eyes with UUIDs)`);
+
+    // Verify map has all 8 entries before returning
+    const expectedKeys = ['overseer', 'sharingan', 'kyuubi', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan'];
+    const missingKeys = expectedKeys.filter(id => !EYE_NAME_TO_UUID_MAP.has(id));
+    if (missingKeys.length > 0) {
+      const mapKeys = Array.from(EYE_NAME_TO_UUID_MAP.keys());
+      const errorMsg = `EYE_NAME_TO_UUID_MAP is incomplete: missing ${missingKeys.join(', ')}. Map has ${mapKeys.length} entries: ${mapKeys.join(', ')}`;
+      console.error(`[CRITICAL ERROR] ${errorMsg}`);
+      throw new Error(errorMsg);
+    }
+    
     return true;
   } catch (error) {
-    log(`  ✗ Failed to seed eyes: ${error}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    // Always log to stderr for debugging
+    console.error(`[ERROR] Failed to seed eyes: ${errorMessage}`);
+    if (error instanceof Error && error.stack) {
+      console.error(`[ERROR] Stack trace: ${error.stack}`);
+    }
+    // Also log entry details if available
+    if (eyeEntries && eyeEntries.length > 0) {
+      console.error(`[ERROR] First entry details:`, JSON.stringify(eyeEntries[0], null, 2));
+    }
+    log(`  ✗ Failed to seed eyes: ${errorMessage}`);
     return false;
   }
 }
@@ -143,19 +290,20 @@ async function seedBlueprints(
 
   try {
     const now = new Date();
-    
+
     const blueprintEntries = Object.entries(DEFAULT_BLUEPRINTS as any)
-      .map(([_eyeName, blueprint]: [string, any]) => {
-        const eyeName = blueprint.metadata.name.toLowerCase();
-        const eyeUuid = EYE_NAME_TO_UUID_MAP.get(eyeName);
-        
+      .map(([eyeId, blueprint]: [string, any]) => {
+        const eyeUuid = EYE_NAME_TO_UUID_MAP.get(eyeId);
+
         if (!eyeUuid) {
-          log(`  ⚠ Skipping blueprint for ${eyeName} - eye UUID not found`);
+          log(`  ⚠ Skipping blueprint for ${eyeId} - eye UUID not found`);
           return null;
         }
 
+        const blueprintId = generateId();
+
         return {
-          id: generateId(),
+          id: blueprintId,
           eyeId: eyeUuid,
           name: blueprint.metadata.name,
           description: blueprint.metadata.description,
@@ -192,6 +340,8 @@ async function seedPersonas(
   log: (message: string) => void,
   force: boolean
 ): Promise<boolean> {
+  log(`  🚀 seedPersonas CALLED (start of function)`);
+
   const existing = await db.select({ id: personas.id }).from(personas).limit(1);
   const shouldSeed = force || existing.length === 0;
   if (!shouldSeed) {
@@ -205,13 +355,13 @@ async function seedPersonas(
   try {
     const now = new Date();
 
-    const entries = DEFAULT_PERSONAS
-      .map((persona) => {
-        const eyeName = persona.eye.toLowerCase();
-        const eyeUuid = EYE_NAME_TO_UUID_MAP.get(eyeName);
-        
+    const resolvedEntries = DEFAULT_PERSONAS.map((persona) => {
+        const eyeName = persona.eye;
+        let eyeUuid = EYE_NAME_TO_UUID_MAP.get(eyeName);
+
         if (!eyeUuid) {
-          log(`  ⚠ Skipping persona for ${eyeName} - eye UUID not found`);
+          const availableKeys = Array.from(EYE_NAME_TO_UUID_MAP.keys());
+          log(`  ⚠ Skipping persona for ${eyeName} - eye UUID not found in map`);
           return null;
         }
 
@@ -223,7 +373,7 @@ async function seedPersonas(
           name: persona.name,
           version: persona.version,
 
-          metadata_json: JSON.stringify({
+          metadataJson: JSON.stringify({
             eyeId: eyeUuid,
             name: persona.name,
             description: persona.description,
@@ -232,19 +382,19 @@ async function seedPersonas(
           }),
 
           mission: persona.mission,
-          guidance_json: blueprint?.phases.guidance ? JSON.stringify(blueprint.phases.guidance) : null,
-          validation_json: blueprint?.phases.validation ? JSON.stringify(blueprint.phases.validation) : null,
+          guidanceJson: blueprint?.phases.guidance ? JSON.stringify(blueprint.phases.guidance) : null,
+          validationJson: blueprint?.phases.validation ? JSON.stringify(blueprint.phases.validation) : null,
 
-          envelope_json: JSON.stringify(blueprint?.envelopeContract || {
+          envelopeJson: JSON.stringify(blueprint?.envelopeContract || {
             requiredKeys: ['tag', 'ok', 'code', 'data', 'ui', 'next'],
             requiredDataKeys: [],
             requiredUiKeys: ['title', 'summary', 'details', 'icon', 'color'],
           }),
 
-          reminders_json: JSON.stringify(blueprint?.reminders || []),
+          remindersJson: JSON.stringify(blueprint?.reminders || []),
           notes: blueprint?.notes || null,
 
-          llm_config_json: JSON.stringify({
+          llmConfigJson: JSON.stringify({
             temperature: 0.7,
             top_p: 0.9,
             response_format: 'json_object',
@@ -254,8 +404,11 @@ async function seedPersonas(
           active: true,
           createdAt: now,
         } as NewPersona;
-      })
-      .filter((entry): entry is NewPersona => entry !== null);
+      });
+    
+    const entries = resolvedEntries.filter((entry): entry is NewPersona => entry !== null);
+    
+    log(`  ✓ Created ${entries.length} personas (expected ${DEFAULT_PERSONAS.length})`);
 
     await db.insert(personas).values(entries).run();
 
@@ -295,7 +448,8 @@ async function seedRouting(
   const now = new Date();
   const routingEntries = DEFAULT_PERSONAS
     .map((persona) => {
-      const eyeName = persona.eye.toLowerCase();
+      // persona.eye is already an EyeId constant (e.g., 'jogan', 'mangekyo') - use directly
+      const eyeName = persona.eye;
       const eyeUuid = EYE_NAME_TO_UUID_MAP.get(eyeName);
       
       if (!eyeUuid) {
@@ -303,6 +457,8 @@ async function seedRouting(
         return null;
       }
 
+      // System defaults for seeding (can be overridden by app_settings)
+      // These are minimal defaults - actual runtime uses getDefaultRouting() helper
       return {
         id: generateId(),
         eyeId: eyeUuid,
@@ -532,7 +688,7 @@ export async function seedDefaults(options: SeedDefaultsOptions = {}): Promise<S
 
   // Seed in dependency order
   if (subsets.eyes) {
-    report.eyes = await seedEyes(db, log, force);
+    report.eyes = await seedEyes(db, sqlite, log, force);
   }
 
   if (subsets.blueprints) {

@@ -23,7 +23,6 @@ import { StatusBadge } from '@/components/monitor/StatusBadge';
 import { ViewModeDescription } from '@/components/ViewModeToggle';
 import { RoutingDecisionPanel } from '@/components/monitor/RoutingDecisionPanel';
 import type { EyeName } from '@third-eye/types';
-import { EYE_DISPLAY_NAMES } from '@third-eye/config/constants';
 import { API_BASE_URL } from '@/consts/api';
 import { API_ROUTES } from '@/constants/api-routes';
 import {
@@ -81,16 +80,16 @@ interface EvidenceData {
   readonly byakugan: Record<string, unknown> | null;
 }
 
-const KNOWN_EYES = new Set(Object.keys(EYE_DISPLAY_NAMES));
-
+/**
+ * Normalize eye name - just format normalization, no hardcoded validation
+ * Per SSOT: We can't hardcode valid eye names, they come from database
+ */
 function normalizeEyeName(value?: string | null): EyeName | undefined {
   if (!value) return undefined;
-  if (KNOWN_EYES.has(value)) return value as EyeName;
+  // Normalize format (replace hyphens/colons with underscores) and return as EyeName
+  // No validation against hardcoded list - database is SSOT
   const normalized = value.replace(/[-:]/g, '_');
-  if (KNOWN_EYES.has(normalized)) {
-    return normalized as EyeName;
-  }
-  return undefined;
+  return normalized as EyeName;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
@@ -523,7 +522,7 @@ function MonitorContent() {
                 {summary && (
                   <p className="mt-1 text-sm text-semantic-muted">
                     Status: {summary.status} · {summary.eventCount} events
-                    {summary.eyes && summary.eyes.length > 0 && ` · Eyes: ${summary.eyes.map(e => EYE_DISPLAY_NAMES[e as EyeName] || e).join(', ')}`}
+                    {summary.eyes && summary.eyes.length > 0 && ` · Eyes: ${summary.eyes.join(', ')}`}
                   </p>
                 )}
               </div>

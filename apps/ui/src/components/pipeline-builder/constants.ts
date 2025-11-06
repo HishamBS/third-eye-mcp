@@ -1,68 +1,16 @@
 /**
- * Pipeline Builder Constants - SSOT for Eye metadata and UI strings
+ * Pipeline Builder Constants - SSOT for UI strings only
  * Per R13: No magic strings or literal values
+ * 
+ * NOTE: Eye metadata (names, descriptions, stages, capabilities) is now loaded from database
+ * via /api/eyes/all endpoint. No hardcoded eye data here.
  */
-
-import type { EyeName } from '@third-eye/types';
-
-/**
- * Eye Display Names - Human-readable names
- */
-export const EYE_DISPLAY_NAMES: Record<EyeName, string> = {
-  overseer: 'Overseer',
-  sharingan: 'Sharingan',
-  kyuubi: 'Kyuubi',
-  jogan: 'Jogan',
-  rinnegan: 'Rinnegan',
-  mangekyo: 'Mangekyo',
-  tenseigan: 'Tenseigan',
-  byakugan: 'Byakugan',
-} as const;
-
-/**
- * Eye Short Descriptions
- */
-export const EYE_DESCRIPTIONS: Record<EyeName, string> = {
-  overseer: 'Navigator & Router',
-  sharingan: 'Ambiguity Detector',
-  kyuubi: 'Prompt Helper',
-  jogan: 'Intent Confirmer',
-  rinnegan: 'Planning & Architecture',
-  mangekyo: 'Code Review',
-  tenseigan: 'Evidence Validator',
-  byakugan: 'Final Approval',
-} as const;
-
 
 /**
  * Eye Stages - GUIDANCE or VALIDATION phase
+ * Type definition only - actual stage data comes from database blueprint phases
  */
 export type EyeStage = 'GUIDANCE' | 'VALIDATION' | 'BOTH' | 'ROUTER';
-
-export const EYE_STAGES: Record<EyeName, EyeStage> = {
-  overseer: 'ROUTER',
-  sharingan: 'GUIDANCE',
-  kyuubi: 'GUIDANCE',
-  jogan: 'GUIDANCE',
-  rinnegan: 'VALIDATION',
-  mangekyo: 'VALIDATION',
-  tenseigan: 'VALIDATION',
-  byakugan: 'VALIDATION',
-} as const;
-
-/**
- * Eye Capabilities - Primary capability tags
- */
-export const EYE_PRIMARY_CAPABILITIES: Record<EyeName, string> = {
-  overseer: 'auto_routing',
-  sharingan: 'clarification',
-  kyuubi: 'briefing',
-  jogan: 'intent_confirmation',
-  rinnegan: 'pipeline_planning',
-  mangekyo: 'code_review',
-  tenseigan: 'factual_validation',
-  byakugan: 'final_approval',
-} as const;
 
 /**
  * Pipeline Builder UI Text Constants
@@ -210,14 +158,11 @@ export const TOOLBAR_TEXT = {
 export const PALETTE_TEXT = {
   TITLE: 'Eyes',
   SEARCH_PLACEHOLDER: 'Search eyes...',
-  BUILTIN_SECTION: 'Built-in Eyes',
-  CUSTOM_SECTION: 'Custom Eyes',
   NO_RESULTS: 'No eyes found',
   COLLAPSE: 'Collapse',
   EXPAND: 'Expand',
   DRAG_HINT: 'Drag to canvas',
-  NO_CUSTOM: 'No custom eyes yet',
-  CREATE_CUSTOM: 'Create Custom Eye',
+  CREATE_EYE: 'Create Eye',
 } as const;
 
 /**
@@ -310,198 +255,13 @@ export const PIPELINE_DEFAULTS = {
 } as const;
 
 /**
- * System Default Pipeline - Phase 10
- * Pre-configured 8-Eye validation flow
- * Per R13: Centralized default pipeline structure
- *
- * Flow: Overseer → Sharingan → Kyuubi → Jogan → Rinnegan → Mangekyo → Byakugan → Tenseigan
+ * System Default Pipeline - REMOVED (SSOT Violation)
+ * 
+ * This constant used hardcoded eye metadata which violates database-as-SSOT principle.
+ * Pipeline templates should be loaded from database instead.
+ * 
+ * For default pipelines, use the seeded pipelines from database (loaded via /api/pipelines).
  */
-export const SYSTEM_DEFAULT_PIPELINE = {
-  nodes: [
-    {
-      id: 'node-overseer',
-      type: 'eyeNode',
-      position: { x: 100, y: 200 },
-      data: {
-        eyeId: 'overseer' as const,
-        displayName: EYE_DISPLAY_NAMES.overseer,
-        capabilities: [EYE_PRIMARY_CAPABILITIES.overseer],
-        isCustom: false as const,
-        stage: EYE_STAGES.overseer,
-      },
-    },
-    {
-      id: 'node-sharingan',
-      type: 'eyeNode',
-      position: { x: 400, y: 100 },
-      data: {
-        eyeId: 'sharingan' as const,
-        displayName: EYE_DISPLAY_NAMES.sharingan,
-        capabilities: [EYE_PRIMARY_CAPABILITIES.sharingan],
-        isCustom: false as const,
-        stage: EYE_STAGES.sharingan,
-      },
-    },
-    {
-      id: 'node-kyuubi',
-      type: 'eyeNode',
-      position: { x: 700, y: 100 },
-      data: {
-        eyeId: 'kyuubi' as const,
-        displayName: EYE_DISPLAY_NAMES.kyuubi,
-        capabilities: [EYE_PRIMARY_CAPABILITIES.kyuubi],
-        isCustom: false as const,
-        stage: EYE_STAGES.kyuubi,
-      },
-    },
-    {
-      id: 'node-jogan',
-      type: 'eyeNode',
-      position: { x: 1000, y: 100 },
-      data: {
-        eyeId: 'jogan' as const,
-        displayName: EYE_DISPLAY_NAMES.jogan,
-        capabilities: [EYE_PRIMARY_CAPABILITIES.jogan],
-        isCustom: false as const,
-        stage: EYE_STAGES.jogan,
-      },
-    },
-    {
-      id: 'node-rinnegan',
-      type: 'eyeNode',
-      position: { x: 400, y: 300 },
-      data: {
-        eyeId: 'rinnegan' as const,
-        displayName: EYE_DISPLAY_NAMES.rinnegan,
-        capabilities: [EYE_PRIMARY_CAPABILITIES.rinnegan],
-        isCustom: false as const,
-        stage: EYE_STAGES.rinnegan,
-      },
-    },
-    {
-      id: 'node-mangekyo',
-      type: 'eyeNode',
-      position: { x: 700, y: 300 },
-      data: {
-        eyeId: 'mangekyo' as const,
-        displayName: EYE_DISPLAY_NAMES.mangekyo,
-        capabilities: [EYE_PRIMARY_CAPABILITIES.mangekyo],
-        isCustom: false as const,
-        stage: EYE_STAGES.mangekyo,
-      },
-    },
-    {
-      id: 'node-byakugan',
-      type: 'eyeNode',
-      position: { x: 1000, y: 300 },
-      data: {
-        eyeId: 'byakugan' as const,
-        displayName: EYE_DISPLAY_NAMES.byakugan,
-        capabilities: [EYE_PRIMARY_CAPABILITIES.byakugan],
-        isCustom: false as const,
-        stage: EYE_STAGES.byakugan,
-      },
-    },
-    {
-      id: 'node-tenseigan',
-      type: 'eyeNode',
-      position: { x: 1300, y: 200 },
-      data: {
-        eyeId: 'tenseigan' as const,
-        displayName: EYE_DISPLAY_NAMES.tenseigan,
-        capabilities: [EYE_PRIMARY_CAPABILITIES.tenseigan],
-        isCustom: false as const,
-        stage: EYE_STAGES.tenseigan,
-      },
-    },
-  ],
-  edges: [
-    {
-      id: 'edge-overseer-sharingan',
-      source: 'node-overseer',
-      target: 'node-sharingan',
-      type: 'smoothstep',
-      animated: true,
-      markerEnd: { type: 'arrowclosed' },
-      data: {
-        condition: EDGE_CONDITION_TYPES.ALWAYS,
-        enabled: true,
-      },
-    },
-    {
-      id: 'edge-sharingan-kyuubi',
-      source: 'node-sharingan',
-      target: 'node-kyuubi',
-      type: 'smoothstep',
-      animated: true,
-      markerEnd: { type: 'arrowclosed' },
-      data: {
-        condition: EDGE_CONDITION_TYPES.ALWAYS,
-        enabled: true,
-      },
-    },
-    {
-      id: 'edge-kyuubi-jogan',
-      source: 'node-kyuubi',
-      target: 'node-jogan',
-      type: 'smoothstep',
-      animated: true,
-      markerEnd: { type: 'arrowclosed' },
-      data: {
-        condition: EDGE_CONDITION_TYPES.ALWAYS,
-        enabled: true,
-      },
-    },
-    {
-      id: 'edge-jogan-rinnegan',
-      source: 'node-jogan',
-      target: 'node-rinnegan',
-      type: 'smoothstep',
-      animated: true,
-      markerEnd: { type: 'arrowclosed' },
-      data: {
-        condition: EDGE_CONDITION_TYPES.ALWAYS,
-        enabled: true,
-      },
-    },
-    {
-      id: 'edge-rinnegan-mangekyo',
-      source: 'node-rinnegan',
-      target: 'node-mangekyo',
-      type: 'smoothstep',
-      animated: true,
-      markerEnd: { type: 'arrowclosed' },
-      data: {
-        condition: EDGE_CONDITION_TYPES.ALWAYS,
-        enabled: true,
-      },
-    },
-    {
-      id: 'edge-mangekyo-byakugan',
-      source: 'node-mangekyo',
-      target: 'node-byakugan',
-      type: 'smoothstep',
-      animated: true,
-      markerEnd: { type: 'arrowclosed' },
-      data: {
-        condition: EDGE_CONDITION_TYPES.ALWAYS,
-        enabled: true,
-      },
-    },
-    {
-      id: 'edge-byakugan-tenseigan',
-      source: 'node-byakugan',
-      target: 'node-tenseigan',
-      type: 'smoothstep',
-      animated: true,
-      markerEnd: { type: 'arrowclosed' },
-      data: {
-        condition: EDGE_CONDITION_TYPES.ALWAYS,
-        enabled: true,
-      },
-    },
-  ],
-} as const;
 
 /**
  * Pipeline Template Text Constants - Phase 19.4
@@ -524,162 +284,11 @@ export const TEMPLATE_TEXT = {
 } as const;
 
 /**
- * Pre-built Pipeline Templates - Phase 19.4
- * Per R01: Single source of truth for templates
+ * Pre-built Pipeline Templates - REMOVED (SSOT Violation)
+ * 
+ * These templates used hardcoded eye metadata which violates database-as-SSOT principle.
+ * Pipeline templates should be loaded from database instead.
+ * 
+ * Use seeded pipelines from database (loaded via /api/pipelines) or create pipelines
+ * dynamically from eye data fetched from /api/eyes/all.
  */
-export const PIPELINE_TEMPLATES = [
-  {
-    id: 'quick-validation',
-    name: 'Quick Validation',
-    description: 'Fast validation pipeline for simple prompts',
-    nodes: [
-      {
-        id: 'node-overseer',
-        type: 'eyeNode',
-        position: { x: 100, y: 200 },
-        data: {
-          eyeId: 'overseer' as const,
-          displayName: EYE_DISPLAY_NAMES.overseer,
-          capabilities: [EYE_PRIMARY_CAPABILITIES.overseer],
-          isCustom: false as const,
-          stage: EYE_STAGES.overseer,
-        },
-      },
-      {
-        id: 'node-sharingan',
-        type: 'eyeNode',
-        position: { x: 400, y: 200 },
-        data: {
-          eyeId: 'sharingan' as const,
-          displayName: EYE_DISPLAY_NAMES.sharingan,
-          capabilities: [EYE_PRIMARY_CAPABILITIES.sharingan],
-          isCustom: false as const,
-          stage: EYE_STAGES.sharingan,
-        },
-      },
-      {
-        id: 'node-byakugan',
-        type: 'eyeNode',
-        position: { x: 700, y: 200 },
-        data: {
-          eyeId: 'byakugan' as const,
-          displayName: EYE_DISPLAY_NAMES.byakugan,
-          capabilities: [EYE_PRIMARY_CAPABILITIES.byakugan],
-          isCustom: false as const,
-          stage: EYE_STAGES.byakugan,
-        },
-      },
-    ],
-    edges: [
-      {
-        id: 'edge-overseer-sharingan',
-        source: 'node-overseer',
-        target: 'node-sharingan',
-        type: 'smoothstep',
-        animated: true,
-        markerEnd: { type: 'arrowclosed' },
-        data: { condition: EDGE_CONDITION_TYPES.ALWAYS, enabled: true },
-      },
-      {
-        id: 'edge-sharingan-byakugan',
-        source: 'node-sharingan',
-        target: 'node-byakugan',
-        type: 'smoothstep',
-        animated: true,
-        markerEnd: { type: 'arrowclosed' },
-        data: { condition: EDGE_CONDITION_TYPES.ALWAYS, enabled: true },
-      },
-    ],
-  },
-  {
-    id: 'code-review',
-    name: 'Code Review Pipeline',
-    description: 'Specialized pipeline for code validation with review steps',
-    nodes: [
-      {
-        id: 'node-overseer',
-        type: 'eyeNode',
-        position: { x: 100, y: 200 },
-        data: {
-          eyeId: 'overseer' as const,
-          displayName: EYE_DISPLAY_NAMES.overseer,
-          capabilities: [EYE_PRIMARY_CAPABILITIES.overseer],
-          isCustom: false as const,
-          stage: EYE_STAGES.overseer,
-        },
-      },
-      {
-        id: 'node-rinnegan',
-        type: 'eyeNode',
-        position: { x: 400, y: 200 },
-        data: {
-          eyeId: 'rinnegan' as const,
-          displayName: EYE_DISPLAY_NAMES.rinnegan,
-          capabilities: [EYE_PRIMARY_CAPABILITIES.rinnegan],
-          isCustom: false as const,
-          stage: EYE_STAGES.rinnegan,
-        },
-      },
-      {
-        id: 'node-mangekyo',
-        type: 'eyeNode',
-        position: { x: 700, y: 200 },
-        data: {
-          eyeId: 'mangekyo' as const,
-          displayName: EYE_DISPLAY_NAMES.mangekyo,
-          capabilities: [EYE_PRIMARY_CAPABILITIES.mangekyo],
-          isCustom: false as const,
-          stage: EYE_STAGES.mangekyo,
-        },
-      },
-      {
-        id: 'node-tenseigan',
-        type: 'eyeNode',
-        position: { x: 1000, y: 200 },
-        data: {
-          eyeId: 'tenseigan' as const,
-          displayName: EYE_DISPLAY_NAMES.tenseigan,
-          capabilities: [EYE_PRIMARY_CAPABILITIES.tenseigan],
-          isCustom: false as const,
-          stage: EYE_STAGES.tenseigan,
-        },
-      },
-    ],
-    edges: [
-      {
-        id: 'edge-overseer-rinnegan',
-        source: 'node-overseer',
-        target: 'node-rinnegan',
-        type: 'smoothstep',
-        animated: true,
-        markerEnd: { type: 'arrowclosed' },
-        data: { condition: EDGE_CONDITION_TYPES.ALWAYS, enabled: true },
-      },
-      {
-        id: 'edge-rinnegan-mangekyo',
-        source: 'node-rinnegan',
-        target: 'node-mangekyo',
-        type: 'smoothstep',
-        animated: true,
-        markerEnd: { type: 'arrowclosed' },
-        data: { condition: EDGE_CONDITION_TYPES.ALWAYS, enabled: true },
-      },
-      {
-        id: 'edge-mangekyo-tenseigan',
-        source: 'node-mangekyo',
-        target: 'node-tenseigan',
-        type: 'smoothstep',
-        animated: true,
-        markerEnd: { type: 'arrowclosed' },
-        data: { condition: EDGE_CONDITION_TYPES.ALWAYS, enabled: true },
-      },
-    ],
-  },
-  {
-    id: 'thorough-review',
-    name: 'Thorough Review',
-    description: 'Complete validation pipeline with all guidance and validation steps',
-    nodes: SYSTEM_DEFAULT_PIPELINE.nodes,
-    edges: SYSTEM_DEFAULT_PIPELINE.edges,
-  },
-] as const;

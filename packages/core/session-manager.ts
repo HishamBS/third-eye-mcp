@@ -10,6 +10,7 @@ import { sessions, runs } from '@third-eye/db';
 import { getEyeNameById } from '@third-eye/db/utils/lookups';
 import { eq, desc, and } from 'drizzle-orm';
 import type { EyeName } from '@third-eye/types';
+import { EyeId } from '@third-eye/constants';
 import { orderGuard, type PipelineState } from './order-guard';
 import { TOOL_NAME } from '@third-eye/types';
 
@@ -433,7 +434,7 @@ export class SessionManager {
       return {
         currentPhase: 'not_started',
         completedEyes: [],
-        expectedNext: ['overseer', 'sharingan'],
+        expectedNext: [EyeId.OVERSEER as EyeName, EyeId.SHARINGAN as EyeName],
         progressPercentage: 0,
       };
     }

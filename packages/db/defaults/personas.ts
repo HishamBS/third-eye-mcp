@@ -1,6 +1,7 @@
 import {
   CLARIFICATION_FIELD_PROMPTS,
   REQUIRED_CLARIFICATION_FIELDS,
+  EyeId,
 } from "@third-eye/constants";
 
 const CANONICAL_CLARIFICATION_QUESTIONS = REQUIRED_CLARIFICATION_FIELDS.map(
@@ -792,7 +793,7 @@ export interface PersonaSeed {
 
 export const DEFAULT_PERSONAS: PersonaSeed[] = [
   {
-    eye: "overseer",
+    eye: EyeId.OVERSEER,
     name: "Overseer",
     description:
       "Navigator that analyses requests and selects the optimal eye sequence.",
@@ -800,14 +801,14 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
     mission: PERSONA_CONTENT.overseer,
   },
   {
-    eye: "sharingan",
+    eye: EyeId.SHARINGAN,
     name: "Sharingan",
     description: "Ambiguity radar that highlights unclear requirements.",
     version: 1,
     mission: PERSONA_CONTENT.sharingan,
   },
   {
-    eye: "kyuubi",
+    eye: EyeId.KYUUBI,
     name: "Kyuubi",
     description:
       "Transforms clarified intent into a structured creative brief.",
@@ -815,7 +816,7 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
     mission: PERSONA_CONTENT["kyuubi"],
   },
   {
-    eye: "jogan",
+    eye: EyeId.JOGAN,
     name: "Jōgan",
     description:
       "Confirms scope and effort with the human before work proceeds.",
@@ -823,7 +824,7 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
     mission: PERSONA_CONTENT.jogan,
   },
   {
-    eye: "rinnegan",
+    eye: EyeId.RINNEGAN,
     name: "Rinnegan",
     description:
       "Strategic planner providing architecture, plans, and plan reviews.",
@@ -831,21 +832,21 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
     mission: PERSONA_CONTENT.rinnegan,
   },
   {
-    eye: "mangekyo",
+    eye: EyeId.MANGEKYO,
     name: "Mangekyō",
     description: "Code quality gate covering structure, safety, and tests.",
     version: 1,
     mission: PERSONA_CONTENT.mangekyo,
   },
   {
-    eye: "tenseigan",
+    eye: EyeId.TENSEIGAN,
     name: "Tenseigan",
     description: "Evidence and citation auditor for factual claims.",
     version: 1,
     mission: PERSONA_CONTENT.tenseigan,
   },
   {
-    eye: "byakugan",
+    eye: EyeId.BYAKUGAN,
     name: "Byakugan",
     description:
       "Final readiness check ensuring clarity, completeness, and quality.",

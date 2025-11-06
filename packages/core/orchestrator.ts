@@ -2,7 +2,7 @@ import { Buffer } from 'node:buffer';
 import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
 import { runs, sessions, personas, eyesRouting, providerKeys, providerFailovers } from '@third-eye/db';
-import { getEyeIdByName, getEyeNameById } from '@third-eye/db/utils/lookups';
+import { getEyeIdByName, getEyeNameById, getEyeByName } from '@third-eye/db/utils/lookups';
 import { ProviderFactory, type CompletionResponse } from '@third-eye/providers';
 import type { ProviderType } from '@third-eye/providers';
 import { getEye, type EyeResponse, type BaseEnvelope, type PersonaPrompt, BaseEnvelopeSchema } from '@third-eye/eyes';
@@ -14,7 +14,7 @@ import { getWebSocketBridge } from './websocket-registry';
 import { decryptFromStorage } from './encryption';
 import { ensureEyeBehavior, EyeBehaviorError } from './persona-guards';
 import { renderPersonaPrompt, getPersonaBlueprint } from '@third-eye/eyes';
-import { getStageTemplate } from '@third-eye/constants';
+import { getStageTemplate, EyeId } from '@third-eye/constants';
 import { EyeStageToken } from '@third-eye/constants';
 import { capabilityProgress } from './capability-progress';
 import { retryWithThrow } from './provider-retry';
@@ -30,12 +30,6 @@ function isSupportedProvider(value: unknown): value is ProviderType {
 
 function hasBaseUrl(value: unknown): value is { baseUrl?: unknown } {
   return typeof value === 'object' && value !== null && 'baseUrl' in value;
-}
-
-const VALID_EYE_NAMES = new Set<string>(EYES);
-
-function isEyeName(value: string): value is EyeName {
-  return VALID_EYE_NAMES.has(value);
 }
 
 function isRejectedResponse(response: EyeResponse): boolean {
@@ -121,22 +115,12 @@ export class EyeOrchestrator {
       });
     }
 
-    if (!isEyeName(eyeName)) {
-      return this.createErrorEnvelope(
-        eyeName,
-        `Eye not found: ${eyeName}`,
-        runId,
-        actualSessionId,
-        startTime
-      );
-    }
-
-    // Look up eyeId (UUID) for database operations
+    // Validate eye exists in database (SSOT) and get UUID
     const eyeId = await getEyeIdByName(eyeName);
     if (!eyeId) {
       return this.createErrorEnvelope(
         eyeName,
-        `Eye ID not found for: ${eyeName}`,
+        `Eye not found: ${eyeName}`,
         runId,
         actualSessionId,
         startTime
@@ -177,7 +161,8 @@ export class EyeOrchestrator {
 
     try {
       // 1. Validate pipeline order
-      const orderViolation = orderGuard.validateOrder(actualSessionId, eyeName);
+      // Cast to EyeName since we've validated it exists in database
+      const orderViolation = orderGuard.validateOrder(actualSessionId, eyeName as EyeName);
       if (orderViolation) {
         return this.createOrderViolationEnvelope(
           eyeName,
@@ -338,8 +323,11 @@ export class EyeOrchestrator {
           let enrichedInput = input;
 
           // **DYNAMIC ROUTING**: If this is the Overseer eye, load capabilities from DB
+          // Check by name (case-insensitive match)
           let dynamicRouterPersona: string | null = null;
-          if (eyeName === 'overseer') {
+          const isOverseer = eyeName.toLowerCase() === EyeId.OVERSEER;
+          
+          if (isOverseer) {
             try {
               const { loadDynamicCapabilities, buildRouterPersona, extractUserNeeds } = await import('./capability-loader');
               const { getDb } = await import('@third-eye/db');
@@ -368,7 +356,7 @@ export class EyeOrchestrator {
             // Build persona prompt (may include reminder on retries)
             // Use dynamic router persona for Overseer, otherwise use blueprint
             let personaPrompt: PersonaPrompt;
-            if (dynamicRouterPersona && eyeName === 'overseer') {
+            if (dynamicRouterPersona && isOverseer) {
               personaPrompt = {
                 systemPrompt: dynamicRouterPersona,
                 userMessage: enrichedInput,
@@ -563,7 +551,8 @@ export class EyeOrchestrator {
       }
 
       // 9. Record successful completion in order guard
-      orderGuard.recordEyeCompletion(actualSessionId, eyeName, {
+      // Cast to EyeName since we've validated it exists in database
+      orderGuard.recordEyeCompletion(actualSessionId, eyeName as EyeName, {
         code: envelope.code,
         metadata: envelope.data,
       });
@@ -961,18 +950,28 @@ export class EyeOrchestrator {
       .get();
 
     if (!persona) {
-      const { seedDefaults, DEFAULT_PERSONA_MAP } = await import('@third-eye/db/defaults');
+      // Try seeding personas if not found
+      const { seedDefaults } = await import('@third-eye/db/defaults');
       await seedDefaults({ subsets: { personas: true }, log: () => {} });
 
-      const fallback = DEFAULT_PERSONA_MAP[eyeName];
-      if (fallback) {
-        console.warn(`⚠️ No active persona found for ${eyeName}. Loaded default from persona catalog.`);
-        return fallback.mission;
+      // Query again after seeding
+      const personaAfterSeed = await this.db
+        .select()
+        .from(personas)
+        .where(and(
+          eq(personas.eyeId, eyeId),
+          eq(personas.active, true)
+        ))
+        .get();
+
+      if (!personaAfterSeed) {
+        throw new Error(
+          `No active persona found for Eye: ${eyeName} even after seeding attempt. Database may be corrupted.`
+        );
       }
 
-      throw new Error(
-        `No active persona found for Eye: ${eyeName}. Run 'bun run scripts/seed-defaults.ts --force --only=personas' to restore defaults.`
-      );
+      console.log(`📖 Loaded persona from database for Eye: ${eyeName} (v${personaAfterSeed.version}) after seeding`);
+      return personaAfterSeed.mission;
     }
 
     console.log(`📖 Loaded persona from database for Eye: ${eyeName} (v${persona.version})`);

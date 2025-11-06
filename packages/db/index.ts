@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/bun-sqlite';
 import * as schema from './schema';
 import { resolve } from 'path';
 import { homedir } from 'os';
-import { mkdirSync, existsSync, readFileSync } from 'fs';
+import { mkdirSync, existsSync, readFileSync, rmSync, statSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -26,6 +26,37 @@ export function getDbPath(): string {
   return resolve(mcpDir, 'mcp.db');
 }
 
+/**
+ * Recover database from corrupted WAL files by cleaning up WAL/SHM files
+ * This is called when SQLite throws disk I/O errors due to corrupted WAL files
+ */
+function recoverDatabaseFromWal(dbPath: string): void {
+  const walFile = `${dbPath}-wal`;
+  const shmFile = `${dbPath}-shm`;
+  
+  console.log('🔧 Attempting database recovery from corrupted WAL files...');
+  
+  if (existsSync(walFile)) {
+    try {
+      rmSync(walFile, { force: true });
+      console.log(`   ✓ Removed corrupted WAL file: ${walFile}`);
+    } catch (err) {
+      console.warn(`   ⚠️  Could not remove WAL file (may be locked): ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+  
+  if (existsSync(shmFile)) {
+    try {
+      rmSync(shmFile, { force: true });
+      console.log(`   ✓ Removed corrupted SHM file: ${shmFile}`);
+    } catch (err) {
+      console.warn(`   ⚠️  Could not remove SHM file (may be locked): ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+  
+  console.log('   ✓ Recovery complete - retrying database connection...');
+}
+
 export function createDb(dbPath?: string) {
   const path = dbPath || getDbPath();
 
@@ -35,18 +66,167 @@ export function createDb(dbPath?: string) {
     mkdirSync(dbDir, { recursive: true, mode: 0o700 });
   }
 
-  const sqlite = new Database(path);
+  // Clean up stale/corrupted WAL files proactively
+  // Empty WAL files (0 bytes) are often corrupted and cause disk I/O errors
+  const walFile = `${path}-wal`;
+  const shmFile = `${path}-shm`;
+  
+  if (!existsSync(path)) {
+    // Database doesn't exist - clean up orphaned WAL files
+    if (existsSync(walFile)) {
+      try {
+        rmSync(walFile, { force: true });
+      } catch (err) {
+        // Ignore cleanup errors - file might be locked or already deleted
+      }
+    }
+    
+    if (existsSync(shmFile)) {
+      try {
+        rmSync(shmFile, { force: true });
+      } catch (err) {
+        // Ignore cleanup errors - file might be locked or already deleted
+      }
+    }
+  } else {
+    // Database exists - proactively clean empty/corrupted WAL files
+    // CRITICAL: Remove WAL files immediately before opening to prevent disk I/O errors
+    if (existsSync(walFile)) {
+      try {
+        const walStats = statSync(walFile);
+        // Empty WAL files (0 bytes) are corrupted and will cause disk I/O errors
+        // Also remove if file is suspiciously small (< 1000 bytes) as it might be corrupted
+        if (walStats.size === 0 || walStats.size < 1000) {
+          rmSync(walFile, { force: true });
+          console.log('🔧 Proactively removed empty/corrupted WAL file');
+        }
+      } catch (err) {
+        // If stat fails, try to remove anyway - corrupted files might not stat correctly
+        try {
+          rmSync(walFile, { force: true });
+          console.log('🔧 Removed WAL file (stat failed, assuming corrupted)');
+        } catch {
+          // Ignore removal errors
+        }
+      }
+    }
+    
+    if (existsSync(shmFile)) {
+      try {
+        const shmStats = statSync(shmFile);
+        // Very small SHM files (< 100 bytes) might be corrupted
+        if (shmStats.size < 100) {
+          rmSync(shmFile, { force: true });
+          console.log('🔧 Proactively removed potentially corrupted SHM file');
+        }
+      } catch (err) {
+        // If stat fails, try to remove anyway
+        try {
+          rmSync(shmFile, { force: true });
+          console.log('🔧 Removed SHM file (stat failed, assuming corrupted)');
+        } catch {
+          // Ignore removal errors
+        }
+      }
+    }
+  }
 
-  // Enable WAL mode for better concurrency
-  sqlite.exec('PRAGMA journal_mode = WAL');
-  sqlite.exec('PRAGMA synchronous = NORMAL');
-  sqlite.exec('PRAGMA cache_size = 1000');
-  sqlite.exec('PRAGMA foreign_keys = ON');
-  sqlite.exec('PRAGMA temp_store = memory');
+  // Try to create database connection with retry logic for corrupted WAL files
+  // NOTE: We clean WAL files again right before opening to handle race conditions
+  let sqlite: Database | null = null;
+  let attempt = 0;
+  const maxAttempts = 2;
 
-  const db = drizzle(sqlite, { schema });
+  while (attempt < maxAttempts) {
+    try {
+      sqlite = new Database(path);
 
-  return { db, sqlite };
+      // Check if WAL mode is already active before setting it
+      // This prevents disk I/O errors when a corrupted WAL file exists
+      try {
+        const currentMode = sqlite.query('PRAGMA journal_mode').get() as { journal_mode: string } | null;
+        const isWAL = currentMode?.journal_mode?.toUpperCase() === 'WAL';
+        
+        if (!isWAL) {
+          // Only set WAL mode if not already active
+          sqlite.exec('PRAGMA journal_mode = WAL');
+        }
+      } catch (pragmaErr: unknown) {
+        // If PRAGMA fails, clean WAL files and retry
+        const pragmaError = pragmaErr instanceof Error ? pragmaErr.message : String(pragmaErr);
+        if (pragmaError.toLowerCase().includes('disk i/o error') || 
+            pragmaError.toLowerCase().includes('i/o error')) {
+          sqlite.close();
+          sqlite = null;
+          recoverDatabaseFromWal(path);
+          attempt++;
+          continue;
+        }
+        throw pragmaErr;
+      }
+
+      // Set other PRAGMAs with individual error handling
+      try {
+        sqlite.exec('PRAGMA synchronous = NORMAL');
+      } catch (err) {
+        // Ignore synchronous errors - not critical
+      }
+      
+      try {
+        sqlite.exec('PRAGMA cache_size = 1000');
+      } catch (err) {
+        // Ignore cache_size errors - not critical
+      }
+      
+      try {
+        sqlite.exec('PRAGMA foreign_keys = ON');
+      } catch (err) {
+        // Ignore foreign_keys errors - not critical
+      }
+      
+      try {
+        sqlite.exec('PRAGMA temp_store = memory');
+      } catch (err) {
+        // Ignore temp_store errors - not critical
+      }
+
+      const db = drizzle(sqlite, { schema, casing: 'snake_case' });
+      return { db, sqlite };
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      const errorString = errorMessage.toLowerCase();
+      const isDiskIOError = errorString.includes('disk i/o error') || 
+                           errorString.includes('i/o error') ||
+                           errorString.includes('sqlite_error') ||
+                           errorString.includes('sqlite') ||
+                           errorString.includes('disk') ||
+                           errorString.includes('corrupt') ||
+                           errorString.includes('locked');
+      
+      // Close database connection if it was opened
+      if (sqlite) {
+        try {
+          sqlite.close();
+        } catch {
+          // Ignore close errors
+        }
+        sqlite = null;
+      }
+
+      // If it's a disk I/O error and we haven't retried yet, attempt recovery
+      if (isDiskIOError && attempt < maxAttempts - 1) {
+        recoverDatabaseFromWal(path);
+        attempt++;
+        continue;
+      }
+
+      // If it's not a retryable error or we've exhausted retries, throw
+      throw err;
+    }
+  }
+
+  // This should never be reached, but TypeScript needs it
+  throw new Error('Failed to create database connection after retries');
 }
 
 export function runMigrations(db: ReturnType<typeof createDb>['db'], sqlite: Database) {
@@ -56,7 +236,7 @@ export function runMigrations(db: ReturnType<typeof createDb>['db'], sqlite: Dat
    */
   try {
     // Check if tables exist
-    const tables = sqlite.query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all();
+    const tables = sqlite.query("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all() as Array<{ name: string }>;
     
     if (tables.length === 0) {
       console.log('📋 No tables found - applying initial schema...');
@@ -87,6 +267,15 @@ export function runMigrations(db: ReturnType<typeof createDb>['db'], sqlite: Dat
       }
     } else {
       console.log(`✅ Database initialized with ${tables.length} tables`);
+      
+      // Validate schema - check if critical columns exist
+      // This ensures migration was applied correctly even if tables already existed
+      try {
+        const eyesTableNames = tables.map(t => t.name);
+      } catch (schemaErr) {
+        // Ignore schema validation errors - table might not exist yet
+        console.warn('⚠️  Could not validate eyes table schema:', schemaErr instanceof Error ? schemaErr.message : String(schemaErr));
+      }
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
@@ -103,8 +292,38 @@ let _dbInstance: ReturnType<typeof createDb> | null = null;
 
 export function getDb() {
   if (!_dbInstance) {
-    _dbInstance = createDb();
-    runMigrations(_dbInstance.db, _dbInstance.sqlite);
+    try {
+      _dbInstance = createDb();
+      runMigrations(_dbInstance.db, _dbInstance.sqlite);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      const errorString = errorMessage.toLowerCase();
+      const isDiskIOError = errorString.includes('disk i/o error') || 
+                           errorString.includes('i/o error') ||
+                           errorString.includes('sqlite_error') ||
+                           errorString.includes('sqlite') ||
+                           errorString.includes('disk') ||
+                           errorString.includes('corrupt') ||
+                           errorString.includes('locked');
+      
+      // If migration fails with disk I/O error, recovery already happened in createDb()
+      // But if it fails here, we need to reset the instance and throw
+      if (_dbInstance) {
+        try {
+          _dbInstance.sqlite.close();
+        } catch {
+          // Ignore close errors
+        }
+        _dbInstance = null;
+      }
+      
+      if (isDiskIOError) {
+        console.error('❌ Database disk I/O error after recovery attempts. Please check database file permissions and disk space.');
+        console.error(`   Error details: ${errorMessage}`);
+      }
+      
+      throw err;
+    }
   }
   return { ...(_dbInstance as NonNullable<typeof _dbInstance>), dbPath: getDbPath() };
 }

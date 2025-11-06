@@ -123,8 +123,8 @@ CREATE TABLE `mcp_integrations` (
 	`config_template` text NOT NULL,
 	`setup_steps` text NOT NULL,
 	`docs_url` text,
-	`enabled` integer DEFAULT true,
-	`display_order` integer DEFAULT 0,
+	`enabled` integer,
+	`display_order` integer,
 	`created_at` integer NOT NULL,
 	`updated_at` integer NOT NULL
 );

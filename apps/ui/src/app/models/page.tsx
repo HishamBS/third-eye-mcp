@@ -86,7 +86,8 @@ export default function ModelsPage() {
       if (response.ok) {
         const result = await response.json();
         const eyesData = result.data || [];
-        setAllEyes(eyesData.map((eye: { id: string }) => eye.id));
+        // Use eye names instead of IDs for display (backend returns names)
+        setAllEyes(eyesData.map((eye: { name: string }) => eye.name).filter(Boolean));
       }
     } catch (error) {
       console.error('Failed to fetch eyes:', error);
@@ -100,6 +101,11 @@ export default function ModelsPage() {
         const result = await response.json();
         const routingData = result.data?.routings || [];
         setRouting(routingData);
+        // Extract eye names from routing data (SSOT) instead of using eye IDs
+        const eyeNames = routingData.map((r: { eye: string }) => r.eye).filter(Boolean);
+        if (eyeNames.length > 0) {
+          setAllEyes(eyeNames);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch routing:', error);

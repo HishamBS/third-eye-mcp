@@ -5,6 +5,6 @@
  * Does not import database or core orchestration modules
  */
 
-export { BLUEPRINT_REGISTRY, getPersonaBlueprint } from './src/blueprints';
+export { getPersonaBlueprint } from './src/blueprints';
 export type { PersonaBlueprint } from './src/interfaces/persona-blueprint';
 

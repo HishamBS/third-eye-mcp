@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { PersonaWizard } from '@/components/persona-form/PersonaWizard';
+import { EyeIcon } from '@/components/EyeIcon';
 import { Plus, Eye, CheckCircle2, Circle, Calendar, FileText, Edit } from 'lucide-react';
 import type { PersonaFormState } from '@/types/persona-form';
 import type { Persona } from '@/types/api';
@@ -171,31 +172,42 @@ export default function PersonasPage() {
   };
 
   // Deduplicate personas - one card per eye (show active or latest version)
-  const deduplicatedPersonas = personas.reduce((acc, persona) => {
-    const existing = acc.find(p => p.eye === persona.eye);
+  // NO FALLBACKS - all personas from API must have valid eyeName
+  // Filter out any personas missing eyeName (should not happen, but validate)
+  const validPersonas = personas.filter(persona => {
+    if (!persona.eyeName) {
+      console.error(`[PERSONAS PAGE] Persona ${persona.id} missing eyeName. Excluding from display.`);
+      return false;
+    }
+    return true;
+  });
+
+  const deduplicatedPersonas = validPersonas.reduce((acc, persona) => {
+    // eyeName is guaranteed to be non-null after filtering
+    const existing = acc.find(p => p.eyeName === persona.eyeName);
     
     if (!existing) {
       acc.push(persona);
     } else {
       // Prefer active version over higher version number
       if (persona.active && !existing.active) {
-        const index = acc.findIndex(p => p.eye === persona.eye);
+        const index = acc.findIndex(p => p.eyeName === persona.eyeName);
         acc[index] = persona;
       } else if (!persona.active && !existing.active && persona.version > existing.version) {
         // If neither is active, use latest version
-        const index = acc.findIndex(p => p.eye === persona.eye);
+        const index = acc.findIndex(p => p.eyeName === persona.eyeName);
         acc[index] = persona;
       }
     }
     
     return acc;
-  }, [] as Persona[]).sort((a, b) => a.eye.localeCompare(b.eye));
+  }, [] as Persona[]).sort((a, b) => a.eyeName.localeCompare(b.eyeName));
 
   if (showWizard) {
     // Reconstruct PersonaFormState from structured fields if editing with safe JSON parsing
     const initialData = editingPersona
       ? {
-          metadata: safeParseJSON(editingPersona.metadata_json, {
+          metadata: safeParseJSON(editingPersona.metadataJson, {
             eyeId: '',
             name: '',
             description: '',
@@ -203,12 +215,12 @@ export default function PersonasPage() {
             capabilities: [],
           }),
           mission: editingPersona.mission,
-          guidancePhase: safeParseJSON(editingPersona.guidance_json, null),
-          validationPhase: safeParseJSON(editingPersona.validation_json, null),
-          envelopeContract: safeParseJSON(editingPersona.envelope_json, {}),
-          reminders: safeParseJSON(editingPersona.reminders_json, []),
+          guidancePhase: safeParseJSON(editingPersona.guidanceJson, null),
+          validationPhase: safeParseJSON(editingPersona.validationJson, null),
+          envelopeContract: safeParseJSON(editingPersona.envelopeJson, {}),
+          reminders: safeParseJSON(editingPersona.remindersJson, []),
           notes: editingPersona.notes,
-          llmConfig: safeParseJSON(editingPersona.llm_config_json, {
+          llmConfig: safeParseJSON(editingPersona.llmConfigJson, {
             temperature: 0.7,
             top_p: 1,
             response_format: 'json',
@@ -287,7 +299,7 @@ export default function PersonasPage() {
           <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
             {deduplicatedPersonas.map((persona) => (
               <motion.div
-                key={persona.eye}
+                key={persona.id}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: ANIMATION_FAST }}
@@ -302,10 +314,10 @@ export default function PersonasPage() {
                   {/* Eye Name Badge */}
                   <div className="mb-3 flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-accent/20">
-                      <Eye className="h-5 w-5 text-brand-accent" />
+                      <EyeIcon eye={persona.eyeName} size={24} />
                     </div>
                     <h3 className="text-lg font-bold text-brand-foreground">
-                      {persona.eye}
+                      {persona.eyeName}
                     </h3>
                   </div>
 
@@ -382,7 +394,7 @@ export default function PersonasPage() {
                       className="rounded-lg border border-brand-outline bg-brand-paperElev px-3 py-1.5 text-sm font-medium text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
                     >
                       {personaVersions.map(p => (
-                        <option key={p.version} value={p.version}>
+                        <option key={p.id} value={p.version}>
                           v{p.version} {p.active ? '(active)' : ''}
                         </option>
                       ))}
@@ -401,7 +413,7 @@ export default function PersonasPage() {
             {(() => {
               // Use structured fields directly from database with safe JSON parsing
               const data = {
-                metadata: safeParseJSON(viewingPersona.metadata_json, {
+                metadata: safeParseJSON(viewingPersona.metadataJson, {
                   eyeId: '',
                   name: '',
                   description: '',
@@ -409,12 +421,12 @@ export default function PersonasPage() {
                   capabilities: [],
                 }),
                 mission: viewingPersona.mission,
-                guidancePhase: safeParseJSON(viewingPersona.guidance_json, null),
-                validationPhase: safeParseJSON(viewingPersona.validation_json, null),
-                envelopeContract: safeParseJSON(viewingPersona.envelope_json, {}),
-                reminders: safeParseJSON(viewingPersona.reminders_json, []),
+                guidancePhase: safeParseJSON(viewingPersona.guidanceJson, null),
+                validationPhase: safeParseJSON(viewingPersona.validationJson, null),
+                envelopeContract: safeParseJSON(viewingPersona.envelopeJson, {}),
+                reminders: safeParseJSON(viewingPersona.remindersJson, []),
                 notes: viewingPersona.notes,
-                llmConfig: safeParseJSON(viewingPersona.llm_config_json, {
+                llmConfig: safeParseJSON(viewingPersona.llmConfigJson, {
                   temperature: 0.7,
                   top_p: 1,
                   response_format: 'json',

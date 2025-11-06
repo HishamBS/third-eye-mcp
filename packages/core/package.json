@@ -4,6 +4,9 @@
   "type": "module",
   "main": "index.ts",
   "dependencies": {
+    "@third-eye/config": "workspace:*",
+    "@third-eye/constants": "workspace:*",
+    "@third-eye/types": "workspace:*",
     "@third-eye/eyes": "workspace:*",
     "@third-eye/providers": "workspace:*",
     "@third-eye/db": "workspace:*",

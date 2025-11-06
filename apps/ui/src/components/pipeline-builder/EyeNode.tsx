@@ -3,21 +3,20 @@
 import { memo } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import { EyeIcon, getEyeColor } from '@/components/EyeIcon';
-import {
-  EYE_DISPLAY_NAMES,
-  EYE_STAGES,
-  type EyeStage,
-} from './constants';
+import type { EyeStage } from './constants';
 import type { EyeName } from '@third-eye/types';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 import { ANIMATION_DURATION } from '@/constants/timing';
 
 /**
  * Eye Node Data Structure
+ * All metadata (displayName, stage, capabilities) should come from database via API
  */
 export interface EyeNodeData {
   eyeId: EyeName;
-  capabilities?: string[];
+  displayName?: string; // From database - eyes.name
+  stage?: EyeStage; // From database - blueprint phases
+  capabilities?: string[]; // From database - blueprint capabilities
   customConfig?: Record<string, unknown>;
 }
 
@@ -30,12 +29,15 @@ export interface EyeNodeData {
  * - Input/Output handles
  * - Icon, name, badge, stage display
  * - Expandable capabilities (on selected)
+ * 
+ * Per SSOT: All eye metadata (displayName, stage, capabilities) must come from database
  */
 function EyeNodeComponent({ data, selected, dragging }: NodeProps<EyeNodeData>) {
   const { eyeId, capabilities = [], stage: dataStage, displayName: dataDisplayName } = data;
 
-  const displayName = dataDisplayName || EYE_DISPLAY_NAMES[eyeId] || eyeId;
-  const stage = dataStage || EYE_STAGES[eyeId];
+  // Use provided data from database, fallback to eyeId if not provided
+  const displayName = dataDisplayName || eyeId;
+  const stage = dataStage || 'GUIDANCE'; // Default fallback - should always be provided from DB
 
   // Get Eye-specific color from theme SSOT
   const eyeColor = getEyeColor(eyeId);

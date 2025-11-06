@@ -107,9 +107,12 @@
       "name": "@third-eye/core",
       "version": "1.0.0",
       "dependencies": {
+        "@third-eye/config": "workspace:*",
+        "@third-eye/constants": "workspace:*",
         "@third-eye/db": "workspace:*",
         "@third-eye/eyes": "workspace:*",
         "@third-eye/providers": "workspace:*",
+        "@third-eye/types": "workspace:*",
         "drizzle-orm": "^0.36.4",
         "nanoid": "^5.0.9",
         "zod": "^3.23.8",
@@ -119,8 +122,10 @@
       "name": "@third-eye/db",
       "version": "1.0.0",
       "dependencies": {
+        "@third-eye/constants": "workspace:*",
         "@third-eye/types": "workspace:*",
         "drizzle-orm": "^0.36.4",
+        "nanoid": "^5.1.6",
       },
       "devDependencies": {
         "drizzle-kit": "^0.31.6",
@@ -130,10 +135,11 @@
       "name": "@third-eye/eyes",
       "version": "1.0.0",
       "dependencies": {
+        "@third-eye/constants": "workspace:*",
+        "@third-eye/db": "workspace:*",
         "zod": "^3.23.8",
       },
       "devDependencies": {
-        "@third-eye/db": "workspace:*",
         "@types/node": "^22.10.2",
         "typescript": "^5.7.3",
       },

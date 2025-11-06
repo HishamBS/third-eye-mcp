@@ -4,7 +4,7 @@ import { getDb } from '@third-eye/db';
 import { personas, personaVersions } from '@third-eye/db';
 import { personaBlueprints } from '@third-eye/db/schema';
 // DEFAULT_PERSONA_MAP removed - all personas in database
-import { getEyeIconPath, EyeId } from '@third-eye/constants';
+import { EyeId } from '@third-eye/constants';
 import { eq, and, desc } from 'drizzle-orm';
 import { getEyeIdByName, getEyeNameById } from '@third-eye/db/utils/lookups';
 import { generateId } from '@third-eye/db/utils/uuid';
@@ -48,7 +48,6 @@ app.get('/blueprints', async (c) => {
         description: blueprint.description,
         version: blueprint.version,
         capabilities,
-        iconPath: getEyeIconPath(blueprint.eyeId as EyeId),
         metadata: {
           eyeId: blueprint.eyeId as EyeId,
           name: blueprint.name,
@@ -99,7 +98,6 @@ app.get('/blueprints/:eyeId', async (c) => {
       description: blueprint.description,
       version: blueprint.version,
       capabilities,
-      iconPath: getEyeIconPath(blueprint.eyeId as EyeId),
       metadata: {
         eyeId: blueprint.eyeId as EyeId,
         name: blueprint.name,
@@ -161,7 +159,7 @@ app.put('/blueprints/:eyeId', async (c) => {
 // Zod schemas for validation
 const createPersonaSchema = z.object({
   name: z.string().min(1),
-  metadata_json: z.object({
+  metadataJson: z.object({
     eyeId: z.string(),
     name: z.string(),
     description: z.string(),
@@ -169,16 +167,16 @@ const createPersonaSchema = z.object({
     capabilities: z.array(z.string()),
   }),
   mission: z.string().min(1),
-  guidance_json: z.record(z.unknown()).nullable().optional(),
-  validation_json: z.record(z.unknown()).nullable().optional(),
-  envelope_json: z.object({
+  guidanceJson: z.record(z.unknown()).nullable().optional(),
+  validationJson: z.record(z.unknown()).nullable().optional(),
+  envelopeJson: z.object({
     requiredKeys: z.array(z.string()).optional(),
     requiredDataKeys: z.array(z.string()).optional(),
     requiredUiKeys: z.array(z.string()).optional(),
   }),
-  reminders_json: z.array(z.string()),
+  remindersJson: z.array(z.string()),
   notes: z.string().nullable().optional(),
-  llm_config_json: z.object({
+  llmConfigJson: z.object({
     temperature: z.number(),
     top_p: z.number(),
     response_format: z.string(),
@@ -196,17 +194,31 @@ app.get('/', async (c) => {
       .orderBy(desc(personas.createdAt))
       .all();
 
-    // Ensure all personas have the name field populated and convert eyeId to eyeName
-    const personasWithNames = await Promise.all(
-      allPersonas.map(async (persona) => {
-        const eyeName = await getEyeNameById(persona.eyeId);
-        return {
-          ...persona,
-          name: persona.name || eyeName || 'unknown',
-          eyeName, // Include for backward compatibility
-        };
-      })
-    );
+    // Ensure all personas have valid eyeId references and convert eyeId to eyeName
+    // NO FALLBACKS - if eyeId is invalid, exclude persona and log error
+    const personasWithNames: Array<typeof personas.$inferSelect & { eyeName: string }> = [];
+    const invalidPersonas: Array<{ personaId: string; eyeId: string }> = [];
+
+    for (const persona of allPersonas) {
+      const eyeName = await getEyeNameById(persona.eyeId);
+      
+      if (!eyeName) {
+        // Invalid eyeId reference - log error and exclude from response
+        console.error(`[PERSONAS API] Persona ${persona.id} has invalid eyeId: ${persona.eyeId}. Excluding from response.`);
+        invalidPersonas.push({ personaId: persona.id, eyeId: persona.eyeId });
+        continue;
+      }
+
+      personasWithNames.push({
+        ...persona,
+        eyeName, // Always set - guaranteed to be non-null
+      });
+    }
+
+    // Log warning if any invalid personas found
+    if (invalidPersonas.length > 0) {
+      console.warn(`[PERSONAS API] Found ${invalidPersonas.length} persona(s) with invalid eyeId references. These were excluded from the response.`, invalidPersonas);
+    }
 
     return createSuccessResponse(c, personasWithNames);
   } catch (error) {
@@ -288,14 +300,14 @@ app.post('/:eye', validateBodyWithEnvelope(createPersonaSchema), async (c) => {
     const eyeName = c.req.param('eye');
     const {
       name,
-      metadata_json,
+      metadataJson,
       mission,
-      guidance_json,
-      validation_json,
-      envelope_json,
-      reminders_json,
+      guidanceJson,
+      validationJson,
+      envelopeJson,
+      remindersJson,
       notes,
-      llm_config_json
+      llmConfigJson
     } = c.get('validatedBody');
 
     const { db } = getDb();
@@ -325,14 +337,14 @@ app.post('/:eye', validateBodyWithEnvelope(createPersonaSchema), async (c) => {
       eyeId,
       name,
       version: newVersion,
-      metadata_json,
+      metadataJson,
       mission,
-      guidance_json,
-      validation_json,
-      envelope_json,
-      reminders_json,
+      guidanceJson,
+      validationJson,
+      envelopeJson,
+      remindersJson,
       notes,
-      llm_config_json,
+      llmConfigJson,
       active: false,
       createdAt: new Date(),
     };

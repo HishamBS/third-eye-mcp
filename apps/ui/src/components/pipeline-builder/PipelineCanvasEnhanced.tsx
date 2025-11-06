@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, useMemo } from 'react';
+import { useCallback, useState, useMemo, useEffect } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -22,7 +22,8 @@ import { EdgeConfigModal } from './EdgeConfigModal';
 import { Toolbar } from './Toolbar';
 import { PersonaWizardModal } from '@/components/persona-form/PersonaWizardModal';
 import { PipelineTemplateSelector } from './PipelineTemplateSelector';
-import { CANVAS_SETTINGS, LAYOUT, SYSTEM_DEFAULT_PIPELINE } from './constants';
+import { CANVAS_SETTINGS, LAYOUT } from './constants';
+import { API_BASE_URL } from '@/consts/api';
 import type { PipelineNode, PipelineEdge, EyeNodeData, EdgeConditionData } from '@/types/pipeline';
 
 // Register custom node types
@@ -45,12 +46,34 @@ const nodeTypes = { eyeNode: EyeNode };
  * Per R13: All constants from SSOT
  */
 export function PipelineCanvasEnhanced() {
-  const [nodes, setNodes, onNodesChange] = useNodesState<PipelineNode>(
-    SYSTEM_DEFAULT_PIPELINE.nodes as PipelineNode[]
-  );
-  const [edges, setEdges, onEdgesChange] = useEdgesState<PipelineEdge>(
-    SYSTEM_DEFAULT_PIPELINE.edges as PipelineEdge[]
-  );
+  // Start with empty pipeline - load from database if needed
+  const [nodes, setNodes, onNodesChange] = useNodesState<PipelineNode>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<PipelineEdge>([]);
+  
+  // Optionally load default pipeline from database on mount
+  useEffect(() => {
+    const loadDefaultPipeline = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/pipelines`);
+        if (response.ok) {
+          const envelope = await response.json();
+          const pipelines = envelope.data || [];
+          const defaultPipeline = pipelines.find((p: any) => p.category === 'default') || pipelines[0];
+          if (defaultPipeline?.workflowJson) {
+            setNodes((defaultPipeline.workflowJson.nodes || []) as PipelineNode[]);
+            setEdges((defaultPipeline.workflowJson.edges || []) as PipelineEdge[]);
+          }
+        }
+      } catch (error) {
+        console.debug('[PipelineCanvasEnhanced] No default pipeline available');
+      }
+    };
+    // Only load if nodes are empty (first mount)
+    if (nodes.length === 0) {
+      loadDefaultPipeline();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [selectedNode, setSelectedNode] = useState<PipelineNode | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<PipelineEdge | null>(null);
   const [paletteCollapsed, setPaletteCollapsed] = useState<boolean>(false);

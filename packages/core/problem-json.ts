@@ -5,6 +5,7 @@
  */
 
 import { z } from 'zod';
+import { ALL_EYE_IDS } from '@third-eye/constants';
 
 // RFC7807 Problem Details schema
 export const ProblemDetailsSchema = z.object({
@@ -158,7 +159,7 @@ export class ProblemJsonFormatter {
       detail: `Eye implementation not found: ${eyeName}`,
       extensions: {
         eyeName,
-        availableEyes: ['overseer', 'sharingan', 'kyuubi', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan'],
+        availableEyes: ALL_EYE_IDS,
       },
     });
   }

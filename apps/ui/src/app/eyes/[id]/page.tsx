@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { EyeWizardModal } from '@/components/eye-wizard/EyeWizardModal';
+import { EyeIcon } from '@/components/EyeIcon';
 import { API_BASE_URL } from '@/consts/api';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
@@ -218,9 +219,6 @@ export default function EyeDetailPage() {
     }
   };
 
-  const getEyeIconPath = (id: string) => {
-    return `/eyes/${id}.svg`;
-  };
 
   const toHumanReadable = (text: string) => {
     return text
@@ -259,14 +257,7 @@ export default function EyeDetailPage() {
                 ← Back to Eyes
               </Link>
               <div className="flex items-center gap-4">
-                <img 
-                  src={getEyeIconPath(eye.id)} 
-                  alt={`${eye.name} icon`}
-                  className="h-16 w-16"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
+                <EyeIcon eye={eye.name} size={64} />
                 <div>
                   <div className="flex items-center gap-2">
                     <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">{eye.source}</p>

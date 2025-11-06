@@ -60,7 +60,6 @@ export const NodeEditModal = memo(function NodeEditModal({
         displayName: node.data.displayName,
         capabilities: node.data.capabilities || [],
         customConfig: config,
-        isCustom: node.data.isCustom,
         iconSvg: node.data.iconSvg,
       });
       // Initialize form fields from customConfig
@@ -198,11 +197,6 @@ export const NodeEditModal = memo(function NodeEditModal({
             </label>
             <div className="px-3 py-2 bg-brand-paperElev border border-brand-outline rounded-md text-semantic-muted text-sm">
               {formData.displayName || formData.eyeId}
-              {formData.isCustom && (
-                <span className="ml-2 text-xs bg-brand-accent/20 text-brand-accent px-2 py-0.5 rounded-full">
-                  Custom
-                </span>
-              )}
             </div>
 
             {/* Phase 16: Configure Persona button */}

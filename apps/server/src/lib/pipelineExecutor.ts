@@ -255,6 +255,10 @@ export class PipelineExecutor {
 
 /**
  * Example pipeline definitions
+ * 
+ * NOTE: These are test-only examples with hardcoded eye names.
+ * For production, all pipelines should be loaded from the database (SSOT).
+ * These examples are kept for documentation/testing purposes only.
  */
 export const examplePipelines: PipelineDefinition[] = [
   {

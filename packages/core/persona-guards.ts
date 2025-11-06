@@ -2,10 +2,11 @@ import {
   CLARIFICATION_FIELD_PROMPTS,
   REQUIRED_CLARIFICATION_FIELDS,
   type ClarificationField,
+  EyeId,
 } from '@third-eye/constants';
 import type { BaseEnvelope } from '@third-eye/eyes';
 
-const SHARINGAN_ID = 'sharingan';
+const SHARINGAN_ID = EyeId.SHARINGAN;
 const SHARINGAN_GUIDANCE_CODES = new Set<string>([
   'NEED_CLARIFICATION',
   'NEED_MORE_CONTEXT',

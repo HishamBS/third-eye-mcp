@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Eye as EyeIcon, Sparkles, Settings } from 'lucide-react';
+import { Eye as EyeIconLucide, Sparkles, Settings } from 'lucide-react';
+import { EyeIcon } from '@/components/EyeIcon';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useDialog } from '@/hooks/useDialog';
 import { EmptyState } from '@/components/EmptyState';
@@ -402,9 +403,6 @@ export default function EyesPage() {
     }
   };
 
-  const getEyeIconPath = (eyeId: string) => {
-    return `/eyes/${eyeId}.svg`;
-  };
 
   const getEyeColor = (_eyeId: string) => {
     // All cards use consistent brand tokens
@@ -695,14 +693,7 @@ export default function EyesPage() {
                     <Link href={`/eyes/${eye.id}`} className="block">
                       <div className="mb-4 text-center">
                         <div className="mb-3 flex justify-center">
-                          <img
-                            src={getEyeIconPath(eye.id)}
-                            alt={`${eye.name} icon`}
-                            className="h-16 w-16"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
+                          <EyeIcon eye={eye.name} size={64} />
                         </div>
                         <h3 className="mb-1 text-xl font-bold text-brand-foreground">{eye.name}</h3>
                         <div className="mb-2 flex items-center justify-center gap-2">

@@ -6,6 +6,7 @@
  */
 
 import type { NewPipeline } from '../schema';
+import { EyeId } from '@third-eye/constants';
 
 export const DEFAULT_PIPELINES: Omit<NewPipeline, 'createdAt' | 'active'>[] = [
   {
@@ -16,19 +17,19 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, 'createdAt' | 'active'>[] = [
     category: 'default',
     workflowJson: {
       nodes: [
-        { id: 'overseer', type: 'eye', data: { eyeId: 'overseer', position: { x: 100, y: 200 } } },
-        { id: 'sharingan', type: 'eye', data: { eyeId: 'sharingan', position: { x: 400, y: 100 } } },
-        { id: 'kyuubi', type: 'eye', data: { eyeId: 'kyuubi', position: { x: 700, y: 100 } } },
-        { id: 'jogan', type: 'eye', data: { eyeId: 'jogan', position: { x: 1000, y: 100 } } },
-        { id: 'tenseigan', type: 'eye', data: { eyeId: 'tenseigan', position: { x: 1300, y: 200 } } },
-        { id: 'byakugan', type: 'eye', data: { eyeId: 'byakugan', position: { x: 1600, y: 200 } } },
+        { id: EyeId.OVERSEER, type: 'eye', data: { eyeId: EyeId.OVERSEER, position: { x: 100, y: 200 } } },
+        { id: EyeId.SHARINGAN, type: 'eye', data: { eyeId: EyeId.SHARINGAN, position: { x: 400, y: 100 } } },
+        { id: EyeId.KYUUBI, type: 'eye', data: { eyeId: EyeId.KYUUBI, position: { x: 700, y: 100 } } },
+        { id: EyeId.JOGAN, type: 'eye', data: { eyeId: EyeId.JOGAN, position: { x: 1000, y: 100 } } },
+        { id: EyeId.TENSEIGAN, type: 'eye', data: { eyeId: EyeId.TENSEIGAN, position: { x: 1300, y: 200 } } },
+        { id: EyeId.BYAKUGAN, type: 'eye', data: { eyeId: EyeId.BYAKUGAN, position: { x: 1600, y: 200 } } },
       ],
       edges: [
-        { id: 'e1', source: 'overseer', target: 'sharingan' },
-        { id: 'e2', source: 'sharingan', target: 'kyuubi' },
-        { id: 'e3', source: 'kyuubi', target: 'jogan' },
-        { id: 'e4', source: 'jogan', target: 'tenseigan' },
-        { id: 'e5', source: 'tenseigan', target: 'byakugan' },
+        { id: 'e1', source: EyeId.OVERSEER, target: EyeId.SHARINGAN },
+        { id: 'e2', source: EyeId.SHARINGAN, target: EyeId.KYUUBI },
+        { id: 'e3', source: EyeId.KYUUBI, target: EyeId.JOGAN },
+        { id: 'e4', source: EyeId.JOGAN, target: EyeId.TENSEIGAN },
+        { id: 'e5', source: EyeId.TENSEIGAN, target: EyeId.BYAKUGAN },
       ],
     },
   },
@@ -40,13 +41,13 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, 'createdAt' | 'active'>[] = [
     category: 'default',
     workflowJson: {
       nodes: [
-        { id: 'mangekyo', type: 'eye', data: { eyeId: 'mangekyo', position: { x: 100, y: 200 } } },
-        { id: 'tenseigan', type: 'eye', data: { eyeId: 'tenseigan', position: { x: 400, y: 200 } } },
-        { id: 'byakugan', type: 'eye', data: { eyeId: 'byakugan', position: { x: 700, y: 200 } } },
+        { id: EyeId.MANGEKYO, type: 'eye', data: { eyeId: EyeId.MANGEKYO, position: { x: 100, y: 200 } } },
+        { id: EyeId.TENSEIGAN, type: 'eye', data: { eyeId: EyeId.TENSEIGAN, position: { x: 400, y: 200 } } },
+        { id: EyeId.BYAKUGAN, type: 'eye', data: { eyeId: EyeId.BYAKUGAN, position: { x: 700, y: 200 } } },
       ],
       edges: [
-        { id: 'e1', source: 'mangekyo', target: 'tenseigan' },
-        { id: 'e2', source: 'tenseigan', target: 'byakugan' },
+        { id: 'e1', source: EyeId.MANGEKYO, target: EyeId.TENSEIGAN },
+        { id: 'e2', source: EyeId.TENSEIGAN, target: EyeId.BYAKUGAN },
       ],
     },
   },
@@ -58,13 +59,13 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, 'createdAt' | 'active'>[] = [
     category: 'default',
     workflowJson: {
       nodes: [
-        { id: 'overseer', type: 'eye', data: { eyeId: 'overseer', position: { x: 100, y: 200 } } },
-        { id: 'sharingan', type: 'eye', data: { eyeId: 'sharingan', position: { x: 400, y: 200 } } },
-        { id: 'rinnegan', type: 'eye', data: { eyeId: 'rinnegan', position: { x: 700, y: 200 } } },
+        { id: EyeId.OVERSEER, type: 'eye', data: { eyeId: EyeId.OVERSEER, position: { x: 100, y: 200 } } },
+        { id: EyeId.SHARINGAN, type: 'eye', data: { eyeId: EyeId.SHARINGAN, position: { x: 400, y: 200 } } },
+        { id: EyeId.RINNEGAN, type: 'eye', data: { eyeId: EyeId.RINNEGAN, position: { x: 700, y: 200 } } },
       ],
       edges: [
-        { id: 'e1', source: 'overseer', target: 'sharingan' },
-        { id: 'e2', source: 'sharingan', target: 'rinnegan' },
+        { id: 'e1', source: EyeId.OVERSEER, target: EyeId.SHARINGAN },
+        { id: 'e2', source: EyeId.SHARINGAN, target: EyeId.RINNEGAN },
       ],
     },
   },

@@ -71,7 +71,15 @@ app.get('/:provider', async (c) => {
   }
 });
 
-const LOCAL_PROVIDERS: readonly ProviderId[] = [PROVIDERS[2], PROVIDERS[3]] as const; // ollama, lmstudio
+/**
+ * Get list of local providers that don't require API keys
+ * SSOT: Providers are infrastructure-level constants, but this helper makes it explicit
+ */
+function getLocalProviders(): readonly ProviderId[] {
+  return ['ollama', 'lmstudio'] as const;
+}
+
+const LOCAL_PROVIDERS = getLocalProviders();
 
 app.post('/:provider/refresh', async (c) => {
   const providerId = c.req.param('provider') as ProviderId;

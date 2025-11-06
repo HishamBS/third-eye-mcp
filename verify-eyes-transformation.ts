@@ -3,22 +3,21 @@
  */
 
 import { getEye } from '@third-eye/eyes';
-import { getDb, closeDb, personas } from '@third-eye/db';
+import { getDb, closeDb, personas, eyes } from '@third-eye/db';
 import { eq, and } from 'drizzle-orm';
+import { getAllActiveEyes } from '@third-eye/db/utils/lookups';
 
 console.log('🔍 Verifying Transformed Eyes...\n');
-
-const eyeNames = ['overseer', 'sharingan', 'kyuubi', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan'] as const;
 
 let allPassed = true;
 
 const { db } = getDb();
 
-async function loadActivePersona(eyeName: typeof eyeNames[number]): Promise<string> {
+async function loadActivePersona(eyeId: string): Promise<string> {
   const record = await db
     .select()
     .from(personas)
-    .where(and(eq(personas.eye, eyeName), eq(personas.active, true)))
+    .where(and(eq(personas.eyeId, eyeId), eq(personas.active, true)))
     .get();
 
   if (!record) {
@@ -31,7 +30,16 @@ async function loadActivePersona(eyeName: typeof eyeNames[number]): Promise<stri
 }
 
 async function main() {
-  for (const name of eyeNames) {
+  // Query database for active eyes (SSOT)
+  const activeEyes = await getAllActiveEyes();
+  
+  if (activeEyes.length === 0) {
+    console.log('❌ No active eyes found in database. Run seeding first.');
+    process.exit(1);
+  }
+
+  for (const eyeData of activeEyes) {
+    const name = eyeData.name;
     try {
       const eye = getEye(name);
 
@@ -41,7 +49,7 @@ async function main() {
         continue;
       }
 
-      const persona = await loadActivePersona(name);
+      const persona = await loadActivePersona(eyeData.id);
 
       // Check for two-phase operation keywords in persona (except overseer and byakugan)
       const hasTwoPhase = persona.includes('GUIDANCE') || persona.includes('VALIDATION') || name === 'overseer' || name === 'byakugan';

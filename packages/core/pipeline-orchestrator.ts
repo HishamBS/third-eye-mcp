@@ -105,73 +105,8 @@ export interface PipelineExecutionResult {
   error?: string;
 }
 
-// Default pipeline definitions
-const DEFAULT_PIPELINES: PipelineDefinition[] = [
-  {
-    id: 'default-code',
-    name: 'Code Review Pipeline',
-    description: 'Complete code review workflow with all gates',
-    taskTypes: ['code'],
-    isDefault: true,
-    version: 1,
-    steps: [
-      { eye: 'overseer', condition: 'always' },
-      {
-        eye: 'sharingan',
-        condition: 'always',
-        branches: {
-          approved: ['jogan'],
-          rejected: ['kyuubi'],
-          needs_input: ['kyuubi']
-        }
-      },
-      { eye: 'kyuubi', condition: 'if_rejected' },
-      { eye: 'jogan', condition: 'always' },
-      { eye: 'rinnegan', condition: 'if_approved' },
-      { eye: 'mangekyo', condition: 'if_approved' },
-      { eye: 'rinnegan', condition: 'if_approved' } // Final approval
-    ]
-  },
-  {
-    id: 'default-text',
-    name: 'Text Validation Pipeline',
-    description: 'Evidence and consistency validation for text content',
-    taskTypes: ['text'],
-    isDefault: true,
-    version: 1,
-    steps: [
-      { eye: 'overseer', condition: 'always' },
-      {
-        eye: 'sharingan',
-        condition: 'always',
-        branches: {
-          approved: ['jogan'],
-          rejected: ['kyuubi']
-        }
-      },
-      { eye: 'kyuubi', condition: 'if_rejected' },
-      { eye: 'jogan', condition: 'always' },
-      { eye: 'rinnegan', condition: 'if_approved' },
-      { eye: 'tenseigan', condition: 'if_approved' },
-      { eye: 'byakugan', condition: 'if_approved' },
-      { eye: 'rinnegan', condition: 'if_approved' } // Final approval
-    ]
-  },
-  {
-    id: 'quick-review',
-    name: 'Quick Review',
-    description: 'Fast-track pipeline for simple tasks',
-    taskTypes: ['general'],
-    isDefault: false,
-    version: 1,
-    steps: [
-      { eye: 'overseer', condition: 'always' },
-      { eye: 'sharingan', condition: 'always' },
-      { eye: 'jogan', condition: 'if_approved' },
-      { eye: 'rinnegan', condition: 'if_approved' }
-    ]
-  }
-];
+// DEFAULT_PIPELINES removed - SSOT violation
+// Pipelines should come from database only. Seeding happens via packages/db/defaults/pipelines.ts
 
 export class PipelineOrchestrator {
   private static instance: PipelineOrchestrator | null = null;
@@ -403,8 +338,7 @@ export class PipelineOrchestrator {
 
   /**
    * Get available pipelines for a task type
-   * Database is SSOT - always queries database first
-   * DEFAULT_PIPELINES only used as fallback if database is empty (shouldn't happen after seeding)
+   * Database is SSOT - no fallback to hardcoded defaults
    */
   async getAvailablePipelines(taskType: 'code' | 'text' | 'general'): Promise<PipelineDefinition[]> {
     // Query all active pipelines from database (SSOT)
@@ -428,16 +362,14 @@ export class PipelineOrchestrator {
       })
       .filter(p => p.taskTypes.includes(taskType));
 
-    // If database has pipelines, return them (SSOT)
-    if (pipelinesFromDb.length > 0) {
-      return pipelinesFromDb;
+    // Database is SSOT - return what's in database
+    // If empty, seeding should happen first or error should be thrown
+    if (pipelinesFromDb.length === 0) {
+      console.error('[PipelineOrchestrator] No pipelines in database. Run seeding before using pipelines.');
+      throw new Error('No pipelines available. Database must be seeded first.');
     }
 
-    // Fallback to defaults only if database is empty (first run before seeding)
-    // This should rarely happen after initial seeding
-    console.warn('[PipelineOrchestrator] No pipelines in database, using fallback defaults. Run seeding if this persists.');
-    const defaultPipelines = DEFAULT_PIPELINES.filter(p => p.taskTypes.includes(taskType));
-    return defaultPipelines;
+    return pipelinesFromDb;
   }
 
   // Private helper methods
@@ -492,9 +424,8 @@ export class PipelineOrchestrator {
       return availablePipelines[0];
     }
 
-    // Last resort fallback - should never happen after seeding
-    console.error('[PipelineOrchestrator] No pipelines available, using emergency fallback');
-    return DEFAULT_PIPELINES.find(p => p.taskTypes.includes(taskType)) || DEFAULT_PIPELINES[0];
+    // No fallback - database is SSOT
+    throw new Error(`No pipeline available for task type: ${taskType}. Database must be seeded first.`);
   }
 
   private shouldExecuteStep(step: PipelineStep, previousResults: EyeResponse[]): boolean {

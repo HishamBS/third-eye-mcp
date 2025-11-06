@@ -6,6 +6,7 @@ import { EyeOrchestrator } from '@third-eye/core';
 import { sessionManager } from '@third-eye/core/session-manager';
 import { eq, desc, inArray, and, sql } from 'drizzle-orm';
 import type { Envelope } from '@third-eye/types';
+import { getDefaultRouting } from '../lib/defaults';
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
@@ -249,7 +250,7 @@ app.get('/all', async (c) => {
 
       return {
         id: eye.id,
-        name: eye.name,
+        name: eye.name, // Display name (e.g., 'Overseer', 'Jōgan')
         version: eye.version,
         description: eye.description,
         capabilities: blueprint ? JSON.parse(blueprint.capabilities as string) : [],
@@ -485,12 +486,7 @@ app.post('/custom', validateBodyWithEnvelope(createCustomEyeSchema), async (c) =
       .get();
 
     if (!existingRouting) {
-      const defaultRouting = {
-        primaryProvider: 'groq',
-        primaryModel: 'llama-3.3-70b-versatile',
-        fallbackProvider: 'openrouter',
-        fallbackModel: 'anthropic/claude-3.5-sonnet',
-      };
+      const defaultRouting = await getDefaultRouting();
 
       await db.insert(eyesRouting).values({
         id: nanoid(),
@@ -507,13 +503,13 @@ app.post('/custom', validateBodyWithEnvelope(createCustomEyeSchema), async (c) =
     const existingBlueprint = await db
       .select()
       .from(personaBlueprints)
-      .where(eq(personaBlueprints.eyeId, name))
+      .where(eq(personaBlueprints.eyeId, id))
       .get();
 
     if (!existingBlueprint) {
       // Create minimal blueprint with basic structure
       const minimalBlueprint = {
-        eyeId: name,
+        eyeId: id,
         name: name,
         description: description,
         version: String(nextVersion),

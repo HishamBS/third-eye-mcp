@@ -433,20 +433,24 @@ export default function SettingsPage() {
               <div>
                 <label className="mb-3 block text-sm font-medium text-semantic-muted">Theme</label>
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                  {THEME_METADATA.map((themeOption) => (
-                    <button
-                      key={themeOption.value}
-                      onClick={() => setTheme(themeOption.value)}
-                      className={`rounded-xl border p-4 text-left transition-all ${
-                        theme === themeOption.value
-                          ? 'border-brand-accent bg-brand-accent/10'
-                          : 'border-brand-outline/40 hover:border-brand-accent/60'
-                      }`}
-                    >
-                      <div className="font-semibold text-brand-foreground">{themeOption.label}</div>
-                      <div className="mt-1 text-xs text-semantic-muted">{themeOption.description}</div>
-                    </button>
-                  ))}
+                  {THEME_METADATA.map((themeOption) => {
+                    // Normalize comparison to handle any case sensitivity issues
+                    const isSelected = theme?.toLowerCase() === themeOption.value.toLowerCase();
+                    return (
+                      <button
+                        key={themeOption.value}
+                        onClick={() => setTheme(themeOption.value)}
+                        className={`rounded-xl border p-4 text-left transition-all ${
+                          isSelected
+                            ? 'border-brand-accent bg-brand-accent/10'
+                            : 'border-brand-outline/40 hover:border-brand-accent/60'
+                        }`}
+                      >
+                        <div className="font-semibold text-brand-foreground">{themeOption.label}</div>
+                        <div className="mt-1 text-xs text-semantic-muted">{themeOption.description}</div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

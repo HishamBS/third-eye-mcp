@@ -19,7 +19,6 @@ import { GlassCard } from '../ui/GlassCard';
 import { EyeIcon } from '../EyeIcon';
 import { Route, ArrowRight, Info, Zap } from 'lucide-react';
 import type { EyeSequence, EyeRouteStep } from '@third-eye/eyes';
-import { EYE_DISPLAY_NAMES } from '@third-eye/config/constants';
 import type { EyeName } from '@third-eye/types';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 
@@ -128,7 +127,8 @@ export const RoutingDecisionPanel = memo(function RoutingDecisionPanel({
         <div className="space-y-3">
           {routing.eyes.map((step, index) => {
             const eyeName = step.eyeId as EyeName;
-            const displayName = EYE_DISPLAY_NAMES[eyeName] || step.eyeId;
+            // Use displayName from step if provided (from DB), otherwise use eyeId
+            const displayName = step.displayName || step.eyeId;
             const isLast = index === routing.eyes.length - 1;
 
             return (

@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "59b4e4cf-5e7a-4c51-8f3a-42eee03811bc",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "375ee3a3-4b17-49f2-aa08-9977acbd34eb",
+  "prevId": "59b4e4cf-5e7a-4c51-8f3a-42eee03811bc",
   "tables": {
     "app_settings": {
       "name": "app_settings",
@@ -460,13 +460,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "taxonomy_id": {
-          "name": "taxonomy_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "name": {
           "name": "name",
           "type": "text",
@@ -545,13 +538,6 @@
           "name": "eyes_name_unique",
           "columns": [
             "name"
-          ],
-          "isUnique": true
-        },
-        "eyes_taxonomyId_unique": {
-          "name": "eyes_taxonomyId_unique",
-          "columns": [
-            "taxonomy_id"
           ],
           "isUnique": true
         }

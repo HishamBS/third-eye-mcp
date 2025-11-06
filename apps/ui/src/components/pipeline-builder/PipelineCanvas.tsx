@@ -23,6 +23,7 @@ import {
   CANVAS_SETTINGS,
   PIPELINE_UI_TEXT,
 } from './constants';
+import { EyeId } from '@third-eye/constants';
 
 // Register custom node types
 const nodeTypes: NodeTypes = {
@@ -38,7 +39,7 @@ const initialNodes: Node<EyeNodeData>[] = [
     type: 'eyeNode',
     position: { x: 50, y: 200 },
     data: {
-      eyeId: 'overseer',
+      eyeId: EyeId.OVERSEER,
       capabilities: ['auto_routing', 'orchestration'],
     },
   },
@@ -47,7 +48,7 @@ const initialNodes: Node<EyeNodeData>[] = [
     type: 'eyeNode',
     position: { x: 300, y: 100 },
     data: {
-      eyeId: 'sharingan',
+      eyeId: EyeId.SHARINGAN,
       capabilities: ['clarification', 'ambiguity_detection'],
     },
   },
@@ -56,7 +57,7 @@ const initialNodes: Node<EyeNodeData>[] = [
     type: 'eyeNode',
     position: { x: 300, y: 300 },
     data: {
-      eyeId: 'kyuubi',
+      eyeId: EyeId.KYUUBI,
       capabilities: ['briefing', 'guidance'],
     },
   },

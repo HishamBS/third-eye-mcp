@@ -3,9 +3,15 @@
   "version": "1.0.0",
   "type": "module",
   "main": "index.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./defaults": "./dist/defaults/index.js"
+  },
   "dependencies": {
     "@third-eye/types": "workspace:*",
-    "drizzle-orm": "^0.36.4"
+    "@third-eye/constants": "workspace:*",
+    "drizzle-orm": "^0.36.4",
+    "nanoid": "^5.1.6"
   },
   "devDependencies": {
     "drizzle-kit": "^0.31.6"

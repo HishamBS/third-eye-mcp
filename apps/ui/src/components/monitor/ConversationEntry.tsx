@@ -18,8 +18,6 @@ import {
   PHASE_BG_COLORS,
   EyeStageToken,
 } from '@third-eye/constants';
-import { EYE_DISPLAY_NAMES } from '@third-eye/config/constants';
-import type { EyeName } from '@third-eye/types';
 
 export interface ConversationEntryData {
   readonly id: string;
@@ -43,8 +41,9 @@ function getSpeakerDisplayName(speaker: Speaker): string {
   if (speaker in SpeakerType) {
     return SPEAKER_DISPLAY_NAMES[speaker as SpeakerType];
   }
-  // It's an Eye
-  return EYE_DISPLAY_NAMES[speaker as EyeName] || speaker;
+  // It's an Eye - use speaker as-is (should be name from database)
+  // If display name needed, should be provided from API response
+  return speaker;
 }
 
 /**

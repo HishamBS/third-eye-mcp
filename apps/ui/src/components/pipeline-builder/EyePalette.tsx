@@ -176,14 +176,7 @@ export const EyePalette = memo(function EyePalette({
                   className="flex items-start gap-3 p-3 bg-brand-paper border border-brand-outline rounded-lg cursor-grab hover:border-brand-primary hover:shadow-md transition-all"
                 >
                   <div className="flex-shrink-0 mt-0.5">
-                    {eye.iconSvg ? (
-                      <div
-                        className="w-8 h-8 flex items-center justify-center"
-                        dangerouslySetInnerHTML={{ __html: eye.iconSvg }}
-                      />
-                    ) : (
-                      <EyeIcon eye={eye.id} size={32} />
-                    )}
+                    <EyeIcon eye={eye.name} size={32} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold text-brand-foreground">{eye.name}</div>

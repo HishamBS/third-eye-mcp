@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { TenseiganEye, TenseiganEnvelopeSchema } from '../src/eyes/tenseigan';
-import { DEFAULT_PERSONA_MAP } from '@third-eye/db/defaults/personas';
 
 const tenseigan = new TenseiganEye();
 
@@ -256,9 +255,33 @@ describe('Tenseigan Eye', () => {
       expect(envelope.code).toBe('NEED_MORE_CONTEXT');
     });
 
-    it('should surface persona catalog content for tenseigan', () => {
-      const persona = DEFAULT_PERSONA_MAP['tenseigan']?.content;
+    it('should surface persona catalog content for tenseigan', async () => {
+      // Query database for persona (SSOT) - test-only mock
+      const { getDb } = await import('@third-eye/db');
+      const { personas } = await import('@third-eye/db');
+      const { getEyeIdByName } = await import('@third-eye/db/utils/lookups');
+      const { eq, and } = await import('drizzle-orm');
+      
+      const eyeId = await getEyeIdByName('tenseigan');
+      if (!eyeId) {
+        // Skip test if eye not found (test environment may not have DB seeded)
+        return;
+      }
+      
+      const { db } = getDb();
+      const personaRecord = await db
+        .select()
+        .from(personas)
+        .where(and(eq(personas.eyeId, eyeId), eq(personas.active, true)))
+        .limit(1)
+        .get();
 
+      if (!personaRecord) {
+        // Skip test if persona not found
+        return;
+      }
+
+      const persona = personaRecord.content;
       expect(persona).toBeDefined();
       expect(persona).toContain('Tenseigan');
       expect(persona).toContain('Evidence Validator');

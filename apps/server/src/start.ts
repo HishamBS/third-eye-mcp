@@ -11,8 +11,6 @@ import app from './index';
 import { createWebSocketHandler } from './websocket';
 import { getConfig } from '@third-eye/config';
 import { loadProviderKeysIntoConfig } from '@third-eye/core/load-provider-keys';
-import { seedDefaults } from '@third-eye/db/defaults';
-import { seedBlueprints } from './seed-blueprints';
 import { TOOL_NAME, DATA_DIRECTORY, PROVIDERS } from '@third-eye/types';
 
 const config = getConfig();
@@ -31,15 +29,8 @@ const warnOnUnsafeBind = (host: string) => {
 
 warnOnUnsafeBind(HOST);
 
-// Initialize database with default data
-console.log('[Startup] Seeding defaults...');
-const seedReport = await seedDefaults({
-  log: (message: string) => console.log(message),
-});
-console.log('[Startup] Default seeding complete:', seedReport, '\n');
-
-// Seed blueprints if not already seeded by CLI (silent if already exists)
-await seedBlueprints();
+// Database seeding is handled by CLI before server starts
+// No duplicate seeding needed here - follows SSOT principle
 
 // Load provider keys from database into config
 await loadProviderKeysIntoConfig();

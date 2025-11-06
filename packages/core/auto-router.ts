@@ -7,6 +7,7 @@
 import type { EyeName } from '@third-eye/types';
 import type { BaseEnvelope } from '@third-eye/eyes';
 import { isRejected } from '@third-eye/eyes';
+import { EyeId } from '@third-eye/constants';
 import { EyeOrchestrator } from './orchestrator';
 import { orderGuard } from './order-guard';
 import { z } from 'zod';
@@ -157,7 +158,24 @@ export class AutoRouter {
     }
 
     // Call Overseer Eye to get dynamic pipeline routing
-    const overseerResult = await this.orchestrator.runEye('overseer', enrichedInput, actualSessionId);
+    // Look up Overseer by name from database (SSOT)
+    const { getAllActiveEyes } = await import('@third-eye/db/utils/lookups');
+    const activeEyes = await getAllActiveEyes();
+    
+    // Find Overseer by name (case-insensitive match)
+    let overseerName: string | null = null;
+    for (const eye of activeEyes) {
+      if (eye.name.toLowerCase() === EyeId.OVERSEER) {
+        overseerName = eye.name;
+        break;
+      }
+    }
+    
+    if (!overseerName) {
+      throw new Error('Overseer eye not found in database');
+    }
+    
+    const overseerResult = await this.orchestrator.runEye(overseerName, enrichedInput, actualSessionId);
 
     if (!overseerResult.ok) {
       throw new Error(`Overseer failed: ${overseerResult.code} - ${overseerResult.md || 'No details'}`);

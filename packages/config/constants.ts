@@ -4,6 +4,7 @@
  */
 
 import { REPLAY_SPEEDS, THEMES, PROVIDERS } from '@third-eye/types';
+import { EyeId } from '@third-eye/constants';
 
 /**
  * API Configuration
@@ -202,39 +203,28 @@ export const BUILT_IN_PROFILES = {
 } as const;
 
 /**
- * Eye Display Names (for UI)
+ * Eye Display Names - REMOVED (SSOT Violation)
+ * 
+ * Eye names should come from database via /api/eyes/all endpoint.
+ * This constant violated database-as-SSOT principle.
  */
-export const EYE_DISPLAY_NAMES: Record<string, string> = {
-  sharingan: 'Sharingan',
-  'kyuubi': 'Kyuubi',
-  jogan: 'Jōgan',
-  rinnegan_plan: 'Rinnegan (Plan)',
-  rinnegan_review: 'Rinnegan (Review)',
-  rinnegan_final: 'Rinnegan (Final)',
-  mangekyo_scaffold: 'Mangekyō (Scaffold)',
-  mangekyo_impl: 'Mangekyō (Implementation)',
-  mangekyo_tests: 'Mangekyō (Tests)',
-  mangekyo_docs: 'Mangekyō (Docs)',
-  tenseigan: 'Tenseigan',
-  byakugan: 'Byakugan',
-  overseer: 'Overseer',
-} as const;
 
 /**
  * Eye Colors (for UI visualization)
+ * Uses EyeId constants from SSOT
  */
 export const EYE_COLORS: Record<string, string> = {
-  sharingan: '#ef4444', // red
-  'kyuubi': '#8b5cf6', // purple
-  jogan: '#06b6d4', // cyan
-  rinnegan_plan: '#a855f7', // purple
-  rinnegan_review: '#9333ea', // purple
-  rinnegan_final: '#7c3aed', // violet
-  mangekyo_scaffold: '#ec4899', // pink
-  mangekyo_impl: '#f43f5e', // rose
-  mangekyo_tests: '#fb7185', // rose
-  mangekyo_docs: '#fda4af', // rose
-  tenseigan: '#10b981', // green
-  byakugan: '#f59e0b', // amber
-  overseer: '#6366f1', // indigo
+  [EyeId.SHARINGAN]: '#ef4444', // red
+  [EyeId.KYUUBI]: '#8b5cf6', // purple
+  [EyeId.JOGAN]: '#06b6d4', // cyan
+  [`${EyeId.RINNEGAN}_plan`]: '#a855f7', // purple
+  [`${EyeId.RINNEGAN}_review`]: '#9333ea', // purple
+  [`${EyeId.RINNEGAN}_final`]: '#7c3aed', // violet
+  [`${EyeId.MANGEKYO}_scaffold`]: '#ec4899', // pink
+  [`${EyeId.MANGEKYO}_impl`]: '#f43f5e', // rose
+  [`${EyeId.MANGEKYO}_tests`]: '#fb7185', // rose
+  [`${EyeId.MANGEKYO}_docs`]: '#fda4af', // rose
+  [EyeId.TENSEIGAN]: '#10b981', // green
+  [EyeId.BYAKUGAN]: '#f59e0b', // amber
+  [EyeId.OVERSEER]: '#6366f1', // indigo
 } as const;

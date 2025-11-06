@@ -5,6 +5,7 @@ import { getEyeIdByName, getEyeNameById } from '@third-eye/db/utils/lookups';
 import { generateId } from '@third-eye/db/utils/uuid';
 import { eq } from 'drizzle-orm';
 import { schemas } from '../middleware/validation';
+import { getDefaultRouting } from '../lib/defaults';
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
@@ -22,13 +23,6 @@ import {
  */
 
 const app = new Hono();
-
-const defaultRouting = {
-  primaryProvider: 'groq',
-  primaryModel: 'llama-3.3-70b-versatile',
-  fallbackProvider: 'openrouter',
-  fallbackModel: 'anthropic/claude-3.5-sonnet',
-};
 
 // Apply middleware
 app.use('*', requestIdMiddleware());
@@ -55,6 +49,7 @@ app.get('/', async (c) => {
       }
 
       // Return default routing if not configured
+      const defaultRouting = await getDefaultRouting();
       return {
         eye: eye.name,
         eyeId: eye.id,
@@ -92,6 +87,7 @@ app.get('/:eye', async (c) => {
     }
 
     // Return default if not configured
+    const defaultRouting = await getDefaultRouting();
     return createSuccessResponse(c, {
       eye: eyeName,
       eyeId,

@@ -2,21 +2,19 @@
  * Blueprint Index
  * 
  * Exports centralized blueprint data from single source of truth
- * Database is SSOT - queries database first, falls back to hardcoded defaults only if not found
+ * Database is SSOT - no fallback to hardcoded defaults at runtime
+ * DEFAULT_BLUEPRINTS is only used during seeding
  */
 
 export * from './data';
 
-// Re-export for backwards compatibility
-import { DEFAULT_BLUEPRINTS, getPersonaBlueprint as getPersonaBlueprintFromDefaults } from './data';
+// Re-export for backwards compatibility (seeding only)
+import { getPersonaBlueprint as getPersonaBlueprintFromDefaults } from './data';
 import type { PersonaBlueprint } from '@third-eye/constants/blueprints-data';
-
-export const BLUEPRINT_REGISTRY = DEFAULT_BLUEPRINTS;
 
 /**
  * Load persona blueprint from database (SSOT)
- * Falls back to DEFAULT_BLUEPRINTS only if not found in database
- * This enables custom personas to work alongside seeded ones
+ * Database is the single source of truth - no fallback to hardcoded defaults
  */
 export async function loadPersonaBlueprintFromDb(eyeId: string): Promise<PersonaBlueprint | null> {
   try {
@@ -128,24 +126,25 @@ export async function loadPersonaBlueprintFromDb(eyeId: string): Promise<Persona
 }
 
 /**
- * Get persona blueprint - queries database first (SSOT), falls back to defaults
+ * Get persona blueprint - queries database only (SSOT)
  * This is the main function used by orchestrator and other components
+ * 
+ * Per SSOT: No fallback to hardcoded defaults. Database is the single source of truth.
+ * If blueprint not found, returns null. Seeding should happen before runtime.
  */
 export async function getPersonaBlueprint(eyeId: string): Promise<PersonaBlueprint | null> {
-  // Try database first (SSOT)
-  const dbBlueprint = await loadPersonaBlueprintFromDb(eyeId);
-  if (dbBlueprint) {
-    return dbBlueprint;
-  }
-  
-  // Fallback to hardcoded defaults (for seeded eyes on first run)
-  return getPersonaBlueprintFromDefaults(eyeId);
+  // Database is SSOT - no fallback
+  return await loadPersonaBlueprintFromDb(eyeId);
 }
 
 /**
- * Synchronous version for backwards compatibility
- * Only reads from DEFAULT_BLUEPRINTS (used during seeding)
+ * Synchronous version for backwards compatibility (seeding only)
+ * Only reads from DEFAULT_BLUEPRINTS (used during seeding, not at runtime)
+ * 
+ * WARNING: This function should only be used during database seeding.
+ * For runtime, use getPersonaBlueprint() which queries the database.
  */
 export function getPersonaBlueprintSync(eyeId: string): PersonaBlueprint | null {
+  // Only used during seeding - database is SSOT for runtime
   return getPersonaBlueprintFromDefaults(eyeId);
 }

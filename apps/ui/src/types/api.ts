@@ -285,7 +285,8 @@ export type GetIntegrationConfigResponse = ApiEnvelope<{
 
 export interface Persona {
   id: string;
-  eye: string;
+  eye: string; // Note: This is eyeId (UUID) after migration
+  eyeName?: string; // Actual eye name (e.g., 'overseer', 'sharingan') - returned by backend
   name: string;
   version: number;
   metadata_json: {

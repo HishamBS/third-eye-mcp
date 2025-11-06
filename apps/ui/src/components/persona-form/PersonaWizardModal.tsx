@@ -116,26 +116,26 @@ export function PersonaWizardModal({
         // Transform database format to PersonaFormState
         const transformedData: Partial<PersonaFormState> = {
           metadata: {
-            eyeId: dbData.metadata_json.eyeId,
-            name: dbData.metadata_json.name,
-            description: dbData.metadata_json.description,
-            version: dbData.metadata_json.version,
-            capabilities: [...dbData.metadata_json.capabilities],
+            eyeId: dbData.metadataJson.eyeId,
+            name: dbData.metadataJson.name,
+            description: dbData.metadataJson.description,
+            version: dbData.metadataJson.version,
+            capabilities: [...dbData.metadataJson.capabilities],
           },
           mission: dbData.mission,
-          guidancePhase: dbData.guidance_json,
-          validationPhase: dbData.validation_json,
+          guidancePhase: dbData.guidanceJson,
+          validationPhase: dbData.validationJson,
           envelopeContract: {
-            requiredKeys: [...dbData.envelope_json.requiredKeys],
-            requiredDataKeys: [...dbData.envelope_json.requiredDataKeys],
-            requiredUiKeys: [...dbData.envelope_json.requiredUiKeys],
+            requiredKeys: [...dbData.envelopeJson.requiredKeys],
+            requiredDataKeys: [...dbData.envelopeJson.requiredDataKeys],
+            requiredUiKeys: [...dbData.envelopeJson.requiredUiKeys],
           },
-          reminders: [...dbData.reminders_json],
+          reminders: [...dbData.remindersJson],
           llmConfig: {
-            temperature: dbData.llm_config_json.temperature,
-            top_p: dbData.llm_config_json.top_p,
-            response_format: dbData.llm_config_json.response_format,
-            max_tokens: dbData.llm_config_json.max_tokens,
+            temperature: dbData.llmConfigJson.temperature,
+            top_p: dbData.llmConfigJson.top_p,
+            response_format: dbData.llmConfigJson.response_format,
+            max_tokens: dbData.llmConfigJson.max_tokens,
           },
           notes: dbData.notes || '',
         };
@@ -166,7 +166,7 @@ export function PersonaWizardModal({
     try {
       // Transform PersonaFormState back to database format
       const dbPayload = {
-        metadata_json: {
+        metadataJson: {
           eyeId: state.metadata.eyeId,
           name: state.metadata.name,
           description: state.metadata.description,
@@ -174,15 +174,15 @@ export function PersonaWizardModal({
           capabilities: state.metadata.capabilities,
         },
         mission: state.mission,
-        guidance_json: state.guidancePhase,
-        validation_json: state.validationPhase,
-        envelope_json: {
+        guidanceJson: state.guidancePhase,
+        validationJson: state.validationPhase,
+        envelopeJson: {
           requiredKeys: state.envelopeContract.requiredKeys,
           requiredDataKeys: state.envelopeContract.requiredDataKeys,
           requiredUiKeys: state.envelopeContract.requiredUiKeys,
         },
-        reminders_json: state.reminders,
-        llm_config_json: {
+        remindersJson: state.reminders,
+        llmConfigJson: {
           temperature: state.llmConfig.temperature,
           top_p: state.llmConfig.top_p,
           response_format: state.llmConfig.response_format,

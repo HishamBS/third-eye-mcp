@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { X } from 'lucide-react';
-import { TEMPLATE_TEXT, PIPELINE_TEMPLATES } from './constants';
+import { TEMPLATE_TEXT } from './constants';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { ARIA_LABELS } from '@/constants/accessibility';
+import { API_BASE_URL } from '@/consts/api';
 import type { PipelineNode, PipelineEdge } from '@/types/pipeline';
 
 /**
@@ -27,11 +28,60 @@ interface PipelineTemplateSelectorProps {
   readonly onSelect: (template: PipelineTemplateData) => void;
 }
 
+interface PipelineTemplate {
+  id: string;
+  name: string;
+  description: string;
+  nodes: PipelineNode[];
+  edges: PipelineEdge[];
+}
+
 export function PipelineTemplateSelector({
   isOpen,
   onClose,
   onSelect,
 }: PipelineTemplateSelectorProps) {
+  const [templates, setTemplates] = useState<PipelineTemplate[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch pipelines from database (SSOT)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const fetchTemplates = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/pipelines`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch pipelines');
+        }
+        const envelope = await response.json();
+        const pipelines = envelope.data || [];
+        
+        // Convert database pipelines to template format
+        const templatesFromDb: PipelineTemplate[] = pipelines.map((p: any) => {
+          const workflow = p.workflowJson || {};
+          return {
+            id: p.id,
+            name: p.name,
+            description: p.description || '',
+            nodes: workflow.nodes || [],
+            edges: workflow.edges || [],
+          };
+        });
+        
+        setTemplates(templatesFromDb);
+      } catch (error) {
+        console.error('[PipelineTemplateSelector] Failed to fetch pipelines:', error);
+        setTemplates([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTemplates();
+  }, [isOpen]);
+
   // Phase 20.1: Focus trap for accessibility
   const modalRef = useFocusTrap({
     isActive: isOpen,
@@ -39,7 +89,7 @@ export function PipelineTemplateSelector({
   });
 
   const handleSelect = useCallback(
-    (template: typeof PIPELINE_TEMPLATES[number]) => {
+    (template: PipelineTemplate) => {
       onSelect({
         nodes: [...template.nodes] as PipelineNode[],
         edges: [...template.edges] as PipelineEdge[],
@@ -84,7 +134,12 @@ export function PipelineTemplateSelector({
 
         {/* Templates Grid */}
         <div className="space-y-4">
-          {PIPELINE_TEMPLATES.map((template) => (
+          {loading ? (
+            <div className="text-center py-8 text-semantic-muted">Loading templates...</div>
+          ) : templates.length === 0 ? (
+            <div className="text-center py-8 text-semantic-muted">No pipeline templates available. Create pipelines in the database.</div>
+          ) : (
+            templates.map((template) => (
             <button
               key={template.id}
               onClick={() => handleSelect(template)}
@@ -104,7 +159,7 @@ export function PipelineTemplateSelector({
                 </div>
               </div>
             </button>
-          ))}
+          )))}
         </div>
 
         {/* Footer */}

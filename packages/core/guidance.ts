@@ -6,6 +6,7 @@
  */
 
 import type { EyeResponse } from '@third-eye/eyes';
+import { EyeId } from '@third-eye/constants';
 
 interface GuidanceRequest {
   taskDescription: string;
@@ -42,54 +43,62 @@ enum WorkflowStage {
 }
 
 /**
+ * Helper to construct MCP tool names from EyeId constants (SSOT)
+ */
+const toolName = (eyeId: string, action: string): string => `third_eye_${eyeId}_${action}`;
+const navigatorTool = 'third_eye_navigator'; // Overseer navigation tool
+const helperTool = 'third_eye_helper_rewrite_prompt'; // Kyuubi prompt helper tool
+
+/**
  * Eye delegation rules - defines optimal workflow paths
+ * Uses EyeId constants from SSOT
  */
 const WORKFLOW_PATHS = {
   // Fast path for unambiguous code tasks
   code_fast: [
-    'third_eye_navigator',
-    'third_eye_sharingan_clarify',
-    'third_eye_jogan_confirm_intent',
-    'third_eye_rinnegan_plan_requirements',
-    'third_eye_rinnegan_plan_review',
-    'third_eye_mangekyo_review_scaffold',
-    'third_eye_mangekyo_review_impl',
-    'third_eye_mangekyo_review_tests',
-    'third_eye_mangekyo_review_docs',
-    'third_eye_tenseigan_validate_claims',
-    'third_eye_byakugan_consistency_check',
-    'third_eye_rinnegan_final_approval',
+    navigatorTool,
+    toolName(EyeId.SHARINGAN, 'clarify'),
+    toolName(EyeId.JOGAN, 'confirm_intent'),
+    toolName(EyeId.RINNEGAN, 'plan_requirements'),
+    toolName(EyeId.RINNEGAN, 'plan_review'),
+    toolName(EyeId.MANGEKYO, 'review_scaffold'),
+    toolName(EyeId.MANGEKYO, 'review_impl'),
+    toolName(EyeId.MANGEKYO, 'review_tests'),
+    toolName(EyeId.MANGEKYO, 'review_docs'),
+    toolName(EyeId.TENSEIGAN, 'validate_claims'),
+    toolName(EyeId.BYAKUGAN, 'consistency_check'),
+    toolName(EyeId.RINNEGAN, 'final_approval'),
   ],
 
   // Full path for ambiguous code tasks
   code_full: [
-    'third_eye_navigator',
-    'third_eye_sharingan_clarify',
-    'third_eye_helper_rewrite_prompt',
-    'third_eye_jogan_confirm_intent',
-    'third_eye_rinnegan_plan_requirements',
-    'third_eye_rinnegan_plan_review',
-    'third_eye_mangekyo_review_scaffold',
-    'third_eye_mangekyo_review_impl',
-    'third_eye_mangekyo_review_tests',
-    'third_eye_mangekyo_review_docs',
-    'third_eye_tenseigan_validate_claims',
-    'third_eye_byakugan_consistency_check',
-    'third_eye_rinnegan_final_approval',
+    navigatorTool,
+    toolName(EyeId.SHARINGAN, 'clarify'),
+    helperTool,
+    toolName(EyeId.JOGAN, 'confirm_intent'),
+    toolName(EyeId.RINNEGAN, 'plan_requirements'),
+    toolName(EyeId.RINNEGAN, 'plan_review'),
+    toolName(EyeId.MANGEKYO, 'review_scaffold'),
+    toolName(EyeId.MANGEKYO, 'review_impl'),
+    toolName(EyeId.MANGEKYO, 'review_tests'),
+    toolName(EyeId.MANGEKYO, 'review_docs'),
+    toolName(EyeId.TENSEIGAN, 'validate_claims'),
+    toolName(EyeId.BYAKUGAN, 'consistency_check'),
+    toolName(EyeId.RINNEGAN, 'final_approval'),
   ],
 
   // Path for documentation/validation tasks
   validation_only: [
-    'third_eye_navigator',
-    'third_eye_tenseigan_validate_claims',
-    'third_eye_byakugan_consistency_check',
+    navigatorTool,
+    toolName(EyeId.TENSEIGAN, 'validate_claims'),
+    toolName(EyeId.BYAKUGAN, 'consistency_check'),
   ],
 
   // Path for quick clarifications
   clarification: [
-    'third_eye_sharingan_clarify',
-    'third_eye_helper_rewrite_prompt',
-    'third_eye_jogan_confirm_intent',
+    toolName(EyeId.SHARINGAN, 'clarify'),
+    helperTool,
+    toolName(EyeId.JOGAN, 'confirm_intent'),
   ],
 };
 
@@ -251,12 +260,12 @@ function determineWorkflowStage(currentState?: string, lastResponse?: EyeRespons
   const tag = lastResponse?.tag?.toLowerCase() || '';
   const nextAction = typeof lastResponse?.next === 'string' ? lastResponse.next.toLowerCase() : Array.isArray(lastResponse?.next) ? lastResponse.next.join(' ').toLowerCase() : '';
 
-  // Check tag for eye type
-  if (tag === 'byakugan' && nextAction.includes('final')) {
+  // Check tag for eye type (using EyeId constants from SSOT)
+  if (tag === EyeId.BYAKUGAN && nextAction.includes('final')) {
     return WorkflowStage.COMPLETE;
   }
 
-  if (tag === 'mangekyo') {
+  if (tag === EyeId.MANGEKYO) {
     if (nextAction.includes('docs') || nextAction.includes('documentation')) {
       return WorkflowStage.DOCUMENTATION;
     }
@@ -271,15 +280,15 @@ function determineWorkflowStage(currentState?: string, lastResponse?: EyeRespons
     }
   }
 
-  if (tag === 'rinnegan') {
+  if (tag === EyeId.RINNEGAN) {
     return WorkflowStage.PLANNING;
   }
 
-  if (tag === 'jogan') {
+  if (tag === EyeId.JOGAN) {
     return WorkflowStage.INTENT_VALIDATION;
   }
 
-  if (tag === 'kyuubi' || tag === 'prompt-helper') {
+  if (tag === EyeId.KYUUBI || tag === 'prompt-helper') {
     return WorkflowStage.CLARIFICATION;
   }
 
@@ -322,19 +331,19 @@ function suggestAlternatives(tool: string, isCode: boolean, stage: string): stri
   const alternatives: string[] = [];
 
   // If recommending Sharingan, alternatives could include direct navigation
-  if (tool === 'third_eye_sharingan_clarify') {
-    alternatives.push('third_eye_navigator');
+  if (tool === toolName(EyeId.SHARINGAN, 'clarify')) {
+    alternatives.push(navigatorTool);
   }
 
   // If recommending code review, alternatives include validation tools
-  if (tool.includes('mangekyo')) {
-    alternatives.push('third_eye_tenseigan_validate_claims');
-    alternatives.push('third_eye_byakugan_consistency_check');
+  if (tool.includes(EyeId.MANGEKYO)) {
+    alternatives.push(toolName(EyeId.TENSEIGAN, 'validate_claims'));
+    alternatives.push(toolName(EyeId.BYAKUGAN, 'consistency_check'));
   }
 
   // If recommending planning, could skip to scaffold if already have plan
-  if (tool.includes('rinnegan_plan')) {
-    alternatives.push('third_eye_mangekyo_review_scaffold');
+  if (tool.includes(`${EyeId.RINNEGAN}_plan`)) {
+    alternatives.push(toolName(EyeId.MANGEKYO, 'review_scaffold'));
   }
 
   return alternatives;
@@ -346,7 +355,7 @@ function suggestAlternatives(tool: string, isCode: boolean, stage: string): stri
 function generateNextSteps(tool: string, stage: string, lastResponse?: EyeResponse): string[] {
   const steps: string[] = [];
 
-  if (tool === 'third_eye_sharingan_clarify') {
+  if (tool === toolName(EyeId.SHARINGAN, 'clarify')) {
     steps.push('Submit your task description to Sharingan for classification');
     steps.push('Answer any clarifying questions that emerge');
     // Type guard for questions array
@@ -355,32 +364,32 @@ function generateNextSteps(tool: string, stage: string, lastResponse?: EyeRespon
     }
   }
 
-  if (tool === 'third_eye_helper_rewrite_prompt') {
+  if (tool === helperTool) {
     steps.push('Provide your ambiguous prompt for restructuring');
     steps.push('Include any clarifications you have');
   }
 
-  if (tool === 'third_eye_jogan_confirm_intent') {
+  if (tool === toolName(EyeId.JOGAN, 'confirm_intent')) {
     steps.push('Submit restructured prompt for validation');
     steps.push('Ensure all required sections are present');
   }
 
-  if (tool.includes('rinnegan_plan')) {
+  if (tool.includes(`${EyeId.RINNEGAN}_plan`)) {
     steps.push('Prepare or review your implementation plan');
     steps.push('Include file impact table and testing strategy');
   }
 
-  if (tool.includes('mangekyo')) {
+  if (tool.includes(EyeId.MANGEKYO)) {
     steps.push('Submit your code changes for review');
     steps.push('Include diffs, reasoning, and test results');
   }
 
-  if (tool.includes('tenseigan')) {
+  if (tool.includes(EyeId.TENSEIGAN)) {
     steps.push('Provide content with factual claims');
     steps.push('Include evidence sources for verification');
   }
 
-  if (tool.includes('byakugan')) {
+  if (tool.includes(EyeId.BYAKUGAN)) {
     steps.push('Submit content for consistency check');
     steps.push('Previous session context will be automatically included');
   }

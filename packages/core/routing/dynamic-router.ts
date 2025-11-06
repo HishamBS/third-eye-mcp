@@ -11,6 +11,7 @@
 import type { EyeName } from '@third-eye/types';
 import type { RoutingDecision as CoreRoutingDecision, AutoRouterOptions } from '../auto-router';
 import { autoRouter } from '../auto-router';
+import { EyeStageToken } from '@third-eye/constants';
 
 /**
  * Eye Route Step - Single step in pipeline sequence
@@ -86,7 +87,7 @@ export class DynamicRouter {
     );
 
     // Transform to Phase 17 API format
-    return this.transformRoutingDecision(routing);
+    return await this.transformRoutingDecision(routing);
   }
 
   /**
@@ -148,13 +149,18 @@ export class DynamicRouter {
   /**
    * Transform core RoutingDecision to Phase 17 EyeSequence format
    */
-  private transformRoutingDecision(routing: CoreRoutingDecision): EyeSequence {
-    const steps: EyeRouteStep[] = routing.recommendedFlow.map((eyeId, index) => ({
-      eyeId,
-      stage: this.inferStage(eyeId),
-      reason: this.extractReasonForEye(eyeId, routing.reasoning),
-      order: index,
-    }));
+  private async transformRoutingDecision(routing: CoreRoutingDecision): Promise<EyeSequence> {
+    const steps: EyeRouteStep[] = [];
+    for (let index = 0; index < routing.recommendedFlow.length; index++) {
+      const eyeId = routing.recommendedFlow[index];
+      const stage = await this.inferStage(eyeId);
+      steps.push({
+        eyeId,
+        stage,
+        reason: this.extractReasonForEye(eyeId, routing.reasoning),
+        order: index,
+      });
+    }
 
     return {
       eyes: steps,
@@ -165,22 +171,30 @@ export class DynamicRouter {
   }
 
   /**
-   * Infer Eye stage from name/capabilities
+   * Infer Eye stage from database capabilities (SSOT)
    */
-  private inferStage(eyeId: EyeName): 'guidance' | 'validation' | 'both' {
-    // Overseer is special - handles routing
-    if (eyeId === 'overseer') return 'both';
-
-    // Known guidance Eyes
-    const guidanceEyes: EyeName[] = ['sharingan', 'kyuubi', 'jogan'];
-    if (guidanceEyes.includes(eyeId)) return 'guidance';
-
-    // Known validation Eyes
-    const validationEyes: EyeName[] = ['rinnegan', 'mangekyo', 'byakugan', 'tenseigan'];
-    if (validationEyes.includes(eyeId)) return 'validation';
-
-    // Default to both if unsure
-    return 'both';
+  private async inferStage(eyeId: EyeName): Promise<'guidance' | 'validation' | 'both'> {
+    try {
+      // Query database for eye capabilities (SSOT)
+      const { loadDynamicCapabilities } = await import('../capability-loader');
+      const { getDb } = await import('@third-eye/db');
+      const { db } = getDb();
+      
+      const capabilityRegistry = await loadDynamicCapabilities(db);
+      const eyeCapabilities = capabilityRegistry[eyeId];
+      
+      if (eyeCapabilities) {
+        // Determine stage from capabilities
+        if (eyeCapabilities.stage === EyeStageToken.GUIDANCE) return 'guidance';
+        if (eyeCapabilities.stage === EyeStageToken.VALIDATION) return 'validation';
+      }
+      
+      // Default to both if unsure or not found
+      return 'both';
+    } catch (error) {
+      console.warn(`[DynamicRouter] Failed to infer stage for ${eyeId}:`, error);
+      return 'both';
+    }
   }
 
   /**
