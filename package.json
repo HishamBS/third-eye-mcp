@@ -60,6 +60,7 @@
     "test:e2e:ui": "playwright test --ui",
     "lint": "tsc --noEmit",
     "lint:packages": "tsc --build --noEmit",
+    "typecheck": "bun run clean:packages && tsc --build",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "mcp": "bun run bin/mcp-server.ts",
