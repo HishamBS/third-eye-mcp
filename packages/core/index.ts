@@ -37,5 +37,9 @@ export type {
   SessionContext
 } from './routing/dynamic-router';
 
+// Logger utility
+export { logger, createLogger, LogLevel } from './logger';
+export type { LogContext, LoggerConfig } from './logger';
+
 // Re-export Eyes for convenience
 export * from '@third-eye/eyes';

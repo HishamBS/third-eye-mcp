@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { ModelDiscoveryService } from '@third-eye/core/model-discovery';
 import { type ProviderId } from '@third-eye/types';
+import { logger } from '@third-eye/core';
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -44,7 +45,7 @@ app.get('/:provider', async (c) => {
 
     return createSuccessResponse(c, models);
   } catch (error) {
-    console.error(`Failed to list models for ${providerId}:`, error);
+    logger.error(`Failed to list models for ${providerId}`, { error, providerId });
     if (error instanceof Error && /401/.test(error.message)) {
       return createErrorResponse(c, {
         title: 'Provider Authentication Failed',
@@ -82,7 +83,7 @@ app.post('/:provider/refresh', async (c) => {
       refreshedAt: new Date().toISOString()
     });
   } catch (error) {
-    console.error(`Failed to refresh models for ${providerId}:`, error);
+    logger.error(`Failed to refresh models for ${providerId}`, { error, providerId });
     if (error instanceof Error && /401/.test(error.message)) {
       return createErrorResponse(c, {
         title: 'Provider Authentication Failed',
@@ -111,7 +112,7 @@ app.get('/:provider/cached', async (c) => {
 
     return createSuccessResponse(c, models);
   } catch (error) {
-    console.error(`Failed to get cached models for ${providerId}:`, error);
+    logger.error(`Failed to get cached models for ${providerId}`, { error, providerId });
     return createInternalErrorResponse(c, `Failed to get cached models`);
   }
 });
@@ -143,7 +144,7 @@ app.get('/', async (c) => {
       modelsByProvider,
     });
   } catch (error) {
-    console.error('Failed to get all cached models:', error);
+    logger.error('Failed to get all cached models', { error });
     return createInternalErrorResponse(c, 'Failed to get cached models');
   }
 });
