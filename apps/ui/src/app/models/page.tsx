@@ -13,6 +13,9 @@ import { TIMING } from '@/constants/timing';
 import { MESSAGES } from '@/constants/messages';
 import { ROUTES } from '@/constants/routes';
 import { PROVIDERS } from '@/constants/models';
+import { EyeId } from '@third-eye/constants';
+import { ProviderSelector } from '@/components/models/ProviderSelector';
+import { ModelSelector } from '@/components/models/ModelSelector';
 
 interface ModelInfo {
   name: string;
@@ -54,6 +57,13 @@ export default function ModelsPage() {
   const [expandedProviders, setExpandedProviders] = useState<Record<string, boolean>>({});
   const [expandedEyes, setExpandedEyes] = useState<Record<string, boolean>>({});
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Global model selector state
+  const [globalProvider, setGlobalProvider] = useState<string>('');
+  const [globalModel, setGlobalModel] = useState<string>('');
+  const [showGlobalProviderSelector, setShowGlobalProviderSelector] = useState(false);
+  const [showGlobalModelSelector, setShowGlobalModelSelector] = useState(false);
+  const [applyingGlobalModel, setApplyingGlobalModel] = useState(false);
 
   useEffect(() => {
     loadAllData();
@@ -286,7 +296,7 @@ export default function ModelsPage() {
 
   const handleQuickAction = useCallback((eye: string, action: 'copy-overseer' | 'reset-default' | 'use-same-primary' | 'clear') => {
     if (action === 'copy-overseer') {
-      const overseerRouting = routing.find(r => r.eye.toLowerCase() === 'overseer');
+      const overseerRouting = routing.find(r => r.eye.toLowerCase() === EyeId.OVERSEER.toLowerCase());
       if (overseerRouting) {
         handleRoutingChange(eye, {
           primaryProvider: overseerRouting.primaryProvider,
@@ -320,6 +330,83 @@ export default function ModelsPage() {
     }
   }, [routing, handleRoutingChange]);
 
+  // Apply global model to all eyes - immediately saves to backend
+  const handleApplyGlobalModel = useCallback(async () => {
+    if (!globalProvider || !globalModel || allEyes.length === 0) {
+      setError('Please select both provider and model');
+      return;
+    }
+
+    setApplyingGlobalModel(true);
+    setError(null);
+
+    try {
+      const promises = allEyes.map(async (eye) => {
+        const currentRouting = routing.find(r => r.eye.toLowerCase() === eye.toLowerCase());
+        const fullRouting: EyeRouting = {
+          eye,
+          primaryProvider: globalProvider,
+          primaryModel: globalModel,
+          fallbackProvider: currentRouting?.fallbackProvider,
+          fallbackModel: currentRouting?.fallbackModel,
+        };
+        return saveRoutingForEye(eye, fullRouting);
+      });
+
+      const results = await Promise.all(promises);
+      const successCount = results.filter(Boolean).length;
+      const failedCount = results.length - successCount;
+
+      if (successCount > 0) {
+        setSuccess(`Applied global model to ${successCount} eye${successCount > 1 ? 's' : ''}`);
+        // Update lastSaved for all successfully saved eyes
+        const successfulEyes = allEyes.filter((_, index) => results[index]);
+        setLastSaved(prev => {
+          const updated = { ...prev };
+          successfulEyes.forEach(eye => {
+            updated[eye] = new Date();
+          });
+          return updated;
+        });
+        // Clear pending changes for successfully saved eyes
+        setPendingRoutingChanges(prev => {
+          const updated = { ...prev };
+          successfulEyes.forEach(eye => {
+            delete updated[eye];
+          });
+          return updated;
+        });
+        // Refresh routing data
+        if (failedCount === 0) {
+          await fetchRouting();
+        }
+      }
+
+      if (failedCount > 0) {
+        setError(`Failed to apply global model to ${failedCount} eye${failedCount > 1 ? 's' : ''}. Please check the console for details.`);
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to apply global model');
+    } finally {
+      setApplyingGlobalModel(false);
+    }
+  }, [globalProvider, globalModel, allEyes, routing]);
+
+  const handleGlobalProviderSelect = useCallback((providerId: string) => {
+    setGlobalProvider(providerId);
+    setShowGlobalProviderSelector(false);
+    if (models[providerId] && models[providerId].length > 0) {
+      setShowGlobalModelSelector(true);
+    } else {
+      setGlobalModel('');
+    }
+  }, [models]);
+
+  const handleGlobalModelSelect = useCallback((modelName: string) => {
+    setGlobalModel(modelName);
+    setShowGlobalModelSelector(false);
+  }, []);
+
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => setError(null), TIMING.MESSAGE_AUTO_DISMISS_MS);
@@ -347,6 +434,37 @@ export default function ModelsPage() {
               </p>
             </div>
             <div className="flex items-center gap-4">
+              {/* Global Model Selector */}
+              <div className="flex items-center gap-2 rounded-lg border border-brand-outline/40 bg-brand-paper px-3 py-2">
+                <span className="text-xs text-semantic-muted">Global:</span>
+                <button
+                  onClick={() => setShowGlobalProviderSelector(true)}
+                  className="text-sm text-brand-foreground hover:text-brand-accent transition-colors"
+                >
+                  {globalProvider ? PROVIDERS.find(p => p.id === globalProvider)?.name || globalProvider : 'Provider'}
+                </button>
+                <span className="text-semantic-muted">→</span>
+                <button
+                  onClick={() => {
+                    if (globalProvider && models[globalProvider]) {
+                      setShowGlobalModelSelector(true);
+                    } else {
+                      setShowGlobalProviderSelector(true);
+                    }
+                  }}
+                  className="text-sm text-brand-foreground hover:text-brand-accent transition-colors"
+                  disabled={!globalProvider}
+                >
+                  {globalModel || 'Model'}
+                </button>
+                <button
+                  onClick={handleApplyGlobalModel}
+                  disabled={!globalProvider || !globalModel || applyingGlobalModel || allEyes.length === 0}
+                  className="ml-2 rounded px-3 py-1 text-xs font-medium text-brand-foreground bg-brand-accent/20 hover:bg-brand-accent/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {applyingGlobalModel ? 'Applying...' : 'Apply to All'}
+                </button>
+              </div>
               <button
                 onClick={refreshAllModels}
                 disabled={loading === 'all'}
@@ -466,6 +584,25 @@ export default function ModelsPage() {
           </div>
         </GlassCard>
       </div>
+
+      {/* Global Model Selectors */}
+      <ProviderSelector
+        providers={PROVIDERS}
+        selectedProvider={globalProvider}
+        onSelect={handleGlobalProviderSelect}
+        onClose={() => setShowGlobalProviderSelector(false)}
+        isOpen={showGlobalProviderSelector}
+        health={health}
+      />
+
+      <ModelSelector
+        provider={globalProvider}
+        models={models[globalProvider] || []}
+        selectedModel={globalModel}
+        onSelect={handleGlobalModelSelect}
+        onClose={() => setShowGlobalModelSelector(false)}
+        isOpen={showGlobalModelSelector}
+      />
     </div>
   );
 }

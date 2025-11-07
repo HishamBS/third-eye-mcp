@@ -9,7 +9,11 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   useReactFlow,
+  applyNodeChanges,
   type Connection,
+  type Node,
+  type Edge,
+  type NodeChange,
   MarkerType,
   BackgroundVariant,
 } from 'reactflow';
@@ -26,8 +30,33 @@ import { CANVAS_SETTINGS, LAYOUT } from './constants';
 import { API_BASE_URL } from '@/consts/api';
 import type { PipelineNode, PipelineEdge, EyeNodeData, EdgeConditionData } from '@/types/pipeline';
 
-// Register custom node types
-const nodeTypes = { eyeNode: EyeNode };
+/**
+ * Validate nodes structure - throws error if malformed
+ * Per R07: Strict typing, no any
+ * Per R12: No fallbacks - throw error if data is invalid
+ */
+const validateNodes = (nodes: PipelineNode[]): void => {
+  for (const node of nodes) {
+    if (!node.id) {
+      throw new Error(`Node missing required property: id`);
+    }
+    if (!node.type || node.type !== 'eyeNode') {
+      throw new Error(`Node ${node.id} has invalid type: ${node.type}. Expected 'eyeNode'`);
+    }
+    if (!node.position) {
+      throw new Error(`Node ${node.id} missing required property: position`);
+    }
+    if (typeof node.position.x !== 'number' || typeof node.position.y !== 'number') {
+      throw new Error(`Node ${node.id} has invalid position: position must have numeric x and y properties`);
+    }
+    if (!node.data) {
+      throw new Error(`Node ${node.id} missing required property: data`);
+    }
+    if (!node.data.eyeId) {
+      throw new Error(`Node ${node.id} missing required property: data.eyeId`);
+    }
+  }
+};
 
 /**
  * Enhanced Pipeline Canvas - Phase 10
@@ -46,9 +75,48 @@ const nodeTypes = { eyeNode: EyeNode };
  * Per R13: All constants from SSOT
  */
 export function PipelineCanvasEnhanced() {
+  // Memoize nodeTypes to prevent ReactFlow warning
+  const nodeTypes = useMemo(() => ({ eyeNode: EyeNode }), []);
+
   // Start with empty pipeline - load from database if needed
-  const [nodes, setNodes, onNodesChange] = useNodesState<PipelineNode>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<PipelineEdge>([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<EyeNodeData>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<EdgeConditionData>([]);
+  
+  // Wrap setNodes to validate nodes before setting
+  // This ensures ReactFlow never receives invalid nodes
+  // Per R12: No fallbacks - throw error if data is invalid
+  const setNodesValidated = useCallback(
+    (nodesOrUpdater: Node<EyeNodeData>[] | ((nodes: Node<EyeNodeData>[]) => Node<EyeNodeData>[])) => {
+      const nodesToSet = typeof nodesOrUpdater === 'function' 
+        ? nodesOrUpdater(nodes) 
+        : nodesOrUpdater;
+      
+      // DEBUG: Log nodes being set
+      console.log('[DEBUG] setNodesValidated called with:', {
+        isFunction: typeof nodesOrUpdater === 'function',
+        nodesCount: nodesToSet.length,
+        nodes: nodesToSet.map(n => ({
+          id: n.id,
+          type: n.type,
+          hasPosition: !!n.position,
+          position: n.position,
+          positionType: typeof n.position,
+        })),
+      });
+      
+      // Validate nodes before setting - throws error if invalid (per R12)
+      if (nodesToSet.length > 0) {
+        validateNodes(nodesToSet as PipelineNode[]);
+      }
+      
+      // DEBUG: Log after validation
+      console.log('[DEBUG] Validation passed, setting nodes');
+      
+      // If validation passes, set the nodes
+      setNodes(nodesToSet);
+    },
+    [nodes, setNodes]
+  );
   
   // Optionally load default pipeline from database on mount
   useEffect(() => {
@@ -58,10 +126,39 @@ export function PipelineCanvasEnhanced() {
         if (response.ok) {
           const envelope = await response.json();
           const pipelines = envelope.data || [];
-          const defaultPipeline = pipelines.find((p: any) => p.category === 'default') || pipelines[0];
+          const defaultPipeline = pipelines.find((p: { category?: string }) => p.category === 'default') || pipelines[0];
+          
+          // DEBUG: Log what API returns
+          console.log('[DEBUG] API returned pipeline:', {
+            id: defaultPipeline?.id,
+            name: defaultPipeline?.name,
+            hasWorkflowJson: !!defaultPipeline?.workflowJson,
+            workflowJsonKeys: defaultPipeline?.workflowJson ? Object.keys(defaultPipeline.workflowJson) : [],
+            nodesCount: defaultPipeline?.workflowJson?.nodes?.length || 0,
+            firstNode: defaultPipeline?.workflowJson?.nodes?.[0],
+            firstNodePosition: defaultPipeline?.workflowJson?.nodes?.[0]?.position,
+          });
+          
           if (defaultPipeline?.workflowJson) {
-            setNodes((defaultPipeline.workflowJson.nodes || []) as PipelineNode[]);
-            setEdges((defaultPipeline.workflowJson.edges || []) as PipelineEdge[]);
+            // Parse workflowJson if it's a string (from database text column)
+            const workflow = typeof defaultPipeline.workflowJson === 'string'
+              ? JSON.parse(defaultPipeline.workflowJson)
+              : defaultPipeline.workflowJson;
+            
+            const rawNodes = (workflow.nodes || []) as PipelineNode[];
+            
+            // DEBUG: Log nodes before validation
+            console.log('[DEBUG] Raw nodes before validation:', rawNodes.map(n => ({
+              id: n.id,
+              type: n.type,
+              hasPosition: !!n.position,
+              position: n.position,
+              hasData: !!n.data,
+            })));
+            
+            validateNodes(rawNodes);
+            setNodesValidated(rawNodes as Node<EyeNodeData>[]);
+            setEdges((workflow.edges || []) as Edge<EdgeConditionData>[]);
           }
         }
       } catch (error) {
@@ -74,8 +171,8 @@ export function PipelineCanvasEnhanced() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const [selectedNode, setSelectedNode] = useState<PipelineNode | null>(null);
-  const [selectedEdge, setSelectedEdge] = useState<PipelineEdge | null>(null);
+  const [selectedNode, setSelectedNode] = useState<Node<EyeNodeData> | null>(null);
+  const [selectedEdge, setSelectedEdge] = useState<Edge<EdgeConditionData> | null>(null);
   const [paletteCollapsed, setPaletteCollapsed] = useState<boolean>(false);
   const [showMinimap, setShowMinimap] = useState<boolean>(true);
   const [showGrid, setShowGrid] = useState<boolean>(true);
@@ -94,7 +191,7 @@ export function PipelineCanvasEnhanced() {
 
   // Single click node → zoom to node
   const handleNodeClick = useCallback(
-    (event: React.MouseEvent, node: PipelineNode) => {
+    (event: React.MouseEvent, node: Node<EyeNodeData>) => {
       event.stopPropagation();
 
       if (!node.position) {
@@ -121,7 +218,7 @@ export function PipelineCanvasEnhanced() {
 
   // Right-click node → edit modal
   const handleNodeContextMenu = useCallback(
-    (event: React.MouseEvent, node: PipelineNode) => {
+    (event: React.MouseEvent, node: Node<EyeNodeData>) => {
       event.preventDefault();
       setSelectedNode(node);
     },
@@ -130,7 +227,7 @@ export function PipelineCanvasEnhanced() {
 
   // Right-click edge → config modal
   const handleEdgeContextMenu = useCallback(
-    (event: React.MouseEvent, edge: PipelineEdge) => {
+    (event: React.MouseEvent, edge: Edge<EdgeConditionData>) => {
       event.preventDefault();
       setSelectedEdge(edge);
     },
@@ -140,20 +237,20 @@ export function PipelineCanvasEnhanced() {
   // Update node
   const handleNodeUpdate = useCallback(
     (nodeId: string, updates: Partial<EyeNodeData>) => {
-      setNodes((nds) =>
-        nds.map((n) => (n.id === nodeId ? { ...n, data: { ...n.data, ...updates } } : n))
+      setNodesValidated((nds) =>
+        nds.map((n) => (n.id === nodeId ? { ...n, data: { ...n.data, ...updates } } : n)) as Node<EyeNodeData>[]
       );
     },
-    [setNodes]
+    [setNodesValidated]
   );
 
   // Delete node
   const handleNodeDelete = useCallback(
     (nodeId: string) => {
-      setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+      setNodesValidated((nds) => nds.filter((n) => n.id !== nodeId));
       setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
     },
-    [setNodes, setEdges]
+    [setNodesValidated, setEdges]
   );
 
   // Update edge
@@ -193,15 +290,25 @@ export function PipelineCanvasEnhanced() {
 
   // Phase 19.4: Template loading handler
   const handleLoadTemplate = useCallback(
-    (template: { nodes: readonly PipelineNode[]; edges: readonly PipelineEdge[] }) => {
-      setNodes([...template.nodes] as PipelineNode[]);
-      setEdges([...template.edges] as PipelineEdge[]);
+    (template: { nodes: readonly PipelineNode[]; edges: readonly PipelineEdge[]; workflowJson?: unknown }) => {
+      // Parse workflowJson if provided and is a string
+      let workflow = template;
+      if (template.workflowJson) {
+        workflow = typeof template.workflowJson === 'string'
+          ? JSON.parse(template.workflowJson)
+          : template.workflowJson;
+      }
+      
+      const templateNodes = [...(workflow.nodes || template.nodes)] as PipelineNode[];
+      validateNodes(templateNodes);
+      setNodesValidated(templateNodes as Node<EyeNodeData>[]);
+      setEdges([...(workflow.edges || template.edges)] as Edge<EdgeConditionData>[]);
       // Fit view after loading template
       setTimeout(() => {
         reactFlowInstance.fitView({ padding: LAYOUT.FIT_VIEW_PADDING, duration: LAYOUT.ZOOM_DURATION });
       }, 100);
     },
-    [setNodes, setEdges, reactFlowInstance]
+    [setNodesValidated, setEdges, reactFlowInstance]
   );
 
   // Handle new connections
@@ -235,16 +342,16 @@ export function PipelineCanvasEnhanced() {
         y: event.clientY,
       });
 
-      const newNode: PipelineNode = {
+      const newNode: Node<EyeNodeData> = {
         id: `node-${Date.now()}`,
         type,
         position,
         data: nodeData,
       };
 
-      setNodes((nds) => [...nds, newNode]);
+      setNodesValidated((nds) => [...nds, newNode]);
     },
-    [reactFlowInstance, setNodes]
+    [reactFlowInstance, setNodesValidated]
   );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -253,9 +360,48 @@ export function PipelineCanvasEnhanced() {
   }, []);
 
   // Get node color for minimap
-  const getNodeColor = useCallback((node: PipelineNode): string => {
+  const getNodeColor = useCallback((node: Node<EyeNodeData>): string => {
     return getEyeColor(node.data.eyeId);
   }, []);
+
+  // Wrap onNodesChange to validate nodes after changes are applied
+  // This ensures ReactFlow cannot set invalid nodes that bypass validation
+  // Per R12: No fallbacks - throw error if data is invalid
+  const handleNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      // Apply changes to get resulting nodes
+      const newNodes = applyNodeChanges(changes, nodes);
+      // Validate resulting nodes - throws error if any are malformed (no fallback)
+      if (newNodes.length > 0) {
+        validateNodes(newNodes as PipelineNode[]);
+      }
+      // If validation passes, apply the changes
+      onNodesChange(changes);
+    },
+    [nodes, onNodesChange]
+  );
+
+  // Validate nodes before ReactFlow renders them - prevents crashes from invalid position
+  // Per R12: No fallbacks - throw error if data is invalid
+  const validatedNodes = useMemo(() => {
+    if (nodes.length === 0) {
+      return nodes;
+    }
+    
+    // DEBUG: Log nodes in state before validation
+    console.log('[DEBUG] validatedNodes useMemo - nodes in state:', nodes.map(n => ({
+      id: n.id,
+      type: n.type,
+      hasPosition: !!n.position,
+      position: n.position,
+      positionType: typeof n.position,
+      positionKeys: n.position ? Object.keys(n.position) : [],
+    })));
+    
+    // Validate all nodes - throws error if any are malformed (no fallback)
+    validateNodes(nodes as PipelineNode[]);
+    return nodes;
+  }, [nodes]);
 
   // Toolbar handlers (placeholders for S8)
   const handleSave = useCallback(() => console.log('Save pipeline'), []);
@@ -296,9 +442,9 @@ export function PipelineCanvasEnhanced() {
         style={{ paddingTop: LAYOUT.TOOLBAR_HEIGHT }}
       >
         <ReactFlow
-          nodes={nodes}
+          nodes={validatedNodes}
           edges={edges}
-          onNodesChange={onNodesChange}
+          onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onNodeClick={handleNodeClick}
@@ -340,7 +486,7 @@ export function PipelineCanvasEnhanced() {
 
         {/* Node Edit Modal */}
         <NodeEditModal
-          node={selectedNode}
+          node={selectedNode as PipelineNode | null}
           onClose={() => setSelectedNode(null)}
           onSave={handleNodeUpdate}
           onDelete={handleNodeDelete}

@@ -590,11 +590,30 @@ async function seedPipelines(
 
   const now = new Date();
   // DEFAULT_PIPELINES already includes UUIDs in their id fields
-  const pipelineEntries: NewPipeline[] = DEFAULT_PIPELINES.map((pipeline) => ({
-    ...pipeline,
-    active: true,
-    createdAt: now,
-  }));
+  // CRITICAL: Store workflowJson as-is without transformation
+  // Position must be at top level of nodes, type must be 'eyeNode'
+  // Explicitly stringify workflowJson to match pattern in seedPersonas (per R01: SSOT)
+  const pipelineEntries: NewPipeline[] = DEFAULT_PIPELINES.map((pipeline) => {
+    // Validate structure before storing
+    if (pipeline.workflowJson?.nodes) {
+      for (const node of pipeline.workflowJson.nodes) {
+        if (!node.position || typeof node.position.x !== 'number' || typeof node.position.y !== 'number') {
+          throw new Error(`Invalid node position in pipeline ${pipeline.id}: node ${node.id} missing or invalid position`);
+        }
+        if (node.type !== 'eyeNode') {
+          throw new Error(`Invalid node type in pipeline ${pipeline.id}: node ${node.id} has type ${node.type}, expected 'eyeNode'`);
+        }
+      }
+    }
+    return {
+      ...pipeline,
+      // Stringify workflowJson to match pattern in seedPersonas (per R01: SSOT)
+      // Drizzle's text({ mode: 'json' }) accepts stringified JSON
+      workflowJson: JSON.stringify(pipeline.workflowJson),
+      active: true,
+      createdAt: now,
+    };
+  });
 
   await db.insert(pipelines).values(pipelineEntries).run();
   log(`  • Pipelines seeded (${pipelineEntries.length} pipelines with UUIDs)`);

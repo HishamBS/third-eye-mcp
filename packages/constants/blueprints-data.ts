@@ -23,7 +23,7 @@ import {
   NextAction,
   RequestType,
   ContentDomain,
-  type EyeCapability,
+  EyeCapability,
 } from '@third-eye/constants';
 
 /**
@@ -93,7 +93,7 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
       name: 'Overseer',
       description: 'Navigator that analyzes requests and selects the optimal eye sequence',
       version: '1.0.0',
-      capabilities: ['auto_routing', 'orchestration', 'master_coordination'] as const,
+      capabilities: [EyeCapability.ORCHESTRATION, EyeCapability.ROUTING, EyeCapability.OUTCOME_SYNTHESIS] as const,
     },
     mission: `You are the BRAIN of Third Eye MCP. For every request, you decide the pipeline route based on request type, content domain, and complexity assessment.`,
     phases: {

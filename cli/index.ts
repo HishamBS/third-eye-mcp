@@ -750,7 +750,7 @@ function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
           typeof f === 'string' && f.endsWith('.ts')
         );
 
-        const hasNewerSource = srcFiles.some(file => {
+        let hasNewerSource = srcFiles.some(file => {
           const srcFile = resolve(srcPath, file);
           try {
             return statSync(srcFile).mtimeMs > distMtime;
@@ -758,6 +758,26 @@ function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
             return false;
           }
         });
+
+        // CRITICAL FIX: Also check defaults/ folder for db package
+        // Seed data changes must trigger rebuilds (per R01: SSOT)
+        if (!hasNewerSource && pkg === 'db') {
+          const defaultsPath = resolve(packagesDir, pkg, 'defaults');
+          if (existsSync(defaultsPath)) {
+            const defaultsFiles = readdirSync(defaultsPath, { recursive: true }).filter(f =>
+              typeof f === 'string' && f.endsWith('.ts')
+            );
+            
+            hasNewerSource = defaultsFiles.some(file => {
+              const defaultsFile = resolve(defaultsPath, file);
+              try {
+                return statSync(defaultsFile).mtimeMs > distMtime;
+              } catch {
+                return false;
+              }
+            });
+          }
+        }
 
         if (hasNewerSource) {
           rmSync(distPath, { recursive: true, force: true });

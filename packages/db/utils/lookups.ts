@@ -1,6 +1,6 @@
 import { getDb } from '../index';
 import { eyes, personas, pipelines, personaBlueprints } from '../schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 
 /**
  * Entity Lookup Utilities - SSOT for name to UUID conversion
@@ -51,10 +51,11 @@ export async function getEyeIdByName(name: string): Promise<string | null> {
   if (cached) return cached;
 
   const { db } = getDb();
+  // Case-insensitive lookup: database stores "Overseer" but middleware sends "overseer"
   const eye = await db
     .select({ id: eyes.id })
     .from(eyes)
-    .where(eq(eyes.name, name))
+    .where(sql`LOWER(${eyes.name}) = LOWER(${name})`)
     .limit(1)
     .get();
 
@@ -69,10 +70,11 @@ export async function getEyeByName(name: string): Promise<typeof eyes.$inferSele
   if (cached) return cached;
 
   const { db } = getDb();
+  // Case-insensitive lookup: database stores "Overseer" but middleware sends "overseer"
   const eye = await db
     .select()
     .from(eyes)
-    .where(eq(eyes.name, name))
+    .where(sql`LOWER(${eyes.name}) = LOWER(${name})`)
     .limit(1)
     .get();
 

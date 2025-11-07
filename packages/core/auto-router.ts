@@ -157,6 +157,10 @@ export class AutoRouter {
       actualSessionId = session.sessionId;
     }
 
+    // Mark session as auto-router controlled BEFORE calling Overseer
+    // This ensures Overseer bypasses order guard validation when called by auto-router
+    orderGuard.markAsAutoRouterSession(actualSessionId);
+
     // Call Overseer Eye to get dynamic pipeline routing
     // Look up Overseer by name from database (SSOT)
     const { getAllActiveEyes } = await import('@third-eye/db/utils/lookups');
@@ -212,11 +216,8 @@ export class AutoRouter {
       // Then through the full pipeline to GUIDE the agent step-by-step
 
       // Analyze task if no routing provided
+      // Note: analyzeTask already marks the session as auto-router before calling Overseer
       const decision = routing || await this.analyzeTask(input, undefined, providedSessionId, options);
-
-      // Mark session as auto-router controlled to bypass order guard validation
-      // Auto-router already knows the correct Eye sequence
-      orderGuard.markAsAutoRouterSession(decision.sessionId);
 
       const results: BaseEnvelope[] = [];
       let currentInput = input;

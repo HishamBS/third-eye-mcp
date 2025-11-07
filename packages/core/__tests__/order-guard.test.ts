@@ -27,6 +27,17 @@ describe('OrderGuard', () => {
       expect(violation).toBeNull();
     });
 
+    it('should allow Overseer with capitalized name (case-insensitive)', () => {
+      // Database stores "Overseer" (capitalized) but constant is "overseer" (lowercase)
+      const violation = orderGuard.validateOrder(testSessionId, 'Overseer');
+      expect(violation).toBeNull();
+    });
+
+    it('should allow Overseer with all caps (case-insensitive)', () => {
+      const violation = orderGuard.validateOrder(testSessionId, 'OVERSEER');
+      expect(violation).toBeNull();
+    });
+
     it('should reject Jogan before Sharingan', () => {
       const violation = orderGuard.validateOrder(testSessionId, 'jogan');
 

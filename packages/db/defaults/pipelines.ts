@@ -17,12 +17,12 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, 'createdAt' | 'active'>[] = [
     category: 'default',
     workflowJson: {
       nodes: [
-        { id: EyeId.OVERSEER, type: 'eye', data: { eyeId: EyeId.OVERSEER, position: { x: 100, y: 200 } } },
-        { id: EyeId.SHARINGAN, type: 'eye', data: { eyeId: EyeId.SHARINGAN, position: { x: 400, y: 100 } } },
-        { id: EyeId.KYUUBI, type: 'eye', data: { eyeId: EyeId.KYUUBI, position: { x: 700, y: 100 } } },
-        { id: EyeId.JOGAN, type: 'eye', data: { eyeId: EyeId.JOGAN, position: { x: 1000, y: 100 } } },
-        { id: EyeId.TENSEIGAN, type: 'eye', data: { eyeId: EyeId.TENSEIGAN, position: { x: 1300, y: 200 } } },
-        { id: EyeId.BYAKUGAN, type: 'eye', data: { eyeId: EyeId.BYAKUGAN, position: { x: 1600, y: 200 } } },
+        { id: EyeId.OVERSEER, type: 'eyeNode', position: { x: 100, y: 200 }, data: { eyeId: EyeId.OVERSEER } },
+        { id: EyeId.SHARINGAN, type: 'eyeNode', position: { x: 400, y: 100 }, data: { eyeId: EyeId.SHARINGAN } },
+        { id: EyeId.KYUUBI, type: 'eyeNode', position: { x: 700, y: 100 }, data: { eyeId: EyeId.KYUUBI } },
+        { id: EyeId.JOGAN, type: 'eyeNode', position: { x: 1000, y: 100 }, data: { eyeId: EyeId.JOGAN } },
+        { id: EyeId.TENSEIGAN, type: 'eyeNode', position: { x: 1300, y: 200 }, data: { eyeId: EyeId.TENSEIGAN } },
+        { id: EyeId.BYAKUGAN, type: 'eyeNode', position: { x: 1600, y: 200 }, data: { eyeId: EyeId.BYAKUGAN } },
       ],
       edges: [
         { id: 'e1', source: EyeId.OVERSEER, target: EyeId.SHARINGAN },
@@ -41,9 +41,9 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, 'createdAt' | 'active'>[] = [
     category: 'default',
     workflowJson: {
       nodes: [
-        { id: EyeId.MANGEKYO, type: 'eye', data: { eyeId: EyeId.MANGEKYO, position: { x: 100, y: 200 } } },
-        { id: EyeId.TENSEIGAN, type: 'eye', data: { eyeId: EyeId.TENSEIGAN, position: { x: 400, y: 200 } } },
-        { id: EyeId.BYAKUGAN, type: 'eye', data: { eyeId: EyeId.BYAKUGAN, position: { x: 700, y: 200 } } },
+        { id: EyeId.MANGEKYO, type: 'eyeNode', position: { x: 100, y: 200 }, data: { eyeId: EyeId.MANGEKYO } },
+        { id: EyeId.TENSEIGAN, type: 'eyeNode', position: { x: 400, y: 200 }, data: { eyeId: EyeId.TENSEIGAN } },
+        { id: EyeId.BYAKUGAN, type: 'eyeNode', position: { x: 700, y: 200 }, data: { eyeId: EyeId.BYAKUGAN } },
       ],
       edges: [
         { id: 'e1', source: EyeId.MANGEKYO, target: EyeId.TENSEIGAN },
@@ -59,9 +59,9 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, 'createdAt' | 'active'>[] = [
     category: 'default',
     workflowJson: {
       nodes: [
-        { id: EyeId.OVERSEER, type: 'eye', data: { eyeId: EyeId.OVERSEER, position: { x: 100, y: 200 } } },
-        { id: EyeId.SHARINGAN, type: 'eye', data: { eyeId: EyeId.SHARINGAN, position: { x: 400, y: 200 } } },
-        { id: EyeId.RINNEGAN, type: 'eye', data: { eyeId: EyeId.RINNEGAN, position: { x: 700, y: 200 } } },
+        { id: EyeId.OVERSEER, type: 'eyeNode', position: { x: 100, y: 200 }, data: { eyeId: EyeId.OVERSEER } },
+        { id: EyeId.SHARINGAN, type: 'eyeNode', position: { x: 400, y: 200 }, data: { eyeId: EyeId.SHARINGAN } },
+        { id: EyeId.RINNEGAN, type: 'eyeNode', position: { x: 700, y: 200 }, data: { eyeId: EyeId.RINNEGAN } },
       ],
       edges: [
         { id: 'e1', source: EyeId.OVERSEER, target: EyeId.SHARINGAN },

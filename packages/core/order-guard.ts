@@ -93,7 +93,8 @@ export class OrderGuard {
     }
 
     // Overseer can always be called (navigation entry point)
-    if (eyeName === EyeId.OVERSEER) {
+    // Case-insensitive check: database stores "Overseer" but constant is "overseer"
+    if (eyeName.toLowerCase() === EyeId.OVERSEER.toLowerCase()) {
       return null;
     }
 

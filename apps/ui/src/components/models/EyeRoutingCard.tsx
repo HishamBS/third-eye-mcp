@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, MoreVertical, Check, Loader2, Copy, RotateCcw, ArrowRight, X } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
@@ -10,6 +10,7 @@ import { ModelSelector } from './ModelSelector';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
 import { MESSAGES } from '@/constants/messages';
 import { PROVIDERS } from '@/constants/models';
+import { EyeId } from '@third-eye/constants';
 import type { ProviderDefinition } from '@/constants/models';
 
 interface ModelInfo {
@@ -63,6 +64,24 @@ export function EyeRoutingCard({
   const [showFallback, setShowFallback] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [selectorType, setSelectorType] = useState<'primary' | 'fallback'>('primary');
+  const quickActionsRef = useRef<HTMLDivElement>(null);
+
+  // Close popover when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (quickActionsRef.current && !quickActionsRef.current.contains(event.target as Node)) {
+        setShowQuickActions(false);
+      }
+    };
+
+    if (showQuickActions) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showQuickActions]);
 
   const getEyeIcon = () => {
     if (!eye || typeof eye !== 'string') return null;
@@ -175,7 +194,7 @@ export function EyeRoutingCard({
               <ChevronDown className="h-4 w-4 text-semantic-muted" />
             )}
           </button>
-          <div className="relative">
+          <div className="relative" ref={quickActionsRef}>
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -187,16 +206,18 @@ export function EyeRoutingCard({
             </button>
             {showQuickActions && (
               <div className="absolute right-0 top-full mt-2 w-48 rounded-lg border border-brand-outline/40 bg-brand-paper shadow-xl z-10">
-                <button
-                  onClick={() => {
-                    onQuickAction('copy-overseer');
-                    setShowQuickActions(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-brand-foreground hover:bg-brand-paperElev transition-colors"
-                >
-                  <Copy className="h-4 w-4" />
-                  {MESSAGES.COPY_FROM_OVERSEER}
-                </button>
+                {eye.toLowerCase() !== EyeId.OVERSEER.toLowerCase() && (
+                  <button
+                    onClick={() => {
+                      onQuickAction('copy-overseer');
+                      setShowQuickActions(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-brand-foreground hover:bg-brand-paperElev transition-colors"
+                  >
+                    <Copy className="h-4 w-4" />
+                    {MESSAGES.COPY_FROM_OVERSEER}
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     onQuickAction('reset-default');
