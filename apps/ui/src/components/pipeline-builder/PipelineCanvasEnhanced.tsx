@@ -87,33 +87,36 @@ export function PipelineCanvasEnhanced() {
   // Per R12: No fallbacks - throw error if data is invalid
   const setNodesValidated = useCallback(
     (nodesOrUpdater: Node<EyeNodeData>[] | ((nodes: Node<EyeNodeData>[]) => Node<EyeNodeData>[])) => {
-      const nodesToSet = typeof nodesOrUpdater === 'function'
-        ? nodesOrUpdater(nodes)
-        : nodesOrUpdater;
+      setNodes((currentNodes) => {
+        // Use currentNodes from React state, not stale closure
+        const nodesToSet = typeof nodesOrUpdater === 'function'
+          ? nodesOrUpdater(currentNodes)
+          : nodesOrUpdater;
 
-      // DEBUG: Log nodes being set
-      console.log('[DEBUG] setNodesValidated called with:', {
-        isFunction: typeof nodesOrUpdater === 'function',
-        nodesCount: nodesToSet.length,
-        nodes: nodesToSet.map(n => ({
-          id: n.id,
-          type: n.type,
-          hasPosition: !!n.position,
-          position: n.position,
-          positionType: typeof n.position,
-        })),
+        // DEBUG: Log nodes being set
+        console.log('[DEBUG] setNodesValidated called with:', {
+          isFunction: typeof nodesOrUpdater === 'function',
+          nodesCount: nodesToSet.length,
+          nodes: nodesToSet.map(n => ({
+            id: n.id,
+            type: n.type,
+            hasPosition: !!n.position,
+            position: n.position,
+            positionType: typeof n.position,
+          })),
+        });
+
+        // Validate nodes before setting - throws error if invalid (per R12)
+        if (nodesToSet.length > 0) {
+          validateNodes(nodesToSet as PipelineNode[]);
+        }
+
+        // DEBUG: Log after validation
+        console.log('[DEBUG] Validation passed, setting nodes');
+
+        // Return validated nodes to React
+        return nodesToSet;
       });
-
-      // Validate nodes before setting - throws error if invalid (per R12)
-      if (nodesToSet.length > 0) {
-        validateNodes(nodesToSet as PipelineNode[]);
-      }
-
-      // DEBUG: Log after validation
-      console.log('[DEBUG] Validation passed, setting nodes');
-
-      // If validation passes, set the nodes
-      setNodes(nodesToSet);
     },
     [setNodes]
   );
