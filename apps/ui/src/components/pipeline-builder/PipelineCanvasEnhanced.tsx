@@ -168,11 +168,9 @@ export function PipelineCanvasEnhanced() {
         console.debug('[PipelineCanvasEnhanced] No default pipeline available');
       }
     };
-    // Only load if nodes are empty (first mount)
-    if (nodes.length === 0) {
-      loadDefaultPipeline();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    // Load on mount - nodes are always empty on first render
+    loadDefaultPipeline();
   }, []);
   const [selectedNode, setSelectedNode] = useState<Node<EyeNodeData> | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<Edge<EdgeConditionData> | null>(null);
