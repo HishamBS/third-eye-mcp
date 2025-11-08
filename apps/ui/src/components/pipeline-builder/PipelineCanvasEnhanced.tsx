@@ -87,10 +87,10 @@ export function PipelineCanvasEnhanced() {
   // Per R12: No fallbacks - throw error if data is invalid
   const setNodesValidated = useCallback(
     (nodesOrUpdater: Node<EyeNodeData>[] | ((nodes: Node<EyeNodeData>[]) => Node<EyeNodeData>[])) => {
-      const nodesToSet = typeof nodesOrUpdater === 'function' 
-        ? nodesOrUpdater(nodes) 
+      const nodesToSet = typeof nodesOrUpdater === 'function'
+        ? nodesOrUpdater(nodes)
         : nodesOrUpdater;
-      
+
       // DEBUG: Log nodes being set
       console.log('[DEBUG] setNodesValidated called with:', {
         isFunction: typeof nodesOrUpdater === 'function',
@@ -103,19 +103,19 @@ export function PipelineCanvasEnhanced() {
           positionType: typeof n.position,
         })),
       });
-      
+
       // Validate nodes before setting - throws error if invalid (per R12)
       if (nodesToSet.length > 0) {
         validateNodes(nodesToSet as PipelineNode[]);
       }
-      
+
       // DEBUG: Log after validation
       console.log('[DEBUG] Validation passed, setting nodes');
-      
+
       // If validation passes, set the nodes
       setNodes(nodesToSet);
     },
-    [nodes, setNodes]
+    [setNodes]
   );
   
   // Optionally load default pipeline from database on mount
@@ -416,7 +416,7 @@ export function PipelineCanvasEnhanced() {
   }, [reactFlowInstance]);
 
   return (
-    <div className="w-full h-[calc(100vh-112px)] relative">
+    <div className="w-full h-full flex flex-col relative">
       {/* Toolbar */}
       <Toolbar
         activePipeline={activePipeline}
@@ -437,10 +437,7 @@ export function PipelineCanvasEnhanced() {
       />
 
       {/* Main Canvas */}
-      <div
-        className="w-full h-full"
-        style={{ paddingTop: LAYOUT.TOOLBAR_HEIGHT }}
-      >
+      <div className="flex-1 w-full relative">
         <ReactFlow
           nodes={validatedNodes}
           edges={edges}
