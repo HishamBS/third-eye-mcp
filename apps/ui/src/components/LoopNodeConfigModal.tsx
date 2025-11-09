@@ -2,11 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { X, RotateCw, Layers } from 'lucide-react';
-
-interface LoopNodeConfig {
-  maxIterations?: number;
-  batchSize?: number;
-}
+import type { LoopNodeConfig } from './pipeline/types';
 
 interface LoopNodeConfigModalProps {
   isOpen: boolean;

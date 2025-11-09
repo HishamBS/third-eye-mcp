@@ -17,42 +17,40 @@ import ReactFlow, {
   Panel,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Trash2, Plus, Settings } from 'lucide-react';
+import { Trash2, Plus, Settings, Square, GitBranch, RotateCw, MessageSquare, Eye } from 'lucide-react';
 import { SwitchNodeConfigModal } from './SwitchNodeConfigModal';
 import { IFNodeConfigModal } from './IFNodeConfigModal';
 import { LoopNodeConfigModal } from './LoopNodeConfigModal';
+import { NODE_TYPES } from './pipeline/constants';
+import type { WorkflowJson } from './pipeline/types';
 
 // Custom Node Component
 function EyeNode({ data }: { data: { label: string; eye?: string; type?: string } }) {
   const getNodeColor = () => {
-    if (data.type === 'terminal') return 'bg-slate-600 border-slate-400';
-    if (data.type === 'condition') return 'bg-yellow-600 border-yellow-400';
-    if (data.type === 'switch') return 'bg-orange-600 border-orange-400';
-    if (data.type === 'loop') return 'bg-cyan-600 border-cyan-400';
-    if (data.type === 'user_input') return 'bg-purple-600 border-purple-400';
+    if (data.type === NODE_TYPES.TERMINAL) return 'bg-slate-600 border-slate-400';
+    if (data.type === NODE_TYPES.CONDITION) return 'bg-yellow-600 border-yellow-400';
+    if (data.type === NODE_TYPES.SWITCH) return 'bg-orange-600 border-orange-400';
+    if (data.type === NODE_TYPES.LOOP) return 'bg-cyan-600 border-cyan-400';
+    if (data.type === NODE_TYPES.USER_INPUT) return 'bg-purple-600 border-purple-400';
     if (data.eye) return 'bg-blue-600 border-blue-400';
     return 'bg-gray-600 border-gray-400';
   };
 
   const getIcon = () => {
-    if (data.type === 'terminal') return '⏹️';
-    if (data.type === 'condition') return '🔀';
-    if (data.type === 'switch') return '🔀';
-    if (data.type === 'loop') return '🔁';
-    if (data.type === 'user_input') return '💬';
-    if (data.eye === 'sharingan') return '👁️';
-    if (data.eye === 'rinnegan') return '🔮';
-    if (data.eye === 'byakugan') return '👀';
-    if (data.eye === 'jogan') return '⚡';
-    if (data.eye === 'tenseigan') return '✨';
-    if (data.eye === 'mangekyo') return '🌀';
-    return '📦';
+    const iconClass = "h-4 w-4";
+    if (data.type === NODE_TYPES.TERMINAL) return <Square className={iconClass} />;
+    if (data.type === NODE_TYPES.CONDITION) return <GitBranch className={iconClass} />;
+    if (data.type === NODE_TYPES.SWITCH) return <GitBranch className={iconClass} />;
+    if (data.type === NODE_TYPES.LOOP) return <RotateCw className={iconClass} />;
+    if (data.type === NODE_TYPES.USER_INPUT) return <MessageSquare className={iconClass} />;
+    if (data.eye) return <Eye className={iconClass} />;
+    return <Square className={iconClass} />;
   };
 
   return (
     <div className={`rounded-xl border-2 px-4 py-3 shadow-lg ${getNodeColor()}`}>
       <div className="flex items-center gap-2">
-        <span className="text-lg">{getIcon()}</span>
+        <span className="text-white">{getIcon()}</span>
         <div className="text-white">
           <div className="text-xs font-semibold uppercase tracking-wide opacity-80">
             {data.eye || data.type || 'Step'}
@@ -69,23 +67,8 @@ const nodeTypes: NodeTypes = {
 };
 
 interface PipelineFlowBuilderProps {
-  workflowJson: {
-    steps: Array<{
-      id: string;
-      eye?: string;
-      type?: string;
-      next?: string;
-      condition?: string;
-      true?: string;
-      false?: string;
-      prompt?: string;
-      switchConfig?: unknown;
-      loopConfig?: unknown;
-      trueLabel?: string;
-      falseLabel?: string;
-    }>;
-  };
-  onChange?: (workflow: unknown) => void;
+  workflowJson: WorkflowJson;
+  onChange?: (workflow: WorkflowJson) => void;
   readOnly?: boolean;
 }
 
@@ -97,22 +80,31 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
   const [switchModalOpen, setSwitchModalOpen] = useState(false);
   const [ifModalOpen, setIfModalOpen] = useState(false);
   const [loopModalOpen, setLoopModalOpen] = useState(false);
+  const [availableEyes, setAvailableEyes] = useState<string[]>([]);
   const selectedNode = selectedNodes[0] ?? null;
   const selectedStep = selectedNode
     ? workflowJson.steps.find((step) => step.id === selectedNode.id) ?? null
     : null;
-  const selectedStepType = selectedStep?.type ?? 'eye';
+  const selectedStepType = selectedStep?.type ?? NODE_TYPES.EYE;
 
-  const availableEyes = [
-    'sharingan',
-    'rinnegan',
-    'byakugan',
-    'jogan',
-    'tenseigan',
-    'mangekyo',
-    'overseer',
-    'helper',
-  ];
+  // Fetch available eyes from API
+  useEffect(() => {
+    const fetchEyes = async () => {
+      try {
+        const response = await fetch('/api/eyes');
+        if (response.ok) {
+          const result = await response.json();
+          const eyeNames = result.data?.map((eye: { name: string }) => eye.name) || [];
+          setAvailableEyes(eyeNames);
+        }
+      } catch (error) {
+        console.error('Failed to fetch eyes:', error);
+        // Set empty array on error - user will need to create eyes first
+        setAvailableEyes([]);
+      }
+    };
+    fetchEyes();
+  }, []);
 
   // Convert workflow JSON to React Flow nodes and edges
   useEffect(() => {
@@ -150,7 +142,7 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
       }
 
       // Handle conditional edges
-      if (step.type === 'condition' && step.true && step.false) {
+      if (step.type === NODE_TYPES.CONDITION && step.true && step.false) {
         newEdges.push({
           id: `${step.id}-true`,
           source: step.id,
@@ -185,7 +177,7 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
   }, [workflowJson]);
 
   const addNode = useCallback(
-    (type: 'eye' | 'condition' | 'switch' | 'loop' | 'user_input' | 'terminal', eyeName?: string) => {
+    (type: typeof NODE_TYPES[keyof typeof NODE_TYPES], eyeName?: string) => {
       if (readOnly) return;
 
       const newId = `step_${Date.now()}`;
@@ -197,8 +189,8 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
         position: { x: 250, y: maxY + 120 },
         data: {
           label: newId,
-          ...(type === 'eye' && eyeName ? { eye: eyeName } : {}),
-          ...(type !== 'eye' ? { type } : {}),
+          ...(type === NODE_TYPES.EYE && eyeName ? { eye: eyeName } : {}),
+          ...(type !== NODE_TYPES.EYE ? { type } : {}),
         },
       };
 
@@ -207,10 +199,10 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
 
       // Update workflow JSON
       if (onChange) {
-        const newStep: any = {
+        const newStep = {
           id: newId,
-          ...(type === 'eye' && eyeName ? { eye: eyeName } : {}),
-          ...(type !== 'eye' ? { type } : {}),
+          ...(type === NODE_TYPES.EYE && eyeName ? { eye: eyeName } : {}),
+          ...(type !== NODE_TYPES.EYE ? { type } : {}),
         };
 
         onChange({ steps: [...workflowJson.steps, newStep] });
@@ -361,7 +353,7 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
                       <button
                         key={eye}
                         onClick={() => {
-                          addNode('eye', eye);
+                          addNode(NODE_TYPES.EYE, eye);
                           setShowEyeMenu(false);
                         }}
                         className="w-full px-4 py-2 text-left text-sm text-white transition hover:bg-brand-paperElev capitalize"
@@ -375,7 +367,7 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
 
               {/* Add IF/Condition Button */}
               <button
-                onClick={() => addNode('condition')}
+                onClick={() => addNode(NODE_TYPES.CONDITION)}
                 className="flex items-center gap-2 rounded-lg bg-yellow-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-yellow-700"
               >
                 <Plus className="h-4 w-4" />
@@ -384,7 +376,7 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
 
               {/* Add Switch Button */}
               <button
-                onClick={() => addNode('switch')}
+                onClick={() => addNode(NODE_TYPES.SWITCH)}
                 className="flex items-center gap-2 rounded-lg bg-orange-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-orange-700"
               >
                 <Plus className="h-4 w-4" />
@@ -393,7 +385,7 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
 
               {/* Add Loop Button */}
               <button
-                onClick={() => addNode('loop')}
+                onClick={() => addNode(NODE_TYPES.LOOP)}
                 className="flex items-center gap-2 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-cyan-700"
               >
                 <Plus className="h-4 w-4" />
@@ -402,7 +394,7 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
 
               {/* Add User Input Button */}
               <button
-                onClick={() => addNode('user_input')}
+                onClick={() => addNode(NODE_TYPES.USER_INPUT)}
                 className="flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-purple-700"
               >
                 <Plus className="h-4 w-4" />
@@ -411,7 +403,7 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
 
               {/* Add Terminal Button */}
               <button
-                onClick={() => addNode('terminal')}
+                onClick={() => addNode(NODE_TYPES.TERMINAL)}
                 className="flex items-center gap-2 rounded-lg bg-slate-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
               >
                 <Plus className="h-4 w-4" />
@@ -438,12 +430,12 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
           <div className="mb-3 flex items-center justify-between">
             <h4 className="text-sm font-semibold text-slate-100">Step Configuration</h4>
             {/* Configure Button for nodes with modals */}
-            {(selectedStepType === 'condition' || selectedStepType === 'switch' || selectedStepType === 'loop') && (
+            {(selectedStepType === NODE_TYPES.CONDITION || selectedStepType === NODE_TYPES.SWITCH || selectedStepType === NODE_TYPES.LOOP) && (
               <button
                 onClick={() => {
-                  if (selectedStepType === 'condition') setIfModalOpen(true);
-                  else if (selectedStepType === 'switch') setSwitchModalOpen(true);
-                  else if (selectedStepType === 'loop') setLoopModalOpen(true);
+                  if (selectedStepType === NODE_TYPES.CONDITION) setIfModalOpen(true);
+                  else if (selectedStepType === NODE_TYPES.SWITCH) setSwitchModalOpen(true);
+                  else if (selectedStepType === NODE_TYPES.LOOP) setLoopModalOpen(true);
                 }}
                 className="flex items-center gap-2 rounded-lg bg-brand-accent px-3 py-1.5 text-xs font-medium text-white transition hover:bg-brand-accent/90"
               >
@@ -466,15 +458,15 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
               <select
                 value={selectedStepType}
                 onChange={(e) => {
-                  const value = e.target.value as 'eye' | 'condition' | 'switch' | 'loop' | 'user_input' | 'terminal';
+                  const value = e.target.value as typeof NODE_TYPES[keyof typeof NODE_TYPES];
                   const updates: Record<string, unknown> = {};
-                  if (value === 'eye') {
+                  if (value === NODE_TYPES.EYE) {
                     updates.type = undefined;
                     updates['true'] = undefined;
                     updates['false'] = undefined;
                   } else {
                     updates.type = value;
-                    if (value !== 'condition') {
+                    if (value !== NODE_TYPES.CONDITION) {
                       updates['true'] = undefined;
                       updates['false'] = undefined;
                     }
@@ -483,12 +475,12 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
                 }}
                 className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200 focus:border-brand-accent focus:outline-none"
               >
-                <option value="eye">Eye</option>
-                <option value="condition">IF/Condition</option>
-                <option value="switch">Switch</option>
-                <option value="loop">Loop</option>
-                <option value="user_input">User Input</option>
-                <option value="terminal">Terminal</option>
+                <option value={NODE_TYPES.EYE}>Eye</option>
+                <option value={NODE_TYPES.CONDITION}>IF/Condition</option>
+                <option value={NODE_TYPES.SWITCH}>Switch</option>
+                <option value={NODE_TYPES.LOOP}>Loop</option>
+                <option value={NODE_TYPES.USER_INPUT}>User Input</option>
+                <option value={NODE_TYPES.TERMINAL}>Terminal</option>
               </select>
             </div>
             <div>
@@ -524,7 +516,7 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
                 className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200 focus:border-brand-accent focus:outline-none"
               />
             </div>
-            {selectedStepType === 'condition' && (
+            {selectedStepType === NODE_TYPES.CONDITION && (
               <>
                 <div className="md:col-span-2">
                   <label className="mb-1 block text-xs font-medium text-slate-400">Condition</label>

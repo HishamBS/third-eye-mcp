@@ -3,12 +3,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { X, CheckCircle, XCircle } from 'lucide-react';
 import { ExpressionBuilder } from './ExpressionBuilder';
-
-interface IFNodeConfig {
-  condition: string;
-  trueLabel?: string;
-  falseLabel?: string;
-}
+import type { IFNodeConfig } from './pipeline/types';
 
 interface IFNodeConfigModalProps {
   isOpen: boolean;

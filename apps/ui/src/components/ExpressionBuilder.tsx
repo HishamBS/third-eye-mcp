@@ -2,40 +2,8 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { Plus, Trash2, ChevronDown } from 'lucide-react';
-
-type Operator = '==' | '!=' | '>' | '>=' | '<' | '<=' | 'contains' | 'not_contains' | 'starts_with' | 'ends_with' | 'regex' | 'in' | 'not_in';
-type LogicalOperator = 'AND' | 'OR';
-
-interface SimpleCondition {
-  field: string;
-  operator: Operator;
-  value: string;
-}
-
-interface ExpressionBuilderProps {
-  value: string;
-  onChange: (expression: string) => void;
-  mode?: 'simple' | 'advanced';
-  placeholder?: string;
-  availableFields?: string[];
-  showTemplates?: boolean;
-}
-
-const OPERATORS: { value: Operator; label: string }[] = [
-  { value: '==', label: 'equals (==)' },
-  { value: '!=', label: 'not equals (!=)' },
-  { value: '>', label: 'greater than (>)' },
-  { value: '>=', label: 'greater or equal (>=)' },
-  { value: '<', label: 'less than (<)' },
-  { value: '<=', label: 'less or equal (<=)' },
-  { value: 'contains', label: 'contains' },
-  { value: 'not_contains', label: 'does not contain' },
-  { value: 'starts_with', label: 'starts with' },
-  { value: 'ends_with', label: 'ends with' },
-  { value: 'regex', label: 'matches regex' },
-  { value: 'in', label: 'in list' },
-  { value: 'not_in', label: 'not in list' },
-];
+import { OPERATORS, LOGICAL_OPERATORS } from './pipeline/constants';
+import type { SimpleCondition, ExpressionBuilderProps, Operator, LogicalOperator } from './pipeline/types';
 
 const TEMPLATES = [
   {
@@ -128,7 +96,7 @@ export function ExpressionBuilder({
   }, []);
 
   const [simpleConditions, setSimpleConditions] = useState<SimpleCondition[]>(() => parseToSimple(value));
-  const [logicalOp, setLogicalOp] = useState<LogicalOperator>('AND');
+  const [logicalOp, setLogicalOp] = useState<LogicalOperator>(LOGICAL_OPERATORS.AND);
 
   // Build expression from simple conditions
   const buildExpression = useCallback((conditions: SimpleCondition[], logicOp: LogicalOperator): string => {
@@ -168,7 +136,7 @@ export function ExpressionBuilder({
 
     if (parts.length === 0) return '';
 
-    const joined = parts.join(` ${logicOp === 'AND' ? '&&' : '||'} `);
+    const joined = parts.join(` ${logicOp === LOGICAL_OPERATORS.AND ? '&&' : '||'} `);
     return `{{ ${joined} }}`;
   }, []);
 
@@ -372,25 +340,25 @@ export function ExpressionBuilder({
               <div className="flex gap-2 rounded-lg border border-brand-outline/40 bg-brand-paper p-1">
                 <button
                   type="button"
-                  onClick={() => updateLogicalOp('AND')}
+                  onClick={() => updateLogicalOp(LOGICAL_OPERATORS.AND)}
                   className={`rounded px-3 py-1 text-sm font-medium transition ${
-                    logicalOp === 'AND'
+                    logicalOp === LOGICAL_OPERATORS.AND
                       ? 'bg-brand-accent text-white'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  AND
+                  {LOGICAL_OPERATORS.AND}
                 </button>
                 <button
                   type="button"
-                  onClick={() => updateLogicalOp('OR')}
+                  onClick={() => updateLogicalOp(LOGICAL_OPERATORS.OR)}
                   className={`rounded px-3 py-1 text-sm font-medium transition ${
-                    logicalOp === 'OR'
+                    logicalOp === LOGICAL_OPERATORS.OR
                       ? 'bg-brand-accent text-white'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  OR
+                  {LOGICAL_OPERATORS.OR}
                 </button>
               </div>
             </div>

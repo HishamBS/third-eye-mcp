@@ -3,19 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { X, Plus, Trash2, GripVertical } from 'lucide-react';
 import { ExpressionBuilder } from './ExpressionBuilder';
-
-interface SwitchRule {
-  expression: string;
-  label: string;
-  outputIndex: number;
-}
-
-interface SwitchNodeConfig {
-  mode: 'rules' | 'expression';
-  rules?: SwitchRule[];
-  fallbackIndex?: number;
-  sendToAll?: boolean;
-}
+import type { SwitchNodeConfig, SwitchRule } from './pipeline/types';
 
 interface SwitchNodeConfigModalProps {
   isOpen: boolean;
