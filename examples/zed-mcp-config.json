@@ -1,0 +1,14 @@
+{
+  "context_servers": {
+    "third-eye-mcp": {
+      "command": {
+        "path": "bun",
+        "args": ["run", "/home/user/third-eye-mcp/bin/mcp-server.ts"],
+        "env": {
+          "GROQ_API_KEY": "gsk_your_groq_key_here",
+          "OPENROUTER_API_KEY": "sk-or-v1-your_openrouter_key_here"
+        }
+      }
+    }
+  }
+}
