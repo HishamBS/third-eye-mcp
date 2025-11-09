@@ -7,6 +7,38 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./enums": {
+      "types": "./dist/enums.d.ts",
+      "default": "./dist/enums.js"
+    },
+    "./events": {
+      "types": "./dist/events.d.ts",
+      "default": "./dist/events.js"
+    },
+    "./constants": {
+      "types": "./dist/constants.d.ts",
+      "default": "./dist/constants.js"
+    },
+    "./envelope": {
+      "types": "./dist/envelope.d.ts",
+      "default": "./dist/envelope.js"
+    },
+    "./envelope-codes": {
+      "types": "./dist/envelope-codes.d.ts",
+      "default": "./dist/envelope-codes.js"
+    },
+    "./interfaces": {
+      "types": "./dist/interfaces.d.ts",
+      "default": "./dist/interfaces.js"
+    },
+    "./pipeline": {
+      "types": "./dist/pipeline.d.ts",
+      "default": "./dist/pipeline.js"
+    },
+    "./providers": {
+      "types": "./dist/providers.d.ts",
+      "default": "./dist/providers.js"
     }
   },
   "dependencies": {

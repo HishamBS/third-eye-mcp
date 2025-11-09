@@ -11,6 +11,18 @@
     "./defaults": {
       "types": "./dist/defaults/index.d.ts",
       "default": "./dist/defaults/index.js"
+    },
+    "./schema": {
+      "types": "./dist/schema.d.ts",
+      "default": "./dist/schema.js"
+    },
+    "./utils/lookups": {
+      "types": "./dist/utils/lookups.d.ts",
+      "default": "./dist/utils/lookups.js"
+    },
+    "./utils/uuid": {
+      "types": "./dist/utils/uuid.d.ts",
+      "default": "./dist/utils/uuid.js"
     }
   },
   "dependencies": {

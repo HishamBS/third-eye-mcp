@@ -7,6 +7,34 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./orchestrator": {
+      "types": "./dist/orchestrator.d.ts",
+      "default": "./dist/orchestrator.js"
+    },
+    "./pipeline-execution-engine": {
+      "types": "./dist/pipeline-execution-engine.d.ts",
+      "default": "./dist/pipeline-execution-engine.js"
+    },
+    "./auto-router": {
+      "types": "./dist/auto-router.d.ts",
+      "default": "./dist/auto-router.js"
+    },
+    "./session-manager": {
+      "types": "./dist/session-manager.d.ts",
+      "default": "./dist/session-manager.js"
+    },
+    "./load-provider-keys": {
+      "types": "./dist/load-provider-keys.d.ts",
+      "default": "./dist/load-provider-keys.js"
+    },
+    "./guidance": {
+      "types": "./dist/guidance.d.ts",
+      "default": "./dist/guidance.js"
+    },
+    "./model-discovery": {
+      "types": "./dist/model-discovery.d.ts",
+      "default": "./dist/model-discovery.js"
     }
   },
   "dependencies": {
