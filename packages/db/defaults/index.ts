@@ -31,6 +31,17 @@ import { generateId } from '../utils/uuid';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
+// Minimal type for workflow validation (avoids circular dependency with @third-eye/core)
+interface WorkflowNode {
+  id: string;
+  type?: string;
+  position?: { x: number; y: number };
+}
+
+interface WorkflowJson {
+  nodes?: WorkflowNode[];
+}
+
 // Map eye names to UUIDs during seeding
 // This will be populated by seedEyes and used by other seed functions
 const EYE_NAME_TO_UUID_MAP = new Map<string, string>();
@@ -595,8 +606,9 @@ async function seedPipelines(
   // Explicitly stringify workflowJson to match pattern in seedPersonas (per R01: SSOT)
   const pipelineEntries: NewPipeline[] = DEFAULT_PIPELINES.map((pipeline) => {
     // Validate structure before storing
-    if (pipeline.workflowJson?.nodes) {
-      for (const node of pipeline.workflowJson.nodes) {
+    const workflow = pipeline.workflowJson as WorkflowJson;
+    if (workflow?.nodes) {
+      for (const node of workflow.nodes) {
         if (!node.position || typeof node.position.x !== 'number' || typeof node.position.y !== 'number') {
           throw new Error(`Invalid node position in pipeline ${pipeline.id}: node ${node.id} missing or invalid position`);
         }
