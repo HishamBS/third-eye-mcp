@@ -23,6 +23,8 @@ import { EyeNode } from './EyeNode';
 import { SwitchNode } from './SwitchNode';
 import { IFNode } from './IFNode';
 import { LoopNode } from './LoopNode';
+import { TerminalNode } from './TerminalNode';
+import { UserInputNode } from './UserInputNode';
 import { NodePalette } from './NodePalette';
 import { NodeEditModal } from './NodeEditModal';
 import { EdgeConfigModal } from './EdgeConfigModal';
@@ -86,6 +88,8 @@ export function PipelineCanvasEnhanced() {
     switch: SwitchNode,
     if: IFNode,
     loop_over_items: LoopNode,
+    terminal: TerminalNode,
+    user_input: UserInputNode,
   }), []);
 
   // Start with empty pipeline - load from database if needed
