@@ -405,14 +405,6 @@ export class PipelineExecutionEngine {
       }
     });
 
-    // If no matches and fallback edge exists, use it
-    if (matchingEdges.length === 0) {
-      const fallbackEdge = outgoingEdges.find(e => e.fallback === true);
-      if (fallbackEdge) {
-        return [fallbackEdge.targetNodeId];
-      }
-    }
-
     return matchingEdges.map(edge => edge.targetNodeId);
   }
 

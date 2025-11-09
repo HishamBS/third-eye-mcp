@@ -10,6 +10,7 @@ import { nanoid } from 'nanoid';
 import { EyeOrchestrator } from './orchestrator';
 import { evaluateExpression, type ExpressionContext } from './expression-evaluator';
 import type { EyeResponse } from '@third-eye/eyes';
+import { WORKFLOW_NODE_TYPES, STATUS_CODES } from '@third-eye/constants';
 
 export interface WorkflowNode {
   id: string;
@@ -100,13 +101,13 @@ export class WorkflowInterpreter {
       visitedNodes: new Set(),
       loopIterations: new Map(),
       context: {
-        $json: {},
+        $json: {} as Record<string, unknown>,
         $input: options.input,
       },
       stepCount: 0,
     };
 
-    const steps: WorkflowExecutionResult['steps'] = [];
+    const steps: Array<WorkflowExecutionResult['steps'][0] & { nextNodeId?: string }> = [];
     let sessionId = options.sessionId;
 
     // Create session if not provided
@@ -142,7 +143,7 @@ export class WorkflowInterpreter {
         // Update context with result
         if (stepResult.result) {
           state.context.$json = {
-            ...state.context.$json,
+            ...(state.context.$json as Record<string, unknown>),
             [node.id]: this.extractResultData(stepResult.result),
           };
         }
@@ -151,7 +152,7 @@ export class WorkflowInterpreter {
         currentNodeId = stepResult.nextNodeId;
 
         // Check for terminal node
-        if (node.type === 'terminal') {
+        if (node.type === WORKFLOW_NODE_TYPES.TERMINAL) {
           break;
         }
       }
@@ -166,7 +167,7 @@ export class WorkflowInterpreter {
         success: true,
         sessionId,
         steps: steps.map(({ nextNodeId, ...rest }) => rest),
-        output: state.context.$json,
+        output: state.context.$json as Record<string, unknown>,
         totalLatency,
       };
     } catch (error) {
@@ -176,7 +177,7 @@ export class WorkflowInterpreter {
         success: false,
         sessionId: sessionId || 'unknown',
         steps: steps.map(({ nextNodeId, ...rest }) => rest),
-        output: state.context.$json,
+        output: state.context.$json as Record<string, unknown>,
         totalLatency,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
@@ -197,26 +198,26 @@ export class WorkflowInterpreter {
     // Mark node as visited
     state.visitedNodes.add(node.id);
 
-    const nodeType = node.type || 'eye';
+    const nodeType = node.type || WORKFLOW_NODE_TYPES.EYE;
 
     try {
       switch (nodeType) {
-        case 'eye':
+        case WORKFLOW_NODE_TYPES.EYE:
           return await this.executeEyeNode(node, state, sessionId, startTime);
 
-        case 'condition':
+        case WORKFLOW_NODE_TYPES.CONDITION:
           return this.executeConditionNode(node, state, startTime);
 
-        case 'switch':
+        case WORKFLOW_NODE_TYPES.SWITCH:
           return this.executeSwitchNode(node, state, startTime);
 
-        case 'loop':
+        case WORKFLOW_NODE_TYPES.LOOP:
           return await this.executeLoopNode(node, state, sessionId, workflow, startTime);
 
-        case 'user_input':
+        case WORKFLOW_NODE_TYPES.USER_INPUT:
           return this.executeUserInputNode(node, state, startTime);
 
-        case 'terminal':
+        case WORKFLOW_NODE_TYPES.TERMINAL:
           return this.executeTerminalNode(node, startTime);
 
         default:
@@ -257,7 +258,7 @@ export class WorkflowInterpreter {
 
     return {
       nodeId: node.id,
-      type: 'eye',
+      type: WORKFLOW_NODE_TYPES.EYE,
       eye: node.eye,
       result,
       latencyMs,
@@ -286,13 +287,15 @@ export class WorkflowInterpreter {
 
     return {
       nodeId: node.id,
-      type: 'condition',
+      type: WORKFLOW_NODE_TYPES.CONDITION,
       result: {
+        tag: WORKFLOW_NODE_TYPES.CONDITION,
         ok: true,
-        code: 'OK',
+        code: STATUS_CODES.OK,
         md: `Condition evaluated to ${conditionResult}`,
         data: { conditionResult, branch: conditionResult ? 'true' : 'false' },
-      } as EyeResponse,
+        next: nextNodeId || '',
+      },
       latencyMs,
       nextNodeId,
     };
@@ -346,13 +349,15 @@ export class WorkflowInterpreter {
 
     return {
       nodeId: node.id,
-      type: 'switch',
+      type: WORKFLOW_NODE_TYPES.SWITCH,
       result: {
+        tag: WORKFLOW_NODE_TYPES.SWITCH,
         ok: true,
-        code: 'OK',
+        code: STATUS_CODES.OK,
         md: `Switch routed to output ${matchedIndex}`,
         data: { matchedIndex, outputCount: outputs?.length || 0 },
-      } as EyeResponse,
+        next: nextNodeId || '',
+      },
       latencyMs,
       nextNodeId,
     };
@@ -384,13 +389,15 @@ export class WorkflowInterpreter {
 
       return {
         nodeId: node.id,
-        type: 'loop',
+        type: WORKFLOW_NODE_TYPES.LOOP,
         result: {
+          tag: WORKFLOW_NODE_TYPES.LOOP,
           ok: true,
-          code: 'OK',
+          code: STATUS_CODES.OK,
           md: `Loop completed after ${currentIterations} iterations`,
           data: { iterations: currentIterations, maxIterations },
-        } as EyeResponse,
+          next: node.next || '',
+        },
         latencyMs,
         nextNodeId: node.next,
       };
@@ -403,17 +410,19 @@ export class WorkflowInterpreter {
 
     return {
       nodeId: node.id,
-      type: 'loop',
+      type: WORKFLOW_NODE_TYPES.LOOP,
       result: {
+        tag: WORKFLOW_NODE_TYPES.LOOP,
         ok: true,
-        code: 'OK',
+        code: STATUS_CODES.OK,
         md: `Loop iteration ${currentIterations + 1}/${maxIterations}`,
         data: {
           iteration: currentIterations + 1,
           maxIterations,
           batchSize,
         },
-      } as EyeResponse,
+        next: body || node.next || '',
+      },
       latencyMs,
       nextNodeId: body || node.next,
     };
@@ -431,13 +440,15 @@ export class WorkflowInterpreter {
 
     return {
       nodeId: node.id,
-      type: 'user_input',
+      type: WORKFLOW_NODE_TYPES.USER_INPUT,
       result: {
+        tag: WORKFLOW_NODE_TYPES.USER_INPUT,
         ok: false,
-        code: 'AWAIT_INPUT',
+        code: STATUS_CODES.NEED_CLARIFICATION,
         md: node.prompt || 'Waiting for user input',
         data: { prompt: node.prompt },
-      } as EyeResponse,
+        next: '',
+      },
       latencyMs,
       nextNodeId: undefined,
     };
@@ -454,13 +465,15 @@ export class WorkflowInterpreter {
 
     return {
       nodeId: node.id,
-      type: 'terminal',
+      type: WORKFLOW_NODE_TYPES.TERMINAL,
       result: {
+        tag: WORKFLOW_NODE_TYPES.TERMINAL,
         ok: true,
-        code: 'OK',
+        code: STATUS_CODES.OK,
         md: 'Workflow completed',
         data: {},
-      } as EyeResponse,
+        next: '',
+      },
       latencyMs,
       nextNodeId: undefined,
     };
