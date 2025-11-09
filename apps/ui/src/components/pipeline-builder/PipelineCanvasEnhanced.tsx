@@ -34,11 +34,11 @@ import { PipelineTemplateSelector } from './PipelineTemplateSelector';
 import { SwitchNodeConfigModal } from './SwitchNodeConfigModal';
 import { IFNodeConfigModal } from './IFNodeConfigModal';
 import { LoopNodeConfigModal } from './LoopNodeConfigModal';
-import { CANVAS_SETTINGS, LAYOUT } from './constants';
+import { CANVAS_SETTINGS, LAYOUT, PIPELINE_UI_TEXT } from './constants';
 import { API_BASE_URL } from '@/consts/api';
 import type { PipelineNode, PipelineEdge, EyeNodeData, EdgeConditionData } from '@/types/pipeline';
 import type { SwitchNodeConfig, IfNodeConfig, LoopNodeConfig } from '@third-eye/types/pipeline';
-import { useActivePipeline } from '@/hooks/usePipelines';
+import { useActivePipeline, usePipelines, useSavePipeline, useActivatePipeline } from '@/hooks/usePipelines';
 
 /**
  * Validate nodes structure - throws error if malformed
@@ -170,6 +170,13 @@ export function PipelineCanvasEnhanced() {
   // Load active/default pipeline from database
   const { pipeline: activePipeline, loading: pipelineLoading, refetch: refetchPipeline } = useActivePipeline();
 
+  // Load all pipelines for toolbar dropdown (Quick Win #1 - fix undefined variable)
+  const { pipelines } = usePipelines();
+
+  // Save/activate hooks
+  const { save: savePipeline, loading: saving } = useSavePipeline();
+  const { activate: activatePipeline } = useActivatePipeline();
+
   // Load default pipeline on mount
   useEffect(() => {
     console.log('[PipelineCanvas] Loading default pipeline on mount');
@@ -238,6 +245,14 @@ export function PipelineCanvasEnhanced() {
       }
     },
     []
+  );
+
+  // Double-click node → edit modal (Quick Win #3)
+  const handleNodeDoubleClick = useCallback(
+    (event: React.MouseEvent, node: Node<EyeNodeData>) => {
+      handleNodeContextMenu(event, node);
+    },
+    [handleNodeContextMenu]
   );
 
   // Right-click edge → config modal
@@ -455,17 +470,119 @@ export function PipelineCanvasEnhanced() {
     return nodes;
   }, [nodes]);
 
-  // Toolbar handlers (placeholders for S8)
-  const handleSave = useCallback(() => console.log('Save pipeline'), []);
-  const handleActivate = useCallback(() => console.log('Activate pipeline'), []);
-  const handleNew = useCallback(() => console.log('New pipeline'), []);
-  const handleExport = useCallback(() => console.log('Export pipeline'), []);
-  const handleImport = useCallback(() => console.log('Import pipeline'), []);
-  const handleValidate = useCallback(() => console.log('Validate pipeline'), []);
+  // Toolbar handlers (Quick Wins #4-6: Real implementations)
+  const handleSave = useCallback(async () => {
+    if (!activePipeline?.id) {
+      const name = prompt('Enter pipeline name:');
+      if (!name) return;
+      const result = await savePipeline(null, name, '', validatedNodes as PipelineNode[], edges as PipelineEdge[]);
+      if (result) {
+        console.log('Pipeline saved:', result);
+        await refetchPipeline();
+      }
+    } else {
+      const result = await savePipeline(
+        activePipeline.id,
+        activePipeline.name,
+        activePipeline.description || '',
+        validatedNodes as PipelineNode[],
+        edges as PipelineEdge[]
+      );
+      if (result) console.log('Pipeline updated:', result);
+    }
+  }, [validatedNodes, edges, activePipeline, savePipeline, refetchPipeline]);
+
+  const handleActivate = useCallback(async () => {
+    if (!activePipeline?.id) {
+      alert('Please save the pipeline first');
+      return;
+    }
+    const success = await activatePipeline(activePipeline.id);
+    if (success) console.log('Pipeline activated');
+  }, [activePipeline, activatePipeline]);
+
+  const handleNew = useCallback(() => {
+    if (confirm('Clear current pipeline and start fresh?')) {
+      setNodesValidated([]);
+      setEdges([]);
+    }
+  }, [setNodesValidated, setEdges]);
+
+  const handleExport = useCallback(() => {
+    const data = {
+      nodes: validatedNodes,
+      edges,
+      metadata: {
+        exportedAt: new Date().toISOString(),
+        version: '1.0',
+      },
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pipeline-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [validatedNodes, edges]);
+
+  const handleImport = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (data.nodes && data.edges) {
+        setNodesValidated(data.nodes);
+        setEdges(data.edges);
+      }
+    };
+    input.click();
+  }, [setNodesValidated, setEdges]);
+
+  const handleValidate = useCallback(() => {
+    try {
+      validateNodes(validatedNodes as PipelineNode[]);
+      alert('Pipeline validation passed!');
+    } catch (error) {
+      alert(`Validation error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }, [validatedNodes]);
+
   const handleAutoLayout = useCallback(() => console.log('Auto layout'), []);
+
   const handleZoomFit = useCallback(() => {
     reactFlowInstance.fitView({ padding: LAYOUT.FIT_VIEW_PADDING, duration: LAYOUT.ZOOM_DURATION });
   }, [reactFlowInstance]);
+
+  // Keyboard shortcuts (Quick Win #7)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Escape - deselect all
+      if (e.key === 'Escape') {
+        setSelectedNode(null);
+        setSelectedSwitchNode(null);
+        setSelectedIFNode(null);
+        setSelectedLoopNode(null);
+        setSelectedEdge(null);
+      }
+      // Delete/Backspace - delete selected
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedNode) {
+          handleNodeDelete(selectedNode.id);
+          setSelectedNode(null);
+        } else if (selectedEdge) {
+          handleEdgeDelete(selectedEdge.id);
+          setSelectedEdge(null);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedNode, selectedEdge, handleNodeDelete, handleEdgeDelete]);
 
   return (
     <div className="w-full h-full flex flex-col relative">
@@ -490,6 +607,26 @@ export function PipelineCanvasEnhanced() {
 
       {/* Main Canvas */}
       <div className="flex-1 w-full relative">
+        {/* Loading Overlay - Quick Win #2 */}
+        {pipelineLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-brand-paper/80 backdrop-blur-sm z-50">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary mx-auto mb-4"></div>
+              <p className="text-sm text-semantic-muted">Loading pipeline...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Empty State - Quick Win #1 */}
+        {nodes.length === 0 && !pipelineLoading && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="text-center text-semantic-muted">
+              <p className="text-lg font-medium mb-2">Start Building Your Pipeline</p>
+              <p className="text-sm">{PIPELINE_UI_TEXT.EMPTY_STATE_NO_NODES}</p>
+            </div>
+          </div>
+        )}
+
         <ReactFlow
           nodes={validatedNodes}
           edges={edges}
@@ -499,6 +636,7 @@ export function PipelineCanvasEnhanced() {
           onNodeClick={handleNodeClick}
           onPaneClick={handlePaneClick}
           onNodeContextMenu={handleNodeContextMenu}
+          onNodeDoubleClick={handleNodeDoubleClick}
           onEdgeContextMenu={handleEdgeContextMenu}
           onDrop={onDrop}
           onDragOver={onDragOver}
