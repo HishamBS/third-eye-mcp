@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { EyeOrchestrator } from '@third-eye/core';
 import { schemas, rateLimit } from '../middleware/validation';
 import { validateBodyWithEnvelope } from '../middleware/response';
+import { TOOL_NAME } from '@third-eye/types';
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -20,6 +21,49 @@ import {
 const app = new Hono();
 const orchestrator = new EyeOrchestrator();
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function parseSessionConfig(value: unknown): Record<string, unknown> {
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return isPlainObject(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  if (isPlainObject(value)) {
+    return { ...value };
+  }
+
+  return {};
+}
+
+function mergeSessionConfig(
+  base: Record<string, unknown>,
+  context?: Record<string, unknown>,
+  strictness?: Record<string, unknown>
+) {
+  const merged: Record<string, unknown> = { ...base };
+
+  if (context && isPlainObject(context)) {
+    Object.assign(merged, context);
+  }
+
+  if (strictness && isPlainObject(strictness)) {
+    merged.strictness = strictness;
+  }
+
+  return merged;
+}
+
+function configsEqual(a: Record<string, unknown>, b: Record<string, unknown>) {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
 // Apply middleware
 app.use('*', requestIdMiddleware());
 app.use('*', errorHandler());
@@ -29,85 +73,96 @@ app.use('*', rateLimit());
 // GOLDEN RULE #1: ONLY task-based auto-routing allowed - NO direct Eye execution
 app.post('/run', validateBodyWithEnvelope(schemas.mcpRun), async (c) => {
   try {
-    const { task, sessionId: providedSessionId, context } = c.get('validatedBody');
+    const { task, sessionId: providedSessionId, context, strictness } = c.get('validatedBody');
 
-    // Import dependencies
-    const { autoRoute } = await import('../../../../mcp-bridge/src/middleware/autoRoute');
-    const { orderGuard } = await import('../../../../mcp-bridge/src/middleware/orderGuard');
-    const { getDb } = await import('@third-eye/db');
-    const { nanoid } = await import('nanoid');
-    const { db } = getDb();
-    const { runs, sessions } = await import('@third-eye/db/schema');
-    const { eq } = await import('drizzle-orm');
+    const contextConfig = isPlainObject(context) ? context : undefined;
+    const strictnessConfig = isPlainObject(strictness) ? strictness : undefined;
 
-    // Auto-generate sessionId if not provided (MANDATORY for order guard)
-    const sessionId = providedSessionId || nanoid();
+    let sessionConfig = mergeSessionConfig({}, contextConfig, strictnessConfig);
 
-    // Get session history and context
-    let executedEyes: string[] = [];
-    let sessionContext: Record<string, any> = context || {};
+    // Ensure session exists before pipeline execution
+    // If providedSessionId is given but doesn't exist in DB, create it
+    // If no sessionId provided, auto-router will create one
+    let actualSessionId = providedSessionId;
 
     if (providedSessionId) {
-      // Existing session - load history
-      const session = await db.select().from(sessions).where(eq(sessions.id, providedSessionId)).get();
+      const { getDb } = await import('@third-eye/db');
+      const { sessions } = await import('@third-eye/db');
+      const { eq } = await import('drizzle-orm');
+      const { nanoid } = await import('nanoid');
 
-      if (session) {
-        sessionContext = {
-          ...sessionContext,
-          ...(typeof session.configJson === 'string' ? JSON.parse(session.configJson) : session.configJson || {}),
-        };
+      const { db } = getDb();
+      const existingSession = await db
+        .select()
+        .from(sessions)
+        .where(eq(sessions.id, providedSessionId))
+        .get();
+
+      if (!existingSession) {
+        // Session doesn't exist - create it now
+        console.log(`📝 Creating session on-demand: ${providedSessionId}`);
+        await db.insert(sessions).values({
+          id: providedSessionId,
+          agentName: 'Playground',
+          model: null,
+          displayName: providedSessionId.slice(0, 8),
+          status: 'active',
+          createdAt: new Date(),
+          configJson: sessionConfig,
+        }).run();
       }
 
-      // Get execution history
-      const sessionRuns = await db
-        .select()
-        .from(runs)
-        .where(eq(runs.sessionId, providedSessionId))
-        .orderBy(runs.createdAt)
-        .all();
+      if (existingSession) {
+        const currentConfig = parseSessionConfig(existingSession.configJson);
+        const mergedConfig = mergeSessionConfig(currentConfig, contextConfig, strictnessConfig);
 
-      executedEyes = sessionRuns.map((run) => run.eye);
-    } else {
-      // New session - create it in database
-      await db.insert(sessions).values({
-        id: sessionId,
-        createdAt: new Date(),
-        status: 'active',
-        configJson: sessionContext, // Drizzle handles JSON conversion
-      });
-      console.log(`📝 Created new session: ${sessionId}`);
+        if (!configsEqual(currentConfig, mergedConfig)) {
+          await db
+            .update(sessions)
+            .set({ configJson: mergedConfig })
+            .where(eq(sessions.id, providedSessionId))
+            .run();
+        }
+
+        sessionConfig = mergedConfig;
+      }
     }
 
-    // Auto-route to determine next Eye (ONLY routing method - no backdoors)
-    const routingResult = await autoRoute({
-      task,
-      currentState: {
-        executedEyes,
-        sessionContext,
-      },
+    // Import AutoRouter for FULL pipeline execution
+    const { autoRouter } = await import('@third-eye/core/auto-router');
+
+    console.log(`🚀 Executing full pipeline for task via AutoRouter`);
+
+    // Execute COMPLETE pipeline via AutoRouter
+    // AutoRouter will:
+    // 1. Call Overseer to analyze task and determine optimal Eye sequence
+    // 2. Execute each Eye in the pipeline
+    // 3. Handle pauses (AWAIT_INPUT, NEED_CLARIFICATION)
+    // 4. Return all results
+    const result = await autoRouter.executeFlow(task, undefined, providedSessionId, {
+      strictness: strictnessConfig,
+      context: Object.keys(sessionConfig).length > 0 ? sessionConfig : undefined,
     });
 
-    const eyeToRun = routingResult.recommendedEye;
-
-    console.log(`🔀 Auto-routed task to ${eyeToRun}: ${routingResult.reasoning}`);
-
-    // MANDATORY Order Guard - ALWAYS enforced
-    const guardResult = orderGuard(eyeToRun, { executedEyes });
-
-    if (!guardResult.allowed) {
-      console.error(`🚫 Order guard violation: ${guardResult.reason}`);
+    if (!result.completed) {
+      console.error(`❌ Pipeline incomplete: ${result.error}`);
       return createErrorResponse(c, {
-        title: 'Pipeline Order Violation',
-        status: 400,
-        detail: guardResult.reason,
-        code: 'E_PIPELINE_ORDER',
+        title: 'Pipeline Execution Failed',
+        status: 500,
+        detail: result.error || 'Pipeline did not complete',
+        code: 'E_PIPELINE_INCOMPLETE',
       });
     }
 
-    // Execute Eye via orchestrator (pass task as string input)
-    const result = await orchestrator.runEye(eyeToRun, task, sessionId);
+    // Return final result from pipeline
+    const finalResult = result.results[result.results.length - 1];
 
-    return createSuccessResponse(c, result);
+    return createSuccessResponse(c, {
+      sessionId: result.sessionId,
+      pipelineResults: result.results,
+      finalResult,
+      totalSteps: result.results.length,
+    });
   } catch (error: any) {
     console.error('MCP run failed:', error);
     return createInternalErrorResponse(c, error.message || 'MCP execution failed');
@@ -123,18 +178,18 @@ app.get('/health', (c) => {
 });
 
 // GET /mcp/tools - List all registered Eyes
-// GOLDEN RULE #1: Only overseer is publicly callable - filter out individual Eyes
+// GOLDEN RULE #1: Only third_eye_overseer is publicly callable - filter out individual Eyes
 app.get('/tools', async (c) => {
   const { getToolsJSON } = await import('../../../../mcp-bridge/src/registry');
 
   const allTools = getToolsJSON();
-  // Only expose overseer - individual Eyes are internal implementation details
-  const publicTools = allTools.filter(tool => tool.name === 'overseer');
+  // Only expose third_eye_overseer - individual Eyes are internal implementation details
+  const publicTools = allTools.filter(tool => tool.name === TOOL_NAME);
 
   return createSuccessResponse(c, {
     tools: publicTools,
     count: publicTools.length,
-    _internal_note: 'Individual Eyes (sharingan, jogan, etc.) are internal - only overseer is public',
+    _internal_note: 'Individual Eyes (sharingan, jogan, etc.) are internal - only third_eye_overseer is public',
   });
 });
 

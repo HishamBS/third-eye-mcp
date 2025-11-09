@@ -1,10 +1,11 @@
 import { Hono } from 'hono';
 import { nanoid } from 'nanoid';
 import { getDb } from '@third-eye/db';
-import { pipelineEvents, eyesCustom, eyesRouting } from '@third-eye/db';
+import { pipelineEvents, eyesCustom, eyesRouting, personas } from '@third-eye/db';
 import { EyeOrchestrator } from '@third-eye/core';
-import { ALL_EYES, getAllEyeNames } from '@third-eye/eyes';
-import { eq, desc } from 'drizzle-orm';
+import { sessionManager } from '@third-eye/core/session-manager';
+import { eq, desc, inArray, and } from 'drizzle-orm';
+import { DEFAULT_PERSONAS, DEFAULT_PERSONA_MAP } from '@third-eye/db/defaults';
 import type { Envelope } from '@third-eye/types';
 import {
   validateBodyWithEnvelope,
@@ -29,6 +30,35 @@ import { z } from 'zod';
 
 const app = new Hono();
 const orchestrator = new EyeOrchestrator();
+
+const BUILT_IN_EYE_IDS = DEFAULT_PERSONAS.map((persona) => persona.eye);
+
+async function getActivePersonasMap(db: ReturnType<typeof getDb>['db'], eyes: string[]) {
+  if (eyes.length === 0) {
+    return new Map<string, typeof personas.$inferSelect>();
+  }
+
+  const rows = await db
+    .select()
+    .from(personas)
+    .where(inArray(personas.eye, eyes))
+    .orderBy(desc(personas.version))
+    .all();
+
+  const map = new Map<string, typeof personas.$inferSelect>();
+  for (const row of rows) {
+    if (row.active) {
+      map.set(row.eye, row);
+      continue;
+    }
+
+    if (!map.has(row.eye)) {
+      map.set(row.eye, row);
+    }
+  }
+
+  return map;
+}
 
 app.use('*', requestIdMiddleware());
 app.use('*', errorHandler());
@@ -79,6 +109,13 @@ const createCustomEyeSchema = z.object({
   defaultRouting: z.any().optional(),
 });
 
+const eyeTestSchema = z.object({
+  input: z.string().min(1).optional(),
+  prompt: z.string().min(1).optional(),
+  task: z.string().min(1).optional(),
+  sessionId: z.string().optional(),
+});
+
 // Helper to log pipeline events
 async function logPipelineEvent(sessionId: string, eye: string, response: Envelope) {
   try {
@@ -117,279 +154,70 @@ async function logPipelineEvent(sessionId: string, eye: string, response: Envelo
   }
 }
 
-/**
- * POST /eyes/overseer/navigator
- * Entry point for all sessions. Provides pipeline overview and contract.
- */
-app.post('/overseer/navigator', async (c) => {
-  try {
-    const body = await c.req.json();
-    const sessionId = body.context?.session_id || body.sessionId || nanoid();
-    const input = body.context?.description || body.input || 'Provide pipeline overview';
-
-    const response = await orchestrator.runEye('overseer', input, sessionId);
-    await logPipelineEvent(sessionId, 'overseer', response);
-
-    return createSuccessResponse(c, response);
-  } catch (error) {
-    return createInternalErrorResponse(c, `Failed to process navigator request: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-});
+// NOTE: Direct Eye POST routes removed - all execution goes through /api/mcp/run (Golden Rule #1)
 
 /**
- * POST /eyes/sharingan/clarify
- * Ambiguity detection and code classification.
+ * POST /eyes/:id/test - Execute a single Eye for playground validation
  */
-app.post('/sharingan/clarify', async (c) => {
+app.post('/:id/test', async (c) => {
+  const eyeId = c.req.param('id');
+
   try {
     const body = await c.req.json();
-    const sessionId = body.context?.session_id || body.sessionId || nanoid();
-    const prompt = body.payload?.prompt || body.prompt;
+    const parsed = eyeTestSchema.parse(body);
+    const candidateInput = parsed.input || parsed.prompt || parsed.task;
 
-    if (!prompt) {
-      return createErrorResponse(c, { title: 'Missing Required Field', status: 400, detail: 'prompt field is required' });
+    if (!candidateInput || candidateInput.trim().length === 0) {
+      return createErrorResponse(c, {
+        title: 'Invalid input',
+        status: 400,
+        detail: 'Provide a non-empty string in "input", "prompt", or "task".',
+        code: 'E_EMPTY_INPUT',
+      });
     }
 
-    const response = await orchestrator.runEye('sharingan', prompt, sessionId);
-    await logPipelineEvent(sessionId, 'sharingan', response);
-
-    return createSuccessResponse(c, response);
-  } catch (error) {
-    return createInternalErrorResponse(c, `Failed to process clarify request: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-});
-
-/**
- * POST /eyes/helper/rewrite_prompt
- * Prompt restructuring into ROLE/TASK/CONTEXT/REQUIREMENTS/OUTPUT format.
- */
-app.post('/helper/rewrite_prompt', async (c) => {
-  try {
-    const body = await c.req.json();
-    const sessionId = body.context?.session_id || body.sessionId || nanoid();
-    const prompt = body.payload?.prompt || body.prompt;
-
-    if (!prompt) {
-      return createErrorResponse(c, { title: 'Missing Required Field', status: 400, detail: 'prompt field is required' });
+    let sessionId = parsed.sessionId ?? null;
+    if (sessionId) {
+      const existing = await sessionManager.getSession(sessionId);
+      if (!existing) {
+        sessionId = null;
+      }
     }
 
-    const input = body.payload?.clarifications
-      ? `${prompt}\n\nClarifications: ${JSON.stringify(body.payload.clarifications)}`
-      : prompt;
-
-    const response = await orchestrator.runEye('helper', input, sessionId);
-    return createSuccessResponse(c, response);
-  } catch (error) {
-    return createInternalErrorResponse(c, `Failed to process rewrite_prompt request: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-});
-
-/**
- * POST /eyes/jogan/confirm_intent
- * Intent confirmation by checking required prompt sections.
- */
-app.post('/jogan/confirm_intent', async (c) => {
-  try {
-    const body = await c.req.json();
-    const sessionId = body.context?.session_id || body.sessionId || nanoid();
-    const prompt = body.payload?.prompt || body.prompt;
-
-    if (!prompt) {
-      return createErrorResponse(c, { title: 'Missing Required Field', status: 400, detail: 'prompt field is required' });
+    if (!sessionId) {
+      const session = await sessionManager.createSession({
+        agentName: 'Playground Tester',
+        metadata: {
+          entryTool: eyeId,
+          source: 'playground',
+        },
+      });
+      sessionId = session.id;
     }
 
-    const response = await orchestrator.runEye('jogan', prompt, sessionId);
-    return createSuccessResponse(c, response);
-  } catch (error) {
-    return createInternalErrorResponse(c, `Failed to process confirm_intent request: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-});
-
-/**
- * POST /eyes/rinnegan/plan_requirements
- * Emit plan schema and example.
- */
-app.post('/rinnegan/plan_requirements', async (c) => {
-  try {
-    const body = await c.req.json();
-    const sessionId = body.context?.session_id || body.sessionId || nanoid();
-    const task = body.payload?.task || body.task || 'General task planning';
-
-    const response = await orchestrator.runEye('rinnegan_requirements', task, sessionId);
-    return createSuccessResponse(c, response);
-  } catch (error) {
-    return createInternalErrorResponse(c, `Failed to process plan_requirements request: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-});
-
-/**
- * POST /eyes/rinnegan/plan_review
- * Review submitted plan against required sections and file impact table.
- */
-app.post('/rinnegan/plan_review', async (c) => {
-  try {
-    const body = await c.req.json();
-    const sessionId = body.context?.session_id || body.sessionId || nanoid();
-    const plan = body.payload?.plan || body.plan;
-
-    if (!plan) {
-      return createErrorResponse(c, { title: 'Missing Required Field', status: 400, detail: 'plan field is required' });
+    if (!sessionId) {
+      return createInternalErrorResponse(c, 'Failed to create playground session for Eye execution');
     }
 
-    const response = await orchestrator.runEye('rinnegan_review', plan, sessionId);
-    return createSuccessResponse(c, response);
-  } catch (error) {
-    return createInternalErrorResponse(c, `Failed to process plan_review request: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-});
+    const result = await orchestrator.runEye(eyeId, candidateInput.trim(), sessionId);
+    await logPipelineEvent(sessionId, eyeId, result as Envelope);
 
-/**
- * POST /eyes/rinnegan/final_approval
- * Final approval gate checking all phases.
- */
-app.post('/rinnegan/final_approval', async (c) => {
-  try {
-    const body = await c.req.json();
-    const sessionId = body.context?.session_id || body.sessionId || nanoid();
-
-    const input = JSON.stringify({
-      plan: body.payload?.plan || body.plan,
-      scaffold: body.payload?.scaffold || body.scaffold,
-      implementation: body.payload?.implementation || body.implementation,
-      tests: body.payload?.tests || body.tests,
-      docs: body.payload?.docs || body.docs,
+    return createSuccessResponse(c, {
+      sessionId,
+      result,
     });
-
-    const response = await orchestrator.runEye('rinnegan_approval', input, sessionId);
-    return createSuccessResponse(c, response);
   } catch (error) {
-    return createInternalErrorResponse(c, `Failed to process final_approval request: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-});
-
-/**
- * POST /eyes/mangekyo/review_scaffold
- * Scaffold review - validates file structure plan.
- */
-app.post('/mangekyo/review_scaffold', async (c) => {
-  try {
-    const body = await c.req.json();
-    const sessionId = body.context?.session_id || body.sessionId || nanoid();
-    const scaffold = body.payload?.scaffold || body.scaffold;
-
-    if (!scaffold) {
-      return createErrorResponse(c, { title: 'Missing Required Field', status: 400, detail: 'scaffold field is required' });
+    if (error instanceof z.ZodError) {
+      return createErrorResponse(c, {
+        title: 'Validation Error',
+        status: 400,
+        detail: error.issues.map((issue) => issue.message).join('; '),
+        code: 'E_INVALID_PAYLOAD',
+      });
     }
 
-    const response = await orchestrator.runEye('mangekyo_scaffold', scaffold, sessionId);
-    return createSuccessResponse(c, response);
-  } catch (error) {
-    return createInternalErrorResponse(c, `Failed to process review_scaffold request: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-});
-
-/**
- * POST /eyes/mangekyo/review_impl
- * Implementation review - validates diffs and reasoning.
- */
-app.post('/mangekyo/review_impl', async (c) => {
-  try {
-    const body = await c.req.json();
-    const sessionId = body.context?.session_id || body.sessionId || nanoid();
-
-    const input = JSON.stringify({
-      diffs: body.payload?.diffs || body.diffs,
-      reasoning: body.payload?.reasoning || body.reasoning,
-    });
-
-    const response = await orchestrator.runEye('mangekyo_impl', input, sessionId);
-    return createSuccessResponse(c, response);
-  } catch (error) {
-    return createInternalErrorResponse(c, `Failed to process review_impl request: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-});
-
-/**
- * POST /eyes/mangekyo/review_tests
- * Test review - validates coverage against thresholds.
- */
-app.post('/mangekyo/review_tests', async (c) => {
-  try {
-    const body = await c.req.json();
-    const sessionId = body.context?.session_id || body.sessionId || nanoid();
-
-    const input = JSON.stringify({
-      tests: body.payload?.tests || body.tests,
-      coverage: body.payload?.coverage || body.coverage,
-    });
-
-    const response = await orchestrator.runEye('mangekyo_tests', input, sessionId);
-    return createSuccessResponse(c, response);
-  } catch (error) {
-    return createInternalErrorResponse(c, `Failed to process review_tests request: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-});
-
-/**
- * POST /eyes/mangekyo/review_docs
- * Documentation review - validates docs updates.
- */
-app.post('/mangekyo/review_docs', async (c) => {
-  try {
-    const body = await c.req.json();
-    const sessionId = body.context?.session_id || body.sessionId || nanoid();
-    const docs = body.payload?.docs || body.docs;
-
-    if (!docs) {
-      return createErrorResponse(c, { title: 'Missing Required Field', status: 400, detail: 'docs field is required' });
-    }
-
-    const response = await orchestrator.runEye('mangekyo_docs', docs, sessionId);
-    return createSuccessResponse(c, response);
-  } catch (error) {
-    return createInternalErrorResponse(c, `Failed to process review_docs request: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-});
-
-/**
- * POST /eyes/tenseigan/validate_claims
- * Citation validation for factual claims.
- */
-app.post('/tenseigan/validate_claims', async (c) => {
-  try {
-    const body = await c.req.json();
-    const sessionId = body.context?.session_id || body.sessionId || nanoid();
-
-    const input = JSON.stringify({
-      content: body.payload?.content || body.content,
-      sources: body.payload?.sources || body.sources,
-    });
-
-    const response = await orchestrator.runEye('tenseigan', input, sessionId);
-    return createSuccessResponse(c, response);
-  } catch (error) {
-    return createInternalErrorResponse(c, `Failed to process validate_claims request: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-});
-
-/**
- * POST /eyes/byakugan/consistency_check
- * Consistency and contradiction detection.
- */
-app.post('/byakugan/consistency_check', async (c) => {
-  try {
-    const body = await c.req.json();
-    const sessionId = body.context?.session_id || body.sessionId || nanoid();
-    const content = body.payload?.content || body.content;
-
-    if (!content) {
-      return createErrorResponse(c, { title: 'Missing Required Field', status: 400, detail: 'content field is required' });
-    }
-
-    const response = await orchestrator.runEye('byakugan', content, sessionId);
-    return createSuccessResponse(c, response);
-  } catch (error) {
-    return createInternalErrorResponse(c, `Failed to process consistency_check request: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error('[Eyes API] Failed to execute Eye:', error);
+    return createInternalErrorResponse(c, error instanceof Error ? error.message : 'Failed to execute Eye');
   }
 });
 
@@ -397,20 +225,22 @@ app.post('/byakugan/consistency_check', async (c) => {
  * GET /eyes/registry - Get all built-in Eyes from registry
  */
 app.get('/registry', async (c) => {
-  const eyeNames = getAllEyeNames();
-  return createSuccessResponse(c,
-    eyeNames.map((eyeName) => {
-      const eye = ALL_EYES[eyeName];
-      return {
-        id: eyeName,
-        name: eye.name,
-        version: eye.version,
-        description: eye.description,
-        source: 'built-in',
-        personaTemplate: eye.getPersona(),
-      };
-    })
-  );
+  const { db } = getDb();
+  const activePersonaMap = await getActivePersonasMap(db, BUILT_IN_EYE_IDS);
+
+  const payload = DEFAULT_PERSONAS.map((definition) => {
+    const active = activePersonaMap.get(definition.eye);
+    return {
+      id: definition.eye,
+      name: definition.name,
+      version: active?.version ?? definition.version,
+      description: definition.description,
+      source: 'built-in' as const,
+      personaTemplate: active?.content ?? definition.content,
+    };
+  });
+
+  return createSuccessResponse(c, payload);
 });
 
 /**
@@ -445,22 +275,21 @@ app.get('/custom', async (c) => {
  * GET /eyes/all - Get ALL Eyes (built-in + custom) - NO HARDCODING
  */
 app.get('/all', async (c) => {
-  // Get built-in Eyes from ALL_EYES
-  const eyeNames = getAllEyeNames();
-  const builtInEyes = eyeNames.map((eyeName) => {
-    const eye = ALL_EYES[eyeName];
+  const { db } = getDb();
+
+  const activePersonaMap = await getActivePersonasMap(db, BUILT_IN_EYE_IDS);
+  const builtInEyes = DEFAULT_PERSONAS.map((definition) => {
+    const active = activePersonaMap.get(definition.eye);
     return {
-      id: eyeName,
-      name: eye.name,
-      version: eye.version,
-      description: eye.description,
+      id: definition.eye,
+      name: definition.name,
+      version: active?.version ?? definition.version,
+      description: definition.description,
       source: 'built-in' as const,
-      personaTemplate: eye.getPersona(),
+      personaTemplate: active?.content ?? definition.content,
     };
   });
 
-  // Get custom Eyes from database
-  const { db } = getDb();
   const customEyes = await db
     .select()
     .from(eyesCustom)
@@ -482,6 +311,157 @@ app.get('/all', async (c) => {
   }));
 
   return createSuccessResponse(c, [...builtInEyes, ...customEyesFormatted]);
+});
+
+/**
+ * GET /eyes/:id - Get specific Eye by ID with complete details
+ */
+app.get('/:id', async (c) => {
+  const eyeId = c.req.param('id');
+
+  try {
+    const { db } = getDb();
+
+    // Check if it's a built-in Eye first
+    const builtInDefinition = DEFAULT_PERSONA_MAP[eyeId];
+    if (builtInDefinition) {
+      const activePersona = await db
+        .select()
+        .from(personas)
+        .where(and(eq(personas.eye, eyeId), eq(personas.active, true)))
+        .get();
+
+      return createSuccessResponse(c, {
+        id: eyeId,
+        name: builtInDefinition.name,
+        version: activePersona?.version ?? builtInDefinition.version,
+        description: builtInDefinition.description,
+        source: 'built-in' as const,
+        personaTemplate: activePersona?.content ?? builtInDefinition.content,
+      });
+    }
+
+    // Check if it's a custom Eye
+    const customEye = await db
+      .select()
+      .from(eyesCustom)
+      .where(eq(eyesCustom.id, eyeId))
+      .limit(1)
+      .all();
+
+    if (customEye.length > 0) {
+      const eye = customEye[0];
+      return createSuccessResponse(c, {
+        id: eye.id,
+        name: eye.name,
+        version: eye.version.toString(),
+        description: eye.description,
+        source: 'custom',
+        inputSchema: eye.inputSchemaJson,
+        outputSchema: eye.outputSchemaJson,
+        personaId: eye.personaId,
+        defaultRouting: eye.defaultRouting,
+        createdAt: eye.createdAt,
+      });
+    }
+
+    return createErrorResponse(c, {
+      title: 'Eye Not Found',
+      status: 404,
+      detail: `Eye with id ${eyeId} not found`
+    });
+  } catch (error) {
+    return createInternalErrorResponse(c, `Failed to fetch Eye: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+});
+
+/**
+ * GET /eyes/:id/personas - Get all persona versions for specific Eye
+ */
+app.get('/:id/personas', async (c) => {
+  const eyeId = c.req.param('id');
+
+  try {
+    const { db } = getDb();
+    const eyePersonas = await db
+      .select()
+      .from(personas)
+      .where(eq(personas.eye, eyeId))
+      .orderBy(desc(personas.version))
+      .all();
+
+    const active = eyePersonas.find(p => p.active);
+
+    return createSuccessResponse(c, {
+      eye: eyeId,
+      versions: eyePersonas,
+      activeVersion: active?.version || null,
+    });
+  } catch (error) {
+    return createInternalErrorResponse(c, 'Failed to fetch Eye personas');
+  }
+});
+
+/**
+ * PATCH /eyes/:id/name - Update Eye display name
+ */
+app.patch('/:id/name', async (c) => {
+  try {
+    const eyeId = c.req.param('id');
+    const body = await c.req.json();
+    const { displayName } = body;
+
+    if (!displayName || typeof displayName !== 'string' || displayName.trim().length === 0) {
+      return createErrorResponse(c, {
+        title: 'Validation Error',
+        status: 400,
+        detail: 'Display name is required'
+      });
+    }
+
+    const { db } = getDb();
+    const { eyeSettings } = await import('@third-eye/db/schema');
+    const { eq } = await import('drizzle-orm');
+
+    // Check if Eye settings exist
+    const existing = await db
+      .select()
+      .from(eyeSettings)
+      .where(eq(eyeSettings.eye, eyeId))
+      .get();
+
+    if (existing) {
+      // Update existing
+      await db
+        .update(eyeSettings)
+        .set({
+          displayName: displayName.trim(),
+          updatedAt: new Date(),
+        })
+        .where(eq(eyeSettings.eye, eyeId))
+        .run();
+    } else {
+      // Insert new
+      await db
+        .insert(eyeSettings)
+        .values({
+          eye: eyeId,
+          displayName: displayName.trim(),
+          description: null,
+          updatedAt: new Date(),
+        })
+        .run();
+    }
+
+    return createSuccessResponse(c, {
+      eye: eyeId,
+      displayName: displayName.trim(),
+      message: 'Eye display name updated successfully',
+    });
+  } catch (error) {
+    console.error('[Eyes API] Failed to update Eye name:', error);
+    return createInternalErrorResponse(c, 'Failed to update Eye name');
+  }
 });
 
 /**

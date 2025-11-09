@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { TenseiganEye, TenseiganEnvelopeSchema } from '../src/eyes/tenseigan';
+import { DEFAULT_PERSONA_MAP } from '@third-eye/db/defaults/personas';
 
 const tenseigan = new TenseiganEye();
 
@@ -255,9 +256,10 @@ describe('Tenseigan Eye', () => {
       expect(envelope.code).toBe('NEED_MORE_CONTEXT');
     });
 
-    it('should validate the persona method returns proper format', () => {
-      const persona = tenseigan.getPersona();
+    it('should surface persona catalog content for tenseigan', () => {
+      const persona = DEFAULT_PERSONA_MAP['tenseigan']?.content;
 
+      expect(persona).toBeDefined();
       expect(persona).toContain('Tenseigan');
       expect(persona).toContain('Evidence Validator');
       expect(persona).toContain('JSON envelope');

@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import type { MiddlewareHandler } from 'hono';
 
 /**
  * Response Caching System
@@ -7,14 +8,14 @@ import { createHash } from 'crypto';
  * Skips cache for session-dependent Eyes (Byakugan, Rinnegan)
  */
 
-interface CacheEntry {
-  data: any;
+interface CacheEntry<T> {
+  data: T;
   expiresAt: number;
   createdAt: number;
 }
 
 class ResponseCache {
-  private cache = new Map<string, CacheEntry>();
+  private cache = new Map<string, CacheEntry<unknown>>();
   private readonly defaultTTL = 5 * 60 * 1000; // 5 minutes
 
   /**
@@ -32,7 +33,7 @@ class ResponseCache {
   /**
    * Generate cache key from input
    */
-  private generateKey(eye: string, input: any): string {
+  private generateKey(eye: string, input: unknown): string {
     const content = JSON.stringify({ eye, input });
     return createHash('sha256').update(content).digest('hex');
   }
@@ -47,7 +48,7 @@ class ResponseCache {
   /**
    * Get cached response
    */
-  get(eye: string, input: any): any | null {
+  get<T>(eye: string, input: unknown): T | null {
     if (!this.shouldCache(eye)) {
       return null;
     }
@@ -65,13 +66,13 @@ class ResponseCache {
       return null;
     }
 
-    return entry.data;
+    return entry.data as T;
   }
 
   /**
    * Set cached response
    */
-  set(eye: string, input: any, data: any, ttl?: number): void {
+  set<T>(eye: string, input: unknown, data: T, ttl?: number): void {
     if (!this.shouldCache(eye)) {
       return;
     }
@@ -145,8 +146,8 @@ setInterval(() => {
 /**
  * Cache middleware for Hono
  */
-export function cacheMiddleware() {
-  return async (c: any, next: any) => {
+export function cacheMiddleware(): MiddlewareHandler {
+  return async (c, next) => {
     const method = c.req.method;
 
     // Only cache GET requests
@@ -163,7 +164,7 @@ export function cacheMiddleware() {
       .update(JSON.stringify({ path, query }))
       .digest('hex');
 
-    const cached = responseCache.get(path, query);
+    const cached = responseCache.get<unknown>(path, query);
 
     if (cached) {
       c.header('X-Cache', 'HIT');
@@ -188,11 +189,11 @@ export function cacheMiddleware() {
  */
 export async function withCache<T>(
   eye: string,
-  input: any,
+  input: unknown,
   executor: () => Promise<T>
 ): Promise<T> {
   // Check cache
-  const cached = responseCache.get(eye, input);
+  const cached = responseCache.get<T>(eye, input);
   if (cached) {
     console.log(`📦 Cache HIT for ${eye}`);
     return cached;

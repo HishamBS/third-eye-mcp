@@ -10,6 +10,72 @@ import { EyeOrchestrator } from './orchestrator';
 import { orderGuard } from './order-guard';
 import { z } from 'zod';
 
+export interface AutoRouterOptions {
+  strictness?: Record<string, unknown>;
+  context?: Record<string, unknown>;
+}
+
+const STRICTNESS_HEADER = 'STRICTNESS CONTROLS (from UI):';
+
+const STRICTNESS_LABELS: Record<string, string> = {
+  ambiguityThreshold: 'Ambiguity Threshold (0-100, lower = stricter)',
+  citationCutoff: 'Citation Confidence Cutoff (0-100%)',
+  consistencyTolerance: 'Consistency Tolerance (0-100, lower = stricter)',
+  mangekyoStrictness: 'Mangekyō Code Review Minimum (%)',
+};
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function formatStrictnessDirective(strictness?: Record<string, unknown>): string | null {
+  if (!strictness || !isPlainObject(strictness)) {
+    return null;
+  }
+
+  const lines: string[] = [];
+
+  for (const [key, label] of Object.entries(STRICTNESS_LABELS)) {
+    const value = strictness[key];
+    if (typeof value === 'number') {
+      const formatted = key === 'citationCutoff' ? `${value}%` : value;
+      lines.push(`- ${label}: ${formatted}`);
+    }
+  }
+
+  for (const [key, value] of Object.entries(strictness)) {
+    if (key in STRICTNESS_LABELS) continue;
+    if (typeof value === 'number' || typeof value === 'string') {
+      lines.push(`- ${key}: ${value}`);
+    } else if (value !== undefined) {
+      lines.push(`- ${key}: ${JSON.stringify(value)}`);
+    }
+  }
+
+  if (lines.length === 0) {
+    return null;
+  }
+
+  return [
+    STRICTNESS_HEADER,
+    ...lines,
+    'Apply these thresholds when selecting eyes, requesting clarifications, and validating outputs.',
+  ].join('\n');
+}
+
+function formatContextDirective(context?: Record<string, unknown>): string | null {
+  if (!context || !isPlainObject(context) || Object.keys(context).length === 0) {
+    return null;
+  }
+
+  try {
+    return `SESSION CONTEXT (JSON):\n${JSON.stringify(context, null, 2)}`;
+  } catch (error) {
+    console.warn('[AutoRouter] Failed to serialize session context for prompt enrichment:', error);
+    return null;
+  }
+}
+
 export interface RoutingDecision {
   sessionId: string;
   taskType: 'code' | 'text' | 'analysis';
@@ -54,40 +120,77 @@ export class AutoRouter {
   /**
    * Analyze a freeform task and determine optimal routing
    */
-  async analyzeTask(input: string, sessionId?: string, providedSessionId?: string): Promise<RoutingDecision> {
-    const actualSessionId = sessionId || providedSessionId || (await this.orchestrator.createSession({ agentName: 'Auto-Router', displayName: 'Auto-Router Session' })).sessionId;
+  async analyzeTask(
+    input: string,
+    sessionId?: string,
+    providedSessionId?: string,
+    options: AutoRouterOptions = {}
+  ): Promise<RoutingDecision> {
+    const strictnessDirective = formatStrictnessDirective(options.strictness);
+    const contextDirective = formatContextDirective(options.context);
+    const enrichedInput = [input, strictnessDirective, contextDirective]
+      .filter(Boolean)
+      .join('\n\n');
 
-    // Use Sharingan to analyze task characteristics
-    const analysis = await this.orchestrator.runEye('sharingan', input, actualSessionId);
+    let actualSessionId = sessionId || providedSessionId;
 
-    // Determine task type and complexity from Sharingan response
-    const isCodeRelated = this.detectCodeTask(input, analysis);
-    const complexity = this.assessComplexity(input, analysis);
+    if (!actualSessionId) {
+      const bootstrapConfig: Record<string, unknown> = {
+        agentName: 'Auto-Router',
+        displayName: 'Auto-Router Session',
+      };
 
-    // Build recommended flow based on analysis
-    const recommendedFlow = this.buildOptimalFlow(isCodeRelated, complexity, analysis);
+      if (options.strictness && isPlainObject(options.strictness)) {
+        bootstrapConfig.strictness = options.strictness;
+      }
+
+      if (options.context && isPlainObject(options.context)) {
+        bootstrapConfig.context = options.context;
+      }
+
+      const session = await this.orchestrator.createSession(bootstrapConfig);
+      actualSessionId = session.sessionId;
+    }
+
+    // Call Overseer Eye to get dynamic pipeline routing
+    const overseerResult = await this.orchestrator.runEye('overseer', enrichedInput, actualSessionId);
+
+    if (!overseerResult.ok) {
+      throw new Error(`Overseer failed: ${overseerResult.code} - ${overseerResult.md || 'No details'}`);
+    }
+
+    const pipelineRoute = overseerResult.data?.pipelineRoute;
+    if (!Array.isArray(pipelineRoute) || pipelineRoute.length === 0) {
+      console.error('[AutoRouter] Overseer returned invalid pipeline route:', overseerResult.data);
+      throw new Error('Overseer did not provide a valid pipelineRoute array');
+    }
 
     return {
       sessionId: actualSessionId,
-      taskType: isCodeRelated ? 'code' : (this.isAnalysisTask(input) ? 'analysis' : 'text'),
-      complexity,
-      recommendedFlow,
-      reasoning: this.explainRouting(isCodeRelated, complexity, analysis),
-      estimatedSteps: recommendedFlow.length
+      taskType: (overseerResult.data.contentDomain as 'code' | 'text' | 'analysis') || 'text',
+      complexity: (overseerResult.data.complexity as 'simple' | 'medium' | 'complex') || 'medium',
+      recommendedFlow: pipelineRoute as EyeName[],
+      reasoning: (overseerResult.data.routingReasoning as string) || 'Overseer-determined',
+      estimatedSteps: (pipelineRoute as any[]).length
     };
   }
 
   /**
    * Execute complete pipeline based on routing decision
    */
-  async executeFlow(input: string, routing?: RoutingDecision, providedSessionId?: string): Promise<AutoRoutingResult> {
+  async executeFlow(
+    input: string,
+    routing?: RoutingDecision,
+    providedSessionId?: string,
+    options: AutoRouterOptions = {}
+  ): Promise<AutoRoutingResult> {
     try {
       // NOTE: We DO NOT reject generation requests
       // Instead, we route through Sharingan → asks clarifying questions
       // Then through the full pipeline to GUIDE the agent step-by-step
 
       // Analyze task if no routing provided
-      const decision = routing || await this.analyzeTask(input, undefined, providedSessionId);
+      const decision = routing || await this.analyzeTask(input, undefined, providedSessionId, options);
 
       // Mark session as auto-router controlled to bypass order guard validation
       // Auto-router already knows the correct Eye sequence
@@ -95,11 +198,49 @@ export class AutoRouter {
 
       const results: BaseEnvelope[] = [];
       let currentInput = input;
+      const strictnessDirective = formatStrictnessDirective(options.strictness);
+
+      // Import WebSocket bridge for real-time updates
+      const { getWebSocketBridge } = await import('./websocket-registry');
+      const ws = getWebSocketBridge();
 
       // Execute each Eye in the recommended flow
-      for (const eyeName of decision.recommendedFlow) {
-        const result = await this.orchestrator.runEye(eyeName, currentInput, decision.sessionId);
+      for (let i = 0; i < decision.recommendedFlow.length; i++) {
+        const eyeName = decision.recommendedFlow[i];
+
+        // Emit eye_started event
+        if (ws) {
+          ws.broadcastToSession(decision.sessionId, {
+            type: 'eye_started',
+            eye: eyeName,
+            step: i + 1,
+            totalSteps: decision.recommendedFlow.length,
+            timestamp: Date.now(),
+          });
+        }
+
+        const runInput = strictnessDirective && !currentInput.includes(STRICTNESS_HEADER)
+          ? `${currentInput}\n\n${strictnessDirective}`
+          : currentInput;
+
+        const result = await this.orchestrator.runEye(eyeName, runInput, decision.sessionId);
         results.push(result);
+
+        // Emit eye_complete event
+        if (ws) {
+          ws.broadcastToSession(decision.sessionId, {
+            type: 'eye_complete',
+            eye: eyeName,
+            step: i + 1,
+            totalSteps: decision.recommendedFlow.length,
+            result: {
+              ok: result.ok,
+              code: result.code,
+              md: result.md?.substring(0, 200), // Truncate for WebSocket
+            },
+            timestamp: Date.now(),
+          });
+        }
 
         if (isRejected(result)) {
           return {
@@ -141,118 +282,6 @@ export class AutoRouter {
     }
   }
 
-  /**
-   * Detect if task is code-related
-   */
-  private detectCodeTask(input: string, analysis: BaseEnvelope): boolean {
-    const parsed = SharinganAnalysisSchema.safeParse(analysis);
-    const isCodeRelated = parsed.success ? parsed.data.data?.isCodeRelated : undefined;
-    if (typeof isCodeRelated === 'boolean') {
-      return isCodeRelated;
-    }
-
-    // Fallback keyword detection
-    const codeKeywords = [
-      'implement', 'code', 'function', 'class', 'API', 'database',
-      'component', 'service', 'endpoint', 'test', 'debug', 'fix',
-      'refactor', 'optimize', 'deploy', 'build', 'compile'
-    ];
-
-    const lowerInput = input.toLowerCase();
-    return codeKeywords.some(keyword => lowerInput.includes(keyword));
-  }
-
-  /**
-   * Assess task complexity
-   */
-  private assessComplexity(input: string, analysis: BaseEnvelope): 'simple' | 'medium' | 'complex' {
-    const parsed = SharinganAnalysisSchema.safeParse(analysis);
-    const providedComplexity = parsed.success ? parsed.data.data?.complexity : undefined;
-    if (providedComplexity) {
-      return providedComplexity;
-    }
-
-    // Heuristic complexity assessment
-    const wordCount = input.split(/\s+/).length;
-    const hasMultipleSteps = /\b(and|then|also|additionally|furthermore)\b/i.test(input);
-    const hasSpecificRequirements = input.includes('requirements') || input.includes('must');
-
-    if (wordCount > 50 || hasMultipleSteps || hasSpecificRequirements) {
-      return 'complex';
-    } else if (wordCount > 20 || input.includes('with') || input.includes('using')) {
-      return 'medium';
-    } else {
-      return 'simple';
-    }
-  }
-
-  /**
-   * Check if task is analysis/review focused
-   */
-  private isAnalysisTask(input: string): boolean {
-    const analysisKeywords = [
-      'analyze', 'review', 'check', 'validate', 'verify', 'audit',
-      'examine', 'assess', 'evaluate', 'investigate'
-    ];
-
-    const lowerInput = input.toLowerCase();
-    return analysisKeywords.some(keyword => lowerInput.includes(keyword));
-  }
-
-  /**
-   * Build optimal Eye flow based on task characteristics
-   */
-  private buildOptimalFlow(isCodeRelated: boolean, complexity: string, analysis: any): EyeName[] {
-    const flow: EyeName[] = [];
-
-    // NOTE: Sharingan was already executed in analyzeTask(), so we DON'T include it here
-
-    // Add prompt optimization for complex tasks
-    if (complexity === 'complex' || analysis.confidence < 80) {
-      flow.push('prompt-helper');
-    }
-
-    // Intent confirmation
-    flow.push('jogan');
-
-    // Branch based on task type
-    if (isCodeRelated) {
-      // Code branch: planning -> implementation -> review
-      flow.push('rinnegan');  // Plan requirements
-
-      if (complexity !== 'simple') {
-        flow.push('mangekyo');  // Implementation phases
-        flow.push('rinnegan');  // Review and approval
-      }
-    } else {
-      // Text branch: optional planning -> analysis -> consistency check
-      if (complexity === 'complex') {
-        flow.push('rinnegan');  // Optional planning for complex text
-      }
-
-      flow.push('tenseigan');  // Evidence validation
-      flow.push('byakugan');   // Consistency check
-    }
-
-    // Final approval for complex tasks
-    if (complexity === 'complex') {
-      flow.push('rinnegan');  // Final approval
-    }
-
-    return flow;
-  }
-
-  /**
-   * Explain routing decision
-   */
-  private explainRouting(isCodeRelated: boolean, complexity: string, analysis: any): string {
-    const taskType = isCodeRelated ? 'code implementation' : 'text analysis';
-    const complexityNote = complexity === 'complex' ? 'complex' : complexity === 'medium' ? 'moderate' : 'simple';
-
-    return `Detected ${complexityNote} ${taskType} task. ` +
-           `Following ${isCodeRelated ? 'code branch' : 'text branch'} pipeline. ` +
-           `Confidence: ${analysis.confidence || 'unknown'}%`;
-  }
 
   /**
    * Get current pipeline state for session

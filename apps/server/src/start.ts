@@ -11,8 +11,8 @@ import app from './index';
 import { createWebSocketHandler } from './websocket';
 import { getConfig } from '@third-eye/config';
 import { loadProviderKeysIntoConfig } from '@third-eye/core/load-provider-keys';
-import { seedDatabase } from '../../../scripts/seed-database';
-import { seedIntegrations } from '../../../scripts/seed-integrations';
+import { seedDefaults } from '@third-eye/db/defaults';
+import { TOOL_NAME, DATA_DIRECTORY, PROVIDERS } from '@third-eye/types';
 
 const config = getConfig();
 const PORT = config.server.port;
@@ -31,10 +31,11 @@ const warnOnUnsafeBind = (host: string) => {
 warnOnUnsafeBind(HOST);
 
 // Initialize database with default data
-console.log('[Startup] Seeding database...');
-await seedDatabase();
-await seedIntegrations();
-console.log('[Startup] Database seeded successfully\n');
+console.log('[Startup] Seeding defaults...');
+const seedReport = await seedDefaults({
+  log: (message: string) => console.log(message),
+});
+console.log('[Startup] Default seeding complete:', seedReport, '\n');
 
 // Load provider keys from database into config
 await loadProviderKeysIntoConfig();
@@ -69,11 +70,11 @@ const server = serve({
 
 console.log(`
 🧿 Third-Eye MCP — READY
-• MCP tool: overseer
+• MCP tool: ${TOOL_NAME}
 • Server: http://${HOST}:${PORT}
 • UI:     http://${HOST}:${config.ui.port}
-• DB:     ~/.third-eye-mcp/mcp.db
-• Providers: groq, openrouter, ollama, lmstudio  (health: green)
+• DB:     ~/${DATA_DIRECTORY}/mcp.db
+• Providers: ${PROVIDERS.join(', ')}  (health: green)
 • Agent Primer: http://${HOST}:${PORT}/mcp/quickstart
 `);
 console.log(`📡 WebSocket: ws://${HOST}:${PORT}/ws/monitor?sessionId=<id>`);

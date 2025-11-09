@@ -116,7 +116,7 @@ Dashboard → **Personas**:
 3. Click **Save Draft** to create a new version
 4. Activate to promote the persona to production
 
-Seed via script: `bun run scripts/seed-database.ts`.
+Seed via script: `bun run scripts/seed-defaults.ts`.
 
 ### Can I maintain multiple personas per Eye?
 

@@ -17,7 +17,7 @@ COPY scripts/ ./scripts/
 RUN bun install --frozen-lockfile
 
 # Run database seeding
-RUN bun run scripts/seed-database.ts || true
+RUN bun run scripts/seed-defaults.ts || true
 
 # Expose server port
 EXPOSE 7070

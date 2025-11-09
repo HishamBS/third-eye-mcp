@@ -7,7 +7,9 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { useDialog } from '@/hooks/useDialog';
 
 interface Persona {
+  id: string;
   eye: string;
+  name?: string;
   version: number;
   content: string;
   active: boolean;
@@ -39,6 +41,36 @@ export default function PersonasPage() {
   useEffect(() => {
     fetchAllEyes();
     fetchPersonas();
+
+    // Set up WebSocket listener for persona updates
+    const handleMessage = (event: MessageEvent) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'persona_activated') {
+          fetchPersonas();
+        }
+      } catch (e) {
+        // Ignore parse errors
+      }
+    };
+
+    // Try to connect to WebSocket if available
+    const wsUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070').replace('http', 'ws');
+    let ws: WebSocket | null = null;
+
+    try {
+      ws = new WebSocket(wsUrl);
+      ws.addEventListener('message', handleMessage);
+    } catch (e) {
+      console.debug('WebSocket not available:', e);
+    }
+
+    return () => {
+      if (ws) {
+        ws.removeEventListener('message', handleMessage);
+        ws.close();
+      }
+    };
   }, []);
 
   const fetchAllEyes = async () => {
@@ -79,12 +111,13 @@ export default function PersonasPage() {
       const response = await fetch(`${API_URL}/api/personas`);
       if (response.ok) {
         const result = await response.json();
-        const personasData = result.data?.personas || {};
-        const personasArray = Object.values(personasData).flat();
+        // API returns data as an array of personas directly
+        const personasArray = Array.isArray(result.data) ? result.data : [];
         setPersonas(personasArray as Persona[]);
       }
     } catch (error) {
       console.error('Failed to fetch personas:', error);
+      setError('Failed to load personas');
     }
   };
 
@@ -324,9 +357,11 @@ export default function PersonasPage() {
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">{getEyeIcon(eye)}</span>
                         <div>
-                          <h3 className="font-bold capitalize">{eye}</h3>
+                          <h3 className="font-bold capitalize">
+                            {activePersona?.name || eye}
+                          </h3>
                           <p className="text-xs opacity-80">
-                            Version {activePersona?.version || 1}
+                            Version {activePersona?.version || 'Default'}
                             {activePersona?.active && ' (Active)'}
                           </p>
                         </div>
@@ -570,9 +605,17 @@ export default function PersonasPage() {
                 <div className="space-y-2 text-sm text-slate-500">
                   <p>• Each Eye has versioned personas with system prompts</p>
                   <p>• Only one version can be active at a time</p>
-                  <p>• Changes take effect immediately for new runs</p>
+                  <p>• Changes take effect immediately for new runs (hot-reload)</p>
                   <p>• Previous versions are preserved for rollback</p>
+                  <p>• Click "Edit" on any Eye to create or modify its persona</p>
                 </div>
+                {allEyes.length === 0 && (
+                  <div className="mt-8 rounded-xl border border-yellow-500/40 bg-yellow-500/10 p-4">
+                    <p className="text-yellow-400 text-sm">
+                      No Eyes detected. Make sure the server is running and Eyes are properly configured.
+                    </p>
+                  </div>
+                )}
               </GlassCard>
             )}
           </div>

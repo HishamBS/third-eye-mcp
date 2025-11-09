@@ -36,9 +36,9 @@ function validateImplementation() {
     'Directory structure: apps/, packages/, cli/, docker/ created'
   );
 
-  validate('1. Monorepo Layout', 'Archive FastAPI and Python deps',
-    checkFileExists('legacy-python') ? 'PASS' : 'FAIL',
-    'Python code moved to legacy-python directory'
+  validate('1. Monorepo Layout', 'Retire legacy FastAPI/Python stack',
+    !checkFileExists('legacy-python') ? 'PASS' : 'FAIL',
+    'Legacy Python implementation removed (no legacy-python directory)'
   );
 
   validate('1. Monorepo Layout', 'Remove control-plane/admin theme and RBAC logic',
@@ -53,9 +53,9 @@ function validateImplementation() {
     'SQLite schema with 7 tables: app_settings, provider_keys, models_cache, eyes_routing, personas, sessions, runs'
   );
 
-  validate('2. Data Model', 'Write importer for personas',
+  validate('2. Data Model', 'Persona importer uses catalog defaults',
     checkFileExists('packages/db/import-personas.ts') ? 'PASS' : 'FAIL',
-    'Persona importer that reads existing Python personas and writes to personas table'
+    'Importer syncs from packages/db/defaults/personas into the personas table'
   );
 
   // Section 3: Provider Adapters

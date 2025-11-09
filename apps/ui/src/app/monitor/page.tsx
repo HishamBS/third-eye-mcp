@@ -1,18 +1,15 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { GlassCard } from '@/components/ui/GlassCard';
-import { EyeDashboard } from '@/components/EyeDashboard';
-import { UserContributionMode } from '@/components/UserContributionMode';
-import { PersonaVoiceDecorator } from '@/components/PersonaVoiceDecorator';
-import { EvidenceLens } from '@/components/EvidenceLens';
-import { PlanRenderer } from '@/components/PlanRenderer';
 import { useWebSocket, type WSMessage } from '@/hooks/useWebSocket';
-import type { PipelineEvent, EyeName } from '@third-eye/types';
-import { EYE_DISPLAY_NAMES } from '@third-eye/config/constants';
+import type { EyeName } from '@third-eye/types';
+import { EYE_DISPLAY_NAMES, EYE_COLORS } from '@third-eye/config/constants';
+import { Clock, User, Bot, Eye } from 'lucide-react';
+import { useUI } from '@/contexts/UIContext';
 
 interface SessionSummary {
   sessionId: string;
@@ -22,36 +19,217 @@ interface SessionSummary {
   createdAt: Date;
 }
 
+interface ConversationEntry {
+  id: string;
+  timestamp: Date;
+  speaker: 'overseer' | 'agent' | 'human' | EyeName;
+  message: string;
+  metadata?: {
+    code?: string;
+    dataJson?: any;
+  };
+}
+
+interface ApiPipelineEvent {
+  id: string;
+  sessionId: string;
+  type: string;
+  eye?: string | null;
+  code?: string | null;
+  md?: string | null;
+  dataJson?: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+const KNOWN_EYES = new Set(Object.keys(EYE_DISPLAY_NAMES));
+
+function normalizeEyeName(value?: string | null): EyeName | undefined {
+  if (!value) return undefined;
+  if (KNOWN_EYES.has(value)) return value as EyeName;
+  const normalized = value.replace(/[-:]/g, '_');
+  if (KNOWN_EYES.has(normalized)) {
+    return normalized as EyeName;
+  }
+  return undefined;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return undefined;
+}
+
+function getString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
+}
+
+function firstString(values: Array<unknown>): string | undefined {
+  for (const value of values) {
+    const str = getString(value);
+    if (str) return str;
+  }
+  return undefined;
+}
+
+function deriveSpeaker(params: { type?: string; eye?: string; data?: Record<string, unknown>; speaker?: string }): ConversationEntry['speaker'] {
+  const candidateSpeaker = params.speaker || (params.data ? getString((params.data as any).speaker) : undefined);
+  if (candidateSpeaker === 'agent') return 'agent';
+  if (candidateSpeaker === 'human') return 'human';
+
+  const resolvedEye = normalizeEyeName(candidateSpeaker)
+    || normalizeEyeName(params.eye)
+    || (params.data ? normalizeEyeName(getString((params.data as any).eye)) : undefined);
+
+  if (resolvedEye) {
+    return resolvedEye;
+  }
+
+  if (params.type === 'agent_message' || params.type === 'agent_response') {
+    return 'agent';
+  }
+
+  if (params.type === 'user_input' || params.type === 'user_input_request' || params.type === 'user_input_received') {
+    return 'human';
+  }
+
+  return 'overseer';
+}
+
+function normalizeApiEvent(event: ApiPipelineEvent): ConversationEntry {
+  const data = asRecord(event.dataJson);
+  const message = firstString([
+    event.md,
+    data?.md,
+    data?.details,
+    data?.summary,
+  ]) || 'Processing...';
+
+  return {
+    id: event.id,
+    timestamp: new Date(event.createdAt),
+    speaker: deriveSpeaker({ type: event.type, eye: event.eye || undefined, data }),
+    message,
+    metadata: {
+      code: event.code || undefined,
+      dataJson: data,
+    },
+  };
+}
+
+function normalizeWebSocketPipelineMessage(message: WSMessage): ConversationEntry | null {
+  const payload = asRecord(message.data);
+  if (!payload) return null;
+
+  const result = asRecord(payload.result);
+  const ui = asRecord(payload.ui);
+  const timestampMs = typeof payload.timestamp === 'number' ? payload.timestamp : message.timestamp;
+
+  const idParts = [
+    getString(payload.runId),
+    getString(payload.eventType),
+    getString(payload.status),
+    getString(payload.eye),
+    timestampMs ? String(timestampMs) : undefined,
+  ].filter(Boolean);
+
+  const id = idParts.length > 0
+    ? `ws-${idParts.join(':')}`
+    : `ws-${typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : String(Date.now())}`;
+
+  const code = getString(payload.code) || (result ? getString(result.code) : undefined);
+
+  const messageText = firstString([
+    ui?.details,
+    ui?.summary,
+    ui?.title,
+    payload.md,
+    result?.md,
+    payload.error,
+  ]) || 'Processing...';
+
+  return {
+    id,
+    timestamp: new Date(timestampMs),
+    speaker: deriveSpeaker({
+      type: getString(payload.eventType) || message.type,
+      eye: getString(payload.eye),
+      data: payload,
+      speaker: getString(payload.speaker),
+    }),
+    message: messageText,
+    metadata: {
+      code: code || undefined,
+      dataJson: payload,
+    },
+  };
+}
+
+function getSpeakerColor(speaker: string): string {
+  if (speaker === 'overseer') return '#6366f1'; // indigo
+  if (speaker === 'agent') return '#10b981'; // green
+  if (speaker === 'human') return '#f59e0b'; // amber
+  return EYE_COLORS[speaker as EyeName] || '#8b5cf6'; // purple default
+}
+
+function getSpeakerIcon(speaker: string) {
+  if (speaker === 'agent') return <Bot className="h-4 w-4" />;
+  if (speaker === 'human') return <User className="h-4 w-4" />;
+  return <Eye className="h-4 w-4" />;
+}
+
 function MonitorContent() {
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get('sessionId');
+  const { selectedSessionId, setSelectedSession } = useUI();
+  const sessionIdFromQuery = searchParams.get('sessionId');
+  const sessionId = sessionIdFromQuery ?? selectedSessionId ?? null;
 
-  const [events, setEvents] = useState<PipelineEvent[]>([]);
+  const [entries, setEntries] = useState<ConversationEntry[]>([]);
   const [summary, setSummary] = useState<SessionSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'timeline' | 'eyes' | 'evidence' | 'contributions' | 'plan'>('dashboard');
-  const [activeEye, setActiveEye] = useState<EyeName | null>(null);
+  const [autoScroll, setAutoScroll] = useState(true);
+  const conversationEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (sessionIdFromQuery && sessionIdFromQuery !== selectedSessionId) {
+      setSelectedSession(sessionIdFromQuery);
+    }
+  }, [sessionIdFromQuery, selectedSessionId, setSelectedSession]);
+
+  // Auto-scroll effect
+  useEffect(() => {
+    if (autoScroll && conversationEndRef.current) {
+      conversationEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [entries, autoScroll]);
+
+  const upsertEntry = (entry: ConversationEntry) => {
+    setEntries((prev) => {
+      const existingIndex = prev.findIndex((item) => item.id === entry.id);
+      if (existingIndex >= 0) {
+        const updated = [...prev];
+        updated[existingIndex] = entry;
+        return updated;
+      }
+
+      const next = [...prev, entry];
+      next.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      return next;
+    });
+  };
 
   // WebSocket connection
-  const { isConnected, connectionStatus, lastMessage } = useWebSocket({
+  const { connectionStatus } = useWebSocket({
     sessionId: sessionId || undefined,
     onMessage: (message: WSMessage) => {
       console.log('[Monitor] Received WebSocket message:', message.type, message);
 
       // Handle real-time updates
-      if (message.type === 'pipeline_event' && message.data) {
-        const eventData = message.data as PipelineEvent;
-        setEvents(prev => {
-          // Avoid duplicates
-          const exists = prev.some(e => e.id === eventData.id);
-          if (exists) return prev;
-          return [...prev, eventData];
-        });
-
-        // Update active eye if event is for an eye
-        if (eventData.eye && !eventData.code?.startsWith('OK')) {
-          setActiveEye(eventData.eye as EyeName);
+      if (message.type === 'pipeline_event') {
+        const entry = normalizeWebSocketPipelineMessage(message);
+        if (entry) {
+          upsertEntry(entry);
         }
       } else if (message.type === 'session_update' && message.data) {
         // Refresh summary on session updates
@@ -59,7 +237,6 @@ function MonitorContent() {
       }
     },
     onError: (error) => {
-      // Better error logging
       const errorDetails = {
         type: error.type,
         message: error instanceof ErrorEvent ? error.message : 'Unknown error',
@@ -79,6 +256,7 @@ function MonitorContent() {
   useEffect(() => {
     if (!sessionId) {
       setLoading(false);
+      setEntries([]);
       return;
     }
 
@@ -115,20 +293,15 @@ function MonitorContent() {
           summaryStatus: summaryData?.status || summaryData?.data?.status
         });
 
-        // Handle envelope format from server (data might be wrapped)
-        const actualEvents = eventsData?.data || eventsData || [];
-        const actualSummary = summaryData?.data || summaryData;
+        // Backend returns envelope format: {success: true, data: [...]}
+        const initialEntries = Array.isArray(eventsData.data)
+          ? (eventsData.data as ApiPipelineEvent[]).map(normalizeApiEvent)
+          : [];
 
-        setEvents(Array.isArray(actualEvents) ? actualEvents : []);
-        setSummary(actualSummary);
+        initialEntries.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
 
-        // Detect active eye from most recent event
-        if (actualEvents.length > 0) {
-          const lastEvent = actualEvents[actualEvents.length - 1];
-          if (lastEvent.eye && !lastEvent.code?.startsWith('OK')) {
-            setActiveEye(lastEvent.eye as EyeName);
-          }
-        }
+        setEntries(initialEntries);
+        setSummary(summaryData.data);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'An error occurred';
         console.error('[Monitor] Failed to fetch initial data:', err);
@@ -149,58 +322,14 @@ function MonitorContent() {
       const response = await fetch(`${API_URL}/api/session/${sessionId}/summary`);
       if (response.ok) {
         const summaryData = await response.json();
-        setSummary(summaryData);
+        setSummary(summaryData.data);
       }
     } catch (err) {
       console.error('Failed to fetch summary:', err);
     }
   };
 
-  // Kill session handler
-  const handleKillSession = async () => {
-    if (!sessionId) return;
-    if (!confirm('Are you sure you want to kill this session? This cannot be undone.')) return;
-
-    try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/session/${sessionId}/kill`, {
-        method: 'POST',
-      });
-
-      if (response.ok) {
-        alert('Session killed successfully');
-        fetchSummary();
-      } else {
-        alert('Failed to kill session');
-      }
-    } catch (err) {
-      alert('Error killing session');
-      console.error(err);
-    }
-  };
-
-  // Rerun eye validation handler
-  const handleRerunEye = async (eye: string) => {
-    if (!sessionId) return;
-    if (!confirm(`Re-run validation for ${eye}?`)) return;
-
-    try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-      const response = await fetch(`${API_URL}/api/session/${sessionId}/rerun/${eye}`, {
-        method: 'POST',
-      });
-
-      if (response.ok) {
-        alert(`${eye} validation re-run initiated`);
-        fetchSummary();
-      } else {
-        alert(`Failed to re-run ${eye}`);
-      }
-    } catch (err) {
-      alert(`Error re-running ${eye}`);
-      console.error(err);
-    }
-  };
+  const conversationEntries = entries;
 
   if (!sessionId) {
     return (
@@ -220,7 +349,16 @@ function MonitorContent() {
         </div>
         <div className="mx-auto max-w-4xl px-6 py-16 text-center">
           <GlassCard className="py-12">
-            <p className="text-sm text-slate-400">Provide a sessionId query parameter to view session details.</p>
+            <p className="text-lg text-white mb-2">No Session Selected</p>
+            <p className="text-sm text-slate-400 mb-6">
+              Select a session to watch real-time agent conversations
+            </p>
+            <Link
+              href="/"
+              className="inline-flex items-center space-x-2 rounded-lg bg-brand-accent px-6 py-3 text-sm font-semibold text-white hover:bg-brand-accent/90 transition-colors"
+            >
+              <span>Back to Dashboard</span>
+            </Link>
           </GlassCard>
         </div>
       </div>
@@ -257,366 +395,157 @@ function MonitorContent() {
   }
 
   return (
-    <PersonaVoiceDecorator activeEye={activeEye}>
-      <div className="min-h-screen bg-brand-ink">
-        <div className="border-b border-brand-outline/60 bg-brand-paperElev/50">
-          <div className="mx-auto max-w-7xl px-6 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6">
-                <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
-                  ← Home
-                </Link>
-                <div>
-                  <div className="flex items-center gap-3">
-                    <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Real-time Monitor</p>
-                    <div className="flex items-center gap-2">
-                      <div className={`h-2 w-2 rounded-full ${
-                        connectionStatus === 'connected' ? 'bg-green-400 animate-pulse' :
-                        connectionStatus === 'reconnecting' ? 'bg-yellow-400 animate-pulse' :
-                        'bg-red-400'
-                      }`} />
-                      <span className="text-xs text-slate-500">
-                        {connectionStatus === 'connected' ? 'Live' :
-                         connectionStatus === 'reconnecting' ? 'Reconnecting...' :
-                         'Disconnected'}
-                      </span>
-                    </div>
+    <div className="min-h-screen bg-brand-ink">
+      <div className="border-b border-brand-outline/60 bg-brand-paperElev/50">
+        <div className="mx-auto max-w-7xl px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <Link href="/" className="text-slate-400 transition-colors hover:text-brand-accent">
+                ← Home
+              </Link>
+              <div>
+                <div className="flex items-center gap-3">
+                  <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Real-time Monitor</p>
+                  <div className="flex items-center gap-2">
+                    <div className={`h-2 w-2 rounded-full ${
+                      connectionStatus === 'connected' ? 'bg-green-400 animate-pulse' :
+                      connectionStatus === 'reconnecting' ? 'bg-yellow-400 animate-pulse' :
+                      'bg-red-400'
+                    }`} />
+                    <span className="text-xs text-slate-500">
+                      {connectionStatus === 'connected' ? 'Live' :
+                       connectionStatus === 'reconnecting' ? 'Reconnecting...' :
+                       'Disconnected'}
+                    </span>
                   </div>
-                  <h1 className="mt-1 text-2xl font-semibold text-white">Session {sessionId}</h1>
-                  {summary && (
-                    <p className="mt-1 text-sm text-slate-400">
-                      Status: {summary.status} · {summary.eventCount} events · Eyes: {summary.eyes.join(', ')}
-                    </p>
-                  )}
                 </div>
+                <h1 className="mt-1 text-2xl font-semibold text-white">Session {sessionId?.slice(0, 8)}...</h1>
+                {summary && (
+                  <p className="mt-1 text-sm text-slate-400">
+                    Status: {summary.status} · {summary.eventCount} events
+                    {summary.eyes && summary.eyes.length > 0 && ` · Eyes: ${summary.eyes.map(e => EYE_DISPLAY_NAMES[e as EyeName] || e).join(', ')}`}
+                  </p>
+                )}
               </div>
-              <button
-                onClick={handleKillSession}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
-              >
-                Kill Session
-              </button>
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={autoScroll}
+                  onChange={(e) => setAutoScroll(e.target.checked)}
+                  className="rounded border-brand-outline bg-brand-paper text-brand-accent focus:ring-brand-accent"
+                />
+                Auto-scroll
+              </label>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="mx-auto max-w-7xl px-6 py-8">
-          {(() => {
-            // Check if any event has Rinnegan plan data
-            const planEvent = events.find(e => e.eye === 'rinnegan' && e.dataJson?.plan_md);
-            const hasPlanData = !!planEvent;
-
-            // Build tabs array conditionally
-            const baseTabs: ('dashboard' | 'timeline' | 'eyes' | 'evidence' | 'contributions' | 'plan')[] =
-              ['dashboard', 'timeline', 'eyes', 'evidence', 'contributions'];
-            const tabs = hasPlanData ? [...baseTabs, 'plan'] : baseTabs;
-
-            return (
-              <div className="mb-6 flex gap-2 border-b border-brand-outline/40">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`rounded-t-xl px-4 py-2 text-sm font-medium capitalize transition ${
-                      activeTab === tab
-                        ? 'border-b-2 border-brand-accent bg-brand-paperElev/50 text-brand-accent'
-                        : 'text-slate-400 hover:bg-brand-paper/30 hover:text-slate-200'
-                    }`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-            );
-          })()}
+      <div className="mx-auto max-w-7xl px-6 py-8">
+        <GlassCard className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-white">Conversation Log</h2>
+            <div className="text-xs text-slate-500">
+              {conversationEntries.length} {conversationEntries.length === 1 ? 'message' : 'messages'}
+            </div>
+          </div>
 
           {loading ? (
             <div className="h-96 animate-pulse rounded-2xl border border-brand-outline/40 bg-brand-paper/60" />
+          ) : conversationEntries.length === 0 ? (
+            <div className="py-16 text-center">
+              <Eye className="h-12 w-12 mx-auto mb-4 text-slate-600" />
+              <p className="text-lg text-white mb-2">No Conversation Yet</p>
+              <p className="text-sm text-slate-400">
+                Waiting for agent to start communicating...
+              </p>
+            </div>
           ) : (
-            <>
-              {/* Debug Panel - Only show in development or when there's no data */}
-              {(events.length === 0 || !summary) && (
-                <GlassCard className="mb-6 border-yellow-500/40 bg-yellow-500/10">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-yellow-400 animate-pulse" />
-                      <h3 className="text-sm font-semibold text-yellow-200">Debug Information</h3>
-                    </div>
-                    <div className="space-y-2 text-xs text-slate-300 font-mono">
-                      <div>Session ID: <span className="text-yellow-200">{sessionId}</span></div>
-                      <div>WebSocket Status: <span className={
-                        connectionStatus === 'connected' ? 'text-green-400' :
-                        connectionStatus === 'reconnecting' ? 'text-yellow-400' : 'text-red-400'
-                      }>{connectionStatus}</span></div>
-                      <div>Events Loaded: <span className="text-yellow-200">{events.length}</span></div>
-                      <div>Summary Loaded: <span className="text-yellow-200">{summary ? 'Yes' : 'No'}</span></div>
-                      {summary && (
-                        <>
-                          <div>Summary Status: <span className="text-yellow-200">{summary.status}</span></div>
-                          <div>Summary Event Count: <span className="text-yellow-200">{summary.eventCount}</span></div>
-                          <div>Summary Eyes: <span className="text-yellow-200">{summary.eyes?.join(', ') || 'None'}</span></div>
-                        </>
-                      )}
-                      <div className="pt-2 border-t border-yellow-500/30">
-                        <div>API URL: <span className="text-yellow-200">{process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070'}</span></div>
-                        <div>WS URL: <span className="text-yellow-200">{process.env.NEXT_PUBLIC_WS_URL || 'ws://127.0.0.1:7070'}</span></div>
-                      </div>
-                    </div>
-                    {events.length === 0 && summary?.eventCount === 0 && (
-                      <div className="mt-3 pt-3 border-t border-yellow-500/30">
-                        <p className="text-sm text-yellow-200">
-                          This session has no events yet. Events will appear here when the MCP agent executes Eyes.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </GlassCard>
-              )}
-
-              {activeTab === 'dashboard' && (
-                <EyeDashboard sessionId={sessionId} />
-              )}
-
-              {activeTab === 'contributions' && (
-                <UserContributionMode
-                  sessionId={sessionId}
-                  onContribute={(contribution) => {
-                    console.log('User contribution:', contribution);
-                  }}
-                />
-              )}
-
-              {activeTab === 'timeline' && (
-                <GlassCard>
-              <div className="space-y-3">
-                {events.length === 0 ? (
-                  <p className="py-12 text-center text-sm text-slate-400">No events yet.</p>
-                ) : (
-                  events.map((event, index) => (
-                    <motion.div
-                      key={event.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="rounded-xl border border-brand-outline/30 bg-brand-paper p-4 text-sm"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-white">{event.eye || event.type}</span>
-                        <span className="text-xs text-slate-500">
-                          {new Date(event.createdAt).toLocaleString()}
-                        </span>
-                      </div>
-                      {(event.md || event.code) && (
-                        <p className="mt-2 text-slate-300">{event.md || event.code}</p>
-                      )}
-                    </motion.div>
-                  ))
-                )}
-              </div>
-            </GlassCard>
-              )}
-
-              {activeTab === 'eyes' && (
-                <GlassCard>
-              <div className="space-y-3">
-                {summary && summary.eyes && summary.eyes.length > 0 ? (
-                  summary.eyes.map((eyeName: string, index: number) => {
-                    const eyeEvents = events.filter(e => e.eye === eyeName);
-                    const lastEvent = eyeEvents[eyeEvents.length - 1];
-                    const status = lastEvent?.code?.startsWith('OK') ? 'success' :
-                                  lastEvent?.code?.startsWith('REJECT') ? 'error' : 'pending';
-
-                    return (
-                      <motion.div
-                        key={eyeName}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        className="rounded-xl border border-brand-outline/30 bg-brand-paper p-4"
-                      >
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`h-3 w-3 rounded-full ${
-                                status === 'success' ? 'bg-green-400' :
-                                status === 'error' ? 'bg-red-400' : 'bg-yellow-400'
-                              } ${status === 'pending' ? 'animate-pulse' : ''}`}
-                            />
-                            <h3 className="font-semibold text-white capitalize">
-                              {EYE_DISPLAY_NAMES[eyeName as EyeName] || eyeName.replace(/_/g, ' ')}
-                            </h3>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="rounded-full bg-brand-accent/20 px-3 py-1 text-xs text-brand-accent">
-                              {eyeEvents.length} {eyeEvents.length === 1 ? 'event' : 'events'}
-                            </span>
-                            <button
-                              onClick={() => handleRerunEye(eyeName)}
-                              className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700"
-                            >
-                              Re-run
-                            </button>
-                          </div>
-                        </div>
-
-                        {eyeEvents.length > 0 && (
-                          <div className="space-y-2">
-                            {eyeEvents.slice(-3).map((event) => (
-                              <div key={event.id} className="rounded-lg bg-brand-ink/50 p-2 text-sm">
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="text-xs text-slate-500">{event.code || 'Processing'}</span>
-                                  <span className="text-xs text-slate-500">
-                                    {new Date(event.createdAt).toLocaleTimeString()}
-                                  </span>
-                                </div>
-                                <div className="text-slate-300 line-clamp-2">{event.md || 'Processing...'}</div>
-                              </div>
-                            ))}
-                            {eyeEvents.length > 3 && (
-                              <div className="text-xs text-center text-slate-500 pt-1">
-                                +{eyeEvents.length - 3} more events
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </motion.div>
-                    );
-                  })
-                ) : (
-                  <div className="py-12 text-center">
-                    <p className="text-sm text-slate-400">No Eyes executed yet.</p>
-                  </div>
-                )}
-              </div>
-            </GlassCard>
-              )}
-
-              {activeTab === 'evidence' && (
-                <GlassCard>
-              <div className="space-y-3">
-                {events.filter(e => e.dataJson && (
-                  e.dataJson.citations ||
-                  e.dataJson.evidence ||
-                  e.dataJson.confidence !== undefined ||
-                  e.dataJson.claimValidation
-                )).length > 0 ? (
-                  events
-                    .filter(e => e.dataJson && (
-                      e.dataJson.citations ||
-                      e.dataJson.evidence ||
-                      e.dataJson.confidence !== undefined ||
-                      e.dataJson.claimValidation
-                    ))
-                    .map((event, index) => {
-                      const data = event.dataJson!;
-                      return (
-                        <motion.div
-                          key={event.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          className="rounded-xl border border-brand-outline/30 bg-brand-paper p-4"
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold text-white">
-                              {EYE_DISPLAY_NAMES[event.eye as EyeName] || event.eye || event.type}
-                            </span>
-                            {data.confidence !== undefined && (
-                              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                data.confidence > 0.8 ? 'bg-green-500/20 text-green-400' :
-                                data.confidence > 0.5 ? 'bg-yellow-500/20 text-yellow-400' :
-                                'bg-red-500/20 text-red-400'
-                              }`}>
-                                {Math.round((data.confidence as number) * 100)}% confidence
-                              </span>
-                            )}
-                          </div>
-
-                          {data.citations && Array.isArray(data.citations) && (
-                            <div className="mt-3 space-y-2">
-                              <div className="text-xs font-medium text-slate-400">Citations:</div>
-                              {(data.citations as string[]).map((citation, i) => (
-                                <div key={i} className="text-sm text-slate-300 pl-3 border-l-2 border-brand-accent/40 py-1">
-                                  {citation}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                          {data.evidence && (
-                            <div className="mt-3 text-sm text-slate-300">
-                              <div className="text-xs font-medium text-slate-400 mb-1">Evidence:</div>
-                              <div className="rounded bg-brand-ink/50 p-2 whitespace-pre-wrap">{data.evidence as string}</div>
-                            </div>
-                          )}
-
-                          {/* Use Evidence Lens for claim validation */}
-                          {event.md && data.claimValidation && (
-                            <div className="mt-3">
-                              <div className="text-xs font-medium text-slate-400 mb-2">Evidence Lens:</div>
-                              <EvidenceLens
-                                draft={event.md}
-                                claims={Object.entries(data.claimValidation as Record<string, boolean>).map(([text, cited]) => ({
-                                  start: event.md!.indexOf(text),
-                                  end: event.md!.indexOf(text) + text.length,
-                                  citation: cited ? (data.citations as string[])?.[0] || 'Evidence available' : null,
-                                  confidence: data.confidence as number | undefined,
-                                }))}
-                                expertMode={true}
-                              />
-                            </div>
-                          )}
-
-                          {/* Fallback for simple claim validation without Evidence Lens */}
-                          {data.claimValidation && !event.md && (
-                            <div className="mt-3 space-y-1">
-                              <div className="text-xs font-medium text-slate-400 mb-1">Claim Validation:</div>
-                              {Object.entries(data.claimValidation as Record<string, boolean>).map(([claim, isValid]) => (
-                                <div key={claim} className="flex items-start gap-2 text-sm">
-                                  <span className={`mt-0.5 ${isValid ? 'text-green-400' : 'text-red-400'}`}>
-                                    {isValid ? '✓' : '✗'}
-                                  </span>
-                                  <span className="text-slate-300">{claim}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </motion.div>
-                      );
-                    })
-                ) : (
-                  <div className="py-12 text-center">
-                    <p className="text-sm text-slate-400">
-                      No evidence data available yet. Evidence is collected by Tenseigan and Byakugan Eyes.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </GlassCard>
-              )}
-
-              {activeTab === 'plan' && (() => {
-                // Find the most recent Rinnegan event with plan data
-                const planEvent = events.find(e => e.eye === 'rinnegan' && e.dataJson?.plan_md);
-                const planMd = planEvent?.dataJson?.plan_md as string | undefined;
+            <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+              {conversationEntries.map((entry, index) => {
+                const speakerColor = getSpeakerColor(entry.speaker);
+                const speakerName = entry.speaker === 'overseer' ? 'Overseer' :
+                                   entry.speaker === 'agent' ? 'Agent' :
+                                   entry.speaker === 'human' ? 'Human' :
+                                   EYE_DISPLAY_NAMES[entry.speaker as EyeName] || entry.speaker;
 
                 return (
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    key={entry.id}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ delay: index * 0.02 }}
+                    className="group"
                   >
-                    <PlanRenderer planMd={planMd} />
+                    <div className="flex gap-3">
+                      <div
+                        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white"
+                        style={{ backgroundColor: speakerColor }}
+                      >
+                        {getSpeakerIcon(entry.speaker)}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span
+                            className="font-semibold text-sm"
+                            style={{ color: speakerColor }}
+                          >
+                            {speakerName}
+                          </span>
+                          <span className="text-xs text-slate-500 flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {entry.timestamp.toLocaleTimeString()}
+                          </span>
+                          {entry.metadata?.code && (
+                            <span className="text-xs px-2 py-0.5 rounded bg-brand-paper text-slate-400 font-mono">
+                              {entry.metadata.code}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="rounded-lg bg-brand-paper/60 border border-brand-outline/30 p-3">
+                          <p className="text-sm text-slate-300 whitespace-pre-wrap break-words">
+                            {entry.message}
+                          </p>
+
+                          {entry.metadata?.dataJson && Object.keys(entry.metadata.dataJson).length > 0 && (
+                            <details className="mt-2 text-xs">
+                              <summary className="cursor-pointer text-slate-500 hover:text-slate-400">
+                                Technical Data
+                              </summary>
+                              <pre className="mt-2 p-2 rounded bg-brand-ink/50 text-slate-400 overflow-x-auto">
+                                {JSON.stringify(entry.metadata.dataJson, null, 2)}
+                              </pre>
+                            </details>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </motion.div>
                 );
-              })()}
-            </>
+              })}
+
+              <div ref={conversationEndRef} />
+            </div>
           )}
-        </div>
+        </GlassCard>
       </div>
-    </PersonaVoiceDecorator>
+    </div>
   );
 }
+
+
+// TODO: Add speaker detection in event mapping:
+// const events = pipelineEvents.map(event => ({
+//   ...event,
+//   speaker: event.type === 'user_input' ? 'User' :
+//            event.type === 'eye_call' ? 'Assistant' : 'System',
+//   icon: event.type === 'user_input' ? '👤' :
+//         event.type === 'eye_call' ? getEyeIcon(event.eye) : '⚙️'
+// }));
 
 export default function MonitorPage() {
   return (

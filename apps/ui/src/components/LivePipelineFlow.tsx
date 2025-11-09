@@ -2,7 +2,127 @@
 
 import { useState, useEffect } from 'react';
 import { PipelineVisualization } from './monitor/PipelineVisualization';
-import { useWebSocket } from '@/hooks/useWebSocket';
+import { useWebSocket, type WSMessage } from '@/hooks/useWebSocket';
+
+type NormalizedEvent = Record<string, unknown> & {
+  id: string;
+  type?: string;
+  eye?: string;
+  code?: string;
+  md?: string;
+  createdAt: number;
+  dataJson?: Record<string, unknown>;
+  raw: Record<string, unknown>;
+};
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return undefined;
+}
+
+function getString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
+}
+
+function firstString(values: Array<unknown>): string | undefined {
+  for (const value of values) {
+    const str = getString(value);
+    if (str) {
+      return str;
+    }
+  }
+  return undefined;
+}
+
+function normalizeApiPipelineEvent(event: Record<string, unknown>): NormalizedEvent {
+  const id = getString(event.id) || `api-${Date.now()}`;
+  const createdAtValue = event.createdAt;
+  const createdAt = typeof createdAtValue === 'number'
+    ? createdAtValue
+    : typeof createdAtValue === 'string'
+      ? Date.parse(createdAtValue)
+      : Date.now();
+
+  const dataJson = asRecord(event.dataJson);
+  const result = asRecord(event.result);
+
+  const code = getString(event.code)
+    || (dataJson ? getString((dataJson as any).code) : undefined)
+    || (result ? getString((result as any).code) : undefined);
+
+  const md = firstString([
+    event.md,
+    dataJson?.md,
+    result?.md,
+    (dataJson as any)?.details,
+    (dataJson as any)?.summary,
+  ]);
+
+  const eye = getString(event.eye)
+    || (dataJson ? getString((dataJson as any).eye) : undefined)
+    || (result ? getString((result as any).eye) : undefined);
+
+  return {
+    id,
+    type: getString(event.type),
+    eye,
+    code,
+    md,
+    createdAt: Number.isFinite(createdAt) ? createdAt : Date.now(),
+    dataJson,
+    raw: event,
+  };
+}
+
+function normalizeWebSocketEvent(message: WSMessage): NormalizedEvent | null {
+  const payload = asRecord(message.data);
+  if (!payload) {
+    return null;
+  }
+
+  const result = asRecord(payload.result);
+  const ui = asRecord(payload.ui);
+  const timestamp = typeof payload.timestamp === 'number' ? payload.timestamp : message.timestamp;
+
+  const idParts = [
+    getString(payload.runId),
+    getString(payload.eventType) || message.type,
+    getString(payload.status),
+    getString(payload.eye),
+    timestamp ? String(timestamp) : undefined,
+  ].filter(Boolean);
+
+  const id = idParts.length > 0
+    ? `ws-${idParts.join(':')}`
+    : `ws-${typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : String(Date.now())}`;
+
+  const code = getString(payload.code)
+    || (result ? getString(result.code) : undefined);
+
+  const md = firstString([
+    payload.md,
+    result?.md,
+    ui?.summary,
+    ui?.details,
+    payload.error,
+  ]);
+
+  const eye = getString(payload.eye)
+    || (result ? getString(result.eye) : undefined);
+
+  return {
+    id,
+    type: getString(payload.eventType) || message.type,
+    eye,
+    code,
+    md,
+    createdAt: timestamp,
+    dataJson: payload,
+    raw: payload,
+  };
+}
 
 interface LivePipelineFlowProps {
   sessionId: string;
@@ -10,7 +130,9 @@ interface LivePipelineFlowProps {
 }
 
 export function LivePipelineFlow({ sessionId, initialEvents = [] }: LivePipelineFlowProps) {
-  const [events, setEvents] = useState<Array<Record<string, unknown>>>(initialEvents);
+  const [events, setEvents] = useState<NormalizedEvent[]>(() =>
+    initialEvents.map((event) => normalizeApiPipelineEvent(event))
+  );
   const [isConnected, setIsConnected] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
@@ -21,9 +143,33 @@ export function LivePipelineFlow({ sessionId, initialEvents = [] }: LivePipeline
   }, [wsConnected]);
 
   useEffect(() => {
+    if (initialEvents.length > 0) {
+      const normalized = initialEvents.map((event) => normalizeApiPipelineEvent(event));
+      normalized.sort((a, b) => a.createdAt - b.createdAt);
+      setEvents(normalized);
+    }
+  }, [initialEvents]);
+
+  useEffect(() => {
     if (lastMessage) {
       if (lastMessage.type === 'pipeline_event' || lastMessage.type === 'eye_complete') {
-        setEvents(prev => [...prev, lastMessage]);
+        const normalized = normalizeWebSocketEvent(lastMessage);
+        if (!normalized) {
+          return;
+        }
+
+        setEvents((prev) => {
+          const existingIndex = prev.findIndex((event) => event.id === normalized.id);
+          if (existingIndex >= 0) {
+            const updated = [...prev];
+            updated[existingIndex] = normalized;
+            return updated;
+          }
+
+          const next = [...prev, normalized];
+          next.sort((a, b) => a.createdAt - b.createdAt);
+          return next;
+        });
       } else if (lastMessage.type === 'pipeline_complete') {
         console.log('Pipeline completed:', lastMessage);
       }
@@ -36,7 +182,15 @@ export function LivePipelineFlow({ sessionId, initialEvents = [] }: LivePipeline
         const response = await fetch(`${API_URL}/api/session/${sessionId}/events`);
         if (response.ok) {
           const data = await response.json();
-          setEvents(data.events || data || []);
+          const payload = Array.isArray(data?.data)
+            ? data.data
+            : Array.isArray(data?.events)
+              ? data.events
+              : [];
+
+          const normalized = payload.map((event: Record<string, unknown>) => normalizeApiPipelineEvent(event));
+          normalized.sort((a, b) => a.createdAt - b.createdAt);
+          setEvents(normalized);
         }
       } catch (err) {
         console.error('Failed to fetch initial events:', err);

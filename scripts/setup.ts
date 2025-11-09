@@ -140,11 +140,11 @@ async function seedDatabase() {
 
   try {
     // Import and run seed script
-    const { seedDatabase: runSeed } = await import('./seed-database.js');
-    await runSeed();
+    const { seedDefaults } = await import('../packages/db/defaults/index.ts');
+    await seedDefaults({ log: (message) => log(message, 'green') });
   } catch (error) {
     log(`✗ Seeding failed: ${error instanceof Error ? error.message : 'Unknown error'}`, 'red');
-    log('  You can manually seed later with: bun run scripts/seed-database.ts', 'yellow');
+    log('  You can manually seed later with: bun run scripts/seed-defaults.ts', 'yellow');
   }
 }
 

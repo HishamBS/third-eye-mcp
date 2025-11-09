@@ -4,6 +4,7 @@
   "type": "module",
   "main": "index.ts",
   "dependencies": {
+    "@third-eye/types": "workspace:*",
     "drizzle-orm": "^0.36.4"
   },
   "devDependencies": {

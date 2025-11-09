@@ -93,7 +93,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         try {
           const message: WSMessage = JSON.parse(event.data);
 
-          // Handle pong messages
+          // Handle server ping - respond with pong immediately
+          if (message.type === 'ping') {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
+            }
+            return;
+          }
+
+          // Handle pong messages (responses to our client-initiated pings)
           if (message.type === 'pong') {
             // Connection is alive
             return;

@@ -2,11 +2,12 @@
 
 import { spawn, exec, execSync } from 'child_process';
 import { resolve } from 'path';
-import { existsSync, mkdirSync, writeFileSync, readFileSync, rmSync, appendFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, readFileSync, rmSync, appendFileSync, readdirSync } from 'fs';
 import { homedir } from 'os';
 import { select, input, confirm } from '@inquirer/prompts';
 import ora, { Ora } from 'ora';
 import kleur from 'kleur';
+import { CLI_BIN, CLI_EXEC, TOOL_NAME, DATA_DIRECTORY } from '@third-eye/types';
 
 const VERSION = process.env.npm_package_version || JSON.parse(
   readFileSync(resolve(import.meta.dir, '../package.json'), 'utf-8')
@@ -14,7 +15,7 @@ const VERSION = process.env.npm_package_version || JSON.parse(
 const SERVER_PORT = process.env.PORT ? parseInt(process.env.PORT) : 7070;
 const UI_PORT = process.env.UI_PORT ? parseInt(process.env.UI_PORT) : 3300;
 
-const THIRD_EYE_DIR = resolve(homedir(), '.third-eye-mcp');
+const THIRD_EYE_DIR = resolve(homedir(), DATA_DIRECTORY);
 const PIDS_DIR = resolve(THIRD_EYE_DIR, 'pids');
 const LOGS_DIR = resolve(THIRD_EYE_DIR, 'logs');
 const SERVER_PID_FILE = resolve(PIDS_DIR, 'server.pid');
@@ -41,8 +42,8 @@ ${kleur.gray('━━━━━━━━━━━━━━━━━━━━━━
 ${kleur.white('Local-first AI orchestration layer for multi-provider LLM workflows')}
 
 ${kleur.cyan('USAGE:')}
-  bunx third-eye-mcp <command> [options]
-  third-eye-mcp <command> [options]   ${kleur.gray('(after global install)')}
+  ${CLI_EXEC} <command> [options]
+  ${CLI_BIN} <command> [options]   ${kleur.gray('(after global install)')}
 
 ${kleur.cyan('COMMANDS:')}
   up              Start services (detached by default)
@@ -66,14 +67,14 @@ ${kleur.cyan('OPTIONS:')}
   --tail          Tail logs in real-time
 
 ${kleur.cyan('EXAMPLES:')}
-  bunx third-eye-mcp up
-  bunx third-eye-mcp up --foreground --verbose
-  bunx third-eye-mcp up --no-ui --port 8080
-  bunx third-eye-mcp status
-  bunx third-eye-mcp logs --tail
-  bunx third-eye-mcp stop
-  bunx third-eye-mcp restart
-  bunx third-eye-mcp release:ship
+  ${CLI_EXEC} up
+  ${CLI_EXEC} up --foreground --verbose
+  ${CLI_EXEC} up --no-ui --port 8080
+  ${CLI_EXEC} status
+  ${CLI_EXEC} logs --tail
+  ${CLI_EXEC} stop
+  ${CLI_EXEC} restart
+  ${CLI_EXEC} release:ship
 
 For documentation: ${kleur.underline('https://github.com/third-eye-mcp')}
 `);
@@ -117,6 +118,15 @@ function parseArgs(): CliArgs {
   return parsed;
 }
 
+function commandExists(command: string): boolean {
+  try {
+    execSync(process.platform === 'win32' ? `where ${command}` : `command -v ${command}`, { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function ensureDirectories() {
   [THIRD_EYE_DIR, PIDS_DIR, LOGS_DIR].forEach(dir => {
     if (!existsSync(dir)) {
@@ -125,52 +135,148 @@ function ensureDirectories() {
   });
 }
 
+function hasNodeModules(path: string): boolean {
+  try {
+    return existsSync(path) && readdirSync(path).length > 0;
+  } catch {
+    return false;
+  }
+}
+
+function runInstallCommand(command: string, args: string[], cwd: string, label: string, verbose: boolean): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (verbose) {
+      console.log(`📦 ${label}`);
+    } else {
+      console.log(`   • ${label}`);
+    }
+
+    const child = spawn(command, args, {
+      cwd,
+      stdio: verbose ? 'inherit' : 'pipe',
+    });
+
+    let output = '';
+    if (!verbose) {
+      child.stdout?.on('data', (chunk) => {
+        output += chunk.toString();
+      });
+      child.stderr?.on('data', (chunk) => {
+        output += chunk.toString();
+      });
+    }
+
+    child.on('error', (error) => {
+      reject(error);
+    });
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        if (!verbose) {
+          console.log('      ✓ done');
+        }
+        resolve();
+      } else {
+        if (!verbose && output.trim().length > 0) {
+          console.error(output.trim());
+        }
+        const nodeModulesPath = resolve(cwd, 'node_modules');
+        if (hasNodeModules(nodeModulesPath)) {
+          console.warn(`⚠️  ${command} ${args.join(' ')} exited with code ${code}, but dependencies appear to be installed.`);
+          resolve();
+        } else {
+          reject(new Error(`${command} ${args.join(' ')} exited with code ${code}`));
+        }
+      }
+    });
+  });
+}
+
+async function ensureDependencies(verbose: boolean) {
+  const projectRoot = getProjectRoot();
+  const rootNodeModules = resolve(projectRoot, 'node_modules');
+  const uiNodeModules = resolve(projectRoot, 'apps/ui/node_modules');
+
+  const needsRootInstall = !hasNodeModules(rootNodeModules);
+  if (needsRootInstall) {
+    await installWithFallback(projectRoot, 'root dependencies', verbose);
+  } else if (verbose) {
+    console.log('📦 Root dependencies already installed');
+  }
+
+  const needsUiInstall = !hasNodeModules(uiNodeModules);
+  if (needsUiInstall) {
+    await installWithFallback(resolve(projectRoot, 'apps/ui'), 'UI dependencies', verbose);
+  } else if (verbose) {
+    console.log('📦 UI dependencies already installed');
+  }
+}
+
+async function installWithFallback(cwd: string, label: string, verbose: boolean) {
+  const strategies: Array<{ cmd: string; args: string[]; display: string }> = [];
+
+  if (commandExists('bun')) strategies.push({ cmd: 'bun', args: ['install'], display: 'bun install' });
+  if (commandExists('pnpm')) strategies.push({ cmd: 'pnpm', args: ['install'], display: 'pnpm install' });
+  if (commandExists('npm')) strategies.push({ cmd: 'npm', args: ['install'], display: 'npm install' });
+
+  if (strategies.length === 0) {
+    throw new Error('No package manager found (bun/pnpm/npm). Install one before running the CLI.');
+  }
+
+  const labelPrefix = `Installing ${label}`;
+  let lastError: Error | null = null;
+
+  for (const strategy of strategies) {
+    try {
+      await runInstallCommand(strategy.cmd, strategy.args, cwd, `${labelPrefix} (${strategy.display})...`, verbose);
+      // Verify install succeeded by checking node_modules
+      const nodeModulesPath = resolve(cwd, 'node_modules');
+      if (hasNodeModules(nodeModulesPath)) {
+        return;
+      }
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (verbose) {
+        console.warn(`⚠️  ${strategy.display} failed: ${lastError.message}`);
+      }
+    }
+  }
+
+  throw lastError ?? new Error(`Failed to install dependencies for ${label}`);
+}
+
 async function prepareDatabase(verbose: boolean) {
   const start = Date.now();
 
   try {
-    const [{ getDb, personas, mcpIntegrations }, { count }, { seedDatabase }, { seedIntegrations }] = await Promise.all([
+    const [{ getDb, personas, mcpIntegrations }, { count }, { seedDefaults }] = await Promise.all([
       import('@third-eye/db'),
       import('drizzle-orm'),
-      import('../scripts/seed-database.ts'),
-      import('../scripts/seed-integrations.ts')
+      import('../packages/db/defaults/index.ts')
     ]);
 
     const { db, dbPath } = getDb();
+    const scopedLog = verbose ? (message: string) => console.log(`   ${message}`) : () => {};
+    const report = await seedDefaults({ log: scopedLog });
 
     const personaCounts = await db
       .select({ value: count() })
       .from(personas)
       .limit(1);
-
     const personaCount = personaCounts[0]?.value ?? 0;
-    let seeded = false;
 
-    if (personaCount === 0) {
-      await seedDatabase();
-      seeded = true;
-    }
-
-    // Always check and seed integrations
     const integrationCounts = await db
       .select({ value: count() })
       .from(mcpIntegrations)
       .limit(1);
-
     const integrationCount = integrationCounts[0]?.value ?? 0;
-    let integrationsSeeded = false;
-
-    if (integrationCount === 0) {
-      await seedIntegrations();
-      integrationsSeeded = true;
-    }
 
     if (verbose) {
       const duration = ((Date.now() - start) / 1000).toFixed(1);
       console.log('\n🗄  Database ready');
       console.log(`   Path: ${dbPath}`);
-      console.log(`   Personas: ${seeded ? 'seeded' : personaCount}`);
-      console.log(`   Integrations: ${integrationsSeeded ? 'seeded (9 tools)' : integrationCount}`);
+      console.log(`   Personas: ${report.personas ? 'seeded defaults' : personaCount}`);
+      console.log(`   Integrations: ${report.integrations ? 'seeded defaults' : integrationCount}`);
       console.log(`   Prep time: ${duration}s\n`);
     }
   } catch (error) {
@@ -453,6 +559,7 @@ async function startServices() {
     console.log(kleur.gray('━'.repeat(60)));
   }
 
+  await ensureDependencies(!args.quiet);
   checkEnvironment();
   await prepareDatabase(!args.quiet);
   await killPortProcesses([args.port || SERVER_PORT, args.uiPort || UI_PORT]);
@@ -532,17 +639,17 @@ async function startServices() {
     if (!args.noUi) {
       console.log(`• UI:     ${kleur.cyan(`http://127.0.0.1:${args.uiPort || UI_PORT}`)} ${kleur.green('✓')}`);
     }
-    console.log(`• DB:     ${kleur.cyan('~/.third-eye-mcp/mcp.db')}`);
-    console.log(`• Logs:   ${kleur.cyan('~/.third-eye-mcp/logs/')}`);
+    console.log(`• DB:     ${kleur.cyan(`~/${DATA_DIRECTORY}/mcp.db`)}`);
+    console.log(`• Logs:   ${kleur.cyan(`~/${DATA_DIRECTORY}/logs/`)}`);
     if (!args.foreground) {
       const serverPid = getPid(SERVER_PID_FILE);
       const uiPid = !args.noUi ? getPid(UI_PID_FILE) : null;
       console.log(`• PIDs:   server(${serverPid})${uiPid ? ` ui(${uiPid})` : ''}`);
     }
     console.log(`\n${kleur.cyan('📖 Next steps:')}`);
-    console.log(`   ${kleur.yellow('bunx third-eye-mcp status')}  - Check status`);
-    console.log(`   ${kleur.yellow('bunx third-eye-mcp logs')}    - View logs`);
-    console.log(`   ${kleur.yellow('bunx third-eye-mcp stop')}    - Stop services`);
+    console.log(`   ${kleur.yellow(`${CLI_EXEC} status`)}  - Check status`);
+    console.log(`   ${kleur.yellow(`${CLI_EXEC} logs`)}    - View logs`);
+    console.log(`   ${kleur.yellow(`${CLI_EXEC} stop`)}    - Stop services`);
 
     if (args.foreground) {
       console.log(kleur.gray('\nRunning in foreground. Press Ctrl+C to stop.'));
@@ -684,6 +791,7 @@ async function restartServices() {
 }
 
 async function startMCPServer() {
+  await ensureDependencies(true);
   const projectRoot = getProjectRoot();
   console.log('🧿 Starting Third Eye MCP Server (stdio mode)...\n');
 
@@ -842,7 +950,7 @@ async function runReleaseAssistant() {
 
 async function resetData() {
   const confirmed = await confirm({
-    message: 'This will permanently delete all data in ~/.third-eye-mcp. Continue?',
+    message: `This will permanently delete all data in ~/${DATA_DIRECTORY}. Continue?`,
     default: false,
   });
 
@@ -854,7 +962,7 @@ async function resetData() {
   try {
     rmSync(THIRD_EYE_DIR, { recursive: true, force: true });
     console.log('✅ Data reset successfully.');
-    console.log('💡 Run "bunx third-eye-mcp up" to reinitialize.');
+    console.log(`💡 Run "${CLI_EXEC} up" to reinitialize.`);
   } catch (error) {
     console.error('❌ Failed to reset data:', error);
     process.exit(1);
@@ -899,7 +1007,7 @@ async function main() {
         if (process.argv[3] === 'open') {
           await openDbBrowser();
         } else {
-          console.error('❌ Unknown db command. Try: bunx third-eye-mcp db open');
+          console.error(`❌ Unknown db command. Try: ${CLI_EXEC} db open`);
           process.exit(1);
         }
         break;
@@ -923,7 +1031,7 @@ async function main() {
     }
   } catch (error) {
     console.error('❌ Command failed:', error);
-    console.error('\n💡 For help, run: bunx third-eye-mcp --help');
+    console.error(`\n💡 For help, run: ${CLI_EXEC} --help`);
     process.exit(1);
   }
 }

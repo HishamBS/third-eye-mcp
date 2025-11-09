@@ -1,9 +1,0 @@
-{
-  "folders": [
-    { "path": "." }
-  ],
-  "settings": {
-    "python.pythonPath": "${workspaceFolder}/.venv/bin/python",
-    "eslint.workingDirectories": [{ "mode": "auto" }]
-  }
-}

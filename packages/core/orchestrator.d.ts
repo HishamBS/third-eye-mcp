@@ -17,7 +17,15 @@ export declare class EyeOrchestrator {
      * 4) Parse and validate response envelope
      * 5) Persist run with metrics; return envelope
      */
-    runEye(eyeName: string, input: string, sessionId?: string): Promise<BaseEnvelope>;
+    runEye(eyeName: string, input: string, sessionId?: string, options?: {
+        providerOverride?: {
+            provider: string;
+            model: string;
+            label?: string;
+        };
+        temperature?: number;
+        maxTokens?: number;
+    }): Promise<BaseEnvelope>;
     /**
      * Run complete pipeline (all Eyes in sequence)
      */

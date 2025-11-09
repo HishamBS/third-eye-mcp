@@ -1,5 +1,6 @@
 import { Context, Next } from 'hono';
 import { z, ZodSchema } from 'zod';
+import { PROVIDERS, EYES } from '@third-eye/types';
 
 /**
  * Input Validation Middleware
@@ -169,12 +170,13 @@ setInterval(() => {
 export const schemas = {
   // MCP Operations
   // GOLDEN RULE #1: Only accept 'task' - NO direct Eye execution allowed
-  // .strict() ensures unknown fields like 'eye' are REJECTED
+  // Allow 'strictness' and other configuration fields from UI
   mcpRun: z.object({
     task: z.string().min(1, 'Task is required'),
     sessionId: z.string().optional(),
     context: z.record(z.unknown()).optional(), // Optional additional context
-  }).strict(),
+    strictness: z.any().optional(), // Strictness settings from UI
+  }),
 
   // Session Management
   sessionCreate: z.object({
@@ -198,7 +200,7 @@ export const schemas = {
 
   // Provider Keys
   providerKeyCreate: z.object({
-    provider: z.enum(['groq', 'openrouter', 'ollama', 'lmstudio']),
+    provider: z.enum(PROVIDERS),
     label: z.string().min(1).max(100),
     apiKey: z.string().min(1),
     metadata: z.object({
@@ -218,19 +220,19 @@ export const schemas = {
 
   // Routing Configuration
   routingCreate: z.object({
-    eye: z.enum(['overseer', 'sharingan', 'prompt-helper', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan']),
-    primaryProvider: z.enum(['groq', 'openrouter', 'ollama', 'lmstudio']),
+    eye: z.enum(EYES),
+    primaryProvider: z.enum(PROVIDERS),
     primaryModel: z.string().min(1),
-    fallbackProvider: z.enum(['groq', 'openrouter', 'ollama', 'lmstudio']).optional(),
+    fallbackProvider: z.enum(PROVIDERS).optional(),
     fallbackModel: z.string().optional(),
     temperature: z.number().min(0).max(2).optional(),
     maxTokens: z.number().int().positive().optional(),
   }),
 
   routingUpdate: z.object({
-    primaryProvider: z.enum(['groq', 'openrouter', 'ollama', 'lmstudio']).optional(),
+    primaryProvider: z.enum(PROVIDERS).optional(),
     primaryModel: z.string().min(1).optional(),
-    fallbackProvider: z.enum(['groq', 'openrouter', 'ollama', 'lmstudio']).optional(),
+    fallbackProvider: z.enum(PROVIDERS).optional(),
     fallbackModel: z.string().optional(),
     temperature: z.number().min(0).max(2).optional(),
     maxTokens: z.number().int().positive().optional(),
@@ -238,7 +240,7 @@ export const schemas = {
 
   // Personas
   personaCreate: z.object({
-    eye: z.enum(['overseer', 'sharingan', 'prompt-helper', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan']),
+    eye: z.enum(EYES),
     version: z.number().int().positive(),
     content: z.string().min(10),
     active: z.boolean().default(false),
@@ -253,7 +255,7 @@ export const schemas = {
   pipelineCreate: z.object({
     name: z.string().min(1).max(100),
     description: z.string().max(500).optional(),
-    eyeFlow: z.array(z.enum(['overseer', 'sharingan', 'prompt-helper', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan'])).min(1),
+    eyeFlow: z.array(z.enum(EYES)).min(1),
     conditions: z.object({
       taskType: z.enum(['code', 'text', 'analysis']).optional(),
       complexity: z.enum(['simple', 'medium', 'complex']).optional(),
@@ -264,7 +266,7 @@ export const schemas = {
   pipelineUpdate: z.object({
     name: z.string().min(1).max(100).optional(),
     description: z.string().max(500).optional(),
-    eyeFlow: z.array(z.enum(['overseer', 'sharingan', 'prompt-helper', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan'])).min(1).optional(),
+    eyeFlow: z.array(z.enum(EYES)).min(1).optional(),
     conditions: z.object({
       taskType: z.enum(['code', 'text', 'analysis']).optional(),
       complexity: z.enum(['simple', 'medium', 'complex']).optional(),

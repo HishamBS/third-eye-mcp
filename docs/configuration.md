@@ -108,7 +108,7 @@ Create custom profiles via the dashboard or seed scripts. For schema details see
 - Run migrations: `bun run db:migrate`
 - Backup database: `bun run backup`
 - Restore from backup: `bun run restore`
-- Seed personas/routing: `bun run scripts/seed-database.ts`
+- Seed defaults (personas/routing/strictness/app settings/integrations): `bun run scripts/seed-defaults.ts`
 
 Backups are stored in `~/.third-eye-mcp/backups` by default. See [Database](./DATABASE.md) for schema diagrams.
 
@@ -120,4 +120,3 @@ Backups are stored in `~/.third-eye-mcp/backups` by default. See [Database](./DA
 - [CLI Reference](./cli.md)
 - [FAQ & Troubleshooting](./FAQ.md)
 - [Publishing Checklist](./publishing.md)
-

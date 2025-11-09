@@ -24,7 +24,8 @@ export function SessionNotifier() {
         ? JSON.parse(session.configJson)
         : session?.configJson || {};
 
-      const agentName = config.agentName || 'Unknown Agent';
+      const agentName = config.agentName || session?.agentName || 'Unknown Agent';
+      const displayName = config.displayName || session?.displayName || agentName;
       const model = config.model || 'Unknown Model';
 
       // If there's already a selected session, show notification
@@ -38,7 +39,7 @@ export function SessionNotifier() {
             </div>
             <div className="flex-1">
               <p className="font-semibold text-white">New Session Started</p>
-              <p className="mt-0.5 text-sm text-slate-300">{agentName}</p>
+              <p className="mt-0.5 text-sm text-slate-300">{displayName}</p>
               <p className="mt-0.5 text-xs text-slate-400">{model}</p>
             </div>
           </div>,

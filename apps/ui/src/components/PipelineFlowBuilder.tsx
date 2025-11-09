@@ -83,6 +83,11 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
   const [edges, setEdges] = useState<Edge[]>([]);
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
   const [showEyeMenu, setShowEyeMenu] = useState(false);
+  const selectedNode = selectedNodes[0] ?? null;
+  const selectedStep = selectedNode
+    ? workflowJson.steps.find((step) => step.id === selectedNode.id) ?? null
+    : null;
+  const selectedStepType = selectedStep?.type ?? 'eye';
 
   const availableEyes = [
     'sharingan',
@@ -200,6 +205,36 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
     [nodes, onChange, workflowJson, readOnly]
   );
 
+  const updateWorkflowStep = useCallback(
+    (stepId: string, updates: Record<string, unknown>) => {
+      if (!onChange) return;
+
+      const updatedSteps = workflowJson.steps.map((step) =>
+        step.id === stepId ? { ...step, ...updates } : step
+      );
+
+      onChange({ steps: updatedSteps });
+
+      if ('eye' in updates || 'type' in updates) {
+        setNodes((prev) =>
+          prev.map((node) =>
+            node.id === stepId
+              ? {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    ...(updates.eye !== undefined ? { eye: updates.eye as string | undefined } : {}),
+                    ...(updates.type !== undefined ? { type: updates.type as string | undefined } : {}),
+                  },
+                }
+              : node
+          )
+        );
+      }
+    },
+    [onChange, workflowJson.steps]
+  );
+
   const deleteSelectedNodes = useCallback(() => {
     if (readOnly || selectedNodes.length === 0) return;
 
@@ -275,94 +310,210 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
   );
 
   return (
-    <div className="h-[600px] w-full rounded-xl border border-brand-outline/50 bg-brand-ink/50">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onSelectionChange={onSelectionChange}
-        nodeTypes={nodeTypes}
-        fitView
-        attributionPosition="bottom-right"
-        nodesDraggable={!readOnly}
-        nodesConnectable={!readOnly}
-        elementsSelectable={!readOnly}
-      >
-        <Background color="#374151" gap={16} />
-        <Controls />
+    <div className="rounded-xl border border-brand-outline/50 bg-brand-ink/50">
+      <div className="h-[520px] w-full">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onSelectionChange={onSelectionChange}
+          nodeTypes={nodeTypes}
+          fitView
+          attributionPosition="bottom-right"
+          nodesDraggable={!readOnly}
+          nodesConnectable={!readOnly}
+          elementsSelectable={!readOnly}
+        >
+          <Background color="#374151" gap={16} />
+          <Controls />
 
-        {/* Toolbar Panel */}
-        {!readOnly && (
-          <Panel position="top-left" className="flex flex-col gap-2 p-2 bg-brand-paper/90 rounded-xl border border-brand-outline/40">
-            {/* Add Eye Button */}
-            <div className="relative">
+          {/* Toolbar Panel */}
+          {!readOnly && (
+            <Panel position="top-left" className="flex flex-col gap-2 p-2 bg-brand-paper/90 rounded-xl border border-brand-outline/40">
+              {/* Add Eye Button */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowEyeMenu(!showEyeMenu)}
+                  className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Eye
+                </button>
+                {showEyeMenu && (
+                  <div className="absolute left-0 top-full mt-1 z-10 w-48 rounded-lg border border-brand-outline/40 bg-brand-paper shadow-xl">
+                    {availableEyes.map(eye => (
+                      <button
+                        key={eye}
+                        onClick={() => {
+                          addNode('eye', eye);
+                          setShowEyeMenu(false);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-white transition hover:bg-brand-paperElev capitalize"
+                      >
+                        {eye}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Add Condition Button */}
               <button
-                onClick={() => setShowEyeMenu(!showEyeMenu)}
-                className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                onClick={() => addNode('condition')}
+                className="flex items-center gap-2 rounded-lg bg-yellow-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-yellow-700"
               >
                 <Plus className="h-4 w-4" />
-                Add Eye
+                Condition
               </button>
-              {showEyeMenu && (
-                <div className="absolute left-0 top-full mt-1 z-10 w-48 rounded-lg border border-brand-outline/40 bg-brand-paper shadow-xl">
-                  {availableEyes.map(eye => (
-                    <button
-                      key={eye}
-                      onClick={() => {
-                        addNode('eye', eye);
-                        setShowEyeMenu(false);
-                      }}
-                      className="w-full px-4 py-2 text-left text-sm text-white transition hover:bg-brand-paperElev capitalize"
-                    >
-                      {eye}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
 
-            {/* Add Condition Button */}
-            <button
-              onClick={() => addNode('condition')}
-              className="flex items-center gap-2 rounded-lg bg-yellow-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-yellow-700"
-            >
-              <Plus className="h-4 w-4" />
-              Condition
-            </button>
-
-            {/* Add User Input Button */}
-            <button
-              onClick={() => addNode('user_input')}
-              className="flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-purple-700"
-            >
-              <Plus className="h-4 w-4" />
-              User Input
-            </button>
-
-            {/* Add Terminal Button */}
-            <button
-              onClick={() => addNode('terminal')}
-              className="flex items-center gap-2 rounded-lg bg-slate-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
-            >
-              <Plus className="h-4 w-4" />
-              Terminal
-            </button>
-
-            {/* Delete Selected Button */}
-            {selectedNodes.length > 0 && (
+              {/* Add User Input Button */}
               <button
-                onClick={deleteSelectedNodes}
-                className="flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                onClick={() => addNode('user_input')}
+                className="flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-purple-700"
               >
-                <Trash2 className="h-4 w-4" />
-                Delete ({selectedNodes.length})
+                <Plus className="h-4 w-4" />
+                User Input
               </button>
+
+              {/* Add Terminal Button */}
+              <button
+                onClick={() => addNode('terminal')}
+                className="flex items-center gap-2 rounded-lg bg-slate-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-700"
+              >
+                <Plus className="h-4 w-4" />
+                Terminal
+              </button>
+
+              {/* Delete Selected Button */}
+              {selectedNodes.length > 0 && (
+                <button
+                  onClick={deleteSelectedNodes}
+                  className="flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete ({selectedNodes.length})
+                </button>
+              )}
+            </Panel>
+          )}
+        </ReactFlow>
+      </div>
+
+      {!readOnly && selectedStep && (
+        <div className="mt-4 rounded-xl border border-brand-outline/40 bg-brand-paper/80 p-4 text-sm">
+          <h4 className="mb-3 text-sm font-semibold text-slate-100">Step Configuration</h4>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-400">Step ID</label>
+              <input
+                value={selectedStep.id}
+                disabled
+                className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-400">Type</label>
+              <select
+                value={selectedStepType}
+                onChange={(e) => {
+                  const value = e.target.value as 'eye' | 'condition' | 'user_input' | 'terminal';
+                  const updates: Record<string, unknown> = {};
+                  if (value === 'eye') {
+                    updates.type = undefined;
+                    updates['true'] = undefined;
+                    updates['false'] = undefined;
+                  } else {
+                    updates.type = value;
+                    if (value !== 'condition') {
+                      updates['true'] = undefined;
+                      updates['false'] = undefined;
+                    }
+                  }
+                  updateWorkflowStep(selectedStep.id, updates);
+                }}
+                className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200 focus:border-brand-accent focus:outline-none"
+              >
+                <option value="eye">Eye</option>
+                <option value="condition">Condition</option>
+                <option value="user_input">User Input</option>
+                <option value="terminal">Terminal</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-400">Eye</label>
+              <input
+                value={selectedStep.eye ?? ''}
+                onChange={(e) =>
+                  updateWorkflowStep(selectedStep.id, { eye: e.target.value.trim() || undefined })
+                }
+                placeholder="e.g., sharingan"
+                className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200 focus:border-brand-accent focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-400">Next Step</label>
+              <input
+                value={selectedStep.next ?? ''}
+                onChange={(e) =>
+                  updateWorkflowStep(selectedStep.id, { next: e.target.value.trim() || undefined })
+                }
+                placeholder="step identifier"
+                className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200 focus:border-brand-accent focus:outline-none"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="mb-1 block text-xs font-medium text-slate-400">Prompt / Notes</label>
+              <textarea
+                value={selectedStep.prompt ?? ''}
+                onChange={(e) =>
+                  updateWorkflowStep(selectedStep.id, { prompt: e.target.value || undefined })
+                }
+                rows={3}
+                className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200 focus:border-brand-accent focus:outline-none"
+              />
+            </div>
+            {selectedStepType === 'condition' && (
+              <>
+                <div className="md:col-span-2">
+                  <label className="mb-1 block text-xs font-medium text-slate-400">Condition</label>
+                  <textarea
+                    value={selectedStep.condition ?? ''}
+                    onChange={(e) =>
+                      updateWorkflowStep(selectedStep.id, { condition: e.target.value || undefined })
+                    }
+                    rows={2}
+                    className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200 focus:border-brand-accent focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-400">True Branch</label>
+                  <input
+                    value={selectedStep.true ?? ''}
+                    onChange={(e) =>
+                      updateWorkflowStep(selectedStep.id, { ['true']: e.target.value.trim() || undefined })
+                    }
+                    placeholder="next step when true"
+                    className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200 focus:border-brand-accent focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-slate-400">False Branch</label>
+                  <input
+                    value={selectedStep.false ?? ''}
+                    onChange={(e) =>
+                      updateWorkflowStep(selectedStep.id, { ['false']: e.target.value.trim() || undefined })
+                    }
+                    placeholder="next step when false"
+                    className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200 focus:border-brand-accent focus:outline-none"
+                  />
+                </div>
+              </>
             )}
-          </Panel>
-        )}
-      </ReactFlow>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,8 +1,5 @@
 import { Hono } from 'hono';
 import { autoRouter } from '@third-eye/core/auto-router';
-import { EyeOrchestrator } from '@third-eye/core';
-import { sessionManager } from '@third-eye/core/session-manager';
-import { orderGuard } from '@third-eye/core/order-guard';
 import { schemas } from '../middleware/validation';
 import {
   validateBodyWithEnvelope,
@@ -13,81 +10,51 @@ import {
 } from '../middleware/response';
 
 const app = new Hono();
-const orchestrator = new EyeOrchestrator();
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
 app.use('*', requestIdMiddleware());
 app.use('*', errorHandler());
 
 app.post('/run', validateBodyWithEnvelope(schemas.mcpRun), async (c) => {
-  const { sessionId: providedSessionId, task, eye: explicitEye, input } = c.get('validatedBody');
+  const { sessionId: providedSessionId, task, strictness, context } = c.get('validatedBody');
 
-  const sessionId = providedSessionId || `session_${Date.now()}`;
+  if (!task) {
+    return createErrorResponse(c, {
+      title: 'Invalid request',
+      status: 400,
+      detail: 'The request body must include a non-empty "task" string for auto-routing.',
+      code: 'INVALID_REQUEST',
+    });
+  }
 
   try {
-    if (task) {
-      // Analyze task to get routing decision
-      const routing = await autoRouter.analyzeTask(task, sessionId);
-      const eyeToRun = routing.recommendedFlow[0];
+    const strictnessOptions = isPlainObject(strictness) ? strictness : undefined;
+    const contextOptions = isPlainObject(context) ? context : undefined;
 
-      // Create session with proper config (returns SessionInfo with generated ID)
-      const session = await sessionManager.createSession({
-        agentName: 'MCP Client',
-        displayName: task.substring(0, 50),
-        metadata: {
-          task,
-          routing: routing.recommendedFlow,
-          taskType: routing.taskType,
-        },
-      });
+    const routing = await autoRouter.analyzeTask(task, undefined, providedSessionId, {
+      strictness: strictnessOptions,
+      context: contextOptions,
+    });
 
-      // Update routing decision with actual session ID
-      routing.sessionId = session.id;
+    const result = await autoRouter.executeFlow(task, routing, undefined, {
+      strictness: strictnessOptions,
+      context: contextOptions,
+    });
 
-      // Execute the full flow with routing decision
-      const result = await autoRouter.executeFlow(task, routing);
-
-      return createSuccessResponse(c, {
-        sessionId: result.sessionId,
-        completed: result.completed,
-        results: result.results,
-        routing: {
-          recommendedEye: eyeToRun,
-          flow: routing.recommendedFlow,
-          taskType: routing.taskType,
-          reasoning: routing.reasoning,
-        },
-      });
-    } else if (explicitEye && input) {
-      // Validate Eye order in pipeline
-      const violation = orderGuard.validateOrder(sessionId, explicitEye);
-      if (violation) {
-        return createErrorResponse(c, {
-          title: 'Pipeline order violation',
-          status: 400,
-          detail: violation.violation,
-          code: 'E_PIPELINE_ORDER',
-        });
-      }
-
-      // Run the Eye
-      const result = await orchestrator.runEye(explicitEye, input, sessionId);
-
-      // Record Eye completion for order tracking
-      orderGuard.recordEyeCompletion(sessionId, explicitEye, result);
-
-      return createSuccessResponse(c, {
-        sessionId,
-        eye: explicitEye,
-        result,
-      });
-    } else {
-      return createErrorResponse(c, {
-        title: 'Invalid request',
-        status: 400,
-        detail: 'Either "task" (freeform) or both "eye" and "input" must be provided',
-        code: 'INVALID_REQUEST',
-      });
-    }
+    return createSuccessResponse(c, {
+      sessionId: result.sessionId,
+      completed: result.completed,
+      results: result.results,
+      routing: {
+        recommendedEye: routing.recommendedFlow[0] ?? null,
+        flow: routing.recommendedFlow,
+        taskType: routing.taskType,
+        reasoning: routing.reasoning,
+      },
+    });
   } catch (error) {
     return createErrorResponse(c, {
       title: 'Overseer execution failed',

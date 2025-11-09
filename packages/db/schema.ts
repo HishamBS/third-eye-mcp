@@ -37,6 +37,14 @@ export const eyesRouting = sqliteTable('eyes_routing', {
   fallbackModel: text('fallback_model'),
 });
 
+// Eye display name overrides (for customizing built-in Eye names)
+export const eyeSettings = sqliteTable('eye_settings', {
+  eye: text('eye').primaryKey(),
+  displayName: text('display_name'),
+  description: text('description'),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
 // Personas with versioning
 export const personas = sqliteTable('personas', {
   id: text('id').primaryKey(),
@@ -101,6 +109,9 @@ export type NewModelCache = typeof modelsCache.$inferInsert;
 
 export type EyeRouting = typeof eyesRouting.$inferSelect;
 export type NewEyeRouting = typeof eyesRouting.$inferInsert;
+
+export type EyeSettings = typeof eyeSettings.$inferSelect;
+export type NewEyeSettings = typeof eyeSettings.$inferInsert;
 
 export type Persona = typeof personas.$inferSelect;
 export type NewPersona = typeof personas.$inferInsert;
