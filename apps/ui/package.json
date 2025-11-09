@@ -19,6 +19,8 @@
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
     "@fontsource/geist-mono": "^5.2.7",
+    "@third-eye/config": "workspace:*",
+    "@third-eye/constants": "workspace:*",
     "@third-eye/core": "workspace:*",
     "@third-eye/theme": "workspace:*",
     "@third-eye/types": "workspace:*",

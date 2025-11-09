@@ -85,11 +85,20 @@ export class EnhancedProviderFactory {
   }
 
   private static createClient(providerId: ProviderType, config: ProviderConfig): ProviderClient {
-    return ProviderFactory.createProvider(providerId, config);
+    const baseProvider = ProviderFactory.createProvider(providerId, config);
+    // Adapt BaseProvider to ProviderClient interface
+    return {
+      listModels: () => baseProvider.listModels(),
+      complete: (request: CompletionRequest) => baseProvider.complete(request),
+      health: async () => {
+        const healthStatus = await baseProvider.health();
+        return { ok: healthStatus.healthy, details: { latency_ms: healthStatus.latency_ms, error: healthStatus.error } };
+      },
+    };
   }
 
   private static buildCacheKey(providerId: ProviderType, config: ProviderConfig): string {
-    const keyParts = [providerId];
+    const keyParts: string[] = [providerId];
     if (config.apiKey) {
       keyParts.push(config.apiKey);
     }
@@ -100,7 +109,7 @@ export class EnhancedProviderFactory {
   }
 
   private static parseCacheKey(cacheKey: string): ProviderType {
-    const providerId = cacheKey.split(':')[0];
+    const providerId = cacheKey.split(':')[0] as ProviderType;
     if (providerId === 'groq' || providerId === 'openrouter' || providerId === 'ollama' || providerId === 'lmstudio') {
       return providerId;
     }
@@ -131,7 +140,7 @@ export class EnhancedProviderFactory {
 
     const client = EnhancedProviderFactory.createClient(providerId, config);
     const health = await client.health();
-    instance.healthy = health.healthy;
+    instance.healthy = health.ok;
     instance.lastHealthCheckAt = now;
   }
 

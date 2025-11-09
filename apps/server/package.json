@@ -8,11 +8,13 @@
     "start": "bun run src/start.ts"
   },
   "dependencies": {
-    "@third-eye/core": "workspace:*",
     "@third-eye/config": "workspace:*",
+    "@third-eye/constants": "workspace:*",
+    "@third-eye/core": "workspace:*",
     "@third-eye/db": "workspace:*",
-    "@third-eye/types": "workspace:*",
+    "@third-eye/eyes": "workspace:*",
     "@third-eye/providers": "workspace:*",
+    "@third-eye/types": "workspace:*",
     "hono": "^4.6.0",
     "nanoid": "^5.0.4"
   },
