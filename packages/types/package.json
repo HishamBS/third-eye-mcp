@@ -2,9 +2,12 @@
   "name": "@third-eye/types",
   "version": "1.0.0",
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "index.ts",
   "exports": {
-    ".": "./dist/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "dependencies": {
     "zod": "^3.22.4"
