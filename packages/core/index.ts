@@ -37,6 +37,33 @@ export type {
   SessionContext
 } from './routing/dynamic-router';
 
+// Workflow execution
+export { WorkflowInterpreter } from './workflow-interpreter';
+export type {
+  WorkflowNode,
+  WorkflowDefinition,
+  WorkflowExecutionOptions,
+  WorkflowExecutionResult
+} from './workflow-interpreter';
+
+// Expression evaluation
+export {
+  evaluateExpression,
+  validateExpression,
+  evaluateSimpleCondition,
+  testExpression,
+  getContextField,
+  CONTEXT_FIELDS,
+  EXPRESSION_TEMPLATES
+} from './expression-evaluator';
+export type {
+  ExpressionContext,
+  ExpressionResult,
+  ValidationResult as ExpressionValidationResult,
+  ContextField,
+  ExpressionTemplate
+} from './expression-evaluator';
+
 // Logger utility
 export { logger, createLogger, LogLevel } from './logger';
 export type { LogContext, LoggerConfig } from './logger';
