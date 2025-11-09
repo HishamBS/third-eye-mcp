@@ -11,7 +11,7 @@
  * - Type-safe execution context
  */
 
-import jsonLogic from 'json-logic-js';
+import jsonLogic, { type RulesLogic } from 'json-logic-js';
 
 /**
  * Execution context available to expressions
@@ -104,7 +104,7 @@ export function evaluateExpression(
     }
 
     // Parse string expressions as JSON
-    let parsedExpression = expression;
+    let parsedExpression: object = typeof expression === 'string' ? {} : expression;
     if (typeof expression === 'string') {
       try {
         parsedExpression = JSON.parse(expression);
@@ -115,10 +115,12 @@ export function evaluateExpression(
           error: `Invalid JSON expression: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`
         };
       }
+    } else {
+      parsedExpression = expression;
     }
 
     // Apply JSONLogic
-    const result = jsonLogic.apply(parsedExpression, context);
+    const result = jsonLogic.apply(parsedExpression as RulesLogic, context);
 
     return {
       success: true,
