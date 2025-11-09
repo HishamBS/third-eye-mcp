@@ -11,11 +11,11 @@ describe('BaseEnvelopeSchema', () => {
       code: 'OK',
       md: '# Hi',
       data: {},
-      next: 'PROMPT_HELPER',
-      next_action: 'PROMPT_HELPER',
+      next: 'KYUUBI',
+      next_action: 'KYUUBI',
     });
 
-    expect(parsed.next).toBe('PROMPT_HELPER');
+    expect(parsed.next).toBe('KYUUBI');
   });
 
   test('accepts next as string array', () => {
@@ -25,11 +25,11 @@ describe('BaseEnvelopeSchema', () => {
       code: 'NEED_CLARIFICATION',
       md: '# Need more info',
       data: {},
-      next: ['PROMPT_HELPER', 'JOGAN'],
+      next: ['KYUUBI', 'JOGAN'],
     });
 
     expect(Array.isArray(parsed.next)).toBe(true);
-    expect(parsed.next).toEqual(['PROMPT_HELPER', 'JOGAN']);
+    expect(parsed.next).toEqual(['KYUUBI', 'JOGAN']);
   });
 });
 
@@ -53,11 +53,11 @@ describe('Envelope helpers', () => {
       code: StatusCode.OK,
       md: '# done',
       data: {},
-      next_action: 'PROMPT_HELPER',
+      next_action: 'KYUUBI',
     });
 
-    expect(envelope.next_action).toBe('PROMPT_HELPER');
-    expect(envelope.next).toBe('PROMPT_HELPER');
+    expect(envelope.next_action).toBe('KYUUBI');
+    expect(envelope.next).toBe('KYUUBI');
   });
 
   test('buildResponse preserves explicit next', () => {
@@ -67,10 +67,10 @@ describe('Envelope helpers', () => {
       code: StatusCode.NEED_CLARIFICATION,
       md: '# wait',
       data: {},
-      next_action: 'PROMPT_HELPER',
-      next: ['PROMPT_HELPER', 'JOGAN'],
+      next_action: 'KYUUBI',
+      next: ['KYUUBI', 'JOGAN'],
     });
 
-    expect(envelope.next).toEqual(['PROMPT_HELPER', 'JOGAN']);
+    expect(envelope.next).toEqual(['KYUUBI', 'JOGAN']);
   });
 });

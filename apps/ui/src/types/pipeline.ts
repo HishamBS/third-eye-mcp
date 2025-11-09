@@ -5,7 +5,7 @@ import type { EdgeConditionType } from '@/components/pipeline-builder/constants'
 
 export type EyeType =
   | 'SHARINGAN'
-  | 'PROMPT_HELPER'
+  | 'KYUUBI'
   | 'JOGAN'
   | 'RINNEGAN_PLAN'
   | 'RINNEGAN_REVIEW'
@@ -181,14 +181,25 @@ export interface EyeNodeData {
   customConfig?: Record<string, unknown>;
   iconSvg?: string; // Custom SVG content from database
   stage?: 'GUIDANCE' | 'VALIDATION' | 'ROUTER' | 'BOTH';
+  label?: string; // For control nodes
+  switchConfig?: Record<string, unknown>; // For switch nodes
+  ifConfig?: Record<string, unknown>; // For if nodes
+  loopConfig?: Record<string, unknown>; // For loop nodes
 }
 
 /**
- * Pipeline Node - React Flow node with Eye data
+ * Valid Pipeline Node Types
+ * Per R13: SSOT for node types
+ */
+export type PipelineNodeType = 'eyeNode' | 'switch' | 'if' | 'loop_over_items' | 'terminal' | 'user_input';
+
+/**
+ * Pipeline Node - React Flow node supporting all node types
  * Per R07: Extends React Flow Node with strict typing
+ * Supports: eyeNode, switch, if, loop_over_items, terminal, user_input
  */
 export interface PipelineNode extends Node<EyeNodeData> {
-  type: 'eyeNode';
+  type: PipelineNodeType;
   data: EyeNodeData;
 }
 

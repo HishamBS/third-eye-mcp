@@ -12,7 +12,7 @@ import byakuganPng from '../assets/eyes/byakugan.png';
 
 const eyeAssets = {
   SHARINGAN: sharinganPng,
-  PROMPT_HELPER: promptHelperPng,
+  KYUUBI: promptHelperPng,
   JOGAN: joganPng,
   RINNEGAN_PLAN: rinneganPng,
   RINNEGAN_REVIEW: rinneganPng,
@@ -27,7 +27,7 @@ const eyeAssets = {
 
 const eyeLabels: Record<string, string> = {
   SHARINGAN: 'Sharingan',
-  PROMPT_HELPER: 'Kyuubi',
+  KYUUBI: 'Kyuubi',
   JOGAN: 'Jōgan',
   RINNEGAN_PLAN: 'Rinnegan · Plan',
   RINNEGAN_REVIEW: 'Rinnegan · Review',
@@ -47,7 +47,7 @@ const eyeLabels: Record<string, string> = {
 function getEyeColorClasses(eyeKey: string): string {
   const eyeTypeMap: Record<string, string> = {
     SHARINGAN: 'sharingan',
-    PROMPT_HELPER: 'kyuubi',
+    KYUUBI: 'kyuubi',
     JOGAN: 'jogan',
     RINNEGAN_PLAN: 'rinnegan',
     RINNEGAN_REVIEW: 'rinnegan',

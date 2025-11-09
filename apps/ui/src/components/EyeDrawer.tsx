@@ -47,7 +47,7 @@ ${JSON.stringify(data, null, 2)}`;
 
 const personaMeta: Record<string, { prefix: string; tone: string }> = {
   SHARINGAN: { prefix: 'Itachi', tone: 'text-eye-sharingan' },
-  PROMPT_HELPER: { prefix: 'Konan', tone: 'text-eye-prompt' },
+  KYUUBI: { prefix: 'Konan', tone: 'text-eye-prompt' },
   JOGAN: { prefix: 'Boruto', tone: 'text-eye-jogan' },
   RINNEGAN_PLAN: { prefix: 'Nagato', tone: 'text-eye-rinnegan' },
   RINNEGAN_REVIEW: { prefix: 'Nagato', tone: 'text-eye-rinnegan' },

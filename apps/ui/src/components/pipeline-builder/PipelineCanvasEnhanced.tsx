@@ -34,19 +34,23 @@ import { PipelineTemplateSelector } from './PipelineTemplateSelector';
 import { CANVAS_SETTINGS, LAYOUT } from './constants';
 import { API_BASE_URL } from '@/consts/api';
 import type { PipelineNode, PipelineEdge, EyeNodeData, EdgeConditionData } from '@/types/pipeline';
+import { useActivePipeline } from '@/hooks/usePipelines';
 
 /**
  * Validate nodes structure - throws error if malformed
  * Per R07: Strict typing, no any
  * Per R12: No fallbacks - throw error if data is invalid
+ * Per R13: Valid node types from SSOT (registered node types)
  */
-const validateNodes = (nodes: PipelineNode[]): void => {
+const VALID_NODE_TYPES = ['eyeNode', 'switch', 'if', 'loop_over_items', 'terminal', 'user_input'] as const;
+
+const validateNodes = (nodes: Node[]): void => {
   for (const node of nodes) {
     if (!node.id) {
       throw new Error(`Node missing required property: id`);
     }
-    if (!node.type || node.type !== 'eyeNode') {
-      throw new Error(`Node ${node.id} has invalid type: ${node.type}. Expected 'eyeNode'`);
+    if (!node.type || !VALID_NODE_TYPES.includes(node.type as any)) {
+      throw new Error(`Node ${node.id} has invalid type: ${node.type}. Expected one of: ${VALID_NODE_TYPES.join(', ')}`);
     }
     if (!node.position) {
       throw new Error(`Node ${node.id} missing required property: position`);
@@ -57,8 +61,9 @@ const validateNodes = (nodes: PipelineNode[]): void => {
     if (!node.data) {
       throw new Error(`Node ${node.id} missing required property: data`);
     }
-    if (!node.data.eyeId) {
-      throw new Error(`Node ${node.id} missing required property: data.eyeId`);
+    // Only validate eyeId for eyeNode types
+    if (node.type === 'eyeNode' && !node.data.eyeId) {
+      throw new Error(`Eye node ${node.id} missing required property: data.eyeId`);
     }
   }
 };
@@ -153,9 +158,26 @@ export function PipelineCanvasEnhanced() {
   // Phase 19.4: Template selector modal state
   const [isTemplateSelectorOpen, setIsTemplateSelectorOpen] = useState(false);
 
-  // Placeholder pipeline data (will be replaced by service hooks in S8)
-  const activePipeline = useMemo(() => null, []);
-  const pipelines = useMemo(() => [], []);
+  // Load active/default pipeline from database
+  const { pipeline: activePipeline, loading: pipelineLoading, refetch: refetchPipeline } = useActivePipeline();
+
+  // Load default pipeline on mount
+  useEffect(() => {
+    console.log('[PipelineCanvas] Loading default pipeline on mount');
+    refetchPipeline();
+  }, [refetchPipeline]);
+
+  // Set nodes and edges when pipeline is loaded
+  useEffect(() => {
+    if (activePipeline && activePipeline.nodes && activePipeline.edges) {
+      console.log('[PipelineCanvas] Setting pipeline nodes and edges:', {
+        nodeCount: activePipeline.nodes.length,
+        edgeCount: activePipeline.edges.length,
+      });
+      setNodesValidated(activePipeline.nodes as Node<EyeNodeData>[]);
+      setEdges(activePipeline.edges as Edge<EdgeConditionData>[]);
+    }
+  }, [activePipeline, setNodesValidated, setEdges]);
 
   // Single click node → zoom to node
   const handleNodeClick = useCallback(

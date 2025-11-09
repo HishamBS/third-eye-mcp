@@ -7,6 +7,7 @@ interface EyeIconProps {
   eye: string;
   size?: number;
   className?: string;
+  iconSvg?: string; // Optional pre-fetched SVG from node data
 }
 
 /**
@@ -14,10 +15,11 @@ interface EyeIconProps {
  * NO EMOJIS - All icons are SVG content from database
  *
  * Priority:
- * 1. Database SVG (fetched via API from eyes.iconSvg)
- * 2. Placeholder if not available
+ * 1. Pre-provided iconSvg (from node data)
+ * 2. Database SVG (fetched via API from eyes.iconSvg)
+ * 3. Placeholder if not available
  */
-export function EyeIcon({ eye, size = 24, className = '' }: EyeIconProps) {
+export function EyeIcon({ eye, size = 24, className = '', iconSvg }: EyeIconProps) {
   // Early return if eye name is invalid
   if (!eye || typeof eye !== 'string') {
     return (
@@ -49,8 +51,13 @@ export function EyeIcon({ eye, size = 24, className = '' }: EyeIconProps) {
   const [dbSvg, setDbSvg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch icon SVG from database (SSOT)
+  // Fetch icon SVG from database (SSOT) - only if not provided via props
   useEffect(() => {
+    // Skip fetching if iconSvg is already provided
+    if (iconSvg) {
+      return;
+    }
+
     const fetchSvg = async () => {
       setLoading(true);
       try {
@@ -73,9 +80,10 @@ export function EyeIcon({ eye, size = 24, className = '' }: EyeIconProps) {
     };
 
     fetchSvg();
-  }, [eye, eyeLower]);
+  }, [eye, eyeLower, iconSvg]);
 
-  const svgContent = dbSvg;
+  // Use provided iconSvg first, then fetched dbSvg
+  const svgContent = iconSvg || dbSvg;
 
   if (svgContent) {
     return (

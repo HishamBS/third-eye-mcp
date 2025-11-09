@@ -10,7 +10,7 @@ import { ANIMATION_DURATION } from '@/constants/timing';
 
 /**
  * Eye Node Data Structure
- * All metadata (displayName, stage, capabilities) should come from database via API
+ * All metadata (displayName, stage, capabilities, iconSvg) should come from database via API
  */
 export interface EyeNodeData {
   eyeId: EyeName;
@@ -18,6 +18,7 @@ export interface EyeNodeData {
   stage?: EyeStage; // From database - blueprint phases
   capabilities?: string[]; // From database - blueprint capabilities
   customConfig?: Record<string, unknown>;
+  iconSvg?: string; // From database - eyes.iconSvg (optional, prevents API fetch)
 }
 
 /**
@@ -33,7 +34,7 @@ export interface EyeNodeData {
  * Per SSOT: All eye metadata (displayName, stage, capabilities) must come from database
  */
 function EyeNodeComponent({ data, selected, dragging }: NodeProps<EyeNodeData>) {
-  const { eyeId, capabilities = [], stage: dataStage, displayName: dataDisplayName } = data;
+  const { eyeId, capabilities = [], stage: dataStage, displayName: dataDisplayName, iconSvg } = data;
 
   // Use provided data from database, fallback to eyeId if not provided
   const displayName = dataDisplayName || eyeId;
@@ -76,9 +77,9 @@ function EyeNodeComponent({ data, selected, dragging }: NodeProps<EyeNodeData>) 
         style={{ background: eyeColor }}
       />
 
-      {/* Icon - SVG from SSOT */}
+      {/* Icon - SVG from database (provided via data.iconSvg or fetched via API) */}
       <div className="flex justify-center items-center mb-2">
-        <EyeIcon eye={eyeId} size={48} />
+        <EyeIcon eye={eyeId} size={48} iconSvg={iconSvg} />
       </div>
 
       {/* Name */}
