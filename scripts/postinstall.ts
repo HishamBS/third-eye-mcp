@@ -51,7 +51,7 @@ async function postInstall() {
 ✅ Third Eye MCP installed successfully!
 
 🚀 Quick Start:
-   npx third-eye-mcp up
+   bunx third-eye-mcp up
 
 📖 Documentation:
    • README.md                 — Project overview
@@ -60,12 +60,12 @@ async function postInstall() {
    • docs/                     — Full technical reference
 
 💡 Next steps:
-   1. Run: npx third-eye-mcp up
+   1. Run: bunx third-eye-mcp up
    2. Open http://127.0.0.1:3300
    3. Configure your API keys
    4. Connect your AI agent via docs/integrations
 
-For help: npx third-eye-mcp --help
+For help: bunx third-eye-mcp --help
 `);
 }
 
