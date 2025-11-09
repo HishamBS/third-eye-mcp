@@ -50,7 +50,11 @@ async function postInstall() {
   console.log(`
 ✅ Third Eye MCP installed successfully!
 
-🚀 Quick Start:
+🚀 Quick Start (local development):
+   bun dist/cli.js up
+
+   OR create a global link first:
+   bun link
    bunx third-eye-mcp up
 
 📖 Documentation:
@@ -60,12 +64,12 @@ async function postInstall() {
    • docs/                     — Full technical reference
 
 💡 Next steps:
-   1. Run: bunx third-eye-mcp up
+   1. Run: bun dist/cli.js up
    2. Open http://127.0.0.1:3300
    3. Configure your API keys
    4. Connect your AI agent via docs/integrations
 
-For help: bunx third-eye-mcp --help
+For help: bun dist/cli.js --help
 `);
 }
 
