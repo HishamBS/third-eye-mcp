@@ -36,7 +36,7 @@
     "build:theme": "tsc --build packages/theme",
     "build:server": "bun run apps/server/src/build.ts",
     "build:ui": "bun run --cwd apps/ui build",
-    "build:cli": "bun build cli/index.ts --target=bun --outfile=dist/cli.js && bun build bin/mcp-server.ts --target=bun --outfile=dist/mcp-server.js",
+    "build:cli": "bun build cli/index.ts --target=bun --outfile=dist/cli.js --external='@third-eye/*' && bun build bin/mcp-server.ts --target=bun --outfile=dist/mcp-server.js --external='@third-eye/*'",
     "clean": "bun run clean:packages && bun run clean:apps && rm -rf dist",
     "clean:packages": "rm -rf packages/*/dist packages/*/*.tsbuildinfo",
     "clean:apps": "rm -rf apps/server/dist apps/ui/.next apps/ui/out",
