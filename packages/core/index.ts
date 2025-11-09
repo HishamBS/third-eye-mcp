@@ -28,5 +28,16 @@ export type { WebSocketBridge } from './websocket-registry';
 // Guidance functions
 export { getWorkflowGuidance, shouldDelegate } from './guidance';
 
+// Workflow interpreter and expression evaluator
+export { WorkflowInterpreter } from './workflow-interpreter';
+export { ExpressionEvaluator } from './expression-evaluator';
+export type {
+  WorkflowNode,
+  WorkflowDefinition,
+  WorkflowExecutionOptions,
+  WorkflowExecutionResult
+} from './workflow-interpreter';
+export type { EvaluationContext } from './expression-evaluator';
+
 // Re-export Eyes for convenience
 export * from '@third-eye/eyes';

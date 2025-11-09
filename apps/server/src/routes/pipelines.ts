@@ -12,6 +12,7 @@ import {
   errorHandler
 } from '../middleware/response';
 import { z } from 'zod';
+import { WorkflowInterpreter, type WorkflowDefinition } from '@third-eye/core';
 
 const app = new Hono();
 
@@ -282,18 +283,11 @@ app.delete('/:id', async (c) => {
 });
 
 /**
- * POST /api/pipelines/:id/execute - Initialize pipeline execution
+ * POST /api/pipelines/:id/execute - Execute pipeline workflow
  *
- * Note: This endpoint creates a pipeline run record in the database but does not execute
- * the pipeline workflow. Actual pipeline execution is delegated to the MCP client/agent
- * which reads the workflow from the database and executes each step by calling the
- * appropriate Eye endpoints. This design allows for:
- * 1. Client-driven execution (agent controls the flow)
- * 2. Conditional branching based on Eye responses
- * 3. User interaction steps (approval gates)
- * 4. Real-time monitoring via WebSocket events
- *
- * Future enhancement: Implement server-side async pipeline engine with worker queues.
+ * Executes a visual pipeline workflow using the WorkflowInterpreter.
+ * Handles all node types: eye, condition, switch, loop, user_input, terminal.
+ * Supports conditional branching, loops, and complex routing logic.
  */
 app.post('/:id/execute', validateBodyWithEnvelope(executePipelineSchema), async (c) => {
   try {
@@ -322,21 +316,71 @@ app.post('/:id/execute', validateBodyWithEnvelope(executePipelineSchema), async 
         id: runId,
         pipelineId: id,
         sessionId: session_id,
-        status: 'pending',
+        status: 'running',
         currentStep: 0,
         stateJson: { input, startTime: new Date().toISOString(), workflow: pipeline[0].workflowJson },
         createdAt: new Date(),
       })
       .run();
 
-    // Return run info for client-side execution
+    // Execute workflow using WorkflowInterpreter
+    const interpreter = new WorkflowInterpreter();
+    const workflow = pipeline[0].workflowJson as WorkflowDefinition;
+
+    // Validate workflow before execution
+    const validation = WorkflowInterpreter.validate(workflow);
+    if (!validation.valid) {
+      await db
+        .update(pipelineRuns)
+        .set({
+          status: 'failed',
+          errorMessage: `Workflow validation failed: ${validation.errors.join(', ')}`,
+          completedAt: new Date(),
+        })
+        .where(eq(pipelineRuns.id, runId))
+        .run();
+
+      return createErrorResponse(c, {
+        title: 'Invalid Workflow',
+        status: 400,
+        detail: `Workflow validation failed: ${validation.errors.join(', ')}`,
+      });
+    }
+
+    // Execute workflow
+    const result = await interpreter.execute(workflow, {
+      sessionId: session_id,
+      input: input || {},
+    });
+
+    // Update pipeline run with results
+    await db
+      .update(pipelineRuns)
+      .set({
+        status: result.success ? 'completed' : 'failed',
+        currentStep: result.steps.length,
+        stateJson: {
+          input,
+          startTime: new Date().toISOString(),
+          workflow: pipeline[0].workflowJson,
+          result,
+        },
+        errorMessage: result.error,
+        completedAt: new Date(),
+      })
+      .where(eq(pipelineRuns.id, runId))
+      .run();
+
+    // Return execution results
     return createSuccessResponse(c, {
       runId,
       pipelineId: id,
-      sessionId: session_id,
-      workflow: pipeline[0].workflowJson,
-      status: 'pending',
-      message: 'Pipeline run created. Execute workflow steps via Eye endpoints.',
+      sessionId: result.sessionId,
+      success: result.success,
+      steps: result.steps,
+      output: result.output,
+      totalLatency: result.totalLatency,
+      error: result.error,
     });
   } catch (error) {
     return createInternalErrorResponse(c, `Failed to execute pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`);
