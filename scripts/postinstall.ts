@@ -3,9 +3,28 @@
 import { resolve } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { homedir } from 'os';
+import { execSync } from 'child_process';
 
 async function postInstall() {
   console.log('\n🧿 Third Eye MCP - Post-install setup\n');
+
+  // Build workspace packages for CLI
+  console.log('📦 Building workspace packages...');
+  try {
+    execSync('bun run build:packages', { stdio: 'inherit' });
+    console.log('   ✓ Packages built');
+  } catch (error) {
+    console.log('   ⚠ Package build failed, CLI may not work');
+  }
+
+  // Build CLI
+  console.log('🔨 Building CLI...');
+  try {
+    execSync('bun run build:cli', { stdio: 'inherit' });
+    console.log('   ✓ CLI built');
+  } catch (error) {
+    console.log('   ⚠ CLI build failed');
+  }
 
   const thirdEyeDir = resolve(homedir(), '.third-eye-mcp');
 
@@ -21,7 +40,6 @@ async function postInstall() {
   if (!existsSync(dbPath)) {
     console.log('🗄️  Initializing database...');
     try {
-      const { execSync } = await import('child_process');
       execSync('bun run db:migrate', { stdio: 'inherit' });
       console.log('   ✓ Database initialized');
     } catch (error) {
@@ -33,7 +51,7 @@ async function postInstall() {
 ✅ Third Eye MCP installed successfully!
 
 🚀 Quick Start:
-   bunx third-eye-mcp up
+   npx third-eye-mcp up
 
 📖 Documentation:
    • README.md                 — Project overview
@@ -42,12 +60,12 @@ async function postInstall() {
    • docs/                     — Full technical reference
 
 💡 Next steps:
-   1. Run: bunx third-eye-mcp up
+   1. Run: npx third-eye-mcp up
    2. Open http://127.0.0.1:3300
    3. Configure your API keys
    4. Connect your AI agent via docs/integrations
 
-For help: bunx third-eye-mcp --help
+For help: npx third-eye-mcp --help
 `);
 }
 
