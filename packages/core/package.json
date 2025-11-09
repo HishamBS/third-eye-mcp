@@ -2,7 +2,10 @@
   "name": "@third-eye/core",
   "version": "1.0.0",
   "type": "module",
-  "main": "index.ts",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
   "dependencies": {
     "@third-eye/config": "workspace:*",
     "@third-eye/constants": "workspace:*",

@@ -2,7 +2,7 @@
   "name": "@third-eye/db",
   "version": "1.0.0",
   "type": "module",
-  "main": "index.ts",
+  "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js",
     "./defaults": "./dist/defaults/index.js"
