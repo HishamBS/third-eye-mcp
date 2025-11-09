@@ -17,13 +17,18 @@ import ReactFlow, {
   Panel,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, Settings } from 'lucide-react';
+import { SwitchNodeConfigModal } from './SwitchNodeConfigModal';
+import { IFNodeConfigModal } from './IFNodeConfigModal';
+import { LoopNodeConfigModal } from './LoopNodeConfigModal';
 
 // Custom Node Component
 function EyeNode({ data }: { data: { label: string; eye?: string; type?: string } }) {
   const getNodeColor = () => {
     if (data.type === 'terminal') return 'bg-slate-600 border-slate-400';
     if (data.type === 'condition') return 'bg-yellow-600 border-yellow-400';
+    if (data.type === 'switch') return 'bg-orange-600 border-orange-400';
+    if (data.type === 'loop') return 'bg-cyan-600 border-cyan-400';
     if (data.type === 'user_input') return 'bg-purple-600 border-purple-400';
     if (data.eye) return 'bg-blue-600 border-blue-400';
     return 'bg-gray-600 border-gray-400';
@@ -32,6 +37,8 @@ function EyeNode({ data }: { data: { label: string; eye?: string; type?: string 
   const getIcon = () => {
     if (data.type === 'terminal') return '⏹️';
     if (data.type === 'condition') return '🔀';
+    if (data.type === 'switch') return '🔀';
+    if (data.type === 'loop') return '🔁';
     if (data.type === 'user_input') return '💬';
     if (data.eye === 'sharingan') return '👁️';
     if (data.eye === 'rinnegan') return '🔮';
@@ -72,9 +79,13 @@ interface PipelineFlowBuilderProps {
       true?: string;
       false?: string;
       prompt?: string;
+      switchConfig?: unknown;
+      loopConfig?: unknown;
+      trueLabel?: string;
+      falseLabel?: string;
     }>;
   };
-  onChange?: (workflow: any) => void;
+  onChange?: (workflow: unknown) => void;
   readOnly?: boolean;
 }
 
@@ -83,6 +94,9 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
   const [edges, setEdges] = useState<Edge[]>([]);
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
   const [showEyeMenu, setShowEyeMenu] = useState(false);
+  const [switchModalOpen, setSwitchModalOpen] = useState(false);
+  const [ifModalOpen, setIfModalOpen] = useState(false);
+  const [loopModalOpen, setLoopModalOpen] = useState(false);
   const selectedNode = selectedNodes[0] ?? null;
   const selectedStep = selectedNode
     ? workflowJson.steps.find((step) => step.id === selectedNode.id) ?? null
@@ -171,7 +185,7 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
   }, [workflowJson]);
 
   const addNode = useCallback(
-    (type: 'eye' | 'condition' | 'user_input' | 'terminal', eyeName?: string) => {
+    (type: 'eye' | 'condition' | 'switch' | 'loop' | 'user_input' | 'terminal', eyeName?: string) => {
       if (readOnly) return;
 
       const newId = `step_${Date.now()}`;
@@ -359,13 +373,31 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
                 )}
               </div>
 
-              {/* Add Condition Button */}
+              {/* Add IF/Condition Button */}
               <button
                 onClick={() => addNode('condition')}
                 className="flex items-center gap-2 rounded-lg bg-yellow-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-yellow-700"
               >
                 <Plus className="h-4 w-4" />
-                Condition
+                IF
+              </button>
+
+              {/* Add Switch Button */}
+              <button
+                onClick={() => addNode('switch')}
+                className="flex items-center gap-2 rounded-lg bg-orange-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-orange-700"
+              >
+                <Plus className="h-4 w-4" />
+                Switch
+              </button>
+
+              {/* Add Loop Button */}
+              <button
+                onClick={() => addNode('loop')}
+                className="flex items-center gap-2 rounded-lg bg-cyan-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-cyan-700"
+              >
+                <Plus className="h-4 w-4" />
+                Loop
               </button>
 
               {/* Add User Input Button */}
@@ -403,7 +435,23 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
 
       {!readOnly && selectedStep && (
         <div className="mt-4 rounded-xl border border-brand-outline/40 bg-brand-paper/80 p-4 text-sm">
-          <h4 className="mb-3 text-sm font-semibold text-slate-100">Step Configuration</h4>
+          <div className="mb-3 flex items-center justify-between">
+            <h4 className="text-sm font-semibold text-slate-100">Step Configuration</h4>
+            {/* Configure Button for nodes with modals */}
+            {(selectedStepType === 'condition' || selectedStepType === 'switch' || selectedStepType === 'loop') && (
+              <button
+                onClick={() => {
+                  if (selectedStepType === 'condition') setIfModalOpen(true);
+                  else if (selectedStepType === 'switch') setSwitchModalOpen(true);
+                  else if (selectedStepType === 'loop') setLoopModalOpen(true);
+                }}
+                className="flex items-center gap-2 rounded-lg bg-brand-accent px-3 py-1.5 text-xs font-medium text-white transition hover:bg-brand-accent/90"
+              >
+                <Settings className="h-4 w-4" />
+                Configure
+              </button>
+            )}
+          </div>
           <div className="grid gap-3 md:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-400">Step ID</label>
@@ -418,7 +466,7 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
               <select
                 value={selectedStepType}
                 onChange={(e) => {
-                  const value = e.target.value as 'eye' | 'condition' | 'user_input' | 'terminal';
+                  const value = e.target.value as 'eye' | 'condition' | 'switch' | 'loop' | 'user_input' | 'terminal';
                   const updates: Record<string, unknown> = {};
                   if (value === 'eye') {
                     updates.type = undefined;
@@ -436,7 +484,9 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
                 className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-slate-200 focus:border-brand-accent focus:outline-none"
               >
                 <option value="eye">Eye</option>
-                <option value="condition">Condition</option>
+                <option value="condition">IF/Condition</option>
+                <option value="switch">Switch</option>
+                <option value="loop">Loop</option>
                 <option value="user_input">User Input</option>
                 <option value="terminal">Terminal</option>
               </select>
@@ -513,6 +563,55 @@ export function PipelineFlowBuilder({ workflowJson, onChange, readOnly = false }
             )}
           </div>
         </div>
+      )}
+
+      {/* Configuration Modals */}
+      {!readOnly && selectedStep && (
+        <>
+          {/* Switch Node Config Modal */}
+          <SwitchNodeConfigModal
+            isOpen={switchModalOpen}
+            onClose={() => setSwitchModalOpen(false)}
+            stepId={selectedStep.id}
+            initialConfig={selectedStep.switchConfig as any}
+            onSave={(config) => {
+              updateWorkflowStep(selectedStep.id, { switchConfig: config });
+              setSwitchModalOpen(false);
+            }}
+          />
+
+          {/* IF Node Config Modal */}
+          <IFNodeConfigModal
+            isOpen={ifModalOpen}
+            onClose={() => setIfModalOpen(false)}
+            stepId={selectedStep.id}
+            initialConfig={{
+              condition: selectedStep.condition || '',
+              trueLabel: selectedStep.trueLabel as string,
+              falseLabel: selectedStep.falseLabel as string,
+            }}
+            onSave={(config) => {
+              updateWorkflowStep(selectedStep.id, {
+                condition: config.condition,
+                trueLabel: config.trueLabel,
+                falseLabel: config.falseLabel,
+              });
+              setIfModalOpen(false);
+            }}
+          />
+
+          {/* Loop Node Config Modal */}
+          <LoopNodeConfigModal
+            isOpen={loopModalOpen}
+            onClose={() => setLoopModalOpen(false)}
+            stepId={selectedStep.id}
+            initialConfig={selectedStep.loopConfig as any}
+            onSave={(config) => {
+              updateWorkflowStep(selectedStep.id, { loopConfig: config });
+              setLoopModalOpen(false);
+            }}
+          />
+        </>
       )}
     </div>
   );
