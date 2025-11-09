@@ -69,9 +69,14 @@ export class DagGraphBuilder {
 
     // Build adjacency lists
     for (const edge of edges) {
+      // Convert ExpressionRule to string for internal representation
+      const conditionStr = typeof edge.on === 'string'
+        ? edge.on
+        : edge.on?.expression ?? '';
+
       const edgeInfo: DagEdgeInfo = {
         targetNodeId: edge.to,
-        condition: edge.on ?? '',
+        condition: conditionStr,
         loop: edge.loop ?? false,
       };
 
@@ -84,7 +89,7 @@ export class DagGraphBuilder {
       const toEdges = reverseAdjacencyList.get(edge.to) ?? [];
       toEdges.push({
         targetNodeId: edge.from,
-        condition: edge.on ?? '',
+        condition: conditionStr,
         loop: edge.loop ?? false,
       });
       reverseAdjacencyList.set(edge.to, toEdges);

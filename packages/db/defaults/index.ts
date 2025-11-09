@@ -607,9 +607,9 @@ async function seedPipelines(
     }
     return {
       ...pipeline,
-      // Stringify workflowJson to match pattern in seedPersonas (per R01: SSOT)
-      // Drizzle's text({ mode: 'json' }) accepts stringified JSON
-      workflowJson: JSON.stringify(pipeline.workflowJson),
+      // Drizzle's text({ mode: 'json' }) automatically handles JSON serialization
+      // No manual stringify needed (was causing double-stringification bug)
+      workflowJson: pipeline.workflowJson,
       active: true,
       createdAt: now,
     };

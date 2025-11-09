@@ -18,10 +18,14 @@ import {
   TerminalNodeHandler,
   UserInputNodeHandler,
   ConditionNodeHandler,
+  IFNodeHandler,
   type NodeHandler,
   type ExecutionContext,
   type NodeExecutionResult,
 } from './node-handlers';
+import { SwitchNodeHandler } from './node-handlers/switch-node-handler';
+import { LoopNodeHandler } from './node-handlers/loop-node-handler';
+import { evaluateExpression, type ExpressionContext } from './expression-evaluator';
 
 // ============================================================================
 // Types
@@ -84,6 +88,9 @@ export class PipelineExecutionEngine {
       new TerminalNodeHandler(),
       new UserInputNodeHandler(),
       new ConditionNodeHandler(),
+      new IFNodeHandler(),
+      new SwitchNodeHandler(),
+      new LoopNodeHandler(),
     ];
   }
 
@@ -333,6 +340,7 @@ export class PipelineExecutionEngine {
 
   /**
    * Determine next node(s) to execute based on current node result
+   * Supports: Switch nodes, IF nodes, Loop nodes, expression-based edges
    */
   private determineNextNodes(currentNodeId: string, result: NodeExecutionResult): string[] {
     if (!this.graph || !this.dag) {
@@ -340,20 +348,103 @@ export class PipelineExecutionEngine {
     }
 
     const outgoingEdges = this.graph.adjacencyList.get(currentNodeId) ?? [];
-
-    // Special handling for Condition nodes
     const currentNode = this.graph.nodes.get(currentNodeId);
+
+    // Special handling for Switch nodes
+    if (currentNode?.type === 'switch' && result.metadata?.matchedOutputs) {
+      const matchedOutputs = result.metadata.matchedOutputs as number[];
+      return this.getEdgesByOutputIndices(outgoingEdges, matchedOutputs);
+    }
+
+    // Special handling for IF nodes
+    if (currentNode?.type === 'if') {
+      const conditionMet = result.metadata?.conditionMet as boolean;
+      const trueEdges = outgoingEdges.filter(e => e.condition === 'true' || e.condition === 'TRUE');
+      const falseEdges = outgoingEdges.filter(e => e.condition === 'false' || e.condition === 'FALSE');
+      const targetEdges = conditionMet ? trueEdges : falseEdges;
+      return targetEdges.map(e => e.targetNodeId);
+    }
+
+    // Special handling for Loop nodes
+    if (currentNode?.type === 'loop_over_items') {
+      const verdict = result.verdict || 'LOOP_CONTINUE';
+      if (verdict === 'LOOP_COMPLETE' || verdict === 'MAX_ITERATIONS_REACHED') {
+        // Exit loop - find non-loop edges
+        const exitEdges = outgoingEdges.filter(e => !e.loop);
+        return exitEdges.map(e => e.targetNodeId);
+      }
+      // Continue loop - find loop-back edges
+      const loopEdges = outgoingEdges.filter(e => e.loop === true);
+      return loopEdges.map(e => e.targetNodeId);
+    }
+
+    // Special handling for legacy Condition nodes
     if (currentNode?.type === 'condition' && result.metadata?.selectedNext) {
       return [result.metadata.selectedNext as string];
     }
 
-    // Filter edges by verdict condition
-    const verdict = result.verdict || 'OK';
-    const matchingEdges = outgoingEdges.filter(
-      edge => !edge.loop && (edge.condition === verdict || edge.condition === 'OK')
-    );
+    // Build expression context for edge evaluation
+    const expressionContext = this.buildExpressionContextFromResult(result);
+
+    // Evaluate edges with expressions/conditions
+    const matchingEdges = outgoingEdges.filter(edge => {
+      // Skip loop edges for normal flow
+      if (edge.loop) return false;
+
+      // No condition - always match
+      if (!edge.condition) return true;
+
+      // Try expression evaluation
+      try {
+        const evalResult = evaluateExpression(edge.condition, expressionContext);
+        return evalResult.success && evalResult.value === true;
+      } catch {
+        // Fallback: simple verdict matching for backward compatibility
+        const verdict = result.verdict || 'OK';
+        return edge.condition === verdict || edge.condition === 'OK';
+      }
+    });
+
+    // If no matches and fallback edge exists, use it
+    if (matchingEdges.length === 0) {
+      const fallbackEdge = outgoingEdges.find(e => e.fallback === true);
+      if (fallbackEdge) {
+        return [fallbackEdge.targetNodeId];
+      }
+    }
 
     return matchingEdges.map(edge => edge.targetNodeId);
+  }
+
+  /**
+   * Get edges by output indices (for Switch nodes)
+   */
+  private getEdgesByOutputIndices(edges: { targetNodeId: string; priority?: number }[], indices: number[]): string[] {
+    // Sort edges by priority
+    const sortedEdges = [...edges].sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));
+
+    // Map indices to target node IDs
+    return indices
+      .filter(idx => idx < sortedEdges.length)
+      .map(idx => sortedEdges[idx].targetNodeId);
+  }
+
+  /**
+   * Build expression context from node execution result
+   */
+  private buildExpressionContextFromResult(result: NodeExecutionResult): ExpressionContext {
+    const output = result.output && typeof result.output === 'object'
+      ? result.output as Record<string, unknown>
+      : undefined;
+
+    return {
+      output: {
+        verdict: result.verdict,
+        ...output,
+      },
+      metadata: result.metadata ?? {},
+      verdict: result.verdict,
+    };
   }
 
   /**

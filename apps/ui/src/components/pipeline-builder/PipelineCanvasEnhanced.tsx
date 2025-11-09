@@ -20,7 +20,10 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { getEyeColor } from '@/components/EyeIcon';
 import { EyeNode } from './EyeNode';
-import { EyePalette } from './EyePalette';
+import { SwitchNode } from './SwitchNode';
+import { IFNode } from './IFNode';
+import { LoopNode } from './LoopNode';
+import { NodePalette } from './NodePalette';
 import { NodeEditModal } from './NodeEditModal';
 import { EdgeConfigModal } from './EdgeConfigModal';
 import { Toolbar } from './Toolbar';
@@ -75,8 +78,15 @@ const validateNodes = (nodes: PipelineNode[]): void => {
  * Per R13: All constants from SSOT
  */
 export function PipelineCanvasEnhanced() {
+  console.log('[DEBUG] PipelineCanvasEnhanced component mounting');
+
   // Memoize nodeTypes to prevent ReactFlow warning
-  const nodeTypes = useMemo(() => ({ eyeNode: EyeNode }), []);
+  const nodeTypes = useMemo(() => ({
+    eyeNode: EyeNode,
+    switch: SwitchNode,
+    if: IFNode,
+    loop_over_items: LoopNode,
+  }), []);
 
   // Start with empty pipeline - load from database if needed
   const [nodes, setNodes, onNodesChange] = useNodesState<EyeNodeData>([]);
@@ -121,57 +131,10 @@ export function PipelineCanvasEnhanced() {
     [setNodes]
   );
   
-  // Optionally load default pipeline from database on mount
-  useEffect(() => {
-    const loadDefaultPipeline = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/pipelines`);
-        if (response.ok) {
-          const envelope = await response.json();
-          const pipelines = envelope.data || [];
-          const defaultPipeline = pipelines.find((p: { category?: string }) => p.category === 'default') || pipelines[0];
-          
-          // DEBUG: Log what API returns
-          console.log('[DEBUG] API returned pipeline:', {
-            id: defaultPipeline?.id,
-            name: defaultPipeline?.name,
-            hasWorkflowJson: !!defaultPipeline?.workflowJson,
-            workflowJsonKeys: defaultPipeline?.workflowJson ? Object.keys(defaultPipeline.workflowJson) : [],
-            nodesCount: defaultPipeline?.workflowJson?.nodes?.length || 0,
-            firstNode: defaultPipeline?.workflowJson?.nodes?.[0],
-            firstNodePosition: defaultPipeline?.workflowJson?.nodes?.[0]?.position,
-          });
-          
-          if (defaultPipeline?.workflowJson) {
-            // Parse workflowJson if it's a string (from database text column)
-            const workflow = typeof defaultPipeline.workflowJson === 'string'
-              ? JSON.parse(defaultPipeline.workflowJson)
-              : defaultPipeline.workflowJson;
-            
-            const rawNodes = (workflow.nodes || []) as PipelineNode[];
-            
-            // DEBUG: Log nodes before validation
-            console.log('[DEBUG] Raw nodes before validation:', rawNodes.map(n => ({
-              id: n.id,
-              type: n.type,
-              hasPosition: !!n.position,
-              position: n.position,
-              hasData: !!n.data,
-            })));
-            
-            validateNodes(rawNodes);
-            setNodesValidated(rawNodes as Node<EyeNodeData>[]);
-            setEdges((workflow.edges || []) as Edge<EdgeConditionData>[]);
-          }
-        }
-      } catch (error) {
-        console.debug('[PipelineCanvasEnhanced] No default pipeline available');
-      }
-    };
-
-    // Load on mount - nodes are always empty on first render
-    loadDefaultPipeline();
-  }, []);
+  // START WITH BLANK CANVAS for N8N-style pipeline builder
+  // Per vision: Dynamic routing via Overseer (not static templates)
+  // Templates/sessions can be loaded via toolbar "Load" button
+  // This allows professional pipeline creation from scratch
   const [selectedNode, setSelectedNode] = useState<Node<EyeNodeData> | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<Edge<EdgeConditionData> | null>(null);
   const [paletteCollapsed, setPaletteCollapsed] = useState<boolean>(false);
@@ -476,8 +439,8 @@ export function PipelineCanvasEnhanced() {
           )}
         </ReactFlow>
 
-        {/* Eye Palette */}
-        <EyePalette
+        {/* Node Palette (Eyes + Control Nodes) */}
+        <NodePalette
           collapsed={paletteCollapsed}
           onToggleCollapse={() => setPaletteCollapsed(!paletteCollapsed)}
         />

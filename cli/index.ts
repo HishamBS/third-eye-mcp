@@ -25,6 +25,20 @@ const UI_LOG_FILE = resolve(LOGS_DIR, 'ui.log');
 const BUILD_LOG_FILE = resolve(LOGS_DIR, 'build.log');
 const RELEASE_HISTORY_FILE = resolve(THIRD_EYE_DIR, 'release-history.json');
 
+// Cleanup patterns for stale source artifacts (R13: SSOT for cleanup logic)
+const CLEANUP_PATTERNS = {
+  SOURCE_JS: ['**/*.js', '!*.config.js'],
+  SOURCE_MAPS: ['**/*.js.map', '**/*.d.ts.map'],
+  TYPE_DEFS: ['**/*.d.ts'],
+  BUILD_INFO: ['*.tsbuildinfo']
+} as const;
+
+const CLEANUP_DIRS = [
+  'packages/*/src',
+  'apps/ui/src',
+  'apps/server/src'
+] as const;
+
 interface CliArgs {
   command: string;
   foreground?: boolean;
@@ -34,6 +48,9 @@ interface CliArgs {
   port?: number;
   uiPort?: number;
   tail?: boolean;
+  skipUpdate?: boolean;
+  nuclear?: boolean;
+  quick?: boolean;
 }
 
 function showHelp() {
@@ -66,11 +83,16 @@ ${kleur.cyan('OPTIONS:')}
   --port <n>      Server port (default: 7070)
   --ui-port <n>   UI port (default: 3300)
   --tail          Tail logs in real-time
+  --skip-update   Skip dependency updates (faster iterations)
+  --quick         Skip updates and stale checks (just start)
+  --nuclear       Full clean (remove node_modules, reinstall)
 
 ${kleur.cyan('EXAMPLES:')}
   ${CLI_EXEC} up
   ${CLI_EXEC} up --foreground --verbose
   ${CLI_EXEC} up --no-ui --port 8080
+  ${CLI_EXEC} up --quick
+  ${CLI_EXEC} up --nuclear
   ${CLI_EXEC} status
   ${CLI_EXEC} logs --tail
   ${CLI_EXEC} stop
@@ -112,6 +134,15 @@ function parseArgs(): CliArgs {
       case '--tail':
       case '-t':
         parsed.tail = true;
+        break;
+      case '--skip-update':
+        parsed.skipUpdate = true;
+        break;
+      case '--nuclear':
+        parsed.nuclear = true;
+        break;
+      case '--quick':
+        parsed.quick = true;
         break;
     }
   }
@@ -702,6 +733,110 @@ async function runReleasePipeline() {
   console.log('\n🎉 Release pipeline completed successfully.');
 }
 
+/**
+ * Clean stale compiled artifacts from source directories
+ * Per R13: Prevents .js/.d.ts pollution in src/
+ */
+function cleanSourceArtifacts(projectRoot: string, quiet: boolean): number {
+  const spinner = quiet ? null : ora('Cleaning stale source artifacts...').start();
+  let filesRemoved = 0;
+
+  try {
+    // Build find command to locate stale compiled files
+    const patterns = [
+      '-name "*.js" ! -name "*.config.js"',
+      '-o -name "*.d.ts"',
+      '-o -name "*.js.map"',
+      '-o -name "*.d.ts.map"',
+      '-o -name "*.tsbuildinfo"'
+    ].join(' ');
+
+    for (const dir of CLEANUP_DIRS) {
+      const fullPath = resolve(projectRoot, dir);
+
+      // Use find to locate files (handles glob patterns)
+      const findCmd = `find ${fullPath} \\( ${patterns} \\) 2>/dev/null || true`;
+
+      try {
+        const output = execSync(findCmd, { encoding: 'utf-8' });
+        const files = output.trim().split('\n').filter(f => f.length > 0);
+
+        for (const file of files) {
+          try {
+            rmSync(file, { force: true });
+            filesRemoved++;
+          } catch (err) {
+            // Silently skip files that can't be removed
+          }
+        }
+      } catch (err) {
+        // Directory might not exist, skip
+      }
+    }
+
+    if (spinner) {
+      if (filesRemoved > 0) {
+        spinner.succeed(`Cleaned ${filesRemoved} stale source artifacts`);
+      } else {
+        spinner.succeed('No stale source artifacts found');
+      }
+    }
+
+    return filesRemoved;
+  } catch (error) {
+    if (spinner) {
+      spinner.fail('Failed to clean source artifacts');
+    }
+    if (!quiet) {
+      console.error(kleur.yellow(`Warning: ${error}`));
+    }
+    return filesRemoved;
+  }
+}
+
+/**
+ * Update project dependencies
+ * Per R12: Keep dependencies fresh
+ */
+async function updateDependencies(projectRoot: string, skipUpdate: boolean, quiet: boolean): Promise<void> {
+  if (skipUpdate) {
+    if (!quiet) {
+      console.log(kleur.gray('⏭️  Skipping dependency updates (--skip-update)'));
+    }
+    return;
+  }
+
+  const spinner = quiet ? null : ora('Updating dependencies...').start();
+
+  try {
+    // Update root dependencies
+    execSync('bun update', {
+      cwd: projectRoot,
+      stdio: quiet ? 'ignore' : 'inherit'
+    });
+
+    // Update UI dependencies
+    const uiPath = resolve(projectRoot, 'apps/ui');
+    if (existsSync(uiPath)) {
+      execSync('bun update', {
+        cwd: uiPath,
+        stdio: quiet ? 'ignore' : 'inherit'
+      });
+    }
+
+    if (spinner) {
+      spinner.succeed('Dependencies updated');
+    }
+  } catch (error) {
+    if (spinner) {
+      spinner.fail('Failed to update dependencies');
+    }
+    if (!quiet) {
+      console.error(kleur.yellow(`Warning: ${error}`));
+    }
+  }
+}
+
 function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
   if (!quiet) {
     console.log(kleur.cyan('🔍 Checking for stale package builds...'));
@@ -956,9 +1091,35 @@ async function startServices() {
     console.log(kleur.gray('━'.repeat(60)));
   }
 
+  // Nuclear mode: Full clean + reinstall
+  if (args.nuclear) {
+    if (!args.quiet) {
+      console.log(kleur.yellow('\n💣 Nuclear mode: Full clean + reinstall'));
+    }
+    const nuclearSpinner = args.quiet ? null : ora('Removing node_modules and build artifacts...').start();
+    try {
+      execSync('rm -rf node_modules apps/ui/node_modules apps/*/dist packages/*/dist .next', {
+        cwd: projectRoot,
+        stdio: 'ignore'
+      });
+      if (nuclearSpinner) nuclearSpinner.succeed('Cleaned all artifacts');
+    } catch (err) {
+      if (nuclearSpinner) nuclearSpinner.fail('Clean failed');
+    }
+  }
+
   await ensureDependencies(!args.quiet);
   checkEnvironment();
-  cleanStaleBuilds(projectRoot, args.quiet);
+
+  // Quick mode: Skip updates and stale checks
+  if (!args.quick) {
+    await updateDependencies(projectRoot, args.skipUpdate || false, args.quiet);
+    cleanSourceArtifacts(projectRoot, args.quiet);
+    cleanStaleBuilds(projectRoot, args.quiet);
+  } else if (!args.quiet) {
+    console.log(kleur.gray('⏭️  Quick mode: Skipping updates and stale checks'));
+  }
+
   await prepareDatabase(!args.quiet);
   await cleanStaleProcesses([args.port || SERVER_PORT, args.uiPort || UI_PORT]);
 
