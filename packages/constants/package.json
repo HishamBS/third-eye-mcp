@@ -5,8 +5,18 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js",
-    "./blueprints-data": "./dist/blueprints-data.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./blueprints-data": {
+      "types": "./dist/blueprints-data.d.ts",
+      "default": "./dist/blueprints-data.js"
+    },
+    "./workflow-constants": {
+      "types": "./dist/workflow-constants.d.ts",
+      "default": "./dist/workflow-constants.js"
+    }
   },
   "scripts": {
     "build": "tsc --build"
