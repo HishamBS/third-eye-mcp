@@ -3,7 +3,12 @@
   "version": "1.0.0",
   "type": "module",
   "main": "index.ts",
-  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "dependencies": {
     "@third-eye/types": "workspace:*",
     "zod": "^3.22.4"

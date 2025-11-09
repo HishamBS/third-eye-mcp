@@ -4,8 +4,14 @@
   "type": "module",
   "main": "index.ts",
   "exports": {
-    ".": "./dist/index.js",
-    "./defaults": "./dist/defaults/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./defaults": {
+      "types": "./dist/defaults/index.d.ts",
+      "default": "./dist/defaults/index.js"
+    }
   },
   "dependencies": {
     "@third-eye/types": "workspace:*",

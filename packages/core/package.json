@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "type": "module",
   "main": "index.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "dependencies": {
     "@third-eye/config": "workspace:*",
     "@third-eye/constants": "workspace:*",
