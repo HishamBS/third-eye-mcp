@@ -31,9 +31,13 @@ import { EdgeConfigModal } from './EdgeConfigModal';
 import { Toolbar } from './Toolbar';
 import { PersonaWizardModal } from '@/components/persona-form/PersonaWizardModal';
 import { PipelineTemplateSelector } from './PipelineTemplateSelector';
+import { SwitchNodeConfigModal } from './SwitchNodeConfigModal';
+import { IFNodeConfigModal } from './IFNodeConfigModal';
+import { LoopNodeConfigModal } from './LoopNodeConfigModal';
 import { CANVAS_SETTINGS, LAYOUT } from './constants';
 import { API_BASE_URL } from '@/consts/api';
 import type { PipelineNode, PipelineEdge, EyeNodeData, EdgeConditionData } from '@/types/pipeline';
+import type { SwitchNodeConfig, IfNodeConfig, LoopNodeConfig } from '@third-eye/types/pipeline';
 import { useActivePipeline } from '@/hooks/usePipelines';
 
 /**
@@ -158,6 +162,11 @@ export function PipelineCanvasEnhanced() {
   // Phase 19.4: Template selector modal state
   const [isTemplateSelectorOpen, setIsTemplateSelectorOpen] = useState(false);
 
+  // Control node configuration modal states
+  const [selectedSwitchNode, setSelectedSwitchNode] = useState<Node<EyeNodeData> | null>(null);
+  const [selectedIFNode, setSelectedIFNode] = useState<Node<EyeNodeData> | null>(null);
+  const [selectedLoopNode, setSelectedLoopNode] = useState<Node<EyeNodeData> | null>(null);
+
   // Load active/default pipeline from database
   const { pipeline: activePipeline, loading: pipelineLoading, refetch: refetchPipeline } = useActivePipeline();
 
@@ -206,11 +215,27 @@ export function PipelineCanvasEnhanced() {
     });
   }, [reactFlowInstance]);
 
-  // Right-click node → edit modal
+  // Right-click node → edit modal (type-specific)
   const handleNodeContextMenu = useCallback(
     (event: React.MouseEvent, node: Node<EyeNodeData>) => {
       event.preventDefault();
-      setSelectedNode(node);
+
+      // Route to appropriate modal based on node type
+      switch (node.type) {
+        case 'switch':
+          setSelectedSwitchNode(node);
+          break;
+        case 'if':
+          setSelectedIFNode(node);
+          break;
+        case 'loop_over_items':
+          setSelectedLoopNode(node);
+          break;
+        case 'eyeNode':
+        default:
+          setSelectedNode(node);
+          break;
+      }
     },
     []
   );
@@ -277,6 +302,43 @@ export function PipelineCanvasEnhanced() {
     // Could refresh node data here if needed
     console.log('Persona saved for pipeline node');
   }, []);
+
+  // Control node configuration save handlers
+  const handleSaveSwitchConfig = useCallback((config: SwitchNodeConfig) => {
+    if (!selectedSwitchNode) return;
+    setNodesValidated((nds) =>
+      nds.map((n) =>
+        n.id === selectedSwitchNode.id
+          ? { ...n, data: { ...n.data, switchConfig: config } }
+          : n
+      ) as Node<EyeNodeData>[]
+    );
+    setSelectedSwitchNode(null);
+  }, [selectedSwitchNode, setNodesValidated]);
+
+  const handleSaveIFConfig = useCallback((config: IfNodeConfig) => {
+    if (!selectedIFNode) return;
+    setNodesValidated((nds) =>
+      nds.map((n) =>
+        n.id === selectedIFNode.id
+          ? { ...n, data: { ...n.data, ifConfig: config } }
+          : n
+      ) as Node<EyeNodeData>[]
+    );
+    setSelectedIFNode(null);
+  }, [selectedIFNode, setNodesValidated]);
+
+  const handleSaveLoopConfig = useCallback((config: LoopNodeConfig) => {
+    if (!selectedLoopNode) return;
+    setNodesValidated((nds) =>
+      nds.map((n) =>
+        n.id === selectedLoopNode.id
+          ? { ...n, data: { ...n.data, loopConfig: config } }
+          : n
+      ) as Node<EyeNodeData>[]
+    );
+    setSelectedLoopNode(null);
+  }, [selectedLoopNode, setNodesValidated]);
 
   // Phase 19.4: Template loading handler
   const handleLoadTemplate = useCallback(
@@ -486,6 +548,28 @@ export function PipelineCanvasEnhanced() {
           onClose={() => setSelectedEdge(null)}
           onSave={handleEdgeUpdate}
           onDelete={handleEdgeDelete}
+        />
+
+        {/* Control Node Configuration Modals */}
+        <SwitchNodeConfigModal
+          isOpen={!!selectedSwitchNode}
+          onClose={() => setSelectedSwitchNode(null)}
+          config={selectedSwitchNode?.data?.switchConfig as SwitchNodeConfig | undefined}
+          onSave={handleSaveSwitchConfig}
+        />
+
+        <IFNodeConfigModal
+          isOpen={!!selectedIFNode}
+          onClose={() => setSelectedIFNode(null)}
+          config={selectedIFNode?.data?.ifConfig as IfNodeConfig | undefined}
+          onSave={handleSaveIFConfig}
+        />
+
+        <LoopNodeConfigModal
+          isOpen={!!selectedLoopNode}
+          onClose={() => setSelectedLoopNode(null)}
+          config={selectedLoopNode?.data?.loopConfig as LoopNodeConfig | undefined}
+          onSave={handleSaveLoopConfig}
         />
 
         {/* Phase 16: Persona Configuration Modal */}
