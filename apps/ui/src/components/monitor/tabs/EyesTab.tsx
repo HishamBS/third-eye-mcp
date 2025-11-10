@@ -22,7 +22,7 @@ export interface EyesTabProps {
 
 const DISPLAY_ORDER = [
   'SHARINGAN',
-  'PROMPT_HELPER',
+  'KYUUBI',
   'JOGAN',
   'RINNEGAN_PLAN',
   'RINNEGAN_REVIEW',

@@ -1,25 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import {
-  OVERSEER_BLUEPRINT,
-  SHARINGAN_BLUEPRINT,
-  JOGAN_BLUEPRINT,
-  RINNEGAN_BLUEPRINT,
-  MANGEKYO_BLUEPRINT,
-  TENSEIGAN_BLUEPRINT,
-  BYAKUGAN_BLUEPRINT,
-  PROMPT_HELPER_BLUEPRINT,
-} from '../index';
+import { DEFAULT_BLUEPRINTS } from '@third-eye/constants/blueprints-data';
+import { EyeId } from '@third-eye/constants';
 
 describe('Persona Blueprints', () => {
   const allBlueprints = [
-    OVERSEER_BLUEPRINT,
-    SHARINGAN_BLUEPRINT,
-    JOGAN_BLUEPRINT,
-    RINNEGAN_BLUEPRINT,
-    MANGEKYO_BLUEPRINT,
-    TENSEIGAN_BLUEPRINT,
-    BYAKUGAN_BLUEPRINT,
-    PROMPT_HELPER_BLUEPRINT,
+    DEFAULT_BLUEPRINTS[EyeId.OVERSEER],
+    DEFAULT_BLUEPRINTS[EyeId.SHARINGAN],
+    DEFAULT_BLUEPRINTS[EyeId.JOGAN],
+    DEFAULT_BLUEPRINTS[EyeId.RINNEGAN],
+    DEFAULT_BLUEPRINTS[EyeId.MANGEKYO],
+    DEFAULT_BLUEPRINTS[EyeId.TENSEIGAN],
+    DEFAULT_BLUEPRINTS[EyeId.BYAKUGAN],
+    DEFAULT_BLUEPRINTS[EyeId.KYUUBI],
   ];
 
   describe('Blueprint Structure', () => {
@@ -70,7 +62,7 @@ describe('Persona Blueprints', () => {
   });
 
   describe('Example JSON Parsing', () => {
-    const testBlueprintExamples = (blueprint: typeof OVERSEER_BLUEPRINT) => {
+    const testBlueprintExamples = (blueprint: typeof DEFAULT_BLUEPRINTS[typeof EyeId.OVERSEER]) => {
       for (const phase of [blueprint.phases.guidance, blueprint.phases.validation].filter(Boolean)) {
         expect(phase.example).toBeDefined();
         expect(typeof phase.example).toBe('string');
@@ -86,35 +78,35 @@ describe('Persona Blueprints', () => {
     };
 
     it('should have valid JSON examples for Overseer', () => {
-      testBlueprintExamples(OVERSEER_BLUEPRINT);
+      testBlueprintExamples(DEFAULT_BLUEPRINTS[EyeId.OVERSEER]);
     });
 
     it('should have valid JSON examples for Sharingan', () => {
-      testBlueprintExamples(SHARINGAN_BLUEPRINT);
+      testBlueprintExamples(DEFAULT_BLUEPRINTS[EyeId.SHARINGAN]);
     });
 
     it('should have valid JSON examples for Jogan', () => {
-      testBlueprintExamples(JOGAN_BLUEPRINT);
+      testBlueprintExamples(DEFAULT_BLUEPRINTS[EyeId.JOGAN]);
     });
 
     it('should have valid JSON examples for Rinnegan', () => {
-      testBlueprintExamples(RINNEGAN_BLUEPRINT);
+      testBlueprintExamples(DEFAULT_BLUEPRINTS[EyeId.RINNEGAN]);
     });
 
     it('should have valid JSON examples for Mangekyo', () => {
-      testBlueprintExamples(MANGEKYO_BLUEPRINT);
+      testBlueprintExamples(DEFAULT_BLUEPRINTS[EyeId.MANGEKYO]);
     });
 
     it('should have valid JSON examples for Tenseigan', () => {
-      testBlueprintExamples(TENSEIGAN_BLUEPRINT);
+      testBlueprintExamples(DEFAULT_BLUEPRINTS[EyeId.TENSEIGAN]);
     });
 
     it('should have valid JSON examples for Byakugan', () => {
-      testBlueprintExamples(BYAKUGAN_BLUEPRINT);
+      testBlueprintExamples(DEFAULT_BLUEPRINTS[EyeId.BYAKUGAN]);
     });
 
     it('should have valid JSON examples for Kyuubi', () => {
-      testBlueprintExamples(PROMPT_HELPER_BLUEPRINT);
+      testBlueprintExamples(DEFAULT_BLUEPRINTS[EyeId.KYUUBI]);
     });
   });
 

@@ -260,11 +260,23 @@ export class EyeOrchestrator {
 
       // 5. Build persona prompt using blueprint renderer (done once, used for all providers)
       // Query database first (SSOT), fallback to defaults
-      const blueprint = await getPersonaBlueprint(eyeName);
+      // Convert eyeName to eyeId first (per V1 SSOT standard: all lookups use UUIDs)
+      const eyeId = await getEyeIdByName(eyeName);
+      if (!eyeId) {
+        return this.createErrorEnvelope(
+          eyeName,
+          `Eye not found in database: ${eyeName}`,
+          runId,
+          actualSessionId,
+          startTime
+        );
+      }
+
+      const blueprint = await getPersonaBlueprint(eyeId);
       if (!blueprint) {
         return this.createErrorEnvelope(
           eyeName,
-          `No blueprint found for Eye: ${eyeName}`,
+          `No blueprint found for Eye: ${eyeName} (eyeId: ${eyeId})`,
           runId,
           actualSessionId,
           startTime

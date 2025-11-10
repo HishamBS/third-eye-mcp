@@ -152,7 +152,7 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
             requestType: RequestType.NEW_TASK,
             contentDomain: ContentDomain.TEXT,
             complexity: 'moderate',
-            pipelineRoute: [EyeTag.SHARINGAN, EyeTag.PROMPT_HELPER, EyeTag.JOGAN, EyeTag.TENSEIGAN, EyeTag.BYAKUGAN],
+            pipelineRoute: [EyeTag.SHARINGAN, EyeTag.KYUUBI, EyeTag.JOGAN, EyeTag.TENSEIGAN, EyeTag.BYAKUGAN],
             routingReasoning: 'NEW_TASK for TEXT domain with MODERATE complexity. Route: Sharingan (clarification) → Kyuubi (structured brief) → Jogan (intent confirmation) → Tenseigan (evidence validation) → Byakugan (final review).',
           },
           [EnvelopeField.UI]: {
@@ -262,7 +262,7 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
             [EnvelopeField.ICON]: EmojiIcon.CHECK,
             [EnvelopeField.COLOR]: SemanticColor.SUCCESS,
           },
-          [EnvelopeField.NEXT]: EyeTag.PROMPT_HELPER,
+          [EnvelopeField.NEXT]: EyeTag.KYUUBI,
         }, null, 2),
       },
     },
