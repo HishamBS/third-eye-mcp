@@ -398,6 +398,35 @@ export const humanResponses = sqliteTable('human_responses', {
   createdAt: integer({ mode: 'timestamp' }).notNull(),
 });
 
+// Phase 1-A2: Three Routing Modes - Routing Policies Table
+export const routingPolicies = sqliteTable('routing_policies', {
+  id: text().primaryKey(),
+  name: text().notNull(),
+  description: text(),
+  mandatoryEyes: text({ mode: 'json' }).notNull(), // JSON array of eye names
+  forbiddenEyes: text({ mode: 'json' }), // JSON array of eye names
+  minValidationEyes: integer(),
+  securityRequired: integer({ mode: 'boolean' }).default(false),
+  alwaysConfirmIntent: integer({ mode: 'boolean' }).default(false),
+  customConstraints: text({ mode: 'json' }), // JSON array of constraints
+  isActive: integer({ mode: 'boolean' }).notNull().default(true),
+  createdAt: integer({ mode: 'timestamp' }).notNull(),
+});
+
+// Phase 1-A2: Three Routing Modes - Pipeline Templates Table
+export const pipelineTemplates = sqliteTable('pipeline_templates', {
+  id: text().primaryKey(),
+  name: text().notNull(),
+  description: text(),
+  eyes: text({ mode: 'json' }).notNull(), // JSON array of eye names (exact sequence)
+  strict: integer({ mode: 'boolean' }).notNull().default(true),
+  autoTriggerPattern: text(), // Regex pattern for automatic triggering
+  createdBy: text(),
+  isPublic: integer({ mode: 'boolean' }).notNull().default(false),
+  usageCount: integer().notNull().default(0),
+  createdAt: integer({ mode: 'timestamp' }).notNull(),
+});
+
 // Type exports
 export type AppSetting = typeof appSettings.$inferSelect;
 export type NewAppSetting = typeof appSettings.$inferInsert;
@@ -482,3 +511,9 @@ export type NewPendingQuestion = typeof pendingQuestions.$inferInsert;
 
 export type HumanResponse = typeof humanResponses.$inferSelect;
 export type NewHumanResponse = typeof humanResponses.$inferInsert;
+
+export type RoutingPolicy = typeof routingPolicies.$inferSelect;
+export type NewRoutingPolicy = typeof routingPolicies.$inferInsert;
+
+export type PipelineTemplate = typeof pipelineTemplates.$inferSelect;
+export type NewPipelineTemplate = typeof pipelineTemplates.$inferInsert;
