@@ -49,6 +49,7 @@ export const eyes = sqliteTable('eyes', {
   inputSchemaJson: text({ mode: 'json' }).notNull(),
   outputSchemaJson: text({ mode: 'json' }).notNull(),
   personaId: text(),
+  capabilityTags: text({ mode: 'json' }).notNull().default('[]'), // Phase 1-A1: Dynamic routing capability tags
   active: integer({ mode: 'boolean' }).notNull().default(true),
   createdAt: integer({ mode: 'timestamp' }).notNull(),
 }, (table) => ({
@@ -351,6 +352,52 @@ export const mcpIntegrations = sqliteTable('mcp_integrations', {
   updatedAt: integer({ mode: 'timestamp' }).notNull(),
 });
 
+// Phase 1-A1: Routing Decisions - store dynamic routing analytics
+export const routingDecisions = sqliteTable('routing_decisions', {
+  id: text().primaryKey(), // UUID
+  sessionId: text().notNull().references(() => sessions.id), // FK
+  requestAnalysis: text({ mode: 'json' }).notNull(),
+  selectedEyes: text({ mode: 'json' }).notNull(),
+  reasoning: text().notNull(),
+  executionMode: text().notNull(), // sequential | parallel
+  createdAt: integer({ mode: 'timestamp' }).notNull(),
+});
+
+// Phase 1-A3: Pipeline States - pause/resume mechanism
+export const pipelineStates = sqliteTable('pipeline_states', {
+  sessionId: text().primaryKey().references(() => sessions.id), // Session ID as PK
+  status: text().notNull(), // running | paused_for_human | paused_for_agent | completed
+  currentEye: text().notNull(),
+  pauseReason: text(), // clarification | confirmation | validation_failed
+  pendingData: text({ mode: 'json' }),
+  resumeToken: text().notNull(),
+  pausedAt: integer({ mode: 'timestamp' }),
+  expiresAt: integer({ mode: 'timestamp' }),
+});
+
+// Phase 1-A3: Pending Questions - human-in-the-loop questions
+export const pendingQuestions = sqliteTable('pending_questions', {
+  id: text().primaryKey(), // UUID
+  sessionId: text().notNull().references(() => sessions.id), // FK
+  eyeName: text().notNull(),
+  questions: text({ mode: 'json' }).notNull(),
+  context: text({ mode: 'json' }),
+  status: text().notNull(), // pending | answered | expired
+  createdAt: integer({ mode: 'timestamp' }).notNull(),
+  expiresAt: integer({ mode: 'timestamp' }).notNull(),
+});
+
+// Phase 1-A3: Human Responses - answers to pending questions
+export const humanResponses = sqliteTable('human_responses', {
+  id: text().primaryKey(), // UUID
+  questionId: text().notNull().references(() => pendingQuestions.id), // FK
+  sessionId: text().notNull().references(() => sessions.id), // FK
+  answers: text({ mode: 'json' }).notNull(),
+  source: text().notNull(), // human | agent
+  validated: integer({ mode: 'boolean' }).notNull().default(false),
+  createdAt: integer({ mode: 'timestamp' }).notNull(),
+});
+
 // Type exports
 export type AppSetting = typeof appSettings.$inferSelect;
 export type NewAppSetting = typeof appSettings.$inferInsert;
@@ -423,3 +470,15 @@ export type NewIntentConfirmation = typeof intentConfirmations.$inferInsert;
 
 export type McpIntegration = typeof mcpIntegrations.$inferSelect;
 export type NewMcpIntegration = typeof mcpIntegrations.$inferInsert;
+
+export type RoutingDecision = typeof routingDecisions.$inferSelect;
+export type NewRoutingDecision = typeof routingDecisions.$inferInsert;
+
+export type PipelineState = typeof pipelineStates.$inferSelect;
+export type NewPipelineState = typeof pipelineStates.$inferInsert;
+
+export type PendingQuestion = typeof pendingQuestions.$inferSelect;
+export type NewPendingQuestion = typeof pendingQuestions.$inferInsert;
+
+export type HumanResponse = typeof humanResponses.$inferSelect;
+export type NewHumanResponse = typeof humanResponses.$inferInsert;
