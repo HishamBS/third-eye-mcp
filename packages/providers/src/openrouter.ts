@@ -15,8 +15,21 @@ const OpenRouterModelsResponseSchema = z.object({
   data: z.array(OpenRouterModelSchema),
 });
 
+// Phase 1-A4: Tool call schema for function calling
+const OpenRouterToolCallSchema = z.object({
+  id: z.string(),
+  type: z.literal('function'),
+  function: z.object({
+    name: z.string(),
+    arguments: z.string(), // JSON string
+  }),
+});
+
 const OpenRouterChoiceSchema = z.object({
-  message: z.object({ content: z.string() }),
+  message: z.object({
+    content: z.string().nullable(), // Phase 1-A4: Nullable when using tool_calls
+    tool_calls: z.array(OpenRouterToolCallSchema).optional(), // Phase 1-A4: Function calling
+  }),
   finish_reason: z.string().optional().nullable(),
 });
 
@@ -105,6 +118,8 @@ export class OpenRouterProvider extends BaseProvider {
           max_tokens: request.max_tokens,
           top_p: request.top_p,
           stop: request.stop,
+          tools: request.tools, // Phase 1-A4: Function calling
+          tool_choice: request.tool_choice, // Phase 1-A4
         }),
       });
 
@@ -117,16 +132,21 @@ export class OpenRouterProvider extends BaseProvider {
       const usage = payload.usage ?? {};
       const choice = payload.choices[0];
 
+      // Phase 1-A4: Handle function calling responses
+      const toolCalls = choice.message.tool_calls;
+      const content = choice.message.content ?? '';
+
       return {
         id: payload.id,
         model: payload.model,
-        content: choice.message.content,
+        content,
         usage: {
           prompt_tokens: usage.prompt_tokens ?? 0,
           completion_tokens: usage.completion_tokens ?? 0,
           total_tokens: usage.total_tokens ?? 0,
         },
         finish_reason: this.normalizeFinishReason(choice.finish_reason),
+        tool_calls: toolCalls, // Phase 1-A4: Include tool calls if present
       };
     } catch (error) {
       throw new Error(`OpenRouter completion error: ${this.normalizeError(error)}`);

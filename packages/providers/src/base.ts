@@ -11,6 +11,26 @@ export interface ModelInfo {
   };
 }
 
+// Phase 1-A4: Function tool definition for function calling
+export interface FunctionTool {
+  type: 'function';
+  function: {
+    name: string;
+    description: string;
+    parameters: Record<string, unknown>; // JSON Schema
+  };
+}
+
+// Phase 1-A4: Tool call response from model
+export interface ToolCall {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string; // JSON string
+  };
+}
+
 export interface CompletionRequest {
   model: string;
   messages: Array<{
@@ -22,6 +42,8 @@ export interface CompletionRequest {
   top_p?: number;
   stop?: string[];
   response_format?: { type: 'json_object' | 'text' };
+  tools?: FunctionTool[]; // Phase 1-A4: Function calling support
+  tool_choice?: 'auto' | 'none' | { type: 'function'; function: { name: string } }; // Phase 1-A4
 }
 
 export interface CompletionResponse {
@@ -34,6 +56,7 @@ export interface CompletionResponse {
     total_tokens: number;
   };
   finish_reason: 'stop' | 'length' | 'content_filter' | 'tool_calls';
+  tool_calls?: ToolCall[]; // Phase 1-A4: Function calling responses
 }
 
 export interface HealthStatus {
