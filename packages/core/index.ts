@@ -37,6 +37,27 @@ export type {
   SessionContext
 } from './routing/dynamic-router';
 
+// Pause/Resume mechanism (Phase 1-A3)
+export { PauseResumeManager } from './pause-resume-manager';
+export type {
+  PipelineState,
+  PendingQuestion,
+  HumanResponse
+} from './pause-resume-manager';
+
+// Three Routing Modes (Phase 1-A2)
+export { RoutingMode } from './routing/routing-modes';
+export type {
+  RoutingPolicy,
+  Constraint,
+  PipelineTemplate,
+  PolicyValidationResult,
+  RoutingContext
+} from './routing/routing-modes';
+export { PolicyValidator } from './routing/policy-validator';
+export { TemplateExecutor } from './routing/template-executor';
+export type { TemplateExecutionPlan } from './routing/template-executor';
+
 // Workflow execution
 export { WorkflowInterpreter } from './workflow-interpreter';
 export type {

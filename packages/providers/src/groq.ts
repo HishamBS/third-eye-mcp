@@ -11,8 +11,21 @@ const GroqModelsResponseSchema = z.object({
   data: z.array(GroqModelSchema),
 });
 
+// Phase 1-A4: Tool call schema for function calling
+const GroqToolCallSchema = z.object({
+  id: z.string(),
+  type: z.literal('function'),
+  function: z.object({
+    name: z.string(),
+    arguments: z.string(), // JSON string
+  }),
+});
+
 const GroqChoiceSchema = z.object({
-  message: z.object({ content: z.string() }),
+  message: z.object({
+    content: z.string().nullable(), // Phase 1-A4: Nullable when using tool_calls
+    tool_calls: z.array(GroqToolCallSchema).optional(), // Phase 1-A4: Function calling
+  }),
   finish_reason: z.string().optional().nullable(),
 });
 
@@ -103,7 +116,9 @@ export class GroqProvider extends BaseProvider {
             max_tokens: request.max_tokens,
             top_p: request.top_p,
             stop: request.stop,
-            response_format: request.response_format
+            response_format: request.response_format,
+            tools: request.tools, // Phase 1-A4: Function calling
+            tool_choice: request.tool_choice, // Phase 1-A4
           })
         }
       );
@@ -117,16 +132,21 @@ export class GroqProvider extends BaseProvider {
       const usage = data.usage ?? {};
       const primaryChoice = data.choices[0];
 
+      // Phase 1-A4: Handle function calling responses
+      const toolCalls = primaryChoice.message.tool_calls;
+      const content = primaryChoice.message.content ?? '';
+
       return {
         id: data.id,
         model: data.model,
-        content: primaryChoice.message.content,
+        content,
         usage: {
           prompt_tokens: usage.prompt_tokens ?? 0,
           completion_tokens: usage.completion_tokens ?? 0,
           total_tokens: usage.total_tokens ?? 0,
         },
         finish_reason: this.normalizeFinishReason(primaryChoice.finish_reason),
+        tool_calls: toolCalls, // Phase 1-A4: Include tool calls if present
       };
     } catch (error) {
       throw new Error(`Groq completion error: ${this.normalizeError(error)}`);
@@ -174,7 +194,8 @@ export class GroqProvider extends BaseProvider {
       'llama-3.1-70b-versatile': { prompt: 0.59, completion: 0.79 },
       'llama-3.1-8b-instant': { prompt: 0.05, completion: 0.08 },
       'mixtral-8x7b-32768': { prompt: 0.24, completion: 0.24 },
-      'gemma2-9b-it': { prompt: 0.20, completion: 0.20 }
+      'gemma2-9b-it': { prompt: 0.20, completion: 0.20 },
+      'llama-3-groq-70b-tool-use': { prompt: 0.89, completion: 0.89 }, // Phase 1-A4: Tool use model
     };
 
     return pricing[modelId];
