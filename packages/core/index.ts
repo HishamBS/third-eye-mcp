@@ -37,6 +37,14 @@ export type {
   SessionContext
 } from './routing/dynamic-router';
 
+// Pause/Resume mechanism (Phase 1-A3)
+export { PauseResumeManager } from './pause-resume-manager';
+export type {
+  PipelineState,
+  PendingQuestion,
+  HumanResponse
+} from './pause-resume-manager';
+
 // Workflow execution
 export { WorkflowInterpreter } from './workflow-interpreter';
 export type {
