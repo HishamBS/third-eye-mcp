@@ -398,6 +398,8 @@ export function createMCPServer(): Server {
           stepsExecuted: result.results.length,
         };
 
+        // Phase 1-A6: Eye Invisibility - Agent never sees internal Eye operations
+        // Only return final result, sessionId, and portal URL for developer monitoring
         return {
           content: [
             {
@@ -410,7 +412,8 @@ export function createMCPServer(): Server {
                   summary,
                   metadata,
                   data: finalResult,
-                  history: result.results,
+                  // history removed - agent should not see Eye operations
+                  // Developers can monitor Eyes via portal: metadata.portalUrl
                 },
                 null,
                 2
