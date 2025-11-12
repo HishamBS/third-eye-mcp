@@ -62,6 +62,8 @@ interface MCPToolArguments {
   sessionId?: string;
   strictness?: Record<string, unknown>;
   context?: Record<string, unknown>;
+  confirmationId?: string;
+  confirmationResponse?: string;
 }
 
 function buildSessionMetadata(): Record<string, unknown> {
@@ -363,8 +365,8 @@ export function createMCPServer(): Server {
       if (confirmationId && confirmationResponse) {
         const { IntentConfirmationManager } = await import('@third-eye/core');
         const { getDb } = await import('@third-eye/db');
-        const { db } = getDb();
-        const confirmationManager = new IntentConfirmationManager(db);
+        const { sqlite } = getDb();
+        const confirmationManager = new IntentConfirmationManager(sqlite);
 
         // Submit the confirmation response
         const confirmation = await confirmationManager.submitConfirmation(confirmationId, {

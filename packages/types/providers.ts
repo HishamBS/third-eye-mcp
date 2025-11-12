@@ -41,6 +41,20 @@ export const CompletionRequestSchema = z.object({
 export type CompletionRequest = z.infer<typeof CompletionRequestSchema>;
 
 /**
+ * Tool call from function calling API
+ */
+export const ToolCallSchema = z.object({
+  id: z.string(),
+  type: z.literal('function'),
+  function: z.object({
+    name: z.string(),
+    arguments: z.string(),
+  }),
+});
+
+export type ToolCall = z.infer<typeof ToolCallSchema>;
+
+/**
  * Completion response format
  * Matches the actual provider implementations in packages/providers/src/base.ts
  */
@@ -54,6 +68,7 @@ export const CompletionResponseSchema = z.object({
     total_tokens: z.number(),
   }).optional(),
   finish_reason: z.enum(['stop', 'length', 'content_filter', 'tool_calls']).optional(),
+  tool_calls: z.array(ToolCallSchema).optional(),
   // Legacy fields for backward compatibility
   tokensIn: z.number().optional(),
   tokensOut: z.number().optional(),

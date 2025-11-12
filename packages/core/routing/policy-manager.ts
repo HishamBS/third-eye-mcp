@@ -9,8 +9,8 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { Database } from 'better-sqlite3';
-import type { RoutingPolicy } from './routing-modes';
+import type { Database } from 'bun:sqlite';
+import type { RoutingPolicy, Constraint } from './routing-modes';
 import { PolicyValidator } from './policy-validator';
 
 /**
@@ -34,7 +34,7 @@ export class PolicyManager {
     minValidationEyes?: number;
     securityRequired?: boolean;
     alwaysConfirmIntent?: boolean;
-    customConstraints?: readonly { readonly type: string; readonly value: unknown; readonly reason: string }[];
+    customConstraints?: readonly Constraint[];
   }): Promise<RoutingPolicy> {
     const id = randomUUID();
     const createdAt = Date.now();
@@ -121,7 +121,7 @@ export class PolicyManager {
       securityRequired: row.security_required === 1,
       alwaysConfirmIntent: row.always_confirm_intent === 1,
       customConstraints: row.custom_constraints
-        ? (JSON.parse(row.custom_constraints) as Array<{ readonly type: string; readonly value: unknown; readonly reason: string }>)
+        ? (JSON.parse(row.custom_constraints) as Constraint[])
         : undefined,
       isActive: row.is_active === 1,
       createdAt: row.created_at,
@@ -134,7 +134,7 @@ export class PolicyManager {
   listPolicies(filters?: { isActive?: boolean }): readonly RoutingPolicy[] {
     let query = `SELECT id, name, description, mandatory_eyes, forbidden_eyes, min_validation_eyes, security_required, always_confirm_intent, custom_constraints, is_active, created_at
                  FROM routing_policies WHERE 1=1`;
-    const params: unknown[] = [];
+    const params: (string | number | boolean | null)[] = [];
 
     if (filters?.isActive !== undefined) {
       query += ` AND is_active = ?`;
@@ -167,7 +167,7 @@ export class PolicyManager {
       securityRequired: row.security_required === 1,
       alwaysConfirmIntent: row.always_confirm_intent === 1,
       customConstraints: row.custom_constraints
-        ? (JSON.parse(row.custom_constraints) as Array<{ readonly type: string; readonly value: unknown; readonly reason: string }>)
+        ? (JSON.parse(row.custom_constraints) as Constraint[])
         : undefined,
       isActive: row.is_active === 1,
       createdAt: row.created_at,
@@ -187,7 +187,7 @@ export class PolicyManager {
       minValidationEyes: number;
       securityRequired: boolean;
       alwaysConfirmIntent: boolean;
-      customConstraints: readonly { readonly type: string; readonly value: unknown; readonly reason: string }[];
+      customConstraints: readonly Constraint[];
       isActive: boolean;
     }>
   ): Promise<RoutingPolicy> {
