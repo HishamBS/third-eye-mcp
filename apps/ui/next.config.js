@@ -38,8 +38,18 @@ const nextConfig = {
     return config;
   },
 
-  // Transpile workspace packages
-  transpilePackages: ['@third-eye/db', '@third-eye/core', '@third-eye/types', '@third-eye/config', '@third-eye/constants'],
+  // Transpile ALL workspace packages (required for proper module resolution)
+  transpilePackages: [
+    '@third-eye/constants',
+    '@third-eye/types',
+    '@third-eye/config',
+    '@third-eye/db',
+    '@third-eye/core',
+    '@third-eye/providers',
+    '@third-eye/eyes',
+    '@third-eye/mcp',
+    '@third-eye/theme'
+  ],
 
   // Image optimization
   images: {
