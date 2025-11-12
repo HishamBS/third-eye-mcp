@@ -28,6 +28,8 @@ import databaseOpsRoutes from './routes/database-ops';
 import modelsRoutes from './routes/models';
 import systemRoutes from './routes/system';
 import metricsRoutes from './routes/metrics';
+import policiesRoutes from './routes/policies';
+import templatesRoutes from './routes/templates';
 
 /**
  * Third Eye MCP Bun Server
@@ -94,6 +96,10 @@ app.route('/api/app-settings', appSettingsRoutes);
 app.route('/api/models', modelsRoutes);
 app.route('/api/system', systemRoutes);
 app.route('/api/metrics', metricsRoutes);
+
+// Phase 3: Routing Modes API
+app.route('/api/policies', policiesRoutes);
+app.route('/api/templates', templatesRoutes);
 
 // Eyes API Routes - Read-only endpoints enabled for UI
 // Note: Direct Eye EXECUTION is blocked (violates Golden Rule #1)
