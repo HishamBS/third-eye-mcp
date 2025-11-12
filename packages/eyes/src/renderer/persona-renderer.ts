@@ -16,6 +16,49 @@ export interface PersonaPromptOptions {
   debug?: boolean;
 }
 
+// REPAIR_PLAN A4: Function calling tool schema for structured eye responses
+export const EYE_RESPONSE_TOOL = {
+  type: "function" as const,
+  function: {
+    name: "submit_eye_analysis",
+    description: "Submit structured analysis from the Eye",
+    parameters: {
+      type: "object",
+      properties: {
+        tag: { type: "string", description: "Eye identifier tag" },
+        ok: { type: "boolean", description: "Whether the analysis succeeded" },
+        code: { type: "string", description: "Status code (E_OK, E_NEEDS_CLARIFICATION, etc.)" },
+        md: { type: "string", description: "Markdown-formatted analysis" },
+        data: {
+          type: "object",
+          description: "Structured data specific to this eye",
+          additionalProperties: true
+        },
+        next: {
+          oneOf: [
+            { type: "string" },
+            { type: "array", items: { type: "string" } }
+          ],
+          description: "Next recommended eye(s) or action"
+        },
+        next_action: {
+          oneOf: [
+            { type: "string" },
+            { type: "array", items: { type: "string" } }
+          ],
+          description: "Next action (legacy field, same as next)"
+        },
+        ui: {
+          type: "object",
+          description: "Optional UI display fields",
+          additionalProperties: true
+        }
+      },
+      required: ["tag", "ok", "code", "md", "data"]
+    }
+  }
+};
+
 export interface PersonaPrompt {
   /** Complete system prompt for LLM */
   systemPrompt: string;
@@ -25,7 +68,8 @@ export interface PersonaPrompt {
   config: {
     temperature: number;
     top_p: number;
-    response_format: { type: 'json_object' };
+    tools: typeof EYE_RESPONSE_TOOL[];
+    tool_choice: { type: "function"; function: { name: string } };
   };
 }
 
@@ -67,7 +111,8 @@ export function renderPersonaPrompt(
     config: {
       temperature: 0,
       top_p: 1,
-      response_format: { type: ResponseFormatType.JSON_OBJECT },
+      tools: [EYE_RESPONSE_TOOL],
+      tool_choice: { type: "function", function: { name: "submit_eye_analysis" } },
     },
   };
 }

@@ -9,6 +9,7 @@ import {
   strictnessProfiles,
   appSettings,
   mcpIntegrations,
+  pipelineTemplates,
   type NewPersona,
   type NewEye,
   type NewPipeline,
@@ -22,12 +23,14 @@ import { eq, inArray } from 'drizzle-orm';
 import { DEFAULT_PERSONAS, DEFAULT_PERSONA_MAP } from './personas';
 import { DEFAULT_INTEGRATIONS } from './integrations';
 import { DEFAULT_PIPELINES } from './pipelines';
+import { PREDEFINED_TEMPLATES } from './templates';
 import {
   STRICTNESS_PRESETS,
   type StrictnessPresetId,
 } from '@third-eye/types';
 import { DEFAULT_BLUEPRINTS } from '@third-eye/constants/blueprints-data';
 import { generateId } from '../utils/uuid';
+import { SeedSubset } from '../constants';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -64,19 +67,20 @@ const DEFAULT_STRICTNESS: Array<Omit<NewStrictnessProfile, 'createdAt'>> = (
 
 export interface SeedDefaultsOptions {
   force?: boolean;
-  subsets?: Partial<Record<'eyes' | 'personas' | 'blueprints' | 'pipelines' | 'routing' | 'strictness' | 'appSettings' | 'integrations', boolean>>;
+  subsets?: Partial<Record<SeedSubset, boolean>>;
   log?: (message: string) => void;
 }
 
 export interface SeedReport {
-  eyes: boolean;
-  personas: boolean;
-  blueprints: boolean;
-  pipelines: boolean;
-  routing: boolean;
-  strictness: boolean;
-  appSettings: boolean;
-  integrations: boolean;
+  [SeedSubset.EYES]: boolean;
+  [SeedSubset.PERSONAS]: boolean;
+  [SeedSubset.BLUEPRINTS]: boolean;
+  [SeedSubset.PIPELINES]: boolean;
+  [SeedSubset.ROUTING]: boolean;
+  [SeedSubset.STRICTNESS]: boolean;
+  [SeedSubset.APP_SETTINGS]: boolean;
+  [SeedSubset.INTEGRATIONS]: boolean;
+  [SeedSubset.TEMPLATES]: boolean;
 }
 
 function generatePersonaId(eyeName: string, version: number) {
@@ -633,6 +637,30 @@ async function seedPipelines(
 }
 
 /**
+ * REPAIR_PLAN A7.2: Seed predefined pipeline templates
+ * 5 built-in templates for common use cases
+ */
+async function seedTemplates(
+  db: ReturnType<typeof getDb>['db'],
+  log: (message: string) => void,
+  force: boolean
+): Promise<boolean> {
+  const existing = await db.select({ id: pipelineTemplates.id }).from(pipelineTemplates).limit(1);
+  const shouldSeed = force || existing.length === 0;
+  if (!shouldSeed) {
+    return false;
+  }
+
+  if (force) {
+    await db.delete(pipelineTemplates).run(); // Delete ALL templates
+  }
+
+  await db.insert(pipelineTemplates).values(PREDEFINED_TEMPLATES).run();
+  log(`  • Templates seeded (${PREDEFINED_TEMPLATES.length} predefined templates)`);
+  return true;
+}
+
+/**
  * Seed all defaults - complete data-driven initialization
  * 
  * ORDER MATTERS:
@@ -649,59 +677,65 @@ export async function seedDefaults(options: SeedDefaultsOptions = {}): Promise<S
   
   
   const subsets = {
-    eyes: true,
-    personas: true,
-    blueprints: true,
-    pipelines: true,
-    routing: true,
-    strictness: true,
-    appSettings: true,
-    integrations: true,
+    [SeedSubset.EYES]: true,
+    [SeedSubset.PERSONAS]: true,
+    [SeedSubset.BLUEPRINTS]: true,
+    [SeedSubset.PIPELINES]: true,
+    [SeedSubset.ROUTING]: true,
+    [SeedSubset.STRICTNESS]: true,
+    [SeedSubset.APP_SETTINGS]: true,
+    [SeedSubset.INTEGRATIONS]: true,
+    [SeedSubset.TEMPLATES]: true,
     ...(options.subsets ?? {}),
   };
 
   const report: SeedReport = {
-    eyes: false,
-    personas: false,
-    blueprints: false,
-    pipelines: false,
-    routing: false,
-    strictness: false,
-    appSettings: false,
-    integrations: false,
+    [SeedSubset.EYES]: false,
+    [SeedSubset.PERSONAS]: false,
+    [SeedSubset.BLUEPRINTS]: false,
+    [SeedSubset.PIPELINES]: false,
+    [SeedSubset.ROUTING]: false,
+    [SeedSubset.STRICTNESS]: false,
+    [SeedSubset.APP_SETTINGS]: false,
+    [SeedSubset.INTEGRATIONS]: false,
+    [SeedSubset.TEMPLATES]: false,
   };
 
   // Seed in dependency order
-  if (subsets.eyes) {
-    report.eyes = await seedEyes(db, sqlite, log, force);
+  if (subsets[SeedSubset.EYES]) {
+    report[SeedSubset.EYES] = await seedEyes(db, sqlite, log, force);
   }
 
-  if (subsets.blueprints) {
-    report.blueprints = await seedBlueprints(db, log, force);
+  if (subsets[SeedSubset.BLUEPRINTS]) {
+    report[SeedSubset.BLUEPRINTS] = await seedBlueprints(db, log, force);
   }
 
-  if (subsets.personas) {
-    report.personas = await seedPersonas(db, sqlite, log, force);
+  if (subsets[SeedSubset.PERSONAS]) {
+    report[SeedSubset.PERSONAS] = await seedPersonas(db, sqlite, log, force);
   }
 
-  if (subsets.pipelines) {
-    report.pipelines = await seedPipelines(db, log, force);
+  if (subsets[SeedSubset.PIPELINES]) {
+    report[SeedSubset.PIPELINES] = await seedPipelines(db, log, force);
   }
 
-  if (subsets.routing) {
-    report.routing = await seedRouting(db, log, force);
+  if (subsets[SeedSubset.ROUTING]) {
+    report[SeedSubset.ROUTING] = await seedRouting(db, log, force);
   }
 
-  if (subsets.strictness) {
-    report.strictness = await seedStrictness(db, log, force);
+  if (subsets[SeedSubset.STRICTNESS]) {
+    report[SeedSubset.STRICTNESS] = await seedStrictness(db, log, force);
   }
 
-  if (subsets.appSettings) {
-    report.appSettings = await seedAppSettings(db, log, force);
+  if (subsets[SeedSubset.APP_SETTINGS]) {
+    report[SeedSubset.APP_SETTINGS] = await seedAppSettings(db, log, force);
   }
 
-  if (subsets.integrations) {
-    report.integrations = await seedIntegrations(db, log, force);
+  if (subsets[SeedSubset.INTEGRATIONS]) {
+    report[SeedSubset.INTEGRATIONS] = await seedIntegrations(db, log, force);
+  }
+
+  if (subsets[SeedSubset.TEMPLATES]) {
+    report[SeedSubset.TEMPLATES] = await seedTemplates(db, log, force);
   }
 
   return report;

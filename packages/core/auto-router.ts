@@ -8,7 +8,7 @@
 import type { EyeName } from '@third-eye/types';
 import type { BaseEnvelope } from '@third-eye/eyes';
 import { isRejected } from '@third-eye/eyes';
-import { EyeId } from '@third-eye/constants';
+import { EyeId, EyeStatusCode } from '@third-eye/constants';
 import { EyeOrchestrator } from './orchestrator';
 import { orderGuard } from './order-guard';
 import { ConversationTracker } from './conversation-tracker';
@@ -97,6 +97,8 @@ export interface AutoRoutingResult {
   sessionId: string;
   results: BaseEnvelope[];
   completed: boolean;
+  paused?: boolean;        // REPAIR_PLAN A3: Pipeline paused for human input
+  pauseReason?: string;    // REPAIR_PLAN A3: Reason for pause
   error?: string;
 }
 
@@ -426,6 +428,89 @@ export class AutoRouter {
           });
         }
 
+        // REPAIR_PLAN A3: Check for pause codes - BEFORE rejection check
+        if (result.code === EyeStatusCode.E_NEEDS_CLARIFICATION) {
+          const { PauseResumeManager } = await import('./pause-resume-manager');
+          const { getDb } = await import('@third-eye/db');
+          const { db } = getDb();
+          const pauseManager = new PauseResumeManager(db);
+
+          await pauseManager.pausePipeline({
+            sessionId: decision.sessionId,
+            currentEye: eyeName,
+            currentEyeIndex: i,
+            remainingEyes: decision.recommendedFlow.slice(i + 1),
+            reason: 'clarification',
+            pendingData: result.data,
+            expiresAt: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+          });
+
+          conversationTracker.logPause(
+            decision.sessionId,
+            'clarification',
+            `Eye ${eyeName} requested clarification`
+          );
+
+          // Emit pause event via WebSocket
+          if (ws) {
+            ws.broadcastToSession(decision.sessionId, {
+              type: 'pipeline_paused',
+              reason: 'clarification',
+              eye: eyeName,
+              timestamp: Date.now()
+            });
+          }
+
+          return {
+            sessionId: decision.sessionId,
+            results,
+            completed: false,
+            paused: true,
+            pauseReason: 'clarification'
+          };
+        }
+
+        if (result.code === EyeStatusCode.E_INTENT_UNCONFIRMED) {
+          const { PauseResumeManager } = await import('./pause-resume-manager');
+          const { getDb } = await import('@third-eye/db');
+          const { db } = getDb();
+          const pauseManager = new PauseResumeManager(db);
+
+          await pauseManager.pausePipeline({
+            sessionId: decision.sessionId,
+            currentEye: eyeName,
+            currentEyeIndex: i,
+            remainingEyes: decision.recommendedFlow.slice(i + 1),
+            reason: 'intent_confirmation',
+            pendingData: result.data,
+            expiresAt: Date.now() + 24 * 60 * 60 * 1000
+          });
+
+          conversationTracker.logPause(
+            decision.sessionId,
+            'intent_confirmation',
+            `Eye ${eyeName} requested intent confirmation`
+          );
+
+          if (ws) {
+            ws.broadcastToSession(decision.sessionId, {
+              type: 'pipeline_paused',
+              reason: 'intent_confirmation',
+              eye: eyeName,
+              timestamp: Date.now()
+            });
+          }
+
+          return {
+            sessionId: decision.sessionId,
+            results,
+            completed: false,
+            paused: true,
+            pauseReason: 'intent_confirmation'
+          };
+        }
+
+        // Only check isRejected AFTER checking pause codes
         if (isRejected(result)) {
           // Phase 5: Log error
           conversationTracker.logError(

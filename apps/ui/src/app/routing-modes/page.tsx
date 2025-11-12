@@ -26,6 +26,9 @@ import {
   type CreatePolicyRequest,
   type CreateTemplateRequest,
 } from '@/hooks/useRoutingModes';
+import { PolicyBuilderEnhanced } from '@/components/routing-modes/PolicyBuilderEnhanced';
+import { TemplateImportExport, TemplateExportButton } from '@/components/routing-modes/TemplateImportExport';
+import { PolicyPreview } from '@/components/routing-modes/PolicyPreview';
 
 type Tab = 'policies' | 'templates';
 
@@ -154,7 +157,7 @@ function PoliciesTab() {
 
       {/* Create/Edit Form */}
       {(showCreateForm || editingPolicy) && (
-        <PolicyForm
+        <PolicyBuilderEnhanced
           policy={editingPolicy || undefined}
           onSubmit={editingPolicy ? (req) => handleUpdate(editingPolicy.id, req) : handleCreate}
           onCancel={() => {
@@ -182,126 +185,6 @@ function PoliciesTab() {
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-function PolicyForm({
-  policy,
-  onSubmit,
-  onCancel,
-}: {
-  policy?: RoutingPolicy;
-  onSubmit: (request: CreatePolicyRequest) => void;
-  onCancel: () => void;
-}) {
-  const [name, setName] = useState(policy?.name || '');
-  const [description, setDescription] = useState(policy?.description || '');
-  const [mandatoryEyes, setMandatoryEyes] = useState<string[]>(
-    policy?.mandatoryEyes ? [...policy.mandatoryEyes] : []
-  );
-  const [securityRequired, setSecurityRequired] = useState(policy?.securityRequired || false);
-  const [alwaysConfirmIntent, setAlwaysConfirmIntent] = useState(policy?.alwaysConfirmIntent || false);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || mandatoryEyes.length === 0) {
-      alert('Name and at least one mandatory eye are required');
-      return;
-    }
-    onSubmit({
-      name,
-      description: description || undefined,
-      mandatoryEyes,
-      securityRequired,
-      alwaysConfirmIntent,
-    });
-  };
-
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-        {policy ? 'Edit Policy' : 'Create New Policy'}
-      </h3>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Name *
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Description
-          </label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Mandatory Eyes * (comma-separated)
-          </label>
-          <input
-            type="text"
-            value={mandatoryEyes.join(', ')}
-            onChange={(e) => setMandatoryEyes(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
-            placeholder="Sharingan, Byakugan, Mangekyo"
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            required
-          />
-          <p className="mt-1 text-xs text-gray-500">Enter eye names separated by commas</p>
-        </div>
-
-        <div className="flex items-center space-x-6">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={securityRequired}
-              onChange={(e) => setSecurityRequired(e.target.checked)}
-              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-            />
-            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Security Required</span>
-          </label>
-
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={alwaysConfirmIntent}
-              onChange={(e) => setAlwaysConfirmIntent(e.target.checked)}
-              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-            />
-            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Always Confirm Intent</span>
-          </label>
-        </div>
-
-        <div className="flex space-x-3 pt-4">
-          <button
-            type="submit"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-          >
-            {policy ? 'Update' : 'Create'} Policy
-          </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-md text-sm font-medium"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
     </div>
   );
 }
@@ -347,6 +230,11 @@ function PolicyCard({
             {policy.alwaysConfirmIntent && (
               <div className="text-blue-600 dark:text-blue-400">✓ Intent confirmation required</div>
             )}
+          </div>
+
+          {/* Policy Preview - A7.4 */}
+          <div className="mt-4">
+            <PolicyPreview policy={policy} />
           </div>
         </div>
         <div className="flex flex-col space-y-2">
@@ -400,6 +288,25 @@ function TemplatesTab() {
     }
   };
 
+  const handleBatchImport = async (importedTemplates: PipelineTemplate[]) => {
+    try {
+      for (const template of importedTemplates) {
+        await createTemplate({
+          name: template.name,
+          description: template.description,
+          eyes: template.eyes,
+          strict: template.strict,
+          autoTriggerPattern: template.autoTriggerPattern,
+          isPublic: template.isPublic,
+        });
+      }
+      refetch();
+    } catch (err) {
+      console.error('Failed to import templates:', err);
+      throw err;
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-12 text-gray-500">Loading templates...</div>;
   }
@@ -410,14 +317,15 @@ function TemplatesTab() {
 
   return (
     <div>
-      {/* Create Button */}
-      <div className="mb-6">
+      {/* Create Button & Import/Export - A7.3 */}
+      <div className="mb-6 flex items-center justify-between">
         <button
           onClick={() => setShowCreateForm(true)}
           className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
         >
           Create New Template
         </button>
+        <TemplateImportExport templates={templates} onImport={handleBatchImport} />
       </div>
 
       {/* Create Form */}
@@ -624,6 +532,7 @@ function TemplateCard({
           </div>
         </div>
         <div className="flex flex-col space-y-2">
+          <TemplateExportButton template={template} />
           <button
             onClick={onDelete}
             className="text-sm text-red-600 hover:text-red-700 dark:text-red-400"
