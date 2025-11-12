@@ -1081,6 +1081,35 @@ function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
   }
 }
 
+/**
+ * Auto-link CLI globally if not already linked
+ * Makes 'bun third-eye-mcp' and 'bunx third-eye-mcp' work everywhere
+ */
+async function ensureGlobalLink(projectRoot: string, quiet: boolean): Promise<void> {
+  try {
+    // Check if already linked by testing the command
+    execSync('which third-eye-mcp', { stdio: 'pipe' });
+    if (!quiet) {
+      log('✓ CLI already linked globally');
+    }
+  } catch {
+    // Not linked, auto-link now
+    if (!quiet) {
+      log('🔗 Auto-linking CLI globally...');
+    }
+    try {
+      execSync('bun link', { cwd: projectRoot, stdio: quiet ? 'pipe' : 'inherit' });
+      if (!quiet) {
+        log('   ✓ CLI linked: You can now use "bun third-eye-mcp" or "bunx third-eye-mcp"');
+      }
+    } catch (err) {
+      if (!quiet) {
+        log('   ⚠ Auto-link failed (not critical, you can still use "bun up")');
+      }
+    }
+  }
+}
+
 async function startServices() {
   const args = parseArgs();
   const projectRoot = getProjectRoot();
@@ -1090,6 +1119,9 @@ async function startServices() {
     console.log(`\n${kleur.bold().magenta(`🧿 Third Eye MCP v${VERSION}`)}`);
     console.log(kleur.gray('━'.repeat(60)));
   }
+
+  // Auto-link CLI globally (non-blocking, best-effort)
+  await ensureGlobalLink(projectRoot, args.quiet);
 
   // Nuclear mode: Full clean + reinstall
   if (args.nuclear) {

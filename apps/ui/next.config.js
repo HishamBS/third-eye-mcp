@@ -1,3 +1,33 @@
+const fs = require('fs');
+const path = require('path');
+
+// Auto-discover ALL @third-eye/* workspace packages for transpilation
+// This prevents "Module not found" errors when packages import each other
+function getWorkspacePackages() {
+  const packagesDir = path.resolve(__dirname, '../../packages');
+  try {
+    return fs.readdirSync(packagesDir)
+      .filter(dir => {
+        const pkgPath = path.join(packagesDir, dir, 'package.json');
+        return fs.existsSync(pkgPath);
+      })
+      .map(dir => `@third-eye/${dir}`);
+  } catch {
+    // Fallback if packages directory doesn't exist
+    return [
+      '@third-eye/constants',
+      '@third-eye/types',
+      '@third-eye/config',
+      '@third-eye/db',
+      '@third-eye/core',
+      '@third-eye/providers',
+      '@third-eye/eyes',
+      '@third-eye/mcp',
+      '@third-eye/theme'
+    ];
+  }
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Security
@@ -38,18 +68,8 @@ const nextConfig = {
     return config;
   },
 
-  // Transpile ALL workspace packages (required for proper module resolution)
-  transpilePackages: [
-    '@third-eye/constants',
-    '@third-eye/types',
-    '@third-eye/config',
-    '@third-eye/db',
-    '@third-eye/core',
-    '@third-eye/providers',
-    '@third-eye/eyes',
-    '@third-eye/mcp',
-    '@third-eye/theme'
-  ],
+  // Auto-discover and transpile ALL workspace packages (no manual maintenance needed)
+  transpilePackages: getWorkspacePackages(),
 
   // Image optimization
   images: {
