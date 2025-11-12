@@ -433,6 +433,7 @@ function checkEnvironment() {
     log('🔍 Pre-flight checks...');
   }
 
+  // Check Bun/Node version
   const bunVersion = process.versions.bun;
   if (bunVersion) {
     log(`   ✓ Bun ${bunVersion}`, true);
@@ -446,54 +447,123 @@ function checkEnvironment() {
     log(`   ✓ Node.js ${nodeVersion}`, true);
   }
 
+  // Check Git (required for bun install with git dependencies)
+  try {
+    execSync('git --version', { stdio: 'pipe' });
+    log('   ✓ Git installed', true);
+  } catch {
+    console.error('❌ Git not installed');
+    console.error('   Git is required for package installation.');
+    console.error('   Install from: https://git-scm.com/downloads');
+    process.exit(1);
+  }
+
+  // Check available memory (warn if < 2GB free)
+  try {
+    const os = require('os');
+    const freeMemGB = os.freemem() / (1024 ** 3);
+    if (freeMemGB < 2) {
+      console.warn(`⚠️  Low memory: ${freeMemGB.toFixed(1)}GB free (recommend 2GB+)`);
+    } else {
+      log(`   ✓ Memory: ${freeMemGB.toFixed(1)}GB free`, true);
+    }
+  } catch {
+    // Memory check is non-critical
+  }
+
   ensureDirectories();
   log('   ✓ Database directory ready', true);
 
+  // Check ports availability (cross-platform)
   const portsToCheck = [SERVER_PORT];
   if (!parseArgs().noUi) portsToCheck.push(UI_PORT);
 
   for (const port of portsToCheck) {
     try {
-      execSync(`lsof -ti:${port}`, { stdio: 'ignore' });
-      log(`   ⚠ Port ${port} in use`, true);
+      if (process.platform === 'win32') {
+        // Windows: use netstat
+        execSync(`netstat -ano | findstr :${port}`, { stdio: 'ignore' });
+        log(`   ⚠ Port ${port} in use`, true);
+      } else {
+        // Unix: use lsof
+        execSync(`lsof -ti:${port}`, { stdio: 'ignore' });
+        log(`   ⚠ Port ${port} in use`, true);
+      }
     } catch {
       log(`   ✓ Port ${port} available`, true);
     }
   }
 
-  try {
-    const stats = execSync('df -h . | tail -1').toString();
-    const available = stats.split(/\s+/)[3];
-    log(`   ✓ Disk space: ${available} free`, true);
-  } catch {}
+  // Check disk space (Unix only, non-critical)
+  if (process.platform !== 'win32') {
+    try {
+      const stats = execSync('df -h . | tail -1').toString();
+      const available = stats.split(/\s+/)[3];
+      log(`   ✓ Disk space: ${available} free`, true);
+    } catch {}
+  }
 }
 
 async function killProcessesByPattern(pattern: string, description: string): Promise<number> {
   let killed = 0;
-  try {
-    const psOutput = execSync(`ps aux | grep -E "${pattern}" | grep -v grep`, { encoding: 'utf-8' })
-      .trim()
-      .split('\n')
-      .filter(Boolean);
 
-    for (const line of psOutput) {
-      const parts = line.trim().split(/\s+/);
-      const pid = parseInt(parts[1]);
+  if (process.platform === 'win32') {
+    // Windows: use tasklist and taskkill
+    try {
+      const output = execSync('tasklist /FO CSV /NH', { encoding: 'utf-8' });
+      const lines = output.trim().split('\n');
 
-      if (!isNaN(pid) && pid > 0) {
-        try {
-          process.kill(pid, 'SIGTERM');
-          log(`   ✓ Killed ${description} (PID ${pid})`);
-          killed++;
-          await new Promise(resolve => setTimeout(resolve, 300));
-        } catch (err) {
-          // Process might have already exited
+      for (const line of lines) {
+        // CSV format: "ImageName","PID","SessionName","Session#","MemUsage"
+        const match = line.match(/"([^"]+)","(\d+)"/);
+        if (match) {
+          const [, imageName, pidStr] = match;
+          const pid = parseInt(pidStr);
+
+          // Check if process name matches pattern
+          if (imageName.toLowerCase().includes(pattern.toLowerCase()) && !isNaN(pid) && pid > 0) {
+            try {
+              execSync(`taskkill /F /PID ${pid}`, { stdio: 'ignore' });
+              log(`   ✓ Killed ${description} (PID ${pid})`);
+              killed++;
+              await new Promise(resolve => setTimeout(resolve, 300));
+            } catch (err) {
+              // Process might have already exited
+            }
+          }
         }
       }
+    } catch {
+      // No matching processes found
     }
-  } catch {
-    // No matching processes found or grep returned no results
+  } else {
+    // Unix: use ps and grep
+    try {
+      const psOutput = execSync(`ps aux | grep -E "${pattern}" | grep -v grep`, { encoding: 'utf-8' })
+        .trim()
+        .split('\n')
+        .filter(Boolean);
+
+      for (const line of psOutput) {
+        const parts = line.trim().split(/\s+/);
+        const pid = parseInt(parts[1]);
+
+        if (!isNaN(pid) && pid > 0) {
+          try {
+            process.kill(pid, 'SIGTERM');
+            log(`   ✓ Killed ${description} (PID ${pid})`);
+            killed++;
+            await new Promise(resolve => setTimeout(resolve, 300));
+          } catch (err) {
+            // Process might have already exited
+          }
+        }
+      }
+    } catch {
+      // No matching processes found or grep returned no results
+    }
   }
+
   return killed;
 }
 
@@ -504,29 +574,63 @@ async function cleanStaleProcesses(ports: number[]) {
 
   let killed = 0;
 
-  // Kill by port (catches active processes)
+  // Kill by port (catches active processes) - cross-platform
   for (const port of ports) {
     try {
-      const pids = execSync(`lsof -ti:${port}`, { encoding: 'utf-8' })
-        .trim()
-        .split('\n')
-        .filter(Boolean);
+      let pids: string[] = [];
 
-      for (const pid of pids) {
-        try {
-          process.kill(parseInt(pid), 'SIGTERM');
-          log(`   ✓ Freed port ${port} (killed PID ${pid})`);
-          killed++;
-          await new Promise(resolve => setTimeout(resolve, 500));
-        } catch {}
+      if (process.platform === 'win32') {
+        // Windows: use netstat to find PIDs using the port
+        const output = execSync(`netstat -ano | findstr :${port}`, { encoding: 'utf-8' });
+        const lines = output.trim().split('\n');
+
+        for (const line of lines) {
+          // Extract PID from last column
+          const parts = line.trim().split(/\s+/);
+          const pid = parts[parts.length - 1];
+          if (pid && !isNaN(parseInt(pid))) {
+            pids.push(pid);
+          }
+        }
+
+        // Kill each PID with taskkill
+        for (const pid of pids) {
+          try {
+            execSync(`taskkill /F /PID ${pid}`, { stdio: 'ignore' });
+            log(`   ✓ Freed port ${port} (killed PID ${pid})`);
+            killed++;
+            await new Promise(resolve => setTimeout(resolve, 500));
+          } catch {}
+        }
+      } else {
+        // Unix: use lsof
+        pids = execSync(`lsof -ti:${port}`, { encoding: 'utf-8' })
+          .trim()
+          .split('\n')
+          .filter(Boolean);
+
+        for (const pid of pids) {
+          try {
+            process.kill(parseInt(pid), 'SIGTERM');
+            log(`   ✓ Freed port ${port} (killed PID ${pid})`);
+            killed++;
+            await new Promise(resolve => setTimeout(resolve, 500));
+          } catch {}
+        }
       }
     } catch {}
   }
 
   // Kill zombie processes by pattern (catches detached/crashed processes)
-  killed += await killProcessesByPattern('next-server', 'zombie Next.js server');
-  killed += await killProcessesByPattern('node.*next dev.*3300', 'zombie Next.js dev process');
-  killed += await killProcessesByPattern('bun run --cwd apps/ui dev', 'zombie Bun UI process');
+  // Windows pattern matching is different (process name only, not full command)
+  if (process.platform === 'win32') {
+    killed += await killProcessesByPattern('node.exe', 'zombie Node.js process');
+    killed += await killProcessesByPattern('bun.exe', 'zombie Bun process');
+  } else {
+    killed += await killProcessesByPattern('next-server', 'zombie Next.js server');
+    killed += await killProcessesByPattern('node.*next dev.*3300', 'zombie Next.js dev process');
+    killed += await killProcessesByPattern('bun run --cwd apps/ui dev', 'zombie Bun UI process');
+  }
 
   if (killed === 0 && !parseArgs().quiet) {
     log('   ✓ No stale processes found');
@@ -1110,6 +1214,47 @@ async function ensureGlobalLink(projectRoot: string, quiet: boolean): Promise<vo
   }
 }
 
+/**
+ * Auto-create .env file from .env.example if it doesn't exist
+ * Ensures providers and configuration can work on first run
+ */
+function ensureEnvFile(projectRoot: string, quiet: boolean): void {
+  const envPath = resolve(projectRoot, '.env');
+  const examplePath = resolve(projectRoot, '.env.example');
+
+  // If .env already exists, nothing to do
+  if (existsSync(envPath)) {
+    if (!quiet) {
+      log('✓ .env file exists');
+    }
+    return;
+  }
+
+  // If .env.example doesn't exist, can't auto-create
+  if (!existsSync(examplePath)) {
+    if (!quiet) {
+      console.warn('⚠️  No .env.example found, skipping .env creation');
+    }
+    return;
+  }
+
+  // Copy .env.example to .env
+  try {
+    const exampleContent = readFileSync(examplePath, 'utf-8');
+    writeFileSync(envPath, exampleContent);
+
+    if (!quiet) {
+      console.log('📝 Created .env from .env.example');
+      console.log('   ⚠️  Configure your API keys in .env for provider access');
+      console.log(`   Location: ${envPath}`);
+    }
+  } catch (err) {
+    if (!quiet) {
+      console.warn(`⚠️  Failed to create .env: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+}
+
 async function startServices() {
   const args = parseArgs();
   const projectRoot = getProjectRoot();
@@ -1122,6 +1267,9 @@ async function startServices() {
 
   // Auto-link CLI globally (non-blocking, best-effort)
   await ensureGlobalLink(projectRoot, args.quiet);
+
+  // Auto-create .env from .env.example if missing
+  ensureEnvFile(projectRoot, args.quiet);
 
   // Nuclear mode: Full clean + reinstall
   if (args.nuclear) {
