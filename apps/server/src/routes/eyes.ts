@@ -228,6 +228,7 @@ app.post('/:id/test', async (c) => {
  * GET /eyes/all - Get ALL Eyes from unified database table
  * NO hardcoded checks, NO DEFAULT_PERSONA_MAP, NO built-in vs custom distinction
  * Database is the only source of truth
+ * Phase 4: Returns capability_tags from eyes table for CapabilityMatrix component
  */
 app.get('/all', async (c) => {
   const { db } = getDb();
@@ -239,29 +240,27 @@ app.get('/all', async (c) => {
     .orderBy(desc(eyes.createdAt))
     .all();
 
-  // Fetch capabilities from blueprints
-  const eyeData = await Promise.all(
-    allEyes.map(async (eye) => {
-      const blueprint = await db
-        .select()
-        .from(personaBlueprints)
-        .where(eq(personaBlueprints.eyeId, eye.id))
-        .get();
+  // Map eyes to response format with capability_tags
+  const eyeData = allEyes.map((eye) => {
+    // Parse capability_tags from JSON column (Phase 1-A1)
+    const capabilityTags = typeof eye.capabilityTags === 'string'
+      ? JSON.parse(eye.capabilityTags)
+      : (eye.capabilityTags || []);
 
-      return {
-        id: eye.id,
-        name: eye.name, // Display name (e.g., 'Overseer', 'Jōgan')
-        version: eye.version,
-        description: eye.description,
-        capabilities: blueprint ? JSON.parse(blueprint.capabilities as string) : [],
-        inputSchema: eye.inputSchemaJson,
-        outputSchema: eye.outputSchemaJson,
-        personaId: eye.personaId,
-        iconSvg: eye.iconSvg,
-        createdAt: eye.createdAt,
-      };
-    })
-  );
+    return {
+      id: eye.id,
+      name: eye.name, // Display name (e.g., 'Overseer', 'Jōgan')
+      version: eye.version,
+      description: eye.description,
+      capabilityTags, // Phase 4: For CapabilityMatrix
+      inputSchema: eye.inputSchemaJson,
+      outputSchema: eye.outputSchemaJson,
+      personaId: eye.personaId,
+      iconSvg: eye.iconSvg,
+      active: eye.active,
+      createdAt: eye.createdAt,
+    };
+  });
 
   return createSuccessResponse(c, eyeData);
 });

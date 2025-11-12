@@ -30,6 +30,7 @@ import systemRoutes from './routes/system';
 import metricsRoutes from './routes/metrics';
 import policiesRoutes from './routes/policies';
 import templatesRoutes from './routes/templates';
+import routingDecisionsRoutes from './routes/routing-decisions';
 
 /**
  * Third Eye MCP Bun Server
@@ -100,6 +101,9 @@ app.route('/api/metrics', metricsRoutes);
 // Phase 3: Routing Modes API
 app.route('/api/policies', policiesRoutes);
 app.route('/api/templates', templatesRoutes);
+
+// Phase 4: Routing Decisions API
+app.route('/api/routing-decisions', routingDecisionsRoutes);
 
 // Eyes API Routes - Read-only endpoints enabled for UI
 // Note: Direct Eye EXECUTION is blocked (violates Golden Rule #1)
