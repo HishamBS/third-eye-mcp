@@ -21,6 +21,7 @@
     "CONTRIBUTING.md"
   ],
   "scripts": {
+    "up": "bun run dist/cli.js up",
     "dev": "bun run apps/server/src/start.ts & bun run --cwd apps/ui dev --port 3300",
     "start": "bun run apps/server/dist/index.js",
     "build": "bun run build:packages && bun run build:server && bun run build:ui && bun run build:cli",
