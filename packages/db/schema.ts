@@ -427,6 +427,17 @@ export const pipelineTemplates = sqliteTable('pipeline_templates', {
   createdAt: integer({ mode: 'timestamp' }).notNull(),
 });
 
+// Phase 5: Narrative Monitoring - Conversation Events
+export const conversationEvents = sqliteTable('conversation_events', {
+  id: text().primaryKey(), // UUID
+  sessionId: text().notNull().references(() => sessions.id), // FK
+  eventType: text().notNull(), // agent_message | human_message | routing_decision | pause | resume
+  speaker: text().notNull(), // overseer | sharingan | kyuubi | jogan | etc. or 'human'
+  message: text().notNull(), // The actual message content
+  metadata: text({ mode: 'json' }), // Additional data (reasoning, routing info, etc.)
+  createdAt: integer({ mode: 'timestamp' }).notNull(),
+});
+
 // Type exports
 export type AppSetting = typeof appSettings.$inferSelect;
 export type NewAppSetting = typeof appSettings.$inferInsert;
@@ -517,3 +528,6 @@ export type NewRoutingPolicy = typeof routingPolicies.$inferInsert;
 
 export type PipelineTemplate = typeof pipelineTemplates.$inferSelect;
 export type NewPipelineTemplate = typeof pipelineTemplates.$inferInsert;
+
+export type ConversationEvent = typeof conversationEvents.$inferSelect;
+export type NewConversationEvent = typeof conversationEvents.$inferInsert;
