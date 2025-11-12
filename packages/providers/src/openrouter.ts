@@ -133,7 +133,14 @@ export class OpenRouterProvider extends BaseProvider {
       const choice = payload.choices[0];
 
       // Phase 1-A4: Handle function calling responses
-      const toolCalls = choice.message.tool_calls;
+      const toolCalls = choice.message.tool_calls?.map(tc => ({
+        id: tc.id,
+        type: tc.type as 'function',
+        function: {
+          name: tc.function.name,
+          arguments: tc.function.arguments
+        }
+      }));
       const content = choice.message.content ?? '';
 
       return {

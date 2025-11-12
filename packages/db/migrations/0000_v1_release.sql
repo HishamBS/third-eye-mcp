@@ -80,7 +80,8 @@ CREATE TABLE `eyes` (
 	`output_schema_json` text NOT NULL,
 	`persona_id` text,
 	`active` integer DEFAULT true NOT NULL,
-	`created_at` integer NOT NULL
+	`created_at` integer NOT NULL,
+	`capability_tags` text NOT NULL DEFAULT '[]'
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `eyes_name_version_unique` ON `eyes` (`name`,`version`);--> statement-breakpoint
@@ -323,7 +324,10 @@ CREATE TABLE `sessions` (
 	`status` text NOT NULL,
 	`created_at` integer NOT NULL,
 	`last_activity` integer,
-	`config_json` text
+	`config_json` text,
+	`routing_mode` text DEFAULT 'fully_dynamic',
+	`policy_id` text,
+	`template_id` text
 );
 --> statement-breakpoint
 CREATE TABLE `strictness_profiles` (
@@ -338,4 +342,101 @@ CREATE TABLE `strictness_profiles` (
 	`created_at` integer NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `strictness_profiles_name_unique` ON `strictness_profiles` (`name`);
+CREATE UNIQUE INDEX `strictness_profiles_name_unique` ON `strictness_profiles` (`name`);--> statement-breakpoint
+CREATE TABLE `routing_decisions` (
+	`id` text PRIMARY KEY NOT NULL,
+	`session_id` text NOT NULL,
+	`request_analysis` text NOT NULL,
+	`selected_eyes` text NOT NULL,
+	`reasoning` text NOT NULL,
+	`execution_mode` text NOT NULL,
+	`created_at` integer NOT NULL,
+	FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `routing_policies` (
+	`id` text PRIMARY KEY NOT NULL,
+	`name` text NOT NULL,
+	`description` text,
+	`mandatory_eyes` text NOT NULL,
+	`forbidden_eyes` text,
+	`min_validation_eyes` integer,
+	`security_required` integer DEFAULT 0,
+	`always_confirm_intent` integer DEFAULT 0,
+	`custom_constraints` text,
+	`is_active` integer NOT NULL DEFAULT 1,
+	`created_at` integer NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE `pipeline_templates` (
+	`id` text PRIMARY KEY NOT NULL,
+	`name` text NOT NULL,
+	`description` text,
+	`eyes` text NOT NULL,
+	`strict` integer NOT NULL DEFAULT 1,
+	`auto_trigger_pattern` text,
+	`created_by` text,
+	`is_public` integer NOT NULL DEFAULT 0,
+	`usage_count` integer NOT NULL DEFAULT 0,
+	`created_at` integer NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE `pipeline_states` (
+	`session_id` text PRIMARY KEY NOT NULL,
+	`status` text NOT NULL,
+	`current_eye` text NOT NULL,
+	`pause_reason` text,
+	`pending_data` text,
+	`resume_token` text NOT NULL,
+	`paused_at` integer,
+	`expires_at` integer,
+	FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `pending_questions` (
+	`id` text PRIMARY KEY NOT NULL,
+	`session_id` text NOT NULL,
+	`eye_name` text NOT NULL,
+	`questions` text NOT NULL,
+	`context` text,
+	`status` text NOT NULL,
+	`created_at` integer NOT NULL,
+	`expires_at` integer NOT NULL,
+	FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `human_responses` (
+	`id` text PRIMARY KEY NOT NULL,
+	`question_id` text NOT NULL,
+	`session_id` text NOT NULL,
+	`answers` text NOT NULL,
+	`source` text NOT NULL,
+	`validated` integer NOT NULL DEFAULT 0,
+	`created_at` integer NOT NULL,
+	FOREIGN KEY (`question_id`) REFERENCES `pending_questions`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `conversation_events` (
+	`id` text PRIMARY KEY NOT NULL,
+	`session_id` text NOT NULL,
+	`event_type` text NOT NULL,
+	`speaker` text NOT NULL,
+	`message` text NOT NULL,
+	`metadata` text,
+	`created_at` integer NOT NULL,
+	FOREIGN KEY (`session_id`) REFERENCES `sessions`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE INDEX `idx_routing_decisions_session` ON `routing_decisions`(`session_id`);--> statement-breakpoint
+CREATE INDEX `idx_routing_policies_active` ON `routing_policies`(`is_active`);--> statement-breakpoint
+CREATE INDEX `idx_pipeline_templates_public` ON `pipeline_templates`(`is_public`);--> statement-breakpoint
+CREATE INDEX `idx_pipeline_templates_usage` ON `pipeline_templates`(`usage_count` DESC);--> statement-breakpoint
+CREATE INDEX `idx_pipeline_templates_trigger` ON `pipeline_templates`(`auto_trigger_pattern`) WHERE auto_trigger_pattern IS NOT NULL;--> statement-breakpoint
+CREATE INDEX `idx_pending_questions_session` ON `pending_questions`(`session_id`);--> statement-breakpoint
+CREATE INDEX `idx_pending_questions_status` ON `pending_questions`(`status`);--> statement-breakpoint
+CREATE INDEX `idx_human_responses_session` ON `human_responses`(`session_id`);--> statement-breakpoint
+CREATE INDEX `idx_human_responses_question` ON `human_responses`(`question_id`);--> statement-breakpoint
+CREATE INDEX `idx_conversation_events_session` ON `conversation_events`(`session_id`);--> statement-breakpoint
+CREATE INDEX `idx_conversation_events_type` ON `conversation_events`(`event_type`);--> statement-breakpoint
+CREATE INDEX `idx_conversation_events_created` ON `conversation_events`(`created_at` DESC);
