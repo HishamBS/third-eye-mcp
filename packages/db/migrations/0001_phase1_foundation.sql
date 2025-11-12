@@ -24,6 +24,11 @@ CREATE TABLE IF NOT EXISTS routing_decisions (
 -- A2: Three Routing Modes (Fully Dynamic, Constrained, Fixed Template)
 -- ============================================================================
 
+-- Add routing mode tracking to sessions table
+ALTER TABLE sessions ADD COLUMN routing_mode TEXT DEFAULT 'fully_dynamic';
+ALTER TABLE sessions ADD COLUMN policy_id TEXT;
+ALTER TABLE sessions ADD COLUMN template_id TEXT;
+
 -- Create routing_policies table for Constrained Dynamic mode
 CREATE TABLE IF NOT EXISTS routing_policies (
   id TEXT PRIMARY KEY NOT NULL,

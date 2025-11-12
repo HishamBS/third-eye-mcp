@@ -64,6 +64,7 @@ export type {
 export { PolicyValidator } from './routing/policy-validator';
 export { TemplateExecutor } from './routing/template-executor';
 export type { TemplateExecutionPlan } from './routing/template-executor';
+export { PolicyManager } from './routing/policy-manager';
 
 // Workflow execution
 export { WorkflowInterpreter } from './workflow-interpreter';
