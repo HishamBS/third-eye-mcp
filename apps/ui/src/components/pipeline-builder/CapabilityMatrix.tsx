@@ -1,8 +1,9 @@
 /**
- * Capability Matrix Component - Phase 4
+ * Capability Matrix Component - Phase 4 & 5
  *
  * Shows what each eye CAN do (NOT a fixed pipeline diagram)
  * Displays eye capabilities as a matrix of cards, not a linear sequence
+ * Phase 5: Added model recommendation panel in eye detail modal
  *
  * Per R04: Memoized callbacks
  * Per R07: Strict typing, no 'any'
@@ -14,7 +15,9 @@
 import { useMemo, useState } from 'react';
 import { useEyeCapabilities } from '@/hooks/useEyeCapabilities';
 import { EYE_CAPABILITIES } from '@third-eye/config/eye-capabilities';
+import { ModelRecommendationPanel } from '@/components/model-recommendations/ModelRecommendationPanel';
 import type { EyeWithCapabilities } from '@/hooks/useEyeCapabilities';
+import type { ProviderId } from '@third-eye/types';
 
 interface CapabilityMatrixProps {
   mode: 'dynamic' | 'constrained' | 'fixed';
@@ -101,6 +104,7 @@ function EyeCapabilityCard({
 
 /**
  * Eye detail modal (shown on click)
+ * Phase 5: Now includes model recommendations section
  */
 function EyeDetailModal({
   eye,
@@ -111,6 +115,7 @@ function EyeDetailModal({
 }) {
   const eyeName = eye.name.toLowerCase();
   const eyeInfo = EYE_CAPABILITIES[eyeName as keyof typeof EYE_CAPABILITIES];
+  const [selectedProvider, setSelectedProvider] = useState<ProviderId>('groq');
 
   return (
     <div
@@ -118,7 +123,7 @@ function EyeDetailModal({
       onClick={onClose}
     >
       <div
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -184,6 +189,39 @@ function EyeDetailModal({
               </ul>
             </div>
           )}
+
+          {/* Divider */}
+          <div className="border-t border-gray-200 dark:border-gray-700 my-6" />
+
+          {/* Phase 5: Model Recommendations Section */}
+          <div>
+            <h3 className="font-semibold text-sm uppercase text-gray-500 dark:text-gray-400 mb-3">
+              Model Recommendations
+            </h3>
+
+            {/* Provider selector */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Select Provider:
+              </label>
+              <select
+                value={selectedProvider}
+                onChange={(e) => setSelectedProvider(e.target.value as ProviderId)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              >
+                <option value="groq">Groq (Remote API - 95-98% success)</option>
+                <option value="openrouter">OpenRouter (Remote API - 85-95% success)</option>
+                <option value="ollama">Ollama (Local - 100% reliability)</option>
+                <option value="lmstudio">LM Studio (Local - 100% reliability)</option>
+              </select>
+            </div>
+
+            {/* Model recommendation panel */}
+            <ModelRecommendationPanel
+              eyeName={eyeName}
+              provider={selectedProvider}
+            />
+          </div>
         </div>
       </div>
     </div>
