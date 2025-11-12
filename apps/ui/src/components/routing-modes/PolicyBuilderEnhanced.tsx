@@ -24,7 +24,7 @@ const AVAILABLE_EYES = [
 interface PolicyBuilderEnhancedProps {
   onSubmit: (request: CreatePolicyRequest) => void;
   onCancel: () => void;
-  initialPolicy?: {
+  policy?: {
     name: string;
     description?: string;
     mandatoryEyes: string[];
@@ -38,24 +38,24 @@ interface PolicyBuilderEnhancedProps {
 export function PolicyBuilderEnhanced({
   onSubmit,
   onCancel,
-  initialPolicy,
+  policy,
 }: PolicyBuilderEnhancedProps) {
-  const [name, setName] = useState(initialPolicy?.name || '');
-  const [description, setDescription] = useState(initialPolicy?.description || '');
+  const [name, setName] = useState(policy?.name || '');
+  const [description, setDescription] = useState(policy?.description || '');
   const [mandatoryEyes, setMandatoryEyes] = useState<Set<string>>(
-    new Set(initialPolicy?.mandatoryEyes || [])
+    new Set(policy?.mandatoryEyes || [])
   );
   const [forbiddenEyes, setForbiddenEyes] = useState<Set<string>>(
-    new Set(initialPolicy?.forbiddenEyes || [])
+    new Set(policy?.forbiddenEyes || [])
   );
   const [minValidationEyes, setMinValidationEyes] = useState(
-    initialPolicy?.minValidationEyes || 2
+    policy?.minValidationEyes || 2
   );
   const [securityRequired, setSecurityRequired] = useState(
-    initialPolicy?.securityRequired || false
+    policy?.securityRequired || false
   );
   const [alwaysConfirmIntent, setAlwaysConfirmIntent] = useState(
-    initialPolicy?.alwaysConfirmIntent || false
+    policy?.alwaysConfirmIntent || false
   );
 
   const toggleMandatoryEye = (eyeId: string) => {
@@ -110,7 +110,7 @@ export function PolicyBuilderEnhanced({
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
       <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-        {initialPolicy ? 'Edit Policy' : 'Create New Policy'}
+        {policy ? 'Edit Policy' : 'Create New Policy'}
       </h3>
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Info */}
@@ -267,7 +267,7 @@ export function PolicyBuilderEnhanced({
             type="submit"
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
           >
-            {initialPolicy ? 'Update' : 'Create'} Policy
+            {policy ? 'Update' : 'Create'} Policy
           </button>
           <button
             type="button"
