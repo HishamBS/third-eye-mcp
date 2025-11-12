@@ -369,13 +369,16 @@ export class EyeOrchestrator {
             // Use dynamic router persona for Overseer, otherwise use blueprint
             let personaPrompt: PersonaPrompt;
             if (dynamicRouterPersona && isOverseer) {
+              // REPAIR_PLAN A4: Use function calling for dynamic router too
+              const { EYE_RESPONSE_TOOL } = await import('@third-eye/eyes/renderer/persona-renderer');
               personaPrompt = {
                 systemPrompt: dynamicRouterPersona,
                 userMessage: enrichedInput,
                 config: {
                   temperature: 0,
                   top_p: 1,
-                  response_format: { type: 'json_object' as const },
+                  tools: [EYE_RESPONSE_TOOL],
+                  tool_choice: { type: "function", function: { name: "submit_eye_analysis" } },
                 },
               };
             } else {
@@ -408,7 +411,9 @@ export class EyeOrchestrator {
                   ],
                   temperature: options.temperature ?? personaPrompt.config.temperature,
                   max_tokens: options.maxTokens ?? 4096,
-                  response_format: personaPrompt.config.response_format,
+                  // REPAIR_PLAN A4: Use function calling instead of JSON mode
+                  tools: personaPrompt.config.tools,
+                  tool_choice: personaPrompt.config.tool_choice,
                 }),
                 {
                   context: `${providerType}/${targetModel} API call for ${eyeName} Eye`,
@@ -420,14 +425,26 @@ export class EyeOrchestrator {
 
               latencyMs = Date.now() - attemptStartTime;
 
-              // Log actual LLM response for debugging
-              console.log(`\n📤 ${eyeName} LLM raw response (attempt ${attempt}/${MAX_PERSONA_RETRIES}):\n${completion.content}\n`);
-
-              // 8. Parse response as envelope
+              // REPAIR_PLAN A4: Parse response from tool_calls instead of content
+              // 8. Parse response as envelope from function calling
               try {
-                envelope = JSON.parse(completion.content);
+                // Check if response has tool_calls (function calling)
+                if (completion.tool_calls && completion.tool_calls.length > 0) {
+                  const toolCall = completion.tool_calls[0];
+                  if (toolCall.type !== 'function' || toolCall.function.name !== 'submit_eye_analysis') {
+                    throw new Error(`Expected function call 'submit_eye_analysis', got: ${toolCall.type}`);
+                  }
+                  // Parse arguments as JSON
+                  envelope = JSON.parse(toolCall.function.arguments);
+                  console.log(`\n📤 ${eyeName} LLM function call response (attempt ${attempt}/${MAX_PERSONA_RETRIES}):\n${toolCall.function.arguments}\n`);
+                } else {
+                  // Fallback: Try parsing from content (for providers that don't support function calling yet)
+                  console.warn(`⚠️  Provider returned no tool_calls, falling back to content parsing`);
+                  envelope = JSON.parse(completion.content);
+                  console.log(`\n📤 ${eyeName} LLM raw response (attempt ${attempt}/${MAX_PERSONA_RETRIES}):\n${completion.content}\n`);
+                }
               } catch (parseError) {
-                // Try to extract JSON from markdown code blocks
+                // Try to extract JSON from markdown code blocks (legacy fallback)
                 const jsonMatch = completion.content.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
                 if (jsonMatch) {
                   envelope = JSON.parse(jsonMatch[1]);
@@ -435,7 +452,7 @@ export class EyeOrchestrator {
                   // Response is not valid envelope
                   if (attempt < MAX_PERSONA_RETRIES) {
                     console.warn(`⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Invalid JSON response`);
-                    enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\nYour previous response was not valid JSON. You MUST return a valid JSON object matching the envelope schema.`;
+                    enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\nYour previous response was not valid JSON. You MUST call the submit_eye_analysis function with valid arguments.`;
                     continue;
                   } else {
                     throw new Error(`LLM response is not valid JSON envelope after ${MAX_PERSONA_RETRIES} attempts`);
