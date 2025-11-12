@@ -15,6 +15,10 @@ import { z } from 'zod';
 export interface AutoRouterOptions {
   strictness?: Record<string, unknown>;
   context?: Record<string, unknown>;
+  // Phase 1-A2: Three Routing Modes
+  routingMode?: 'fully_dynamic' | 'constrained' | 'fixed';
+  policyId?: string; // For constrained mode
+  templateId?: string; // For fixed mode
 }
 
 const STRICTNESS_HEADER = 'STRICTNESS CONTROLS (from UI):';
