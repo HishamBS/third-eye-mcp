@@ -10,6 +10,7 @@ import { dirname } from 'path';
 export * from './schema';
 export { schema }; // Export the exact schema object used by drizzle initialization
 export * from './defaults';
+export * from './constants';
 
 // Default database path: ~/.third-eye-mcp/mcp.db (following prompt.md spec)
 export function getDbPath(): string {

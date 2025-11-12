@@ -32,6 +32,7 @@ import policiesRoutes from './routes/policies';
 import templatesRoutes from './routes/templates';
 import routingDecisionsRoutes from './routes/routing-decisions';
 import conversationEventsRoutes from './routes/conversation-events';
+import intentConfirmationsRoutes from './routes/intent-confirmations';
 
 /**
  * Third Eye MCP Bun Server
@@ -108,6 +109,9 @@ app.route('/api/routing-decisions', routingDecisionsRoutes);
 
 // Phase 5: Conversation Events API (Narrative Monitoring)
 app.route('/api/conversation-events', conversationEventsRoutes);
+
+// REPAIR_PLAN A9: Intent Confirmations API
+app.route('/api/intent-confirmations', intentConfirmationsRoutes);
 
 // Eyes API Routes - Read-only endpoints enabled for UI
 // Note: Direct Eye EXECUTION is blocked (violates Golden Rule #1)
