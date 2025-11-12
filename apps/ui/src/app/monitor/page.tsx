@@ -22,6 +22,8 @@ import { TabButton } from '@/components/monitor/TabButton';
 import { StatusBadge } from '@/components/monitor/StatusBadge';
 import { ViewModeDescription } from '@/components/ViewModeToggle';
 import { RoutingDecisionPanel } from '@/components/monitor/RoutingDecisionPanel';
+import { ConversationTimeline } from '@/components/conversation/ConversationTimeline';
+import { useConversationTimeline } from '@/hooks/useConversationTimeline';
 import type { EyeName } from '@third-eye/types';
 import { API_BASE_URL } from '@/consts/api';
 import { API_ROUTES } from '@/constants/api-routes';
@@ -246,6 +248,13 @@ function MonitorContent() {
     byakugan: null,
   });
   const [routingDecision, setRoutingDecision] = useState<EyeSequence | null>(null);
+
+  // Phase 5: Narrative timeline hook
+  const {
+    events: narrativeEvents,
+    loading: narrativeLoading,
+    error: narrativeError,
+  } = useConversationTimeline(sessionId);
 
   const { connectionStatus, subscribe } = useWebSocket();
 
@@ -665,6 +674,20 @@ function MonitorContent() {
                   <div ref={conversationEndRef} />
                 </div>
               )}
+            </>
+          )}
+
+          {activeTab === MonitorTabId.NARRATIVE && (
+            <>
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-brand-foreground">Narrative</h2>
+                <p className="text-sm text-semantic-muted mt-1">Human-readable conversation flow showing the story of pipeline execution</p>
+              </div>
+              <ConversationTimeline
+                events={narrativeEvents}
+                loading={narrativeLoading}
+                error={narrativeError}
+              />
             </>
           )}
 
