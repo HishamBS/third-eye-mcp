@@ -159,7 +159,7 @@ const OVERSEER_TOOL: Tool = {
     properties: {
       task: {
         type: "string",
-        description: "Natural-language description of the user’s goal, draft, or material to validate. Send the full request verbatim.",
+        description: "Natural-language description of the user's goal, draft, or material to validate. Send the full request verbatim.",
       },
       context: {
         type: "object",
@@ -170,6 +170,14 @@ const OVERSEER_TOOL: Tool = {
         type: "object",
         additionalProperties: true,
         description: "Optional gates (ambiguity threshold, citation cutoff, consistency tolerance, mangekyoStrictness). Defaults map to Enterprise strictness.",
+      },
+      confirmationId: {
+        type: "string",
+        description: "Phase 2-B: Confirmation ID if resuming from intent confirmation pause.",
+      },
+      confirmationResponse: {
+        type: "string",
+        description: "Phase 2-B: 'confirmed' or 'rejected' - response to intent confirmation request.",
       },
     },
     required: ["task"],
@@ -348,6 +356,71 @@ export function createMCPServer(): Server {
         };
       }
 
+      // Phase 2-B: Handle confirmation resume
+      const confirmationId = typeof toolArgs.confirmationId === 'string' ? toolArgs.confirmationId : undefined;
+      const confirmationResponse = typeof toolArgs.confirmationResponse === 'string' ? toolArgs.confirmationResponse : undefined;
+
+      if (confirmationId && confirmationResponse) {
+        const { IntentConfirmationManager } = await import('@third-eye/core');
+        const { getDb } = await import('@third-eye/db');
+        const { db } = getDb();
+        const confirmationManager = new IntentConfirmationManager(db);
+
+        // Submit the confirmation response
+        const confirmation = await confirmationManager.submitConfirmation(confirmationId, {
+          confirmed: confirmationResponse.toLowerCase() === 'confirmed',
+          response: confirmationResponse,
+          source: 'agent',
+        });
+
+        // If rejected, return early with rejection status
+        if (!confirmation || confirmation.status === 'rejected') {
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  status: "rejected",
+                  code: "E_INTENT_REJECTED",
+                  verdict: "REJECTED",
+                  summary: "Intent confirmation was rejected by user.",
+                  metadata: {
+                    sessionId: confirmation?.sessionId ?? null,
+                    confirmationId,
+                    portalUrl: confirmation?.sessionId ? `http://127.0.0.1:3300/monitor?sessionId=${confirmation.sessionId}` : null,
+                  },
+                }, null, 2),
+              },
+            ],
+          };
+        }
+
+        // If confirmed, continue with pipeline execution
+        // The sessionId should be loaded from the confirmation
+        const resumeSessionId = confirmation.sessionId;
+        // Continue execution with the confirmed intent...
+        // Note: For now, we'll return success and let the agent re-invoke with the original task
+        // A full implementation would resume the exact pipeline state
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify({
+                status: "success",
+                code: "INTENT_CONFIRMED",
+                verdict: "APPROVED",
+                summary: "Intent confirmed. You may proceed with the task.",
+                metadata: {
+                  sessionId: resumeSessionId,
+                  confirmationId,
+                  portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${resumeSessionId}`,
+                },
+              }, null, 2),
+            },
+          ],
+        };
+      }
+
       try {
         // Always execute the full pipeline (simplified - no analyze mode for agents)
         // executeFlow accepts optional string (providedSessionId?: string)
@@ -364,6 +437,58 @@ export function createMCPServer(): Server {
         await openBrowserForSession(result.sessionId);
 
         const finalResult = result.results[result.results.length - 1] as Record<string, unknown> | undefined;
+
+        // Phase 2-B: Check for intent confirmation pause
+        if (finalResult && finalResult.code === 'NEED_CONFIRMATION') {
+          const confirmationPrompt = typeof finalResult.data === 'object' && finalResult.data !== null && 'confirmationPrompt' in finalResult.data
+            ? String((finalResult.data as Record<string, unknown>).confirmationPrompt)
+            : 'Please confirm your intent to proceed with this task.';
+
+          const intentAnalysis = typeof finalResult.data === 'object' && finalResult.data !== null && 'intentAnalysis' in finalResult.data
+            ? (finalResult.data as Record<string, unknown>).intentAnalysis as Record<string, unknown>
+            : {};
+
+          // Create confirmation request
+          const { IntentConfirmationManager } = await import('@third-eye/core');
+          const { getDb } = await import('@third-eye/db');
+          const { db } = getDb();
+          const confirmationManager = new IntentConfirmationManager(db);
+
+          const confirmation = await confirmationManager.createConfirmation({
+            sessionId: result.sessionId,
+            intentAnalysis,
+            confirmationPrompt,
+          });
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(
+                  {
+                    status: "awaiting_confirmation",
+                    code: "NEED_CONFIRMATION",
+                    verdict: "PAUSED",
+                    summary: "Intent confirmation required before proceeding.",
+                    metadata: {
+                      sessionId: result.sessionId,
+                      portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${result.sessionId}`,
+                      confirmationId: confirmation.id,
+                      stepsExecuted: result.results.length,
+                    },
+                    data: {
+                      confirmationPrompt,
+                      intentAnalysis,
+                      confirmationId: confirmation.id,
+                    },
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        }
         const code = (() => {
           if (result.completed) {
             return typeof finalResult?.code === 'string' ? (finalResult.code as string) : 'OK';
@@ -398,6 +523,8 @@ export function createMCPServer(): Server {
           stepsExecuted: result.results.length,
         };
 
+        // Phase 1-A6: Eye Invisibility - Agent never sees internal Eye operations
+        // Only return final result, sessionId, and portal URL for developer monitoring
         return {
           content: [
             {
@@ -410,7 +537,8 @@ export function createMCPServer(): Server {
                   summary,
                   metadata,
                   data: finalResult,
-                  history: result.results,
+                  // history removed - agent should not see Eye operations
+                  // Developers can monitor Eyes via portal: metadata.portalUrl
                 },
                 null,
                 2
