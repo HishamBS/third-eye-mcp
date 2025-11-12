@@ -26,6 +26,7 @@ import {
 import { SwitchNodeHandler } from './node-handlers/switch-node-handler';
 import { LoopNodeHandler } from './node-handlers/loop-node-handler';
 import { evaluateExpression, type ExpressionContext } from './expression-evaluator';
+import { PauseResumeManager } from './pause-resume-manager';
 
 // ============================================================================
 // Types
@@ -80,6 +81,7 @@ export class PipelineExecutionEngine {
   private state: PipelineExecutionState | null = null;
   private graph: DagGraph | null = null;
   private dag: PipelineDag | null = null;
+  private pauseResumeManager: PauseResumeManager | null = null;
 
   constructor() {
     // Initialize node handlers
@@ -92,6 +94,18 @@ export class PipelineExecutionEngine {
       new SwitchNodeHandler(),
       new LoopNodeHandler(),
     ];
+  }
+
+  /**
+   * Lazy-load PauseResumeManager with database connection
+   */
+  private getPauseResumeManager(): PauseResumeManager {
+    if (!this.pauseResumeManager) {
+      const { getDb } = require('@third-eye/db');
+      const { db } = getDb();
+      this.pauseResumeManager = new PauseResumeManager(db);
+    }
+    return this.pauseResumeManager;
   }
 
   /**
@@ -142,6 +156,11 @@ export class PipelineExecutionEngine {
       if (this.state!.status === 'running') {
         this.state!.status = 'completed';
         this.state!.completedAt = Date.now();
+
+        // Phase 1-A3: Mark pipeline as completed in database
+        const manager = this.getPauseResumeManager();
+        await manager.completePipeline(this.state!.sessionId);
+
         this.emitEvent('pipeline_completed', {
           executedNodes: this.state!.executedNodes,
           totalLatencyMs: Date.now() - this.state!.startedAt,
@@ -163,6 +182,7 @@ export class PipelineExecutionEngine {
 
   /**
    * Pause pipeline execution
+   * Phase 1-A3: Persists state to database via PauseResumeManager
    */
   async pause(): Promise<void> {
     if (!this.state) {
@@ -170,6 +190,19 @@ export class PipelineExecutionEngine {
     }
 
     this.state.status = 'paused';
+
+    // Persist pause state to database
+    const manager = this.getPauseResumeManager();
+    await manager.pausePipeline({
+      sessionId: this.state.sessionId,
+      currentEye: this.state.currentNodeId || 'unknown',
+      reason: 'validation_failed',
+      pendingData: {
+        executedNodes: this.state.executedNodes,
+        nodeResults: Array.from(this.state.nodeResults.entries()),
+      },
+    });
+
     this.emitEvent('pipeline_paused', {
       pausedAt: this.state.currentNodeId,
     });
@@ -177,14 +210,36 @@ export class PipelineExecutionEngine {
 
   /**
    * Resume pipeline execution with optional user input
+   * Phase 1-A3: Loads state from database and resumes execution
    */
-  async resume(userInput?: unknown): Promise<void> {
+  async resume(userInput?: unknown, resumeToken?: string): Promise<void> {
     if (!this.state) {
       throw new Error('No active pipeline execution');
     }
 
     if (this.state.status !== 'paused' && this.state.status !== 'awaiting_input') {
       throw new Error(`Cannot resume pipeline with status: ${this.state.status}`);
+    }
+
+    // Load and validate resume state from database if token provided
+    if (resumeToken) {
+      const manager = this.getPauseResumeManager();
+      const pipelineState = await manager.resumePipeline(this.state.sessionId, resumeToken);
+
+      // Restore pending data if available
+      if (pipelineState.pendingData) {
+        const pendingData = pipelineState.pendingData as {
+          nodeResults?: Array<[string, NodeExecutionResult]>;
+          executedNodes?: string[];
+        };
+
+        if (pendingData.nodeResults) {
+          this.state.nodeResults = new Map(pendingData.nodeResults);
+        }
+        if (pendingData.executedNodes) {
+          this.state.executedNodes = pendingData.executedNodes;
+        }
+      }
     }
 
     this.state.status = 'running';
@@ -299,6 +354,21 @@ export class PipelineExecutionEngine {
     // Handle result status
     if (result.status === 'awaiting_input') {
       this.state.status = 'awaiting_input';
+
+      // Phase 1-A3: Persist pause state to database
+      const manager = this.getPauseResumeManager();
+      await manager.pausePipeline({
+        sessionId: this.state.sessionId,
+        currentEye: nodeId,
+        reason: 'clarification',
+        pendingData: {
+          nodeId,
+          promptKey: result.metadata?.promptKey,
+          nodeResults: Array.from(this.state.nodeResults.entries()),
+        },
+        expiresInMs: 3600000, // 1 hour
+      });
+
       this.emitEvent('awaiting_input', {
         nodeId,
         promptKey: result.metadata?.promptKey,

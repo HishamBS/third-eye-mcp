@@ -12,6 +12,8 @@ import type { EyeName } from '@third-eye/types';
 import type { RoutingDecision as CoreRoutingDecision, AutoRouterOptions } from '../auto-router';
 import { autoRouter } from '../auto-router';
 import { EyeStageToken } from '@third-eye/constants';
+import { PolicyValidator } from './policy-validator';
+import type { RoutingPolicy } from './routing-modes';
 
 /**
  * Eye Route Step - Single step in pipeline sequence
@@ -56,8 +58,10 @@ export interface SessionContext {
  * Dynamic Router - Phase 17 Implementation
  *
  * Wraps core AutoRouter with clean Phase 17 API
+ * Phase 1-A2: Integrates PolicyValidator for constrained routing
  */
 export class DynamicRouter {
+  private readonly policyValidator = new PolicyValidator();
   /**
    * Analyze request and determine optimal Eye sequence
    *
@@ -144,6 +148,21 @@ export class DynamicRouter {
     // This would query stored routing decisions from database
     // For now, return null if not found
     return null;
+  }
+
+  /**
+   * Validate route against routing policy (Constrained Dynamic mode)
+   * Phase 1-A2: Integration with PolicyValidator
+   */
+  validateRouteAgainstPolicy(route: EyeSequence, policy: RoutingPolicy): ValidationResult {
+    const eyeIds = route.eyes.map(step => step.eyeId);
+    const policyResult = this.policyValidator.validateSequence(eyeIds, policy);
+
+    return {
+      valid: policyResult.valid,
+      errors: [...policyResult.errors],
+      warnings: [...policyResult.warnings],
+    };
   }
 
   /**
