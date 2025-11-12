@@ -11,6 +11,14 @@
     "./constants": {
       "types": "./dist/constants.d.ts",
       "default": "./dist/constants.js"
+    },
+    "./eye-capabilities": {
+      "types": "./dist/eye-capabilities.d.ts",
+      "default": "./dist/eye-capabilities.js"
+    },
+    "./eye-model-recommendations": {
+      "types": "./dist/eye-model-recommendations.d.ts",
+      "default": "./dist/eye-model-recommendations.js"
     }
   },
   "dependencies": {

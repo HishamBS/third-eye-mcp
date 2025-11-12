@@ -2,7 +2,7 @@
 
 import { memo } from 'react';
 import { Handle, Position, type NodeProps } from 'reactflow';
-import { FlagCheckered, CheckCircle2, XCircle, AlertCircle, Clock } from 'lucide-react';
+import { Flag, CheckCircle2, XCircle, AlertCircle, Clock } from 'lucide-react';
 import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE } from '@/constants/color-mappings';
 import { ANIMATION_DURATION } from '@/constants/timing';
 
@@ -29,7 +29,7 @@ const VERDICT_COLORS: Record<string, { text: string; bg: string; icon: typeof Ch
   AWAIT_INPUT: { text: STATUS_TEXT_COLORS.info, bg: STATUS_BG_COLORS_SUBTLE.info, icon: Clock },
   AWAIT_AGENT_PLAN: { text: STATUS_TEXT_COLORS.info, bg: STATUS_BG_COLORS_SUBTLE.info, icon: Clock },
   FINAL_REVIEW_FAILED: { text: STATUS_TEXT_COLORS.error, bg: STATUS_BG_COLORS_SUBTLE.error, icon: XCircle },
-  END: { text: 'text-brand-foreground', bg: 'bg-brand-outline/20', icon: FlagCheckered },
+  END: { text: 'text-brand-foreground', bg: 'bg-brand-outline/20', icon: Flag },
 };
 
 /**
@@ -77,7 +77,7 @@ function TerminalNodeComponent({ data, selected, dragging }: NodeProps<TerminalN
 
       {/* Icon & Title */}
       <div className="flex items-center gap-2 mb-2">
-        <FlagCheckered className="w-5 h-5 text-brand-primary" />
+        <Flag className="w-5 h-5 text-brand-primary" />
         <div className="font-semibold text-base text-brand-foreground">
           {label}
         </div>
