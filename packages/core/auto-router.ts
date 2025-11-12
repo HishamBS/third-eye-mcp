@@ -2,6 +2,7 @@
  * Auto-Router - Intelligent Pipeline Routing
  *
  * Analyzes freeform tasks and routes them through the optimal Eye sequence
+ * Phase 5: Integrated with ConversationTracker for narrative monitoring
  */
 
 import type { EyeName } from '@third-eye/types';
@@ -10,6 +11,7 @@ import { isRejected } from '@third-eye/eyes';
 import { EyeId } from '@third-eye/constants';
 import { EyeOrchestrator } from './orchestrator';
 import { orderGuard } from './order-guard';
+import { ConversationTracker } from './conversation-tracker';
 import { z } from 'zod';
 
 export interface AutoRouterOptions {
@@ -128,6 +130,7 @@ export class AutoRouter {
 
   /**
    * Analyze a freeform task and determine optimal routing
+   * Phase 3: Supports three routing modes (fully_dynamic, constrained, fixed)
    */
   async analyzeTask(
     input: string,
@@ -165,11 +168,36 @@ export class AutoRouter {
     // This ensures Overseer bypasses order guard validation when called by auto-router
     orderGuard.markAsAutoRouterSession(actualSessionId);
 
-    // Call Overseer Eye to get dynamic pipeline routing
-    // Look up Overseer by name from database (SSOT)
+    // Phase 3: Routing Mode Selection
+    const routingMode = options.routingMode || 'fully_dynamic';
+
+    // ========================================================================
+    // Mode 1: Fixed Template - Use predefined eye sequence
+    // ========================================================================
+    if (routingMode === 'fixed' && options.templateId) {
+      const { TemplateExecutor } = await import('./routing/template-executor');
+      const { getDb } = await import('@third-eye/db');
+      const { db } = getDb();
+      const templateExecutor = new TemplateExecutor(db);
+
+      const executionPlan = await templateExecutor.executeTemplate(options.templateId);
+
+      return {
+        sessionId: actualSessionId,
+        taskType: 'text', // Template doesn't analyze task type
+        complexity: 'medium',
+        recommendedFlow: executionPlan.eyeSequence as EyeName[],
+        reasoning: executionPlan.reasoning,
+        estimatedSteps: executionPlan.eyeSequence.length,
+      };
+    }
+
+    // ========================================================================
+    // Mode 2 & 3: Call Overseer for dynamic routing
+    // ========================================================================
     const { getAllActiveEyes } = await import('@third-eye/db/utils/lookups');
     const activeEyes = await getAllActiveEyes();
-    
+
     // Find Overseer by name (case-insensitive match)
     let overseerName: string | null = null;
     for (const eye of activeEyes) {
@@ -178,12 +206,53 @@ export class AutoRouter {
         break;
       }
     }
-    
+
     if (!overseerName) {
       throw new Error('Overseer eye not found in database');
     }
-    
-    const overseerResult = await this.orchestrator.runEye(overseerName, enrichedInput, actualSessionId);
+
+    // Enrich Overseer input with policy constraints if constrained mode
+    let overseerInput = enrichedInput;
+    if (routingMode === 'constrained' && options.policyId) {
+      const { getDb } = await import('@third-eye/db');
+      const { db } = getDb();
+      const policyRow = db
+        .prepare(
+          `SELECT id, name, description, mandatory_eyes, forbidden_eyes, min_validation_eyes, security_required, always_confirm_intent
+           FROM routing_policies
+           WHERE id = ? AND is_active = 1`
+        )
+        .get(options.policyId) as {
+        id: string;
+        name: string;
+        description: string | null;
+        mandatory_eyes: string;
+        forbidden_eyes: string | null;
+        min_validation_eyes: number | null;
+        security_required: number;
+        always_confirm_intent: number;
+      } | undefined;
+
+      if (policyRow) {
+        const policyDirective = [
+          '\n\nROUTING POLICY CONSTRAINTS:',
+          `Policy: ${policyRow.name}`,
+          policyRow.description ? `Description: ${policyRow.description}` : '',
+          `Mandatory Eyes: ${policyRow.mandatory_eyes}`,
+          policyRow.forbidden_eyes ? `Forbidden Eyes: ${policyRow.forbidden_eyes}` : '',
+          policyRow.min_validation_eyes !== null ? `Minimum Validation Eyes: ${policyRow.min_validation_eyes}` : '',
+          policyRow.security_required ? 'Security validation REQUIRED' : '',
+          policyRow.always_confirm_intent ? 'Intent confirmation REQUIRED (include Jōgan)' : '',
+          '\nYou MUST respect these constraints when selecting eyes.',
+        ]
+          .filter(Boolean)
+          .join('\n');
+
+        overseerInput = `${overseerInput}${policyDirective}`;
+      }
+    }
+
+    const overseerResult = await this.orchestrator.runEye(overseerName, overseerInput, actualSessionId);
 
     if (!overseerResult.ok) {
       throw new Error(`Overseer failed: ${overseerResult.code} - ${overseerResult.md || 'No details'}`);
@@ -193,6 +262,66 @@ export class AutoRouter {
     if (!Array.isArray(pipelineRoute) || pipelineRoute.length === 0) {
       console.error('[AutoRouter] Overseer returned invalid pipeline route:', overseerResult.data);
       throw new Error('Overseer did not provide a valid pipelineRoute array');
+    }
+
+    // ========================================================================
+    // Mode 2: Constrained Dynamic - Validate against policy
+    // ========================================================================
+    if (routingMode === 'constrained' && options.policyId) {
+      const { PolicyValidator } = await import('./routing/policy-validator');
+      const { getDb } = await import('@third-eye/db');
+      const { db } = getDb();
+
+      // Load policy from database
+      const policyRow = db
+        .prepare(
+          `SELECT id, name, description, mandatory_eyes, forbidden_eyes, min_validation_eyes, security_required, always_confirm_intent, custom_constraints
+           FROM routing_policies
+           WHERE id = ? AND is_active = 1`
+        )
+        .get(options.policyId) as {
+        id: string;
+        name: string;
+        description: string | null;
+        mandatory_eyes: string;
+        forbidden_eyes: string | null;
+        min_validation_eyes: number | null;
+        security_required: number;
+        always_confirm_intent: number;
+        custom_constraints: string | null;
+      } | undefined;
+
+      if (policyRow) {
+        const policy = {
+          id: policyRow.id,
+          name: policyRow.name,
+          description: policyRow.description ?? undefined,
+          mandatoryEyes: JSON.parse(policyRow.mandatory_eyes) as string[],
+          forbiddenEyes: policyRow.forbidden_eyes ? (JSON.parse(policyRow.forbidden_eyes) as string[]) : undefined,
+          minValidationEyes: policyRow.min_validation_eyes ?? undefined,
+          securityRequired: policyRow.security_required === 1,
+          alwaysConfirmIntent: policyRow.always_confirm_intent === 1,
+          customConstraints: policyRow.custom_constraints
+            ? (JSON.parse(policyRow.custom_constraints) as Array<{ readonly type: string; readonly value: unknown; readonly reason: string }>)
+            : undefined,
+          isActive: true,
+          createdAt: Date.now(),
+        };
+
+        const validator = new PolicyValidator();
+        const validationResult = validator.validateSequence(pipelineRoute as string[], policy);
+
+        if (!validationResult.valid) {
+          throw new Error(
+            `Policy validation failed: ${validationResult.errors.join(', ')}`
+          );
+        }
+
+        // Log warnings if any
+        if (validationResult.warnings.length > 0) {
+          console.warn('[AutoRouter] Policy validation warnings:', validationResult.warnings);
+        }
+      }
     }
 
     return {
@@ -231,6 +360,21 @@ export class AutoRouter {
       const { getWebSocketBridge } = await import('./websocket-registry');
       const ws = getWebSocketBridge();
 
+      // Phase 5: Initialize ConversationTracker for narrative monitoring
+      const { getDb } = await import('@third-eye/db');
+      const { db } = getDb();
+      const conversationTracker = new ConversationTracker(db);
+
+      // Log routing decision
+      conversationTracker.logRoutingDecision(
+        decision.sessionId,
+        decision.recommendedFlow,
+        decision.reasoning
+      );
+
+      // Log human's initial input
+      conversationTracker.logHumanMessage(decision.sessionId, input);
+
       // Execute each Eye in the recommended flow
       for (let i = 0; i < decision.recommendedFlow.length; i++) {
         const eyeName = decision.recommendedFlow[i];
@@ -253,6 +397,19 @@ export class AutoRouter {
         const result = await this.orchestrator.runEye(eyeName, runInput, decision.sessionId);
         results.push(result);
 
+        // Phase 5: Log agent message from eye
+        conversationTracker.logAgentMessage(
+          decision.sessionId,
+          eyeName,
+          result.md || result.summary || 'Eye completed execution',
+          {
+            code: result.code,
+            ok: result.ok,
+            step: i + 1,
+            totalSteps: decision.recommendedFlow.length,
+          }
+        );
+
         // Emit eye_complete event
         if (ws) {
           ws.broadcastToSession(decision.sessionId, {
@@ -270,6 +427,14 @@ export class AutoRouter {
         }
 
         if (isRejected(result)) {
+          // Phase 5: Log error
+          conversationTracker.logError(
+            decision.sessionId,
+            eyeName,
+            `Pipeline rejected with code: ${result.code}`,
+            { code: result.code, summary: result.summary }
+          );
+
           return {
             sessionId: decision.sessionId,
             results,
@@ -298,6 +463,22 @@ export class AutoRouter {
       // Unmark session on error too
       if (routing?.sessionId) {
         orderGuard.unmarkAsAutoRouterSession(routing.sessionId);
+      }
+
+      // Phase 5: Log error to conversation tracker
+      if (routing?.sessionId) {
+        try {
+          const { getDb } = await import('@third-eye/db');
+          const { db } = getDb();
+          const conversationTracker = new ConversationTracker(db);
+          conversationTracker.logError(
+            routing.sessionId,
+            'auto-router',
+            error instanceof Error ? error.message : 'Unknown error occurred during pipeline execution'
+          );
+        } catch {
+          // Silently fail if logging fails - don't break error handling
+        }
       }
 
       return {
@@ -380,16 +561,26 @@ export class AutoRouter {
       }
 
       // Build enriched input with clarifications
-      const enrichedInput = input 
+      const enrichedInput = input
         ? `${input}\n\nResolved Context:\n${factsSummary}`
         : `Resuming pipeline with resolved context:\n${factsSummary}`;
 
       // Execute remaining Eyes
       const remainingEyes = nextEyes;
       const results: BaseEnvelope[] = [];
-      
+
       // Mark as auto-router controlled
       orderGuard.markAsAutoRouterSession(sessionId);
+
+      // Phase 5: Initialize ConversationTracker and log resume
+      const { getDb } = await import('@third-eye/db');
+      const { db } = getDb();
+      const conversationTracker = new ConversationTracker(db);
+      conversationTracker.logResume(
+        sessionId,
+        `Pipeline resumed with ${remainingEyes.length} remaining eyes: ${remainingEyes.join(', ')}`,
+        { resolvedFacts, remainingEyes }
+      );
 
       // Import WebSocket bridge for real-time updates
       const { getWebSocketBridge } = await import('./websocket-registry');
@@ -411,6 +602,20 @@ export class AutoRouter {
 
         const result = await this.orchestrator.runEye(eyeName, enrichedInput, sessionId);
         results.push(result);
+
+        // Phase 5: Log agent message from eye
+        conversationTracker.logAgentMessage(
+          sessionId,
+          eyeName,
+          result.md || result.summary || 'Eye completed execution',
+          {
+            code: result.code,
+            ok: result.ok,
+            step: state.completedEyes.length + i + 1,
+            totalSteps: state.completedEyes.length + remainingEyes.length,
+            resumed: true,
+          }
+        );
 
         // Emit eye_complete event
         if (ws) {

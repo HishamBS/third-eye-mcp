@@ -45,6 +45,13 @@ export type {
   HumanResponse
 } from './pause-resume-manager';
 
+// Intent Confirmation (Phase 2-B)
+export { IntentConfirmationManager } from './intent-confirmation-manager';
+export type {
+  IntentConfirmation,
+  ConfirmationResponse
+} from './intent-confirmation-manager';
+
 // Three Routing Modes (Phase 1-A2)
 export { RoutingMode } from './routing/routing-modes';
 export type {
@@ -57,6 +64,7 @@ export type {
 export { PolicyValidator } from './routing/policy-validator';
 export { TemplateExecutor } from './routing/template-executor';
 export type { TemplateExecutionPlan } from './routing/template-executor';
+export { PolicyManager } from './routing/policy-manager';
 
 // Workflow execution
 export { WorkflowInterpreter } from './workflow-interpreter';

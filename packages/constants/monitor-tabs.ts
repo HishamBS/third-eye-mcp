@@ -11,6 +11,7 @@ import { freezeTokens, TokenLiteral } from './taxonomy';
 
 export const MonitorTabId = freezeTokens({
   TIMELINE: 'timeline',
+  NARRATIVE: 'narrative',
   ROUTING: 'routing',
   CLARIFICATIONS: 'clarifications',
   INTENT: 'intent',
@@ -25,6 +26,7 @@ export type MonitorTabId = TokenLiteral<typeof MonitorTabId>;
  */
 const MONITOR_TAB_LABELS = Object.freeze({
   TIMELINE: 'Timeline',
+  NARRATIVE: 'Narrative',
   ROUTING: 'Routing Decision',
   CLARIFICATIONS: 'Clarifications',
   INTENT: 'Intent Confirmation',
@@ -37,6 +39,7 @@ const MONITOR_TAB_LABELS = Object.freeze({
  */
 const MONITOR_TAB_ICONS = Object.freeze({
   TIMELINE: 'timeline',
+  NARRATIVE: 'message-circle',
   ROUTING: 'route',
   CLARIFICATIONS: 'help-circle',
   INTENT: 'hand',
@@ -49,6 +52,7 @@ const MONITOR_TAB_ICONS = Object.freeze({
  */
 const MONITOR_TAB_DESCRIPTIONS = Object.freeze({
   TIMELINE: 'Chat-style conversation log with Eye responses',
+  NARRATIVE: 'Human-readable conversation flow showing the story of pipeline execution',
   ROUTING: 'Overseer-determined dynamic Eye sequence and rationale',
   CLARIFICATIONS: 'Outstanding and resolved clarification questions',
   INTENT: 'Jogan intent analysis and human approval status',
@@ -73,6 +77,12 @@ export const MONITOR_TABS: ReadonlyArray<MonitorTabConfig> = Object.freeze([
     label: MONITOR_TAB_LABELS.TIMELINE,
     icon: MONITOR_TAB_ICONS.TIMELINE,
     description: MONITOR_TAB_DESCRIPTIONS.TIMELINE,
+  },
+  {
+    id: MonitorTabId.NARRATIVE,
+    label: MONITOR_TAB_LABELS.NARRATIVE,
+    icon: MONITOR_TAB_ICONS.NARRATIVE,
+    description: MONITOR_TAB_DESCRIPTIONS.NARRATIVE,
   },
   {
     id: MonitorTabId.ROUTING,

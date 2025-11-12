@@ -24,6 +24,11 @@ CREATE TABLE IF NOT EXISTS routing_decisions (
 -- A2: Three Routing Modes (Fully Dynamic, Constrained, Fixed Template)
 -- ============================================================================
 
+-- Add routing mode tracking to sessions table
+ALTER TABLE sessions ADD COLUMN routing_mode TEXT DEFAULT 'fully_dynamic';
+ALTER TABLE sessions ADD COLUMN policy_id TEXT;
+ALTER TABLE sessions ADD COLUMN template_id TEXT;
+
 -- Create routing_policies table for Constrained Dynamic mode
 CREATE TABLE IF NOT EXISTS routing_policies (
   id TEXT PRIMARY KEY NOT NULL,
@@ -110,3 +115,23 @@ CREATE INDEX IF NOT EXISTS idx_pending_questions_session ON pending_questions(se
 CREATE INDEX IF NOT EXISTS idx_pending_questions_status ON pending_questions(status);
 CREATE INDEX IF NOT EXISTS idx_human_responses_session ON human_responses(session_id);
 CREATE INDEX IF NOT EXISTS idx_human_responses_question ON human_responses(question_id);
+
+-- ============================================================================
+-- Phase 5: Narrative Monitoring (Conversation Events)
+-- ============================================================================
+
+-- Create conversation_events table for tracking agent/human narrative
+CREATE TABLE IF NOT EXISTS conversation_events (
+  id TEXT PRIMARY KEY NOT NULL,
+  session_id TEXT NOT NULL REFERENCES sessions(id),
+  event_type TEXT NOT NULL, -- 'agent_message', 'human_message', 'routing_decision', 'pause', 'resume'
+  speaker TEXT NOT NULL, -- 'overseer', 'sharingan', 'kyuubi', 'jogan', etc. or 'human'
+  message TEXT NOT NULL, -- The actual message content
+  metadata TEXT, -- JSON for additional data (reasoning, routing info, etc.)
+  created_at INTEGER NOT NULL
+);
+
+-- Conversation events indexes
+CREATE INDEX IF NOT EXISTS idx_conversation_events_session ON conversation_events(session_id);
+CREATE INDEX IF NOT EXISTS idx_conversation_events_type ON conversation_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_conversation_events_created ON conversation_events(created_at DESC);
