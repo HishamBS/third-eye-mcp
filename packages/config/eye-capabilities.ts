@@ -106,7 +106,7 @@ export function getAllCapabilityTags(): readonly string[] {
 export function getEyesByCapability(capabilityTag: string): readonly EyeCapabilityName[] {
   const eyeNames: EyeCapabilityName[] = [];
   for (const [eyeName, capabilities] of Object.entries(EYE_CAPABILITIES)) {
-    if (capabilities.tags.includes(capabilityTag)) {
+    if ((capabilities.tags as readonly string[]).includes(capabilityTag)) {
       eyeNames.push(eyeName as EyeCapabilityName);
     }
   }
