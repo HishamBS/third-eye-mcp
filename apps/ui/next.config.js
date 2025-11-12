@@ -39,7 +39,7 @@ const nextConfig = {
   },
 
   // Transpile workspace packages
-  transpilePackages: ['@third-eye/db', '@third-eye/core', '@third-eye/types'],
+  transpilePackages: ['@third-eye/db', '@third-eye/core', '@third-eye/types', '@third-eye/config', '@third-eye/constants'],
 
   // Image optimization
   images: {
