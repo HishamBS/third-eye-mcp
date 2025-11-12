@@ -8,6 +8,7 @@
     "start": "bun run src/start.ts"
   },
   "dependencies": {
+    "@hono/zod-validator": "^0.4.1",
     "@third-eye/config": "workspace:*",
     "@third-eye/constants": "workspace:*",
     "@third-eye/core": "workspace:*",

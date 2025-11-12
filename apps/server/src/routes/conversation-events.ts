@@ -15,7 +15,7 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { db } from '../db';
+import { getDb } from '@third-eye/db';
 import { ConversationTracker } from '@third-eye/core/conversation-tracker';
 
 const app = new Hono();
@@ -43,7 +43,7 @@ app.get('/session/:sessionId', async (c) => {
       }, 400);
     }
 
-    const tracker = new ConversationTracker(db);
+    const tracker = new ConversationTracker(getDb());
     const events = tracker.getConversationTimeline(sessionId);
 
     return c.json({
@@ -75,7 +75,7 @@ app.get(
     try {
       const { limit } = c.req.valid('query');
 
-      const tracker = new ConversationTracker(db);
+      const tracker = new ConversationTracker(getDb());
       const events = tracker.getRecentEvents(limit);
 
       return c.json({
@@ -137,7 +137,7 @@ app.get('/session/:sessionId/type/:eventType', async (c) => {
       }, 400);
     }
 
-    const tracker = new ConversationTracker(db);
+    const tracker = new ConversationTracker(getDb());
     const events = tracker.getEventsByType(sessionId, eventType as any);
 
     return c.json({
