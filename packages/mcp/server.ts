@@ -523,8 +523,21 @@ export function createMCPServer(): Server {
           stepsExecuted: result.results.length,
         };
 
-        // Phase 1-A6: Eye Invisibility - Agent never sees internal Eye operations
-        // Only return final result, sessionId, and portal URL for developer monitoring
+        // Phase 1-A6 + REPAIR_PLAN A6: Eye Invisibility - Agent NEVER sees internal Eye operations
+        // Only return sanitized fields: summary, content (from md field), sessionId, portalUrl
+        // Agent must NOT see: eye names, routing decisions, history, steps, or any internal structure
+        const sanitizedData: Record<string, unknown> = {};
+
+        // Extract only safe fields from finalResult
+        if (finalResult && typeof finalResult === 'object') {
+          // md field contains the eye's markdown analysis - safe to expose
+          if ('md' in finalResult && typeof finalResult.md === 'string') {
+            sanitizedData.content = finalResult.md;
+          }
+          // Some eyes may have safe top-level data fields we can expose
+          // But we NEVER expose: tag, next, next_action, routing, history, eyeResults
+        }
+
         return {
           content: [
             {
@@ -536,9 +549,9 @@ export function createMCPServer(): Server {
                   verdict,
                   summary,
                   metadata,
-                  data: finalResult,
-                  // history removed - agent should not see Eye operations
-                  // Developers can monitor Eyes via portal: metadata.portalUrl
+                  data: sanitizedData,
+                  // REPAIR_PLAN A6: NO eye names, NO routing, NO internal structure
+                  // Developers monitor Eyes via portal: metadata.portalUrl
                 },
                 null,
                 2
