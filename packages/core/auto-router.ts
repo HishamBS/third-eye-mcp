@@ -12,6 +12,7 @@ import { EyeId, EyeStatusCode } from '@third-eye/constants';
 import { EyeOrchestrator } from './orchestrator';
 import { orderGuard } from './order-guard';
 import { ConversationTracker } from './conversation-tracker';
+import type { Constraint } from './routing/routing-modes';
 import { z } from 'zod';
 
 export interface AutoRouterOptions {
@@ -179,8 +180,8 @@ export class AutoRouter {
     if (routingMode === 'fixed' && options.templateId) {
       const { TemplateExecutor } = await import('./routing/template-executor');
       const { getDb } = await import('@third-eye/db');
-      const { db } = getDb();
-      const templateExecutor = new TemplateExecutor(db);
+      const { sqlite } = getDb();
+      const templateExecutor = new TemplateExecutor(sqlite);
 
       const executionPlan = await templateExecutor.executeTemplate(options.templateId);
 
@@ -217,8 +218,8 @@ export class AutoRouter {
     let overseerInput = enrichedInput;
     if (routingMode === 'constrained' && options.policyId) {
       const { getDb } = await import('@third-eye/db');
-      const { db } = getDb();
-      const policyRow = db
+      const { sqlite } = getDb();
+      const policyRow = sqlite
         .prepare(
           `SELECT id, name, description, mandatory_eyes, forbidden_eyes, min_validation_eyes, security_required, always_confirm_intent
            FROM routing_policies
@@ -272,10 +273,10 @@ export class AutoRouter {
     if (routingMode === 'constrained' && options.policyId) {
       const { PolicyValidator } = await import('./routing/policy-validator');
       const { getDb } = await import('@third-eye/db');
-      const { db } = getDb();
+      const { sqlite } = getDb();
 
       // Load policy from database
-      const policyRow = db
+      const policyRow = sqlite
         .prepare(
           `SELECT id, name, description, mandatory_eyes, forbidden_eyes, min_validation_eyes, security_required, always_confirm_intent, custom_constraints
            FROM routing_policies
@@ -304,7 +305,7 @@ export class AutoRouter {
           securityRequired: policyRow.security_required === 1,
           alwaysConfirmIntent: policyRow.always_confirm_intent === 1,
           customConstraints: policyRow.custom_constraints
-            ? (JSON.parse(policyRow.custom_constraints) as Array<{ readonly type: string; readonly value: unknown; readonly reason: string }>)
+            ? (JSON.parse(policyRow.custom_constraints) as Constraint[])
             : undefined,
           isActive: true,
           createdAt: Date.now(),
@@ -364,8 +365,8 @@ export class AutoRouter {
 
       // Phase 5: Initialize ConversationTracker for narrative monitoring
       const { getDb } = await import('@third-eye/db');
-      const { db } = getDb();
-      const conversationTracker = new ConversationTracker(db);
+      const { sqlite } = getDb();
+      const conversationTracker = new ConversationTracker(sqlite);
 
       // Log routing decision
       conversationTracker.logRoutingDecision(
@@ -403,7 +404,7 @@ export class AutoRouter {
         conversationTracker.logAgentMessage(
           decision.sessionId,
           eyeName,
-          result.md || result.summary || 'Eye completed execution',
+          result.md || 'Eye completed execution',
           {
             code: result.code,
             ok: result.ok,
@@ -432,17 +433,15 @@ export class AutoRouter {
         if (result.code === EyeStatusCode.E_NEEDS_CLARIFICATION) {
           const { PauseResumeManager } = await import('./pause-resume-manager');
           const { getDb } = await import('@third-eye/db');
-          const { db } = getDb();
-          const pauseManager = new PauseResumeManager(db);
+          const { sqlite } = getDb();
+          const pauseManager = new PauseResumeManager(sqlite);
 
           await pauseManager.pausePipeline({
             sessionId: decision.sessionId,
             currentEye: eyeName,
-            currentEyeIndex: i,
-            remainingEyes: decision.recommendedFlow.slice(i + 1),
             reason: 'clarification',
             pendingData: result.data,
-            expiresAt: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+            expiresInMs: 24 * 60 * 60 * 1000 // 24 hours
           });
 
           conversationTracker.logPause(
@@ -473,29 +472,27 @@ export class AutoRouter {
         if (result.code === EyeStatusCode.E_INTENT_UNCONFIRMED) {
           const { PauseResumeManager } = await import('./pause-resume-manager');
           const { getDb } = await import('@third-eye/db');
-          const { db } = getDb();
-          const pauseManager = new PauseResumeManager(db);
+          const { sqlite } = getDb();
+          const pauseManager = new PauseResumeManager(sqlite);
 
           await pauseManager.pausePipeline({
             sessionId: decision.sessionId,
             currentEye: eyeName,
-            currentEyeIndex: i,
-            remainingEyes: decision.recommendedFlow.slice(i + 1),
-            reason: 'intent_confirmation',
+            reason: 'confirmation',
             pendingData: result.data,
-            expiresAt: Date.now() + 24 * 60 * 60 * 1000
+            expiresInMs: 24 * 60 * 60 * 1000
           });
 
           conversationTracker.logPause(
             decision.sessionId,
-            'intent_confirmation',
+            'confirmation',
             `Eye ${eyeName} requested intent confirmation`
           );
 
           if (ws) {
             ws.broadcastToSession(decision.sessionId, {
               type: 'pipeline_paused',
-              reason: 'intent_confirmation',
+              reason: 'confirmation',
               eye: eyeName,
               timestamp: Date.now()
             });
@@ -506,7 +503,7 @@ export class AutoRouter {
             results,
             completed: false,
             paused: true,
-            pauseReason: 'intent_confirmation'
+            pauseReason: 'confirmation'
           };
         }
 
@@ -517,7 +514,7 @@ export class AutoRouter {
             decision.sessionId,
             eyeName,
             `Pipeline rejected with code: ${result.code}`,
-            { code: result.code, summary: result.summary }
+            { code: result.code, message: result.md }
           );
 
           return {
@@ -554,8 +551,8 @@ export class AutoRouter {
       if (routing?.sessionId) {
         try {
           const { getDb } = await import('@third-eye/db');
-          const { db } = getDb();
-          const conversationTracker = new ConversationTracker(db);
+          const { sqlite } = getDb();
+          const conversationTracker = new ConversationTracker(sqlite);
           conversationTracker.logError(
             routing.sessionId,
             'auto-router',
@@ -659,8 +656,8 @@ export class AutoRouter {
 
       // Phase 5: Initialize ConversationTracker and log resume
       const { getDb } = await import('@third-eye/db');
-      const { db } = getDb();
-      const conversationTracker = new ConversationTracker(db);
+      const { sqlite } = getDb();
+      const conversationTracker = new ConversationTracker(sqlite);
       conversationTracker.logResume(
         sessionId,
         `Pipeline resumed with ${remainingEyes.length} remaining eyes: ${remainingEyes.join(', ')}`,
@@ -692,7 +689,7 @@ export class AutoRouter {
         conversationTracker.logAgentMessage(
           sessionId,
           eyeName,
-          result.md || result.summary || 'Eye completed execution',
+          result.md || 'Eye completed execution',
           {
             code: result.code,
             ok: result.ok,

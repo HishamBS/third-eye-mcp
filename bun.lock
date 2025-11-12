@@ -7,6 +7,7 @@
       "dependencies": {
         "@inquirer/prompts": "^7.8.6",
         "@modelcontextprotocol/sdk": "^1.19.1",
+        "drizzle-orm": "^0.36.0",
         "json-logic-js": "^2.0.5",
         "kleur": "^4.1.5",
         "nanoid": "^5.1.6",
@@ -15,9 +16,12 @@
       },
       "devDependencies": {
         "@playwright/test": "^1.56.0",
+        "@types/json-logic-js": "^2.0.8",
+        "@types/node": "^22.0.0",
         "@vitest/coverage-v8": "^2.1.4",
         "bun-types": "^1.2.23",
         "drizzle-kit": "^0.31.5",
+        "husky": "^9.1.7",
         "typescript": "~5.9.3",
         "vitest": "^2.1.9",
       },
@@ -27,8 +31,10 @@
       "version": "1.0.0",
       "dependencies": {
         "@third-eye/config": "workspace:*",
+        "@third-eye/constants": "workspace:*",
         "@third-eye/core": "workspace:*",
         "@third-eye/db": "workspace:*",
+        "@third-eye/eyes": "workspace:*",
         "@third-eye/providers": "workspace:*",
         "@third-eye/types": "workspace:*",
         "hono": "^4.6.0",
@@ -45,6 +51,8 @@
       "dependencies": {
         "@fontsource-variable/inter": "^5.2.8",
         "@fontsource/geist-mono": "^5.2.7",
+        "@third-eye/config": "workspace:*",
+        "@third-eye/constants": "workspace:*",
         "@third-eye/core": "workspace:*",
         "@third-eye/theme": "workspace:*",
         "@third-eye/types": "workspace:*",
@@ -699,6 +707,8 @@
     "@types/geojson": ["@types/geojson@7946.0.16", "", {}, "sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg=="],
 
     "@types/hast": ["@types/hast@3.0.4", "", { "dependencies": { "@types/unist": "*" } }, "sha512-WPs+bbQw5aCj+x6laNGWLH3wviHtoCv/P3+otBhbOhJgG8qtpdAMlTCxLtsTWA7LH1Oh/bFCHsBn0TPS5m30EQ=="],
+
+    "@types/json-logic-js": ["@types/json-logic-js@2.0.8", "", {}, "sha512-WgNsDPuTPKYXl0Jh0IfoCoJoAGGYZt5qzpmjuLSEg7r0cKp/kWtWp0HAsVepyPSPyXiHo6uXp/B/kW/2J1fa2Q=="],
 
     "@types/json-schema": ["@types/json-schema@7.0.15", "", {}, "sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA=="],
 

@@ -12,7 +12,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { Database } from 'better-sqlite3';
+import type { Database } from 'bun:sqlite';
 
 /**
  * Intent confirmation request

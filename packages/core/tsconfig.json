@@ -5,7 +5,8 @@
     "rootDir": ".",
     "composite": true,
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "types": ["bun-types"]
   },
   "include": ["*.ts", "**/*.ts"],
   "exclude": ["dist", "node_modules", "**/__tests__/**/*", "**/*.test.ts"],

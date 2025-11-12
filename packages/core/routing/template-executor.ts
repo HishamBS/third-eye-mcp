@@ -8,7 +8,7 @@
  */
 
 import type { PipelineTemplate } from './routing-modes';
-import type { Database } from 'better-sqlite3';
+import type { Database } from 'bun:sqlite';
 
 /**
  * Template execution result
@@ -201,7 +201,7 @@ export class TemplateExecutor {
   async listTemplates(filters?: { isPublic?: boolean; createdBy?: string }): Promise<readonly PipelineTemplate[]> {
     let query = `SELECT id, name, description, eyes, strict, auto_trigger_pattern, created_by, is_public, usage_count, created_at
                  FROM pipeline_templates WHERE 1=1`;
-    const params: unknown[] = [];
+    const params: (string | number | boolean | null)[] = [];
 
     if (filters?.isPublic !== undefined) {
       query += ` AND is_public = ?`;

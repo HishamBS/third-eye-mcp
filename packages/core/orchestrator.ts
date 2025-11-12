@@ -370,7 +370,7 @@ export class EyeOrchestrator {
             let personaPrompt: PersonaPrompt;
             if (dynamicRouterPersona && isOverseer) {
               // REPAIR_PLAN A4: Use function calling for dynamic router too
-              const { EYE_RESPONSE_TOOL } = await import('@third-eye/eyes/renderer/persona-renderer');
+              const { EYE_RESPONSE_TOOL } = await import('@third-eye/eyes/src/renderer/persona-renderer');
               personaPrompt = {
                 systemPrompt: dynamicRouterPersona,
                 userMessage: enrichedInput,
