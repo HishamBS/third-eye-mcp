@@ -1111,13 +1111,23 @@ async function startServices() {
   await ensureDependencies(!args.quiet);
   checkEnvironment();
 
-  // Quick mode: Skip updates and stale checks
+  // Quick mode: Skip updates and stale checks (but ALWAYS clean .next for module resolution)
   if (!args.quick) {
     await updateDependencies(projectRoot, args.skipUpdate || false, args.quiet);
     cleanSourceArtifacts(projectRoot, args.quiet);
     cleanStaleBuilds(projectRoot, args.quiet);
-  } else if (!args.quiet) {
-    console.log(kleur.gray('⏭️  Quick mode: Skipping updates and stale checks'));
+  } else {
+    if (!args.quiet) {
+      console.log(kleur.gray('⏭️  Quick mode: Skipping updates and stale checks'));
+    }
+    // CRITICAL: Always clean .next even in quick mode (fixes module resolution issues)
+    const nextBuildPath = resolve(projectRoot, 'apps/ui/.next');
+    if (existsSync(nextBuildPath)) {
+      rmSync(nextBuildPath, { recursive: true, force: true });
+      if (!args.quiet) {
+        console.log(kleur.yellow('🧹 Cleaned apps/ui/.next (required for module resolution)'));
+      }
+    }
   }
 
   await prepareDatabase(!args.quiet);
