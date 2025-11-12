@@ -2,6 +2,7 @@
  * Auto-Router - Intelligent Pipeline Routing
  *
  * Analyzes freeform tasks and routes them through the optimal Eye sequence
+ * Phase 5: Integrated with ConversationTracker for narrative monitoring
  */
 
 import type { EyeName } from '@third-eye/types';
@@ -10,6 +11,7 @@ import { isRejected } from '@third-eye/eyes';
 import { EyeId } from '@third-eye/constants';
 import { EyeOrchestrator } from './orchestrator';
 import { orderGuard } from './order-guard';
+import { ConversationTracker } from './conversation-tracker';
 import { z } from 'zod';
 
 export interface AutoRouterOptions {
@@ -358,6 +360,21 @@ export class AutoRouter {
       const { getWebSocketBridge } = await import('./websocket-registry');
       const ws = getWebSocketBridge();
 
+      // Phase 5: Initialize ConversationTracker for narrative monitoring
+      const { getDb } = await import('@third-eye/db');
+      const { db } = getDb();
+      const conversationTracker = new ConversationTracker(db);
+
+      // Log routing decision
+      conversationTracker.logRoutingDecision(
+        decision.sessionId,
+        decision.recommendedFlow,
+        decision.reasoning
+      );
+
+      // Log human's initial input
+      conversationTracker.logHumanMessage(decision.sessionId, input);
+
       // Execute each Eye in the recommended flow
       for (let i = 0; i < decision.recommendedFlow.length; i++) {
         const eyeName = decision.recommendedFlow[i];
@@ -380,6 +397,19 @@ export class AutoRouter {
         const result = await this.orchestrator.runEye(eyeName, runInput, decision.sessionId);
         results.push(result);
 
+        // Phase 5: Log agent message from eye
+        conversationTracker.logAgentMessage(
+          decision.sessionId,
+          eyeName,
+          result.md || result.summary || 'Eye completed execution',
+          {
+            code: result.code,
+            ok: result.ok,
+            step: i + 1,
+            totalSteps: decision.recommendedFlow.length,
+          }
+        );
+
         // Emit eye_complete event
         if (ws) {
           ws.broadcastToSession(decision.sessionId, {
@@ -397,6 +427,14 @@ export class AutoRouter {
         }
 
         if (isRejected(result)) {
+          // Phase 5: Log error
+          conversationTracker.logError(
+            decision.sessionId,
+            eyeName,
+            `Pipeline rejected with code: ${result.code}`,
+            { code: result.code, summary: result.summary }
+          );
+
           return {
             sessionId: decision.sessionId,
             results,
@@ -425,6 +463,22 @@ export class AutoRouter {
       // Unmark session on error too
       if (routing?.sessionId) {
         orderGuard.unmarkAsAutoRouterSession(routing.sessionId);
+      }
+
+      // Phase 5: Log error to conversation tracker
+      if (routing?.sessionId) {
+        try {
+          const { getDb } = await import('@third-eye/db');
+          const { db } = getDb();
+          const conversationTracker = new ConversationTracker(db);
+          conversationTracker.logError(
+            routing.sessionId,
+            'auto-router',
+            error instanceof Error ? error.message : 'Unknown error occurred during pipeline execution'
+          );
+        } catch {
+          // Silently fail if logging fails - don't break error handling
+        }
       }
 
       return {
@@ -507,16 +561,26 @@ export class AutoRouter {
       }
 
       // Build enriched input with clarifications
-      const enrichedInput = input 
+      const enrichedInput = input
         ? `${input}\n\nResolved Context:\n${factsSummary}`
         : `Resuming pipeline with resolved context:\n${factsSummary}`;
 
       // Execute remaining Eyes
       const remainingEyes = nextEyes;
       const results: BaseEnvelope[] = [];
-      
+
       // Mark as auto-router controlled
       orderGuard.markAsAutoRouterSession(sessionId);
+
+      // Phase 5: Initialize ConversationTracker and log resume
+      const { getDb } = await import('@third-eye/db');
+      const { db } = getDb();
+      const conversationTracker = new ConversationTracker(db);
+      conversationTracker.logResume(
+        sessionId,
+        `Pipeline resumed with ${remainingEyes.length} remaining eyes: ${remainingEyes.join(', ')}`,
+        { resolvedFacts, remainingEyes }
+      );
 
       // Import WebSocket bridge for real-time updates
       const { getWebSocketBridge } = await import('./websocket-registry');
@@ -538,6 +602,20 @@ export class AutoRouter {
 
         const result = await this.orchestrator.runEye(eyeName, enrichedInput, sessionId);
         results.push(result);
+
+        // Phase 5: Log agent message from eye
+        conversationTracker.logAgentMessage(
+          sessionId,
+          eyeName,
+          result.md || result.summary || 'Eye completed execution',
+          {
+            code: result.code,
+            ok: result.ok,
+            step: state.completedEyes.length + i + 1,
+            totalSteps: state.completedEyes.length + remainingEyes.length,
+            resumed: true,
+          }
+        );
 
         // Emit eye_complete event
         if (ws) {
