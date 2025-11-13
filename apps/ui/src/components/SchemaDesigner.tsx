@@ -1,12 +1,16 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
 
 interface SchemaField {
   name: string;
-  type: 'string' | 'number' | 'boolean' | 'array' | 'object';
+  type: "string" | "number" | "boolean" | "array" | "object";
   required: boolean;
   description?: string;
   enum?: string[];
@@ -19,10 +23,14 @@ interface SchemaDesignerProps {
   onChange?: (schema: Record<string, SchemaField>) => void;
 }
 
-export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerProps) {
-  const [fields, setFields] = useState<Record<string, SchemaField>>(initialSchema);
+export function SchemaDesigner({
+  initialSchema = {},
+  onChange,
+}: SchemaDesignerProps) {
+  const [fields, setFields] =
+    useState<Record<string, SchemaField>>(initialSchema);
   const [editingField, setEditingField] = useState<string | null>(null);
-  const [newFieldName, setNewFieldName] = useState('');
+  const [newFieldName, setNewFieldName] = useState("");
 
   const addField = () => {
     if (!newFieldName || fields[newFieldName]) return;
@@ -31,14 +39,14 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
       ...fields,
       [newFieldName]: {
         name: newFieldName,
-        type: 'string',
+        type: "string",
         required: false,
       },
     };
 
     setFields(newFields);
     onChange?.(newFields);
-    setNewFieldName('');
+    setNewFieldName("");
     setEditingField(newFieldName);
   };
 
@@ -61,7 +69,7 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
 
   const generateJSONSchema = () => {
     const schema = {
-      type: 'object',
+      type: "object",
       properties: {} as Record<string, unknown>,
       required: [] as string[],
     };
@@ -76,7 +84,7 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
         schema.properties[name].enum = field.enum;
       }
 
-      if (field.type === 'array' && field.items) {
+      if (field.type === "array" && field.items) {
         schema.properties[name].items = {
           type: field.items.type,
         };
@@ -90,19 +98,27 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
     return schema;
   };
 
-  const typeOptions = ['string', 'number', 'boolean', 'array', 'object'] as const;
+  const typeOptions = [
+    "string",
+    "number",
+    "boolean",
+    "array",
+    "object",
+  ] as const;
 
   return (
     <div className="space-y-6">
       {/* Add New Field */}
       <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/50 p-4">
-        <h3 className="mb-4 text-sm font-semibold text-brand-foreground">Add Field</h3>
+        <h3 className="mb-4 text-sm font-semibold text-brand-foreground">
+          Add Field
+        </h3>
         <div className="flex gap-3">
           <input
             type="text"
             value={newFieldName}
             onChange={(e) => setNewFieldName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && addField()}
+            onKeyDown={(e) => e.key === "Enter" && addField()}
             placeholder="Field name (e.g., temperature, max_tokens)"
             className="flex-1 rounded-lg border border-brand-outline/50 bg-brand-ink px-4 py-2 text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
           />
@@ -131,7 +147,9 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
                 {/* Field Header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-sm font-semibold text-brand-foreground">{name}</span>
+                    <span className="font-mono text-sm font-semibold text-brand-foreground">
+                      {name}
+                    </span>
                     {field.required && (
                       <span className="rounded-full ${STATUS_BG_COLORS_SUBTLE.error} px-2 py-0.5 text-xs ${STATUS_TEXT_COLORS.error}">
                         Required
@@ -140,10 +158,12 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setEditingField(editingField === name ? null : name)}
+                      onClick={() =>
+                        setEditingField(editingField === name ? null : name)
+                      }
                       className="rounded-lg bg-white/10 px-3 py-1 text-xs text-brand-foreground transition hover:bg-white/20"
                     >
-                      {editingField === name ? 'Collapse' : 'Edit'}
+                      {editingField === name ? "Collapse" : "Edit"}
                     </button>
                     <button
                       onClick={() => deleteField(name)}
@@ -158,16 +178,22 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
                 {editingField === name && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
+                    animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     className="space-y-3 border-t border-brand-outline/30 pt-3"
                   >
                     {/* Type Selection */}
                     <div>
-                      <label className="mb-2 block text-xs text-semantic-muted">Type</label>
+                      <label className="mb-2 block text-xs text-semantic-muted">
+                        Type
+                      </label>
                       <select
                         value={field.type}
-                        onChange={(e) => updateField(name, { type: e.target.value as SchemaField['type'] })}
+                        onChange={(e) =>
+                          updateField(name, {
+                            type: e.target.value as SchemaField["type"],
+                          })
+                        }
                         className="w-full rounded-lg border border-brand-outline/50 bg-brand-ink px-3 py-2 text-sm text-brand-foreground focus:border-brand-accent focus:outline-none"
                       >
                         {typeOptions.map((type) => (
@@ -180,10 +206,14 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
 
                     {/* Description */}
                     <div>
-                      <label className="mb-2 block text-xs text-semantic-muted">Description</label>
+                      <label className="mb-2 block text-xs text-semantic-muted">
+                        Description
+                      </label>
                       <textarea
-                        value={field.description || ''}
-                        onChange={(e) => updateField(name, { description: e.target.value })}
+                        value={field.description || ""}
+                        onChange={(e) =>
+                          updateField(name, { description: e.target.value })
+                        }
                         placeholder="Describe what this field does..."
                         className="w-full resize-none rounded-lg border border-brand-outline/50 bg-brand-ink px-3 py-2 text-sm text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none"
                         rows={2}
@@ -196,29 +226,36 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
                         type="checkbox"
                         id={`required-${name}`}
                         checked={field.required}
-                        onChange={(e) => updateField(name, { required: e.target.checked })}
+                        onChange={(e) =>
+                          updateField(name, { required: e.target.checked })
+                        }
                         className="h-4 w-4 rounded border-brand-outline/50 bg-brand-ink text-brand-accent focus:ring-2 focus:ring-brand-accent/40"
                       />
-                      <label htmlFor={`required-${name}`} className="text-sm text-semantic-muted">
+                      <label
+                        htmlFor={`required-${name}`}
+                        className="text-sm text-semantic-muted"
+                      >
                         Required field
                       </label>
                     </div>
 
                     {/* Enum Values (for string type) */}
-                    {field.type === 'string' && (
+                    {field.type === "string" && (
                       <div>
                         <label className="mb-2 block text-xs text-semantic-muted">
                           Allowed Values (comma-separated, optional)
                         </label>
                         <input
                           type="text"
-                          value={field.enum?.join(', ') || ''}
+                          value={field.enum?.join(", ") || ""}
                           onChange={(e) => {
                             const values = e.target.value
-                              .split(',')
+                              .split(",")
                               .map((v) => v.trim())
                               .filter(Boolean);
-                            updateField(name, { enum: values.length > 0 ? values : undefined });
+                            updateField(name, {
+                              enum: values.length > 0 ? values : undefined,
+                            });
                           }}
                           placeholder="e.g., low, medium, high"
                           className="w-full rounded-lg border border-brand-outline/50 bg-brand-ink px-3 py-2 text-sm text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none"
@@ -232,8 +269,9 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
                 {editingField !== name && (
                   <div className="text-xs text-semantic-muted">
                     <span className="capitalize">{field.type}</span>
-                    {field.description && ` • ${field.description.slice(0, 60)}${field.description.length > 60 ? '...' : ''}`}
-                    {field.enum && ` • Values: ${field.enum.join(', ')}`}
+                    {field.description &&
+                      ` • ${field.description.slice(0, 60)}${field.description.length > 60 ? "..." : ""}`}
+                    {field.enum && ` • Values: ${field.enum.join(", ")}`}
                   </div>
                 )}
               </div>
@@ -243,7 +281,9 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
 
         {Object.keys(fields).length === 0 && (
           <div className="rounded-xl border border-dashed border-brand-outline/40 p-8 text-center">
-            <p className="text-semantic-muted">No fields defined yet. Add a field to get started.</p>
+            <p className="text-semantic-muted">
+              No fields defined yet. Add a field to get started.
+            </p>
           </div>
         )}
       </div>
@@ -252,10 +292,14 @@ export function SchemaDesigner({ initialSchema = {}, onChange }: SchemaDesignerP
       {Object.keys(fields).length > 0 && (
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/50 p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-brand-foreground">Generated JSON Schema</h3>
+            <h3 className="text-sm font-semibold text-brand-foreground">
+              Generated JSON Schema
+            </h3>
             <button
               onClick={() => {
-                navigator.clipboard.writeText(JSON.stringify(generateJSONSchema(), null, 2));
+                navigator.clipboard.writeText(
+                  JSON.stringify(generateJSONSchema(), null, 2),
+                );
               }}
               className="rounded-lg bg-white/10 px-3 py-1 text-xs text-brand-foreground transition hover:bg-white/20"
             >

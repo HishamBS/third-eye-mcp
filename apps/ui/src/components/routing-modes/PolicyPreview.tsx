@@ -7,25 +7,37 @@
  * - Previews validation thresholds
  */
 
-import { useState } from 'react';
-import type { RoutingPolicy } from '@/hooks/useRoutingModes';
+import { useState } from "react";
+import type { RoutingPolicy } from "@/hooks/useRoutingModes";
 
 const SAMPLE_TASKS = [
-  { id: 'code', label: 'Code Review', description: 'Review a pull request' },
-  { id: 'security', label: 'Security Audit', description: 'Audit code for vulnerabilities' },
-  { id: 'research', label: 'Research Article', description: 'Write a research article' },
-  { id: 'question', label: 'Quick Question', description: 'Answer a simple question' },
+  { id: "code", label: "Code Review", description: "Review a pull request" },
+  {
+    id: "security",
+    label: "Security Audit",
+    description: "Audit code for vulnerabilities",
+  },
+  {
+    id: "research",
+    label: "Research Article",
+    description: "Write a research article",
+  },
+  {
+    id: "question",
+    label: "Quick Question",
+    description: "Answer a simple question",
+  },
 ] as const;
 
 const ALL_EYES = [
-  'overseer',
-  'sharingan',
-  'kyuubi',
-  'jogan',
-  'rinnegan',
-  'mangekyo',
-  'tenseigan',
-  'byakugan',
+  "overseer",
+  "sharingan",
+  "kyuubi",
+  "jogan",
+  "rinnegan",
+  "mangekyo",
+  "tenseigan",
+  "byakugan",
 ] as const;
 
 interface PolicyPreviewProps {
@@ -46,30 +58,39 @@ export function PolicyPreview({ policy }: PolicyPreviewProps) {
     const mandatory = [...policy.mandatoryEyes];
     const forbidden = policy.forbiddenEyes || [];
     const optional = ALL_EYES.filter(
-      (eye) => !mandatory.includes(eye) && !forbidden.includes(eye)
+      (eye) => !mandatory.includes(eye) && !forbidden.includes(eye),
     );
 
     const warnings: string[] = [];
 
     // Check validation threshold
-    if (policy.minValidationEyes && mandatory.length < policy.minValidationEyes) {
+    if (
+      policy.minValidationEyes &&
+      mandatory.length < policy.minValidationEyes
+    ) {
       warnings.push(
-        `Warning: Only ${mandatory.length} mandatory eyes, but ${policy.minValidationEyes} validation eyes required`
+        `Warning: Only ${mandatory.length} mandatory eyes, but ${policy.minValidationEyes} validation eyes required`,
       );
     }
 
     // Check security requirement
     if (policy.securityRequired) {
-      const securityEyes = ['rinnegan', 'tenseigan', 'mangekyo', 'byakugan'];
-      const hasSecurityEye = mandatory.some((eye) => securityEyes.includes(eye));
+      const securityEyes = ["rinnegan", "tenseigan", "mangekyo", "byakugan"];
+      const hasSecurityEye = mandatory.some((eye) =>
+        securityEyes.includes(eye),
+      );
       if (!hasSecurityEye) {
-        warnings.push('Warning: Security required but no security-focused eyes are mandatory');
+        warnings.push(
+          "Warning: Security required but no security-focused eyes are mandatory",
+        );
       }
     }
 
     // Intent confirmation
     if (policy.alwaysConfirmIntent) {
-      warnings.push('Note: Intent confirmation will be required before execution');
+      warnings.push(
+        "Note: Intent confirmation will be required before execution",
+      );
     }
 
     return {
@@ -92,7 +113,7 @@ export function PolicyPreview({ policy }: PolicyPreviewProps) {
           onClick={() => setShowPreview(!showPreview)}
           className="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
         >
-          {showPreview ? 'Hide' : 'Show'} Preview
+          {showPreview ? "Hide" : "Show"} Preview
         </button>
       </div>
 
@@ -110,12 +131,14 @@ export function PolicyPreview({ policy }: PolicyPreviewProps) {
                   onClick={() => setSelectedTask(task.id)}
                   className={`p-2 text-left rounded-md border text-xs ${
                     selectedTask === task.id
-                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-900 dark:text-indigo-200'
-                      : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400'
+                      ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-900 dark:text-indigo-200"
+                      : "border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400"
                   }`}
                 >
                   <div className="font-medium">{task.label}</div>
-                  <div className="text-gray-500 dark:text-gray-400">{task.description}</div>
+                  <div className="text-gray-500 dark:text-gray-400">
+                    {task.description}
+                  </div>
                 </button>
               ))}
             </div>
@@ -194,7 +217,10 @@ export function PolicyPreview({ policy }: PolicyPreviewProps) {
                 </div>
                 <ul className="space-y-1">
                   {route.warnings.map((warning, idx) => (
-                    <li key={idx} className="text-xs text-amber-700 dark:text-amber-300">
+                    <li
+                      key={idx}
+                      className="text-xs text-amber-700 dark:text-amber-300"
+                    >
                       • {warning}
                     </li>
                   ))}
@@ -205,21 +231,27 @@ export function PolicyPreview({ policy }: PolicyPreviewProps) {
             {/* Policy Stats */}
             <div className="mt-4 grid grid-cols-3 gap-3 p-3 bg-gray-100 dark:bg-gray-800 rounded-md">
               <div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Min Eyes</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  Min Eyes
+                </div>
                 <div className="text-sm font-medium text-gray-900 dark:text-white">
-                  {policy.minValidationEyes || 'N/A'}
+                  {policy.minValidationEyes || "N/A"}
                 </div>
               </div>
               <div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Security</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  Security
+                </div>
                 <div className="text-sm font-medium text-gray-900 dark:text-white">
-                  {policy.securityRequired ? '✓ Required' : '✗ Optional'}
+                  {policy.securityRequired ? "✓ Required" : "✗ Optional"}
                 </div>
               </div>
               <div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Intent Check</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  Intent Check
+                </div>
                 <div className="text-sm font-medium text-gray-900 dark:text-white">
-                  {policy.alwaysConfirmIntent ? '✓ Always' : '✗ Auto'}
+                  {policy.alwaysConfirmIntent ? "✓ Always" : "✗ Auto"}
                 </div>
               </div>
             </div>

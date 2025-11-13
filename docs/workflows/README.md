@@ -12,6 +12,7 @@ Curated workflow templates for orchestrating multi-eye pipelines.
 4. **Documentation Drafting** — Prompt Helper → Mangekyo → Overseer
 
 Each template covers:
+
 - Recommended strictness profile
 - Required provider capabilities
 - Suggested follow-up actions for agents
@@ -28,4 +29,3 @@ For detailed JSON schemas and examples, see [MCP API](../MCP_API.md) and [Config
 ---
 
 To contribute new playbooks, follow the guidelines in [CONTRIBUTING.md](../CONTRIBUTING.md).
-

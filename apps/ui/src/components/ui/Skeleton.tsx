@@ -3,10 +3,10 @@
  * Provides reusable skeleton loaders for different content types
  */
 
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
 
 interface SkeletonProps {
-  variant?: 'text' | 'circular' | 'rectangular' | 'card';
+  variant?: "text" | "circular" | "rectangular" | "card";
   width?: string;
   height?: string;
   className?: string;
@@ -14,17 +14,17 @@ interface SkeletonProps {
 }
 
 const VARIANT_CLASSES = Object.freeze({
-  text: 'h-4 rounded',
-  circular: 'rounded-full',
-  rectangular: 'rounded-lg',
-  card: 'h-64 rounded-2xl',
+  text: "h-4 rounded",
+  circular: "rounded-full",
+  rectangular: "rounded-lg",
+  card: "h-64 rounded-2xl",
 });
 
 export function Skeleton({
-  variant = 'text',
+  variant = "text",
   width,
   height,
-  className = '',
+  className = "",
   count = 1,
 }: SkeletonProps) {
   const variantClass = VARIANT_CLASSES[variant];
@@ -36,7 +36,7 @@ export function Skeleton({
       transition={{
         duration: 1.5,
         repeat: Infinity,
-        ease: 'easeInOut',
+        ease: "easeInOut",
       }}
       className={`bg-brand-outline/20 ${variantClass} ${className}`}
       style={{
@@ -63,9 +63,11 @@ interface SkeletonCardProps {
   className?: string;
 }
 
-export function SkeletonCard({ className = '' }: SkeletonCardProps) {
+export function SkeletonCard({ className = "" }: SkeletonCardProps) {
   return (
-    <div className={`rounded-2xl border border-brand-outline/40 bg-brand-paper/60 p-6 ${className}`}>
+    <div
+      className={`rounded-2xl border border-brand-outline/40 bg-brand-paper/60 p-6 ${className}`}
+    >
       <div className="mb-4 flex justify-center">
         <Skeleton variant="circular" width="64px" height="64px" />
       </div>
@@ -81,11 +83,14 @@ interface SkeletonListProps {
   className?: string;
 }
 
-export function SkeletonList({ count = 3, className = '' }: SkeletonListProps) {
+export function SkeletonList({ count = 3, className = "" }: SkeletonListProps) {
   return (
     <div className={`space-y-4 ${className}`}>
       {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="rounded-xl border border-brand-outline/40 bg-brand-paper/60 p-4">
+        <div
+          key={index}
+          className="rounded-xl border border-brand-outline/40 bg-brand-paper/60 p-4"
+        >
           <div className="flex items-start gap-4">
             <Skeleton variant="circular" width="48px" height="48px" />
             <div className="flex-1 space-y-2">

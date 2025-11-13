@@ -1,6 +1,6 @@
-import { Context, Next } from 'hono';
-import { z, ZodSchema } from 'zod';
-import { getEyeIdByName } from '@third-eye/db/utils/lookups';
+import { Context, Next } from "hono";
+import { z, ZodSchema } from "zod";
+import { getEyeIdByName } from "@third-eye/db/utils/lookups";
 
 /**
  * Input Validation Middleware
@@ -15,24 +15,29 @@ const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
  * Sanitize string input to prevent injection attacks
  */
 export function sanitizeString(input: string): string {
-  if (typeof input !== 'string') return input;
+  if (typeof input !== "string") return input;
 
-  return input
-    // Remove HTML tags
-    .replace(/<[^>]*>/g, '')
-    // Remove SQL injection patterns
-    .replace(/(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE)\b)/gi, '')
-    // Remove script tags and event handlers
-    .replace(/on\w+\s*=/gi, '')
-    // Trim whitespace
-    .trim();
+  return (
+    input
+      // Remove HTML tags
+      .replace(/<[^>]*>/g, "")
+      // Remove SQL injection patterns
+      .replace(
+        /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE)\b)/gi,
+        "",
+      )
+      // Remove script tags and event handlers
+      .replace(/on\w+\s*=/gi, "")
+      // Trim whitespace
+      .trim()
+  );
 }
 
 /**
  * Recursively sanitize object values
  */
 export function sanitizeObject(obj: unknown): unknown {
-  if (typeof obj === 'string') {
+  if (typeof obj === "string") {
     return sanitizeString(obj);
   }
 
@@ -40,7 +45,7 @@ export function sanitizeObject(obj: unknown): unknown {
     return obj.map(sanitizeObject);
   }
 
-  if (obj !== null && typeof obj === 'object') {
+  if (obj !== null && typeof obj === "object") {
     const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
       sanitized[key] = sanitizeObject(value);
@@ -66,24 +71,30 @@ export function validateBody<T extends ZodSchema>(schema: T) {
       const validated = schema.parse(sanitized);
 
       // Store validated body for route handler
-      c.set('validatedBody', validated);
+      c.set("validatedBody", validated);
 
       await next();
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return c.json({
-          error: 'Validation failed',
-          details: error.errors.map((e) => ({
-            path: e.path.join('.'),
-            message: e.message,
-          })),
-        }, 400);
+        return c.json(
+          {
+            error: "Validation failed",
+            details: error.errors.map((e) => ({
+              path: e.path.join("."),
+              message: e.message,
+            })),
+          },
+          400,
+        );
       }
 
-      return c.json({
-        error: 'Invalid request body',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }, 400);
+      return c.json(
+        {
+          error: "Invalid request body",
+          message: error instanceof Error ? error.message : "Unknown error",
+        },
+        400,
+      );
     }
   };
 }
@@ -99,14 +110,20 @@ export function rateLimit(options?: {
 }) {
   const maxRequests = options?.maxRequests || 100;
   const windowMs = options?.windowMs || 60000; // 1 minute
-  const keyGenerator = options?.keyGenerator || ((c: Context) => {
-    // Use sessionId if available, otherwise IP address
-    const sessionId = c.req.query('sessionId') || c.req.header('x-session-id');
-    if (sessionId) return `session:${sessionId}`;
+  const keyGenerator =
+    options?.keyGenerator ||
+    ((c: Context) => {
+      // Use sessionId if available, otherwise IP address
+      const sessionId =
+        c.req.query("sessionId") || c.req.header("x-session-id");
+      if (sessionId) return `session:${sessionId}`;
 
-    const ip = c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown';
-    return `ip:${ip}`;
-  });
+      const ip =
+        c.req.header("x-forwarded-for") ||
+        c.req.header("x-real-ip") ||
+        "unknown";
+      return `ip:${ip}`;
+    });
 
   return async (c: Context, next: Next) => {
     const key = keyGenerator(c);
@@ -131,22 +148,25 @@ export function rateLimit(options?: {
     if (entry.count > maxRequests) {
       const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
 
-      c.header('X-RateLimit-Limit', maxRequests.toString());
-      c.header('X-RateLimit-Remaining', '0');
-      c.header('X-RateLimit-Reset', entry.resetAt.toString());
-      c.header('Retry-After', retryAfter.toString());
+      c.header("X-RateLimit-Limit", maxRequests.toString());
+      c.header("X-RateLimit-Remaining", "0");
+      c.header("X-RateLimit-Reset", entry.resetAt.toString());
+      c.header("Retry-After", retryAfter.toString());
 
-      return c.json({
-        error: 'Rate limit exceeded',
-        message: `Too many requests. Please try again in ${retryAfter} seconds.`,
-        retryAfter,
-      }, 429);
+      return c.json(
+        {
+          error: "Rate limit exceeded",
+          message: `Too many requests. Please try again in ${retryAfter} seconds.`,
+          retryAfter,
+        },
+        429,
+      );
     }
 
     // Set rate limit headers
-    c.header('X-RateLimit-Limit', maxRequests.toString());
-    c.header('X-RateLimit-Remaining', (maxRequests - entry.count).toString());
-    c.header('X-RateLimit-Reset', entry.resetAt.toString());
+    c.header("X-RateLimit-Limit", maxRequests.toString());
+    c.header("X-RateLimit-Remaining", (maxRequests - entry.count).toString());
+    c.header("X-RateLimit-Reset", entry.resetAt.toString());
 
     await next();
   };
@@ -158,7 +178,8 @@ export function rateLimit(options?: {
 setInterval(() => {
   const now = Date.now();
   for (const [key, entry] of rateLimitStore.entries()) {
-    if (now > entry.resetAt + 60000) { // 1 minute grace period
+    if (now > entry.resetAt + 60000) {
+      // 1 minute grace period
       rateLimitStore.delete(key);
     }
   }
@@ -172,7 +193,7 @@ export const schemas = {
   // GOLDEN RULE #1: Only accept 'task' - NO direct Eye execution allowed
   // Allow 'strictness' and other configuration fields from UI
   mcpRun: z.object({
-    task: z.string().min(1, 'Task is required'),
+    task: z.string().min(1, "Task is required"),
     sessionId: z.string().optional(),
     context: z.record(z.unknown()).optional(), // Optional additional context
     strictness: z.any().optional(), // Strictness settings from UI
@@ -180,49 +201,65 @@ export const schemas = {
 
   // Session Management
   sessionCreate: z.object({
-    config: z.object({
-      agentName: z.string().optional(),
-      model: z.string().optional(),
-      displayName: z.string().optional(),
-      maxTokens: z.number().int().positive().optional(),
-      temperature: z.number().min(0).max(2).optional(),
-    }).optional(),
+    config: z
+      .object({
+        agentName: z.string().optional(),
+        model: z.string().optional(),
+        displayName: z.string().optional(),
+        maxTokens: z.number().int().positive().optional(),
+        temperature: z.number().min(0).max(2).optional(),
+      })
+      .optional(),
   }),
 
   sessionUpdate: z.object({
-    status: z.enum(['active', 'paused', 'completed', 'failed']).optional(),
-    config: z.object({
-      agentName: z.string().optional(),
-      model: z.string().optional(),
-      displayName: z.string().optional(),
-    }).optional(),
+    status: z.enum(["active", "paused", "completed", "failed"]).optional(),
+    config: z
+      .object({
+        agentName: z.string().optional(),
+        model: z.string().optional(),
+        displayName: z.string().optional(),
+      })
+      .optional(),
   }),
 
   // Provider Keys
-  providerKeyCreate: z.object({
-    provider: z.string().min(1),
-    label: z.string().min(1).max(100),
-    apiKey: z.string().optional(),
-    metadata: z.object({
-      baseUrl: z.string().url().optional(),
-      description: z.string().optional(),
-    }).optional(),
-  }).refine((data) => {
-    // Ollama and LM Studio are local providers - no API key needed
-    const requiresKey = !['ollama', 'lmstudio'].includes(data.provider.toLowerCase());
-    return !requiresKey || (data.apiKey && data.apiKey.length > 0);
-  }, {
-    message: "API key is required for cloud providers (not needed for Ollama/LM Studio)",
-    path: ["apiKey"],
-  }),
+  providerKeyCreate: z
+    .object({
+      provider: z.string().min(1),
+      label: z.string().min(1).max(100),
+      apiKey: z.string().optional(),
+      metadata: z
+        .object({
+          baseUrl: z.string().url().optional(),
+          description: z.string().optional(),
+        })
+        .optional(),
+    })
+    .refine(
+      (data) => {
+        // Ollama and LM Studio are local providers - no API key needed
+        const requiresKey = !["ollama", "lmstudio"].includes(
+          data.provider.toLowerCase(),
+        );
+        return !requiresKey || (data.apiKey && data.apiKey.length > 0);
+      },
+      {
+        message:
+          "API key is required for cloud providers (not needed for Ollama/LM Studio)",
+        path: ["apiKey"],
+      },
+    ),
 
   providerKeyUpdate: z.object({
     label: z.string().min(1).max(100).optional(),
     apiKey: z.string().optional(),
-    metadata: z.object({
-      baseUrl: z.string().url().optional(),
-      description: z.string().optional(),
-    }).optional(),
+    metadata: z
+      .object({
+        baseUrl: z.string().url().optional(),
+        description: z.string().optional(),
+      })
+      .optional(),
   }),
 
   // Routing Configuration
@@ -263,10 +300,12 @@ export const schemas = {
     name: z.string().min(1).max(100),
     description: z.string().max(500).optional(),
     eyeFlow: z.array(z.string().min(1)).min(1),
-    conditions: z.object({
-      taskType: z.enum(['code', 'text', 'analysis']).optional(),
-      complexity: z.enum(['simple', 'medium', 'complex']).optional(),
-    }).optional(),
+    conditions: z
+      .object({
+        taskType: z.enum(["code", "text", "analysis"]).optional(),
+        complexity: z.enum(["simple", "medium", "complex"]).optional(),
+      })
+      .optional(),
     active: z.boolean().default(true),
   }),
 
@@ -274,10 +313,12 @@ export const schemas = {
     name: z.string().min(1).max(100).optional(),
     description: z.string().max(500).optional(),
     eyeFlow: z.array(z.string().min(1)).min(1).optional(),
-    conditions: z.object({
-      taskType: z.enum(['code', 'text', 'analysis']).optional(),
-      complexity: z.enum(['simple', 'medium', 'complex']).optional(),
-    }).optional(),
+    conditions: z
+      .object({
+        taskType: z.enum(["code", "text", "analysis"]).optional(),
+        complexity: z.enum(["simple", "medium", "complex"]).optional(),
+      })
+      .optional(),
     active: z.boolean().optional(),
   }),
 
@@ -297,18 +338,20 @@ export const schemas = {
   strictnessUpdate: z.object({
     name: z.string().min(1).max(100).optional(),
     description: z.string().max(500).optional(),
-    rules: z.object({
-      requireAllEyes: z.boolean().optional(),
-      allowSkipSteps: z.boolean().optional(),
-      enforceOrder: z.boolean().optional(),
-      maxRetries: z.number().int().min(0).max(10).optional(),
-    }).optional(),
+    rules: z
+      .object({
+        requireAllEyes: z.boolean().optional(),
+        allowSkipSteps: z.boolean().optional(),
+        enforceOrder: z.boolean().optional(),
+        maxRetries: z.number().int().min(0).max(10).optional(),
+      })
+      .optional(),
     active: z.boolean().optional(),
   }),
 
   // Legacy schemas
   contextAdd: z.object({
-    source: z.enum(['user', 'eye']),
+    source: z.enum(["user", "eye"]),
     key: z.string().min(1),
     value: z.any(),
   }),
@@ -330,7 +373,7 @@ export const schemas = {
  * Helper to get validated body from context
  */
 export function getValidatedBody<T>(c: Context): T {
-  return c.get('validatedBody') as T;
+  return c.get("validatedBody") as T;
 }
 
 /**
@@ -342,7 +385,7 @@ export function getValidatedBody<T>(c: Context): T {
  * Validate that an eye exists in the database by name
  */
 export async function validateEyeExists(eyeName: string): Promise<boolean> {
-  if (!eyeName || typeof eyeName !== 'string') {
+  if (!eyeName || typeof eyeName !== "string") {
     return false;
   }
   const eyeId = await getEyeIdByName(eyeName);
@@ -353,23 +396,28 @@ export async function validateEyeExists(eyeName: string): Promise<boolean> {
  * Validate that a provider exists in the database configuration
  * Providers are defined in the codebase but we check if they're configured
  */
-export async function validateProviderExists(providerId: string): Promise<boolean> {
-  if (!providerId || typeof providerId !== 'string') {
+export async function validateProviderExists(
+  providerId: string,
+): Promise<boolean> {
+  if (!providerId || typeof providerId !== "string") {
     return false;
   }
-  
+
   // Known providers from types (for type checking, not runtime validation)
   // But we validate against database configuration
-  const validProviders = ['groq', 'openrouter', 'ollama', 'lmstudio'];
+  const validProviders = ["groq", "openrouter", "ollama", "lmstudio"];
   if (!validProviders.includes(providerId.toLowerCase())) {
     return false;
   }
-  
+
   // For local providers (ollama, lmstudio), they're always valid
-  if (providerId.toLowerCase() === 'ollama' || providerId.toLowerCase() === 'lmstudio') {
+  if (
+    providerId.toLowerCase() === "ollama" ||
+    providerId.toLowerCase() === "lmstudio"
+  ) {
     return true;
   }
-  
+
   // For cloud providers, check if they have a key configured (optional check)
   // This allows providers to be valid even without keys
   return true;

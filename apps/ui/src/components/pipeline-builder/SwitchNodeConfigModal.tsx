@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { memo, useState, useCallback } from 'react';
-import { X, Plus, Trash2, GripVertical } from 'lucide-react';
-import { ExpressionBuilder } from './ExpressionBuilder';
-import { ANIMATION_DURATION } from '@/constants/timing';
-import type { SwitchNodeConfig, SwitchRule } from '@third-eye/types';
+import { memo, useState, useCallback } from "react";
+import { X, Plus, Trash2, GripVertical } from "lucide-react";
+import { ExpressionBuilder } from "./ExpressionBuilder";
+import { ANIMATION_DURATION } from "@/constants/timing";
+import type { SwitchNodeConfig, SwitchRule } from "@third-eye/types";
 
 /**
  * Switch Node Configuration Modal
@@ -27,24 +27,25 @@ import type { SwitchNodeConfig, SwitchRule } from '@third-eye/types';
  * Modal UI Text Constants
  */
 const MODAL_TEXT = {
-  TITLE: 'Configure Switch Node',
-  MODE_LABEL: 'Mode',
-  MODE_RULES: 'Rules',
-  MODE_EXPRESSION: 'Expression',
-  RULES_SECTION_TITLE: 'Routing Rules',
-  RULES_HELP: 'Each rule defines a condition and which output to route to',
-  ADD_RULE_BUTTON: 'Add Rule',
-  RULE_LABEL_PLACEHOLDER: 'Rule label...',
-  RULE_OUTPUT_LABEL: 'Output',
-  EXPRESSION_SECTION_TITLE: 'Single Expression',
-  EXPRESSION_HELP: 'Define a single expression that determines routing',
-  FALLBACK_TOGGLE_LABEL: 'Enable Fallback Output',
-  FALLBACK_HELP: 'Route to this output if no rules match',
-  FALLBACK_OUTPUT_LABEL: 'Fallback Output Index',
-  SEND_ALL_TOGGLE_LABEL: 'Send to All Matching Outputs',
-  SEND_ALL_HELP: 'When enabled, executes all matching rules instead of just the first match',
-  SAVE_BUTTON: 'Save Configuration',
-  CANCEL_BUTTON: 'Cancel',
+  TITLE: "Configure Switch Node",
+  MODE_LABEL: "Mode",
+  MODE_RULES: "Rules",
+  MODE_EXPRESSION: "Expression",
+  RULES_SECTION_TITLE: "Routing Rules",
+  RULES_HELP: "Each rule defines a condition and which output to route to",
+  ADD_RULE_BUTTON: "Add Rule",
+  RULE_LABEL_PLACEHOLDER: "Rule label...",
+  RULE_OUTPUT_LABEL: "Output",
+  EXPRESSION_SECTION_TITLE: "Single Expression",
+  EXPRESSION_HELP: "Define a single expression that determines routing",
+  FALLBACK_TOGGLE_LABEL: "Enable Fallback Output",
+  FALLBACK_HELP: "Route to this output if no rules match",
+  FALLBACK_OUTPUT_LABEL: "Fallback Output Index",
+  SEND_ALL_TOGGLE_LABEL: "Send to All Matching Outputs",
+  SEND_ALL_HELP:
+    "When enabled, executes all matching rules instead of just the first match",
+  SAVE_BUTTON: "Save Configuration",
+  CANCEL_BUTTON: "Cancel",
 } as const;
 
 /**
@@ -66,28 +67,34 @@ function SwitchNodeConfigModalComponent({
   config,
   onSave,
 }: SwitchNodeConfigModalProps) {
-  const [mode, setMode] = useState<'rules' | 'expression'>(config?.mode ?? 'rules');
+  const [mode, setMode] = useState<"rules" | "expression">(
+    config?.mode ?? "rules",
+  );
   const [rules, setRules] = useState<SwitchRule[]>(
     config?.rules ?? [
       {
-        expression: { '==': [{ var: 'verdict' }, 'OK'] },
-        label: 'Approved',
+        expression: { "==": [{ var: "verdict" }, "OK"] },
+        label: "Approved",
         outputIndex: 0,
       },
-    ]
+    ],
   );
   const [expression, setExpression] = useState<unknown>(
-    config?.expression ?? { '==': [{ var: 'verdict' }, 'OK'] }
+    config?.expression ?? { "==": [{ var: "verdict" }, "OK"] },
   );
-  const [sendToAll, setSendToAll] = useState<boolean>(config?.sendToAll ?? false);
+  const [sendToAll, setSendToAll] = useState<boolean>(
+    config?.sendToAll ?? false,
+  );
   const [fallbackEnabled, setFallbackEnabled] = useState<boolean>(
-    config?.fallbackOutput !== undefined
+    config?.fallbackOutput !== undefined,
   );
-  const [fallbackOutput, setFallbackOutput] = useState<number>(config?.fallbackOutput ?? 0);
+  const [fallbackOutput, setFallbackOutput] = useState<number>(
+    config?.fallbackOutput ?? 0,
+  );
 
   const handleAddRule = useCallback(() => {
     const newRule: SwitchRule = {
-      expression: { '==': [{ var: 'verdict' }, 'OK'] },
+      expression: { "==": [{ var: "verdict" }, "OK"] },
       label: `Rule ${rules.length + 1}`,
       outputIndex: rules.length,
     };
@@ -102,29 +109,48 @@ function SwitchNodeConfigModalComponent({
     });
   }, []);
 
-  const handleRuleExpressionChange = useCallback((index: number, newExpression: unknown) => {
-    setRules((prev) =>
-      prev.map((rule, idx) => (idx === index ? { ...rule, expression: newExpression } : rule))
-    );
-  }, []);
+  const handleRuleExpressionChange = useCallback(
+    (index: number, newExpression: unknown) => {
+      setRules((prev) =>
+        prev.map((rule, idx) =>
+          idx === index ? { ...rule, expression: newExpression } : rule,
+        ),
+      );
+    },
+    [],
+  );
 
-  const handleRuleLabelChange = useCallback((index: number, newLabel: string) => {
-    setRules((prev) =>
-      prev.map((rule, idx) => (idx === index ? { ...rule, label: newLabel } : rule))
-    );
-  }, []);
+  const handleRuleLabelChange = useCallback(
+    (index: number, newLabel: string) => {
+      setRules((prev) =>
+        prev.map((rule, idx) =>
+          idx === index ? { ...rule, label: newLabel } : rule,
+        ),
+      );
+    },
+    [],
+  );
 
   const handleSave = useCallback(() => {
     const newConfig: SwitchNodeConfig = {
       mode,
       sendToAll,
-      ...(mode === 'rules' && { rules }),
-      ...(mode === 'expression' && { expression }),
+      ...(mode === "rules" && { rules }),
+      ...(mode === "expression" && { expression }),
       ...(fallbackEnabled && { fallbackOutput }),
     };
     onSave(newConfig);
     onClose();
-  }, [mode, rules, expression, sendToAll, fallbackEnabled, fallbackOutput, onSave, onClose]);
+  }, [
+    mode,
+    rules,
+    expression,
+    sendToAll,
+    fallbackEnabled,
+    fallbackOutput,
+    onSave,
+    onClose,
+  ]);
 
   if (!isOpen) {
     return null;
@@ -141,7 +167,9 @@ function SwitchNodeConfigModalComponent({
       >
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-brand-paper border-b border-brand-outline">
-          <h2 className="text-xl font-semibold text-brand-foreground">{MODAL_TEXT.TITLE}</h2>
+          <h2 className="text-xl font-semibold text-brand-foreground">
+            {MODAL_TEXT.TITLE}
+          </h2>
           <button
             type="button"
             onClick={onClose}
@@ -161,13 +189,13 @@ function SwitchNodeConfigModalComponent({
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setMode('rules')}
+                onClick={() => setMode("rules")}
                 className={`
                   flex-1 px-4 py-3 text-sm font-medium rounded-lg border-2 transition-all ${ANIMATION_DURATION.FAST}
                   ${
-                    mode === 'rules'
-                      ? 'border-brand-primary bg-brand-primary/10 text-brand-primary'
-                      : 'border-brand-outline bg-brand-surface text-brand-foreground hover:border-brand-primary/50'
+                    mode === "rules"
+                      ? "border-brand-primary bg-brand-primary/10 text-brand-primary"
+                      : "border-brand-outline bg-brand-surface text-brand-foreground hover:border-brand-primary/50"
                   }
                 `}
               >
@@ -175,13 +203,13 @@ function SwitchNodeConfigModalComponent({
               </button>
               <button
                 type="button"
-                onClick={() => setMode('expression')}
+                onClick={() => setMode("expression")}
                 className={`
                   flex-1 px-4 py-3 text-sm font-medium rounded-lg border-2 transition-all ${ANIMATION_DURATION.FAST}
                   ${
-                    mode === 'expression'
-                      ? 'border-brand-primary bg-brand-primary/10 text-brand-primary'
-                      : 'border-brand-outline bg-brand-surface text-brand-foreground hover:border-brand-primary/50'
+                    mode === "expression"
+                      ? "border-brand-primary bg-brand-primary/10 text-brand-primary"
+                      : "border-brand-outline bg-brand-surface text-brand-foreground hover:border-brand-primary/50"
                   }
                 `}
               >
@@ -191,13 +219,15 @@ function SwitchNodeConfigModalComponent({
           </div>
 
           {/* Rules Mode */}
-          {mode === 'rules' && (
+          {mode === "rules" && (
             <div className="space-y-4">
               <div>
                 <h3 className="text-sm font-semibold text-brand-foreground mb-1">
                   {MODAL_TEXT.RULES_SECTION_TITLE}
                 </h3>
-                <p className="text-xs text-semantic-muted">{MODAL_TEXT.RULES_HELP}</p>
+                <p className="text-xs text-semantic-muted">
+                  {MODAL_TEXT.RULES_HELP}
+                </p>
               </div>
 
               {/* Rules List */}
@@ -214,7 +244,9 @@ function SwitchNodeConfigModalComponent({
                         className="flex-1 px-3 py-2 text-sm bg-brand-paper border border-brand-outline rounded-md text-brand-foreground placeholder-semantic-muted focus:outline-none focus:ring-2 focus:ring-brand-primary"
                         placeholder={MODAL_TEXT.RULE_LABEL_PLACEHOLDER}
                         value={rule.label}
-                        onChange={(e) => handleRuleLabelChange(index, e.target.value)}
+                        onChange={(e) =>
+                          handleRuleLabelChange(index, e.target.value)
+                        }
                       />
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-semantic-muted">
@@ -237,7 +269,9 @@ function SwitchNodeConfigModalComponent({
                     {/* Expression Builder for this rule */}
                     <ExpressionBuilder
                       value={rule.expression}
-                      onChange={(newExpression) => handleRuleExpressionChange(index, newExpression)}
+                      onChange={(newExpression) =>
+                        handleRuleExpressionChange(index, newExpression)
+                      }
                       placeholder="Define condition for this rule..."
                     />
                   </div>
@@ -260,7 +294,9 @@ function SwitchNodeConfigModalComponent({
                   <label className="text-sm font-medium text-brand-foreground">
                     {MODAL_TEXT.SEND_ALL_TOGGLE_LABEL}
                   </label>
-                  <p className="text-xs text-semantic-muted mt-1">{MODAL_TEXT.SEND_ALL_HELP}</p>
+                  <p className="text-xs text-semantic-muted mt-1">
+                    {MODAL_TEXT.SEND_ALL_HELP}
+                  </p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -276,13 +312,15 @@ function SwitchNodeConfigModalComponent({
           )}
 
           {/* Expression Mode */}
-          {mode === 'expression' && (
+          {mode === "expression" && (
             <div className="space-y-4">
               <div>
                 <h3 className="text-sm font-semibold text-brand-foreground mb-1">
                   {MODAL_TEXT.EXPRESSION_SECTION_TITLE}
                 </h3>
-                <p className="text-xs text-semantic-muted">{MODAL_TEXT.EXPRESSION_HELP}</p>
+                <p className="text-xs text-semantic-muted">
+                  {MODAL_TEXT.EXPRESSION_HELP}
+                </p>
               </div>
 
               <ExpressionBuilder
@@ -300,7 +338,9 @@ function SwitchNodeConfigModalComponent({
                 <label className="text-sm font-medium text-brand-foreground">
                   {MODAL_TEXT.FALLBACK_TOGGLE_LABEL}
                 </label>
-                <p className="text-xs text-semantic-muted mt-1">{MODAL_TEXT.FALLBACK_HELP}</p>
+                <p className="text-xs text-semantic-muted mt-1">
+                  {MODAL_TEXT.FALLBACK_HELP}
+                </p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -323,7 +363,9 @@ function SwitchNodeConfigModalComponent({
                   min="0"
                   className="w-full px-3 py-2 text-sm bg-brand-paper border border-brand-outline rounded-md text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-primary"
                   value={fallbackOutput}
-                  onChange={(e) => setFallbackOutput(parseInt(e.target.value, 10) || 0)}
+                  onChange={(e) =>
+                    setFallbackOutput(parseInt(e.target.value, 10) || 0)
+                  }
                 />
               </div>
             )}
@@ -356,4 +398,4 @@ function SwitchNodeConfigModalComponent({
  * Memoized SwitchNodeConfigModal (Performance optimization per R04)
  */
 export const SwitchNodeConfigModal = memo(SwitchNodeConfigModalComponent);
-SwitchNodeConfigModal.displayName = 'SwitchNodeConfigModal';
+SwitchNodeConfigModal.displayName = "SwitchNodeConfigModal";

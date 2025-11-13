@@ -1,35 +1,43 @@
 #!/usr/bin/env bun
 
-import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { resolve } from 'path';
+import { readFileSync, writeFileSync, existsSync } from "fs";
+import { resolve } from "path";
 
-const PROJECT_ROOT = resolve(import.meta.dir, '..');
-const COVERAGE_FILE = resolve(PROJECT_ROOT, 'coverage', 'coverage-summary.json');
-const BADGE_PATH = resolve(PROJECT_ROOT, 'docs', 'badges', 'coverage.svg');
+const PROJECT_ROOT = resolve(import.meta.dir, "..");
+const COVERAGE_FILE = resolve(
+  PROJECT_ROOT,
+  "coverage",
+  "coverage-summary.json",
+);
+const BADGE_PATH = resolve(PROJECT_ROOT, "docs", "badges", "coverage.svg");
 
 function readCoverage(): number {
   if (!existsSync(COVERAGE_FILE)) {
-    throw new Error(`Coverage summary not found at ${COVERAGE_FILE}. Run bun run test:coverage first.`);
+    throw new Error(
+      `Coverage summary not found at ${COVERAGE_FILE}. Run bun run test:coverage first.`,
+    );
   }
 
-  const summary = JSON.parse(readFileSync(COVERAGE_FILE, 'utf-8'));
+  const summary = JSON.parse(readFileSync(COVERAGE_FILE, "utf-8"));
   const statements = summary.total?.statements?.pct;
-  if (typeof statements !== 'number') {
-    throw new Error('Unable to read statements coverage from coverage-summary.json');
+  if (typeof statements !== "number") {
+    throw new Error(
+      "Unable to read statements coverage from coverage-summary.json",
+    );
   }
 
   return Math.round(statements * 10) / 10;
 }
 
 function coverageColor(pct: number): string {
-  if (pct >= 95) return '#2ecc71';
-  if (pct >= 90) return '#27ae60';
-  if (pct >= 80) return '#f1c40f';
-  return '#e74c3c';
+  if (pct >= 95) return "#2ecc71";
+  if (pct >= 90) return "#27ae60";
+  if (pct >= 80) return "#f1c40f";
+  return "#e74c3c";
 }
 
 function makeBadge(pct: number): string {
-  const label = 'coverage';
+  const label = "coverage";
   const pctText = `${pct.toFixed(1)}%`;
   const color = coverageColor(pct);
 
@@ -69,6 +77,9 @@ try {
   writeFileSync(BADGE_PATH, badge);
   console.log(`✅ Coverage badge updated (${pct.toFixed(1)}%) → ${BADGE_PATH}`);
 } catch (error) {
-  console.error('❌ Failed to update coverage badge:', error instanceof Error ? error.message : error);
+  console.error(
+    "❌ Failed to update coverage badge:",
+    error instanceof Error ? error.message : error,
+  );
   process.exit(1);
 }

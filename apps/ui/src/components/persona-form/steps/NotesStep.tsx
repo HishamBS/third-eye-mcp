@@ -1,8 +1,13 @@
-'use client';
+"use client";
 
-import React from 'react';
-import type { WizardStepProps } from '@/types/persona-form';
-import { FIELD_LABELS, PLACEHOLDERS, HELP_TEXT, CHAR_LIMITS } from '../constants';
+import React from "react";
+import type { WizardStepProps } from "@/types/persona-form";
+import {
+  FIELD_LABELS,
+  PLACEHOLDERS,
+  HELP_TEXT,
+  CHAR_LIMITS,
+} from "../constants";
 
 /**
  * NotesStep - Internal notes configuration
@@ -22,7 +27,9 @@ export function NotesStep({ state, dispatch }: WizardStepProps) {
         </label>
         <textarea
           value={state.notes}
-          onChange={(e) => dispatch({ type: 'SET_NOTES', notes: e.target.value })}
+          onChange={(e) =>
+            dispatch({ type: "SET_NOTES", notes: e.target.value })
+          }
           placeholder={PLACEHOLDERS.NOTES}
           rows={10}
           className="w-full px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none font-mono text-sm"
@@ -38,8 +45,9 @@ export function NotesStep({ state, dispatch }: WizardStepProps) {
 
       <div className="p-4 rounded-lg bg-brand-paperElev border border-brand-outline">
         <p className="text-sm text-semantic-muted">
-          <strong>Note:</strong> These notes are for internal documentation only.
-          They will not be sent to the LLM or included in the persona execution.
+          <strong>Note:</strong> These notes are for internal documentation
+          only. They will not be sent to the LLM or included in the persona
+          execution.
         </p>
       </div>
     </div>

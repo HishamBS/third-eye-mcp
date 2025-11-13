@@ -1,4 +1,5 @@
 <!-- e4105ae2-220b-4fd9-a9d6-5a5bc830b96e 8281680a-14b7-4a45-bbe2-c66f8e9eeb55 -->
+
 # Third Eye MCP - Complete Restoration Plan
 
 ## Overview
@@ -45,7 +46,7 @@ Restore the platform to its original state with the beautiful n8n-style pipeline
 ```typescript
 // Add to ReactFlow:
 import { MiniMap } from 'reactflow';
-<MiniMap 
+<MiniMap
   nodeColor={(node) => getNodeColorByStage(node)}
   position="bottom-right"
   style={{ background: 'var(--brand-paper)' }}
@@ -57,7 +58,7 @@ import { MiniMap } from 'reactflow';
 ```typescript
 // Add useEffect for keyboard handling:
 - Cmd/Ctrl + Plus: Zoom in
-- Cmd/Ctrl + Minus: Zoom out  
+- Cmd/Ctrl + Minus: Zoom out
 - Cmd/Ctrl + 0: Reset view
 - Delete/Backspace: Delete selected nodes
 - Cmd/Ctrl + D: Duplicate selected
@@ -91,23 +92,23 @@ import { MiniMap } from 'reactflow';
 
 ```typescript
 // Add Dagre layout algorithm:
-import dagre from 'dagre';
+import dagre from "dagre";
 
 const getLayoutedElements = (nodes, edges) => {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
-  dagreGraph.setGraph({ rankdir: 'TB', ranksep: 100 });
-  
+  dagreGraph.setGraph({ rankdir: "TB", ranksep: 100 });
+
   nodes.forEach((node) => {
     dagreGraph.setNode(node.id, { width: 250, height: 80 });
   });
-  
+
   edges.forEach((edge) => {
     dagreGraph.setEdge(edge.source, edge.target);
   });
-  
+
   dagre.layout(dagreGraph);
-  
+
   // Return positioned nodes
 };
 ```
@@ -135,8 +136,8 @@ const getLayoutedElements = (nodes, edges) => {
 
 - `apps/ui/src/app/monitor/page.tsx`
 - Create server API routes (if missing):
-    - `apps/server/src/routes/session.ts` - clarifications endpoint
-    - `apps/server/src/routes/session.ts` - intent confirmations endpoint
+  - `apps/server/src/routes/session.ts` - clarifications endpoint
+  - `apps/server/src/routes/session.ts` - intent confirmations endpoint
 
 ### Implementation:
 
@@ -172,7 +173,7 @@ if (message.type === 'clarification_update') {
     <div>
       <h3>Outstanding</h3>
       {clarifications.outstanding.map(c => (
-        <ClarificationCard 
+        <ClarificationCard
           field={c.field}
           question={c.question}
           ambiguityScore={c.ambiguityScore}
@@ -238,7 +239,7 @@ useEffect(() => {
   const mangekyoEvent = entries.find(e => e.speaker === 'mangekyo');
   const tenseiganEvent = entries.find(e => e.speaker === 'tenseigan');
   const byakuganEvent = entries.find(e => e.speaker === 'byakugan');
-  
+
   setEvidenceData({
     mangekyo: mangekyoEvent?.metadata?.dataJson,
     tenseigan: tenseiganEvent?.metadata?.dataJson,
@@ -278,30 +279,30 @@ useEffect(() => {
 // apps/server/src/routes/session.ts
 
 // GET /api/session/:sessionId/clarifications
-app.get('/:sessionId/clarifications', async (c) => {
+app.get("/:sessionId/clarifications", async (c) => {
   const { sessionId } = c.req.param();
   const { db } = getDb();
-  
+
   const results = await db
     .select()
     .from(clarifications)
     .where(eq(clarifications.sessionId, sessionId));
-  
+
   return c.json({ success: true, data: results });
 });
 
 // GET /api/session/:sessionId/intent-confirmations
-app.get('/:sessionId/intent-confirmations', async (c) => {
+app.get("/:sessionId/intent-confirmations", async (c) => {
   const { sessionId } = c.req.param();
   const { db } = getDb();
-  
+
   const result = await db
     .select()
     .from(intentConfirmations)
     .where(eq(intentConfirmations.sessionId, sessionId))
     .limit(1)
     .get();
-  
+
   return c.json({ success: true, data: result || null });
 });
 ```
@@ -330,7 +331,7 @@ let enrichedInput = input;
 
 while (attempt < MAX_PERSONA_RETRIES) {
   attempt++;
-  
+
   // Call LLM (moved from line 277-290):
   const personaPrompt = renderPersonaPrompt(blueprint, stage, enrichedInput);
   const completion = await provider.complete({
@@ -340,10 +341,10 @@ while (attempt < MAX_PERSONA_RETRIES) {
     temperature: options.temperature ?? 0,
     maxTokens: options.maxTokens,
   });
-  
+
   // Parse envelope:
   const envelope = this.parseEnvelope(completion.text);
-  
+
   // Validate with guard:
   try {
     ensureEyeBehavior(eyeName, envelope);
@@ -353,24 +354,28 @@ while (attempt < MAX_PERSONA_RETRIES) {
   } catch (guardError) {
     if (guardError instanceof EyeBehaviorError) {
       lastGuardError = guardError.reason;
-      console.warn(`⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES} failed: ${guardError.reason}`);
-      
+      console.warn(
+        `⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES} failed: ${guardError.reason}`,
+      );
+
       if (attempt < MAX_PERSONA_RETRIES) {
         // Build targeted reminder:
         const reminder = buildReminderMessage(eyeName, guardError);
         enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\n${reminder}`;
-        
+
         // Continue to next iteration (retry)
         continue;
       } else {
         // Exhausted retries
-        console.error(`❌ ${eyeName} failed after ${MAX_PERSONA_RETRIES} attempts: ${guardError.reason}`);
+        console.error(
+          `❌ ${eyeName} failed after ${MAX_PERSONA_RETRIES} attempts: ${guardError.reason}`,
+        );
         return this.createErrorEnvelope(
           eyeName,
           `Persona contract violated after ${MAX_PERSONA_RETRIES} attempts: ${guardError.reason}. Consider adjusting provider or persona blueprint.`,
           runId,
           actualSessionId,
-          startTime
+          startTime,
         );
       }
     }
@@ -381,35 +386,40 @@ while (attempt < MAX_PERSONA_RETRIES) {
 // Continue with rest of runEye logic (record completion, persist run, etc.)
 ```
 
-
-
 ```typescript
 // In packages/eyes/src/guards/persona-guards.ts:
 
-export function buildReminderMessage(eyeId: EyeId, error: EyeBehaviorError): string {
+export function buildReminderMessage(
+  eyeId: EyeId,
+  error: EyeBehaviorError,
+): string {
   const reminders: string[] = [];
-  
+
   // Generic reminders:
   reminders.push(`Your response violated: ${error.reason}`);
-  reminders.push('You MUST return valid JSON matching the envelope schema.');
-  
+  reminders.push("You MUST return valid JSON matching the envelope schema.");
+
   // Eye-specific reminders:
   if (eyeId === EyeId.OVERSEER) {
-    reminders.push('You MUST include a valid pipelineRoute array.');
-    reminders.push('You MUST include a capabilityPlan with assignments.');
-    reminders.push('Each canonical question MUST use exact field names: audience, deliverable, scope, success_criteria, references.');
+    reminders.push("You MUST include a valid pipelineRoute array.");
+    reminders.push("You MUST include a capabilityPlan with assignments.");
+    reminders.push(
+      "Each canonical question MUST use exact field names: audience, deliverable, scope, success_criteria, references.",
+    );
   } else if (eyeId === EyeId.SHARINGAN) {
-    reminders.push('Use ONLY the five canonical clarification fields.');
-    reminders.push('Return OK_NO_CLARIFICATION_NEEDED if all fields answered.');
+    reminders.push("Use ONLY the five canonical clarification fields.");
+    reminders.push("Return OK_NO_CLARIFICATION_NEEDED if all fields answered.");
   } else if (eyeId === EyeId.KYUUBI) {
-    reminders.push('You MUST include a brief field with structured guidance.');
-    reminders.push('You MUST include qualityScore and alignment metrics.');
+    reminders.push("You MUST include a brief field with structured guidance.");
+    reminders.push("You MUST include qualityScore and alignment metrics.");
   }
   // ... add for other eyes
-  
-  reminders.push('Review the "Self-Check" section in your prompt and verify compliance.');
-  
-  return reminders.join('\n');
+
+  reminders.push(
+    'Review the "Self-Check" section in your prompt and verify compliance.',
+  );
+
+  return reminders.join("\n");
 }
 ```
 
@@ -561,62 +571,53 @@ const MarkdownComponents = {
 
 ## Todos (Ordered by Priority)
 
-1. **Pipeline Builder - n8n Style** (4-6 hours)
+1.  **Pipeline Builder - n8n Style** (4-6 hours)
+    - Custom node cards with SVG icons and gradients
+    - MiniMap component
+    - Keyboard shortcuts
+    - Right-click context menu
+    - Snap-to-grid
+    - Auto-layout with Dagre
+    - Validation overlays
 
-      - Custom node cards with SVG icons and gradients
-      - MiniMap component
-      - Keyboard shortcuts
-      - Right-click context menu
-      - Snap-to-grid
-      - Auto-layout with Dagre
-      - Validation overlays
+2.  **Monitor Dynamic Data** (2-3 hours)
+    - Wire Clarifications tab to API
+    - Wire Intent tab to API
+    - Parse Evidence from pipeline events
+    - Add missing server API routes
+    - Update WebSocket handlers
 
-2. **Monitor Dynamic Data** (2-3 hours)
+3.  **Orchestrator Retry Logic** (2-3 hours)
+    - Implement retry loop in runEye
+    - Create buildReminderMessage function
+    - Test with intentionally failing guards
 
-      - Wire Clarifications tab to API
-      - Wire Intent tab to API
-      - Parse Evidence from pipeline events
-      - Add missing server API routes
-      - Update WebSocket handlers
+4.  **Eyes Capabilities Pills** (30 min)
+    - Debug API proxy
+    - Add error logging
+    - Test enrichment
 
-3. **Orchestrator Retry Logic** (2-3 hours)
+5.  **Dashboard Wow Factors** (1-2 hours)
+    - Test all feature links
+    - Implement missing features or update links
 
-      - Implement retry loop in runEye
-      - Create buildReminderMessage function
-      - Test with intentionally failing guards
+6.  **Markdown Rendering** (1 hour)
+    - Create custom components
+    - Apply to all pages
 
-4. **Eyes Capabilities Pills** (30 min)
+7.  **Theme Switcher** (1 hour)
+    - Add to global header
+    - Verify all 6 themes work
 
-      - Debug API proxy
-      - Add error logging
-      - Test enrichment
+8.  **Session Dropdown** (1-2 hours)
+    - Add to global nav
+    - Wire to React Context
+    - Update pages to respect selection
 
-5. **Dashboard Wow Factors** (1-2 hours)
-
-      - Test all feature links
-      - Implement missing features or update links
-
-6. **Markdown Rendering** (1 hour)
-
-      - Create custom components
-      - Apply to all pages
-
-7. **Theme Switcher** (1 hour)
-
-      - Add to global header
-      - Verify all 6 themes work
-
-8. **Session Dropdown** (1-2 hours)
-
-      - Add to global nav
-      - Wire to React Context
-      - Update pages to respect selection
-
-9. **Testing** (2-3 hours)
-
-      - Run Playwright tests
-      - Execute manual QA checklist
-      - Run scenario runner
+9.  **Testing** (2-3 hours)
+    - Run Playwright tests
+    - Execute manual QA checklist
+    - Run scenario runner
 
 10. **Final Polish** (2-3 hours)
 

@@ -2,7 +2,10 @@
 export * from "./src/index";
 
 // Re-export base types and utilities
-export type { BaseEnvelope, BaseEnvelope as EyeResponse } from "./src/schemas/base";
+export type {
+  BaseEnvelope,
+  BaseEnvelope as EyeResponse,
+} from "./src/schemas/base";
 export { isApproved, isRejected, needsInput } from "./src/schemas/base";
 
 // Re-export MarkdownBuilder utility

@@ -16,6 +16,7 @@ Phase 3 UI enables users to configure and use three routing modes (Fully Dynamic
 ## Component Architecture
 
 ### Directory Structure
+
 ```
 apps/ui/src/components/routing-modes/
 ├── PolicyBuilder.tsx          # Create/edit routing policies
@@ -34,12 +35,14 @@ apps/ui/src/components/routing-modes/
 ## 1. PolicyBuilder Component
 
 ### Purpose
+
 Create and edit routing policies for Constrained Dynamic mode.
 
 ### Props
+
 ```typescript
 interface PolicyBuilderProps {
-  policyId?: string;           // For editing existing policy
+  policyId?: string; // For editing existing policy
   onSave?: (policy: RoutingPolicy) => void;
   onCancel?: () => void;
 }
@@ -48,22 +51,26 @@ interface PolicyBuilderProps {
 ### Features
 
 **Required Fields**:
+
 - Name (text input)
 - Description (textarea, optional)
 - Mandatory Eyes (multi-select dropdown with all active eyes)
 
 **Optional Constraints**:
+
 - Forbidden Eyes (multi-select dropdown)
 - Minimum Validation Eyes (number input, 0-10)
 - Security Required (checkbox) - Must include security eye
 - Always Confirm Intent (checkbox) - Must include Jōgan
 
 **Custom Constraints Section**:
+
 - Add/remove custom constraints
 - Constraint types: must_include, must_exclude, max_eyes, sequence_order
 - Each constraint has: type, value, reason
 
 ### API Integration
+
 ```typescript
 // Create policy
 POST /api/policies
@@ -84,6 +91,7 @@ PUT /api/policies/:id
 ```
 
 ### Validation
+
 - Name required (non-empty)
 - Mandatory eyes required (at least one)
 - No overlap between mandatory and forbidden
@@ -91,6 +99,7 @@ PUT /api/policies/:id
 - Always confirm intent → must allow Jōgan
 
 ### UI/UX
+
 - Form with sections for each constraint type
 - Real-time validation feedback
 - "Test Policy" button (opens PolicyTester modal)
@@ -104,9 +113,11 @@ PUT /api/policies/:id
 ## 2. PolicyList Component
 
 ### Purpose
+
 Display list of routing policies with management actions.
 
 ### Props
+
 ```typescript
 interface PolicyListProps {
   onEdit?: (policyId: string) => void;
@@ -117,6 +128,7 @@ interface PolicyListProps {
 ### Features
 
 **Policy Card Display**:
+
 - Name + description
 - Active/Inactive badge
 - Mandatory eyes (chip list)
@@ -125,16 +137,19 @@ interface PolicyListProps {
 - Created date
 
 **Actions per Policy**:
+
 - Edit button → Opens PolicyBuilder
 - Test button → Opens PolicyTester
 - Activate/Deactivate toggle
 - Delete button (with confirmation)
 
 **Filters**:
+
 - Show All / Active Only / Inactive Only
 - Search by name
 
 ### API Integration
+
 ```typescript
 // List policies
 GET /api/policies?active=true
@@ -148,6 +163,7 @@ DELETE /api/policies/:id
 ```
 
 ### UI/UX
+
 - Grid or list view toggle
 - Empty state: "No policies yet. Create your first policy!"
 - Loading skeleton during fetch
@@ -159,9 +175,11 @@ DELETE /api/policies/:id
 ## 3. PolicyTester Component
 
 ### Purpose
+
 Test a policy against a proposed eye sequence to validate compliance.
 
 ### Props
+
 ```typescript
 interface PolicyTesterProps {
   policyId: string;
@@ -172,21 +190,25 @@ interface PolicyTesterProps {
 ### Features
 
 **Input**:
+
 - Eye sequence builder (drag-and-drop or multi-select)
 - Predefined sequences (templates) for quick testing
 
 **Test Results**:
+
 - Valid/Invalid status (green/red badge)
 - Errors list (if invalid)
 - Warnings list (if any)
 - Explanation of why policy passed/failed
 
 **Example Sequences**:
+
 - Minimal sequence (fewest eyes possible)
 - Typical sequence (common use case)
 - Maximum sequence (most comprehensive)
 
 ### API Integration
+
 ```typescript
 // Test policy
 POST /api/policies/:id/test
@@ -205,6 +227,7 @@ Response:
 ```
 
 ### UI/UX
+
 - Modal or slide-over panel
 - Visual feedback (green checkmark / red X)
 - Clear error messages
@@ -216,12 +239,14 @@ Response:
 ## 4. TemplateDesigner Component
 
 ### Purpose
+
 Create and edit fixed pipeline templates.
 
 ### Props
+
 ```typescript
 interface TemplateDesignerProps {
-  templateId?: string;         // For editing
+  templateId?: string; // For editing
   onSave?: (template: PipelineTemplate) => void;
   onCancel?: () => void;
 }
@@ -230,10 +255,12 @@ interface TemplateDesignerProps {
 ### Features
 
 **Required Fields**:
+
 - Name (text input)
 - Eye Sequence (ordered list with drag-and-drop)
 
 **Optional Fields**:
+
 - Description (textarea)
 - Strict mode (checkbox) - Enforce exact sequence
 - Auto-trigger pattern (regex input)
@@ -241,6 +268,7 @@ interface TemplateDesignerProps {
 - Created by (auto-filled from session)
 
 **Eye Sequence Builder**:
+
 - Available eyes list (left panel)
 - Selected sequence (right panel, ordered)
 - Drag-and-drop to reorder
@@ -248,11 +276,13 @@ interface TemplateDesignerProps {
 - Validation: at least 1 eye required
 
 **Auto-Trigger Pattern**:
+
 - Regex input with validation
 - Test input (test regex against sample text)
 - Examples: `review.*code`, `deploy.*production`, `analyze.*security`
 
 ### API Integration
+
 ```typescript
 // Create template
 POST /api/templates
@@ -273,12 +303,14 @@ POST /api/templates/match
 ```
 
 ### Validation
+
 - Name required
 - Eyes array required (at least 1)
 - Auto-trigger pattern must be valid regex
 - Duplicate eye names allowed (for loops)
 
 ### UI/UX
+
 - Split view: available eyes | selected sequence
 - Visual sequence flow (arrow between eyes)
 - Regex tester modal
@@ -291,9 +323,11 @@ POST /api/templates/match
 ## 5. TemplateList Component
 
 ### Purpose
+
 Display and manage pipeline templates.
 
 ### Props
+
 ```typescript
 interface TemplateListProps {
   onEdit?: (templateId: string) => void;
@@ -304,6 +338,7 @@ interface TemplateListProps {
 ### Features
 
 **Template Card Display**:
+
 - Name + description
 - Eye sequence preview (visual flow)
 - Public/Private badge
@@ -312,6 +347,7 @@ interface TemplateListProps {
 - Created by + date
 
 **Actions per Template**:
+
 - Edit button → Opens TemplateDesigner
 - Use button → Applies template to session
 - Delete button (with confirmation)
@@ -319,16 +355,19 @@ interface TemplateListProps {
 - Export button (download JSON)
 
 **Filters**:
+
 - Show All / Public Only / My Templates
 - Sort by: Name, Usage Count, Created Date
 - Search by name
 
 **Usage Statistics**:
+
 - Total usage count
 - Most popular templates
 - Recently used
 
 ### API Integration
+
 ```typescript
 // List templates
 GET /api/templates?public=true&createdBy=username
@@ -341,6 +380,7 @@ GET /api/templates/:id/stats
 ```
 
 ### UI/UX
+
 - Grid view with template cards
 - Empty state: "No templates yet. Create your first template!"
 - Loading skeleton
@@ -353,12 +393,14 @@ GET /api/templates/:id/stats
 ## 6. TemplateImportExport Component
 
 ### Purpose
+
 Import and export templates as JSON files.
 
 ### Props
+
 ```typescript
 interface TemplateImportExportProps {
-  templateId?: string;         // For export
+  templateId?: string; // For export
   onImportSuccess?: (template: PipelineTemplate) => void;
 }
 ```
@@ -366,17 +408,20 @@ interface TemplateImportExportProps {
 ### Features
 
 **Export**:
+
 - Export single template as JSON
 - Export all user templates as bundle
 - Download file with template name
 
 **Import**:
+
 - Upload JSON file
 - Validate template structure
 - Preview before import
 - Overwrite existing or create new
 
 **Template JSON Format**:
+
 ```json
 {
   "name": "Code Review Pipeline",
@@ -389,12 +434,14 @@ interface TemplateImportExportProps {
 ```
 
 ### Validation
+
 - Valid JSON structure
 - All eyes exist in database
 - Auto-trigger pattern is valid regex
 - Name doesn't conflict (or prompt overwrite)
 
 ### UI/UX
+
 - Export button → Downloads JSON file
 - Import button → File upload dialog
 - Preview modal before importing
@@ -406,13 +453,15 @@ interface TemplateImportExportProps {
 ## 7. ModeSelector Component
 
 ### Purpose
+
 Select routing mode for current session.
 
 ### Props
+
 ```typescript
 interface ModeSelectorProps {
   sessionId: string;
-  currentMode?: 'fully_dynamic' | 'constrained' | 'fixed';
+  currentMode?: "fully_dynamic" | "constrained" | "fixed";
   currentPolicyId?: string;
   currentTemplateId?: string;
   onModeChange?: (mode: string, policyId?: string, templateId?: string) => void;
@@ -444,12 +493,14 @@ interface ModeSelectorProps {
    - "Create New Template" button
 
 **Mode Selection**:
+
 - Radio button or card selection
 - Shows currently active mode
 - Disable if mode requires config (policy/template) and none selected
 - Apply button to save changes
 
 ### API Integration
+
 ```typescript
 // Update session mode
 PUT /api/session/:sessionId
@@ -465,11 +516,13 @@ GET /api/templates?public=true
 ```
 
 ### Validation
+
 - Constrained mode requires policy selection
 - Fixed mode requires template selection
 - Warn if changing mode mid-session
 
 ### UI/UX
+
 - Card-based selection (visual)
 - Expandable cards to show config
 - Disabled state for unavailable modes
@@ -482,12 +535,14 @@ GET /api/templates?public=true
 ## 8. RoutingModeCard Component
 
 ### Purpose
+
 Display routing mode information and selection.
 
 ### Props
+
 ```typescript
 interface RoutingModeCardProps {
-  mode: 'fully_dynamic' | 'constrained' | 'fixed';
+  mode: "fully_dynamic" | "constrained" | "fixed";
   selected: boolean;
   onSelect: () => void;
   disabled?: boolean;
@@ -496,6 +551,7 @@ interface RoutingModeCardProps {
 ```
 
 ### Features
+
 - Mode icon and name
 - Description text
 - Badge (recommended, advanced, etc.)
@@ -504,6 +560,7 @@ interface RoutingModeCardProps {
 - Disabled state (greyed out)
 
 ### UI/UX
+
 - Clickable card
 - Hover effect
 - Active state highlight
@@ -518,12 +575,14 @@ interface RoutingModeCardProps {
 **Current**: Full-screen N8N-style pipeline editor
 
 **Add**:
+
 1. **Toolbar Button**: "Routing Mode" button in toolbar
 2. **Slide-over Panel**: ModeSelector component
 3. **Status Bar**: Current mode indicator
 4. **Templates Integration**: "Load Template" button → TemplateList
 
 **Modified Components**:
+
 ```typescript
 // apps/ui/src/components/pipeline-builder/Toolbar.tsx
 // Add button: <RoutingModeButton />
@@ -536,6 +595,7 @@ interface RoutingModeCardProps {
 ### /settings Page Integration
 
 **Add New Section**: "Routing Configuration"
+
 - Default routing mode preference
 - Link to PolicyList
 - Link to TemplateList
@@ -551,15 +611,24 @@ interface RoutingModeCardProps {
 
 export function usePolicies(filters?: { active?: boolean }) {
   return useQuery({
-    queryKey: ['policies', filters],
-    queryFn: () => fetch(`/api/policies?${new URLSearchParams(filters)}`).then(r => r.json()),
+    queryKey: ["policies", filters],
+    queryFn: () =>
+      fetch(`/api/policies?${new URLSearchParams(filters)}`).then((r) =>
+        r.json(),
+      ),
   });
 }
 
-export function useTemplates(filters?: { public?: boolean; createdBy?: string }) {
+export function useTemplates(filters?: {
+  public?: boolean;
+  createdBy?: string;
+}) {
   return useQuery({
-    queryKey: ['templates', filters],
-    queryFn: () => fetch(`/api/templates?${new URLSearchParams(filters)}`).then(r => r.json()),
+    queryKey: ["templates", filters],
+    queryFn: () =>
+      fetch(`/api/templates?${new URLSearchParams(filters)}`).then((r) =>
+        r.json(),
+      ),
   });
 }
 
@@ -567,13 +636,13 @@ export function useCreatePolicy() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (policy: CreatePolicyRequest) =>
-      fetch('/api/policies', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      fetch("/api/policies", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(policy),
-      }).then(r => r.json()),
+      }).then((r) => r.json()),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['policies'] });
+      queryClient.invalidateQueries({ queryKey: ["policies"] });
     },
   });
 }
@@ -587,13 +656,13 @@ export function useCreatePolicy() {
 // Listen for real-time updates
 useEffect(() => {
   const handlePolicyUpdate = (data: any) => {
-    if (data.type === 'policy_created' || data.type === 'policy_updated') {
-      queryClient.invalidateQueries({ queryKey: ['policies'] });
+    if (data.type === "policy_created" || data.type === "policy_updated") {
+      queryClient.invalidateQueries({ queryKey: ["policies"] });
     }
   };
 
-  wsManager.on('message', handlePolicyUpdate);
-  return () => wsManager.off('message', handlePolicyUpdate);
+  wsManager.on("message", handlePolicyUpdate);
+  return () => wsManager.off("message", handlePolicyUpdate);
 }, []);
 ```
 
@@ -602,18 +671,21 @@ useEffect(() => {
 ## Styling Guidelines
 
 ### Design System
+
 - Use existing Tailwind classes from codebase
 - Match color scheme from other pages
 - Consistent spacing (4px grid)
 - Card shadows and borders match existing components
 
 ### Component Patterns
+
 - Follow existing modal patterns (see NodeEditModal.tsx)
 - Use existing form components
 - Match button styles from Toolbar.tsx
 - Consistent loading states (skeleton loaders)
 
 ### Accessibility
+
 - All inputs labeled
 - Keyboard navigation support
 - ARIA labels for screen readers
@@ -625,18 +697,21 @@ useEffect(() => {
 ## Testing Strategy
 
 ### Unit Tests
+
 - Component rendering
 - Form validation
 - API integration (mocked)
 - State management
 
 ### Integration Tests
+
 - Policy creation flow
 - Template creation flow
 - Mode selection flow
 - Import/export flow
 
 ### E2E Tests
+
 - Complete policy creation and application
 - Template creation and usage
 - Mode switching in active session
@@ -646,6 +721,7 @@ useEffect(() => {
 ## Implementation Priority
 
 ### Phase 3A (Days 15-17) - Policies
+
 1. PolicyBuilder component ✅
 2. PolicyList component ✅
 3. PolicyTester component ✅
@@ -653,6 +729,7 @@ useEffect(() => {
 5. Integration with /settings page ✅
 
 ### Phase 3B (Days 18-19) - Templates
+
 1. TemplateDesigner component ✅
 2. TemplateList component ✅
 3. TemplateImportExport component ✅
@@ -660,6 +737,7 @@ useEffect(() => {
 5. Integration with /pipelines page ✅
 
 ### Phase 3C (Days 20-21) - Mode Selection
+
 1. ModeSelector component ✅
 2. RoutingModeCard component ✅
 3. Toolbar integration ✅

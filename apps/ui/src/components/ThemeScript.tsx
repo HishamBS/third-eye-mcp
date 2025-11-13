@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { DEFAULT_THEME } from '@third-eye/theme';
-import { STORAGE_KEYS } from '@/constants/storage';
+import { DEFAULT_THEME } from "@third-eye/theme";
+import { STORAGE_KEYS } from "@/constants/storage";
 
 export function ThemeScript() {
   const themeScript = `

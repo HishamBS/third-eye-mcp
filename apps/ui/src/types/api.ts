@@ -46,7 +46,7 @@ export interface Session {
   model: string | null;
   displayName: string;
   createdAt: Date | string;
-  status: 'active' | 'completed' | 'failed' | 'killed';
+  status: "active" | "completed" | "failed" | "killed";
   configJson: unknown;
 }
 
@@ -177,7 +177,7 @@ export interface PipelineRun {
   id: string;
   pipelineId: string;
   sessionId: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
+  status: "pending" | "running" | "completed" | "failed";
   currentStep: number;
   stateJson: Record<string, unknown>;
   createdAt: string | Date;
@@ -353,7 +353,7 @@ export interface Eye {
   name: string;
   version: string;
   description: string;
-  source: 'built-in' | 'custom';
+  source: "built-in" | "custom";
   personaTemplate?: string;
   inputSchema?: Record<string, unknown>;
   outputSchema?: Record<string, unknown>;

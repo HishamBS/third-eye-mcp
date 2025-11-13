@@ -10,17 +10,17 @@
  * Per R13: All text from SSOT
  */
 
-'use client';
+"use client";
 
-import { useMemo, useState } from 'react';
-import { useEyeCapabilities } from '@/hooks/useEyeCapabilities';
-import { EYE_CAPABILITIES } from '@third-eye/config/eye-capabilities';
-import { ModelRecommendationPanel } from '@/components/model-recommendations/ModelRecommendationPanel';
-import type { EyeWithCapabilities } from '@/hooks/useEyeCapabilities';
-import type { ProviderId } from '@third-eye/types';
+import { useMemo, useState } from "react";
+import { useEyeCapabilities } from "@/hooks/useEyeCapabilities";
+import { EYE_CAPABILITIES } from "@third-eye/config/eye-capabilities";
+import { ModelRecommendationPanel } from "@/components/model-recommendations/ModelRecommendationPanel";
+import type { EyeWithCapabilities } from "@/hooks/useEyeCapabilities";
+import type { ProviderId } from "@third-eye/types";
 
 interface CapabilityMatrixProps {
-  mode: 'dynamic' | 'constrained' | 'fixed';
+  mode: "dynamic" | "constrained" | "fixed";
   highlightedEyes?: string[]; // For showing active routing decision
 }
 
@@ -30,7 +30,7 @@ interface CapabilityMatrixProps {
 function EyeCapabilityCard({
   eye,
   highlighted,
-  onClick
+  onClick,
 }: {
   eye: EyeWithCapabilities;
   highlighted: boolean;
@@ -40,10 +40,11 @@ function EyeCapabilityCard({
   const eyeInfo = EYE_CAPABILITIES[eyeName as keyof typeof EYE_CAPABILITIES];
 
   // Fallback if eye not in capabilities config
-  const icon = eyeInfo?.icon || '👁️';
-  const color = eyeInfo?.color || 'gray';
-  const description = eye.description || 'No description available';
-  const tags = eye.capabilityTags.length > 0 ? eye.capabilityTags : eyeInfo?.tags || [];
+  const icon = eyeInfo?.icon || "👁️";
+  const color = eyeInfo?.color || "gray";
+  const description = eye.description || "No description available";
+  const tags =
+    eye.capabilityTags.length > 0 ? eye.capabilityTags : eyeInfo?.tags || [];
   const scenarios = eyeInfo?.scenarios || [];
 
   return (
@@ -52,9 +53,10 @@ function EyeCapabilityCard({
       className={`
         relative p-4 rounded-lg border-2 transition-all duration-200
         hover:shadow-lg hover:-translate-y-1
-        ${highlighted
-          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-          : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
+        ${
+          highlighted
+            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+            : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
         }
       `}
     >
@@ -93,9 +95,15 @@ function EyeCapabilityCard({
       {/* Status indicator */}
       <div className="absolute top-2 right-2">
         {eye.active ? (
-          <span className="inline-block w-2 h-2 bg-green-500 rounded-full" title="Active" />
+          <span
+            className="inline-block w-2 h-2 bg-green-500 rounded-full"
+            title="Active"
+          />
         ) : (
-          <span className="inline-block w-2 h-2 bg-gray-300 rounded-full" title="Inactive" />
+          <span
+            className="inline-block w-2 h-2 bg-gray-300 rounded-full"
+            title="Inactive"
+          />
         )}
       </div>
     </button>
@@ -108,14 +116,14 @@ function EyeCapabilityCard({
  */
 function EyeDetailModal({
   eye,
-  onClose
+  onClose,
 }: {
   eye: EyeWithCapabilities;
   onClose: () => void;
 }) {
   const eyeName = eye.name.toLowerCase();
   const eyeInfo = EYE_CAPABILITIES[eyeName as keyof typeof EYE_CAPABILITIES];
-  const [selectedProvider, setSelectedProvider] = useState<ProviderId>('groq');
+  const [selectedProvider, setSelectedProvider] = useState<ProviderId>("groq");
 
   return (
     <div
@@ -130,11 +138,11 @@ function EyeDetailModal({
         <div className="border-b border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <span className="text-5xl">{eyeInfo?.icon || '👁️'}</span>
+              <span className="text-5xl">{eyeInfo?.icon || "👁️"}</span>
               <div>
                 <h2 className="text-2xl font-bold">{eye.name}</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Version {eye.version} • {eye.active ? 'Active' : 'Inactive'}
+                  Version {eye.version} • {eye.active ? "Active" : "Inactive"}
                 </p>
               </div>
             </div>
@@ -154,7 +162,9 @@ function EyeDetailModal({
             <h3 className="font-semibold text-sm uppercase text-gray-500 dark:text-gray-400 mb-2">
               Description
             </h3>
-            <p className="text-gray-700 dark:text-gray-300">{eye.description}</p>
+            <p className="text-gray-700 dark:text-gray-300">
+              {eye.description}
+            </p>
           </div>
 
           {/* Capabilities */}
@@ -206,13 +216,21 @@ function EyeDetailModal({
               </label>
               <select
                 value={selectedProvider}
-                onChange={(e) => setSelectedProvider(e.target.value as ProviderId)}
+                onChange={(e) =>
+                  setSelectedProvider(e.target.value as ProviderId)
+                }
                 className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               >
                 <option value="groq">Groq (Remote API - 95-98% success)</option>
-                <option value="openrouter">OpenRouter (Remote API - 85-95% success)</option>
-                <option value="ollama">Ollama (Local - 100% reliability)</option>
-                <option value="lmstudio">LM Studio (Local - 100% reliability)</option>
+                <option value="openrouter">
+                  OpenRouter (Remote API - 85-95% success)
+                </option>
+                <option value="ollama">
+                  Ollama (Local - 100% reliability)
+                </option>
+                <option value="lmstudio">
+                  LM Studio (Local - 100% reliability)
+                </option>
               </select>
             </div>
 
@@ -231,12 +249,20 @@ function EyeDetailModal({
 /**
  * Capability Matrix - Main Component
  */
-export function CapabilityMatrix({ mode, highlightedEyes = [] }: CapabilityMatrixProps) {
+export function CapabilityMatrix({
+  mode,
+  highlightedEyes = [],
+}: CapabilityMatrixProps) {
   const { eyes, loading, error } = useEyeCapabilities();
-  const [selectedEye, setSelectedEye] = useState<EyeWithCapabilities | null>(null);
+  const [selectedEye, setSelectedEye] = useState<EyeWithCapabilities | null>(
+    null,
+  );
 
   // Memoize highlighted eye set for performance
-  const highlightedSet = useMemo(() => new Set(highlightedEyes), [highlightedEyes]);
+  const highlightedSet = useMemo(
+    () => new Set(highlightedEyes),
+    [highlightedEyes],
+  );
 
   if (loading) {
     return (
@@ -273,10 +299,13 @@ export function CapabilityMatrix({ mode, highlightedEyes = [] }: CapabilityMatri
         <div>
           <h2 className="text-2xl font-bold">Capability Matrix</h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            What each eye can do{highlightedEyes.length > 0 ? ' (highlighted eyes were selected for current routing)' : ''}
+            What each eye can do
+            {highlightedEyes.length > 0
+              ? " (highlighted eyes were selected for current routing)"
+              : ""}
           </p>
         </div>
-        {mode !== 'dynamic' && (
+        {mode !== "dynamic" && (
           <div className="text-sm text-gray-500 dark:text-gray-400">
             Mode: <span className="font-semibold capitalize">{mode}</span>
           </div>
@@ -296,29 +325,31 @@ export function CapabilityMatrix({ mode, highlightedEyes = [] }: CapabilityMatri
       </div>
 
       {/* Mode-specific info */}
-      {mode === 'dynamic' && (
+      {mode === "dynamic" && (
         <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <p className="text-sm text-blue-800 dark:text-blue-200">
-            <strong>Dynamic Mode:</strong> Overseer analyzes each request and dynamically selects
-            the optimal eye sequence based on required capabilities. No fixed pipeline.
+            <strong>Dynamic Mode:</strong> Overseer analyzes each request and
+            dynamically selects the optimal eye sequence based on required
+            capabilities. No fixed pipeline.
           </p>
         </div>
       )}
 
-      {mode === 'constrained' && (
+      {mode === "constrained" && (
         <div className="p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
           <p className="text-sm text-purple-800 dark:text-purple-200">
-            <strong>Constrained Mode:</strong> Overseer routes within your defined policy constraints
-            (mandatory eyes, forbidden eyes, security requirements).
+            <strong>Constrained Mode:</strong> Overseer routes within your
+            defined policy constraints (mandatory eyes, forbidden eyes, security
+            requirements).
           </p>
         </div>
       )}
 
-      {mode === 'fixed' && (
+      {mode === "fixed" && (
         <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
           <p className="text-sm text-green-800 dark:text-green-200">
-            <strong>Fixed Template Mode:</strong> Uses a predefined eye sequence from a template.
-            Consistent results for repeated tasks.
+            <strong>Fixed Template Mode:</strong> Uses a predefined eye sequence
+            from a template. Consistent results for repeated tasks.
           </p>
         </div>
       )}

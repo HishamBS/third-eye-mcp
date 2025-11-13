@@ -16,8 +16,8 @@ import {
   BUILTIN_EYE_CAPABILITIES,
   EyeStageToken,
   EYE_CAPABILITY_LABELS,
-} from './taxonomy';
-import { ROUTING_CAPABILITY_REQUIREMENTS } from './routing-vision';
+} from "./taxonomy";
+import { ROUTING_CAPABILITY_REQUIREMENTS } from "./routing-vision";
 
 export type CapabilityStage = EyeStageToken;
 export type CapabilityPlanEyeId = string;
@@ -48,7 +48,7 @@ export interface CapabilityPlanOptions {
 export class CapabilityPlanResolutionError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'CapabilityPlanResolutionError';
+    this.name = "CapabilityPlanResolutionError";
   }
 }
 
@@ -56,7 +56,9 @@ const BUILTIN_EYE_IDS = new Set(Object.values(EyeId));
 
 const toLowerId = (value: string): string => value.trim().toLowerCase();
 
-const dedupeCapabilities = (capabilities: readonly EyeCapability[]): EyeCapability[] => {
+const dedupeCapabilities = (
+  capabilities: readonly EyeCapability[],
+): EyeCapability[] => {
   const seen = new Set<EyeCapability>();
   const result: EyeCapability[] = [];
   for (const capability of capabilities) {
@@ -75,7 +77,10 @@ interface InternalCandidate {
   readonly builtin: boolean;
 }
 
-const toCandidate = (id: string, capabilities: readonly EyeCapability[]): InternalCandidate => {
+const toCandidate = (
+  id: string,
+  capabilities: readonly EyeCapability[],
+): InternalCandidate => {
   const trimmedId = id.trim();
   return {
     id: trimmedId,
@@ -90,7 +95,10 @@ const buildCandidateList = (
 ): ReadonlyArray<InternalCandidate> => {
   const map = new Map<string, InternalCandidate>();
 
-  const addCandidate = (eyeId: string, capabilities: readonly EyeCapability[]): void => {
+  const addCandidate = (
+    eyeId: string,
+    capabilities: readonly EyeCapability[],
+  ): void => {
     const candidate = toCandidate(eyeId, capabilities);
     map.set(candidate.idLower, candidate);
   };
@@ -101,13 +109,17 @@ const buildCandidateList = (
     }
   }
 
-  for (const [eyeId, capabilities] of Object.entries(BUILTIN_EYE_CAPABILITIES)) {
+  for (const [eyeId, capabilities] of Object.entries(
+    BUILTIN_EYE_CAPABILITIES,
+  )) {
     if (!map.has(toLowerId(eyeId))) {
       addCandidate(eyeId, capabilities);
     }
   }
 
-  return Array.from(map.values()).sort((a, b) => a.idLower.localeCompare(b.idLower));
+  return Array.from(map.values()).sort((a, b) =>
+    a.idLower.localeCompare(b.idLower),
+  );
 };
 
 interface ExpandedRequirement {
@@ -118,7 +130,11 @@ interface ExpandedRequirement {
 }
 
 const expandRequirementList = (
-  requirements: ReadonlyArray<{ allOf?: readonly EyeCapability[]; anyOf?: readonly EyeCapability[]; optional?: boolean }>,
+  requirements: ReadonlyArray<{
+    allOf?: readonly EyeCapability[];
+    anyOf?: readonly EyeCapability[];
+    optional?: boolean;
+  }>,
   stage: CapabilityStage,
 ): readonly ExpandedRequirement[] =>
   requirements.map(
@@ -134,9 +150,11 @@ const getStageDefinitions = (
   requestType: RequestType,
   contentDomain: ContentDomain,
 ): readonly ExpandedRequirement[] => {
-  const requirementSet = ROUTING_CAPABILITY_REQUIREMENTS[requestType]?.[contentDomain];
+  const requirementSet =
+    ROUTING_CAPABILITY_REQUIREMENTS[requestType]?.[contentDomain];
   const effectiveSet =
-    requirementSet ?? ROUTING_CAPABILITY_REQUIREMENTS[RequestType.NEW_TASK][ContentDomain.MIXED];
+    requirementSet ??
+    ROUTING_CAPABILITY_REQUIREMENTS[RequestType.NEW_TASK][ContentDomain.MIXED];
 
   const stages = [
     ...expandRequirementList(effectiveSet.guidance, EyeStageToken.GUIDANCE),
@@ -147,7 +165,8 @@ const getStageDefinitions = (
     return stages;
   }
 
-  const fallback = ROUTING_CAPABILITY_REQUIREMENTS[RequestType.NEW_TASK][ContentDomain.MIXED];
+  const fallback =
+    ROUTING_CAPABILITY_REQUIREMENTS[RequestType.NEW_TASK][ContentDomain.MIXED];
   return [
     ...expandRequirementList(fallback.guidance, EyeStageToken.GUIDANCE),
     ...expandRequirementList(fallback.validation, EyeStageToken.VALIDATION),
@@ -157,10 +176,18 @@ const getStageDefinitions = (
 const hasAllCapabilities = (
   candidate: InternalCandidate,
   required: readonly EyeCapability[],
-): boolean => required.every((capability) => candidate.capabilities.includes(capability));
+): boolean =>
+  required.every((capability) => candidate.capabilities.includes(capability));
 
-const countMatches = (candidate: InternalCandidate, pool: readonly EyeCapability[]): number =>
-  pool.reduce((count, capability) => (candidate.capabilities.includes(capability) ? count + 1 : count), 0);
+const countMatches = (
+  candidate: InternalCandidate,
+  pool: readonly EyeCapability[],
+): number =>
+  pool.reduce(
+    (count, capability) =>
+      candidate.capabilities.includes(capability) ? count + 1 : count,
+    0,
+  );
 
 const selectCandidateForStage = (
   stage: ExpandedRequirement,
@@ -168,16 +195,21 @@ const selectCandidateForStage = (
 ): InternalCandidate => {
   const { allOf, anyOf } = stage;
 
-  const matchesRequired = candidates.filter((candidate) => hasAllCapabilities(candidate, allOf));
+  const matchesRequired = candidates.filter((candidate) =>
+    hasAllCapabilities(candidate, allOf),
+  );
 
   const matchesRequiredAndAny =
     anyOf.length > 0
       ? matchesRequired.filter((candidate) =>
-          anyOf.some((capability) => candidate.capabilities.includes(capability)),
+          anyOf.some((capability) =>
+            candidate.capabilities.includes(capability),
+          ),
         )
       : matchesRequired;
 
-  let ranked = matchesRequiredAndAny.length > 0 ? matchesRequiredAndAny : matchesRequired;
+  let ranked =
+    matchesRequiredAndAny.length > 0 ? matchesRequiredAndAny : matchesRequired;
 
   if (ranked.length === 0 && allOf.length === 0 && anyOf.length > 0) {
     ranked = candidates.filter((candidate) =>
@@ -188,8 +220,8 @@ const selectCandidateForStage = (
   if (ranked.length === 0) {
     throw new CapabilityPlanResolutionError(
       `No available Eye satisfies capability requirements: allOf=[${allOf.join(
-        ', ',
-      )}], anyOf=[${anyOf.join(', ')}]`,
+        ", ",
+      )}], anyOf=[${anyOf.join(", ")}]`,
     );
   }
 
@@ -254,7 +286,9 @@ export function resolveCapabilityPlan(
   const candidates = buildCandidateList(options);
 
   if (candidates.length === 0) {
-    throw new CapabilityPlanResolutionError('No Eyes available to satisfy capability requirements.');
+    throw new CapabilityPlanResolutionError(
+      "No Eyes available to satisfy capability requirements.",
+    );
   }
 
   const allowReuseGlobal = options.allowEyeReuse ?? false;
@@ -270,7 +304,7 @@ export function resolveCapabilityPlan(
 
     if (pool.length === 0) {
       throw new CapabilityPlanResolutionError(
-        'Exhausted available Eyes before satisfying all capability stages.',
+        "Exhausted available Eyes before satisfying all capability stages.",
       );
     }
 
@@ -300,4 +334,3 @@ export function resolveCapabilityPlan(
     assignments,
   };
 }
-

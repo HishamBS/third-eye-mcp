@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { memo, useState, useCallback } from 'react';
-import { X, RotateCw, Package } from 'lucide-react';
-import { ANIMATION_DURATION } from '@/constants/timing';
-import type { LoopNodeConfig } from '@third-eye/types';
+import { memo, useState, useCallback } from "react";
+import { X, RotateCw, Package } from "lucide-react";
+import { ANIMATION_DURATION } from "@/constants/timing";
+import type { LoopNodeConfig } from "@third-eye/types";
 
 /**
  * Loop Node Configuration Modal
@@ -22,21 +22,22 @@ import type { LoopNodeConfig } from '@third-eye/types';
  * Modal UI Text Constants
  */
 const MODAL_TEXT = {
-  TITLE: 'Configure Loop Node',
-  MAX_ITERATIONS_LABEL: 'Maximum Iterations',
-  MAX_ITERATIONS_PLACEHOLDER: '10',
-  MAX_ITERATIONS_HELP: 'Maximum number of times the loop will execute before exiting',
-  BATCH_SIZE_TOGGLE_LABEL: 'Enable Batch Processing',
-  BATCH_SIZE_TOGGLE_HELP: 'Process items in batches instead of one at a time',
-  BATCH_SIZE_LABEL: 'Batch Size',
-  BATCH_SIZE_PLACEHOLDER: '5',
-  BATCH_SIZE_HELP: 'Number of items to process per iteration',
-  VALIDATION_MIN_ITERATIONS: 'Minimum iterations is 1',
-  VALIDATION_MAX_ITERATIONS: 'Maximum iterations is 1000',
-  VALIDATION_MIN_BATCH_SIZE: 'Minimum batch size is 1',
-  VALIDATION_MAX_BATCH_SIZE: 'Maximum batch size is 100',
-  SAVE_BUTTON: 'Save Configuration',
-  CANCEL_BUTTON: 'Cancel',
+  TITLE: "Configure Loop Node",
+  MAX_ITERATIONS_LABEL: "Maximum Iterations",
+  MAX_ITERATIONS_PLACEHOLDER: "10",
+  MAX_ITERATIONS_HELP:
+    "Maximum number of times the loop will execute before exiting",
+  BATCH_SIZE_TOGGLE_LABEL: "Enable Batch Processing",
+  BATCH_SIZE_TOGGLE_HELP: "Process items in batches instead of one at a time",
+  BATCH_SIZE_LABEL: "Batch Size",
+  BATCH_SIZE_PLACEHOLDER: "5",
+  BATCH_SIZE_HELP: "Number of items to process per iteration",
+  VALIDATION_MIN_ITERATIONS: "Minimum iterations is 1",
+  VALIDATION_MAX_ITERATIONS: "Maximum iterations is 1000",
+  VALIDATION_MIN_BATCH_SIZE: "Minimum batch size is 1",
+  VALIDATION_MAX_BATCH_SIZE: "Maximum batch size is 100",
+  SAVE_BUTTON: "Save Configuration",
+  CANCEL_BUTTON: "Cancel",
 } as const;
 
 /**
@@ -71,23 +72,30 @@ function LoopNodeConfigModalComponent({
   onSave,
 }: LoopNodeConfigModalProps) {
   const [maxIterations, setMaxIterations] = useState<number>(
-    config?.maxIterations ?? LOOP_LIMITS.DEFAULT_ITERATIONS
+    config?.maxIterations ?? LOOP_LIMITS.DEFAULT_ITERATIONS,
   );
-  const [batchEnabled, setBatchEnabled] = useState<boolean>(config?.batchSize !== undefined);
+  const [batchEnabled, setBatchEnabled] = useState<boolean>(
+    config?.batchSize !== undefined,
+  );
   const [batchSize, setBatchSize] = useState<number>(
-    config?.batchSize ?? LOOP_LIMITS.DEFAULT_BATCH_SIZE
+    config?.batchSize ?? LOOP_LIMITS.DEFAULT_BATCH_SIZE,
   );
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
 
-  const validateMaxIterations = useCallback((value: number): string | undefined => {
-    if (value < LOOP_LIMITS.MIN_ITERATIONS) {
-      return MODAL_TEXT.VALIDATION_MIN_ITERATIONS;
-    }
-    if (value > LOOP_LIMITS.MAX_ITERATIONS) {
-      return MODAL_TEXT.VALIDATION_MAX_ITERATIONS;
-    }
-    return undefined;
-  }, []);
+  const validateMaxIterations = useCallback(
+    (value: number): string | undefined => {
+      if (value < LOOP_LIMITS.MIN_ITERATIONS) {
+        return MODAL_TEXT.VALIDATION_MIN_ITERATIONS;
+      }
+      if (value > LOOP_LIMITS.MAX_ITERATIONS) {
+        return MODAL_TEXT.VALIDATION_MAX_ITERATIONS;
+      }
+      return undefined;
+    },
+    [],
+  );
 
   const validateBatchSize = useCallback((value: number): string | undefined => {
     if (value < LOOP_LIMITS.MIN_BATCH_SIZE) {
@@ -105,10 +113,10 @@ function LoopNodeConfigModalComponent({
       const error = validateMaxIterations(value);
       setValidationErrors((prev) => ({
         ...prev,
-        maxIterations: error ?? '',
+        maxIterations: error ?? "",
       }));
     },
-    [validateMaxIterations]
+    [validateMaxIterations],
   );
 
   const handleBatchSizeChange = useCallback(
@@ -117,20 +125,22 @@ function LoopNodeConfigModalComponent({
       const error = validateBatchSize(value);
       setValidationErrors((prev) => ({
         ...prev,
-        batchSize: error ?? '',
+        batchSize: error ?? "",
       }));
     },
-    [validateBatchSize]
+    [validateBatchSize],
   );
 
   const handleSave = useCallback(() => {
     const maxIterError = validateMaxIterations(maxIterations);
-    const batchSizeError = batchEnabled ? validateBatchSize(batchSize) : undefined;
+    const batchSizeError = batchEnabled
+      ? validateBatchSize(batchSize)
+      : undefined;
 
     if (maxIterError || batchSizeError) {
       setValidationErrors({
-        maxIterations: maxIterError ?? '',
-        batchSize: batchSizeError ?? '',
+        maxIterations: maxIterError ?? "",
+        batchSize: batchSizeError ?? "",
       });
       return;
     }
@@ -170,7 +180,9 @@ function LoopNodeConfigModalComponent({
             <div className="p-2 bg-brand-primary/10 rounded-lg">
               <RotateCw className="w-5 h-5 text-brand-primary" />
             </div>
-            <h2 className="text-xl font-semibold text-brand-foreground">{MODAL_TEXT.TITLE}</h2>
+            <h2 className="text-xl font-semibold text-brand-foreground">
+              {MODAL_TEXT.TITLE}
+            </h2>
           </div>
           <button
             type="button"
@@ -197,18 +209,24 @@ function LoopNodeConfigModalComponent({
                 placeholder-semantic-muted focus:outline-none focus:ring-2 transition-all
                 ${
                   validationErrors.maxIterations
-                    ? 'border-semantic-error focus:ring-semantic-error'
-                    : 'border-brand-outline focus:ring-brand-primary'
+                    ? "border-semantic-error focus:ring-semantic-error"
+                    : "border-brand-outline focus:ring-brand-primary"
                 }
               `}
               placeholder={MODAL_TEXT.MAX_ITERATIONS_PLACEHOLDER}
               value={maxIterations}
-              onChange={(e) => handleMaxIterationsChange(parseInt(e.target.value, 10) || 0)}
+              onChange={(e) =>
+                handleMaxIterationsChange(parseInt(e.target.value, 10) || 0)
+              }
             />
             {validationErrors.maxIterations ? (
-              <p className="text-xs text-semantic-error">{validationErrors.maxIterations}</p>
+              <p className="text-xs text-semantic-error">
+                {validationErrors.maxIterations}
+              </p>
             ) : (
-              <p className="text-xs text-semantic-muted">{MODAL_TEXT.MAX_ITERATIONS_HELP}</p>
+              <p className="text-xs text-semantic-muted">
+                {MODAL_TEXT.MAX_ITERATIONS_HELP}
+              </p>
             )}
           </div>
 
@@ -254,18 +272,24 @@ function LoopNodeConfigModalComponent({
                     placeholder-semantic-muted focus:outline-none focus:ring-2 transition-all
                     ${
                       validationErrors.batchSize
-                        ? 'border-semantic-error focus:ring-semantic-error'
-                        : 'border-brand-outline focus:ring-brand-primary'
+                        ? "border-semantic-error focus:ring-semantic-error"
+                        : "border-brand-outline focus:ring-brand-primary"
                     }
                   `}
                   placeholder={MODAL_TEXT.BATCH_SIZE_PLACEHOLDER}
                   value={batchSize}
-                  onChange={(e) => handleBatchSizeChange(parseInt(e.target.value, 10) || 0)}
+                  onChange={(e) =>
+                    handleBatchSizeChange(parseInt(e.target.value, 10) || 0)
+                  }
                 />
                 {validationErrors.batchSize ? (
-                  <p className="text-xs text-semantic-error">{validationErrors.batchSize}</p>
+                  <p className="text-xs text-semantic-error">
+                    {validationErrors.batchSize}
+                  </p>
                 ) : (
-                  <p className="text-xs text-semantic-muted">{MODAL_TEXT.BATCH_SIZE_HELP}</p>
+                  <p className="text-xs text-semantic-muted">
+                    {MODAL_TEXT.BATCH_SIZE_HELP}
+                  </p>
                 )}
               </div>
             )}
@@ -286,13 +310,15 @@ function LoopNodeConfigModalComponent({
               <div className="flex items-center justify-between">
                 <span className="text-semantic-muted">Batch Processing:</span>
                 <span className="font-medium text-brand-foreground">
-                  {batchEnabled ? 'Enabled' : 'Disabled'}
+                  {batchEnabled ? "Enabled" : "Disabled"}
                 </span>
               </div>
               {batchEnabled && (
                 <div className="flex items-center justify-between">
                   <span className="text-semantic-muted">Batch Size:</span>
-                  <span className="font-mono font-medium text-brand-foreground">{batchSize}</span>
+                  <span className="font-mono font-medium text-brand-foreground">
+                    {batchSize}
+                  </span>
                 </div>
               )}
             </div>
@@ -325,4 +351,4 @@ function LoopNodeConfigModalComponent({
  * Memoized LoopNodeConfigModal (Performance optimization per R04)
  */
 export const LoopNodeConfigModal = memo(LoopNodeConfigModalComponent);
-LoopNodeConfigModal.displayName = 'LoopNodeConfigModal';
+LoopNodeConfigModal.displayName = "LoopNodeConfigModal";

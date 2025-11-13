@@ -22,34 +22,34 @@ interface LoggerConfig {
 }
 
 const LOG_LEVEL_NAMES: Record<LogLevel, string> = {
-  [LogLevel.DEBUG]: 'DEBUG',
-  [LogLevel.INFO]: 'INFO',
-  [LogLevel.WARN]: 'WARN',
-  [LogLevel.ERROR]: 'ERROR',
-  [LogLevel.SILENT]: 'SILENT',
+  [LogLevel.DEBUG]: "DEBUG",
+  [LogLevel.INFO]: "INFO",
+  [LogLevel.WARN]: "WARN",
+  [LogLevel.ERROR]: "ERROR",
+  [LogLevel.SILENT]: "SILENT",
 };
 
 const LOG_LEVEL_COLORS: Record<LogLevel, string> = {
-  [LogLevel.DEBUG]: '\x1b[36m',
-  [LogLevel.INFO]: '\x1b[32m',
-  [LogLevel.WARN]: '\x1b[33m',
-  [LogLevel.ERROR]: '\x1b[31m',
-  [LogLevel.SILENT]: '',
+  [LogLevel.DEBUG]: "\x1b[36m",
+  [LogLevel.INFO]: "\x1b[32m",
+  [LogLevel.WARN]: "\x1b[33m",
+  [LogLevel.ERROR]: "\x1b[31m",
+  [LogLevel.SILENT]: "",
 };
 
-const RESET_COLOR = '\x1b[0m';
+const RESET_COLOR = "\x1b[0m";
 
 function parseLogLevel(level: string | undefined): LogLevel {
   switch (level?.toUpperCase()) {
-    case 'DEBUG':
+    case "DEBUG":
       return LogLevel.DEBUG;
-    case 'INFO':
+    case "INFO":
       return LogLevel.INFO;
-    case 'WARN':
+    case "WARN":
       return LogLevel.WARN;
-    case 'ERROR':
+    case "ERROR":
       return LogLevel.ERROR;
-    case 'SILENT':
+    case "SILENT":
       return LogLevel.SILENT;
     default:
       return LogLevel.INFO;
@@ -76,7 +76,7 @@ class Logger {
   private formatMessage(
     level: LogLevel,
     message: string,
-    context?: LogContext
+    context?: LogContext,
   ): string {
     const parts: string[] = [];
 
@@ -96,7 +96,7 @@ class Logger {
       parts.push(JSON.stringify(context));
     }
 
-    return parts.join(' ');
+    return parts.join(" ");
   }
 
   debug(message: string, context?: LogContext): void {

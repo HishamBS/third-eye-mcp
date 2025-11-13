@@ -39,9 +39,7 @@
       "indexes": {
         "app_settings_key_unique": {
           "name": "app_settings_key_unique",
-          "columns": [
-            "key"
-          ],
+          "columns": ["key"],
           "isUnique": true
         }
       },
@@ -114,10 +112,7 @@
       "indexes": {
         "clarifications_sessionId_field_unique": {
           "name": "clarifications_sessionId_field_unique",
-          "columns": [
-            "session_id",
-            "field"
-          ],
+          "columns": ["session_id", "field"],
           "isUnique": true
         }
       },
@@ -126,12 +121,8 @@
           "name": "clarifications_session_id_sessions_id_fk",
           "tableFrom": "clarifications",
           "tableTo": "sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -228,12 +219,8 @@
           "name": "duels_eye_id_eyes_id_fk",
           "tableFrom": "duels",
           "tableTo": "eyes",
-          "columnsFrom": [
-            "eye_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["eye_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -340,10 +327,7 @@
       "indexes": {
         "execution_steps_runId_nodeId_unique": {
           "name": "execution_steps_runId_nodeId_unique",
-          "columns": [
-            "run_id",
-            "node_id"
-          ],
+          "columns": ["run_id", "node_id"],
           "isUnique": true
         }
       },
@@ -352,12 +336,8 @@
           "name": "execution_steps_run_id_pipeline_queue_run_id_fk",
           "tableFrom": "execution_steps",
           "tableTo": "pipeline_queue",
-          "columnsFrom": [
-            "run_id"
-          ],
-          "columnsTo": [
-            "run_id"
-          ],
+          "columnsFrom": ["run_id"],
+          "columnsTo": ["run_id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -425,9 +405,7 @@
       "indexes": {
         "eye_leaderboard_eyeId_unique": {
           "name": "eye_leaderboard_eyeId_unique",
-          "columns": [
-            "eye_id"
-          ],
+          "columns": ["eye_id"],
           "isUnique": true
         }
       },
@@ -436,12 +414,8 @@
           "name": "eye_leaderboard_eye_id_eyes_id_fk",
           "tableFrom": "eye_leaderboard",
           "tableTo": "eyes",
-          "columnsFrom": [
-            "eye_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["eye_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -535,24 +509,17 @@
       "indexes": {
         "eyes_name_version_unique": {
           "name": "eyes_name_version_unique",
-          "columns": [
-            "name",
-            "version"
-          ],
+          "columns": ["name", "version"],
           "isUnique": true
         },
         "eyes_name_unique": {
           "name": "eyes_name_unique",
-          "columns": [
-            "name"
-          ],
+          "columns": ["name"],
           "isUnique": true
         },
         "eyes_taxonomyId_unique": {
           "name": "eyes_taxonomyId_unique",
-          "columns": [
-            "taxonomy_id"
-          ],
+          "columns": ["taxonomy_id"],
           "isUnique": true
         }
       },
@@ -617,9 +584,7 @@
       "indexes": {
         "eyes_routing_eyeId_unique": {
           "name": "eyes_routing_eyeId_unique",
-          "columns": [
-            "eye_id"
-          ],
+          "columns": ["eye_id"],
           "isUnique": true
         }
       },
@@ -628,12 +593,8 @@
           "name": "eyes_routing_eye_id_eyes_id_fk",
           "tableFrom": "eyes_routing",
           "tableTo": "eyes",
-          "columnsFrom": [
-            "eye_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["eye_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -716,12 +677,8 @@
           "name": "intent_confirmations_session_id_sessions_id_fk",
           "tableFrom": "intent_confirmations",
           "tableTo": "sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -852,9 +809,7 @@
       "indexes": {
         "mcp_integrations_slug_unique": {
           "name": "mcp_integrations_slug_unique",
-          "columns": [
-            "slug"
-          ],
+          "columns": ["slug"],
           "isUnique": true
         }
       },
@@ -919,10 +874,7 @@
       "indexes": {
         "models_cache_provider_model_unique": {
           "name": "models_cache_provider_model_unique",
-          "columns": [
-            "provider",
-            "model"
-          ],
+          "columns": ["provider", "model"],
           "isUnique": true
         }
       },
@@ -1008,10 +960,7 @@
       "indexes": {
         "node_configs_pipelineId_nodeId_unique": {
           "name": "node_configs_pipelineId_nodeId_unique",
-          "columns": [
-            "pipeline_id",
-            "node_id"
-          ],
+          "columns": ["pipeline_id", "node_id"],
           "isUnique": true
         }
       },
@@ -1020,12 +969,8 @@
           "name": "node_configs_pipeline_id_pipelines_id_fk",
           "tableFrom": "node_configs",
           "tableTo": "pipelines",
-          "columnsFrom": [
-            "pipeline_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["pipeline_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1033,12 +978,8 @@
           "name": "node_configs_eye_id_eyes_id_fk",
           "tableFrom": "node_configs",
           "tableTo": "eyes",
-          "columnsFrom": [
-            "eye_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["eye_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1145,9 +1086,7 @@
       "indexes": {
         "persona_blueprints_eyeId_unique": {
           "name": "persona_blueprints_eyeId_unique",
-          "columns": [
-            "eye_id"
-          ],
+          "columns": ["eye_id"],
           "isUnique": true
         }
       },
@@ -1156,12 +1095,8 @@
           "name": "persona_blueprints_eye_id_eyes_id_fk",
           "tableFrom": "persona_blueprints",
           "tableTo": "eyes",
-          "columnsFrom": [
-            "eye_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["eye_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1229,12 +1164,8 @@
           "name": "persona_versions_persona_id_personas_id_fk",
           "tableFrom": "persona_versions",
           "tableTo": "personas",
-          "columnsFrom": [
-            "persona_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["persona_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1349,10 +1280,7 @@
       "indexes": {
         "personas_eyeId_version_unique": {
           "name": "personas_eyeId_version_unique",
-          "columns": [
-            "eye_id",
-            "version"
-          ],
+          "columns": ["eye_id", "version"],
           "isUnique": true
         }
       },
@@ -1361,12 +1289,8 @@
           "name": "personas_eye_id_eyes_id_fk",
           "tableFrom": "personas",
           "tableTo": "eyes",
-          "columnsFrom": [
-            "eye_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["eye_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1448,12 +1372,8 @@
           "name": "pipeline_events_session_id_sessions_id_fk",
           "tableFrom": "pipeline_events",
           "tableTo": "sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1461,12 +1381,8 @@
           "name": "pipeline_events_eye_id_eyes_id_fk",
           "tableFrom": "pipeline_events",
           "tableTo": "eyes",
-          "columnsFrom": [
-            "eye_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["eye_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1559,9 +1475,7 @@
       "indexes": {
         "pipeline_queue_runId_unique": {
           "name": "pipeline_queue_runId_unique",
-          "columns": [
-            "run_id"
-          ],
+          "columns": ["run_id"],
           "isUnique": true
         }
       },
@@ -1570,12 +1484,8 @@
           "name": "pipeline_queue_pipeline_id_pipelines_id_fk",
           "tableFrom": "pipeline_queue",
           "tableTo": "pipelines",
-          "columnsFrom": [
-            "pipeline_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["pipeline_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1583,12 +1493,8 @@
           "name": "pipeline_queue_session_id_sessions_id_fk",
           "tableFrom": "pipeline_queue",
           "tableTo": "sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1671,12 +1577,8 @@
           "name": "pipeline_runs_pipeline_id_pipelines_id_fk",
           "tableFrom": "pipeline_runs",
           "tableTo": "pipelines",
-          "columnsFrom": [
-            "pipeline_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["pipeline_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1684,12 +1586,8 @@
           "name": "pipeline_runs_session_id_sessions_id_fk",
           "tableFrom": "pipeline_runs",
           "tableTo": "sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1763,17 +1661,12 @@
       "indexes": {
         "pipelines_name_version_unique": {
           "name": "pipelines_name_version_unique",
-          "columns": [
-            "name",
-            "version"
-          ],
+          "columns": ["name", "version"],
           "isUnique": true
         },
         "pipelines_name_unique": {
           "name": "pipelines_name_unique",
-          "columns": [
-            "name"
-          ],
+          "columns": ["name"],
           "isUnique": true
         }
       },
@@ -1869,12 +1762,8 @@
           "name": "provider_failovers_session_id_sessions_id_fk",
           "tableFrom": "provider_failovers",
           "tableTo": "sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1882,12 +1771,8 @@
           "name": "provider_failovers_eye_id_eyes_id_fk",
           "tableFrom": "provider_failovers",
           "tableTo": "eyes",
-          "columnsFrom": [
-            "eye_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["eye_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2007,12 +1892,8 @@
           "name": "rate_limit_tracking_eye_id_eyes_id_fk",
           "tableFrom": "rate_limit_tracking",
           "tableTo": "eyes",
-          "columnsFrom": [
-            "eye_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["eye_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2108,12 +1989,8 @@
           "name": "runs_session_id_sessions_id_fk",
           "tableFrom": "runs",
           "tableTo": "sessions",
-          "columnsFrom": [
-            "session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2121,12 +1998,8 @@
           "name": "runs_eye_id_eyes_id_fk",
           "tableFrom": "runs",
           "tableTo": "eyes",
-          "columnsFrom": [
-            "eye_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["eye_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2276,9 +2149,7 @@
       "indexes": {
         "strictness_profiles_name_unique": {
           "name": "strictness_profiles_name_unique",
-          "columns": [
-            "name"
-          ],
+          "columns": ["name"],
           "isUnique": true
         }
       },

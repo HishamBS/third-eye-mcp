@@ -1,11 +1,14 @@
-'use client';
+"use client";
 
-import { memo } from 'react';
-import { Handle, Position, type NodeProps } from 'reactflow';
-import { GitMerge, Check, X } from 'lucide-react';
-import type { IfNodeConfig } from '@third-eye/types';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE } from '@/constants/color-mappings';
-import { ANIMATION_DURATION } from '@/constants/timing';
+import { memo } from "react";
+import { Handle, Position, type NodeProps } from "reactflow";
+import { GitMerge, Check, X } from "lucide-react";
+import type { IfNodeConfig } from "@third-eye/types";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
+import { ANIMATION_DURATION } from "@/constants/timing";
 
 /**
  * IF Node Data Structure
@@ -31,10 +34,10 @@ export interface IFNodeData {
  * Per R07: Strict typing throughout
  */
 function IFNodeComponent({ data, selected, dragging }: NodeProps<IFNodeData>) {
-  const { label = 'IF', ifConfig } = data;
+  const { label = "IF", ifConfig } = data;
 
-  const trueLabel = ifConfig?.trueLabel ?? 'True';
-  const falseLabel = ifConfig?.falseLabel ?? 'False';
+  const trueLabel = ifConfig?.trueLabel ?? "True";
+  const falseLabel = ifConfig?.falseLabel ?? "False";
   const hasCondition = !!ifConfig?.condition;
 
   return (
@@ -42,8 +45,8 @@ function IFNodeComponent({ data, selected, dragging }: NodeProps<IFNodeData>) {
       className={`
         relative min-w-[180px] rounded-lg border-2 bg-brand-paper p-4
         transition-all ${ANIMATION_DURATION.FAST} ease-in-out
-        ${selected ? `border-dashed shadow-2xl ${STATUS_TEXT_COLORS.warning}` : 'border-solid shadow-lg border-brand-outline'}
-        ${dragging ? 'cursor-grabbing opacity-80' : 'cursor-grab opacity-100'}
+        ${selected ? `border-dashed shadow-2xl ${STATUS_TEXT_COLORS.warning}` : "border-solid shadow-lg border-brand-outline"}
+        ${dragging ? "cursor-grabbing opacity-80" : "cursor-grab opacity-100"}
       `}
     >
       {/* Input Handle */}
@@ -62,19 +65,23 @@ function IFNodeComponent({ data, selected, dragging }: NodeProps<IFNodeData>) {
       </div>
 
       {/* Binary Branching Indicator */}
-      <div className={`text-center text-xs uppercase tracking-wider font-medium mb-1 ${STATUS_TEXT_COLORS.warning}`}>
+      <div
+        className={`text-center text-xs uppercase tracking-wider font-medium mb-1 ${STATUS_TEXT_COLORS.warning}`}
+      >
         Conditional
       </div>
 
       {/* Condition Preview (shown when selected) */}
       {selected && hasCondition && (
         <div className="mt-2 pt-2 border-t border-brand-outline/40">
-          <div className="text-xs font-medium text-semantic-muted mb-1">Condition:</div>
+          <div className="text-xs font-medium text-semantic-muted mb-1">
+            Condition:
+          </div>
           <div className="text-xs text-brand-foreground font-mono bg-brand-surface rounded px-2 py-1 truncate">
-            {typeof ifConfig.condition === 'string'
+            {typeof ifConfig.condition === "string"
               ? ifConfig.condition.slice(0, 40)
               : JSON.stringify(ifConfig.condition).slice(0, 40)}
-            {(ifConfig.condition.length > 40) && '...'}
+            {ifConfig.condition.length > 40 && "..."}
           </div>
         </div>
       )}
@@ -85,7 +92,7 @@ function IFNodeComponent({ data, selected, dragging }: NodeProps<IFNodeData>) {
         position={Position.Right}
         id="output-true"
         className={`!w-3 !h-3 !border-2 !border-brand-paper ${STATUS_BG_COLORS_SUBTLE.success}`}
-        style={{ top: '35%', transform: 'translateY(-50%)' }}
+        style={{ top: "35%", transform: "translateY(-50%)" }}
       >
         <div
           className={`
@@ -93,7 +100,7 @@ function IFNodeComponent({ data, selected, dragging }: NodeProps<IFNodeData>) {
             bg-brand-surface border border-brand-outline shadow-sm
             flex items-center gap-1 text-semantic-success
           `}
-          style={{ top: '50%', transform: 'translateY(-50%)' }}
+          style={{ top: "50%", transform: "translateY(-50%)" }}
         >
           <Check className="w-3 h-3" />
           <span>{trueLabel}</span>
@@ -106,7 +113,7 @@ function IFNodeComponent({ data, selected, dragging }: NodeProps<IFNodeData>) {
         position={Position.Right}
         id="output-false"
         className={`!w-3 !h-3 !border-2 !border-brand-paper ${STATUS_BG_COLORS_SUBTLE.error}`}
-        style={{ top: '65%', transform: 'translateY(-50%)' }}
+        style={{ top: "65%", transform: "translateY(-50%)" }}
       >
         <div
           className={`
@@ -114,7 +121,7 @@ function IFNodeComponent({ data, selected, dragging }: NodeProps<IFNodeData>) {
             bg-brand-surface border border-brand-outline shadow-sm
             flex items-center gap-1 text-semantic-error
           `}
-          style={{ top: '50%', transform: 'translateY(-50%)' }}
+          style={{ top: "50%", transform: "translateY(-50%)" }}
         >
           <X className="w-3 h-3" />
           <span>{falseLabel}</span>
@@ -128,4 +135,4 @@ function IFNodeComponent({ data, selected, dragging }: NodeProps<IFNodeData>) {
  * Memoized IF Node (Performance optimization per R04)
  */
 export const IFNode = memo(IFNodeComponent);
-IFNode.displayName = 'IFNode';
+IFNode.displayName = "IFNode";

@@ -1,11 +1,14 @@
-'use client';
+"use client";
 
-import { memo, useMemo } from 'react';
-import { Handle, Position, type NodeProps } from 'reactflow';
-import { GitBranch, AlertCircle } from 'lucide-react';
-import type { SwitchNodeConfig } from '@third-eye/types';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE } from '@/constants/color-mappings';
-import { ANIMATION_DURATION } from '@/constants/timing';
+import { memo, useMemo } from "react";
+import { Handle, Position, type NodeProps } from "reactflow";
+import { GitBranch, AlertCircle } from "lucide-react";
+import type { SwitchNodeConfig } from "@third-eye/types";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
+import { ANIMATION_DURATION } from "@/constants/timing";
 
 /**
  * Switch Node Data Structure
@@ -27,12 +30,10 @@ function calculateHandlePositions(outputCount: number): number[] {
 
   // Distribute evenly with padding
   const padding = 15; // percentage from top/bottom
-  const usableRange = 100 - (padding * 2);
+  const usableRange = 100 - padding * 2;
   const step = usableRange / (outputCount - 1);
 
-  return Array.from({ length: outputCount }, (_, i) =>
-    padding + (i * step)
-  );
+  return Array.from({ length: outputCount }, (_, i) => padding + i * step);
 }
 
 /**
@@ -49,14 +50,18 @@ function calculateHandlePositions(outputCount: number): number[] {
  * Per R04: Memoized for performance
  * Per R07: Strict typing throughout
  */
-function SwitchNodeComponent({ data, selected, dragging }: NodeProps<SwitchNodeData>) {
-  const { label = 'Switch', switchConfig } = data;
+function SwitchNodeComponent({
+  data,
+  selected,
+  dragging,
+}: NodeProps<SwitchNodeData>) {
+  const { label = "Switch", switchConfig } = data;
 
   // Calculate output count and positions
   const outputCount = useMemo(() => {
     if (!switchConfig) return 3; // Default 3 outputs
 
-    if (switchConfig.mode === 'rules') {
+    if (switchConfig.mode === "rules") {
       const rulesCount = switchConfig.rules?.length ?? 0;
       const hasFallback = switchConfig.fallbackOutput !== undefined;
       return Math.max(rulesCount + (hasFallback ? 1 : 0), 1);
@@ -66,32 +71,32 @@ function SwitchNodeComponent({ data, selected, dragging }: NodeProps<SwitchNodeD
     return 3; // Default for expression mode
   }, [switchConfig]);
 
-  const handlePositions = useMemo(() =>
-    calculateHandlePositions(outputCount),
-    [outputCount]
+  const handlePositions = useMemo(
+    () => calculateHandlePositions(outputCount),
+    [outputCount],
   );
 
   // Get rule labels for handles
   const ruleLabels = useMemo(() => {
-    if (!switchConfig || switchConfig.mode !== 'rules') return [];
+    if (!switchConfig || switchConfig.mode !== "rules") return [];
 
-    const labels = (switchConfig.rules ?? []).map(r => r.label);
+    const labels = (switchConfig.rules ?? []).map((r) => r.label);
     if (switchConfig.fallbackOutput !== undefined) {
-      labels.push('Fallback');
+      labels.push("Fallback");
     }
     return labels;
   }, [switchConfig]);
 
   const hasValidConfig = !!switchConfig;
-  const mode = switchConfig?.mode ?? 'rules';
+  const mode = switchConfig?.mode ?? "rules";
 
   return (
     <div
       className={`
         relative min-w-[200px] rounded-lg border-2 bg-brand-paper p-4
         transition-all ${ANIMATION_DURATION.FAST} ease-in-out
-        ${selected ? `border-dashed shadow-2xl ${STATUS_TEXT_COLORS.info}` : 'border-solid shadow-lg border-brand-outline'}
-        ${dragging ? 'cursor-grabbing opacity-80' : 'cursor-grab opacity-100'}
+        ${selected ? `border-dashed shadow-2xl ${STATUS_TEXT_COLORS.info}` : "border-solid shadow-lg border-brand-outline"}
+        ${dragging ? "cursor-grabbing opacity-80" : "cursor-grab opacity-100"}
       `}
     >
       {/* Input Handle */}
@@ -110,7 +115,9 @@ function SwitchNodeComponent({ data, selected, dragging }: NodeProps<SwitchNodeD
       </div>
 
       {/* Mode Badge */}
-      <div className={`text-center text-xs uppercase tracking-wider font-medium mb-1 ${STATUS_TEXT_COLORS.info}`}>
+      <div
+        className={`text-center text-xs uppercase tracking-wider font-medium mb-1 ${STATUS_TEXT_COLORS.info}`}
+      >
         {mode} mode
       </div>
 
@@ -123,30 +130,35 @@ function SwitchNodeComponent({ data, selected, dragging }: NodeProps<SwitchNodeD
       )}
 
       {/* Rules List (shown when selected in rules mode) */}
-      {selected && mode === 'rules' && ruleLabels.length > 0 && (
+      {selected && mode === "rules" && ruleLabels.length > 0 && (
         <div className="mt-2 pt-2 border-t border-brand-outline/40 space-y-1">
-          <div className="text-xs font-medium text-semantic-muted mb-1">Rules:</div>
+          <div className="text-xs font-medium text-semantic-muted mb-1">
+            Rules:
+          </div>
           {ruleLabels.map((ruleLabel, idx) => (
-            <div
-              key={idx}
-              className="flex items-center gap-2 text-xs"
-            >
-              <div className={`w-2 h-2 rounded-full ${STATUS_BG_COLORS_SUBTLE.info}`} />
-              <span className="text-brand-foreground truncate">{ruleLabel}</span>
+            <div key={idx} className="flex items-center gap-2 text-xs">
+              <div
+                className={`w-2 h-2 rounded-full ${STATUS_BG_COLORS_SUBTLE.info}`}
+              />
+              <span className="text-brand-foreground truncate">
+                {ruleLabel}
+              </span>
             </div>
           ))}
         </div>
       )}
 
       {/* Expression Info (shown when selected in expression mode) */}
-      {selected && mode === 'expression' && switchConfig?.expression && (
+      {selected && mode === "expression" && switchConfig?.expression && (
         <div className="mt-2 pt-2 border-t border-brand-outline/40">
-          <div className="text-xs font-medium text-semantic-muted mb-1">Expression:</div>
+          <div className="text-xs font-medium text-semantic-muted mb-1">
+            Expression:
+          </div>
           <div className="text-xs text-brand-foreground font-mono bg-brand-surface rounded px-2 py-1 truncate">
-            {typeof switchConfig.expression === 'string'
+            {typeof switchConfig.expression === "string"
               ? switchConfig.expression.slice(0, 50)
               : JSON.stringify(switchConfig.expression).slice(0, 50)}
-            {(switchConfig.expression.length > 50) && '...'}
+            {switchConfig.expression.length > 50 && "..."}
           </div>
         </div>
       )}
@@ -159,7 +171,7 @@ function SwitchNodeComponent({ data, selected, dragging }: NodeProps<SwitchNodeD
           position={Position.Right}
           id={`output-${idx}`}
           className={`!w-3 !h-3 !border-2 !border-brand-paper ${STATUS_BG_COLORS_SUBTLE.info}`}
-          style={{ top: `${topPercent}%`, transform: 'translateY(-50%)' }}
+          style={{ top: `${topPercent}%`, transform: "translateY(-50%)" }}
         >
           {/* Handle Label (visible on hover/selected) */}
           {(selected || true) && ruleLabels[idx] && (
@@ -169,7 +181,7 @@ function SwitchNodeComponent({ data, selected, dragging }: NodeProps<SwitchNodeD
                 bg-brand-surface border border-brand-outline shadow-sm
                 text-brand-foreground
               `}
-              style={{ top: '50%', transform: 'translateY(-50%)' }}
+              style={{ top: "50%", transform: "translateY(-50%)" }}
             >
               {ruleLabels[idx]}
             </div>
@@ -189,4 +201,4 @@ function SwitchNodeComponent({ data, selected, dragging }: NodeProps<SwitchNodeD
  * Memoized Switch Node (Performance optimization per R04)
  */
 export const SwitchNode = memo(SwitchNodeComponent);
-SwitchNode.displayName = 'SwitchNode';
+SwitchNode.displayName = "SwitchNode";

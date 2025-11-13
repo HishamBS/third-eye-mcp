@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { LucideIcon } from 'lucide-react';
-import { motion } from 'framer-motion';
+import Link from "next/link";
+import { LucideIcon } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface EmptyStateAction {
   label: string;
   href?: string;
   onClick?: () => void;
-  variant?: 'primary' | 'secondary';
+  variant?: "primary" | "secondary";
 }
 
 interface EmptyStateProps {
@@ -19,7 +19,13 @@ interface EmptyStateProps {
   illustration?: React.ReactNode;
 }
 
-export function EmptyState({ icon: Icon, title, description, actions, illustration }: EmptyStateProps) {
+export function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  actions,
+  illustration,
+}: EmptyStateProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -31,7 +37,7 @@ export function EmptyState({ icon: Icon, title, description, actions, illustrati
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        transition={{ delay: 0.2, type: 'spring', stiffness: 200, damping: 15 }}
+        transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 15 }}
         className="mb-6"
       >
         {illustration || (
@@ -70,9 +76,10 @@ export function EmptyState({ icon: Icon, title, description, actions, illustrati
           className="flex items-center gap-3"
         >
           {actions.map((action, index) => {
-            const buttonClasses = action.variant === 'secondary'
-              ? 'rounded-lg border border-brand-outline/50 bg-brand-paper px-6 py-3 text-sm font-medium text-brand-foreground hover:border-brand-accent hover:bg-brand-paperElev transition-colors'
-              : 'rounded-lg bg-brand-accent px-6 py-3 text-sm font-medium text-brand-foreground hover:bg-brand-primary transition-colors shadow-lg shadow-brand-accent/20';
+            const buttonClasses =
+              action.variant === "secondary"
+                ? "rounded-lg border border-brand-outline/50 bg-brand-paper px-6 py-3 text-sm font-medium text-brand-foreground hover:border-brand-accent hover:bg-brand-paperElev transition-colors"
+                : "rounded-lg bg-brand-accent px-6 py-3 text-sm font-medium text-brand-foreground hover:bg-brand-primary transition-colors shadow-lg shadow-brand-accent/20";
 
             if (action.href) {
               return (

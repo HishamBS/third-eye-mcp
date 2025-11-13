@@ -28,6 +28,7 @@ bunx third-eye-mcp up
 ```
 
 This command will:
+
 - Download the latest `third-eye-mcp` release from npm
 - Seed the local database at `~/.third-eye-mcp/mcp.db` if it does not exist
 - Start the MCP server on `http://127.0.0.1:7070`
@@ -109,4 +110,3 @@ bun run dev
 - Learn how to connect Claude, Cursor, Warp, and other clients in the [Usage Guide](./usage.md)
 - Configure routing, telemetry, and strictness profiles in [Configuration](./configuration.md)
 - Explore the inner workings in the [Architecture](./ARCHITECTURE.md) documentation
-

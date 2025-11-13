@@ -1,10 +1,10 @@
 /**
  * Load provider keys from database into config at runtime
  */
-import { getDb } from '@third-eye/db';
-import { providerKeys } from '@third-eye/db/schema';
-import { decryptFromStorage } from './encryption';
-import { getConfig } from '@third-eye/config';
+import { getDb } from "@third-eye/db";
+import { providerKeys } from "@third-eye/db/schema";
+import { decryptFromStorage } from "./encryption";
+import { getConfig } from "@third-eye/config";
 
 let keysLoaded = false;
 
@@ -19,7 +19,11 @@ export async function loadProviderKeysIntoConfig(): Promise<void> {
     console.log(`🔑 Loading ${keys.length} provider keys from database...`);
 
     for (const key of keys) {
-      const provider = key.provider as 'groq' | 'openrouter' | 'ollama' | 'lmstudio';
+      const provider = key.provider as
+        | "groq"
+        | "openrouter"
+        | "ollama"
+        | "lmstudio";
 
       try {
         // Decrypt the API key
@@ -27,14 +31,20 @@ export async function loadProviderKeysIntoConfig(): Promise<void> {
 
         // Initialize provider config with defaults if needed
         if (!config.providers[provider]) {
-          if (provider === 'groq') {
-            config.providers[provider] = { baseUrl: 'https://api.groq.com/openai/v1', apiKey: decryptedKey };
-          } else if (provider === 'openrouter') {
-            config.providers[provider] = { baseUrl: 'https://openrouter.ai/api/v1', apiKey: decryptedKey };
-          } else if (provider === 'ollama') {
-            config.providers[provider] = { baseUrl: 'http://127.0.0.1:11434' };
-          } else if (provider === 'lmstudio') {
-            config.providers[provider] = { baseUrl: 'http://127.0.0.1:1234' };
+          if (provider === "groq") {
+            config.providers[provider] = {
+              baseUrl: "https://api.groq.com/openai/v1",
+              apiKey: decryptedKey,
+            };
+          } else if (provider === "openrouter") {
+            config.providers[provider] = {
+              baseUrl: "https://openrouter.ai/api/v1",
+              apiKey: decryptedKey,
+            };
+          } else if (provider === "ollama") {
+            config.providers[provider] = { baseUrl: "http://127.0.0.1:11434" };
+          } else if (provider === "lmstudio") {
+            config.providers[provider] = { baseUrl: "http://127.0.0.1:1234" };
           }
         } else {
           Object.assign(config.providers[provider], { apiKey: decryptedKey });
@@ -48,6 +58,6 @@ export async function loadProviderKeysIntoConfig(): Promise<void> {
 
     keysLoaded = true;
   } catch (error) {
-    console.error('⚠️  Failed to load provider keys:', error);
+    console.error("⚠️  Failed to load provider keys:", error);
   }
 }

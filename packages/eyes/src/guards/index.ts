@@ -1,8 +1,7 @@
 /**
  * Guards Module
- * 
+ *
  * Exports for persona validation guards
  */
 
-export * from './persona-guards';
-
+export * from "./persona-guards";

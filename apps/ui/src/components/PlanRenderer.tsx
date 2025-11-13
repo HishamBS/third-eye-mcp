@@ -1,5 +1,9 @@
-import { useState } from 'react';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { useState } from "react";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
 
 interface PlanNode {
   title: string;
@@ -8,21 +12,21 @@ interface PlanNode {
 
 interface FileImpact {
   path: string;
-  action: 'create' | 'modify' | 'delete';
-  phase?: 'scaffold' | 'impl' | 'tests' | 'docs';
+  action: "create" | "modify" | "delete";
+  phase?: "scaffold" | "impl" | "tests" | "docs";
 }
 
 function parsePlan(planMd?: string): PlanNode[] {
   if (!planMd) return [];
-  const lines = planMd.split('\n');
+  const lines = planMd.split("\n");
   const nodes: PlanNode[] = [];
   let current: PlanNode | null = null;
   for (const line of lines) {
-    if (line.startsWith('### ')) {
+    if (line.startsWith("### ")) {
       if (current) nodes.push(current);
-      current = { title: line.replace(/^###\s*/, ''), items: [] };
-    } else if (line.startsWith('- ') || line.startsWith('* ')) {
-      current?.items.push(line.replace(/^[-*]\s*/, ''));
+      current = { title: line.replace(/^###\s*/, ""), items: [] };
+    } else if (line.startsWith("- ") || line.startsWith("* ")) {
+      current?.items.push(line.replace(/^[-*]\s*/, ""));
     }
   }
   if (current) nodes.push(current);
@@ -33,7 +37,7 @@ function extractFileImpacts(planMd?: string): FileImpact[] {
   if (!planMd) return [];
 
   const impacts: FileImpact[] = [];
-  const lines = planMd.split('\n');
+  const lines = planMd.split("\n");
 
   for (const line of lines) {
     // Match patterns like: "- Create src/components/Foo.tsx"
@@ -42,11 +46,11 @@ function extractFileImpacts(planMd?: string): FileImpact[] {
     const deleteMatch = line.match(/delete|remove\s+([^\s]+\.\w+)/i);
 
     if (createMatch) {
-      impacts.push({ path: createMatch[1], action: 'create' });
+      impacts.push({ path: createMatch[1], action: "create" });
     } else if (modifyMatch) {
-      impacts.push({ path: modifyMatch[1], action: 'modify' });
+      impacts.push({ path: modifyMatch[1], action: "modify" });
     } else if (deleteMatch) {
-      impacts.push({ path: deleteMatch[1], action: 'delete' });
+      impacts.push({ path: deleteMatch[1], action: "delete" });
     }
   }
 
@@ -57,8 +61,8 @@ function buildFileTree(impacts: FileImpact[]): Record<string, FileImpact[]> {
   const tree: Record<string, FileImpact[]> = {};
 
   for (const impact of impacts) {
-    const parts = impact.path.split('/');
-    const dir = parts.slice(0, -1).join('/') || 'root';
+    const parts = impact.path.split("/");
+    const dir = parts.slice(0, -1).join("/") || "root";
 
     if (!tree[dir]) tree[dir] = [];
     tree[dir].push(impact);
@@ -72,8 +76,10 @@ export interface PlanRendererProps {
 }
 
 export function PlanRenderer({ planMd }: PlanRendererProps) {
-  const [view, setView] = useState<'plan' | 'files' | 'kanban'>('plan');
-  const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set(['root']));
+  const [view, setView] = useState<"plan" | "files" | "kanban">("plan");
+  const [expandedDirs, setExpandedDirs] = useState<Set<string>>(
+    new Set(["root"]),
+  );
 
   const nodes = parsePlan(planMd);
   const fileImpacts = extractFileImpacts(planMd);
@@ -99,19 +105,25 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
     });
   };
 
-  const getActionColor = (action: FileImpact['action']) => {
+  const getActionColor = (action: FileImpact["action"]) => {
     switch (action) {
-      case 'create': return '${STATUS_TEXT_COLORS.success}';
-      case 'modify': return '${STATUS_TEXT_COLORS.warning}';
-      case 'delete': return '${STATUS_TEXT_COLORS.error}';
+      case "create":
+        return "${STATUS_TEXT_COLORS.success}";
+      case "modify":
+        return "${STATUS_TEXT_COLORS.warning}";
+      case "delete":
+        return "${STATUS_TEXT_COLORS.error}";
     }
   };
 
-  const getActionIcon = (action: FileImpact['action']) => {
+  const getActionIcon = (action: FileImpact["action"]) => {
     switch (action) {
-      case 'create': return '+';
-      case 'modify': return '~';
-      case 'delete': return '-';
+      case "create":
+        return "+";
+      case "modify":
+        return "~";
+      case "delete":
+        return "-";
     }
   };
 
@@ -119,36 +131,45 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
     <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-semantic-muted">
       <header className="mb-4 flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Visual Plan</p>
-          <h3 className="text-lg font-semibold text-brand-foreground">Implementation Roadmap</h3>
+          <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">
+            Visual Plan
+          </p>
+          <h3 className="text-lg font-semibold text-brand-foreground">
+            Implementation Roadmap
+          </h3>
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => setView('plan')}
-            className={`px-3 py-1 rounded text-xs ${view === 'plan' ? 'bg-brand-accent text-brand-foreground' : 'text-semantic-muted hover:text-brand-foreground'}`}
+            onClick={() => setView("plan")}
+            className={`px-3 py-1 rounded text-xs ${view === "plan" ? "bg-brand-accent text-brand-foreground" : "text-semantic-muted hover:text-brand-foreground"}`}
           >
             Plan
           </button>
           <button
-            onClick={() => setView('files')}
-            className={`px-3 py-1 rounded text-xs ${view === 'files' ? 'bg-brand-accent text-brand-foreground' : 'text-semantic-muted hover:text-brand-foreground'}`}
+            onClick={() => setView("files")}
+            className={`px-3 py-1 rounded text-xs ${view === "files" ? "bg-brand-accent text-brand-foreground" : "text-semantic-muted hover:text-brand-foreground"}`}
           >
             Files ({fileImpacts.length})
           </button>
           <button
-            onClick={() => setView('kanban')}
-            className={`px-3 py-1 rounded text-xs ${view === 'kanban' ? 'bg-brand-accent text-brand-foreground' : 'text-semantic-muted hover:text-brand-foreground'}`}
+            onClick={() => setView("kanban")}
+            className={`px-3 py-1 rounded text-xs ${view === "kanban" ? "bg-brand-accent text-brand-foreground" : "text-semantic-muted hover:text-brand-foreground"}`}
           >
             Kanban
           </button>
         </div>
       </header>
 
-      {view === 'plan' && (
+      {view === "plan" && (
         <div className="grid gap-3 md:grid-cols-2">
           {nodes.map((node) => (
-            <article key={node.title} className="rounded-xl border border-brand-outline/30 bg-brand-paper/80 p-3">
-              <h4 className="text-sm font-semibold text-brand-foreground">{node.title}</h4>
+            <article
+              key={node.title}
+              className="rounded-xl border border-brand-outline/30 bg-brand-paper/80 p-3"
+            >
+              <h4 className="text-sm font-semibold text-brand-foreground">
+                {node.title}
+              </h4>
               <ul className="mt-2 space-y-1 text-xs text-semantic-muted">
                 {node.items.map((item, idx) => (
                   <li key={idx} className="flex items-start gap-2">
@@ -162,15 +183,18 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
         </div>
       )}
 
-      {view === 'files' && (
+      {view === "files" && (
         <div className="space-y-2">
           {Object.entries(fileTree).map(([dir, impacts]) => (
-            <div key={dir} className="rounded-lg border border-brand-outline/30 bg-brand-paper/60 p-2">
+            <div
+              key={dir}
+              className="rounded-lg border border-brand-outline/30 bg-brand-paper/60 p-2"
+            >
               <button
                 onClick={() => toggleDir(dir)}
                 className="flex items-center gap-2 w-full text-left text-xs font-semibold text-brand-foreground hover:text-brand-accent transition"
               >
-                <span>{expandedDirs.has(dir) ? '▼' : '▶'}</span>
+                <span>{expandedDirs.has(dir) ? "▼" : "▶"}</span>
                 <span>📁 {dir}</span>
                 <span className="text-semantic-muted">({impacts.length})</span>
               </button>
@@ -178,11 +202,17 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
                 <ul className="mt-2 ml-6 space-y-1">
                   {impacts.map((impact, idx) => (
                     <li key={idx} className="flex items-center gap-2 text-xs">
-                      <span className={`font-bold ${getActionColor(impact.action)}`}>
+                      <span
+                        className={`font-bold ${getActionColor(impact.action)}`}
+                      >
                         {getActionIcon(impact.action)}
                       </span>
-                      <span className="text-semantic-muted">{impact.path.split('/').pop()}</span>
-                      <span className={`ml-auto ${getActionColor(impact.action)}`}>
+                      <span className="text-semantic-muted">
+                        {impact.path.split("/").pop()}
+                      </span>
+                      <span
+                        className={`ml-auto ${getActionColor(impact.action)}`}
+                      >
                         {impact.action}
                       </span>
                     </li>
@@ -194,35 +224,55 @@ export function PlanRenderer({ planMd }: PlanRendererProps) {
         </div>
       )}
 
-      {view === 'kanban' && (
+      {view === "kanban" && (
         <div className="grid grid-cols-5 gap-2 overflow-x-auto">
-          {['Plan', 'Scaffold', 'Implementation', 'Tests', 'Documentation'].map((phase) => (
-            <div key={phase} className="min-w-[150px]">
-              <div className="rounded-t-lg bg-brand-accent/20 border border-brand-accent/40 px-2 py-1 text-xs font-semibold text-brand-foreground text-center">
-                {phase}
-              </div>
-              <div className="rounded-b-lg border border-brand-outline/30 bg-brand-paper/40 p-2 min-h-[100px] space-y-1">
-                {fileImpacts
-                  .filter((impact) => {
-                    // Simple heuristic for phase detection
-                    if (phase === 'Tests' && impact.path.includes('test')) return true;
-                    if (phase === 'Documentation' && (impact.path.includes('docs') || impact.path.endsWith('.md'))) return true;
-                    if (phase === 'Scaffold' && impact.action === 'create') return true;
-                    if (phase === 'Implementation' && impact.action === 'modify') return true;
-                    return false;
-                  })
-                  .slice(0, 3)
-                  .map((impact, idx) => (
-                    <div key={idx} className="rounded bg-brand-paperElev/80 p-1.5 text-xs border border-brand-outline/20">
-                      <div className={`font-semibold ${getActionColor(impact.action)}`}>
-                        {impact.path.split('/').pop()}
+          {["Plan", "Scaffold", "Implementation", "Tests", "Documentation"].map(
+            (phase) => (
+              <div key={phase} className="min-w-[150px]">
+                <div className="rounded-t-lg bg-brand-accent/20 border border-brand-accent/40 px-2 py-1 text-xs font-semibold text-brand-foreground text-center">
+                  {phase}
+                </div>
+                <div className="rounded-b-lg border border-brand-outline/30 bg-brand-paper/40 p-2 min-h-[100px] space-y-1">
+                  {fileImpacts
+                    .filter((impact) => {
+                      // Simple heuristic for phase detection
+                      if (phase === "Tests" && impact.path.includes("test"))
+                        return true;
+                      if (
+                        phase === "Documentation" &&
+                        (impact.path.includes("docs") ||
+                          impact.path.endsWith(".md"))
+                      )
+                        return true;
+                      if (phase === "Scaffold" && impact.action === "create")
+                        return true;
+                      if (
+                        phase === "Implementation" &&
+                        impact.action === "modify"
+                      )
+                        return true;
+                      return false;
+                    })
+                    .slice(0, 3)
+                    .map((impact, idx) => (
+                      <div
+                        key={idx}
+                        className="rounded bg-brand-paperElev/80 p-1.5 text-xs border border-brand-outline/20"
+                      >
+                        <div
+                          className={`font-semibold ${getActionColor(impact.action)}`}
+                        >
+                          {impact.path.split("/").pop()}
+                        </div>
+                        <div className="text-semantic-muted text-[10px] mt-0.5">
+                          {impact.action}
+                        </div>
                       </div>
-                      <div className="text-semantic-muted text-[10px] mt-0.5">{impact.action}</div>
-                    </div>
-                  ))}
+                    ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ),
+          )}
         </div>
       )}
     </section>

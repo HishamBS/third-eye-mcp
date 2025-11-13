@@ -46,10 +46,10 @@ strictness_profiles (1:1) eye
 
 ```typescript
 {
-  id: string;           // Unique session ID
+  id: string; // Unique session ID
   userId: string | null; // Optional user identifier
   createdAt: Date;
-  metadata: object;      // JSON metadata
+  metadata: object; // JSON metadata
 }
 ```
 
@@ -57,10 +57,10 @@ strictness_profiles (1:1) eye
 
 ```typescript
 {
-  eye: string;          // Eye name (sharingan, rinnegan, etc.)
-  version: number;      // Persona version number
-  content: string;      // Persona prompt template
-  active: boolean;      // Is this the active version?
+  eye: string; // Eye name (sharingan, rinnegan, etc.)
+  version: number; // Persona version number
+  content: string; // Persona prompt template
+  active: boolean; // Is this the active version?
   createdAt: Date;
 }
 ```
@@ -71,9 +71,9 @@ strictness_profiles (1:1) eye
 
 ```typescript
 {
-  eye: string;               // Eye name
-  primaryProvider: string;   // groq | openrouter | ollama | lmstudio
-  primaryModel: string;      // Model ID
+  eye: string; // Eye name
+  primaryProvider: string; // groq | openrouter | ollama | lmstudio
+  primaryModel: string; // Model ID
   fallbackProvider: string | null;
   fallbackModel: string | null;
 }
@@ -85,9 +85,9 @@ strictness_profiles (1:1) eye
 
 ```typescript
 {
-  provider: string;     // groq | openrouter | ollama | lmstudio
-  apiKey: string;       // AES-256-GCM encrypted key
-  encrypted: boolean;   // Always true in production
+  provider: string; // groq | openrouter | ollama | lmstudio
+  apiKey: string; // AES-256-GCM encrypted key
+  encrypted: boolean; // Always true in production
   createdAt: Date;
   lastUsed: Date | null;
   metadata: object;
@@ -178,11 +178,13 @@ cp ~/.third-eye-mcp/backup-20250105.db ~/.third-eye-mcp/mcp.db
 SQLite is optimized for read-heavy workloads. For high-traffic scenarios:
 
 1. **Enable WAL mode** (Write-Ahead Logging):
+
    ```sql
    PRAGMA journal_mode=WAL;
    ```
 
 2. **Increase cache size**:
+
    ```sql
    PRAGMA cache_size=10000;
    ```
@@ -266,5 +268,6 @@ bun run db:studio
 ---
 
 For more details, see:
+
 - [Drizzle ORM Docs](https://orm.drizzle.team/)
 - [SQLite Documentation](https://www.sqlite.org/docs.html)

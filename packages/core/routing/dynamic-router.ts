@@ -8,19 +8,22 @@
  * Per R13: Interfaces exported for SSOT
  */
 
-import type { EyeName } from '@third-eye/types';
-import type { RoutingDecision as CoreRoutingDecision, AutoRouterOptions } from '../auto-router';
-import { autoRouter } from '../auto-router';
-import { EyeStageToken } from '@third-eye/constants';
-import { PolicyValidator } from './policy-validator';
-import type { RoutingPolicy } from './routing-modes';
+import type { EyeName } from "@third-eye/types";
+import type {
+  RoutingDecision as CoreRoutingDecision,
+  AutoRouterOptions,
+} from "../auto-router";
+import { autoRouter } from "../auto-router";
+import { EyeStageToken } from "@third-eye/constants";
+import { PolicyValidator } from "./policy-validator";
+import type { RoutingPolicy } from "./routing-modes";
 
 /**
  * Eye Route Step - Single step in pipeline sequence
  */
 export interface EyeRouteStep {
   readonly eyeId: EyeName;
-  readonly stage: 'guidance' | 'validation' | 'both';
+  readonly stage: "guidance" | "validation" | "both";
   readonly reason: string;
   readonly order: number;
 }
@@ -72,7 +75,7 @@ export class DynamicRouter {
    */
   async analyzeRequest(
     input: string,
-    context: SessionContext
+    context: SessionContext,
   ): Promise<EyeSequence> {
     const options: AutoRouterOptions = {
       strictness: context.strictness,
@@ -87,7 +90,7 @@ export class DynamicRouter {
       input,
       context.sessionId,
       context.sessionId,
-      options
+      options,
     );
 
     // Transform to Phase 17 API format
@@ -107,20 +110,24 @@ export class DynamicRouter {
     const warnings: string[] = [];
 
     // Check for circular dependencies
-    const eyeIds = route.eyes.map(step => step.eyeId);
+    const eyeIds = route.eyes.map((step) => step.eyeId);
     const uniqueEyes = new Set(eyeIds);
     if (uniqueEyes.size !== eyeIds.length) {
-      warnings.push('Route contains duplicate Eyes - may be intentional for multi-pass');
+      warnings.push(
+        "Route contains duplicate Eyes - may be intentional for multi-pass",
+      );
     }
 
     // Check minimum sequence length
     if (route.eyes.length === 0) {
-      errors.push('Route must contain at least one Eye');
+      errors.push("Route must contain at least one Eye");
     }
 
     // Check confidence threshold
     if (route.confidence < 0.5) {
-      warnings.push(`Low confidence route (${route.confidence.toFixed(2)}) - manual review recommended`);
+      warnings.push(
+        `Low confidence route (${route.confidence.toFixed(2)}) - manual review recommended`,
+      );
     }
 
     // Validate stage transitions
@@ -129,8 +136,10 @@ export class DynamicRouter {
       const next = route.eyes[i + 1];
 
       // Guidance should generally come before validation
-      if (current.stage === 'validation' && next.stage === 'guidance') {
-        warnings.push(`Unusual stage order: ${current.eyeId} (validation) → ${next.eyeId} (guidance)`);
+      if (current.stage === "validation" && next.stage === "guidance") {
+        warnings.push(
+          `Unusual stage order: ${current.eyeId} (validation) → ${next.eyeId} (guidance)`,
+        );
       }
     }
 
@@ -154,8 +163,11 @@ export class DynamicRouter {
    * Validate route against routing policy (Constrained Dynamic mode)
    * Phase 1-A2: Integration with PolicyValidator
    */
-  validateRouteAgainstPolicy(route: EyeSequence, policy: RoutingPolicy): ValidationResult {
-    const eyeIds = route.eyes.map(step => step.eyeId);
+  validateRouteAgainstPolicy(
+    route: EyeSequence,
+    policy: RoutingPolicy,
+  ): ValidationResult {
+    const eyeIds = route.eyes.map((step) => step.eyeId);
     const policyResult = this.policyValidator.validateSequence(eyeIds, policy);
 
     return {
@@ -168,7 +180,9 @@ export class DynamicRouter {
   /**
    * Transform core RoutingDecision to Phase 17 EyeSequence format
    */
-  private async transformRoutingDecision(routing: CoreRoutingDecision): Promise<EyeSequence> {
+  private async transformRoutingDecision(
+    routing: CoreRoutingDecision,
+  ): Promise<EyeSequence> {
     const steps: EyeRouteStep[] = [];
     for (let index = 0; index < routing.recommendedFlow.length; index++) {
       const eyeId = routing.recommendedFlow[index];
@@ -192,27 +206,33 @@ export class DynamicRouter {
   /**
    * Infer Eye stage from database capabilities (SSOT)
    */
-  private async inferStage(eyeId: EyeName): Promise<'guidance' | 'validation' | 'both'> {
+  private async inferStage(
+    eyeId: EyeName,
+  ): Promise<"guidance" | "validation" | "both"> {
     try {
       // Query database for eye capabilities (SSOT)
-      const { loadDynamicCapabilities } = await import('../capability-loader');
-      const { getDb } = await import('@third-eye/db');
+      const { loadDynamicCapabilities } = await import("../capability-loader");
+      const { getDb } = await import("@third-eye/db");
       const { db } = getDb();
-      
+
       const capabilityRegistry = await loadDynamicCapabilities(db);
       const eyeCapabilities = capabilityRegistry[eyeId];
-      
+
       if (eyeCapabilities) {
         // Determine stage from capabilities
-        if (eyeCapabilities.stage === EyeStageToken.GUIDANCE) return 'guidance';
-        if (eyeCapabilities.stage === EyeStageToken.VALIDATION) return 'validation';
+        if (eyeCapabilities.stage === EyeStageToken.GUIDANCE) return "guidance";
+        if (eyeCapabilities.stage === EyeStageToken.VALIDATION)
+          return "validation";
       }
-      
+
       // Default to both if unsure or not found
-      return 'both';
+      return "both";
     } catch (error) {
-      console.warn(`[DynamicRouter] Failed to infer stage for ${eyeId}:`, error);
-      return 'both';
+      console.warn(
+        `[DynamicRouter] Failed to infer stage for ${eyeId}:`,
+        error,
+      );
+      return "both";
     }
   }
 
@@ -221,9 +241,9 @@ export class DynamicRouter {
    */
   private extractReasonForEye(eyeId: EyeName, reasoning: string): string {
     // Try to find Eye-specific rationale in reasoning text
-    const lines = reasoning.split('\n');
-    const eyeLine = lines.find(line =>
-      line.toLowerCase().includes(eyeId.toLowerCase())
+    const lines = reasoning.split("\n");
+    const eyeLine = lines.find((line) =>
+      line.toLowerCase().includes(eyeId.toLowerCase()),
     );
 
     if (eyeLine) {
@@ -242,8 +262,8 @@ export class DynamicRouter {
     let confidence = 0.8; // Base confidence
 
     // Higher complexity = lower confidence (more uncertain)
-    if (routing.complexity === 'complex') confidence -= 0.2;
-    if (routing.complexity === 'simple') confidence += 0.1;
+    if (routing.complexity === "complex") confidence -= 0.2;
+    if (routing.complexity === "simple") confidence += 0.1;
 
     // Very short or very long flows may indicate uncertainty
     if (routing.recommendedFlow.length < 2) confidence -= 0.1;

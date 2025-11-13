@@ -15,13 +15,13 @@
  */
 export enum RoutingMode {
   /** Overseer analyzes request and dynamically selects optimal eyes */
-  FULLY_DYNAMIC = 'fully_dynamic',
+  FULLY_DYNAMIC = "fully_dynamic",
 
   /** Overseer routes within user-defined constraints */
-  CONSTRAINED_DYNAMIC = 'constrained',
+  CONSTRAINED_DYNAMIC = "constrained",
 
   /** User-defined exact sequence, no dynamic routing */
-  FIXED_TEMPLATE = 'fixed'
+  FIXED_TEMPLATE = "fixed",
 }
 
 /**
@@ -32,11 +32,11 @@ export interface RoutingPolicy {
   readonly id: string;
   readonly name: string;
   readonly description?: string;
-  readonly mandatoryEyes: readonly string[];        // Always include these
-  readonly forbiddenEyes?: readonly string[];       // Never use these
-  readonly minValidationEyes?: number;              // Minimum validation steps
-  readonly securityRequired?: boolean;              // Must include security validation
-  readonly alwaysConfirmIntent?: boolean;           // Jōgan always required
+  readonly mandatoryEyes: readonly string[]; // Always include these
+  readonly forbiddenEyes?: readonly string[]; // Never use these
+  readonly minValidationEyes?: number; // Minimum validation steps
+  readonly securityRequired?: boolean; // Must include security validation
+  readonly alwaysConfirmIntent?: boolean; // Jōgan always required
   readonly customConstraints?: readonly Constraint[];
   readonly isActive: boolean;
   readonly createdAt: number;
@@ -46,7 +46,11 @@ export interface RoutingPolicy {
  * Custom constraint for routing policy
  */
 export interface Constraint {
-  readonly type: 'must_include' | 'must_exclude' | 'sequence_order' | 'max_eyes';
+  readonly type:
+    | "must_include"
+    | "must_exclude"
+    | "sequence_order"
+    | "max_eyes";
   readonly value: unknown;
   readonly reason: string;
 }
@@ -59,9 +63,9 @@ export interface PipelineTemplate {
   readonly id: string;
   readonly name: string;
   readonly description?: string;
-  readonly eyes: readonly string[];                 // Exact sequence
-  readonly strict: boolean;                         // No deviations allowed
-  readonly autoTriggerPattern?: string;             // Regex for automatic triggering
+  readonly eyes: readonly string[]; // Exact sequence
+  readonly strict: boolean; // No deviations allowed
+  readonly autoTriggerPattern?: string; // Regex for automatic triggering
   readonly createdBy?: string;
   readonly isPublic: boolean;
   readonly usageCount: number;
@@ -82,7 +86,7 @@ export interface PolicyValidationResult {
  */
 export interface RoutingContext {
   readonly sessionId: string;
-  readonly requestType: 'new_task' | 'draft_review' | 'validation_only';
+  readonly requestType: "new_task" | "draft_review" | "validation_only";
   readonly mode: RoutingMode;
   readonly policyId?: string;
   readonly templateId?: string;

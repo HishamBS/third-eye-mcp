@@ -5,9 +5,9 @@
  * Per R16: Ready for backend integration (placeholders for now)
  */
 
-import { useState, useCallback } from 'react';
-import { useAPI } from './useAPI';
-import type { Pipeline, PipelineNode, PipelineEdge } from '@/types/pipeline';
+import { useState, useCallback } from "react";
+import { useAPI } from "./useAPI";
+import type { Pipeline, PipelineNode, PipelineEdge } from "@/types/pipeline";
 
 /**
  * Get all pipelines
@@ -23,7 +23,7 @@ export function usePipelines() {
     setLoading(true);
     setError(null);
     try {
-      const data = await get<Pipeline[]>('/api/pipelines');
+      const data = await get<Pipeline[]>("/api/pipelines");
       setPipelines(data);
     } catch (err) {
       setError(err as Error);
@@ -49,7 +49,7 @@ export function useActivePipeline() {
     setLoading(true);
     setError(null);
     try {
-      const data = await get<Pipeline>('/api/pipelines/active');
+      const data = await get<Pipeline>("/api/pipelines/active");
       setPipeline(data);
     } catch (err) {
       setError(err as Error);
@@ -76,14 +76,24 @@ export function useSavePipeline() {
       name: string,
       description: string,
       nodes: PipelineNode[],
-      edges: PipelineEdge[]
+      edges: PipelineEdge[],
     ): Promise<Pipeline | null> => {
       setLoading(true);
       setError(null);
       try {
         const data = pipelineId
-          ? await put<Pipeline>(`/api/pipelines/${pipelineId}`, { name, description, nodes, edges })
-          : await post<Pipeline>('/api/pipelines', { name, description, nodes, edges });
+          ? await put<Pipeline>(`/api/pipelines/${pipelineId}`, {
+              name,
+              description,
+              nodes,
+              edges,
+            })
+          : await post<Pipeline>("/api/pipelines", {
+              name,
+              description,
+              nodes,
+              edges,
+            });
         return data;
       } catch (err) {
         setError(err as Error);
@@ -92,7 +102,7 @@ export function useSavePipeline() {
         setLoading(false);
       }
     },
-    [post, put]
+    [post, put],
   );
 
   return { save, loading, error };
@@ -121,7 +131,7 @@ export function useActivatePipeline() {
         setLoading(false);
       }
     },
-    [post]
+    [post],
   );
 
   return { activate, loading, error };
@@ -150,7 +160,7 @@ export function useDeletePipeline() {
         setLoading(false);
       }
     },
-    [del]
+    [del],
   );
 
   return { deletePipeline, loading, error };

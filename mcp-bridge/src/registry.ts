@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Tool metadata for MCP discovery
@@ -75,30 +75,31 @@ export const toolRegistry = new ToolRegistry();
 
 // Register built-in Eyes
 toolRegistry.register({
-  name: 'sharingan',
-  description: 'Ambiguity Radar - Detects vague, ambiguous, or underspecified requests',
-  version: '1.0.0',
-  tags: ['clarification', 'validation', 'input-analysis'],
+  name: "sharingan",
+  description:
+    "Ambiguity Radar - Detects vague, ambiguous, or underspecified requests",
+  version: "1.0.0",
+  tags: ["clarification", "validation", "input-analysis"],
   inputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      prompt: { type: 'string', minLength: 1 },
-      lang: { enum: ['auto', 'en', 'ar'] },
+      prompt: { type: "string", minLength: 1 },
+      lang: { enum: ["auto", "en", "ar"] },
     },
-    required: ['prompt'],
+    required: ["prompt"],
   },
   outputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      eye: { type: 'string' },
-      code: { type: 'string' },
-      verdict: { enum: ['APPROVED', 'REJECTED', 'NEEDS_INPUT'] },
-      summary: { type: 'string' },
+      eye: { type: "string" },
+      code: { type: "string" },
+      verdict: { enum: ["APPROVED", "REJECTED", "NEEDS_INPUT"] },
+      summary: { type: "string" },
       metadata: {
-        type: 'object',
+        type: "object",
         properties: {
-          ambiguityScore: { type: 'number' },
-          clarifyingQuestions: { type: 'array', items: { type: 'string' } },
+          ambiguityScore: { type: "number" },
+          clarifyingQuestions: { type: "array", items: { type: "string" } },
         },
       },
     },
@@ -106,126 +107,130 @@ toolRegistry.register({
 });
 
 toolRegistry.register({
-  name: 'kyuubi',
-  description: 'Prompt Rewriter - Transforms vague prompts into structured ROLE/TASK/CONTEXT/REQUIREMENTS/OUTPUT format',
-  version: '1.0.0',
-  tags: ['prompt-engineering', 'optimization'],
+  name: "kyuubi",
+  description:
+    "Prompt Rewriter - Transforms vague prompts into structured ROLE/TASK/CONTEXT/REQUIREMENTS/OUTPUT format",
+  version: "1.0.0",
+  tags: ["prompt-engineering", "optimization"],
   inputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      user_prompt: { type: 'string', minLength: 1 },
-      clarification_answers_md: { type: 'string' },
+      user_prompt: { type: "string", minLength: 1 },
+      clarification_answers_md: { type: "string" },
     },
-    required: ['user_prompt'],
+    required: ["user_prompt"],
   },
   outputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      eye: { type: 'string' },
-      code: { type: 'string' },
-      verdict: { enum: ['APPROVED', 'REJECTED', 'NEEDS_INPUT'] },
-      summary: { type: 'string' },
-      details: { type: 'string' },
+      eye: { type: "string" },
+      code: { type: "string" },
+      verdict: { enum: ["APPROVED", "REJECTED", "NEEDS_INPUT"] },
+      summary: { type: "string" },
+      details: { type: "string" },
     },
   },
 });
 
 toolRegistry.register({
-  name: 'jogan',
-  description: 'Intent Confirmation - Confirms user intent and task understanding',
-  version: '1.0.0',
-  tags: ['intent', 'confirmation', 'understanding'],
+  name: "jogan",
+  description:
+    "Intent Confirmation - Confirms user intent and task understanding",
+  version: "1.0.0",
+  tags: ["intent", "confirmation", "understanding"],
   inputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      refined_prompt_md: { type: 'string', minLength: 1 },
-      estimated_tokens: { type: 'number', minimum: 0 },
+      refined_prompt_md: { type: "string", minLength: 1 },
+      estimated_tokens: { type: "number", minimum: 0 },
     },
-    required: ['refined_prompt_md', 'estimated_tokens'],
+    required: ["refined_prompt_md", "estimated_tokens"],
   },
   outputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      eye: { type: 'string' },
-      code: { type: 'string' },
-      verdict: { enum: ['APPROVED', 'REJECTED', 'NEEDS_INPUT'] },
-      summary: { type: 'string' },
+      eye: { type: "string" },
+      code: { type: "string" },
+      verdict: { enum: ["APPROVED", "REJECTED", "NEEDS_INPUT"] },
+      summary: { type: "string" },
     },
   },
 });
 
 toolRegistry.register({
-  name: 'rinnegan',
-  description: 'Plan Requirements/Review/Approval - Manages planning lifecycle',
-  version: '1.0.0',
-  tags: ['planning', 'requirements', 'review', 'approval'],
+  name: "rinnegan",
+  description: "Plan Requirements/Review/Approval - Manages planning lifecycle",
+  version: "1.0.0",
+  tags: ["planning", "requirements", "review", "approval"],
   inputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      mode: { enum: ['requirements', 'review', 'approval'] },
-      data: { type: 'object' },
+      mode: { enum: ["requirements", "review", "approval"] },
+      data: { type: "object" },
     },
   },
   outputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      eye: { type: 'string' },
-      code: { type: 'string' },
-      verdict: { enum: ['APPROVED', 'REJECTED', 'NEEDS_INPUT'] },
-      summary: { type: 'string' },
+      eye: { type: "string" },
+      code: { type: "string" },
+      verdict: { enum: ["APPROVED", "REJECTED", "NEEDS_INPUT"] },
+      summary: { type: "string" },
     },
   },
 });
 
 toolRegistry.register({
-  name: 'mangekyo',
-  description: 'Code Gates - Reviews scaffold, implementation, tests, and documentation',
-  version: '1.0.0',
-  tags: ['code-review', 'quality', 'gates'],
+  name: "mangekyo",
+  description:
+    "Code Gates - Reviews scaffold, implementation, tests, and documentation",
+  version: "1.0.0",
+  tags: ["code-review", "quality", "gates"],
   inputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      gate: { enum: ['scaffold', 'impl', 'tests', 'docs'] },
-      diffs_md: { type: 'string' },
+      gate: { enum: ["scaffold", "impl", "tests", "docs"] },
+      diffs_md: { type: "string" },
     },
-    required: ['gate'],
+    required: ["gate"],
   },
   outputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      eye: { type: 'string' },
-      code: { type: 'string' },
-      verdict: { enum: ['APPROVED', 'REJECTED', 'NEEDS_INPUT'] },
-      summary: { type: 'string' },
+      eye: { type: "string" },
+      code: { type: "string" },
+      verdict: { enum: ["APPROVED", "REJECTED", "NEEDS_INPUT"] },
+      summary: { type: "string" },
     },
   },
 });
 
 toolRegistry.register({
-  name: 'tenseigan',
-  description: 'Evidence Validation - Validates claims with citations and evidence',
-  version: '1.0.0',
-  tags: ['validation', 'evidence', 'citations', 'fact-checking'],
+  name: "tenseigan",
+  description:
+    "Evidence Validation - Validates claims with citations and evidence",
+  version: "1.0.0",
+  tags: ["validation", "evidence", "citations", "fact-checking"],
   inputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      draft_md: { type: 'string', minLength: 1 },
+      draft_md: { type: "string", minLength: 1 },
     },
-    required: ['draft_md'],
+    required: ["draft_md"],
   },
   outputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      eye: { type: 'string' },
-      code: { type: 'string' },
-      verdict: { enum: ['APPROVED', 'REJECTED', 'NEEDS_INPUT'] },
-      summary: { type: 'string' },
+      eye: { type: "string" },
+      code: { type: "string" },
+      verdict: { enum: ["APPROVED", "REJECTED", "NEEDS_INPUT"] },
+      summary: { type: "string" },
       metadata: {
-        type: 'object',
+        type: "object",
         properties: {
-          totalClaims: { type: 'number' },
-          citedClaims: { type: 'number' },
-          citationRate: { type: 'number' },
+          totalClaims: { type: "number" },
+          citedClaims: { type: "number" },
+          citationRate: { type: "number" },
         },
       },
     },
@@ -233,53 +238,55 @@ toolRegistry.register({
 });
 
 toolRegistry.register({
-  name: 'byakugan',
-  description: 'Consistency Checker - Detects logical contradictions and inconsistencies',
-  version: '1.0.0',
-  tags: ['consistency', 'validation', 'logic'],
+  name: "byakugan",
+  description:
+    "Consistency Checker - Detects logical contradictions and inconsistencies",
+  version: "1.0.0",
+  tags: ["consistency", "validation", "logic"],
   inputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      topic: { type: 'string', minLength: 1 },
-      draft_md: { type: 'string', minLength: 1 },
+      topic: { type: "string", minLength: 1 },
+      draft_md: { type: "string", minLength: 1 },
     },
-    required: ['topic', 'draft_md'],
+    required: ["topic", "draft_md"],
   },
   outputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      eye: { type: 'string' },
-      code: { type: 'string' },
-      verdict: { enum: ['APPROVED', 'REJECTED', 'NEEDS_INPUT'] },
-      summary: { type: 'string' },
+      eye: { type: "string" },
+      code: { type: "string" },
+      verdict: { enum: ["APPROVED", "REJECTED", "NEEDS_INPUT"] },
+      summary: { type: "string" },
     },
   },
 });
 
 toolRegistry.register({
-  name: 'overseer',
-  description: 'Pipeline Navigator - Recommends next Eye based on current state',
-  version: '1.0.0',
-  tags: ['navigation', 'orchestration', 'routing'],
+  name: "overseer",
+  description:
+    "Pipeline Navigator - Recommends next Eye based on current state",
+  version: "1.0.0",
+  tags: ["navigation", "orchestration", "routing"],
   inputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      goal: { type: 'string' },
-      currentState: { type: 'object' },
+      goal: { type: "string" },
+      currentState: { type: "object" },
     },
   },
   outputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      eye: { type: 'string' },
-      code: { type: 'string' },
-      verdict: { enum: ['APPROVED', 'REJECTED', 'NEEDS_INPUT'] },
-      summary: { type: 'string' },
+      eye: { type: "string" },
+      code: { type: "string" },
+      verdict: { enum: ["APPROVED", "REJECTED", "NEEDS_INPUT"] },
+      summary: { type: "string" },
       metadata: {
-        type: 'object',
+        type: "object",
         properties: {
-          recommendedEye: { type: 'string' },
-          reasoning: { type: 'string' },
+          recommendedEye: { type: "string" },
+          reasoning: { type: "string" },
         },
       },
     },

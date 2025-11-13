@@ -1,24 +1,29 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Play, Trophy, Clock, Zap } from 'lucide-react';
-import { useDialog } from '@/hooks/useDialog';
-import { API_BASE_URL } from '@/consts/api';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE, STATUS_BG_COLORS } from '@/constants/color-mappings';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Play, Trophy, Clock, Zap } from "lucide-react";
+import { useDialog } from "@/hooks/useDialog";
+import { API_BASE_URL } from "@/consts/api";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+  STATUS_BG_COLORS,
+} from "@/constants/color-mappings";
 
-const ALLOWED_PROVIDERS = ['groq', 'ollama', 'lmstudio'] as const;
+const ALLOWED_PROVIDERS = ["groq", "ollama", "lmstudio"] as const;
 
 const PROVIDER_LABELS: Record<string, string> = {
-  groq: 'Groq',
-  ollama: 'Ollama',
-  lmstudio: 'LM Studio',
+  groq: "Groq",
+  ollama: "Ollama",
+  lmstudio: "LM Studio",
 };
 
 const FALLBACK_PROVIDER_MODELS: Record<string, string[]> = {
-  groq: ['llama-3.3-70b-versatile', 'mixtral-8x7b-32768'],
-  ollama: ['llama3.1:8b', 'qwen2.5:14b'],
-  lmstudio: ['local-model'],
+  groq: ["llama-3.3-70b-versatile", "mixtral-8x7b-32768"],
+  ollama: ["llama3.1:8b", "qwen2.5:14b"],
+  lmstudio: ["local-model"],
 };
 
 interface DuelConfig {
@@ -34,7 +39,7 @@ interface DuelResult {
   latency: number;
   tokens: { input: number; output: number };
   cost?: number;
-  verdict: 'APPROVED' | 'REJECTED' | 'NEEDS_INPUT';
+  verdict: "APPROVED" | "REJECTED" | "NEEDS_INPUT";
   confidence?: number;
   score: number;
 }
@@ -51,10 +56,12 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<DuelResult[]>([]);
   const [winner, setWinner] = useState<string | null>(null);
-  const [availableProviders, setAvailableProviders] = useState<Record<string, string[]>>(FALLBACK_PROVIDER_MODELS);
+  const [availableProviders, setAvailableProviders] = useState<
+    Record<string, string[]>
+  >(FALLBACK_PROVIDER_MODELS);
   const [loadingProviders, setLoadingProviders] = useState(false);
-  const [stagedProvider, setStagedProvider] = useState<string>('');
-  const [stagedModel, setStagedModel] = useState<string>('');
+  const [stagedProvider, setStagedProvider] = useState<string>("");
+  const [stagedModel, setStagedModel] = useState<string>("");
 
   useEffect(() => {
     const fetchProviders = async () => {
@@ -79,12 +86,15 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
             : [];
           const names = entries
             .map((model: ModelEntry) => {
-              if (typeof model === 'string') return model;
+              if (typeof model === "string") return model;
               if (model?.name) return model.name;
               if (model?.displayName) return model.displayName;
-              return '';
+              return "";
             })
-            .filter((name): name is string => typeof name === 'string' && name.trim().length > 0)
+            .filter(
+              (name): name is string =>
+                typeof name === "string" && name.trim().length > 0,
+            )
             .filter((name) => !/claude|chatgpt|gpt/i.test(name));
 
           if (names.length > 0) {
@@ -92,9 +102,11 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
           }
         }
 
-        setAvailableProviders(Object.keys(mapped).length > 0 ? mapped : FALLBACK_PROVIDER_MODELS);
+        setAvailableProviders(
+          Object.keys(mapped).length > 0 ? mapped : FALLBACK_PROVIDER_MODELS,
+        );
       } catch (error) {
-        console.error('Failed to load provider models for duel mode:', error);
+        console.error("Failed to load provider models for duel mode:", error);
         setAvailableProviders(FALLBACK_PROVIDER_MODELS);
       } finally {
         setLoadingProviders(false);
@@ -107,8 +119,8 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
   useEffect(() => {
     const providers = Object.keys(availableProviders);
     if (providers.length === 0) {
-      setStagedProvider('');
-      setStagedModel('');
+      setStagedProvider("");
+      setStagedModel("");
       return;
     }
 
@@ -116,7 +128,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
       const firstProvider = providers[0];
       setStagedProvider(firstProvider);
       const models = availableProviders[firstProvider] || [];
-      setStagedModel(models[0] ?? '');
+      setStagedModel(models[0] ?? "");
     }
   }, [availableProviders, stagedProvider]);
 
@@ -124,20 +136,25 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
     if (!stagedProvider) return;
     const models = availableProviders[stagedProvider] || [];
     if (!models.includes(stagedModel)) {
-      setStagedModel(models[0] ?? '');
+      setStagedModel(models[0] ?? "");
     }
   }, [stagedProvider, availableProviders]);
 
   const formatProviderName = (provider: string) =>
-    PROVIDER_LABELS[provider] || provider.replace(/[_-]/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+    PROVIDER_LABELS[provider] ||
+    provider
+      .replace(/[_-]/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
 
   const addConfig = async (provider: string, model: string) => {
     if (selectedConfigs.length >= 4) {
-      await dialog.alert('Maximum Models', 'Maximum 4 models for duel');
+      await dialog.alert("Maximum Models", "Maximum 4 models for duel");
       return;
     }
-    if (selectedConfigs.some(c => c.provider === provider && c.model === model)) {
-      await dialog.alert('Duplicate Model', 'Model already selected');
+    if (
+      selectedConfigs.some((c) => c.provider === provider && c.model === model)
+    ) {
+      await dialog.alert("Duplicate Model", "Model already selected");
       return;
     }
     setSelectedConfigs([...selectedConfigs, { provider, model }]);
@@ -145,7 +162,10 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
 
   const handleAddCurrentConfig = async () => {
     if (!stagedProvider || !stagedModel) {
-      await dialog.alert('Selection Required', 'Choose both a provider and a model before adding a competitor.');
+      await dialog.alert(
+        "Selection Required",
+        "Choose both a provider and a model before adding a competitor.",
+      );
       return;
     }
     await addConfig(stagedProvider, stagedModel);
@@ -157,7 +177,10 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
 
   const runDuel = async () => {
     if (selectedConfigs.length < 2) {
-      await dialog.alert('Insufficient Models', 'Select at least 2 models to duel');
+      await dialog.alert(
+        "Insufficient Models",
+        "Select at least 2 models to duel",
+      );
       return;
     }
 
@@ -167,8 +190,8 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/duel`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sessionId,
           prompt,
@@ -177,7 +200,7 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
       });
 
       if (!response.ok) {
-        throw new Error('Duel request failed');
+        throw new Error("Duel request failed");
       }
 
       const data = await response.json();
@@ -188,15 +211,20 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
 
       if (sortedResults.length > 0) {
         const top = sortedResults[0];
-        setWinner(`${top.providerLabel ?? formatProviderName(top.provider)}/${top.model}`);
+        setWinner(
+          `${top.providerLabel ?? formatProviderName(top.provider)}/${top.model}`,
+        );
       }
 
       if (onComplete) {
         onComplete(sortedResults);
       }
     } catch (error) {
-      console.error('Duel error:', error);
-      await dialog.alert('Duel Failed', 'Failed to run duel. Check console for details.');
+      console.error("Duel error:", error);
+      await dialog.alert(
+        "Duel Failed",
+        "Failed to run duel. Check console for details.",
+      );
     } finally {
       setIsRunning(false);
     }
@@ -210,14 +238,36 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
 
   const getVerdictBadge = (verdict: string) => {
     switch (verdict) {
-      case 'APPROVED':
-        return <span className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.success} px-2 py-1 text-xs ${STATUS_TEXT_COLORS.success}`}>✓ Approved</span>;
-      case 'REJECTED':
-        return <span className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.error} px-2 py-1 text-xs ${STATUS_TEXT_COLORS.error}`}>✗ Rejected</span>;
-      case 'NEEDS_INPUT':
-        return <span className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.warning} px-2 py-1 text-xs ${STATUS_TEXT_COLORS.warning}`}>⚠ Needs Input</span>;
+      case "APPROVED":
+        return (
+          <span
+            className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.success} px-2 py-1 text-xs ${STATUS_TEXT_COLORS.success}`}
+          >
+            ✓ Approved
+          </span>
+        );
+      case "REJECTED":
+        return (
+          <span
+            className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.error} px-2 py-1 text-xs ${STATUS_TEXT_COLORS.error}`}
+          >
+            ✗ Rejected
+          </span>
+        );
+      case "NEEDS_INPUT":
+        return (
+          <span
+            className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.warning} px-2 py-1 text-xs ${STATUS_TEXT_COLORS.warning}`}
+          >
+            ⚠ Needs Input
+          </span>
+        );
       default:
-        return <span className="rounded-full bg-brand-paper/20 px-2 py-1 text-xs text-semantic-muted">Unknown</span>;
+        return (
+          <span className="rounded-full bg-brand-paper/20 px-2 py-1 text-xs text-semantic-muted">
+            Unknown
+          </span>
+        );
     }
   };
 
@@ -225,16 +275,20 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
     <div className="rounded-2xl border border-brand-outline/40 bg-brand-paper/50 p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-brand-foreground">⚔️ Duel Mode</h2>
-          <p className="mt-1 text-sm text-semantic-muted">Compare 2-4 models side-by-side</p>
+          <h2 className="text-2xl font-bold text-brand-foreground">
+            ⚔️ Duel Mode
+          </h2>
+          <p className="mt-1 text-sm text-semantic-muted">
+            Compare 2-4 models side-by-side
+          </p>
         </div>
         <button
           onClick={runDuel}
           disabled={selectedConfigs.length < 2 || isRunning}
           className={`flex items-center space-x-2 rounded-lg px-4 py-2 font-semibold transition ${
             selectedConfigs.length >= 2 && !isRunning
-              ? 'bg-brand-accent text-brand-foreground hover:bg-brand-accent/90'
-              : 'cursor-not-allowed bg-brand-outline text-brand-muted'
+              ? "bg-brand-accent text-brand-foreground hover:bg-brand-accent/90"
+              : "cursor-not-allowed bg-brand-outline text-brand-muted"
           }`}
         >
           {isRunning ? (
@@ -253,7 +307,9 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
 
       {/* Model Selection */}
       <div className="mb-6">
-        <h3 className="mb-3 text-sm font-semibold text-semantic-muted">Selected Models ({selectedConfigs.length}/4)</h3>
+        <h3 className="mb-3 text-sm font-semibold text-semantic-muted">
+          Selected Models ({selectedConfigs.length}/4)
+        </h3>
         <div className="grid grid-cols-2 gap-3">
           {selectedConfigs.map((config, index) => (
             <motion.div
@@ -264,7 +320,9 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
               className="flex items-center justify-between rounded-lg border border-brand-outline/40 bg-brand-ink/60 p-3"
             >
               <div>
-                <p className="text-sm font-medium text-semantic-muted">{formatProviderName(config.provider)}</p>
+                <p className="text-sm font-medium text-semantic-muted">
+                  {formatProviderName(config.provider)}
+                </p>
                 <p className="text-xs text-semantic-muted">{config.model}</p>
               </div>
               <button
@@ -279,17 +337,27 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
 
         {selectedConfigs.length < 4 && (
           <div className="mt-4 space-y-3">
-            <h4 className="text-xs font-semibold uppercase text-semantic-muted">Configure competitor</h4>
+            <h4 className="text-xs font-semibold uppercase text-semantic-muted">
+              Configure competitor
+            </h4>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-medium text-semantic-muted">Provider</label>
+                <label className="mb-1 block text-xs font-medium text-semantic-muted">
+                  Provider
+                </label>
                 <select
                   className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-sm text-semantic-muted focus:border-brand-accent focus:outline-none"
                   value={stagedProvider}
                   onChange={(e) => setStagedProvider(e.target.value)}
-                  disabled={loadingProviders || Object.keys(availableProviders).length === 0 || isRunning}
+                  disabled={
+                    loadingProviders ||
+                    Object.keys(availableProviders).length === 0 ||
+                    isRunning
+                  }
                 >
-                  {Object.keys(availableProviders).length === 0 && <option value="">No providers</option>}
+                  {Object.keys(availableProviders).length === 0 && (
+                    <option value="">No providers</option>
+                  )}
                   {Object.keys(availableProviders).map((provider) => (
                     <option key={provider} value={provider}>
                       {formatProviderName(provider)}
@@ -298,7 +366,9 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-semantic-muted">Model</label>
+                <label className="mb-1 block text-xs font-medium text-semantic-muted">
+                  Model
+                </label>
                 <select
                   className="w-full rounded-lg border border-brand-outline/40 bg-brand-ink/40 px-3 py-2 text-sm text-semantic-muted focus:border-brand-accent focus:outline-none"
                   value={stagedModel}
@@ -319,7 +389,9 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
               </div>
             </div>
             {loadingProviders && (
-              <p className="text-xs text-semantic-muted">Loading provider models...</p>
+              <p className="text-xs text-semantic-muted">
+                Loading provider models...
+              </p>
             )}
             <button
               type="button"
@@ -344,7 +416,13 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
           <div className="mb-4 flex items-center space-x-2">
             <Trophy className={`h-5 w-5 ${STATUS_TEXT_COLORS.warning}`} />
             <h3 className="text-lg font-bold text-brand-foreground">Results</h3>
-            {winner && <span className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.warning} px-3 py-1 text-sm font-semibold ${STATUS_TEXT_COLORS.warning}`}>Winner: {winner}</span>}
+            {winner && (
+              <span
+                className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.warning} px-3 py-1 text-sm font-semibold ${STATUS_TEXT_COLORS.warning}`}
+              >
+                Winner: {winner}
+              </span>
+            )}
           </div>
 
           <div className="space-y-4">
@@ -357,25 +435,36 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
                 className={`rounded-xl border p-4 ${
                   index === 0
                     ? `${STATUS_BORDER_COLORS_SUBTLE.warning} ${STATUS_BG_COLORS_SUBTLE.warning}`
-                    : 'border-brand-outline/40 bg-brand-ink/40'
+                    : "border-brand-outline/40 bg-brand-ink/40"
                 }`}
               >
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    {index === 0 && <Trophy className={`h-5 w-5 ${STATUS_TEXT_COLORS.warning}`} />}
+                    {index === 0 && (
+                      <Trophy
+                        className={`h-5 w-5 ${STATUS_TEXT_COLORS.warning}`}
+                      />
+                    )}
                     <div>
                       <p className="font-semibold text-brand-foreground">
-                        #{index + 1} {(result.providerLabel ?? formatProviderName(result.provider))} / {result.model}
+                        #{index + 1}{" "}
+                        {result.providerLabel ??
+                          formatProviderName(result.provider)}{" "}
+                        / {result.model}
                       </p>
                       <div className="mt-1 flex items-center space-x-2">
                         {getVerdictBadge(result.verdict)}
                         {result.confidence !== undefined && (
-                          <span className="text-xs text-semantic-muted">Confidence: {result.confidence}%</span>
+                          <span className="text-xs text-semantic-muted">
+                            Confidence: {result.confidence}%
+                          </span>
                         )}
                       </div>
                     </div>
                   </div>
-                  <div className={`text-3xl font-bold ${getScoreColor(result.score)}`}>
+                  <div
+                    className={`text-3xl font-bold ${getScoreColor(result.score)}`}
+                  >
                     {result.score}
                   </div>
                 </div>
@@ -385,7 +474,9 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
                     <Clock className={`h-4 w-4 ${STATUS_TEXT_COLORS.info}`} />
                     <div>
                       <p className="text-semantic-muted">Latency</p>
-                      <p className="font-semibold text-semantic-muted">{result.latency}ms</p>
+                      <p className="font-semibold text-semantic-muted">
+                        {result.latency}ms
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -400,14 +491,20 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
                   {result.cost !== undefined && (
                     <div>
                       <p className="text-semantic-muted">Cost</p>
-                      <p className="font-semibold text-semantic-muted">${result.cost.toFixed(4)}</p>
+                      <p className="font-semibold text-semantic-muted">
+                        ${result.cost.toFixed(4)}
+                      </p>
                     </div>
                   )}
                 </div>
 
                 <div className="mt-3 rounded-lg bg-brand-ink/60 p-3">
-                  <p className="mb-1 text-xs font-semibold text-semantic-muted">Output:</p>
-                  <p className="text-sm text-semantic-muted">{result.output || 'No output available'}</p>
+                  <p className="mb-1 text-xs font-semibold text-semantic-muted">
+                    Output:
+                  </p>
+                  <p className="text-sm text-semantic-muted">
+                    {result.output || "No output available"}
+                  </p>
                 </div>
               </motion.div>
             ))}
@@ -419,7 +516,9 @@ export function DuelMode({ sessionId, prompt, onComplete }: DuelModeProps) {
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-brand-accent border-t-transparent mx-auto" />
-            <p className="text-semantic-muted">Running duel across {selectedConfigs.length} models...</p>
+            <p className="text-semantic-muted">
+              Running duel across {selectedConfigs.length} models...
+            </p>
           </div>
         </div>
       )}

@@ -16,6 +16,7 @@ After comprehensive analysis of the Third Eye MCP system, **the implementation h
 **The system is fundamentally confused about its purpose**: Personas instruct eyes to **generate content and provide templates**, while the vision states eyes should **only ask questions and validate**. This confusion is why you've never seen a successful pipeline run.
 
 ### Severity Classification
+
 - 🔴 **CRITICAL** (Blocks vision entirely): 6 issues
 - 🟡 **HIGH** (Significantly degrades experience): 8 issues
 - 🟢 **MEDIUM** (Quality/polish issues): 4 issues
@@ -31,6 +32,7 @@ After comprehensive analysis of the Third Eye MCP system, **the implementation h
 **Evidence**:
 
 `packages/db/defaults/personas.ts` - Kyuubi Persona (lines 181-235):
+
 ```
 ## GUIDANCE Phase (Before Agent Creates)
 
@@ -59,26 +61,31 @@ Response:
 ```
 
 **Vision requirement** (from FINAL_OVERSEER_VISION.md):
+
 > "Third Eye MCP is **NOT** a content generator or validator that agents submit work to. It is an **intelligent overseer system** that empowers AI agents with 'inner perception'"
 
 **Why this breaks the vision**:
+
 - Kyuubi is shown creating the entire brief ITSELF
 - The agent receives a fully-formed specification
 - The agent doesn't think - it just implements what Kyuubi generated
 - **This is content generation, not guidance**
 
 **Same problem in**:
+
 - Rinnegan persona: Shows plan template generation
 - Mangekyo persona: Shows code checklist generation
 - Tenseigan persona: Shows evidence requirements generation
 
 **Impact**:
+
 - Eyes become content generators
 - Agents become passive executors
 - Vision of "agent empowerment" completely lost
 - System becomes "another AI tool" not "invisible inner perception"
 
 **Correct approach**:
+
 ```
 ## GUIDANCE Phase (Before Agent Creates)
 
@@ -110,18 +117,20 @@ DO NOT create the brief yourself. Instead, return:
 **Evidence**:
 
 `packages/core/auto-router.ts` (lines 266-275):
+
 ```typescript
 if (isRejected(result)) {
   return {
     sessionId: decision.sessionId,
     results,
     completed: false,
-    error: `Pipeline stopped: ${eyeName} rejected with ${result.code}`
+    error: `Pipeline stopped: ${eyeName} rejected with ${result.code}`,
   };
 }
 ```
 
 **What happens**:
+
 1. Jōgan returns `code: "AWAIT_CONFIRMATION"`
 2. Auto-router sees `isRejected(result)` (because `ok: false`)
 3. Pipeline STOPS with error
@@ -129,15 +138,18 @@ if (isRejected(result)) {
 5. **NO mechanism to resume after human responds**
 
 **No implementation found for**:
+
 - Storing pending confirmations
 - Notifying agent "please ask human X"
 - Resuming pipeline after agent provides answer
 - Tracking confirmation state
 
 **Vision requirement**:
+
 > "Agent asks human for clarifications... Agent should confirm with human before proceeding"
 
 **Impact**:
+
 - Pipeline stops on AWAIT_INPUT
 - Never resumes
 - Agent sees generic error
@@ -153,24 +165,32 @@ if (isRejected(result)) {
 **Evidence**:
 
 `packages/mcp/server.ts` (lines 402-418):
+
 ```typescript
 return {
-  content: [{
-    type: "text",
-    text: JSON.stringify({
-      status: "success",
-      code,
-      verdict,
-      summary,
-      metadata,
-      data: finalResult,
-      history: result.results,  // ⚠️ EXPOSES ALL EYE ENVELOPES
-    }, null, 2),
-  }],
+  content: [
+    {
+      type: "text",
+      text: JSON.stringify(
+        {
+          status: "success",
+          code,
+          verdict,
+          summary,
+          metadata,
+          data: finalResult,
+          history: result.results, // ⚠️ EXPOSES ALL EYE ENVELOPES
+        },
+        null,
+        2,
+      ),
+    },
+  ],
 };
 ```
 
 **What agent sees**:
+
 ```json
 {
   "history": [
@@ -183,10 +203,12 @@ return {
 ```
 
 **Vision requirement**:
+
 > "Completely invisible to human users (seamless agent experience)"
 > "⚡ Golden Rule #1: Agents call only third_eye_overseer - Eyes are internal"
 
 **Impact**:
+
 - Agents learn about eye names and structure
 - Can bypass system by calling eyes directly (if implemented)
 - Violates "invisible empowerment" principle
@@ -199,33 +221,40 @@ return {
 **Problem**: Strict nested JSON schema causes constant LLM failures.
 
 **Evidence from personas** - Required structure:
+
 ```json
 {
-  "tag": "sharingan",           // Must match exactly
-  "ok": false,                  // Boolean
+  "tag": "sharingan", // Must match exactly
+  "ok": false, // Boolean
   "code": "NEED_CLARIFICATION", // Must be exact enum value
-  "md": "...",                  // Required string
-  "data": {                     // Nested object
+  "md": "...", // Required string
+  "data": {
+    // Nested object
     "summary": "...",
-    "ambiguityScore": 75,       // Number
-    "confidence": 20,           // Number
-    "questions": [{             // Array of objects
-      "id": "audience",         // Must match canonical IDs
-      "text": "..."             // Must match canonical text
-    }]
+    "ambiguityScore": 75, // Number
+    "confidence": 20, // Number
+    "questions": [
+      {
+        // Array of objects
+        "id": "audience", // Must match canonical IDs
+        "text": "..." // Must match canonical text
+      }
+    ]
   },
-  "ui": {                       // Another nested object
+  "ui": {
+    // Another nested object
     "title": "...",
     "summary": "...",
     "details": "...",
     "icon": "🔍",
-    "color": "warning"          // Must be valid color
+    "color": "warning" // Must be valid color
   },
-  "next": "AWAIT_INPUT"         // Or array of strings
+  "next": "AWAIT_INPUT" // Or array of strings
 }
 ```
 
 **LLM failure patterns you reported**:
+
 - Missing fields
 - Wrong types (string instead of number)
 - Invalid enum values
@@ -233,11 +262,13 @@ return {
 - Malformed JSON
 
 **Retry attempts** (`packages/core/orchestrator.ts:333-500`):
+
 - MAX_PERSONA_RETRIES = 3
 - System tries 3 times with reminders
 - **Still fails frequently**
 
 **Why this happens**:
+
 - 12+ required fields across 3 nesting levels
 - Canonical ID/text matching (exact string match)
 - Enum validation for codes
@@ -245,6 +276,7 @@ return {
 - **Too much cognitive load for LLMs**
 
 **Impact**:
+
 - Constant JSON parse errors
 - Schema validation failures
 - Wasted retries
@@ -260,23 +292,28 @@ return {
 **Evidence**:
 
 Jōgan persona says:
+
 ```
 "confirmationPrompt": "Agent will create a 500-word beginner-friendly guide... Is this what you want?"
 ```
 
 But searching codebase for intent confirmation:
+
 - No `intent_confirmations` database table
 - No `confirmIntent()` function
 - No tracking of confirmation status
 - `resumeFlow()` checks for confirmation but implementation incomplete
 
 **From `auto-router.ts:332-348`**:
+
 ```typescript
 const confirmation = await getIntentConfirmationStatus(sessionId);
 if (confirmation) {
   const resumeStatus = canResumeAfterConfirmation(confirmation);
   if (!resumeStatus.canResume) {
-    return { /* error */ };
+    return {
+      /* error */
+    };
   }
 }
 ```
@@ -284,9 +321,11 @@ if (confirmation) {
 **But these functions** (`getIntentConfirmationStatus`, `canResumeAfterConfirmation`) are imported but their implementation is minimal/missing.
 
 **Vision requirement**:
+
 > "Jōgan confirms intent with human; agent submits draft architecture"
 
 **Impact**:
+
 - Jōgan asks for confirmation
 - No mechanism to receive/store it
 - Pipeline can't resume
@@ -299,6 +338,7 @@ if (confirmation) {
 **Problem**: Personas mix guidance and validation in same prompt, confusing LLMs.
 
 **Evidence** - Every persona (except Overseer) has this structure:
+
 ```
 ## GUIDANCE Phase (Before Agent Creates)
 [Instructions for before creation]
@@ -310,12 +350,14 @@ if (confirmation) {
 **But LLMs receive this prompt EVERY time** with no indication of which phase to use.
 
 **No mechanism found for**:
+
 - Telling LLM "you're in GUIDANCE phase now"
 - Telling LLM "you're in VALIDATION phase now"
 - Switching personas based on phase
 - Separate prompts for separate phases
 
 **What happens**:
+
 - LLM sees both phases always
 - Doesn't know which to follow
 - Sometimes validates when it should guide
@@ -323,9 +365,11 @@ if (confirmation) {
 - **Produces wrong response codes**
 
 **Vision requirement**:
+
 > "Two-Phase Operation: Eyes provide GUIDANCE before agent creates, and VALIDATION after"
 
 **Impact**:
+
 - Eyes validate in guidance phase
 - Eyes guide in validation phase
 - Wrong status codes returned
@@ -343,11 +387,13 @@ if (confirmation) {
 **Evidence**:
 
 Jōgan persona line 318:
+
 ```
 "details": "... Agent should confirm with human before proceeding."
 ```
 
 But confirmationPrompt is returned to AGENT, not human:
+
 ```json
 {
   "confirmationPrompt": "Agent will create... Is this what you want?"
@@ -355,12 +401,14 @@ But confirmationPrompt is returned to AGENT, not human:
 ```
 
 **Actual flow**:
+
 1. Jōgan returns JSON to agent
 2. Agent decides whether to ask human
 3. **No guarantee agent asks human**
 4. Agent might auto-confirm and proceed
 
 **Vision requirement**:
+
 > "🔍 Sharingan: 'Detected ambiguity, asking 4 questions'"
 > "👤 Human: 'Indoor palms, beginners, 500 words, Saudi Arabia'"
 
@@ -373,19 +421,24 @@ But confirmationPrompt is returned to AGENT, not human:
 **Problem**: Only Sharingan has behavioral validation.
 
 **Evidence** - `packages/core/persona-guards.ts` (lines 141-149):
+
 ```typescript
-export const ensureEyeBehavior = (eyeId: string, envelope: BaseEnvelope): void => {
+export const ensureEyeBehavior = (
+  eyeId: string,
+  envelope: BaseEnvelope,
+): void => {
   switch (eyeId) {
     case SHARINGAN_ID:
       ensureSharinganBehavior(envelope);
       break;
     default:
-      break;  // All other eyes: no validation
+      break; // All other eyes: no validation
   }
 };
 ```
 
 **Impact**:
+
 - Kyuubi can skip briefing
 - Jōgan can skip intent confirmation
 - Mangekyo can skip code review
@@ -400,15 +453,17 @@ export const ensureEyeBehavior = (eyeId: string, envelope: BaseEnvelope): void =
 **Problem**: Order validation disabled when auto-router orchestrates.
 
 **Evidence** - `packages/core/order-guard.ts` (lines 89-93):
+
 ```typescript
 // Auto-router sessions bypass validation - auto-router knows the correct order
 // But we still initialize state above so recordEyeCompletion works
 if (this.isAutoRouterSession(sessionId)) {
-  return null;  // No validation
+  return null; // No validation
 }
 ```
 
 **Impact**:
+
 - Eyes can be called in any order
 - No validation of prerequisites
 - Could call Byakugan before Sharingan
@@ -422,6 +477,7 @@ if (this.isAutoRouterSession(sessionId)) {
 **Problem**: System returns JSON, trusts agent will ask human - but can't enforce it.
 
 **Vision shows**:
+
 ```
 🔍 Sharingan: "Detected ambiguity score 75/100, asking 4 questions"
 🤖 Agent: "Asking human for clarifications..."
@@ -429,6 +485,7 @@ if (this.isAutoRouterSession(sessionId)) {
 ```
 
 **Reality**:
+
 1. Sharingan returns questions JSON
 2. Agent receives questions
 3. **Agent decides** whether to ask human
@@ -436,6 +493,7 @@ if (this.isAutoRouterSession(sessionId)) {
 5. Agent might ignore questions
 
 **No enforcement because**:
+
 - MCP protocol is request/response only
 - Can't control what agent does with response
 - Can't verify human was asked
@@ -450,6 +508,7 @@ if (this.isAutoRouterSession(sessionId)) {
 **Problem**: Overseer persona has hardcoded route table instead of dynamic analysis.
 
 **Evidence** - `personas.ts` (lines 44-52):
+
 ```
 ## Example Routing Decisions
 
@@ -460,11 +519,13 @@ if (this.isAutoRouterSession(sessionId)) {
 ```
 
 **These are examples, not logic**. Overseer LLM must:
+
 1. Memorize the table
 2. Pattern-match user request to table
 3. Return route from memory
 
 **No actual routing intelligence**:
+
 - No learning from results
 - No optimization based on success/failure
 - No adaptation to new eye types
@@ -479,18 +540,21 @@ if (this.isAutoRouterSession(sessionId)) {
 **Problem**: Tool description mentions "reviews" and "route", revealing internal structure.
 
 **Evidence** - `packages/mcp/server.ts` (lines 154-156):
+
 ```typescript
 description:
   "Empowers you with Third Eye's inner perception. Call this tool for every non-trivial request—Overseer will analyse ambiguity, plan the best route, run the reviews, and hand you the next action. Never bypass it.",
 ```
 
 **Reveals**:
+
 - "Overseer" (eye name)
 - "analyse ambiguity" (Sharingan's job)
 - "plan the best route" (routing mechanism)
 - "run the reviews" (multi-eye pipeline)
 
 **Vision requirement**:
+
 > "Completely invisible to human users"
 > "User never knows Third Eye exists"
 
@@ -503,12 +567,15 @@ description:
 **Problem**: Monitor shows eye names, violating invisibility for end users.
 
 **Evidence** - Vision says:
+
 > "Developer watches live: Real-time web portal shows the agent's complete 'thought process'"
 
 **But also says**:
+
 > "Human sees magic: User talks to AI agent naturally, agent asks smart clarifying questions and delivers better results - user never knows Third Eye exists"
 
 **Contradiction**: If end user can access monitor URL, they see:
+
 - Eye names (Sharingan, Kyuubi, etc.)
 - Pipeline stages
 - Internal decisions
@@ -523,6 +590,7 @@ description:
 **Problem**: System trusts agent to ask clarification questions, can't verify.
 
 **Flow**:
+
 1. Sharingan: Returns clarification questions
 2. System returns to agent
 3. Agent SHOULD ask human
@@ -530,12 +598,14 @@ description:
 5. **No validation that human was asked**
 
 **Agent could**:
+
 - Answer questions itself
 - Use previous context
 - Make up answers
 - Skip questions entirely
 
 **No implementation for**:
+
 - Requiring human input flag
 - Validating answer source
 - Tracking who answered
@@ -550,6 +620,7 @@ description:
 ### MEDIUM #1: Narrative Monitoring Incomplete
 
 **Vision shows**:
+
 ```
 🧿 Overseer: "Analyzing request... routing to 5 eyes"
 🔍 Sharingan: "Detected ambiguity score 75/100, asking 4 questions"
@@ -558,6 +629,7 @@ description:
 ```
 
 **But WebSocket events are**:
+
 ```typescript
 {
   type: 'eye_started',
@@ -568,6 +640,7 @@ description:
 ```
 
 **Missing**:
+
 - Agent messages not tracked
 - Human messages not tracked
 - Conversational narrative not implemented
@@ -584,6 +657,7 @@ description:
 **Current**: Prompt shows both phases always
 
 **Should be**: One of:
+
 1. Separate prompts per phase
 2. Dynamic insertion: "YOU ARE IN GUIDANCE PHASE"
 3. Context indicator in user message
@@ -595,6 +669,7 @@ description:
 ### MEDIUM #3: Resume Flow Implementation Incomplete
 
 **Evidence** - `auto-router.ts:326-455` has resumeFlow function, but:
+
 - Doesn't handle intent confirmation
 - Doesn't validate human answered
 - Doesn't preserve pipeline state correctly
@@ -609,6 +684,7 @@ description:
 **Problem**: All persona examples show eyes creating content instead of asking questions.
 
 **Example** - Kyuubi guidance response shows:
+
 ```json
 {
   "data": {
@@ -655,6 +731,7 @@ The pipeline failures you're experiencing are caused by a **cascade of fundament
 ```
 
 **Plus**:
+
 - Complex JSON structure causes LLM parse failures (30-50% failure rate)
 - Missing phase indicators cause wrong eye behavior
 - No persona guards allow contract violations
@@ -667,6 +744,7 @@ The pipeline failures you're experiencing are caused by a **cascade of fundament
 ### Current Problem
 
 **Strict JSON envelope** with 12+ fields, nested objects, canonical matching is:
+
 - ❌ Too complex for LLMs to produce consistently
 - ❌ Requires exact enum matching
 - ❌ Breaks with minor variations
@@ -685,12 +763,14 @@ The pipeline failures you're experiencing are caused by a **cascade of fundament
 ```
 
 **Pros**:
+
 - 4 fields vs 12
 - Simpler parsing
 - Clear action verbs
 - Higher success rate
 
 **Cons**:
+
 - Less rich metadata
 - Less UI information
 
@@ -715,6 +795,7 @@ The request is ambiguous. I need to ask:
 ```
 
 **Pros**:
+
 - Natural for LLMs (they excel at markdown)
 - Structured metadata in frontmatter
 - Human-readable content in markdown
@@ -722,6 +803,7 @@ The request is ambiguous. I need to ask:
 - Fewer formatting errors
 
 **Cons**:
+
 - Non-standard format
 - Requires custom parsing
 
@@ -741,12 +823,14 @@ The request is ambiguous. I need to ask:
 ```
 
 **Pros**:
+
 - Self-documenting structure
 - LLMs trained on XML
 - Validation built into format
 - Flexible nesting
 
 **Cons**:
+
 - Verbose
 - Harder to parse in TypeScript
 
@@ -765,19 +849,21 @@ const sharinganResponse = {
     properties: {
       action: { type: "string", enum: ["ask_questions", "approve"] },
       questions: { type: "array", items: { type: "string" } },
-      next: { type: "string" }
-    }
-  }
+      next: { type: "string" },
+    },
+  },
 };
 ```
 
 **Pros**:
+
 - Native LLM support (98%+ success rate)
 - Provider handles parsing
 - Built-in validation
 - Tool use is LLMs' strongest capability
 
 **Cons**:
+
 - Locks into specific providers
 - Requires provider tool calling support
 
@@ -796,12 +882,14 @@ NEXT: wait_for_human
 ```
 
 **Pros**:
+
 - Extremely natural for LLMs
 - Very high success rate
 - Easy to parse with regex
 - Human-readable
 
 **Cons**:
+
 - Less structured
 - Regex fragile
 - Harder validation
@@ -811,6 +899,7 @@ NEXT: wait_for_human
 ### **RECOMMENDED: Alternative 4 (Function Calling)**
 
 **Why**:
+
 1. **Highest success rate** (98%+ vs current ~50%)
 2. **Native LLM feature** - built for this exact use case
 3. **Automatic validation** - provider handles it
@@ -831,37 +920,38 @@ export const EyeResponseSchema = {
         action: {
           type: "string",
           enum: ["ask_questions", "approve"],
-          description: "Whether to ask clarifying questions or approve"
+          description: "Whether to ask clarifying questions or approve",
         },
         questions: {
           type: "array",
           items: { type: "string" },
-          description: "Clarifying questions to ask (if action is ask_questions)"
+          description:
+            "Clarifying questions to ask (if action is ask_questions)",
         },
         analysis: {
           type: "string",
-          description: "Why these questions are needed"
+          description: "Why these questions are needed",
         },
         next: {
           type: "string",
           enum: ["wait_for_human", "proceed"],
-          description: "What should happen next"
-        }
+          description: "What should happen next",
+        },
       },
-      required: ["action", "next"]
-    }
-  }
+      required: ["action", "next"],
+    },
+  },
 };
 
 // packages/core/orchestrator.ts - runEye()
 const completion = await provider.complete({
   model: targetModel,
   messages: [
-    { role: 'system', content: personaPrompt.systemPrompt },
-    { role: 'user', content: personaPrompt.userMessage }
+    { role: "system", content: personaPrompt.systemPrompt },
+    { role: "user", content: personaPrompt.userMessage },
   ],
   tools: [EyeResponseSchema[eyeName]],
-  tool_choice: { type: "function", function: { name: `${eyeName}_response` } }
+  tool_choice: { type: "function", function: { name: `${eyeName}_response` } },
 });
 
 // Provider returns validated function call
@@ -870,6 +960,7 @@ const envelope = completion.tool_calls[0].function.arguments;
 ```
 
 **Benefits**:
+
 - No more JSON parse errors
 - No more schema validation failures
 - No more 3-retry loops
@@ -884,6 +975,7 @@ const envelope = completion.tool_calls[0].function.arguments;
 #### 1.1 Rewrite All Personas to Ask Questions, Not Generate Content
 
 **Before** (Kyuubi):
+
 ```
 Transform into structured brief.
 
@@ -900,6 +992,7 @@ Response:
 ```
 
 **After** (Kyuubi):
+
 ```
 Your role: Guide the agent to think through structure by asking questions.
 
@@ -926,6 +1019,7 @@ Response:
 #### 1.3 Separate Guidance and Validation Personas
 
 **Don't mix phases** - Create separate personas:
+
 - `sharingan_guidance.ts` - Only guidance behavior
 - `sharingan_validation.ts` - Only validation behavior
 
@@ -934,6 +1028,7 @@ Load appropriate persona based on pipeline state.
 #### 1.4 Implement Actual Pause/Resume Mechanism
 
 **New tables**:
+
 ```sql
 CREATE TABLE pending_questions (
   id TEXT PRIMARY KEY,
@@ -954,16 +1049,17 @@ CREATE TABLE human_responses (
 ```
 
 **New flow**:
+
 ```typescript
 // When eye returns ask_questions
-if (eyeResponse.action === 'ask_questions') {
+if (eyeResponse.action === "ask_questions") {
   // Store questions
   await db.insert(pendingQuestions).values({
     id: nanoid(),
     sessionId,
     eye: eyeName,
     questions: eyeResponse.questions,
-    status: 'pending'
+    status: "pending",
   });
 
   // Return to agent with clear instruction
@@ -972,7 +1068,7 @@ if (eyeResponse.action === 'ask_questions') {
     action: "ask_human",
     questions: eyeResponse.questions,
     sessionId,
-    resumeWith: `third_eye_overseer({ sessionId: "${sessionId}", answers: {...} })`
+    resumeWith: `third_eye_overseer({ sessionId: "${sessionId}", answers: {...} })`,
   };
 }
 ```
@@ -982,17 +1078,23 @@ if (eyeResponse.action === 'ask_questions') {
 ```typescript
 // packages/mcp/server.ts
 return {
-  content: [{
-    type: "text",
-    text: JSON.stringify({
-      status: "success",
-      verdict,
-      summary,
-      // ❌ REMOVE: history: result.results
-      sessionId: result.sessionId,
-      portalUrl: metadata.portalUrl // For developers only
-    }, null, 2),
-  }],
+  content: [
+    {
+      type: "text",
+      text: JSON.stringify(
+        {
+          status: "success",
+          verdict,
+          summary,
+          // ❌ REMOVE: history: result.results
+          sessionId: result.sessionId,
+          portalUrl: metadata.portalUrl, // For developers only
+        },
+        null,
+        2,
+      ),
+    },
+  ],
 };
 ```
 
@@ -1026,7 +1128,7 @@ const confirmation = await db.insert(intentConfirmations).values({
   intentSummary: joganResponse.confirmationPrompt,
   scope: joganResponse.scope,
   estimatedEffort: joganResponse.estimatedEffort,
-  status: 'pending'
+  status: "pending",
 });
 
 // Return to agent
@@ -1035,7 +1137,7 @@ return {
   action: "confirm_with_human",
   prompt: joganResponse.confirmationPrompt,
   sessionId,
-  resumeWith: `third_eye_overseer({ sessionId: "${sessionId}", confirmed: true })`
+  resumeWith: `third_eye_overseer({ sessionId: "${sessionId}", confirmed: true })`,
 };
 ```
 
@@ -1044,8 +1146,8 @@ return {
 ```typescript
 // In resumeFlow()
 const confirmation = await getIntentConfirmation(sessionId);
-if (!confirmation || confirmation.status !== 'confirmed') {
-  throw new Error('Cannot proceed without human intent confirmation');
+if (!confirmation || confirmation.status !== "confirmed") {
+  throw new Error("Cannot proceed without human intent confirmation");
 }
 ```
 
@@ -1058,27 +1160,45 @@ if (!confirmation || confirmation.status !== 'confirmed') {
 ```typescript
 // Add guards for each eye
 const ensureKyuubiBehavior = (envelope: BaseEnvelope): void => {
-  if (envelope.action === 'ask_questions' && !envelope.questions?.length) {
-    throw new EyeBehaviorError('kyuubi', 'questions_empty');
+  if (envelope.action === "ask_questions" && !envelope.questions?.length) {
+    throw new EyeBehaviorError("kyuubi", "questions_empty");
   }
   // More validations...
 };
 
 const ensureJoganBehavior = (envelope: BaseEnvelope): void => {
-  if (envelope.action === 'await_confirmation' && !envelope.confirmationPrompt) {
-    throw new EyeBehaviorError('jogan', 'missing_confirmation_prompt');
+  if (
+    envelope.action === "await_confirmation" &&
+    !envelope.confirmationPrompt
+  ) {
+    throw new EyeBehaviorError("jogan", "missing_confirmation_prompt");
   }
   // More validations...
 };
 
-export const ensureEyeBehavior = (eyeId: string, envelope: BaseEnvelope): void => {
+export const ensureEyeBehavior = (
+  eyeId: string,
+  envelope: BaseEnvelope,
+): void => {
   switch (eyeId) {
-    case 'sharingan': ensureSharinganBehavior(envelope); break;
-    case 'kyuubi': ensureKyuubiBehavior(envelope); break;
-    case 'jogan': ensureJoganBehavior(envelope); break;
-    case 'mangekyo': ensureMangekyoBehavior(envelope); break;
-    case 'tenseigan': ensureTenseiganBehavior(envelope); break;
-    case 'byakugan': ensureByakuganBehavior(envelope); break;
+    case "sharingan":
+      ensureSharinganBehavior(envelope);
+      break;
+    case "kyuubi":
+      ensureKyuubiBehavior(envelope);
+      break;
+    case "jogan":
+      ensureJoganBehavior(envelope);
+      break;
+    case "mangekyo":
+      ensureMangekyoBehavior(envelope);
+      break;
+    case "tenseigan":
+      ensureTenseiganBehavior(envelope);
+      break;
+    case "byakugan":
+      ensureByakuganBehavior(envelope);
+      break;
   }
 };
 ```
@@ -1091,7 +1211,7 @@ export const ensureEyeBehavior = (eyeId: string, envelope: BaseEnvelope): void =
 
 ```typescript
 interface ConversationEvent {
-  type: 'overseer' | 'eye' | 'agent' | 'human' | 'system';
+  type: "overseer" | "eye" | "agent" | "human" | "system";
   speaker: string;
   message: string;
   icon: string;
@@ -1101,33 +1221,33 @@ interface ConversationEvent {
 
 // Emit narrative events
 ws.broadcastToSession(sessionId, {
-  type: 'conversation_event',
+  type: "conversation_event",
   data: {
-    speaker: 'sharingan',
-    message: 'Detected ambiguity score 75/100, asking 4 questions',
-    icon: '🔍',
-    color: 'warning'
-  }
+    speaker: "sharingan",
+    message: "Detected ambiguity score 75/100, asking 4 questions",
+    icon: "🔍",
+    color: "warning",
+  },
 });
 
 ws.broadcastToSession(sessionId, {
-  type: 'conversation_event',
+  type: "conversation_event",
   data: {
-    speaker: 'agent',
-    message: 'Asking human for clarifications...',
-    icon: '🤖',
-    color: 'info'
-  }
+    speaker: "agent",
+    message: "Asking human for clarifications...",
+    icon: "🤖",
+    color: "info",
+  },
 });
 
 ws.broadcastToSession(sessionId, {
-  type: 'conversation_event',
+  type: "conversation_event",
   data: {
-    speaker: 'human',
-    message: 'Indoor palms, beginners, 500 words, Saudi Arabia',
-    icon: '👤',
-    color: 'success'
-  }
+    speaker: "human",
+    message: "Indoor palms, beginners, 500 words, Saudi Arabia",
+    icon: "👤",
+    color: "success",
+  },
 });
 ```
 
@@ -1140,6 +1260,7 @@ ws.broadcastToSession(sessionId, {
 **Input**: "Generate a palm care report"
 
 **Expected Flow**:
+
 ```
 1. Overseer → Routes to: Sharingan, Kyuubi, Jōgan, Tenseigan, Byakugan
 2. Sharingan → Returns 5 clarification questions
@@ -1160,6 +1281,7 @@ ws.broadcastToSession(sessionId, {
 ```
 
 **Validation**:
+
 - ✅ Pipeline completes without errors
 - ✅ Human asked 5 clarification questions
 - ✅ Human asked for intent confirmation
@@ -1174,6 +1296,7 @@ ws.broadcastToSession(sessionId, {
 **Input**: "Review this TypeScript code: [code here]"
 
 **Expected Flow**:
+
 ```
 1. Overseer → Routes to: Mangekyo
 2. Mangekyo → Asks questions about code quality criteria
@@ -1183,6 +1306,7 @@ ws.broadcastToSession(sessionId, {
 ```
 
 **Validation**:
+
 - ✅ Pipeline skips clarification (code already provided)
 - ✅ Direct to Mangekyo validation
 - ✅ No guidance phases needed
@@ -1200,6 +1324,7 @@ ws.broadcastToSession(sessionId, {
 **Vision requirement**: Eyes ask questions and guide thinking
 
 **This misalignment cascades into**:
+
 - Broken pause/resume mechanism
 - No human interaction validation
 - LLM JSON failures
@@ -1251,6 +1376,7 @@ Human: "Wow, great questions! This is perfect."
 ## Appendix: Quick Reference
 
 ### File Locations
+
 - Personas: `packages/db/defaults/personas.ts`
 - Auto-router: `packages/core/auto-router.ts`
 - Orchestrator: `packages/core/orchestrator.ts`
@@ -1259,6 +1385,7 @@ Human: "Wow, great questions! This is perfect."
 - Order Guard: `packages/core/order-guard.ts`
 
 ### Critical Lines
+
 - Content generation examples: `personas.ts:181-235` (Kyuubi)
 - Eye exposure: `mcp/server.ts:413` (`history: result.results`)
 - Rejection without resume: `auto-router.ts:268-275`

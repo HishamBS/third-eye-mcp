@@ -11,7 +11,7 @@
  * - Type-safe execution context
  */
 
-import jsonLogic, { type RulesLogic } from 'json-logic-js';
+import jsonLogic, { type RulesLogic } from "json-logic-js";
 
 /**
  * Execution context available to expressions
@@ -91,28 +91,32 @@ export interface ValidationResult {
  */
 export function evaluateExpression(
   expression: unknown,
-  context: ExpressionContext
+  context: ExpressionContext,
 ): ExpressionResult {
   try {
     // Validate expression format
-    if (!expression || (typeof expression !== 'object' && typeof expression !== 'string')) {
+    if (
+      !expression ||
+      (typeof expression !== "object" && typeof expression !== "string")
+    ) {
       return {
         success: false,
         value: false,
-        error: 'Expression must be an object or string'
+        error: "Expression must be an object or string",
       };
     }
 
     // Parse string expressions as JSON
-    let parsedExpression: object = typeof expression === 'string' ? {} : expression;
-    if (typeof expression === 'string') {
+    let parsedExpression: object =
+      typeof expression === "string" ? {} : expression;
+    if (typeof expression === "string") {
       try {
         parsedExpression = JSON.parse(expression);
       } catch (parseError) {
         return {
           success: false,
           value: false,
-          error: `Invalid JSON expression: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`
+          error: `Invalid JSON expression: ${parseError instanceof Error ? parseError.message : "Unknown error"}`,
         };
       }
     } else {
@@ -124,13 +128,13 @@ export function evaluateExpression(
 
     return {
       success: true,
-      value: result
+      value: result,
     };
   } catch (error) {
     return {
       success: false,
       value: false,
-      error: `Expression evaluation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      error: `Expression evaluation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
     };
   }
 }
@@ -150,50 +154,66 @@ export function validateExpression(expression: unknown): ValidationResult {
     if (!expression) {
       return {
         valid: false,
-        error: 'Expression cannot be empty'
+        error: "Expression cannot be empty",
       };
     }
 
     // Parse string expressions
     let parsedExpression = expression;
-    if (typeof expression === 'string') {
+    if (typeof expression === "string") {
       try {
         parsedExpression = JSON.parse(expression);
       } catch (parseError) {
         return {
           valid: false,
-          error: `Invalid JSON: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`
+          error: `Invalid JSON: ${parseError instanceof Error ? parseError.message : "Unknown error"}`,
         };
       }
     }
 
     // Validate structure
-    if (typeof parsedExpression !== 'object' || parsedExpression === null) {
+    if (typeof parsedExpression !== "object" || parsedExpression === null) {
       return {
         valid: false,
-        error: 'Expression must be a JSON object'
+        error: "Expression must be a JSON object",
       };
     }
 
     // Basic validation - check if it has JSONLogic operators
-    const validOperators = ['==', '!=', '>', '>=', '<', '<=', 'and', 'or', 'not', 'if', 'var', 'in', '!'];
-    const hasValidOperator = Object.keys(parsedExpression).some(key => validOperators.includes(key));
+    const validOperators = [
+      "==",
+      "!=",
+      ">",
+      ">=",
+      "<",
+      "<=",
+      "and",
+      "or",
+      "not",
+      "if",
+      "var",
+      "in",
+      "!",
+    ];
+    const hasValidOperator = Object.keys(parsedExpression).some((key) =>
+      validOperators.includes(key),
+    );
 
     if (!hasValidOperator) {
       return {
         valid: false,
-        error: 'Expression must contain at least one JSONLogic operator'
+        error: "Expression must contain at least one JSONLogic operator",
       };
     }
 
     return {
       valid: true,
-      parsed: parsedExpression
+      parsed: parsedExpression,
     };
   } catch (error) {
     return {
       valid: false,
-      error: `Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      error: `Validation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
     };
   }
 }
@@ -212,7 +232,7 @@ export function validateExpression(expression: unknown): ValidationResult {
  */
 export function evaluateSimpleCondition(
   condition: string,
-  context: ExpressionContext
+  context: ExpressionContext,
 ): boolean {
   // Simple string matching for backward compatibility
   const verdict = context.verdict || context.output?.verdict;
@@ -228,7 +248,7 @@ export function evaluateSimpleCondition(
  */
 export function testExpression(
   expression: unknown,
-  sampleContext: ExpressionContext
+  sampleContext: ExpressionContext,
 ): ExpressionResult {
   return evaluateExpression(expression, sampleContext);
 }
@@ -247,7 +267,7 @@ export function testExpression(
  */
 export function getContextField(
   context: ExpressionContext,
-  fieldPath: string
+  fieldPath: string,
 ): unknown {
   // Use JSONLogic's var operator to get field value
   return jsonLogic.apply({ var: fieldPath }, context);
@@ -258,19 +278,19 @@ export function getContextField(
  * Used by UI to populate autocomplete/dropdowns
  */
 export const CONTEXT_FIELDS = [
-  'output.score',
-  'output.verdict',
-  'output.confidence',
-  'metadata.category',
-  'metadata.priority',
-  'metadata.tags',
-  'verdict',
-  'loop.index',
-  'loop.item',
-  'loop.total'
+  "output.score",
+  "output.verdict",
+  "output.confidence",
+  "metadata.category",
+  "metadata.priority",
+  "metadata.tags",
+  "verdict",
+  "loop.index",
+  "loop.item",
+  "loop.total",
 ] as const;
 
-export type ContextField = typeof CONTEXT_FIELDS[number];
+export type ContextField = (typeof CONTEXT_FIELDS)[number];
 
 /**
  * Common expression templates for quick selection
@@ -278,41 +298,47 @@ export type ContextField = typeof CONTEXT_FIELDS[number];
  */
 export const EXPRESSION_TEMPLATES = {
   SCORE_THRESHOLD: {
-    name: 'Score Threshold',
-    description: 'Check if output score meets minimum threshold',
-    template: { '>': [{ var: 'output.score' }, 80] }
+    name: "Score Threshold",
+    description: "Check if output score meets minimum threshold",
+    template: { ">": [{ var: "output.score" }, 80] },
   },
   VERDICT_MATCH: {
-    name: 'Verdict Match',
-    description: 'Check if verdict matches expected value',
-    template: { '==': [{ var: 'verdict' }, 'APPROVED'] }
+    name: "Verdict Match",
+    description: "Check if verdict matches expected value",
+    template: { "==": [{ var: "verdict" }, "APPROVED"] },
   },
   CATEGORY_IN_LIST: {
-    name: 'Category In List',
-    description: 'Check if category is in allowed list',
-    template: { in: [{ var: 'metadata.category' }, ['urgent', 'high-priority']] }
+    name: "Category In List",
+    description: "Check if category is in allowed list",
+    template: {
+      in: [{ var: "metadata.category" }, ["urgent", "high-priority"]],
+    },
   },
   LOOP_INDEX_CHECK: {
-    name: 'Loop Index Check',
-    description: 'Check loop iteration index',
-    template: { '<': [{ var: 'loop.index' }, 5] }
+    name: "Loop Index Check",
+    description: "Check loop iteration index",
+    template: { "<": [{ var: "loop.index" }, 5] },
   },
   AND_CONDITION: {
-    name: 'AND Condition',
-    description: 'Multiple conditions must all be true',
-    template: { and: [
-      { '>': [{ var: 'output.score' }, 70] },
-      { '==': [{ var: 'verdict' }, 'OK'] }
-    ]}
+    name: "AND Condition",
+    description: "Multiple conditions must all be true",
+    template: {
+      and: [
+        { ">": [{ var: "output.score" }, 70] },
+        { "==": [{ var: "verdict" }, "OK"] },
+      ],
+    },
   },
   OR_CONDITION: {
-    name: 'OR Condition',
-    description: 'At least one condition must be true',
-    template: { or: [
-      { '>': [{ var: 'output.score' }, 90] },
-      { '==': [{ var: 'metadata.priority' }, 'urgent'] }
-    ]}
-  }
+    name: "OR Condition",
+    description: "At least one condition must be true",
+    template: {
+      or: [
+        { ">": [{ var: "output.score" }, 90] },
+        { "==": [{ var: "metadata.priority" }, "urgent"] },
+      ],
+    },
+  },
 } as const;
 
 export type ExpressionTemplate = keyof typeof EXPRESSION_TEMPLATES;

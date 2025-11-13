@@ -60,19 +60,26 @@ export interface ValidationResult {
 // ============================================================================
 
 export type CustomEyeFormAction =
-  | { readonly type: 'SET_STEP'; readonly step: number }
-  | { readonly type: 'SET_FORM_DATA'; readonly formData: Partial<CustomEyeFormData> }
-  | { readonly type: 'SET_NAME'; readonly name: string }
-  | { readonly type: 'SET_DESCRIPTION'; readonly description: string }
-  | { readonly type: 'SET_INPUT_SCHEMA'; readonly inputSchema: string }
-  | { readonly type: 'SET_OUTPUT_SCHEMA'; readonly outputSchema: string }
-  | { readonly type: 'SET_ICON_SVG'; readonly iconSvg: string }
-  | { readonly type: 'SET_PERSONA_ID'; readonly personaId: string }
-  | { readonly type: 'NEXT_STEP' }
-  | { readonly type: 'PREVIOUS_STEP' }
-  | { readonly type: 'RESET' }
-  | { readonly type: 'MARK_CLEAN' }
-  | { readonly type: 'LOAD_TEMPLATE'; readonly inputSchema: string; readonly outputSchema: string };
+  | { readonly type: "SET_STEP"; readonly step: number }
+  | {
+      readonly type: "SET_FORM_DATA";
+      readonly formData: Partial<CustomEyeFormData>;
+    }
+  | { readonly type: "SET_NAME"; readonly name: string }
+  | { readonly type: "SET_DESCRIPTION"; readonly description: string }
+  | { readonly type: "SET_INPUT_SCHEMA"; readonly inputSchema: string }
+  | { readonly type: "SET_OUTPUT_SCHEMA"; readonly outputSchema: string }
+  | { readonly type: "SET_ICON_SVG"; readonly iconSvg: string }
+  | { readonly type: "SET_PERSONA_ID"; readonly personaId: string }
+  | { readonly type: "NEXT_STEP" }
+  | { readonly type: "PREVIOUS_STEP" }
+  | { readonly type: "RESET" }
+  | { readonly type: "MARK_CLEAN" }
+  | {
+      readonly type: "LOAD_TEMPLATE";
+      readonly inputSchema: string;
+      readonly outputSchema: string;
+    };
 
 // ============================================================================
 // Props

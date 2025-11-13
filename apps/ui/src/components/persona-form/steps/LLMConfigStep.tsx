@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import React from 'react';
-import type { WizardStepProps } from '@/types/persona-form';
+import React from "react";
+import type { WizardStepProps } from "@/types/persona-form";
 import {
   FIELD_LABELS,
   HELP_TEXT,
   LLM_CONFIG_RANGES,
   RESPONSE_FORMAT_LABELS,
   RESPONSE_FORMATS,
-} from '../constants';
+} from "../constants";
 
 /**
  * LLMConfigStep - LLM parameter configuration
@@ -38,7 +38,7 @@ export function LLMConfigStep({ state, dispatch }: WizardStepProps) {
           value={state.llmConfig.temperature}
           onChange={(e) =>
             dispatch({
-              type: 'SET_LLM_CONFIG',
+              type: "SET_LLM_CONFIG",
               llmConfig: {
                 ...state.llmConfig,
                 temperature: parseFloat(e.target.value),
@@ -47,7 +47,9 @@ export function LLMConfigStep({ state, dispatch }: WizardStepProps) {
           }
           className="w-full h-2 bg-brand-outline rounded-lg appearance-none cursor-pointer accent-brand-accent"
         />
-        <p className="text-xs text-semantic-muted mt-2">{HELP_TEXT.TEMPERATURE}</p>
+        <p className="text-xs text-semantic-muted mt-2">
+          {HELP_TEXT.TEMPERATURE}
+        </p>
       </div>
 
       {/* Top P */}
@@ -68,7 +70,7 @@ export function LLMConfigStep({ state, dispatch }: WizardStepProps) {
           value={state.llmConfig.top_p}
           onChange={(e) =>
             dispatch({
-              type: 'SET_LLM_CONFIG',
+              type: "SET_LLM_CONFIG",
               llmConfig: {
                 ...state.llmConfig,
                 top_p: parseFloat(e.target.value),
@@ -89,10 +91,10 @@ export function LLMConfigStep({ state, dispatch }: WizardStepProps) {
           value={state.llmConfig.response_format}
           onChange={(e) =>
             dispatch({
-              type: 'SET_LLM_CONFIG',
+              type: "SET_LLM_CONFIG",
               llmConfig: {
                 ...state.llmConfig,
-                response_format: e.target.value as 'text' | 'json_object',
+                response_format: e.target.value as "text" | "json_object",
               },
             })
           }
@@ -105,7 +107,9 @@ export function LLMConfigStep({ state, dispatch }: WizardStepProps) {
             {RESPONSE_FORMAT_LABELS[RESPONSE_FORMATS.TEXT]}
           </option>
         </select>
-        <p className="text-xs text-semantic-muted mt-2">{HELP_TEXT.RESPONSE_FORMAT}</p>
+        <p className="text-xs text-semantic-muted mt-2">
+          {HELP_TEXT.RESPONSE_FORMAT}
+        </p>
       </div>
 
       {/* Max Tokens */}
@@ -126,7 +130,7 @@ export function LLMConfigStep({ state, dispatch }: WizardStepProps) {
           value={state.llmConfig.max_tokens}
           onChange={(e) =>
             dispatch({
-              type: 'SET_LLM_CONFIG',
+              type: "SET_LLM_CONFIG",
               llmConfig: {
                 ...state.llmConfig,
                 max_tokens: parseInt(e.target.value, 10),
@@ -135,7 +139,9 @@ export function LLMConfigStep({ state, dispatch }: WizardStepProps) {
           }
           className="w-full h-2 bg-brand-outline rounded-lg appearance-none cursor-pointer accent-brand-accent"
         />
-        <p className="text-xs text-semantic-muted mt-2">{HELP_TEXT.MAX_TOKENS}</p>
+        <p className="text-xs text-semantic-muted mt-2">
+          {HELP_TEXT.MAX_TOKENS}
+        </p>
       </div>
     </div>
   );

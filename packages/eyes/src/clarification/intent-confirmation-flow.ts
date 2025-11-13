@@ -1,12 +1,16 @@
 /**
  * Intent Confirmation & Resume Flow
- * 
+ *
  * Manages intent confirmation workflow and pipeline resumption.
  */
 
-import type { IntentConfirmation } from '@third-eye/db';
-import { getIntentConfirmationStatus, storeIntentConfirmation, recordIntentConfirmationResponse } from './clarification-storage';
-import { EyeStatusCode } from '@third-eye/constants';
+import type { IntentConfirmation } from "@third-eye/db";
+import {
+  getIntentConfirmationStatus,
+  storeIntentConfirmation,
+  recordIntentConfirmationResponse,
+} from "./clarification-storage";
+import { EyeStatusCode } from "@third-eye/constants";
 
 export interface IntentAnalysis {
   primary: string;
@@ -49,7 +53,7 @@ export async function requestIntentConfirmation(
  */
 export async function processConfirmationResponse(
   confirmationId: string,
-  response: 'approved' | 'rejected' | 'modified',
+  response: "approved" | "rejected" | "modified",
   userIdentity?: string,
   modification?: string,
 ): Promise<void> {
@@ -59,12 +63,12 @@ export async function processConfirmationResponse(
     userIdentity,
   );
 
-  if (response === 'rejected') {
+  if (response === "rejected") {
     // Pipeline should abort or restart
     return;
   }
 
-  if (response === 'modified' && modification) {
+  if (response === "modified" && modification) {
     // Store modification details
     // TODO: Update session state with modified requirements
   }
@@ -73,37 +77,41 @@ export async function processConfirmationResponse(
 /**
  * Check if session needs confirmation before proceeding
  */
-export async function checkConfirmationRequired(sessionId: string): Promise<IntentConfirmation | null> {
+export async function checkConfirmationRequired(
+  sessionId: string,
+): Promise<IntentConfirmation | null> {
   return await getIntentConfirmationStatus(sessionId);
 }
 
 /**
  * Determine if pipeline can resume after confirmation
  */
-export function canResumeAfterConfirmation(
-  confirmation: IntentConfirmation,
-): { canResume: boolean; statusCode: string; nextAction: string } {
+export function canResumeAfterConfirmation(confirmation: IntentConfirmation): {
+  canResume: boolean;
+  statusCode: string;
+  nextAction: string;
+} {
   if (!confirmation.response) {
     return {
       canResume: false,
       statusCode: EyeStatusCode.AWAIT_CONFIRMATION,
-      nextAction: 'await_confirmation',
+      nextAction: "await_confirmation",
     };
   }
 
-  if (confirmation.response === 'approved') {
+  if (confirmation.response === "approved") {
     return {
       canResume: true,
       statusCode: EyeStatusCode.OK_NEXT_EYE,
-      nextAction: 'proceed',
+      nextAction: "proceed",
     };
   }
 
-  if (confirmation.response === 'rejected') {
+  if (confirmation.response === "rejected") {
     return {
       canResume: false,
       statusCode: EyeStatusCode.AWAIT_CONFIRMATION,
-      nextAction: 'abort',
+      nextAction: "abort",
     };
   }
 
@@ -111,7 +119,6 @@ export function canResumeAfterConfirmation(
   return {
     canResume: true,
     statusCode: EyeStatusCode.OK_NEXT_EYE,
-    nextAction: 'proceed',
+    nextAction: "proceed",
   };
 }
-

@@ -1,17 +1,23 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import {
   STRICTNESS_PRESETS,
   DEFAULT_STRICTNESS_PRESET,
   type StrictnessSettings,
   type StrictnessPresetId,
-} from '@third-eye/types';
-import { type ThemeName, DEFAULT_THEME } from '@third-eye/theme';
-import { STORAGE_KEYS } from '@/constants/storage';
-import { API_BASE_URL } from '@/consts/api';
+} from "@third-eye/types";
+import { type ThemeName, DEFAULT_THEME } from "@third-eye/theme";
+import { STORAGE_KEYS } from "@/constants/storage";
+import { API_BASE_URL } from "@/consts/api";
 
-export type ViewMode = 'novice' | 'expert';
+export type ViewMode = "novice" | "expert";
 
 interface UIContextValue {
   viewMode: ViewMode;
@@ -42,15 +48,17 @@ const UIContext = createContext<UIContextValue | undefined>(undefined);
 
 export function UIProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
-  const [viewMode, setViewModeState] = useState<ViewMode>('expert');
+  const [viewMode, setViewModeState] = useState<ViewMode>("expert");
   const [theme, setThemeState] = useState<ThemeName>(DEFAULT_THEME);
   const [darkMode, setDarkModeState] = useState(true);
   const [strictness, setStrictnessState] = useState<StrictnessSettings>(
-    STRICTNESS_PRESETS[DEFAULT_STRICTNESS_PRESET].settings
+    STRICTNESS_PRESETS[DEFAULT_STRICTNESS_PRESET].settings,
   );
   const [autoOpenSessions, setAutoOpenSessionsState] = useState(true);
   const [showPersonaVoice, setShowPersonaVoiceState] = useState(false);
-  const [selectedSessionId, setSelectedSessionIdState] = useState<string | null>(null);
+  const [selectedSessionId, setSelectedSessionIdState] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     setMounted(true);
@@ -63,39 +71,43 @@ export function UIProvider({ children }: { children: ReactNode }) {
     if (savedTheme) setThemeState(savedTheme);
 
     const savedDarkMode = localStorage.getItem(STORAGE_KEYS.THEME_MODE);
-    if (savedDarkMode !== null) setDarkModeState(savedDarkMode === 'dark');
+    if (savedDarkMode !== null) setDarkModeState(savedDarkMode === "dark");
 
     const savedStrictness = localStorage.getItem(STORAGE_KEYS.STRICTNESS);
     if (savedStrictness) {
       try {
         setStrictnessState(JSON.parse(savedStrictness));
       } catch (e) {
-        console.error('Failed to parse strictness settings', e);
+        console.error("Failed to parse strictness settings", e);
       }
     }
 
     const savedAutoOpen = localStorage.getItem(STORAGE_KEYS.AUTO_OPEN);
-    if (savedAutoOpen !== null) setAutoOpenSessionsState(savedAutoOpen === 'true');
+    if (savedAutoOpen !== null)
+      setAutoOpenSessionsState(savedAutoOpen === "true");
 
     const savedPersonaVoice = localStorage.getItem(STORAGE_KEYS.PERSONA_VOICE);
-    if (savedPersonaVoice !== null) setShowPersonaVoiceState(savedPersonaVoice === 'true');
+    if (savedPersonaVoice !== null)
+      setShowPersonaVoiceState(savedPersonaVoice === "true");
 
     const savedSessionId = localStorage.getItem(STORAGE_KEYS.SELECTED_SESSION);
     if (savedSessionId) setSelectedSessionIdState(savedSessionId);
 
     // 2. FETCH FROM API IN BACKGROUND (only update if localStorage was empty)
     fetch(`${API_BASE_URL}/api/app-settings`)
-      .then(res => res.json())
-      .then(response => {
+      .then((res) => res.json())
+      .then((response) => {
         const data = response.data || response;
         // Only update from API if localStorage didn't have a value
         if (!savedTheme && data.theme) setThemeState(data.theme);
-        if (savedDarkMode === null && data.darkMode !== undefined) setDarkModeState(data.darkMode);
-        if (!savedAutoOpen && data.auto_open !== undefined) setAutoOpenSessionsState(data.auto_open);
+        if (savedDarkMode === null && data.darkMode !== undefined)
+          setDarkModeState(data.darkMode);
+        if (!savedAutoOpen && data.auto_open !== undefined)
+          setAutoOpenSessionsState(data.auto_open);
       })
       .catch(() => {
         // API fetch failed, but we already have localStorage values loaded
-        console.debug('Failed to fetch settings from API, using localStorage');
+        console.debug("Failed to fetch settings from API, using localStorage");
       });
   }, []);
 
@@ -105,7 +117,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
   };
 
   const toggleViewMode = () => {
-    const newMode = viewMode === 'novice' ? 'expert' : 'novice';
+    const newMode = viewMode === "novice" ? "expert" : "novice";
     setViewMode(newMode);
   };
 
@@ -114,34 +126,34 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
     setThemeState(newTheme);
     localStorage.setItem(STORAGE_KEYS.THEME, newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
+    document.documentElement.setAttribute("data-theme", newTheme);
 
     fetch(`${API_BASE_URL}/api/app-settings/theme`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ value: newTheme }),
-    }).catch(err => console.debug('Failed to persist theme:', err));
+    }).catch((err) => console.debug("Failed to persist theme:", err));
   };
 
   const setDarkMode = (enabled: boolean) => {
     if (!mounted) return;
 
     setDarkModeState(enabled);
-    const mode = enabled ? 'dark' : 'light';
+    const mode = enabled ? "dark" : "light";
     localStorage.setItem(STORAGE_KEYS.THEME_MODE, mode);
-    document.documentElement.setAttribute('data-mode', mode);
+    document.documentElement.setAttribute("data-mode", mode);
 
     if (enabled) {
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove("dark");
     }
 
     fetch(`${API_BASE_URL}/api/app-settings/darkMode`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ value: enabled }),
-    }).catch(err => console.debug('Failed to persist dark mode:', err));
+    }).catch((err) => console.debug("Failed to persist dark mode:", err));
   };
 
   const setStrictness = (settings: StrictnessSettings) => {
@@ -175,13 +187,16 @@ export function UIProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!mounted) return;
 
-    document.documentElement.setAttribute('data-theme', theme);
-    document.documentElement.setAttribute('data-mode', darkMode ? 'dark' : 'light');
+    document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.setAttribute(
+      "data-mode",
+      darkMode ? "dark" : "light",
+    );
 
     if (darkMode) {
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove("dark");
     }
   }, [mounted, theme, darkMode]);
 
@@ -214,7 +229,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
 export function useUI() {
   const context = useContext(UIContext);
   if (!context) {
-    throw new Error('useUI must be used within a UIProvider');
+    throw new Error("useUI must be used within a UIProvider");
   }
   return context;
 }

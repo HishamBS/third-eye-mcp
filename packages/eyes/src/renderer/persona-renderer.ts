@@ -1,13 +1,27 @@
 /**
  * Persona Runtime Renderer
- * 
+ *
  * Builds lean prompts using stage templates and capability assignments.
  * Includes stage summary, skeleton JSON, behavior checklist, and example.
  */
 
-import type { PersonaBlueprint, PhaseSpec } from '@third-eye/constants/blueprints-data';
-import { EyeStageToken, EyeStatusCode, PromptSection, SelfCheckItem, ErrorMessage, ResponseFormatType, TypeString } from '@third-eye/constants';
-import { getStageTemplate, type StageEnvelopeTemplate } from '@third-eye/constants';
+import type {
+  PersonaBlueprint,
+  PhaseSpec,
+} from "@third-eye/constants/blueprints-data";
+import {
+  EyeStageToken,
+  EyeStatusCode,
+  PromptSection,
+  SelfCheckItem,
+  ErrorMessage,
+  ResponseFormatType,
+  TypeString,
+} from "@third-eye/constants";
+import {
+  getStageTemplate,
+  type StageEnvelopeTemplate,
+} from "@third-eye/constants";
 
 export interface PersonaPromptOptions {
   /** Include self-check instructions */
@@ -27,36 +41,39 @@ export const EYE_RESPONSE_TOOL = {
       properties: {
         tag: { type: "string", description: "Eye identifier tag" },
         ok: { type: "boolean", description: "Whether the analysis succeeded" },
-        code: { type: "string", description: "Status code (E_OK, E_NEEDS_CLARIFICATION, etc.)" },
+        code: {
+          type: "string",
+          description: "Status code (E_OK, E_NEEDS_CLARIFICATION, etc.)",
+        },
         md: { type: "string", description: "Markdown-formatted analysis" },
         data: {
           type: "object",
           description: "Structured data specific to this eye",
-          additionalProperties: true
+          additionalProperties: true,
         },
         next: {
           oneOf: [
             { type: "string" },
-            { type: "array", items: { type: "string" } }
+            { type: "array", items: { type: "string" } },
           ],
-          description: "Next recommended eye(s) or action"
+          description: "Next recommended eye(s) or action",
         },
         next_action: {
           oneOf: [
             { type: "string" },
-            { type: "array", items: { type: "string" } }
+            { type: "array", items: { type: "string" } },
           ],
-          description: "Next action (legacy field, same as next)"
+          description: "Next action (legacy field, same as next)",
         },
         ui: {
           type: "object",
           description: "Optional UI display fields",
-          additionalProperties: true
-        }
+          additionalProperties: true,
+        },
       },
-      required: ["tag", "ok", "code", "md", "data"]
-    }
-  }
+      required: ["tag", "ok", "code", "md", "data"],
+    },
+  },
 };
 
 export interface PersonaPrompt {
@@ -68,7 +85,7 @@ export interface PersonaPrompt {
   config: {
     temperature: number;
     top_p: number;
-    tools: typeof EYE_RESPONSE_TOOL[];
+    tools: (typeof EYE_RESPONSE_TOOL)[];
     tool_choice: { type: "function"; function: { name: string } };
   };
 }
@@ -87,20 +104,30 @@ export function renderPersonaPrompt(
   // Get stage template
   const template = getStageTemplate(blueprint.metadata.eyeId, stage);
   if (!template) {
-    throw new Error(`${ErrorMessage.NO_TEMPLATE} ${blueprint.metadata.eyeId} ${ErrorMessage.AT_STAGE} ${stage}`);
+    throw new Error(
+      `${ErrorMessage.NO_TEMPLATE} ${blueprint.metadata.eyeId} ${ErrorMessage.AT_STAGE} ${stage}`,
+    );
   }
 
   // Get phase specification
-  const phaseSpec = stage === EyeStageToken.GUIDANCE 
-    ? blueprint.phases.guidance 
-    : blueprint.phases.validation;
+  const phaseSpec =
+    stage === EyeStageToken.GUIDANCE
+      ? blueprint.phases.guidance
+      : blueprint.phases.validation;
 
   if (!phaseSpec) {
-    throw new Error(`${ErrorMessage.NO_PHASE_SPEC} ${blueprint.metadata.eyeId} ${ErrorMessage.AT_STAGE} ${stage}`);
+    throw new Error(
+      `${ErrorMessage.NO_PHASE_SPEC} ${blueprint.metadata.eyeId} ${ErrorMessage.AT_STAGE} ${stage}`,
+    );
   }
 
   // Build system prompt
-  const systemPrompt = buildSystemPrompt(blueprint, phaseSpec, template, includeSelfCheck);
+  const systemPrompt = buildSystemPrompt(
+    blueprint,
+    phaseSpec,
+    template,
+    includeSelfCheck,
+  );
 
   // Build user message
   const userMessage = buildUserMessage(phaseSpec, template, inputData);
@@ -112,7 +139,10 @@ export function renderPersonaPrompt(
       temperature: 0,
       top_p: 1,
       tools: [EYE_RESPONSE_TOOL],
-      tool_choice: { type: "function", function: { name: "submit_eye_analysis" } },
+      tool_choice: {
+        type: "function",
+        function: { name: "submit_eye_analysis" },
+      },
     },
   };
 }
@@ -157,7 +187,9 @@ function buildSystemPrompt(
   parts.push(PromptSection.JSON_BLOCK_END);
   parts.push(PromptSection.EMPTY_LINE);
   parts.push(PromptSection.ALLOWED_STATUS_CODES);
-  parts.push(`${PromptSection.ALLOWED_STATUS_CODES_INTRO} ${template.allowedCodes.join(', ')}`);
+  parts.push(
+    `${PromptSection.ALLOWED_STATUS_CODES_INTRO} ${template.allowedCodes.join(", ")}`,
+  );
   parts.push(PromptSection.EMPTY_LINE);
 
   // Include self-check instructions
@@ -235,4 +267,3 @@ export function parsePersonaResponse(
 
   return parsed;
 }
-

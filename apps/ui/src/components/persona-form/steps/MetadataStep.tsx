@@ -1,17 +1,21 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback, useEffect } from 'react';
-import type { WizardStepProps } from '@/types/persona-form';
+import React, { useState, useCallback, useEffect } from "react";
+import type { WizardStepProps } from "@/types/persona-form";
 import {
   FIELD_LABELS,
   PLACEHOLDERS,
   HELP_TEXT,
   CHAR_LIMITS,
   ARRAY_ACTIONS,
-} from '../constants';
-import { X, Plus } from 'lucide-react';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
-import { API_BASE_URL } from '@/consts/api';
+} from "../constants";
+import { X, Plus } from "lucide-react";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
+import { API_BASE_URL } from "@/consts/api";
 
 /**
  * MetadataStep - Eye identity configuration
@@ -21,13 +25,15 @@ import { API_BASE_URL } from '@/consts/api';
  */
 
 export function MetadataStep({ state, dispatch }: WizardStepProps) {
-  const [capabilityInput, setCapabilityInput] = useState('');
+  const [capabilityInput, setCapabilityInput] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [availableEyes, setAvailableEyes] = useState<{
-    id: string;
-    name: string;
-    description: string;
-  }[]>([]);
+  const [availableEyes, setAvailableEyes] = useState<
+    {
+      id: string;
+      name: string;
+      description: string;
+    }[]
+  >([]);
   const [loadingEyes, setLoadingEyes] = useState(true);
 
   // Fetch available eyes
@@ -38,7 +44,7 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
         const data = await response.json();
         setAvailableEyes(data.data || []);
       } catch (error) {
-        console.error('Failed to fetch eyes:', error);
+        console.error("Failed to fetch eyes:", error);
       } finally {
         setLoadingEyes(false);
       }
@@ -51,32 +57,34 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
     if (!trimmed) return;
 
     if (state.metadata.capabilities.includes(trimmed)) {
-      setErrors({ ...errors, capability: 'Capability already exists' });
+      setErrors({ ...errors, capability: "Capability already exists" });
       return;
     }
 
     dispatch({
-      type: 'SET_METADATA',
+      type: "SET_METADATA",
       metadata: {
         ...state.metadata,
         capabilities: [...state.metadata.capabilities, trimmed],
       },
     });
-    setCapabilityInput('');
+    setCapabilityInput("");
     setErrors({});
   }, [capabilityInput, state.metadata, dispatch, errors]);
 
   const handleRemoveCapability = useCallback(
     (index: number) => {
       dispatch({
-        type: 'SET_METADATA',
+        type: "SET_METADATA",
         metadata: {
           ...state.metadata,
-          capabilities: state.metadata.capabilities.filter((_, i) => i !== index),
+          capabilities: state.metadata.capabilities.filter(
+            (_, i) => i !== index,
+          ),
         },
       });
     },
-    [state.metadata, dispatch]
+    [state.metadata, dispatch],
   );
 
   return (
@@ -87,13 +95,15 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
           {FIELD_LABELS.EYE_ID} *
         </label>
         {loadingEyes ? (
-          <div className="text-semantic-muted text-sm py-2">Loading eyes...</div>
+          <div className="text-semantic-muted text-sm py-2">
+            Loading eyes...
+          </div>
         ) : (
           <select
             value={state.metadata.eyeId}
             onChange={(e) =>
               dispatch({
-                type: 'SET_METADATA',
+                type: "SET_METADATA",
                 metadata: { ...state.metadata, eyeId: e.target.value },
               })
             }
@@ -123,7 +133,7 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
           value={state.metadata.name}
           onChange={(e) =>
             dispatch({
-              type: 'SET_METADATA',
+              type: "SET_METADATA",
               metadata: { ...state.metadata, name: e.target.value },
             })
           }
@@ -144,7 +154,7 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
           value={state.metadata.description}
           onChange={(e) =>
             dispatch({
-              type: 'SET_METADATA',
+              type: "SET_METADATA",
               metadata: { ...state.metadata, description: e.target.value },
             })
           }
@@ -172,8 +182,11 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
           value={state.metadata.version}
           onChange={(e) =>
             dispatch({
-              type: 'SET_METADATA',
-              metadata: { ...state.metadata, version: parseInt(e.target.value, 10) || 1 },
+              type: "SET_METADATA",
+              metadata: {
+                ...state.metadata,
+                version: parseInt(e.target.value, 10) || 1,
+              },
             })
           }
           min={1}
@@ -192,7 +205,7 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
             type="text"
             value={capabilityInput}
             onChange={(e) => setCapabilityInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleAddCapability()}
+            onKeyPress={(e) => e.key === "Enter" && handleAddCapability()}
             placeholder={PLACEHOLDERS.CAPABILITY}
             className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
           />
@@ -206,7 +219,9 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
         </div>
 
         {errors.capability && (
-          <p className="text-xs ${STATUS_TEXT_COLORS.error} mb-2">{errors.capability}</p>
+          <p className="text-xs ${STATUS_TEXT_COLORS.error} mb-2">
+            {errors.capability}
+          </p>
         )}
 
         <div className="flex flex-wrap gap-2">
@@ -232,7 +247,9 @@ export function MetadataStep({ state, dispatch }: WizardStepProps) {
           </p>
         )}
 
-        <p className="text-xs text-semantic-muted mt-2">{HELP_TEXT.CAPABILITIES}</p>
+        <p className="text-xs text-semantic-muted mt-2">
+          {HELP_TEXT.CAPABILITIES}
+        </p>
       </div>
     </div>
   );

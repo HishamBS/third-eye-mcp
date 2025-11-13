@@ -13,8 +13,5 @@
   },
   "include": ["*.ts", "**/*.ts"],
   "exclude": ["dist", "node_modules", "**/__tests__/**/*", "**/*.test.ts"],
-  "references": [
-    { "path": "../types" },
-    { "path": "../config" }
-  ]
+  "references": [{ "path": "../types" }, { "path": "../config" }]
 }

@@ -17,26 +17,28 @@
  * Exit code: 0 if all pass, 1 if any fail
  */
 
-import { existsSync } from 'fs';
-import { join } from 'path';
-import { Database } from 'bun:sqlite';
-import { DEFAULT_PERSONAS } from '../packages/db/defaults/personas';
+import { existsSync } from "fs";
+import { join } from "path";
+import { Database } from "bun:sqlite";
+import { DEFAULT_PERSONAS } from "../packages/db/defaults/personas";
 
 // Configuration
-const MCP_HOST = process.env.MCP_HOST || '127.0.0.1';
+const MCP_HOST = process.env.MCP_HOST || "127.0.0.1";
 const MCP_PORT = process.env.MCP_PORT || 7070;
 const UI_PORT = process.env.MCP_UI_PORT || 3300;
-const DB_PATH = process.env.MCP_DB || join(process.env.HOME || '~', '.third-eye-mcp', 'mcp.db');
+const DB_PATH =
+  process.env.MCP_DB ||
+  join(process.env.HOME || "~", ".third-eye-mcp", "mcp.db");
 
 // Colors for output
 const colors = {
-  reset: '\x1b[0m',
-  bright: '\x1b[1m',
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  cyan: '\x1b[36m',
+  reset: "\x1b[0m",
+  bright: "\x1b[1m",
+  red: "\x1b[31m",
+  green: "\x1b[32m",
+  yellow: "\x1b[33m",
+  blue: "\x1b[34m",
+  cyan: "\x1b[36m",
 };
 
 // Helper to print colored text
@@ -55,15 +57,17 @@ const results: CheckResult[] = [];
 
 function addResult(name: string, passed: boolean, message?: string) {
   results.push({ name, passed, message });
-  const symbol = passed ? '✓' : '✗';
-  const color = passed ? 'green' : 'red';
-  const output = message ? `${symbol} ${name}: ${message}` : `${symbol} ${name}`;
+  const symbol = passed ? "✓" : "✗";
+  const color = passed ? "green" : "red";
+  const output = message
+    ? `${symbol} ${name}: ${message}`
+    : `${symbol} ${name}`;
   print(color, output);
 }
 
 // Header
-print('cyan', '\n🧿 Third Eye MCP Health Check');
-print('cyan', '━'.repeat(60));
+print("cyan", "\n🧿 Third Eye MCP Health Check");
+print("cyan", "━".repeat(60));
 
 // Check 1: Server responding
 async function checkServer(): Promise<boolean> {
@@ -73,16 +77,17 @@ async function checkServer(): Promise<boolean> {
     });
 
     if (!response.ok) {
-      addResult('Server responding', false, `HTTP ${response.status}`);
+      addResult("Server responding", false, `HTTP ${response.status}`);
       return false;
     }
 
     const data = await response.json();
-    addResult('Server responding', true, `http://${MCP_HOST}:${MCP_PORT}`);
+    addResult("Server responding", true, `http://${MCP_HOST}:${MCP_PORT}`);
     return true;
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Connection failed';
-    addResult('Server responding', false, message);
+    const message =
+      error instanceof Error ? error.message : "Connection failed";
+    addResult("Server responding", false, message);
     return false;
   }
 }
@@ -95,15 +100,16 @@ async function checkUI(): Promise<boolean> {
     });
 
     if (!response.ok) {
-      addResult('UI responding', false, `HTTP ${response.status}`);
+      addResult("UI responding", false, `HTTP ${response.status}`);
       return false;
     }
 
-    addResult('UI responding', true, `http://${MCP_HOST}:${UI_PORT}`);
+    addResult("UI responding", true, `http://${MCP_HOST}:${UI_PORT}`);
     return true;
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Connection failed';
-    addResult('UI responding', false, message);
+    const message =
+      error instanceof Error ? error.message : "Connection failed";
+    addResult("UI responding", false, message);
     return false;
   }
 }
@@ -113,17 +119,22 @@ function checkDatabase(): { exists: boolean; db?: Database } {
   const exists = existsSync(DB_PATH);
 
   if (!exists) {
-    addResult('Database exists and accessible', false, `Not found at ${DB_PATH}`);
+    addResult(
+      "Database exists and accessible",
+      false,
+      `Not found at ${DB_PATH}`,
+    );
     return { exists: false };
   }
 
   try {
     const db = new Database(DB_PATH, { readonly: true });
-    addResult('Database exists and accessible', true, DB_PATH);
+    addResult("Database exists and accessible", true, DB_PATH);
     return { exists: true, db };
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Cannot open database';
-    addResult('Database exists and accessible', false, message);
+    const message =
+      error instanceof Error ? error.message : "Cannot open database";
+    addResult("Database exists and accessible", false, message);
     return { exists: false };
   }
 }
@@ -131,29 +142,36 @@ function checkDatabase(): { exists: boolean; db?: Database } {
 // Check 4: Schema version
 function checkSchemaVersion(db: Database): boolean {
   try {
-    const tables = db.query("SELECT name FROM sqlite_master WHERE type='table'").all() as Array<{ name: string }>;
+    const tables = db
+      .query("SELECT name FROM sqlite_master WHERE type='table'")
+      .all() as Array<{ name: string }>;
     const tableNames = tables.map((t) => t.name);
 
     const requiredTables = [
-      'sessions',
-      'pipeline_runs',
-      'eyes_routing',
-      'personas',
-      'provider_keys',
+      "sessions",
+      "pipeline_runs",
+      "eyes_routing",
+      "personas",
+      "provider_keys",
     ];
 
-    const missingTables = requiredTables.filter(t => !tableNames.includes(t));
+    const missingTables = requiredTables.filter((t) => !tableNames.includes(t));
 
     if (missingTables.length > 0) {
-      addResult('Schema version correct', false, `Missing tables: ${missingTables.join(', ')}`);
+      addResult(
+        "Schema version correct",
+        false,
+        `Missing tables: ${missingTables.join(", ")}`,
+      );
       return false;
     }
 
-    addResult('Schema version correct', true, 'All required tables present');
+    addResult("Schema version correct", true, "All required tables present");
     return true;
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Schema check failed';
-    addResult('Schema version correct', false, message);
+    const message =
+      error instanceof Error ? error.message : "Schema check failed";
+    addResult("Schema version correct", false, message);
     return false;
   }
 }
@@ -161,19 +179,22 @@ function checkSchemaVersion(db: Database): boolean {
 // Check 5: Provider keys configured
 function checkProviderKeys(db: Database): boolean {
   try {
-    const keys = db.query("SELECT provider FROM provider_keys").all() as Array<{ provider: string }>;
+    const keys = db.query("SELECT provider FROM provider_keys").all() as Array<{
+      provider: string;
+    }>;
 
     if (keys.length === 0) {
-      addResult('Provider keys configured', false, 'No provider keys found');
+      addResult("Provider keys configured", false, "No provider keys found");
       return false;
     }
 
-    const providers = keys.map(k => k.provider);
-    addResult('Provider keys configured', true, providers.join(', '));
+    const providers = keys.map((k) => k.provider);
+    addResult("Provider keys configured", true, providers.join(", "));
     return true;
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Cannot query provider keys';
-    addResult('Provider keys configured', false, message);
+    const message =
+      error instanceof Error ? error.message : "Cannot query provider keys";
+    addResult("Provider keys configured", false, message);
     return false;
   }
 }
@@ -181,24 +202,35 @@ function checkProviderKeys(db: Database): boolean {
 // Check 6: Eye routing seeded
 function checkEyeRouting(db: Database): boolean {
   try {
-    const routes = db.query("SELECT COUNT(*) as count FROM eyes_routing").get() as { count: number };
+    const routes = db
+      .query("SELECT COUNT(*) as count FROM eyes_routing")
+      .get() as { count: number };
 
     if (routes.count === 0) {
-      addResult('Eye routing seeded', false, 'No routing configurations found');
+      addResult("Eye routing seeded", false, "No routing configurations found");
       return false;
     }
 
     const expectedEyes = DEFAULT_PERSONAS.length;
     if (routes.count < expectedEyes) {
-      addResult('Eye routing seeded', false, `Only ${routes.count}/${expectedEyes} eyes configured`);
+      addResult(
+        "Eye routing seeded",
+        false,
+        `Only ${routes.count}/${expectedEyes} eyes configured`,
+      );
       return false;
     }
 
-    addResult('Eye routing seeded', true, `${routes.count}/${expectedEyes} eyes`);
+    addResult(
+      "Eye routing seeded",
+      true,
+      `${routes.count}/${expectedEyes} eyes`,
+    );
     return true;
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Cannot query eye routing';
-    addResult('Eye routing seeded', false, message);
+    const message =
+      error instanceof Error ? error.message : "Cannot query eye routing";
+    addResult("Eye routing seeded", false, message);
     return false;
   }
 }
@@ -206,24 +238,35 @@ function checkEyeRouting(db: Database): boolean {
 // Check 7: Personas seeded
 function checkPersonas(db: Database): boolean {
   try {
-    const personas = db.query("SELECT COUNT(*) as count FROM personas").get() as { count: number };
+    const personas = db
+      .query("SELECT COUNT(*) as count FROM personas")
+      .get() as { count: number };
 
     if (personas.count === 0) {
-      addResult('Personas seeded', false, 'No personas found');
+      addResult("Personas seeded", false, "No personas found");
       return false;
     }
 
     const expectedPersonas = DEFAULT_PERSONAS.length;
     if (personas.count < expectedPersonas) {
-      addResult('Personas seeded', false, `Only ${personas.count}/${expectedPersonas} personas`);
+      addResult(
+        "Personas seeded",
+        false,
+        `Only ${personas.count}/${expectedPersonas} personas`,
+      );
       return false;
     }
 
-    addResult('Personas seeded', true, `${personas.count}/${expectedPersonas} personas`);
+    addResult(
+      "Personas seeded",
+      true,
+      `${personas.count}/${expectedPersonas} personas`,
+    );
     return true;
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Cannot query personas';
-    addResult('Personas seeded', false, message);
+    const message =
+      error instanceof Error ? error.message : "Cannot query personas";
+    addResult("Personas seeded", false, message);
     return false;
   }
 }
@@ -232,20 +275,35 @@ function checkPersonas(db: Database): boolean {
 function checkMCPIntegrations(db: Database): boolean {
   try {
     // Check if mcp_integrations table exists
-    const tables = db.query("SELECT name FROM sqlite_master WHERE type='table' AND name='mcp_integrations'").all();
+    const tables = db
+      .query(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='mcp_integrations'",
+      )
+      .all();
 
     if (tables.length === 0) {
       // Table doesn't exist, that's okay for older versions
-      addResult('MCP integrations configured', true, 'Optional table (not required)');
+      addResult(
+        "MCP integrations configured",
+        true,
+        "Optional table (not required)",
+      );
       return true;
     }
 
-    const integrations = db.query("SELECT COUNT(*) as count FROM mcp_integrations").get() as { count: number };
-    addResult('MCP integrations configured', true, `${integrations.count} integrations`);
+    const integrations = db
+      .query("SELECT COUNT(*) as count FROM mcp_integrations")
+      .get() as { count: number };
+    addResult(
+      "MCP integrations configured",
+      true,
+      `${integrations.count} integrations`,
+    );
     return true;
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Cannot query MCP integrations';
-    addResult('MCP integrations configured', false, message);
+    const message =
+      error instanceof Error ? error.message : "Cannot query MCP integrations";
+    addResult("MCP integrations configured", false, message);
     return false;
   }
 }
@@ -266,9 +324,9 @@ async function runHealthCheck(): Promise<boolean> {
 
   if (!exists || !db) {
     allPassed = false;
-    print('cyan', '━'.repeat(60));
-    print('red', '✗ HEALTH CHECK FAILED');
-    print('yellow', '\nDatabase not found. Run: bunx third-eye-mcp up');
+    print("cyan", "━".repeat(60));
+    print("red", "✗ HEALTH CHECK FAILED");
+    print("yellow", "\nDatabase not found. Run: bunx third-eye-mcp up");
     return false;
   }
 
@@ -277,9 +335,9 @@ async function runHealthCheck(): Promise<boolean> {
 
   if (!schemaOk) {
     db.close();
-    print('cyan', '━'.repeat(60));
-    print('red', '✗ HEALTH CHECK FAILED');
-    print('yellow', '\nDatabase schema outdated. Run: bun run db:migrate');
+    print("cyan", "━".repeat(60));
+    print("red", "✗ HEALTH CHECK FAILED");
+    print("yellow", "\nDatabase schema outdated. Run: bun run db:migrate");
     return false;
   }
 
@@ -304,31 +362,34 @@ async function runHealthCheck(): Promise<boolean> {
 const allPassed = await runHealthCheck();
 
 // Summary
-print('cyan', '━'.repeat(60));
+print("cyan", "━".repeat(60));
 
 if (allPassed) {
-  print('green', '✓ ALL SYSTEMS OPERATIONAL');
-  print('cyan', '\nNext steps:');
-  print('reset', '  • Dashboard: http://127.0.0.1:3300');
-  print('reset', '  • Connect AI client (see docs/integrations/)');
-  print('reset', '  • Send test request via MCP tool');
+  print("green", "✓ ALL SYSTEMS OPERATIONAL");
+  print("cyan", "\nNext steps:");
+  print("reset", "  • Dashboard: http://127.0.0.1:3300");
+  print("reset", "  • Connect AI client (see docs/integrations/)");
+  print("reset", "  • Send test request via MCP tool");
 } else {
-  print('red', '✗ HEALTH CHECK FAILED');
-  print('cyan', '\nFailed checks:');
+  print("red", "✗ HEALTH CHECK FAILED");
+  print("cyan", "\nFailed checks:");
   results
-    .filter(r => !r.passed)
-    .forEach(r => {
-      print('yellow', `  • ${r.name}${r.message ? ': ' + r.message : ''}`);
+    .filter((r) => !r.passed)
+    .forEach((r) => {
+      print("yellow", `  • ${r.name}${r.message ? ": " + r.message : ""}`);
     });
 
-  print('cyan', '\nTroubleshooting:');
-  print('reset', '  • Start services: bunx third-eye-mcp up');
-  print('reset', '  • View logs: bunx third-eye-mcp logs');
-  print('reset', '  • Check status: bunx third-eye-mcp status');
-  print('reset', '  • Reset database: bunx third-eye-mcp reset (WARNING: deletes data)');
+  print("cyan", "\nTroubleshooting:");
+  print("reset", "  • Start services: bunx third-eye-mcp up");
+  print("reset", "  • View logs: bunx third-eye-mcp logs");
+  print("reset", "  • Check status: bunx third-eye-mcp status");
+  print(
+    "reset",
+    "  • Reset database: bunx third-eye-mcp reset (WARNING: deletes data)",
+  );
 }
 
-print('reset', '');
+print("reset", "");
 
 // Exit with appropriate code
 process.exit(allPassed ? 0 : 1);

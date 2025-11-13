@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { memo, useState, useMemo, useCallback, useEffect } from 'react';
-import { EyeIcon } from '@/components/EyeIcon';
-import { PALETTE_TEXT, LAYOUT } from './constants';
-import type { EyeDefinition } from '@/types/pipeline';
-import { API_BASE_URL } from '@/consts/api';
+import { memo, useState, useMemo, useCallback, useEffect } from "react";
+import { EyeIcon } from "@/components/EyeIcon";
+import { PALETTE_TEXT, LAYOUT } from "./constants";
+import type { EyeDefinition } from "@/types/pipeline";
+import { API_BASE_URL } from "@/consts/api";
 
 /**
  * Eye Palette Props
@@ -32,7 +32,7 @@ export const EyePalette = memo(function EyePalette({
   collapsed,
   onToggleCollapse,
 }: EyePaletteProps) {
-  const [search, setSearch] = useState<string>('');
+  const [search, setSearch] = useState<string>("");
   const [allEyes, setAllEyes] = useState<EyeDefinition[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -43,12 +43,12 @@ export const EyePalette = memo(function EyePalette({
       try {
         const response = await fetch(`${API_BASE_URL}/api/eyes/all`);
         if (!response.ok) {
-          throw new Error('Failed to fetch eyes');
+          throw new Error("Failed to fetch eyes");
         }
-        
+
         const envelope = await response.json();
         const eyesData = envelope.data || [];
-        
+
         const mapped: EyeDefinition[] = eyesData.map((eye: any) => ({
           id: eye.id,
           name: eye.name,
@@ -63,7 +63,7 @@ export const EyePalette = memo(function EyePalette({
 
         setAllEyes(mapped);
       } catch (error) {
-        console.error('[EyePalette] Failed to fetch eyes:', error);
+        console.error("[EyePalette] Failed to fetch eyes:", error);
         setAllEyes([]);
       } finally {
         setLoading(false);
@@ -82,18 +82,18 @@ export const EyePalette = memo(function EyePalette({
     return allEyes.filter(
       (eye) =>
         eye.name.toLowerCase().includes(lowerSearch) ||
-        eye.description.toLowerCase().includes(lowerSearch)
+        eye.description.toLowerCase().includes(lowerSearch),
     );
   }, [allEyes, search]);
 
   // Drag start handler for React Flow
   const onDragStart = useCallback(
     (event: React.DragEvent<HTMLDivElement>, eye: EyeDefinition) => {
-      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.setData(
-        'application/reactflow',
+        "application/reactflow",
         JSON.stringify({
-          type: 'eyeNode',
+          type: "eyeNode",
           data: {
             eyeId: eye.id,
             displayName: eye.name,
@@ -101,10 +101,10 @@ export const EyePalette = memo(function EyePalette({
             iconSvg: eye.iconSvg,
             stage: eye.stage,
           },
-        })
+        }),
       );
     },
-    []
+    [],
   );
 
   // Collapsed view
@@ -119,8 +119,18 @@ export const EyePalette = memo(function EyePalette({
           className="p-2 hover:bg-brand-outline/20 rounded-md transition-colors"
           title={PALETTE_TEXT.EXPAND}
         >
-          <svg className="w-5 h-5 text-brand-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          <svg
+            className="w-5 h-5 text-brand-foreground"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
           </svg>
         </button>
       </div>
@@ -135,14 +145,26 @@ export const EyePalette = memo(function EyePalette({
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-brand-outline">
-        <h2 className="text-lg font-semibold text-brand-foreground">{PALETTE_TEXT.TITLE}</h2>
+        <h2 className="text-lg font-semibold text-brand-foreground">
+          {PALETTE_TEXT.TITLE}
+        </h2>
         <button
           onClick={onToggleCollapse}
           className="p-1 hover:bg-brand-outline/20 rounded-md transition-colors"
           title={PALETTE_TEXT.COLLAPSE}
         >
-          <svg className="w-5 h-5 text-brand-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <svg
+            className="w-5 h-5 text-brand-foreground"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </button>
       </div>
@@ -165,7 +187,9 @@ export const EyePalette = memo(function EyePalette({
             All Eyes
           </h3>
           {loading ? (
-            <div className="text-sm text-semantic-muted text-center py-4">Loading eyes...</div>
+            <div className="text-sm text-semantic-muted text-center py-4">
+              Loading eyes...
+            </div>
           ) : filteredEyes.length > 0 ? (
             <div className="space-y-2">
               {filteredEyes.map((eye) => (
@@ -179,17 +203,25 @@ export const EyePalette = memo(function EyePalette({
                     <EyeIcon eye={eye.name} size={32} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-brand-foreground">{eye.name}</div>
-                    <div className="text-xs text-semantic-muted mt-0.5">{eye.description}</div>
+                    <div className="text-sm font-semibold text-brand-foreground">
+                      {eye.name}
+                    </div>
+                    <div className="text-xs text-semantic-muted mt-0.5">
+                      {eye.description}
+                    </div>
                     {eye.version && (
-                      <div className="text-xs text-brand-accent mt-1">v{eye.version}</div>
+                      <div className="text-xs text-brand-accent mt-1">
+                        v{eye.version}
+                      </div>
                     )}
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-sm text-semantic-muted text-center py-4">{PALETTE_TEXT.NO_RESULTS}</div>
+            <div className="text-sm text-semantic-muted text-center py-4">
+              {PALETTE_TEXT.NO_RESULTS}
+            </div>
           )}
         </div>
       </div>

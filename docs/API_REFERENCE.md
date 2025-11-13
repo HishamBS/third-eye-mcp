@@ -22,6 +22,7 @@ Optional API key authentication. Set `REQUIRE_API_KEY=true` in `.env` to enable.
 - **Duel Routes** (`/duel/*`): 50 requests/minute per session/IP
 
 Headers returned:
+
 - `X-RateLimit-Limit`: Maximum requests allowed
 - `X-RateLimit-Remaining`: Requests remaining in current window
 - `X-RateLimit-Reset`: Unix timestamp when limit resets
@@ -35,6 +36,7 @@ Headers returned:
 List all registered Eyes with metadata.
 
 **Response**: `200 OK`
+
 ```json
 {
   "tools": [
@@ -56,6 +58,7 @@ List all registered Eyes with metadata.
 Get workflow recommendations and routing suggestions.
 
 **Response**: `200 OK`
+
 ```json
 {
   "quickstart": {
@@ -80,6 +83,7 @@ Get workflow recommendations and routing suggestions.
 Get all Eye JSON schemas and error codes.
 
 **Response**: `200 OK`
+
 ```json
 {
   "envelope": {
@@ -100,9 +104,11 @@ Get all Eye JSON schemas and error codes.
 Get example inputs/outputs for a specific Eye.
 
 **Parameters**:
+
 - `eye` (path): Eye name (sharingan, jogan, etc.)
 
 **Response**: `200 OK`
+
 ```json
 {
   "eye": "sharingan",
@@ -126,6 +132,7 @@ Get example inputs/outputs for a specific Eye.
 ```
 
 **Errors**:
+
 - `404 Not Found`: Eye not found
 
 ### POST /mcp/run
@@ -133,6 +140,7 @@ Get example inputs/outputs for a specific Eye.
 Execute an Eye with input.
 
 **Request Body**:
+
 ```json
 {
   "eye": "sharingan",
@@ -142,6 +150,7 @@ Execute an Eye with input.
 ```
 
 Or auto-routing mode:
+
 ```json
 {
   "task": "implement user authentication",
@@ -150,6 +159,7 @@ Or auto-routing mode:
 ```
 
 **Response**: `200 OK`
+
 ```json
 {
   "eye": "sharingan",
@@ -161,6 +171,7 @@ Or auto-routing mode:
 ```
 
 **Errors**:
+
 - `400 Bad Request`: Validation error, order guard violation
 - `429 Too Many Requests`: Rate limit exceeded
 - `500 Internal Server Error`: Execution failed
@@ -170,6 +181,7 @@ Or auto-routing mode:
 Check MCP service health.
 
 **Response**: `200 OK`
+
 ```json
 {
   "ok": true,
@@ -187,6 +199,7 @@ Check MCP service health.
 Create a new session.
 
 **Request Body** (optional):
+
 ```json
 {
   "config": {
@@ -197,6 +210,7 @@ Create a new session.
 ```
 
 **Response**: `200 OK`
+
 ```json
 {
   "sessionId": "abc123",
@@ -214,6 +228,7 @@ Create a new session.
 Get session details.
 
 **Response**: `200 OK`
+
 ```json
 {
   "id": "abc123",
@@ -228,10 +243,12 @@ Get session details.
 Get all runs for a session.
 
 **Query Parameters**:
+
 - `limit` (default: 100): Number of runs to return
 - `offset` (default: 0): Pagination offset
 
 **Response**: `200 OK`
+
 ```json
 {
   "sessionId": "abc123",
@@ -256,6 +273,7 @@ Get all runs for a session.
 Get session context.
 
 **Response**: `200 OK`
+
 ```json
 {
   "sessionId": "abc123",
@@ -274,6 +292,7 @@ Get session context.
 Add context item to session.
 
 **Request Body**:
+
 ```json
 {
   "source": "user",
@@ -283,6 +302,7 @@ Add context item to session.
 ```
 
 **Response**: `200 OK`
+
 ```json
 {
   "sessionId": "abc123",
@@ -291,6 +311,7 @@ Add context item to session.
 ```
 
 **Errors**:
+
 - `400 Bad Request`: Invalid source (must be 'user' or 'eye')
 
 ### DELETE /sessions/:id/context/:key
@@ -298,6 +319,7 @@ Add context item to session.
 Remove context item from session.
 
 **Response**: `200 OK`
+
 ```json
 {
   "sessionId": "abc123",
@@ -310,6 +332,7 @@ Remove context item from session.
 Stop all Eyes in session (kill switch).
 
 **Response**: `200 OK`
+
 ```json
 {
   "sessionId": "abc123",
@@ -320,6 +343,7 @@ Stop all Eyes in session (kill switch).
 ```
 
 **Errors**:
+
 - `400 Bad Request`: Session already killed
 - `404 Not Found`: Session not found
 
@@ -328,6 +352,7 @@ Stop all Eyes in session (kill switch).
 Validate clarification answer.
 
 **Request Body**:
+
 ```json
 {
   "answer": "I want to implement user authentication"
@@ -335,6 +360,7 @@ Validate clarification answer.
 ```
 
 **Response**: `200 OK`
+
 ```json
 {
   "valid": true,
@@ -344,6 +370,7 @@ Validate clarification answer.
 ```
 
 Or if invalid:
+
 ```json
 {
   "valid": false,
@@ -357,11 +384,13 @@ Or if invalid:
 Export session data in multiple formats.
 
 **Query Parameters**:
+
 - `format` (default: json): Export format (json|md|csv)
 
 **Response**: `200 OK`
 
 **JSON Format**:
+
 ```json
 {
   "session": { ... },
@@ -375,6 +404,7 @@ Export session data in multiple formats.
 **CSV Format**: Metrics-only (eye,model,latency_ms,tokens_in,tokens_out,verdict)
 
 **Errors**:
+
 - `400 Bad Request`: Invalid format
 
 ---
@@ -386,6 +416,7 @@ Export session data in multiple formats.
 Start model comparison duel.
 
 **Request Body**:
+
 ```json
 {
   "eyeName": "sharingan",
@@ -397,6 +428,7 @@ Start model comparison duel.
 ```
 
 **Response**: `200 OK`
+
 ```json
 {
   "duelId": "duel-123",
@@ -406,6 +438,7 @@ Start model comparison duel.
 ```
 
 **Errors**:
+
 - `400 Bad Request`: Missing required fields, iterations > 10
 
 ### GET /duel/:id/status
@@ -413,6 +446,7 @@ Start model comparison duel.
 Get duel progress.
 
 **Response**: `200 OK`
+
 ```json
 {
   "duelId": "duel-123",
@@ -430,6 +464,7 @@ Get duel progress.
 Get final duel results (only when completed).
 
 **Response**: `200 OK`
+
 ```json
 {
   "duelId": "duel-123",
@@ -451,6 +486,7 @@ Get final duel results (only when completed).
 ```
 
 **Errors**:
+
 - `400 Bad Request`: Duel not yet completed
 - `404 Not Found`: Duel not found
 
@@ -459,6 +495,7 @@ Get final duel results (only when completed).
 ## Error Codes
 
 ### HTTP Status Codes
+
 - `200 OK`: Success
 - `400 Bad Request`: Validation error
 - `401 Unauthorized`: Missing/invalid API key
@@ -467,6 +504,7 @@ Get final duel results (only when completed).
 - `500 Internal Server Error`: Server error
 
 ### Eye Error Codes
+
 - **Success**: `OK`, `OK_WITH_NOTES`
 - **Rejection**: `REJECT_AMBIGUOUS`, `REJECT_UNSAFE`, `REJECT_INCOMPLETE`, `REJECT_INCONSISTENT`, `REJECT_NO_EVIDENCE`, `REJECT_BAD_PLAN`, `REJECT_CODE_ISSUES`
 - **Clarification**: `NEED_CLARIFICATION`, `NEED_MORE_CONTEXT`, `SUGGEST_ALTERNATIVE`
@@ -548,4 +586,4 @@ curl http://127.0.0.1:7070/duel/duel-123/results
 
 ---
 
-*Last Updated: 2025-10-06*
+_Last Updated: 2025-10-06_

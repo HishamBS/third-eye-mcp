@@ -1,6 +1,6 @@
-import EvidenceLens from '../../EvidenceLens';
-import SessionMemoryPanel from '../../SessionMemoryPanel';
-import type { EvidenceClaim, PipelineEvent } from '../../../types/pipeline';
+import EvidenceLens from "../../EvidenceLens";
+import SessionMemoryPanel from "../../SessionMemoryPanel";
+import type { EvidenceClaim, PipelineEvent } from "../../../types/pipeline";
 
 export interface EvidenceTabProps {
   claims: EvidenceClaim[];
@@ -11,7 +11,14 @@ export interface EvidenceTabProps {
   loading?: boolean;
 }
 
-export function EvidenceTab({ claims, events, latestDraft, byakuganEvents, noviceMode, loading = false }: EvidenceTabProps) {
+export function EvidenceTab({
+  claims,
+  events,
+  latestDraft,
+  byakuganEvents,
+  noviceMode,
+  loading = false,
+}: EvidenceTabProps) {
   if (loading && !latestDraft) {
     return (
       <div className="space-y-6">
@@ -23,10 +30,17 @@ export function EvidenceTab({ claims, events, latestDraft, byakuganEvents, novic
 
   return (
     <div className="space-y-6">
-      <EvidenceLens draft={latestDraft} claims={claims} expertMode={!noviceMode} />
+      <EvidenceLens
+        draft={latestDraft}
+        claims={claims}
+        expertMode={!noviceMode}
+      />
       {!noviceMode && <SessionMemoryPanel byakuganEvents={byakuganEvents} />}
       {noviceMode && events.length === 0 && (
-        <p className="text-xs text-semantic-muted">Evidence will appear as soon as the pipeline emits Byakugan or Tenseigan envelopes.</p>
+        <p className="text-xs text-semantic-muted">
+          Evidence will appear as soon as the pipeline emits Byakugan or
+          Tenseigan envelopes.
+        </p>
       )}
     </div>
   );

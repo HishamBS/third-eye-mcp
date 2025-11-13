@@ -4,12 +4,12 @@ Third Eye MCP supports multiple AI providers, both cloud-based and local. This g
 
 ## Supported Providers
 
-| Provider | Type | API Key Required | Base URL |
-|----------|------|------------------|----------|
-| **Groq** | Cloud | ✅ Yes | https://api.groq.com/openai/v1 |
-| **OpenRouter** | Cloud | ✅ Yes | https://openrouter.ai/api/v1 |
-| **Ollama** | Local | ❌ No | http://127.0.0.1:11434 |
-| **LM Studio** | Local | ❌ No | http://127.0.0.1:1234/v1 |
+| Provider       | Type  | API Key Required | Base URL                       |
+| -------------- | ----- | ---------------- | ------------------------------ |
+| **Groq**       | Cloud | ✅ Yes           | https://api.groq.com/openai/v1 |
+| **OpenRouter** | Cloud | ✅ Yes           | https://openrouter.ai/api/v1   |
+| **Ollama**     | Local | ❌ No            | http://127.0.0.1:11434         |
+| **LM Studio**  | Local | ❌ No            | http://127.0.0.1:1234/v1       |
 
 ---
 
@@ -28,6 +28,7 @@ Third Eye MCP supports multiple AI providers, both cloud-based and local. This g
 ### 2. Add to Third Eye
 
 **Via UI** (Recommended):
+
 1. Open Third Eye Portal at http://127.0.0.1:3300
 2. Navigate to **Models** page
 3. Find **Groq API Key** section
@@ -36,6 +37,7 @@ Third Eye MCP supports multiple AI providers, both cloud-based and local. This g
 6. Click **Refresh** to load available models
 
 **Via Environment Variable**:
+
 ```bash
 export GROQ_API_KEY="gsk_..."
 bun run dev
@@ -51,12 +53,12 @@ bun run dev
 
 ### Popular Groq Models
 
-| Model ID | Description | Context Window |
-|----------|-------------|----------------|
-| `llama-3.3-70b-versatile` | Latest Llama 3.3 (best for general tasks) | 128k |
-| `llama-3.1-70b-versatile` | Llama 3.1 70B (great balance) | 128k |
-| `mixtral-8x7b-32768` | Mixtral MoE (fast, good reasoning) | 32k |
-| `gemma2-9b-it` | Google Gemma 2 (efficient) | 8k |
+| Model ID                  | Description                               | Context Window |
+| ------------------------- | ----------------------------------------- | -------------- |
+| `llama-3.3-70b-versatile` | Latest Llama 3.3 (best for general tasks) | 128k           |
+| `llama-3.1-70b-versatile` | Llama 3.1 70B (great balance)             | 128k           |
+| `mixtral-8x7b-32768`      | Mixtral MoE (fast, good reasoning)        | 32k            |
+| `gemma2-9b-it`            | Google Gemma 2 (efficient)                | 8k             |
 
 ### Example Request
 
@@ -87,12 +89,14 @@ curl -X POST http://127.0.0.1:7070/mcp/run \
 ### 2. Add to Third Eye
 
 **Via UI**:
+
 1. Open **Models** page
 2. Find **OpenRouter API Key** section
 3. Paste key and click **Save**
 4. Click **Refresh** to load 200+ models
 
 **Via Environment Variable**:
+
 ```bash
 export OPENROUTER_API_KEY="sk-or-..."
 bun run dev
@@ -123,6 +127,7 @@ Third Eye displays token usage in the UI after each run.
 ### 1. Install Ollama
 
 **macOS/Linux**:
+
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
 ```
@@ -131,6 +136,7 @@ curl -fsSL https://ollama.com/install.sh | sh
 Download from [ollama.com/download](https://ollama.com/download)
 
 **Verify Installation**:
+
 ```bash
 ollama --version
 # ollama version is 0.1.x
@@ -139,6 +145,7 @@ ollama --version
 ### 2. Pull Models
 
 **Recommended models**:
+
 ```bash
 # Llama 3.2 (3B, fast for coding)
 ollama pull llama3.2
@@ -157,6 +164,7 @@ ollama pull qwen2.5-coder
 ```
 
 **List installed models**:
+
 ```bash
 ollama list
 ```
@@ -164,11 +172,13 @@ ollama list
 ### 3. Start Ollama Server
 
 **Default** (runs on 127.0.0.1:11434):
+
 ```bash
 ollama serve
 ```
 
 **Custom port**:
+
 ```bash
 OLLAMA_HOST=127.0.0.1:8080 ollama serve
 ```
@@ -176,6 +186,7 @@ OLLAMA_HOST=127.0.0.1:8080 ollama serve
 ### 4. Configure Third Eye
 
 **UI Setup**:
+
 1. Go to **Models** page
 2. Find **Ollama** section
 3. Click **Refresh** to load models
@@ -213,6 +224,7 @@ docker exec -it third-eye-ollama ollama pull llama3.2
 4. Wait for download to complete
 
 **Recommended models**:
+
 - `Meta-Llama-3.2-3B-Instruct-GGUF` (fast, 3B)
 - `Qwen2.5-Coder-7B-Instruct-GGUF` (coding)
 - `DeepSeek-Coder-V2-Lite-Instruct-GGUF` (coding)
@@ -227,6 +239,7 @@ docker exec -it third-eye-ollama ollama pull llama3.2
 ### 4. Configure Third Eye
 
 **UI Setup**:
+
 1. Go to **Models** page
 2. Find **LM Studio** section
 3. Click **Refresh** to load running model
@@ -237,6 +250,7 @@ docker exec -it third-eye-ollama ollama pull llama3.2
 ### 5. Advanced Settings
 
 LM Studio allows:
+
 - **GPU Acceleration**: Offload layers to GPU
 - **Context Length**: Adjust max context window
 - **Temperature**: Control randomness (0.0-2.0)
@@ -247,15 +261,15 @@ Set these in LM Studio before starting server.
 
 ## Provider Comparison
 
-| Feature | Groq | OpenRouter | Ollama | LM Studio |
-|---------|------|------------|--------|-----------|
-| **Speed** | ⚡ Fastest | 🟢 Fast | 🟡 Medium | 🟡 Medium |
-| **Cost** | 💰 Paid | 💰 Paid | ✅ Free | ✅ Free |
-| **Privacy** | ❌ Cloud | ❌ Cloud | ✅ Local | ✅ Local |
-| **Model Variety** | ~10 models | 200+ models | 100+ models | 100+ models |
-| **Setup Difficulty** | Easy | Easy | Medium | Easy (GUI) |
-| **GPU Required** | No | No | Optional | Optional |
-| **Offline Use** | No | No | Yes | Yes |
+| Feature              | Groq       | OpenRouter  | Ollama      | LM Studio   |
+| -------------------- | ---------- | ----------- | ----------- | ----------- |
+| **Speed**            | ⚡ Fastest | 🟢 Fast     | 🟡 Medium   | 🟡 Medium   |
+| **Cost**             | 💰 Paid    | 💰 Paid     | ✅ Free     | ✅ Free     |
+| **Privacy**          | ❌ Cloud   | ❌ Cloud    | ✅ Local    | ✅ Local    |
+| **Model Variety**    | ~10 models | 200+ models | 100+ models | 100+ models |
+| **Setup Difficulty** | Easy       | Easy        | Medium      | Easy (GUI)  |
+| **GPU Required**     | No         | No          | Optional    | Optional    |
+| **Offline Use**      | No         | No          | Yes         | Yes         |
 
 ---
 
@@ -306,6 +320,7 @@ Fallback: groq / mixtral-8x7b-32768
 **Cause**: Invalid API key
 
 **Fix**:
+
 1. Go to **Models** page
 2. Re-enter API key
 3. Click **Save**
@@ -316,6 +331,7 @@ Fallback: groq / mixtral-8x7b-32768
 **Cause**: Ollama server not running
 
 **Fix**:
+
 ```bash
 # Start Ollama
 ollama serve
@@ -329,6 +345,7 @@ curl http://127.0.0.1:11434/api/tags
 **Cause**: Server not started or model not loaded
 
 **Fix**:
+
 1. Open LM Studio
 2. Go to **Local Server** tab
 3. Select model from dropdown
@@ -337,11 +354,13 @@ curl http://127.0.0.1:11434/api/tags
 ### General: Slow Responses
 
 **Local Providers**:
+
 - Enable GPU acceleration (if available)
 - Use smaller models (3B instead of 70B)
 - Increase RAM allocation
 
 **Cloud Providers**:
+
 - Check internet connection
 - Try different model (smaller = faster)
 - Switch providers (Groq is fastest)

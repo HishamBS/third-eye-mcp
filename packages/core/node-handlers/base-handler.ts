@@ -4,7 +4,7 @@
  * Strategy pattern for handling different node types in pipeline execution
  */
 
-import type { PipelineDagNode } from '@third-eye/types';
+import type { PipelineDagNode } from "@third-eye/types";
 
 export interface ExecutionContext {
   runId: string;
@@ -17,7 +17,7 @@ export interface ExecutionContext {
 
 export interface NodeExecutionResult {
   nodeId: string;
-  status: 'success' | 'error' | 'awaiting_input';
+  status: "success" | "error" | "awaiting_input";
   verdict?: string;
   output?: unknown;
   error?: string;
@@ -35,5 +35,8 @@ export interface NodeHandler {
   /**
    * Execute the node
    */
-  execute(node: PipelineDagNode, context: ExecutionContext): Promise<NodeExecutionResult>;
+  execute(
+    node: PipelineDagNode,
+    context: ExecutionContext,
+  ): Promise<NodeExecutionResult>;
 }

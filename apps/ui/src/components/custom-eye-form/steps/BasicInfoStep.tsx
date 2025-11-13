@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { CheckCircle2 } from 'lucide-react';
-import type { WizardStepProps } from '@/types/custom-eye-form';
-import { FIELD_LABELS, PLACEHOLDERS, HELP_TEXT } from '../constants';
+import { CheckCircle2 } from "lucide-react";
+import type { WizardStepProps } from "@/types/custom-eye-form";
+import { FIELD_LABELS, PLACEHOLDERS, HELP_TEXT } from "../constants";
 
 /**
  * BasicInfoStep - Step 1 of CustomEyeWizard
@@ -21,9 +21,7 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
         <input
           type="text"
           value={state.formData.name}
-          onChange={(e) =>
-            dispatch({ type: 'SET_NAME', name: e.target.value })
-          }
+          onChange={(e) => dispatch({ type: "SET_NAME", name: e.target.value })}
           placeholder={PLACEHOLDERS.NAME}
           className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
         />
@@ -37,13 +35,15 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
         <textarea
           value={state.formData.description}
           onChange={(e) =>
-            dispatch({ type: 'SET_DESCRIPTION', description: e.target.value })
+            dispatch({ type: "SET_DESCRIPTION", description: e.target.value })
           }
           placeholder={PLACEHOLDERS.DESCRIPTION}
           rows={4}
           className="w-full resize-none rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-slate-500 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
         />
-        <p className="mt-1 text-xs text-semantic-muted">{HELP_TEXT.DESCRIPTION}</p>
+        <p className="mt-1 text-xs text-semantic-muted">
+          {HELP_TEXT.DESCRIPTION}
+        </p>
       </div>
 
       <div>
@@ -57,12 +57,15 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
             const file = e.target.files?.[0];
             if (file) {
               if (file.size > 50000) {
-                console.error('File size exceeds 50KB limit');
+                console.error("File size exceeds 50KB limit");
                 return;
               }
               const reader = new FileReader();
               reader.onload = () => {
-                dispatch({ type: 'SET_ICON_SVG', iconSvg: reader.result as string });
+                dispatch({
+                  type: "SET_ICON_SVG",
+                  iconSvg: reader.result as string,
+                });
               };
               reader.readAsText(file);
             }

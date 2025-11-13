@@ -26,12 +26,14 @@ In the MCP Servers section, click **Add Server** and configure:
 **Command**: `bunx`
 
 **Arguments**:
+
 ```
 third-eye-mcp
 server
 ```
 
 **Environment Variables**:
+
 ```
 GROQ_API_KEY=gsk_your_groq_key_here
 OPENROUTER_API_KEY=sk-or-v1-your_openrouter_key_here
@@ -40,6 +42,7 @@ OPENROUTER_API_KEY=sk-or-v1-your_openrouter_key_here
 ### Step 3: Alternative - Config File Method
 
 Warp stores MCP config at:
+
 - **macOS**: `~/.warp/mcp_servers.json`
 - **Linux**: `~/.config/warp-terminal/mcp_servers.json`
 
@@ -105,6 +108,7 @@ Use the third_eye_overseer tool to check connection status.
 ```
 
 Expected response:
+
 - Warp AI calls `third_eye_overseer` tool
 - Third Eye processes request
 - Dashboard shows session at http://127.0.0.1:3300
@@ -181,6 +185,7 @@ Use the `third_eye_overseer` tool to suggest commands for deploying this app bas
 ### MCP Server Not Connecting
 
 1. **Check server status**:
+
    ```bash
    bunx third-eye-mcp status
    ```
@@ -190,6 +195,7 @@ Use the `third_eye_overseer` tool to suggest commands for deploying this app bas
    - Look for MCP-related errors
 
 3. **Test MCP server manually**:
+
    ```bash
    bunx third-eye-mcp server
    # Should start without errors
@@ -214,6 +220,7 @@ Use the `third_eye_overseer` tool to suggest commands for deploying this app bas
 ### Slow Responses
 
 1. **Use faster models**:
+
    ```bash
    # Open dashboard
    open http://127.0.0.1:3300
@@ -223,6 +230,7 @@ Use the `third_eye_overseer` tool to suggest commands for deploying this app bas
    ```
 
 2. **Enable local inference**:
+
    ```bash
    # Install Ollama
    curl https://ollama.ai/install.sh | sh
@@ -240,12 +248,14 @@ Use the `third_eye_overseer` tool to suggest commands for deploying this app bas
 ### Provider Connection Issues
 
 1. **Test Groq API**:
+
    ```bash
    curl https://api.groq.com/openai/v1/models \
      -H "Authorization: Bearer $GROQ_API_KEY"
    ```
 
 2. **Test OpenRouter API**:
+
    ```bash
    curl https://openrouter.ai/api/v1/models \
      -H "Authorization: Bearer $OPENROUTER_API_KEY"

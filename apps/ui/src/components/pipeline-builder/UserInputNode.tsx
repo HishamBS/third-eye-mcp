@@ -1,10 +1,13 @@
-'use client';
+"use client";
 
-import { memo } from 'react';
-import { Handle, Position, type NodeProps } from 'reactflow';
-import { UserCircle, MessageSquare, Clock } from 'lucide-react';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE } from '@/constants/color-mappings';
-import { ANIMATION_DURATION } from '@/constants/timing';
+import { memo } from "react";
+import { Handle, Position, type NodeProps } from "reactflow";
+import { UserCircle, MessageSquare, Clock } from "lucide-react";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
+import { ANIMATION_DURATION } from "@/constants/timing";
 
 /**
  * User Input Node Data Structure
@@ -30,16 +33,20 @@ export interface UserInputNodeData {
  * Per R04: Memoized for performance
  * Per R07: Strict typing throughout
  */
-function UserInputNodeComponent({ data, selected, dragging }: NodeProps<UserInputNodeData>) {
-  const { label = 'User Input', promptKey = 'user_feedback' } = data;
+function UserInputNodeComponent({
+  data,
+  selected,
+  dragging,
+}: NodeProps<UserInputNodeData>) {
+  const { label = "User Input", promptKey = "user_feedback" } = data;
 
   return (
     <div
       className={`
         relative min-w-[180px] rounded-lg border-2 bg-brand-paper p-4
         transition-all ${ANIMATION_DURATION.FAST} ease-in-out
-        ${selected ? `border-dashed shadow-2xl ${STATUS_TEXT_COLORS.info}` : 'border-solid shadow-lg border-brand-outline'}
-        ${dragging ? 'cursor-grabbing opacity-80' : 'cursor-grab opacity-100'}
+        ${selected ? `border-dashed shadow-2xl ${STATUS_TEXT_COLORS.info}` : "border-solid shadow-lg border-brand-outline"}
+        ${dragging ? "cursor-grabbing opacity-80" : "cursor-grab opacity-100"}
       `}
     >
       {/* Input Handle */}
@@ -68,7 +75,9 @@ function UserInputNodeComponent({ data, selected, dragging }: NodeProps<UserInpu
       {/* Prompt Key (shown when selected) */}
       {selected && (
         <div className="mt-2 pt-2 border-t border-brand-outline/40">
-          <div className="text-xs font-medium text-semantic-muted mb-1">Prompt Key:</div>
+          <div className="text-xs font-medium text-semantic-muted mb-1">
+            Prompt Key:
+          </div>
           <div className="flex items-center gap-1 text-xs text-brand-foreground font-mono bg-brand-surface rounded px-2 py-1">
             <MessageSquare className="w-3 h-3" />
             <span>{promptKey}</span>
@@ -84,7 +93,9 @@ function UserInputNodeComponent({ data, selected, dragging }: NodeProps<UserInpu
       />
 
       {/* Pause Indicator Badge */}
-      <div className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full ${STATUS_BG_COLORS_SUBTLE.info} ${STATUS_TEXT_COLORS.info} flex items-center justify-center text-xs font-bold shadow-md`}>
+      <div
+        className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full ${STATUS_BG_COLORS_SUBTLE.info} ${STATUS_TEXT_COLORS.info} flex items-center justify-center text-xs font-bold shadow-md`}
+      >
         <Clock className="w-4 h-4 animate-pulse" />
       </div>
     </div>
@@ -95,4 +106,4 @@ function UserInputNodeComponent({ data, selected, dragging }: NodeProps<UserInpu
  * Memoized User Input Node (Performance optimization per R04)
  */
 export const UserInputNode = memo(UserInputNodeComponent);
-UserInputNode.displayName = 'UserInputNode';
+UserInputNode.displayName = "UserInputNode";

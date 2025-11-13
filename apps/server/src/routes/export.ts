@@ -1,17 +1,24 @@
-import { Hono } from 'hono';
-import { getDb } from '@third-eye/db';
-import { sessions, runs, pipelineEvents, type Session, type Run, type PipelineEvent } from '@third-eye/db';
-import { eq, desc } from 'drizzle-orm';
+import { Hono } from "hono";
+import { getDb } from "@third-eye/db";
+import {
+  sessions,
+  runs,
+  pipelineEvents,
+  type Session,
+  type Run,
+  type PipelineEvent,
+} from "@third-eye/db";
+import { eq, desc } from "drizzle-orm";
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
   createErrorResponse,
   createInternalErrorResponse,
   requestIdMiddleware,
-  errorHandler
-} from '../middleware/response';
-import { z } from 'zod';
-import { type ExportFormat } from '@third-eye/constants';
+  errorHandler,
+} from "../middleware/response";
+import { z } from "zod";
+import { type ExportFormat } from "@third-eye/constants";
 
 /**
  * Export API
@@ -21,8 +28,8 @@ import { type ExportFormat } from '@third-eye/constants';
 
 const app = new Hono();
 
-app.use('*', requestIdMiddleware());
-app.use('*', errorHandler());
+app.use("*", requestIdMiddleware());
+app.use("*", errorHandler());
 
 interface ExportData {
   session: Session;
@@ -34,10 +41,10 @@ interface ExportData {
 /**
  * GET /api/export/:sessionId - Export session data
  */
-app.get('/:sessionId', async (c) => {
+app.get("/:sessionId", async (c) => {
   try {
-    const sessionId = c.req.param('sessionId');
-    const format = (c.req.query('format') || 'json') as ExportFormat;
+    const sessionId = c.req.param("sessionId");
+    const format = (c.req.query("format") || "json") as ExportFormat;
 
     const { db } = getDb();
 
@@ -50,7 +57,11 @@ app.get('/:sessionId', async (c) => {
       .all();
 
     if (session.length === 0) {
-      return createErrorResponse(c, { title: 'Session Not Found', status: 404, detail: 'The requested session could not be found' });
+      return createErrorResponse(c, {
+        title: "Session Not Found",
+        status: 404,
+        detail: "The requested session could not be found",
+      });
     }
 
     // Get all runs for this session
@@ -77,37 +88,47 @@ app.get('/:sessionId', async (c) => {
     };
 
     switch (format) {
-      case 'json':
-        c.header('Content-Disposition', `attachment; filename="third-eye-session-${sessionId}.json"`);
+      case "json":
+        c.header(
+          "Content-Disposition",
+          `attachment; filename="third-eye-session-${sessionId}.json"`,
+        );
         return createSuccessResponse(c, exportData);
 
-      case 'md':
+      case "md":
         const markdown = generateMarkdown(exportData);
         return c.text(markdown, 200, {
-          'Content-Type': 'text/markdown',
-          'Content-Disposition': `attachment; filename="third-eye-session-${sessionId}.md"`,
+          "Content-Type": "text/markdown",
+          "Content-Disposition": `attachment; filename="third-eye-session-${sessionId}.md"`,
         });
 
-      case 'html':
+      case "html":
         const html = generateHTML(exportData);
         return c.html(html, 200, {
-          'Content-Disposition': `attachment; filename="third-eye-session-${sessionId}.html"`,
+          "Content-Disposition": `attachment; filename="third-eye-session-${sessionId}.html"`,
         });
 
-      case 'pdf':
+      case "pdf":
         // PDF generation would require a library like puppeteer or pdfkit
         // For now, we'll generate HTML and suggest user print to PDF
         const pdfHtml = generateHTML(exportData, true);
         return c.html(pdfHtml, 200, {
-          'Content-Disposition': `inline; filename="third-eye-session-${sessionId}.html"`,
+          "Content-Disposition": `inline; filename="third-eye-session-${sessionId}.html"`,
         });
 
       default:
-        return createErrorResponse(c, { title: 'Invalid Format', status: 400, detail: 'Supported formats: pdf, html, json, md' });
+        return createErrorResponse(c, {
+          title: "Invalid Format",
+          status: 400,
+          detail: "Supported formats: pdf, html, json, md",
+        });
     }
   } catch (error) {
-    console.error('Export failed:', error);
-    return createInternalErrorResponse(c, `Failed to export session: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error("Export failed:", error);
+    return createInternalErrorResponse(
+      c,
+      `Failed to export session: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 });
 
@@ -129,8 +150,8 @@ function generateMarkdown(data: ExportData): string {
 
   md += `## Timeline Events (${events.length})\n\n`;
   events.forEach((event, index) => {
-    md += `### ${index + 1}. ${event.type} - ${event.eye || 'system'}\n`;
-    md += `- **Code:** ${event.code || 'N/A'}\n`;
+    md += `### ${index + 1}. ${event.type} - ${event.eye || "system"}\n`;
+    md += `- **Code:** ${event.code || "N/A"}\n`;
     md += `- **Time:** ${new Date(event.createdAt).toLocaleString()}\n`;
     if (event.md) {
       md += `- **Summary:** ${event.md}\n`;
@@ -143,9 +164,9 @@ function generateMarkdown(data: ExportData): string {
     md += `### ${index + 1}. ${run.eye}\n`;
     md += `- **Provider:** ${run.provider}\n`;
     md += `- **Model:** ${run.model}\n`;
-    md += `- **Latency:** ${run.latencyMs || 'N/A'}ms\n`;
-    md += `- **Tokens In:** ${run.tokensIn || 'N/A'}\n`;
-    md += `- **Tokens Out:** ${run.tokensOut || 'N/A'}\n`;
+    md += `- **Latency:** ${run.latencyMs || "N/A"}ms\n`;
+    md += `- **Tokens In:** ${run.tokensIn || "N/A"}\n`;
+    md += `- **Tokens Out:** ${run.tokensOut || "N/A"}\n`;
     md += `- **Time:** ${new Date(run.createdAt).toLocaleString()}\n`;
     md += `\n**Input:**\n\`\`\`\n${run.inputMd}\n\`\`\`\n\n`;
     if (run.outputJson) {
@@ -171,7 +192,7 @@ function generateHTML(data: ExportData, forPrint = false): string {
       h1 { page-break-before: always; }
     }
     `
-    : '';
+    : "";
 
   let html = `<!DOCTYPE html>
 <html lang="en">
@@ -219,7 +240,7 @@ function generateHTML(data: ExportData, forPrint = false): string {
     session.configJson
       ? `<h2>Configuration</h2>
   <pre><code>${JSON.stringify(session.configJson, null, 2)}</code></pre>`
-      : ''
+      : ""
   }
 
   <h2>Statistics</h2>
@@ -236,14 +257,17 @@ function generateHTML(data: ExportData, forPrint = false): string {
       <div class="stat-label">Total Tokens</div>
       <div class="stat-value">${runs.reduce(
         (sum, r) => sum + (r.tokensIn || 0) + (r.tokensOut || 0),
-        0
+        0,
       )}</div>
     </div>
     <div class="stat">
       <div class="stat-label">Avg Latency</div>
       <div class="stat-value">${
         runs.length > 0
-          ? Math.round(runs.reduce((sum, r) => sum + (r.latencyMs || 0), 0) / runs.length)
+          ? Math.round(
+              runs.reduce((sum, r) => sum + (r.latencyMs || 0), 0) /
+                runs.length,
+            )
           : 0
       }ms</div>
     </div>
@@ -254,15 +278,15 @@ function generateHTML(data: ExportData, forPrint = false): string {
     .map(
       (event, index) => `
     <div class="event">
-      <h3>${index + 1}. ${event.type} - ${event.eye || 'system'}</h3>
-      <p><strong>Code:</strong> ${event.code || 'N/A'}</p>
+      <h3>${index + 1}. ${event.type} - ${event.eye || "system"}</h3>
+      <p><strong>Code:</strong> ${event.code || "N/A"}</p>
       <p><strong>Time:</strong> ${new Date(event.createdAt).toLocaleString()}</p>
-      ${event.md ? `<p><strong>Summary:</strong> ${event.md}</p>` : ''}
-      ${event.dataJson ? `<details><summary>Data</summary><pre><code>${JSON.stringify(event.dataJson, null, 2)}</code></pre></details>` : ''}
+      ${event.md ? `<p><strong>Summary:</strong> ${event.md}</p>` : ""}
+      ${event.dataJson ? `<details><summary>Data</summary><pre><code>${JSON.stringify(event.dataJson, null, 2)}</code></pre></details>` : ""}
     </div>
-  `
+  `,
     )
-    .join('')}
+    .join("")}
 
   <h2>Eye Runs (${runs.length})</h2>
   ${runs
@@ -281,7 +305,7 @@ function generateHTML(data: ExportData, forPrint = false): string {
         </div>
         <div class="stat">
           <div class="stat-label">Latency</div>
-          <div class="stat-value">${run.latencyMs || 'N/A'}ms</div>
+          <div class="stat-value">${run.latencyMs || "N/A"}ms</div>
         </div>
         <div class="stat">
           <div class="stat-label">Tokens</div>
@@ -295,19 +319,19 @@ function generateHTML(data: ExportData, forPrint = false): string {
         run.outputJson
           ? `<h4>Output</h4>
       <pre><code>${escapeHtml(JSON.stringify(run.outputJson, null, 2))}</code></pre>`
-          : ''
+          : ""
       }
     </div>
-  `
+  `,
     )
-    .join('')}
+    .join("")}
 
   ${
     forPrint
       ? `<div class="no-print" style="margin-top: 2rem; padding: 1rem; background: #1e293b; border-radius: 8px;">
     <p><strong>Note:</strong> Use your browser's Print function (Cmd/Ctrl+P) and select "Save as PDF" to create a PDF version of this report.</p>
   </div>`
-      : ''
+      : ""
   }
 </body>
 </html>`;
@@ -317,11 +341,11 @@ function generateHTML(data: ExportData, forPrint = false): string {
 
 function escapeHtml(text: string): string {
   return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 export default app;

@@ -9,8 +9,10 @@
  * - This eliminates 70+ duplications across the codebase
  */
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:7070';
-export const WS_BASE_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://127.0.0.1:7070';
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:7070";
+export const WS_BASE_URL =
+  process.env.NEXT_PUBLIC_WS_URL || "ws://127.0.0.1:7070";
 
 export const DEFAULT_API_PORT = 7070;
 
@@ -19,12 +21,12 @@ export const DEFAULT_API_PORT = 7070;
  * Some components use regex to remove trailing slashes - this centralizes that logic
  */
 export function getApiUrl(): string {
-  return API_BASE_URL.replace(/\/$/, '');
+  return API_BASE_URL.replace(/\/$/, "");
 }
 
 /**
  * Get WebSocket URL without trailing slash
  */
 export function getWsUrl(): string {
-  return WS_BASE_URL.replace(/\/$/, '');
+  return WS_BASE_URL.replace(/\/$/, "");
 }

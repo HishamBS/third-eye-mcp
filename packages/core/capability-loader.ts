@@ -5,11 +5,11 @@
  * This registry is used by the LLM router to make intelligent routing decisions.
  */
 
-import { EyeStageToken } from '@third-eye/constants';
-import type { getDb } from '@third-eye/db';
+import { EyeStageToken } from "@third-eye/constants";
+import type { getDb } from "@third-eye/db";
 
 // SSOT: Stage type values
-const STAGE_BOTH = 'both';
+const STAGE_BOTH = "both";
 
 export interface CapabilityRegistry {
   [eyeId: string]: {
@@ -34,10 +34,12 @@ export interface DynamicRouteDecision {
 /**
  * Load dynamic capabilities from the database
  */
-export async function loadDynamicCapabilities(db: ReturnType<typeof getDb>['db']): Promise<CapabilityRegistry> {
+export async function loadDynamicCapabilities(
+  db: ReturnType<typeof getDb>["db"],
+): Promise<CapabilityRegistry> {
   try {
-    const { eyes, personaBlueprints } = await import('@third-eye/db/schema');
-    const { eq } = await import('drizzle-orm');
+    const { eyes, personaBlueprints } = await import("@third-eye/db/schema");
+    const { eq } = await import("drizzle-orm");
 
     // Query DB for all active eyes (SSOT - database is single source of truth)
     const allEyes = await db
@@ -56,17 +58,22 @@ export async function loadDynamicCapabilities(db: ReturnType<typeof getDb>['db']
       // Match blueprint by eyeId (UUID) - SSOT: use UUID for FK relationships
       const blueprint = personas.find((p) => p.eyeId === eye.id);
       if (!blueprint) {
-        console.warn(`[CapabilityLoader] No blueprint found for eye: ${eye.name} (id: ${eye.id})`);
+        console.warn(
+          `[CapabilityLoader] No blueprint found for eye: ${eye.name} (id: ${eye.id})`,
+        );
         continue;
       }
 
       // Parse capabilities from JSON if stored as string
       let capabilities: string[] = [];
-      if (typeof blueprint.capabilities === 'string') {
+      if (typeof blueprint.capabilities === "string") {
         try {
           capabilities = JSON.parse(blueprint.capabilities);
         } catch (e) {
-          console.error(`[CapabilityLoader] Failed to parse capabilities for ${eye.name}:`, e);
+          console.error(
+            `[CapabilityLoader] Failed to parse capabilities for ${eye.name}:`,
+            e,
+          );
         }
       } else if (Array.isArray(blueprint.capabilities)) {
         capabilities = blueprint.capabilities;
@@ -74,19 +81,27 @@ export async function loadDynamicCapabilities(db: ReturnType<typeof getDb>['db']
 
       // Parse phases to determine stage
       let phases: Record<string, unknown> = {};
-      if (typeof blueprint.phases === 'string') {
+      if (typeof blueprint.phases === "string") {
         try {
           phases = JSON.parse(blueprint.phases);
         } catch (e) {
-          console.error(`[CapabilityLoader] Failed to parse phases for ${eye.name}:`, e);
+          console.error(
+            `[CapabilityLoader] Failed to parse phases for ${eye.name}:`,
+            e,
+          );
         }
-      } else if (typeof blueprint.phases === 'object' && blueprint.phases !== null) {
+      } else if (
+        typeof blueprint.phases === "object" &&
+        blueprint.phases !== null
+      ) {
         phases = blueprint.phases as Record<string, unknown>;
       }
 
       // Determine stage from phases
-      const hasGuidance = phases.guidance !== undefined && phases.guidance !== null;
-      const hasValidation = phases.validation !== undefined && phases.validation !== null;
+      const hasGuidance =
+        phases.guidance !== undefined && phases.guidance !== null;
+      const hasValidation =
+        phases.validation !== undefined && phases.validation !== null;
       let stage = STAGE_BOTH;
       if (hasGuidance && !hasValidation) {
         stage = EyeStageToken.GUIDANCE;
@@ -102,10 +117,12 @@ export async function loadDynamicCapabilities(db: ReturnType<typeof getDb>['db']
       };
     }
 
-    console.log(`[CapabilityLoader] Loaded ${Object.keys(registry).length} eyes with capabilities`);
+    console.log(
+      `[CapabilityLoader] Loaded ${Object.keys(registry).length} eyes with capabilities`,
+    );
     return registry;
   } catch (error) {
-    console.error('[CapabilityLoader] Failed to load capabilities:', error);
+    console.error("[CapabilityLoader] Failed to load capabilities:", error);
     return {};
   }
 }
@@ -114,19 +131,23 @@ export async function loadDynamicCapabilities(db: ReturnType<typeof getDb>['db']
  * Build router persona prompt dynamically from capability registry
  */
 // SSOT: Stage labels for router persona
-const STAGE_LABEL_GUIDANCE = '[GUIDANCE]';
-const STAGE_LABEL_VALIDATION = '[VALIDATION]';
-const STAGE_LABEL_BOTH = '[BOTH]';
+const STAGE_LABEL_GUIDANCE = "[GUIDANCE]";
+const STAGE_LABEL_VALIDATION = "[VALIDATION]";
+const STAGE_LABEL_BOTH = "[BOTH]";
 
 export function buildRouterPersona(registry: CapabilityRegistry): string {
   const capabilityList = Object.entries(registry)
     .filter(([_, info]) => info.active)
     .map(([eyeId, info]) => {
-      const stageLabel = info.stage === EyeStageToken.GUIDANCE ? STAGE_LABEL_GUIDANCE : 
-                         info.stage === EyeStageToken.VALIDATION ? STAGE_LABEL_VALIDATION : STAGE_LABEL_BOTH;
-      return `- ${eyeId} ${stageLabel}: [${info.capabilities.join(', ')}] - ${info.description}`;
+      const stageLabel =
+        info.stage === EyeStageToken.GUIDANCE
+          ? STAGE_LABEL_GUIDANCE
+          : info.stage === EyeStageToken.VALIDATION
+            ? STAGE_LABEL_VALIDATION
+            : STAGE_LABEL_BOTH;
+      return `- ${eyeId} ${stageLabel}: [${info.capabilities.join(", ")}] - ${info.description}`;
     })
-    .join('\n');
+    .join("\n");
 
   return `
 You are the Overseer router for Third Eye MCP. Your job is to analyze the user's request and select which eyes to run based on their capabilities.
@@ -190,57 +211,99 @@ The "ui.color" field MUST be one of: "success", "warning", "error", "info" (NOT 
  */
 function generateDynamicExamples(registry: CapabilityRegistry): string {
   const examples: string[] = [];
-  
+
   // Find eyes with specific capabilities
   const codeReviewEyes = Object.entries(registry)
-    .filter(([_, info]) => info.active && info.capabilities.some(cap => cap.includes('code_review') || cap.includes('code_review')))
+    .filter(
+      ([_, info]) =>
+        info.active &&
+        info.capabilities.some(
+          (cap) => cap.includes("code_review") || cap.includes("code_review"),
+        ),
+    )
     .map(([eyeId]) => eyeId);
-  
+
   const finalApprovalEyes = Object.entries(registry)
-    .filter(([_, info]) => info.active && info.capabilities.some(cap => cap.includes('final_approval') || cap.includes('approval')))
+    .filter(
+      ([_, info]) =>
+        info.active &&
+        info.capabilities.some(
+          (cap) => cap.includes("final_approval") || cap.includes("approval"),
+        ),
+    )
     .map(([eyeId]) => eyeId);
-  
+
   const clarificationEyes = Object.entries(registry)
-    .filter(([_, info]) => info.active && info.capabilities.some(cap => cap.includes('clarification')))
+    .filter(
+      ([_, info]) =>
+        info.active &&
+        info.capabilities.some((cap) => cap.includes("clarification")),
+    )
     .map(([eyeId]) => eyeId);
-  
+
   const factCheckEyes = Object.entries(registry)
-    .filter(([_, info]) => info.active && info.capabilities.some(cap => cap.includes('fact') || cap.includes('evidence')))
+    .filter(
+      ([_, info]) =>
+        info.active &&
+        info.capabilities.some(
+          (cap) => cap.includes("fact") || cap.includes("evidence"),
+        ),
+    )
     .map(([eyeId]) => eyeId);
-  
+
   const promptEyes = Object.entries(registry)
-    .filter(([_, info]) => info.active && info.capabilities.some(cap => cap.includes('prompt') || cap.includes('structuring')))
+    .filter(
+      ([_, info]) =>
+        info.active &&
+        info.capabilities.some(
+          (cap) => cap.includes("prompt") || cap.includes("structuring"),
+        ),
+    )
     .map(([eyeId]) => eyeId);
 
   if (codeReviewEyes.length > 0 && finalApprovalEyes.length > 0) {
-    examples.push(`- "Review this code for bugs" → ${codeReviewEyes[0]} + ${finalApprovalEyes[0]} only`);
+    examples.push(
+      `- "Review this code for bugs" → ${codeReviewEyes[0]} + ${finalApprovalEyes[0]} only`,
+    );
   }
-  
+
   if (clarificationEyes.length > 0 && promptEyes.length > 0) {
     const guidanceEyes = Object.entries(registry)
-      .filter(([_, info]) => info.active && info.stage === EyeStageToken.GUIDANCE)
+      .filter(
+        ([_, info]) => info.active && info.stage === EyeStageToken.GUIDANCE,
+      )
       .map(([eyeId]) => eyeId)
       .slice(0, 3);
     const validationEyes = Object.entries(registry)
-      .filter(([_, info]) => info.active && info.stage === EyeStageToken.VALIDATION)
+      .filter(
+        ([_, info]) => info.active && info.stage === EyeStageToken.VALIDATION,
+      )
       .map(([eyeId]) => eyeId)
       .slice(0, 2);
-    
+
     if (guidanceEyes.length > 0 && validationEyes.length > 0) {
-      const route = [...clarificationEyes.slice(0, 1), ...guidanceEyes, ...validationEyes].join(' → ');
+      const route = [
+        ...clarificationEyes.slice(0, 1),
+        ...guidanceEyes,
+        ...validationEyes,
+      ].join(" → ");
       examples.push(`- "Build a new feature" → ${route}`);
     }
   }
-  
+
   if (factCheckEyes.length > 0 && finalApprovalEyes.length > 0) {
-    examples.push(`- "Validate these facts" → ${factCheckEyes[0]} + ${finalApprovalEyes[0]} only`);
+    examples.push(
+      `- "Validate these facts" → ${factCheckEyes[0]} + ${finalApprovalEyes[0]} only`,
+    );
   }
-  
+
   if (promptEyes.length > 0) {
     examples.push(`- "Generate structured prompt" → ${promptEyes[0]} only`);
   }
 
-  return examples.length > 0 ? examples.join('\n') : '- Examples will be generated based on available eyes';
+  return examples.length > 0
+    ? examples.join("\n")
+    : "- Examples will be generated based on available eyes";
 }
 
 export function extractUserNeeds(input: string): string[] {
@@ -248,24 +311,23 @@ export function extractUserNeeds(input: string): string[] {
 
   // Simple keyword matching
   if (/review|check|validate|verify|inspect/i.test(input)) {
-    needs.push('validation');
+    needs.push("validation");
   }
   if (/build|create|generate|write|develop/i.test(input)) {
-    needs.push('creation');
+    needs.push("creation");
   }
   if (/clarify|explain|what|how|why/i.test(input)) {
-    needs.push('clarification');
+    needs.push("clarification");
   }
   if (/code|program|function|class/i.test(input)) {
-    needs.push('code_review');
+    needs.push("code_review");
   }
   if (/fact|citation|evidence|source/i.test(input)) {
-    needs.push('fact_checking');
+    needs.push("fact_checking");
   }
   if (/plan|strategy|roadmap|steps/i.test(input)) {
-    needs.push('planning');
+    needs.push("planning");
   }
 
-  return needs.length > 0 ? needs : ['general'];
+  return needs.length > 0 ? needs : ["general"];
 }
-

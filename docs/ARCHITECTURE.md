@@ -66,6 +66,7 @@ Third Eye MCP is a professional-grade AI orchestration server built on modern Ty
 **Purpose**: Central orchestration engine that routes requests to appropriate AI providers
 
 **Key Features**:
+
 - **Eye Registry**: Manages different "Eyes" (Sharingan, Rinnegan, Tenseigan) with unique personas
 - **Routing Resolution**: Determines primary and fallback provider/model for each Eye
 - **Retry Logic**: Exponential backoff (100ms → 300ms → 900ms) on transient failures
@@ -93,11 +94,13 @@ export class EyeOrchestrator {
 **Purpose**: Unified interface for multiple AI providers
 
 **Interface**: `ProviderClient`
+
 - `listModels()`: Fetch available models
 - `complete(request)`: Execute completion request
 - `health()`: Check provider availability
 
 **Implementations**:
+
 - **GroqProvider** (`providers/groq.ts`): OpenAI-compatible API (api.groq.com)
 - **OpenRouterProvider** (`providers/openrouter.ts`): OpenRouter API (openrouter.ai)
 - **OllamaProvider** (`providers/ollama.ts`): Local Ollama server (127.0.0.1:11434)
@@ -110,6 +113,7 @@ export class EyeOrchestrator {
 **Technology**: SQLite with Drizzle ORM
 
 **Schema Tables**:
+
 ```sql
 -- Eye routing configurations
 routing (
@@ -171,6 +175,7 @@ providerKeys (
 **Framework**: Hono (lightweight Express alternative)
 
 **Routes**:
+
 ```
 GET  /health                    - Server health check
 GET  /ws/monitor?sessionId=X    - WebSocket upgrade endpoint
@@ -199,6 +204,7 @@ POST /api/provider-keys         - Save encrypted API key
 ```
 
 **WebSocket Protocol**:
+
 ```typescript
 // Client → Server
 { type: 'ping' }
@@ -217,6 +223,7 @@ POST /api/provider-keys         - Save encrypted API key
 **Framework**: Next.js 15 (App Router, React Server Components)
 
 **Pages**:
+
 ```
 /                        - Landing page with quick start
 /session/[id]           - Session monitor with real-time updates
@@ -226,6 +233,7 @@ POST /api/provider-keys         - Save encrypted API key
 ```
 
 **Key Features**:
+
 - **WebSocket Integration**: Live updates when runs complete
 - **API Key Management**: Encrypted storage with visual feedback (🔒)
 - **Model Selection**: Dynamic dropdowns populated from provider APIs
@@ -285,6 +293,7 @@ POST /api/provider-keys         - Save encrypted API key
 **Algorithm**: AES-256-GCM (Authenticated Encryption)
 
 **Process**:
+
 1. User enters API key in UI
 2. UI sends key to `/api/provider-keys`
 3. Server generates random IV (12 bytes)
@@ -325,6 +334,7 @@ docker compose up -d
 ```
 
 **Stack**:
+
 - `server` (Bun container, port 7070)
 - `ui` (Next.js container, port 3300)
 - `ollama` (Optional, for local AI)
@@ -342,6 +352,7 @@ Starts the MCP server and dashboard using the Bun runtime (Bun must be installed
 **Framework**: Vitest (unit) + Playwright (E2E)
 
 **Structure**:
+
 ```
 packages/providers/__tests__/groq.test.ts    # Provider unit tests
 packages/core/__tests__/orchestrator.test.ts # Orchestrator logic
@@ -350,6 +361,7 @@ apps/ui/tests/e2e/session-flow.spec.ts       # E2E user flows
 ```
 
 **Commands**:
+
 ```bash
 bun test           # Unit tests
 bun run e2e        # E2E tests
@@ -361,6 +373,7 @@ tsc --noEmit       # Type check
 ### Retry Backoff
 
 Exponential backoff prevents overwhelming failing providers:
+
 - Attempt 1: Immediate
 - Attempt 2: +100ms
 - Attempt 3: +300ms
@@ -383,47 +396,66 @@ Future enhancement: Support streaming completions via Server-Sent Events (SSE).
 ### Adding a New Eye
 
 1. Register in `packages/core/registry.ts`:
+
 ```typescript
 export const EYES_REGISTRY = {
   byakugan: {
-    name: 'Byakugan',
-    description: 'Your Eye description',
+    name: "Byakugan",
+    description: "Your Eye description",
     personaTemplate: `System prompt...`,
-    defaultRouting: { /* ... */ }
-  }
+    defaultRouting: {
+      /* ... */
+    },
+  },
 };
 ```
 
 2. Seed database:
+
 ```bash
 bun run setup
 ```
 
 3. Update UI in `apps/ui/src/app/session/[id]/page.tsx`:
+
 ```typescript
-const EYES = ['sharingan', 'rinnegan', 'tenseigan', 'byakugan'];
+const EYES = ["sharingan", "rinnegan", "tenseigan", "byakugan"];
 ```
 
 ### Adding a New Provider
 
 1. Create provider class in `packages/providers/your-provider.ts`:
+
 ```typescript
 export class YourProvider implements ProviderClient {
-  async listModels(): Promise<ModelInfo[]> { /* ... */ }
-  async complete(req: CompletionRequest): Promise<CompletionResponse> { /* ... */ }
-  async health(): Promise<HealthResponse> { /* ... */ }
+  async listModels(): Promise<ModelInfo[]> {
+    /* ... */
+  }
+  async complete(req: CompletionRequest): Promise<CompletionResponse> {
+    /* ... */
+  }
+  async health(): Promise<HealthResponse> {
+    /* ... */
+  }
 }
 ```
 
 2. Update factory in `packages/providers/factory.ts`:
+
 ```typescript
 case 'your-provider':
   return new YourProvider(config.baseUrl, config.apiKey);
 ```
 
 3. Update types in `packages/types/providers.ts`:
+
 ```typescript
-export type ProviderId = 'groq' | 'openrouter' | 'ollama' | 'lmstudio' | 'your-provider';
+export type ProviderId =
+  | "groq"
+  | "openrouter"
+  | "ollama"
+  | "lmstudio"
+  | "your-provider";
 ```
 
 ## Monitoring

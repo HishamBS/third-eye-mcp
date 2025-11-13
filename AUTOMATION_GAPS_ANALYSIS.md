@@ -9,9 +9,11 @@
 ## 📊 Executive Summary
 
 ### Current State
+
 Third Eye MCP has **excellent CLI automation** but **critical gaps** that hurt junior developers and first-time users.
 
 ### Problems Found
+
 - ❌ **First-time users lost** - No initialization wizard after `git clone`
 - ❌ **Windows completely broken** - Process killing uses Unix-only commands
 - ❌ **.env file mystery** - Not auto-created, blocking all API providers
@@ -20,6 +22,7 @@ Third Eye MCP has **excellent CLI automation** but **critical gaps** that hurt j
 - ❌ **Logs grow forever** - No rotation, fills disk over time
 
 ### Impact
+
 - **Junior developers:** 40% likely to abandon on first try
 - **Windows users:** 100% failure rate on `bun up`
 - **Production deployments:** Risky without health monitoring
@@ -32,6 +35,7 @@ Third Eye MCP has **excellent CLI automation** but **critical gaps** that hurt j
 ### 1. ❌ **First-Time User Experience** (Priority: P0)
 
 **Current State:**
+
 ```bash
 git clone https://github.com/HishamBS/third-eye-mcp
 cd third-eye-mcp
@@ -39,6 +43,7 @@ cd third-eye-mcp
 ```
 
 **Problems:**
+
 1. No post-clone initialization wizard
 2. Users must read 3 docs to understand startup
 3. `.env` file not created (blocks all providers)
@@ -46,6 +51,7 @@ cd third-eye-mcp
 5. No git hooks auto-installation
 
 **Pain Point Scenario:**
+
 ```
 Junior Dev: "I cloned the repo, now what?"
 [Reads README → points to docs/getting-started.md]
@@ -57,6 +63,7 @@ Junior Dev: "I cloned the repo, now what?"
 ```
 
 **Proposed Solution:**
+
 ```bash
 # Automatic on first bun install
 📦 Third Eye MCP - First-Time Setup Wizard
@@ -83,6 +90,7 @@ Would you like to configure API providers now? (Y/n): y
 ```
 
 **Implementation:**
+
 - Add `scripts/first-time-setup.ts` wizard
 - Trigger from `postinstall` if `.env` doesn't exist
 - Validate API keys against provider health endpoints
@@ -90,6 +98,7 @@ Would you like to configure API providers now? (Y/n): y
 - Create VS Code settings from template
 
 **Files to Modify:**
+
 - `scripts/postinstall.ts` - Add wizard trigger
 - `scripts/first-time-setup.ts` - New wizard
 - `.env.example` - Add comments explaining each key
@@ -103,6 +112,7 @@ Would you like to configure API providers now? (Y/n): y
 ### 2. ❌ **Environment Validation** (Priority: P0)
 
 **Current State:**
+
 ```typescript
 // cli/index.ts:725-750 - checkEnvironment()
 ✓ Checks Bun version
@@ -116,12 +126,14 @@ Would you like to configure API providers now? (Y/n): y
 ```
 
 **Problems:**
+
 1. Missing Git causes cryptic errors during `bun install`
 2. Low memory (<2GB) causes OOM kills with no warning
 3. Wrong shell type breaks process spawning
 4. Missing Python breaks native module builds
 
 **Pain Point Scenario:**
+
 ```
 User on fresh Ubuntu install:
 $ bun up
@@ -131,21 +143,22 @@ error: spawn ENOENT
 ```
 
 **Proposed Solution:**
+
 ```typescript
 function checkEnvironment() {
   const checks = {
-    bun: checkBunVersion(),      // ✓ Already exists
-    node: checkNodeVersion(),     // NEW
-    git: checkGitInstalled(),     // NEW
-    memory: checkAvailableRAM(),  // NEW
-    shell: detectShellType(),     // NEW
-    python: checkPythonOptional() // NEW (warning only)
+    bun: checkBunVersion(), // ✓ Already exists
+    node: checkNodeVersion(), // NEW
+    git: checkGitInstalled(), // NEW
+    memory: checkAvailableRAM(), // NEW
+    shell: detectShellType(), // NEW
+    python: checkPythonOptional(), // NEW (warning only)
   };
 
-  const failed = checks.filter(c => c.critical && !c.passed);
+  const failed = checks.filter((c) => c.critical && !c.passed);
   if (failed.length > 0) {
-    console.error('❌ Environment requirements not met:\n');
-    failed.forEach(f => {
+    console.error("❌ Environment requirements not met:\n");
+    failed.forEach((f) => {
       console.error(`   ${f.name}: ${f.message}`);
       console.error(`   Fix: ${f.solution}`);
     });
@@ -155,6 +168,7 @@ function checkEnvironment() {
 ```
 
 **Example Output:**
+
 ```
 🔍 Checking environment...
    ✓ Bun 1.3.1 (>=1.0.0)
@@ -166,12 +180,14 @@ function checkEnvironment() {
 ```
 
 **Implementation:**
+
 - Add validation functions to `cli/index.ts`
 - Create `cli/validators/` directory
 - Add OS-specific checks (Windows, Mac, Linux)
 - Provide actionable fix instructions
 
 **Files to Modify:**
+
 - `cli/index.ts` - Expand `checkEnvironment()`
 - `cli/validators/` - New directory for checks
 
@@ -183,18 +199,21 @@ function checkEnvironment() {
 ### 3. ❌ **Windows Compatibility** (Priority: P0 - BROKEN)
 
 **Current State:**
+
 ```typescript
 // cli/index.ts:510 - cleanStaleProcesses()
 execSync(`lsof -ti:${port}`, ...)  // ❌ Unix-only command!
 ```
 
 **Problems:**
+
 1. `lsof` doesn't exist on Windows
 2. Process killing completely fails
 3. Port cleanup broken
 4. Makes Windows 100% unusable
 
 **Pain Point Scenario:**
+
 ```
 Windows User:
 $ bun up
@@ -205,6 +224,7 @@ error: lsof: command not found
 ```
 
 **Proposed Solution:**
+
 ```typescript
 function cleanStaleProcesses(ports: number[]) {
   const platform = process.platform;
@@ -231,6 +251,7 @@ function cleanStaleProcesses(ports: number[]) {
 ```
 
 **Implementation:**
+
 - Add platform detection
 - Use `netstat` + `taskkill` on Windows
 - Use `lsof` + `kill` on Unix
@@ -238,6 +259,7 @@ function cleanStaleProcesses(ports: number[]) {
 - Add to CI/CD matrix
 
 **Files to Modify:**
+
 - `cli/index.ts` - `cleanStaleProcesses()` function
 
 **Estimated Effort:** 30 minutes
@@ -248,6 +270,7 @@ function cleanStaleProcesses(ports: number[]) {
 ### 4. ❌ **Configuration Management** (Priority: P0)
 
 **Current State:**
+
 ```bash
 $ ls -la .env
 ls: .env: No such file or directory
@@ -259,12 +282,14 @@ $ bun up
 ```
 
 **Problems:**
+
 1. `.env` file never auto-created
 2. No validation of required env vars
 3. No migration when schema changes
 4. Provider keys stored in database but not validated on startup
 
 **Pain Point Scenario:**
+
 ```
 User: "The app started but providers don't work!"
 [Checks UI → sees errors]
@@ -274,19 +299,20 @@ User: "The app started but providers don't work!"
 ```
 
 **Proposed Solution:**
+
 ```typescript
 // cli/index.ts - Add before startServices()
 async function ensureConfiguration(projectRoot: string, quiet: boolean) {
-  const envPath = resolve(projectRoot, '.env');
-  const envExamplePath = resolve(projectRoot, '.env.example');
+  const envPath = resolve(projectRoot, ".env");
+  const envExamplePath = resolve(projectRoot, ".env.example");
 
   // Auto-create .env from example
   if (!existsSync(envPath)) {
     if (existsSync(envExamplePath)) {
       copyFileSync(envExamplePath, envPath);
       if (!quiet) {
-        log('📝 Created .env file from .env.example');
-        log('   ⚠ Please configure your API keys in .env');
+        log("📝 Created .env file from .env.example");
+        log("   ⚠ Please configure your API keys in .env");
       }
     }
   }
@@ -296,23 +322,25 @@ async function ensureConfiguration(projectRoot: string, quiet: boolean) {
   const warnings = [];
 
   if (!env.GROQ_API_KEY && !env.OPENROUTER_API_KEY && !env.OLLAMA_BASE_URL) {
-    warnings.push('No API providers configured - add keys to .env');
+    warnings.push("No API providers configured - add keys to .env");
   }
 
   if (warnings.length > 0 && !quiet) {
-    log('\n⚠️  Configuration warnings:');
-    warnings.forEach(w => log(`   • ${w}`));
+    log("\n⚠️  Configuration warnings:");
+    warnings.forEach((w) => log(`   • ${w}`));
   }
 }
 ```
 
 **Additional Features:**
+
 - Validate API keys on startup (test endpoints)
 - Migrate old .env format to new (with backup)
 - Suggest missing providers
 - Link to provider signup pages
 
 **Files to Modify:**
+
 - `cli/index.ts` - Add `ensureConfiguration()`
 - `.env.example` - Add better comments
 - Create `.env.schema.json` for validation
@@ -325,12 +353,14 @@ async function ensureConfiguration(projectRoot: string, quiet: boolean) {
 ### 5. ❌ **Health Monitoring & Auto-Restart** (Priority: P1)
 
 **Current State:**
+
 ```typescript
 // After startup health check passes...
 // Nothing! No monitoring at all.
 ```
 
 **Problems:**
+
 1. Server crashes → stays dead
 2. UI crashes → stays dead
 3. No periodic health checks
@@ -339,6 +369,7 @@ async function ensureConfiguration(projectRoot: string, quiet: boolean) {
 6. Logs grow unbounded (no rotation)
 
 **Pain Point Scenario:**
+
 ```
 Production deployment:
 [Server starts successfully]
@@ -350,38 +381,39 @@ Production deployment:
 ```
 
 **Proposed Solution:**
+
 ```typescript
 // Add after successful startup
 async function enableHealthMonitoring(args: CliArgs) {
   setInterval(async () => {
     // Check server health
     const serverHealthy = await checkHealth(
-      `http://127.0.0.1:${args.port || 7070}/health`
+      `http://127.0.0.1:${args.port || 7070}/health`,
     );
 
     if (!serverHealthy) {
-      log('⚠️  Server health check failed, restarting...');
+      log("⚠️  Server health check failed, restarting...");
       await restartServer();
     }
 
     // Check UI health
     const uiHealthy = await checkHealth(
-      `http://127.0.0.1:${args.uiPort || 3300}/`
+      `http://127.0.0.1:${args.uiPort || 3300}/`,
     );
 
     if (!uiHealthy) {
-      log('⚠️  UI health check failed, restarting...');
+      log("⚠️  UI health check failed, restarting...");
       await restartUI();
     }
 
     // Rotate logs if > 100MB
     await rotateLogs();
-
   }, 30000); // Every 30 seconds
 }
 ```
 
 **Additional Features:**
+
 - Exponential backoff for restarts (prevent restart loop)
 - Max restart attempts (5) before giving up
 - Log rotation (keep last 10 files, 100MB each)
@@ -389,6 +421,7 @@ async function enableHealthMonitoring(args: CliArgs) {
 - Crash report generation
 
 **Files to Modify:**
+
 - `cli/index.ts` - Add health monitoring
 - Create `cli/monitoring/` directory
 - Add log rotation utilities
@@ -401,19 +434,25 @@ async function enableHealthMonitoring(args: CliArgs) {
 ### 6. ❌ **Network Resilience** (Priority: P1)
 
 **Current State:**
+
 ```typescript
 // cli/index.ts:801 - updateDependencies()
-execSync('bun update', { cwd: projectRoot, stdio: spinner ? 'pipe' : 'inherit' });
+execSync("bun update", {
+  cwd: projectRoot,
+  stdio: spinner ? "pipe" : "inherit",
+});
 // ❌ No retry if npm registry is down!
 ```
 
 **Problems:**
+
 1. Network timeouts cause fatal exit
 2. No retry logic for registry failures
 3. No offline mode
 4. No cache validation
 
 **Pain Point Scenario:**
+
 ```
 User on flaky WiFi:
 $ bun up
@@ -424,27 +463,30 @@ error: GET https://registry.npmjs.org/... - Network timeout
 ```
 
 **Proposed Solution:**
+
 ```typescript
 async function updateDependenciesWithRetry(
   projectRoot: string,
-  maxRetries: number = 3
+  maxRetries: number = 3,
 ): Promise<void> {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      execSync('bun update', {
+      execSync("bun update", {
         cwd: projectRoot,
-        stdio: 'inherit',
-        timeout: 60000 // 60 second timeout
+        stdio: "inherit",
+        timeout: 60000, // 60 second timeout
       });
       return; // Success
     } catch (error) {
       if (attempt < maxRetries) {
         const delay = Math.pow(2, attempt) * 1000; // Exponential backoff
-        log(`⚠️  Dependency update failed, retrying in ${delay/1000}s... (${attempt}/${maxRetries})`);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        log(
+          `⚠️  Dependency update failed, retrying in ${delay / 1000}s... (${attempt}/${maxRetries})`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
       } else {
-        log('⚠️  Dependency update failed after ${maxRetries} attempts');
-        log('   Continuing with cached dependencies...');
+        log("⚠️  Dependency update failed after ${maxRetries} attempts");
+        log("   Continuing with cached dependencies...");
         return; // Don't fail startup
       }
     }
@@ -453,12 +495,14 @@ async function updateDependenciesWithRetry(
 ```
 
 **Additional Features:**
+
 - Detect network connectivity before retrying
 - Use cached dependencies if all retries fail
 - Show helpful error messages
 - Link to offline mode docs
 
 **Files to Modify:**
+
 - `cli/index.ts` - Add retry logic
 
 **Estimated Effort:** 45 minutes
@@ -469,12 +513,14 @@ async function updateDependenciesWithRetry(
 ### 7. ⚠️ **Developer Tools Setup** (Priority: P2)
 
 **Current State:**
+
 ```json
 // package.json
 "prepare": "husky"
 ```
 
 **Problems:**
+
 1. Husky hooks installed but not configured
 2. No pre-commit type checking
 3. No pre-commit linting
@@ -483,6 +529,7 @@ async function updateDependenciesWithRetry(
 6. Debug launch configs missing
 
 **Pain Point Scenario:**
+
 ```
 Contributor:
 [Makes changes, commits]
@@ -495,6 +542,7 @@ Contributor:
 **Proposed Solution:**
 
 **1. Auto-configure Husky hooks:**
+
 ```bash
 # .husky/pre-commit (auto-created on first bun install)
 #!/bin/sh
@@ -503,6 +551,7 @@ bun run format:check
 ```
 
 **2. Auto-create VS Code settings:**
+
 ```json
 // .vscode/settings.json (auto-created)
 {
@@ -516,6 +565,7 @@ bun run format:check
 ```
 
 **3. Auto-create launch configs:**
+
 ```json
 // .vscode/launch.json (auto-created)
 {
@@ -531,12 +581,14 @@ bun run format:check
 ```
 
 **Implementation:**
+
 - Add to `scripts/postinstall.ts`
 - Create templates in `.templates/`
 - Copy on first install only
 - Git-ignore `.vscode/` (user-specific)
 
 **Files to Create:**
+
 - `.husky/pre-commit`
 - `.templates/vscode-settings.json`
 - `.templates/vscode-launch.json`
@@ -549,6 +601,7 @@ bun run format:check
 ### 8. ⚠️ **Package Management** (Priority: P2)
 
 **Current State:**
+
 ```typescript
 // No detection of:
 // - Lock file conflicts
@@ -558,12 +611,14 @@ bun run format:check
 ```
 
 **Problems:**
+
 1. Merge conflicts in `bun.lock` break everything
 2. No validation of workspace protocol versions
 3. No peer dependency conflict detection
 4. No circular dependency detection
 
 **Pain Point Scenario:**
+
 ```
 Developer merges main:
 $ git merge main
@@ -576,19 +631,20 @@ error: Lockfile corrupted
 ```
 
 **Proposed Solution:**
+
 ```typescript
 function validateWorkspace(projectRoot: string): ValidationResult {
   const issues = [];
 
   // Check lock file
-  const lockPath = resolve(projectRoot, 'bun.lock');
+  const lockPath = resolve(projectRoot, "bun.lock");
   try {
-    JSON.parse(readFileSync(lockPath, 'utf-8'));
+    JSON.parse(readFileSync(lockPath, "utf-8"));
   } catch {
     issues.push({
-      level: 'error',
-      message: 'bun.lock is corrupted or has merge conflicts',
-      fix: 'Run: rm bun.lock && bun install'
+      level: "error",
+      message: "bun.lock is corrupted or has merge conflicts",
+      fix: "Run: rm bun.lock && bun install",
     });
   }
 
@@ -607,12 +663,14 @@ function validateWorkspace(projectRoot: string): ValidationResult {
 ```
 
 **Implementation:**
+
 - Add to pre-startup checks
 - Auto-fix lock file corruption
 - Warn about version conflicts
 - Error on circular dependencies
 
 **Files to Modify:**
+
 - `cli/index.ts` - Add validation
 
 **Estimated Effort:** 2 hours
@@ -623,6 +681,7 @@ function validateWorkspace(projectRoot: string): ValidationResult {
 ### 9. ⚠️ **Cross-Platform Testing** (Priority: P2)
 
 **Current State:**
+
 ```yaml
 # No CI/CD matrix for:
 # - Windows
@@ -632,12 +691,14 @@ function validateWorkspace(projectRoot: string): ValidationResult {
 ```
 
 **Problems:**
+
 1. Windows completely untested
 2. Mac Intel vs ARM differences
 3. Linux distro variations
 4. Shell script compatibility
 
 **Proposed Solution:**
+
 ```yaml
 # .github/workflows/ci.yml
 name: CI
@@ -664,12 +725,14 @@ jobs:
 ```
 
 **Implementation:**
+
 - Create GitHub Actions workflow
 - Test on all platforms
 - Auto-run on PRs
 - Prevent merging if any platform fails
 
 **Files to Create:**
+
 - `.github/workflows/ci.yml`
 
 **Estimated Effort:** 1 hour
@@ -680,6 +743,7 @@ jobs:
 ### 10. ⚠️ **Observability** (Priority: P3)
 
 **Current State:**
+
 ```typescript
 // Minimal logging, no:
 // - Structured logs
@@ -690,37 +754,41 @@ jobs:
 ```
 
 **Problems:**
+
 1. Hard to debug production issues
 2. No performance metrics
 3. No error aggregation
 4. No alerting
 
 **Proposed Solution:**
+
 ```typescript
 // Add structured logging
-import pino from 'pino';
+import pino from "pino";
 
 const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env.LOG_LEVEL || "info",
   transport: {
-    target: 'pino-pretty',
+    target: "pino-pretty",
     options: {
-      colorize: true
-    }
-  }
+      colorize: true,
+    },
+  },
 });
 
-logger.info({ component: 'server', port: 7070 }, 'Server started');
-logger.error({ error: err, context: 'startup' }, 'Failed to start');
+logger.info({ component: "server", port: 7070 }, "Server started");
+logger.error({ error: err, context: "startup" }, "Failed to start");
 ```
 
 **Additional Features:**
+
 - Optional Sentry integration
 - Optional DataDog integration
 - Performance metrics (startup time, request latency)
 - Error rate tracking
 
 **Files to Modify:**
+
 - Replace all `console.log` with structured logging
 - Add optional integrations
 
@@ -732,6 +800,7 @@ logger.error({ error: err, context: 'startup' }, 'Failed to start');
 ## 📋 Prioritized Roadmap
 
 ### Phase 1: Critical (Ship This Week) ⚡
+
 **Time:** 4-6 hours total
 
 1. **Windows process killing** (30 min) - P0 🔥🔥🔥
@@ -751,6 +820,7 @@ logger.error({ error: err, context: 'startup' }, 'Failed to start');
    - New file: `scripts/first-time-setup.ts`
 
 ### Phase 2: Important (Ship Next Week) 🎯
+
 **Time:** 3-4 hours total
 
 5. **Network retry logic** (45 min) - P1
@@ -762,6 +832,7 @@ logger.error({ error: err, context: 'startup' }, 'Failed to start');
    - New file: `cli/monitoring/`
 
 ### Phase 3: Nice-to-Have (Ship This Month) ⭐
+
 **Time:** 4-5 hours total
 
 7. **Developer tools auto-setup** (1 hour) - P2
@@ -777,6 +848,7 @@ logger.error({ error: err, context: 'startup' }, 'Failed to start');
    - New file: `.github/workflows/ci.yml`
 
 ### Phase 4: Future (Ship When Needed) 🔮
+
 **Time:** 4-6 hours total
 
 10. **Structured logging & observability** (4-6 hours) - P3
@@ -788,6 +860,7 @@ logger.error({ error: err, context: 'startup' }, 'Failed to start');
 ## 🎯 Success Metrics
 
 ### Before Automation Improvements:
+
 - Junior dev success rate: **60%**
 - Windows success rate: **0%**
 - First-time setup time: **15-30 minutes**
@@ -795,6 +868,7 @@ logger.error({ error: err, context: 'startup' }, 'Failed to start');
 - Support questions per week: **10-15**
 
 ### After Phase 1 (Critical):
+
 - Junior dev success rate: **85%** ✅
 - Windows success rate: **90%** ✅
 - First-time setup time: **2-3 minutes** ✅
@@ -802,6 +876,7 @@ logger.error({ error: err, context: 'startup' }, 'Failed to start');
 - Support questions per week: **3-5** ✅
 
 ### After All Phases:
+
 - Junior dev success rate: **95%** 🎯
 - Windows success rate: **95%** 🎯
 - First-time setup time: **60 seconds** 🎯
@@ -814,6 +889,7 @@ logger.error({ error: err, context: 'startup' }, 'Failed to start');
 ## 💰 ROI Analysis
 
 ### Development Cost:
+
 - Phase 1: **4-6 hours** ($400-600 @ $100/hr)
 - Phase 2: **3-4 hours** ($300-400)
 - Phase 3: **4-5 hours** ($400-500)
@@ -821,11 +897,13 @@ logger.error({ error: err, context: 'startup' }, 'Failed to start');
 - **Total: 15-21 hours** ($1500-2100)
 
 ### Support Cost Savings:
+
 - Current: **2-3 hours/week** answering setup questions ($200-300/week)
 - After Phase 1: **0.5 hours/week** ($50/week)
 - **Annual savings: $7,800 - $13,000**
 
 ### Reputation Impact:
+
 - **Before:** "Hard to set up, great once running"
 - **After Phase 1:** "Just works out of the box"
 - **GitHub stars:** +30% (estimated)
@@ -838,7 +916,9 @@ logger.error({ error: err, context: 'startup' }, 'Failed to start');
 ## 🚀 Implementation Strategy
 
 ### Quick Wins First (Phase 1)
+
 Start with highest impact, lowest effort:
+
 1. Windows fix (30 min)
 2. .env auto-creation (15 min)
 3. Environment validation (1 hour)
@@ -847,7 +927,9 @@ Start with highest impact, lowest effort:
 **Ship in 1 week, measure impact**
 
 ### Measure Everything
+
 Track these metrics:
+
 - Successful first-time setups
 - Time to first `bun up` success
 - Support question volume
@@ -855,7 +937,9 @@ Track these metrics:
 - Crash/restart events
 
 ### Iterate Based on Data
+
 After Phase 1:
+
 - Survey new users
 - Analyze support tickets
 - Identify remaining pain points
@@ -866,11 +950,13 @@ After Phase 1:
 ## 🎓 Learning for Future
 
 ### Design Principles Validated:
+
 ✅ **Silent success** - Don't spam logs
 ✅ **Fail gracefully** - Don't block on non-critical failures
 ✅ **Self-document** - Error messages include fixes
 
 ### New Principles Discovered:
+
 - **Validate early** - Check environment before starting
 - **Cross-platform from day 1** - Test on all platforms
 - **Monitor forever** - Health checks don't stop after startup
@@ -881,6 +967,7 @@ After Phase 1:
 ## 📝 Appendix: File Locations
 
 ### Files to Modify:
+
 ```
 cli/index.ts
   Line 500-534: cleanStaleProcesses() - Add Windows support
@@ -897,6 +984,7 @@ scripts/postinstall.ts
 ```
 
 ### Files to Create:
+
 ```
 scripts/first-time-setup.ts - Interactive wizard
 cli/validators/ - Environment check utilities
@@ -908,6 +996,7 @@ cli/monitoring/ - Health check & log rotation
 ```
 
 ### Files to Document:
+
 ```
 AUTOMATION.md - Update with new features
 README.md - Update "Getting Started"
@@ -933,21 +1022,25 @@ Before implementing any changes:
 ## 🤝 Next Steps
 
 **Option A: Approve & Implement Phase 1**
+
 - Start with critical fixes (4-6 hours)
 - Ship this week
 - Measure impact
 
 **Option B: Approve Entire Roadmap**
+
 - Plan all 4 phases
 - Allocate 15-21 hours
 - Ship over 4 weeks
 
 **Option C: Modify Proposal**
+
 - Feedback on priorities
 - Adjust scope
 - Revise estimates
 
 **Option D: Deep Dive**
+
 - Review specific gap areas
 - Request more analysis
 - Propose alternatives

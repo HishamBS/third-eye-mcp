@@ -3,39 +3,44 @@ import {
   REQUIRED_CLARIFICATION_FIELDS,
   type ClarificationField,
   EyeId,
-} from '@third-eye/constants';
-import type { BaseEnvelope } from '@third-eye/eyes';
+} from "@third-eye/constants";
+import type { BaseEnvelope } from "@third-eye/eyes";
 
 const SHARINGAN_ID = EyeId.SHARINGAN;
 const SHARINGAN_GUIDANCE_CODES = new Set<string>([
-  'NEED_CLARIFICATION',
-  'NEED_MORE_CONTEXT',
-  'REJECT_AMBIGUOUS',
+  "NEED_CLARIFICATION",
+  "NEED_MORE_CONTEXT",
+  "REJECT_AMBIGUOUS",
 ]);
-const SHARINGAN_APPROVAL_CODES = new Set<string>(['OK_NO_CLARIFICATION_NEEDED']);
+const SHARINGAN_APPROVAL_CODES = new Set<string>([
+  "OK_NO_CLARIFICATION_NEEDED",
+]);
 
 type QuestionEntry = string | Record<string, unknown>;
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+  typeof value === "object" && value !== null;
 
-const normaliseQuestion = (entry: QuestionEntry): { id: string | null; text: string | null } => {
-  if (typeof entry === 'string') {
+const normaliseQuestion = (
+  entry: QuestionEntry,
+): { id: string | null; text: string | null } => {
+  if (typeof entry === "string") {
     return { id: null, text: entry.trim() || null };
   }
 
-  const candidateId = isObject(entry) && typeof entry.id === 'string' ? entry.id.trim() : null;
+  const candidateId =
+    isObject(entry) && typeof entry.id === "string" ? entry.id.trim() : null;
   const candidateText = (() => {
     if (!isObject(entry)) {
       return null;
     }
-    if (typeof entry.text === 'string') {
+    if (typeof entry.text === "string") {
       return entry.text.trim();
     }
-    if (typeof entry.question === 'string') {
+    if (typeof entry.question === "string") {
       return entry.question.trim();
     }
-    if (typeof entry.value === 'string') {
+    if (typeof entry.value === "string") {
       return entry.value.trim();
     }
     return null;
@@ -49,7 +54,9 @@ const normaliseQuestion = (entry: QuestionEntry): { id: string | null; text: str
 
 const assertSharinganQuestions = (envelope: BaseEnvelope): void => {
   const data = (envelope.data ?? {}) as Record<string, unknown>;
-  const rawQuestions = Array.isArray(data.questions) ? (data.questions as QuestionEntry[]) : [];
+  const rawQuestions = Array.isArray(data.questions)
+    ? (data.questions as QuestionEntry[])
+    : [];
 
   if (rawQuestions.length !== REQUIRED_CLARIFICATION_FIELDS.length) {
     throw new EyeBehaviorError(
@@ -58,38 +65,42 @@ const assertSharinganQuestions = (envelope: BaseEnvelope): void => {
     );
   }
 
-  REQUIRED_CLARIFICATION_FIELDS.forEach((expectedField: ClarificationField, index: number) => {
-    const entry = rawQuestions[index] ?? null;
-    const { id, text } = normaliseQuestion(entry);
-    const canonicalPrompt = CLARIFICATION_FIELD_PROMPTS[expectedField];
+  REQUIRED_CLARIFICATION_FIELDS.forEach(
+    (expectedField: ClarificationField, index: number) => {
+      const entry = rawQuestions[index] ?? null;
+      const { id, text } = normaliseQuestion(entry);
+      const canonicalPrompt = CLARIFICATION_FIELD_PROMPTS[expectedField];
 
-    if (id !== null && id !== expectedField) {
-      throw new EyeBehaviorError(
-        SHARINGAN_ID,
-        `questions_canonical_id_mismatch_${id}_${expectedField}`,
-      );
-    }
+      if (id !== null && id !== expectedField) {
+        throw new EyeBehaviorError(
+          SHARINGAN_ID,
+          `questions_canonical_id_mismatch_${id}_${expectedField}`,
+        );
+      }
 
-    if (text !== canonicalPrompt) {
-      throw new EyeBehaviorError(
-        SHARINGAN_ID,
-        `questions_canonical_prompt_mismatch_${expectedField}`,
-      );
-    }
-  });
+      if (text !== canonicalPrompt) {
+        throw new EyeBehaviorError(
+          SHARINGAN_ID,
+          `questions_canonical_prompt_mismatch_${expectedField}`,
+        );
+      }
+    },
+  );
 };
 
 const assertSharinganResolution = (envelope: BaseEnvelope): void => {
   const data = (envelope.data ?? {}) as Record<string, unknown>;
-  const resolved = isObject(data.resolved) ? (data.resolved as Record<string, unknown>) : null;
+  const resolved = isObject(data.resolved)
+    ? (data.resolved as Record<string, unknown>)
+    : null;
 
   if (!resolved) {
-    throw new EyeBehaviorError(SHARINGAN_ID, 'missing_resolution');
+    throw new EyeBehaviorError(SHARINGAN_ID, "missing_resolution");
   }
 
   REQUIRED_CLARIFICATION_FIELDS.forEach((field) => {
     const value = resolved[field];
-    if (typeof value !== 'string' || value.trim().length === 0) {
+    if (typeof value !== "string" || value.trim().length === 0) {
       throw new EyeBehaviorError(SHARINGAN_ID, `resolved_missing_${field}`);
     }
   });
@@ -97,20 +108,23 @@ const assertSharinganResolution = (envelope: BaseEnvelope): void => {
 
 const ensureSharinganBehavior = (envelope: BaseEnvelope): void => {
   if (envelope.tag !== SHARINGAN_ID) {
-    throw new EyeBehaviorError(SHARINGAN_ID, `unexpected_tag_${envelope.tag ?? 'unknown'}`);
+    throw new EyeBehaviorError(
+      SHARINGAN_ID,
+      `unexpected_tag_${envelope.tag ?? "unknown"}`,
+    );
   }
 
   if (envelope.ok) {
     if (!SHARINGAN_APPROVAL_CODES.has(envelope.code)) {
       throw new EyeBehaviorError(
         SHARINGAN_ID,
-        `approval_status_not_allowed_${envelope.code ?? 'unknown'}`,
+        `approval_status_not_allowed_${envelope.code ?? "unknown"}`,
       );
     }
 
     const data = (envelope.data ?? {}) as Record<string, unknown>;
     if (Array.isArray(data.questions) && data.questions.length > 0) {
-      throw new EyeBehaviorError(SHARINGAN_ID, 'questions_present_on_approval');
+      throw new EyeBehaviorError(SHARINGAN_ID, "questions_present_on_approval");
     }
 
     assertSharinganResolution(envelope);
@@ -120,7 +134,7 @@ const ensureSharinganBehavior = (envelope: BaseEnvelope): void => {
   if (!SHARINGAN_GUIDANCE_CODES.has(envelope.code)) {
     throw new EyeBehaviorError(
       SHARINGAN_ID,
-      `clarification_status_not_allowed_${envelope.code ?? 'unknown'}`,
+      `clarification_status_not_allowed_${envelope.code ?? "unknown"}`,
     );
   }
 
@@ -138,7 +152,10 @@ export class EyeBehaviorError extends Error {
   }
 }
 
-export const ensureEyeBehavior = (eyeId: string, envelope: BaseEnvelope): void => {
+export const ensureEyeBehavior = (
+  eyeId: string,
+  envelope: BaseEnvelope,
+): void => {
   switch (eyeId) {
     case SHARINGAN_ID:
       ensureSharinganBehavior(envelope);

@@ -4,15 +4,15 @@
  * Manages session lifecycle, state persistence, and pipeline progress tracking
  */
 
-import { nanoid } from 'nanoid';
-import { getDb } from '@third-eye/db';
-import { sessions, runs } from '@third-eye/db';
-import { getEyeNameById } from '@third-eye/db/utils/lookups';
-import { eq, desc, and } from 'drizzle-orm';
-import type { EyeName } from '@third-eye/types';
-import { EyeId } from '@third-eye/constants';
-import { orderGuard, type PipelineState } from './order-guard';
-import { TOOL_NAME } from '@third-eye/types';
+import { nanoid } from "nanoid";
+import { getDb } from "@third-eye/db";
+import { sessions, runs } from "@third-eye/db";
+import { getEyeNameById } from "@third-eye/db/utils/lookups";
+import { eq, desc, and } from "drizzle-orm";
+import type { EyeName } from "@third-eye/types";
+import { EyeId } from "@third-eye/constants";
+import { orderGuard, type PipelineState } from "./order-guard";
+import { TOOL_NAME } from "@third-eye/types";
 
 export interface SessionConfig {
   agentName?: string;
@@ -30,11 +30,9 @@ interface SessionIdentity {
 
 function deriveSessionIdentity(config: SessionConfig = {}): SessionIdentity {
   const metadata = config.metadata ?? {};
-  const client: Record<string, unknown> = (
-    metadata.client ||
+  const client: Record<string, unknown> = (metadata.client ||
     metadata.clientInfo ||
-    {}
-  ) as Record<string, unknown>;
+    {}) as Record<string, unknown>;
 
   const title: string | undefined =
     config.displayName ||
@@ -48,14 +46,15 @@ function deriveSessionIdentity(config: SessionConfig = {}): SessionIdentity {
     (client.name as string | undefined) ||
     title;
 
-  const agentName = (rawAgentName && rawAgentName.trim()) || 'Unknown Agent';
+  const agentName = (rawAgentName && rawAgentName.trim()) || "Unknown Agent";
 
   const version: string | undefined =
     (metadata.clientVersion as string | undefined) ||
     (client.version as string | undefined);
 
   const baseDisplay = (title && title.trim()) || agentName;
-  const versionLabel = version && version.trim().length > 0 ? version.trim() : null;
+  const versionLabel =
+    version && version.trim().length > 0 ? version.trim() : null;
 
   const displayName =
     versionLabel && !baseDisplay.includes(versionLabel)
@@ -70,7 +69,7 @@ function deriveSessionIdentity(config: SessionConfig = {}): SessionIdentity {
 
 export interface SessionInfo {
   id: string;
-  status: 'active' | 'paused' | 'completed' | 'failed';
+  status: "active" | "paused" | "completed" | "failed";
   agentName: string;
   displayName?: string;
   portalUrl: string;
@@ -104,14 +103,19 @@ export class SessionManager {
   }
 
   private slugify(value: string): string {
-    return value
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+/, '')
-      .replace(/-+$/, '') || 'unknown';
+    return (
+      value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+/, "")
+        .replace(/-+$/, "") || "unknown"
+    );
   }
 
-  private async nextSessionSequence(toolSlug: string, agentName: string): Promise<number> {
+  private async nextSessionSequence(
+    toolSlug: string,
+    agentName: string,
+  ): Promise<number> {
     const agentSessions = await this.db
       .select({ displayName: sessions.displayName })
       .from(sessions)
@@ -122,7 +126,8 @@ export class SessionManager {
 
     let maxSequence = 0;
     for (const session of agentSessions) {
-      const displayName = typeof session.displayName === 'string' ? session.displayName : '';
+      const displayName =
+        typeof session.displayName === "string" ? session.displayName : "";
       if (!displayName.startsWith(prefix)) {
         continue;
       }
@@ -153,19 +158,25 @@ export class SessionManager {
 
     const metadata = persistedConfig.metadata ?? {};
     const rawToolName =
-      (typeof metadata.entryTool === 'string' && metadata.entryTool.trim().length > 0
+      (typeof metadata.entryTool === "string" &&
+      metadata.entryTool.trim().length > 0
         ? metadata.entryTool
-        : typeof (persistedConfig as Record<string, unknown>).entryTool === 'string'
+        : typeof (persistedConfig as Record<string, unknown>).entryTool ===
+            "string"
           ? ((persistedConfig as Record<string, unknown>).entryTool as string)
           : null) || TOOL_NAME;
 
     const toolSlug = this.slugify(rawToolName);
     const agentSlug = this.slugify(identity.agentName);
-    const sequence = await this.nextSessionSequence(toolSlug, identity.agentName);
-    const generatedDisplayName = `${toolSlug}-${agentSlug}-${sequence.toString().padStart(2, '0')}`;
+    const sequence = await this.nextSessionSequence(
+      toolSlug,
+      identity.agentName,
+    );
+    const generatedDisplayName = `${toolSlug}-${agentSlug}-${sequence.toString().padStart(2, "0")}`;
 
     const finalDisplayName =
-      typeof config.displayName === 'string' && config.displayName.trim().length > 0
+      typeof config.displayName === "string" &&
+      config.displayName.trim().length > 0
         ? config.displayName.trim()
         : generatedDisplayName;
 
@@ -179,7 +190,7 @@ export class SessionManager {
     await this.db.insert(sessions).values({
       id: sessionId,
       createdAt: now,
-      status: 'active',
+      status: "active",
       configJson: JSON.stringify(persistedConfig),
       agentName: identity.agentName,
       model: persistedConfig.model || null,
@@ -191,13 +202,13 @@ export class SessionManager {
     orderGuard.clearSession(sessionId); // Ensure clean state
 
     // Build portal URL
-    const host = process.env.SERVER_HOST || '127.0.0.1';
-    const uiPort = parseInt(process.env.UI_PORT || '3300', 10);
+    const host = process.env.SERVER_HOST || "127.0.0.1";
+    const uiPort = parseInt(process.env.UI_PORT || "3300", 10);
     const portalUrl = `http://${host}:${uiPort}/monitor?sessionId=${sessionId}`;
 
     return {
       id: sessionId,
-      status: 'active',
+      status: "active",
       agentName: identity.agentName,
       displayName: identity.displayName,
       portalUrl,
@@ -226,7 +237,7 @@ export class SessionManager {
 
     const session = dbSession[0];
     const parsedConfig =
-      typeof session.configJson === 'string'
+      typeof session.configJson === "string"
         ? JSON.parse(session.configJson)
         : session.configJson || {};
     const identity = deriveSessionIdentity(parsedConfig);
@@ -249,13 +260,13 @@ export class SessionManager {
     const lastActivity = runStats[0]?.lastCreated || session.createdAt;
 
     // Build portal URL
-    const host = process.env.SERVER_HOST || '127.0.0.1';
-    const uiPort = parseInt(process.env.UI_PORT || '3300', 10);
+    const host = process.env.SERVER_HOST || "127.0.0.1";
+    const uiPort = parseInt(process.env.UI_PORT || "3300", 10);
     const portalUrl = `http://${host}:${uiPort}/monitor?sessionId=${sessionId}`;
 
     return {
       id: session.id,
-      status: session.status as 'active' | 'paused' | 'completed' | 'failed',
+      status: session.status as "active" | "paused" | "completed" | "failed",
       agentName: session.agentName || identity.agentName,
       displayName: session.displayName || identity.displayName,
       portalUrl,
@@ -271,7 +282,10 @@ export class SessionManager {
   /**
    * Update session status and metadata
    */
-  async updateSession(sessionId: string, updates: Partial<SessionConfig & { status?: string }>): Promise<void> {
+  async updateSession(
+    sessionId: string,
+    updates: Partial<SessionConfig & { status?: string }>,
+  ): Promise<void> {
     const { status, ...config } = updates;
     const now = new Date();
 
@@ -290,15 +304,18 @@ export class SessionManager {
         const mergedConfig = { ...existing.config, ...config };
         const identity = deriveSessionIdentity(mergedConfig);
         const providedDisplayName =
-          typeof config.displayName === 'string' && config.displayName.trim().length > 0
+          typeof config.displayName === "string" &&
+          config.displayName.trim().length > 0
             ? config.displayName.trim()
             : existing.displayName;
-        mergedConfig.displayName = providedDisplayName ?? mergedConfig.displayName;
+        mergedConfig.displayName =
+          providedDisplayName ?? mergedConfig.displayName;
 
         updateData.configJson = JSON.stringify(mergedConfig);
         updateData.agentName = identity.agentName;
-        updateData.displayName = providedDisplayName ?? existing.displayName ?? identity.displayName;
-        if ('model' in mergedConfig) {
+        updateData.displayName =
+          providedDisplayName ?? existing.displayName ?? identity.displayName;
+        if ("model" in mergedConfig) {
           updateData.model = mergedConfig.model ?? null;
         }
       }
@@ -319,19 +336,29 @@ export class SessionManager {
       .from(runs)
       .where(eq(runs.sessionId, sessionId));
 
-    const successfulRuns = allRuns.filter(run =>
-      run.provider !== 'error' && run.provider !== 'order-guard'
+    const successfulRuns = allRuns.filter(
+      (run) => run.provider !== "error" && run.provider !== "order-guard",
     );
 
-    const failedRuns = allRuns.filter(run =>
-      run.provider === 'error' || run.provider === 'order-guard'
+    const failedRuns = allRuns.filter(
+      (run) => run.provider === "error" || run.provider === "order-guard",
     );
 
-    const totalTokensIn = successfulRuns.reduce((sum, run) => sum + (run.tokensIn || 0), 0);
-    const totalTokensOut = successfulRuns.reduce((sum, run) => sum + (run.tokensOut || 0), 0);
+    const totalTokensIn = successfulRuns.reduce(
+      (sum, run) => sum + (run.tokensIn || 0),
+      0,
+    );
+    const totalTokensOut = successfulRuns.reduce(
+      (sum, run) => sum + (run.tokensOut || 0),
+      0,
+    );
 
-    const totalLatency = successfulRuns.reduce((sum, run) => sum + (run.latencyMs || 0), 0);
-    const averageLatency = successfulRuns.length > 0 ? totalLatency / successfulRuns.length : 0;
+    const totalLatency = successfulRuns.reduce(
+      (sum, run) => sum + (run.latencyMs || 0),
+      0,
+    );
+    const averageLatency =
+      successfulRuns.length > 0 ? totalLatency / successfulRuns.length : 0;
 
     // Eye usage statistics - convert eyeIds to names
     const eyeUsageStats: Record<string, number> = {};
@@ -368,7 +395,7 @@ export class SessionManager {
       dbSessions.map(async (session) => {
         const info = await this.getSession(session.id);
         return info!;
-      })
+      }),
     );
 
     return sessionInfos;
@@ -381,14 +408,14 @@ export class SessionManager {
     const dbSessions = await this.db
       .select()
       .from(sessions)
-      .where(eq(sessions.status, 'active'))
+      .where(eq(sessions.status, "active"))
       .orderBy(desc(sessions.lastActivity));
 
     const sessionInfos = await Promise.all(
       dbSessions.map(async (session) => {
         const info = await this.getSession(session.id);
         return info!;
-      })
+      }),
     );
 
     return sessionInfos;
@@ -397,7 +424,10 @@ export class SessionManager {
   /**
    * Close session and finalize state
    */
-  async closeSession(sessionId: string, status: 'completed' | 'failed' = 'completed'): Promise<void> {
+  async closeSession(
+    sessionId: string,
+    status: "completed" | "failed" = "completed",
+  ): Promise<void> {
     await this.updateSession(sessionId, { status });
 
     // Optionally clear pipeline state to free memory
@@ -408,14 +438,14 @@ export class SessionManager {
    * Pause session temporarily
    */
   async pauseSession(sessionId: string): Promise<void> {
-    await this.updateSession(sessionId, { status: 'paused' });
+    await this.updateSession(sessionId, { status: "paused" });
   }
 
   /**
    * Resume paused session
    */
   async resumeSession(sessionId: string): Promise<void> {
-    await this.updateSession(sessionId, { status: 'active' });
+    await this.updateSession(sessionId, { status: "active" });
   }
 
   /**
@@ -432,7 +462,7 @@ export class SessionManager {
 
     if (!state) {
       return {
-        currentPhase: 'not_started',
+        currentPhase: "not_started",
         completedEyes: [],
         expectedNext: [EyeId.OVERSEER as EyeName, EyeId.SHARINGAN as EyeName],
         progressPercentage: 0,
@@ -442,12 +472,24 @@ export class SessionManager {
     // Estimate progress based on phase
     let progressPercentage = 0;
     switch (state.currentPhase) {
-      case 'initialization': progressPercentage = 10; break;
-      case 'clarification': progressPercentage = 30; break;
-      case 'planning': progressPercentage = 50; break;
-      case 'implementation': progressPercentage = 80; break;
-      case 'review': progressPercentage = 90; break;
-      case 'completion': progressPercentage = 100; break;
+      case "initialization":
+        progressPercentage = 10;
+        break;
+      case "clarification":
+        progressPercentage = 30;
+        break;
+      case "planning":
+        progressPercentage = 50;
+        break;
+      case "implementation":
+        progressPercentage = 80;
+        break;
+      case "review":
+        progressPercentage = 90;
+        break;
+      case "completion":
+        progressPercentage = 100;
+        break;
     }
 
     return {
@@ -481,13 +523,15 @@ export class SessionManager {
     const oldSessions = await this.db
       .select({ id: sessions.id })
       .from(sessions)
-      .where(and(
-        eq(sessions.status, 'completed'),
-        // Add date comparison logic here if needed
-      ));
+      .where(
+        and(
+          eq(sessions.status, "completed"),
+          // Add date comparison logic here if needed
+        ),
+      );
 
     // Clear from order guard memory
-    oldSessions.forEach(session => {
+    oldSessions.forEach((session) => {
       orderGuard.clearSession(session.id);
     });
 

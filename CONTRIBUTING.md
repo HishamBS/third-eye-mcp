@@ -77,6 +77,7 @@ git commit -m "docs: update routing guide"
 ```
 
 **Commit Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation
@@ -101,12 +102,12 @@ Test individual functions and modules:
 
 ```typescript
 // packages/providers/__tests__/groq.test.ts
-import { describe, test, expect } from 'vitest';
-import { GroqProvider } from '../groq';
+import { describe, test, expect } from "vitest";
+import { GroqProvider } from "../groq";
 
-describe('GroqProvider', () => {
-  test('lists models correctly', async () => {
-    const provider = new GroqProvider('https://api.groq.com/openai/v1', 'key');
+describe("GroqProvider", () => {
+  test("lists models correctly", async () => {
+    const provider = new GroqProvider("https://api.groq.com/openai/v1", "key");
     const models = await provider.listModels();
     expect(models).toBeInstanceOf(Array);
   });
@@ -119,15 +120,15 @@ Test API endpoints and flows:
 
 ```typescript
 // apps/server/__tests__/mcp.test.ts
-test('POST /mcp/run returns valid envelope', async () => {
-  const response = await fetch('http://localhost:7070/mcp/run', {
-    method: 'POST',
-    body: JSON.stringify({ eye: 'sharingan', input: 'test', sessionId: '123' }),
+test("POST /mcp/run returns valid envelope", async () => {
+  const response = await fetch("http://localhost:7070/mcp/run", {
+    method: "POST",
+    body: JSON.stringify({ eye: "sharingan", input: "test", sessionId: "123" }),
   });
 
   expect(response.ok).toBe(true);
   const envelope = await response.json();
-  expect(envelope).toHaveProperty('tag');
+  expect(envelope).toHaveProperty("tag");
 });
 ```
 
@@ -137,12 +138,12 @@ Test full user flows:
 
 ```typescript
 // apps/ui/tests/e2e/session-flow.spec.ts
-test('create session and run eye', async ({ page }) => {
-  await page.goto('http://localhost:3300');
-  await page.click('text=New Session');
-  await page.fill('textarea[placeholder*="Ask sharingan"]', 'Hello');
+test("create session and run eye", async ({ page }) => {
+  await page.goto("http://localhost:3300");
+  await page.click("text=New Session");
+  await page.fill('textarea[placeholder*="Ask sharingan"]', "Hello");
   await page.click('button:has-text("Run sharingan")');
-  await expect(page.locator('.run-card')).toBeVisible();
+  await expect(page.locator(".run-card")).toBeVisible();
 });
 ```
 
@@ -168,15 +169,15 @@ Use explicit imports and group them:
 
 ```typescript
 // 1. External dependencies
-import { Hono } from 'hono';
-import { nanoid } from 'nanoid';
+import { Hono } from "hono";
+import { nanoid } from "nanoid";
 
 // 2. Workspace packages
-import { getDb } from '@third-eye/db';
-import { EyeOrchestrator } from '@third-eye/core';
+import { getDb } from "@third-eye/db";
+import { EyeOrchestrator } from "@third-eye/core";
 
 // 3. Relative imports
-import { wsManager } from './websocket';
+import { wsManager } from "./websocket";
 ```
 
 ## 📝 Documentation
@@ -202,6 +203,7 @@ async runEye(eye: string, input: string, sessionId: string): Promise<Envelope> {
 ### README Updates
 
 If adding features, update relevant sections in:
+
 - `/README.md` - Main documentation
 - `/docs/*.md` - Detailed guides
 - `/docker/README.md` - Docker-specific docs
@@ -211,24 +213,28 @@ If adding features, update relevant sections in:
 ### Adding a New Eye
 
 1. **Register in Core**:
+
    ```typescript
    // packages/core/registry.ts
    export const EYES_REGISTRY = {
      // ...existing eyes
      byakugan: {
-       name: 'Byakugan',
-       version: '1.0.0',
-       description: 'Your Eye description',
+       name: "Byakugan",
+       version: "1.0.0",
+       description: "Your Eye description",
        personaTemplate: `Your system prompt...`,
-       defaultRouting: { /* ... */ }
-     }
+       defaultRouting: {
+         /* ... */
+       },
+     },
    };
    ```
 
 2. **Add UI Card**:
+
    ```typescript
    // Update apps/ui/src/app/session/[id]/page.tsx
-   const EYES = ['sharingan', 'rinnegan', 'tenseigan', 'byakugan'];
+   const EYES = ["sharingan", "rinnegan", "tenseigan", "byakugan"];
    ```
 
 3. **Seed Database**:
@@ -239,16 +245,24 @@ If adding features, update relevant sections in:
 ### Adding a New Provider
 
 1. **Create Provider Class**:
+
    ```typescript
    // packages/providers/your-provider.ts
    export class YourProvider implements ProviderClient {
-     async listModels(): Promise<ModelInfo[]> { /* ... */ }
-     async complete(req: CompletionRequest): Promise<CompletionResponse> { /* ... */ }
-     async health(): Promise<HealthResponse> { /* ... */ }
+     async listModels(): Promise<ModelInfo[]> {
+       /* ... */
+     }
+     async complete(req: CompletionRequest): Promise<CompletionResponse> {
+       /* ... */
+     }
+     async health(): Promise<HealthResponse> {
+       /* ... */
+     }
    }
    ```
 
 2. **Update Factory**:
+
    ```typescript
    // packages/providers/factory.ts
    case 'your-provider':
@@ -258,7 +272,12 @@ If adding features, update relevant sections in:
 3. **Update Types**:
    ```typescript
    // packages/types/providers.ts
-   export type ProviderId = 'groq' | 'openrouter' | 'ollama' | 'lmstudio' | 'your-provider';
+   export type ProviderId =
+     | "groq"
+     | "openrouter"
+     | "ollama"
+     | "lmstudio"
+     | "your-provider";
    ```
 
 ## 🐛 Reporting Issues
@@ -266,6 +285,7 @@ If adding features, update relevant sections in:
 ### Bug Reports
 
 Include:
+
 - **Description**: Clear description of the bug
 - **Steps to Reproduce**: 1, 2, 3...
 - **Expected**: What should happen
@@ -276,6 +296,7 @@ Include:
 ### Feature Requests
 
 Include:
+
 - **Use Case**: Why is this needed?
 - **Proposal**: How should it work?
 - **Alternatives**: Other approaches considered

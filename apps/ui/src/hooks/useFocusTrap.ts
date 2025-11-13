@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 /**
  * Focus Trap Hook - Phase 20.1
@@ -27,7 +27,7 @@ interface UseFocusTrapOptions {
  * @returns Ref to attach to the trapping container
  */
 export function useFocusTrap<T extends HTMLElement = HTMLDivElement>(
-  options: UseFocusTrapOptions
+  options: UseFocusTrapOptions,
 ) {
   const { isActive, onEscape } = options;
   const containerRef = useRef<T>(null);
@@ -47,20 +47,20 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>(
       if (!container) return [];
 
       const focusableSelectors = [
-        'a[href]',
-        'button:not([disabled])',
-        'textarea:not([disabled])',
-        'input:not([disabled])',
-        'select:not([disabled])',
+        "a[href]",
+        "button:not([disabled])",
+        "textarea:not([disabled])",
+        "input:not([disabled])",
+        "select:not([disabled])",
         '[tabindex]:not([tabindex="-1"])',
-      ].join(',');
+      ].join(",");
 
       return Array.from(
-        container.querySelectorAll<HTMLElement>(focusableSelectors)
+        container.querySelectorAll<HTMLElement>(focusableSelectors),
       ).filter((el) => {
         // Filter out hidden elements
         const style = window.getComputedStyle(el);
-        return style.display !== 'none' && style.visibility !== 'hidden';
+        return style.display !== "none" && style.visibility !== "hidden";
       });
     };
 
@@ -73,14 +73,14 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>(
     // Handle tab key to trap focus
     const handleKeyDown = (event: KeyboardEvent) => {
       // Handle Escape
-      if (event.key === 'Escape' && onEscape) {
+      if (event.key === "Escape" && onEscape) {
         event.preventDefault();
         onEscape();
         return;
       }
 
       // Handle Tab
-      if (event.key === 'Tab') {
+      if (event.key === "Tab") {
         const focusableElements = getFocusableElements();
         if (focusableElements.length === 0) return;
 
@@ -105,11 +105,11 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>(
     };
 
     // Add event listener
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
 
     // Cleanup function
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
 
       // Restore focus to previously focused element
       if (

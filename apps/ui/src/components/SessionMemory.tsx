@@ -1,13 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Brain, Clock, ChevronRight, ExternalLink } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Link from 'next/link';
-import { EyeIcon } from '@/components/EyeIcon';
-import type { ReactNode } from 'react';
-import { API_BASE_URL } from '@/consts/api';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { useState, useEffect } from "react";
+import { Brain, Clock, ChevronRight, ExternalLink } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import { EyeIcon } from "@/components/EyeIcon";
+import type { ReactNode } from "react";
+import { API_BASE_URL } from "@/consts/api";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
 
 interface PriorRun {
   id: string;
@@ -25,7 +29,11 @@ interface SessionMemoryProps {
   maxResults?: number;
 }
 
-export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: SessionMemoryProps) {
+export function SessionMemory({
+  sessionId,
+  currentInput,
+  maxResults = 10,
+}: SessionMemoryProps) {
   const [priorRuns, setPriorRuns] = useState<PriorRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
@@ -37,37 +45,46 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
   const fetchPriorRuns = async () => {
     setLoading(true);
     try {
-            const response = await fetch(`${API_BASE_URL}/api/session/${sessionId}/runs?limit=${maxResults}`);
+      const response = await fetch(
+        `${API_BASE_URL}/api/session/${sessionId}/runs?limit=${maxResults}`,
+      );
       if (response.ok) {
         const data = await response.json();
         // Calculate relevance if current input is provided
         const runsWithRelevance = data.map((run: PriorRun) => ({
           ...run,
-          relevanceScore: currentInput ? calculateRelevance(run.inputMd, currentInput) : 0,
+          relevanceScore: currentInput
+            ? calculateRelevance(run.inputMd, currentInput)
+            : 0,
         }));
         // Sort by relevance, then by recency
         runsWithRelevance.sort((a: PriorRun, b: PriorRun) => {
           if (a.relevanceScore !== b.relevanceScore) {
             return (b.relevanceScore || 0) - (a.relevanceScore || 0);
           }
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
         });
         setPriorRuns(runsWithRelevance);
       }
     } catch (error) {
-      console.error('Failed to fetch prior runs:', error);
+      console.error("Failed to fetch prior runs:", error);
     } finally {
       setLoading(false);
     }
   };
 
   // Simple relevance calculation based on word overlap
-  const calculateRelevance = (priorInput: string, currentInput: string): number => {
+  const calculateRelevance = (
+    priorInput: string,
+    currentInput: string,
+  ): number => {
     const priorWords = new Set(priorInput.toLowerCase().split(/\s+/));
     const currentWords = currentInput.toLowerCase().split(/\s+/);
 
     let matches = 0;
-    currentWords.forEach(word => {
+    currentWords.forEach((word) => {
       if (priorWords.has(word)) matches++;
     });
 
@@ -76,11 +93,11 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
 
   const getVerdictColor = (verdict: string) => {
     switch (verdict?.toUpperCase()) {
-      case 'APPROVED':
+      case "APPROVED":
         return `${STATUS_TEXT_COLORS.success} ${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_BORDER_COLORS_SUBTLE.success}`;
-      case 'REJECTED':
+      case "REJECTED":
         return `${STATUS_TEXT_COLORS.error} ${STATUS_BG_COLORS_SUBTLE.error} ${STATUS_BORDER_COLORS_SUBTLE.error}`;
-      case 'NEEDS_INPUT':
+      case "NEEDS_INPUT":
         return `${STATUS_TEXT_COLORS.warning} ${STATUS_BG_COLORS_SUBTLE.warning} ${STATUS_BORDER_COLORS_SUBTLE.warning}`;
       default:
         return `text-semantic-muted ${STATUS_BG_COLORS_SUBTLE.idle} ${STATUS_BORDER_COLORS_SUBTLE.idle}`;
@@ -129,7 +146,9 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
       ) : priorRuns.length === 0 ? (
         <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-8 text-center">
           <Brain className="mx-auto h-12 w-12 text-semantic-muted" />
-          <p className="mt-3 text-semantic-muted">No prior runs in this session yet</p>
+          <p className="mt-3 text-semantic-muted">
+            No prior runs in this session yet
+          </p>
           <p className="mt-1 text-xs text-semantic-muted">
             Byakugan will reference past validations for consistency checking
           </p>
@@ -151,20 +170,27 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
                     <div className="flex items-center gap-2">
                       {getEyeIcon(run.eye)}
                       <div>
-                        <h4 className="font-medium capitalize text-brand-foreground">{run.eye}</h4>
-                        <p className="text-xs text-semantic-muted">{formatTimeAgo(run.createdAt)}</p>
+                        <h4 className="font-medium capitalize text-brand-foreground">
+                          {run.eye}
+                        </h4>
+                        <p className="text-xs text-semantic-muted">
+                          {formatTimeAgo(run.createdAt)}
+                        </p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {run.relevanceScore !== undefined && run.relevanceScore > 0.3 && (
-                        <span className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.info} px-2 py-0.5 text-xs ${STATUS_TEXT_COLORS.info}`}>
-                          {Math.round(run.relevanceScore * 100)}% match
-                        </span>
-                      )}
+                      {run.relevanceScore !== undefined &&
+                        run.relevanceScore > 0.3 && (
+                          <span
+                            className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.info} px-2 py-0.5 text-xs ${STATUS_TEXT_COLORS.info}`}
+                          >
+                            {Math.round(run.relevanceScore * 100)}% match
+                          </span>
+                        )}
                       <span
                         className={`rounded-full border px-2 py-0.5 text-xs font-medium ${getVerdictColor(
-                          run.verdict
+                          run.verdict,
                         )}`}
                       >
                         {run.verdict}
@@ -199,19 +225,22 @@ export function SessionMemory({ sessionId, currentInput, maxResults = 10 }: Sess
               onClick={() => setExpanded(!expanded)}
               className="mt-4 flex w-full items-center justify-center gap-1 rounded-full border border-brand-outline/40 py-2 text-sm font-medium text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent"
             >
-              {expanded ? 'Show Less' : `Show ${priorRuns.length - 5} More`}
+              {expanded ? "Show Less" : `Show ${priorRuns.length - 5} More`}
               <ChevronRight
                 className={`h-4 w-4 transition-transform ${
-                  expanded ? 'rotate-90' : ''
+                  expanded ? "rotate-90" : ""
                 }`}
               />
             </button>
           )}
 
-          <div className={`mt-4 rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.info} ${STATUS_BG_COLORS_SUBTLE.info} p-3`}>
+          <div
+            className={`mt-4 rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.info} ${STATUS_BG_COLORS_SUBTLE.info} p-3`}
+          >
             <p className={`text-xs ${STATUS_TEXT_COLORS.info}`}>
-              <strong>Byakugan Consistency Check:</strong> References these prior runs to detect
-              contradictions and ensure logical consistency across your session.
+              <strong>Byakugan Consistency Check:</strong> References these
+              prior runs to detect contradictions and ensure logical consistency
+              across your session.
             </p>
           </div>
         </>

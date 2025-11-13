@@ -5,8 +5,8 @@
  * Uses SSOT tab configurations - no hardcoded emojis.
  */
 
-import { DynamicIcon } from '@/components/ui/DynamicIcon';
-import type { MonitorTabConfig } from '@third-eye/constants';
+import { DynamicIcon } from "@/components/ui/DynamicIcon";
+import type { MonitorTabConfig } from "@third-eye/constants";
 
 export interface TabButtonProps {
   readonly tab: MonitorTabConfig;
@@ -23,8 +23,8 @@ export function TabButton({ tab, isActive, onClick }: TabButtonProps) {
       onClick={onClick}
       className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all ${
         isActive
-          ? 'border-b-2 border-brand-accent text-brand-accent'
-          : 'text-semantic-muted hover:text-brand-foreground'
+          ? "border-b-2 border-brand-accent text-brand-accent"
+          : "text-semantic-muted hover:text-brand-foreground"
       }`}
       aria-selected={isActive}
       role="tab"

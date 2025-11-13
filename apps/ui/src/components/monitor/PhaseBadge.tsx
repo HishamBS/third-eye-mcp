@@ -7,33 +7,35 @@
  * Per R13: All styling and text from SSOT
  */
 
-import { memo } from 'react';
+import { memo } from "react";
 import {
   EyeStageToken,
   EYE_STAGE_LABELS,
   PHASE_BADGE_COLORS,
   PHASE_BADGE_TEXT,
-} from '@third-eye/constants';
+} from "@third-eye/constants";
 
 export interface PhaseBadgeProps {
-  readonly stage: 'guidance' | 'validation';
-  readonly size?: 'sm' | 'md';
+  readonly stage: "guidance" | "validation";
+  readonly size?: "sm" | "md";
 }
 
 /**
  * Get EyeStageToken from string literal
  * Per R07: Type-safe mapping
  */
-function getStageToken(stage: 'guidance' | 'validation'): EyeStageToken {
-  return stage === 'guidance' ? EyeStageToken.GUIDANCE : EyeStageToken.VALIDATION;
+function getStageToken(stage: "guidance" | "validation"): EyeStageToken {
+  return stage === "guidance"
+    ? EyeStageToken.GUIDANCE
+    : EyeStageToken.VALIDATION;
 }
 
 /**
  * Get aria-label for accessibility
  * Per R13: Text from SSOT
  */
-function getAriaLabel(stage: 'guidance' | 'validation'): string {
-  return stage === 'guidance'
+function getAriaLabel(stage: "guidance" | "validation"): string {
+  return stage === "guidance"
     ? PHASE_BADGE_TEXT.GUIDANCE_ARIA_LABEL
     : PHASE_BADGE_TEXT.VALIDATION_ARIA_LABEL;
 }
@@ -43,14 +45,15 @@ function getAriaLabel(stage: 'guidance' | 'validation'): string {
  */
 export const PhaseBadge = memo(function PhaseBadge({
   stage,
-  size = 'sm',
+  size = "sm",
 }: PhaseBadgeProps) {
   const stageToken = getStageToken(stage);
   const label = EYE_STAGE_LABELS[stageToken];
   const colorClasses = PHASE_BADGE_COLORS[stageToken];
   const ariaLabel = getAriaLabel(stage);
 
-  const sizeClasses = size === 'sm' ? 'text-xs px-2 py-0.5' : 'text-sm px-3 py-1';
+  const sizeClasses =
+    size === "sm" ? "text-xs px-2 py-0.5" : "text-sm px-3 py-1";
 
   return (
     <span

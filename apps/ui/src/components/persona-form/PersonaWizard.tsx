@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useReducer, useMemo, useCallback, useRef } from 'react';
-import { GlassCard } from '@/components/ui/GlassCard';
+import React, { useReducer, useMemo, useCallback, useRef } from "react";
+import { GlassCard } from "@/components/ui/GlassCard";
 import {
   WIZARD_STEPS,
   TOTAL_STEPS,
@@ -10,28 +10,35 @@ import {
   BUTTON_LABELS,
   WIZARD_TEXT,
   OPTIONAL_STEPS,
-} from './constants';
+} from "./constants";
 import type {
   PersonaFormState,
   PersonaFormAction,
   PersonaWizardProps,
   WizardStep,
-} from '@/types/persona-form';
-import { ChevronLeft, ChevronRight, Save, X, Upload, Sparkles } from 'lucide-react';
-import { MetadataStep } from './steps/MetadataStep';
-import { MissionStep } from './steps/MissionStep';
-import { EnvelopeStep } from './steps/EnvelopeStep';
-import { NotesStep } from './steps/NotesStep';
-import { LLMConfigStep } from './steps/LLMConfigStep';
+} from "@/types/persona-form";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Save,
+  X,
+  Upload,
+  Sparkles,
+} from "lucide-react";
+import { MetadataStep } from "./steps/MetadataStep";
+import { MissionStep } from "./steps/MissionStep";
+import { EnvelopeStep } from "./steps/EnvelopeStep";
+import { NotesStep } from "./steps/NotesStep";
+import { LLMConfigStep } from "./steps/LLMConfigStep";
 import {
   GuidanceStep,
   ValidationStep,
   RemindersStep,
   ReviewStep,
-} from './steps/PlaceholderSteps';
-import { TemplateSelector } from './TemplateSelector';
-import type { PersonaTemplate } from '@/lib/persona-templates';
-import { ANIMATION_DURATION } from '@/constants/timing';
+} from "./steps/PlaceholderSteps";
+import { TemplateSelector } from "./TemplateSelector";
+import type { PersonaTemplate } from "@/lib/persona-templates";
+import { ANIMATION_DURATION } from "@/constants/timing";
 
 /**
  * PersonaWizard - Multi-step form for persona configuration
@@ -48,13 +55,13 @@ import { ANIMATION_DURATION } from '@/constants/timing';
 const createInitialState = (): PersonaFormState => ({
   currentStep: WIZARD_STEPS.METADATA,
   metadata: {
-    eyeId: '',
-    name: '',
-    description: '',
+    eyeId: "",
+    name: "",
+    description: "",
     version: 1,
     capabilities: [],
   },
-  mission: '',
+  mission: "",
   guidancePhase: null,
   validationPhase: null,
   envelopeContract: {
@@ -66,10 +73,10 @@ const createInitialState = (): PersonaFormState => ({
   llmConfig: {
     temperature: 0,
     top_p: 1,
-    response_format: 'json_object',
+    response_format: "json_object",
     max_tokens: 2000,
   },
-  notes: '',
+  notes: "",
   isDirty: false,
 });
 
@@ -79,55 +86,63 @@ const createInitialState = (): PersonaFormState => ({
 
 function personaFormReducer(
   state: PersonaFormState,
-  action: PersonaFormAction
+  action: PersonaFormAction,
 ): PersonaFormState {
   switch (action.type) {
-    case 'SET_STEP':
+    case "SET_STEP":
       return { ...state, currentStep: action.step };
 
-    case 'SET_METADATA':
+    case "SET_METADATA":
       return { ...state, metadata: action.metadata, isDirty: true };
 
-    case 'SET_MISSION':
+    case "SET_MISSION":
       return { ...state, mission: action.mission, isDirty: true };
 
-    case 'SET_GUIDANCE_PHASE':
+    case "SET_GUIDANCE_PHASE":
       return { ...state, guidancePhase: action.guidancePhase, isDirty: true };
 
-    case 'SET_VALIDATION_PHASE':
-      return { ...state, validationPhase: action.validationPhase, isDirty: true };
+    case "SET_VALIDATION_PHASE":
+      return {
+        ...state,
+        validationPhase: action.validationPhase,
+        isDirty: true,
+      };
 
-    case 'SET_ENVELOPE_CONTRACT':
-      return { ...state, envelopeContract: action.envelopeContract, isDirty: true };
+    case "SET_ENVELOPE_CONTRACT":
+      return {
+        ...state,
+        envelopeContract: action.envelopeContract,
+        isDirty: true,
+      };
 
-    case 'SET_REMINDERS':
+    case "SET_REMINDERS":
       return { ...state, reminders: action.reminders, isDirty: true };
 
-    case 'SET_LLM_CONFIG':
+    case "SET_LLM_CONFIG":
       return { ...state, llmConfig: action.llmConfig, isDirty: true };
 
-    case 'SET_NOTES':
+    case "SET_NOTES":
       return { ...state, notes: action.notes, isDirty: true };
 
-    case 'NEXT_STEP':
+    case "NEXT_STEP":
       return {
         ...state,
         currentStep: Math.min(state.currentStep + 1, TOTAL_STEPS - 1),
       };
 
-    case 'PREVIOUS_STEP':
+    case "PREVIOUS_STEP":
       return {
         ...state,
         currentStep: Math.max(state.currentStep - 1, 0),
       };
 
-    case 'RESET':
+    case "RESET":
       return createInitialState();
 
-    case 'MARK_CLEAN':
+    case "MARK_CLEAN":
       return { ...state, isDirty: false };
 
-    case 'LOAD_IMPORTED_DATA':
+    case "LOAD_IMPORTED_DATA":
       return {
         ...state,
         ...action.data,
@@ -154,7 +169,7 @@ export function PersonaWizard({
     (initial) => ({
       ...createInitialState(),
       ...initial,
-    })
+    }),
   );
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -169,29 +184,29 @@ export function PersonaWizard({
         description: STEP_DESCRIPTIONS[stepId],
         isOptional: OPTIONAL_STEPS.has(stepId),
       })),
-    []
+    [],
   );
 
   const currentStepInfo = useMemo(
     () => steps[state.currentStep],
-    [steps, state.currentStep]
+    [steps, state.currentStep],
   );
 
   // Navigation handlers (memoized per R04)
   const handleNext = useCallback(() => {
-    dispatch({ type: 'NEXT_STEP' });
+    dispatch({ type: "NEXT_STEP" });
   }, []);
 
   const handlePrevious = useCallback(() => {
-    dispatch({ type: 'PREVIOUS_STEP' });
+    dispatch({ type: "PREVIOUS_STEP" });
   }, []);
 
   const handleSave = useCallback(async () => {
     try {
       await onSave(state);
-      dispatch({ type: 'MARK_CLEAN' });
+      dispatch({ type: "MARK_CLEAN" });
     } catch (error) {
-      console.error('Failed to save persona:', error);
+      console.error("Failed to save persona:", error);
     }
   }, [onSave, state]);
 
@@ -225,14 +240,15 @@ export function PersonaWizard({
           }
 
           // Remove export metadata before loading
-          const { exportedAt, exportVersion, ...cleanMetadata } = imported.metadata;
+          const { exportedAt, exportVersion, ...cleanMetadata } =
+            imported.metadata;
 
           // Load imported data
           dispatch({
-            type: 'LOAD_IMPORTED_DATA',
+            type: "LOAD_IMPORTED_DATA",
             data: {
               metadata: cleanMetadata,
-              mission: imported.mission || '',
+              mission: imported.mission || "",
               guidancePhase: imported.guidancePhase || null,
               validationPhase: imported.validationPhase || null,
               envelopeContract: imported.envelopeContract || {
@@ -244,25 +260,25 @@ export function PersonaWizard({
               llmConfig: imported.llmConfig || {
                 temperature: 0,
                 top_p: 1,
-                response_format: 'json_object',
+                response_format: "json_object",
                 max_tokens: 2000,
               },
-              notes: imported.notes || '',
+              notes: imported.notes || "",
             },
           });
 
           alert(WIZARD_TEXT.IMPORT_SUCCESS);
         } catch (error) {
-          console.error('Import error:', error);
+          console.error("Import error:", error);
           alert(WIZARD_TEXT.IMPORT_INVALID_JSON);
         }
       };
       reader.readAsText(file);
 
       // Reset input so same file can be imported again
-      event.target.value = '';
+      event.target.value = "";
     },
-    [dispatch]
+    [dispatch],
   );
 
   const handleTemplateSelect = useCallback(
@@ -273,11 +289,11 @@ export function PersonaWizard({
       }
 
       dispatch({
-        type: 'LOAD_IMPORTED_DATA',
+        type: "LOAD_IMPORTED_DATA",
         data: template.data,
       });
     },
-    [state.isDirty, dispatch]
+    [state.isDirty, dispatch],
   );
 
   // Navigation state
@@ -332,9 +348,10 @@ export function PersonaWizard({
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <span className="text-sm font-medium text-semantic-muted">
-              {WIZARD_TEXT.PROGRESS_LABEL
-                .replace('{current}', String(state.currentStep + 1))
-                .replace('{total}', String(TOTAL_STEPS))}
+              {WIZARD_TEXT.PROGRESS_LABEL.replace(
+                "{current}",
+                String(state.currentStep + 1),
+              ).replace("{total}", String(TOTAL_STEPS))}
             </span>
             <span className="text-sm font-medium text-brand-accent">
               {currentStepInfo?.title}
@@ -359,17 +376,14 @@ export function PersonaWizard({
           {/* Step Dots */}
           <div className="flex justify-between mt-4">
             {steps.map((step) => (
-              <div
-                key={step.id}
-                className="flex flex-col items-center gap-1"
-              >
+              <div key={step.id} className="flex flex-col items-center gap-1">
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
                     step.id === state.currentStep
-                      ? 'bg-brand-accent text-brand-foreground'
+                      ? "bg-brand-accent text-brand-foreground"
                       : step.id < state.currentStep
-                      ? 'bg-brand-accent/50 text-brand-foreground'
-                      : 'bg-brand-outline/30 text-brand-foreground/40'
+                        ? "bg-brand-accent/50 text-brand-foreground"
+                        : "bg-brand-outline/30 text-brand-foreground/40"
                   }`}
                 >
                   {step.id + 1}

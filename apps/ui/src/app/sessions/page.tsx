@@ -1,12 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { useUI } from '@/contexts/UIContext';
-import { ViewModeToggle, ViewModeDescription } from '@/components/ViewModeToggle';
-import { API_BASE_URL } from '@/consts/api';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { useUI } from "@/contexts/UIContext";
+import {
+  ViewModeToggle,
+  ViewModeDescription,
+} from "@/components/ViewModeToggle";
+import { API_BASE_URL } from "@/consts/api";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
 
 // Session status color mappings (SSOT)
 const SESSION_STATUS_COLORS = Object.freeze({
@@ -33,8 +40,8 @@ export default function SessionsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [filteredSessions, setFilteredSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchSessions();
@@ -43,17 +50,18 @@ export default function SessionsPage() {
   useEffect(() => {
     let filtered = sessions;
 
-    if (filterStatus !== 'all') {
-      filtered = filtered.filter(s => s.status === filterStatus);
+    if (filterStatus !== "all") {
+      filtered = filtered.filter((s) => s.status === filterStatus);
     }
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(s =>
-        s.id.toLowerCase().includes(query) ||
-        s.agentName?.toLowerCase().includes(query) ||
-        s.model?.toLowerCase().includes(query) ||
-        s.displayName?.toLowerCase().includes(query)
+      filtered = filtered.filter(
+        (s) =>
+          s.id.toLowerCase().includes(query) ||
+          s.agentName?.toLowerCase().includes(query) ||
+          s.model?.toLowerCase().includes(query) ||
+          s.displayName?.toLowerCase().includes(query),
       );
     }
 
@@ -69,7 +77,7 @@ export default function SessionsPage() {
         setSessions(Array.isArray(data) ? data : []);
       }
     } catch (error) {
-      console.error('Failed to fetch sessions:', error);
+      console.error("Failed to fetch sessions:", error);
     } finally {
       setLoading(false);
     }
@@ -87,7 +95,7 @@ export default function SessionsPage() {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Just now';
+    if (diffMins < 1) return "Just now";
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
@@ -109,12 +117,19 @@ export default function SessionsPage() {
         <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-semantic-muted hover:text-brand-accent transition-colors">
+              <Link
+                href="/"
+                className="text-semantic-muted hover:text-brand-accent transition-colors"
+              >
                 Back
               </Link>
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Monitoring</p>
-                <h1 className="text-2xl font-semibold text-brand-foreground mt-1">All Sessions</h1>
+                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">
+                  Monitoring
+                </p>
+                <h1 className="text-2xl font-semibold text-brand-foreground mt-1">
+                  All Sessions
+                </h1>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -159,11 +174,13 @@ export default function SessionsPage() {
 
         {filteredSessions.length === 0 ? (
           <div className="bg-brand-paper border border-brand-outline/50 rounded-xl p-12 text-center">
-            <p className="text-semantic-muted text-lg mb-2">No sessions found</p>
+            <p className="text-semantic-muted text-lg mb-2">
+              No sessions found
+            </p>
             <p className="text-semantic-muted text-sm">
               {sessions.length === 0
-                ? 'Sessions will appear here when agents connect via MCP'
-                : 'Try adjusting your filters'}
+                ? "Sessions will appear here when agents connect via MCP"
+                : "Try adjusting your filters"}
             </p>
           </div>
         ) : (
@@ -204,16 +221,18 @@ export default function SessionsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-brand-foreground text-sm">
-                        {session.agentName || 'Unknown Agent'}
+                        {session.agentName || "Unknown Agent"}
                       </div>
-                      {viewMode === 'expert' && session.model && (
+                      {viewMode === "expert" && session.model && (
                         <div className="text-semantic-muted text-xs font-mono mt-1">
                           {session.model}
                         </div>
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusBadge(session.status)}`}>
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusBadge(session.status)}`}
+                      >
                         {session.status}
                       </span>
                     </td>
@@ -237,19 +256,27 @@ export default function SessionsPage() {
 
         <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-brand-paper border border-brand-outline/50 rounded-xl p-4">
-            <div className="text-xs uppercase tracking-wider text-semantic-muted mb-1">Total Sessions</div>
-            <div className="text-2xl font-bold text-brand-foreground">{sessions.length}</div>
-          </div>
-          <div className="bg-brand-paper border border-brand-outline/50 rounded-xl p-4">
-            <div className="text-xs uppercase tracking-wider text-semantic-muted mb-1">Active</div>
-            <div className={`text-2xl font-bold ${STATUS_TEXT_COLORS.success}`}>
-              {sessions.filter(s => s.status === 'active').length}
+            <div className="text-xs uppercase tracking-wider text-semantic-muted mb-1">
+              Total Sessions
+            </div>
+            <div className="text-2xl font-bold text-brand-foreground">
+              {sessions.length}
             </div>
           </div>
           <div className="bg-brand-paper border border-brand-outline/50 rounded-xl p-4">
-            <div className="text-xs uppercase tracking-wider text-semantic-muted mb-1">Completed</div>
+            <div className="text-xs uppercase tracking-wider text-semantic-muted mb-1">
+              Active
+            </div>
+            <div className={`text-2xl font-bold ${STATUS_TEXT_COLORS.success}`}>
+              {sessions.filter((s) => s.status === "active").length}
+            </div>
+          </div>
+          <div className="bg-brand-paper border border-brand-outline/50 rounded-xl p-4">
+            <div className="text-xs uppercase tracking-wider text-semantic-muted mb-1">
+              Completed
+            </div>
             <div className={`text-2xl font-bold ${STATUS_TEXT_COLORS.info}`}>
-              {sessions.filter(s => s.status === 'completed').length}
+              {sessions.filter((s) => s.status === "completed").length}
             </div>
           </div>
         </div>

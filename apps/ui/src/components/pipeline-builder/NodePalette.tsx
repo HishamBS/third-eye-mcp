@@ -1,11 +1,17 @@
-'use client';
+"use client";
 
-import { memo, useState, useMemo, useCallback, useEffect } from 'react';
-import { EyeIcon } from '@/components/EyeIcon';
-import { GitBranch, GitMerge, RotateCw, Terminal, UserCircle } from 'lucide-react';
-import { PALETTE_TEXT, LAYOUT } from './constants';
-import type { EyeDefinition } from '@/types/pipeline';
-import { API_BASE_URL } from '@/consts/api';
+import { memo, useState, useMemo, useCallback, useEffect } from "react";
+import { EyeIcon } from "@/components/EyeIcon";
+import {
+  GitBranch,
+  GitMerge,
+  RotateCw,
+  Terminal,
+  UserCircle,
+} from "lucide-react";
+import { PALETTE_TEXT, LAYOUT } from "./constants";
+import type { EyeDefinition } from "@/types/pipeline";
+import { API_BASE_URL } from "@/consts/api";
 
 /**
  * Control node definitions (Switch, IF, Loop, etc.)
@@ -13,34 +19,42 @@ import { API_BASE_URL } from '@/consts/api';
  */
 const CONTROL_NODES = [
   {
-    type: 'switch',
-    label: 'Switch',
-    description: 'Multi-way routing with rules',
+    type: "switch",
+    label: "Switch",
+    description: "Multi-way routing with rules",
     icon: GitBranch,
     defaultConfig: {
-      mode: 'rules',
+      mode: "rules",
       rules: [
-        { expression: '{"==": [{"var": "verdict"}, "APPROVED"]}', label: 'Approved', outputIndex: 0 },
-        { expression: '{"==": [{"var": "verdict"}, "REJECTED"]}', label: 'Rejected', outputIndex: 1 },
+        {
+          expression: '{"==": [{"var": "verdict"}, "APPROVED"]}',
+          label: "Approved",
+          outputIndex: 0,
+        },
+        {
+          expression: '{"==": [{"var": "verdict"}, "REJECTED"]}',
+          label: "Rejected",
+          outputIndex: 1,
+        },
       ],
       sendToAll: false,
     },
   },
   {
-    type: 'if',
-    label: 'IF',
-    description: 'Binary true/false branching',
+    type: "if",
+    label: "IF",
+    description: "Binary true/false branching",
     icon: GitMerge,
     defaultConfig: {
       condition: '{"==": [{"var": "verdict"}, "OK"]}',
-      trueLabel: 'Yes',
-      falseLabel: 'No',
+      trueLabel: "Yes",
+      falseLabel: "No",
     },
   },
   {
-    type: 'loop_over_items',
-    label: 'Loop',
-    description: 'Iterate over items with batching',
+    type: "loop_over_items",
+    label: "Loop",
+    description: "Iterate over items with batching",
     icon: RotateCw,
     defaultConfig: {
       maxIterations: 10,
@@ -48,21 +62,21 @@ const CONTROL_NODES = [
     },
   },
   {
-    type: 'terminal',
-    label: 'Terminal',
-    description: 'End pipeline execution',
+    type: "terminal",
+    label: "Terminal",
+    description: "End pipeline execution",
     icon: Terminal,
     defaultConfig: {
-      verdict: 'COMPLETE',
+      verdict: "COMPLETE",
     },
   },
   {
-    type: 'user_input',
-    label: 'User Input',
-    description: 'Wait for user input',
+    type: "user_input",
+    label: "User Input",
+    description: "Wait for user input",
     icon: UserCircle,
     defaultConfig: {
-      promptKey: 'user_feedback',
+      promptKey: "user_feedback",
     },
   },
 ] as const;
@@ -94,10 +108,12 @@ export const NodePalette = memo(function NodePalette({
   collapsed,
   onToggleCollapse,
 }: NodePaletteProps) {
-  const [search, setSearch] = useState<string>('');
+  const [search, setSearch] = useState<string>("");
   const [allEyes, setAllEyes] = useState<EyeDefinition[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+  const [expandedSections, setExpandedSections] = useState<
+    Record<string, boolean>
+  >({
     eyes: true,
     control: true,
   });
@@ -109,27 +125,29 @@ export const NodePalette = memo(function NodePalette({
       try {
         const response = await fetch(`${API_BASE_URL}/api/eyes/all`);
         if (!response.ok) {
-          throw new Error('Failed to fetch eyes');
+          throw new Error("Failed to fetch eyes");
         }
 
         const envelope = await response.json();
         const eyesData = envelope.data || [];
 
-        const mapped: EyeDefinition[] = eyesData.map((eye: Record<string, unknown>) => ({
-          id: eye.id,
-          name: eye.name,
-          description: eye.description,
-          iconSvg: eye.iconSvg,
-          capabilities: eye.capabilities || [],
-          version: eye.version,
-          stage: eye.stage,
-          inputSchema: eye.inputSchemaJson,
-          outputSchema: eye.outputSchemaJson,
-        }));
+        const mapped: EyeDefinition[] = eyesData.map(
+          (eye: Record<string, unknown>) => ({
+            id: eye.id,
+            name: eye.name,
+            description: eye.description,
+            iconSvg: eye.iconSvg,
+            capabilities: eye.capabilities || [],
+            version: eye.version,
+            stage: eye.stage,
+            inputSchema: eye.inputSchemaJson,
+            outputSchema: eye.outputSchemaJson,
+          }),
+        );
 
         setAllEyes(mapped);
       } catch (error) {
-        console.error('[NodePalette] Failed to fetch eyes:', error);
+        console.error("[NodePalette] Failed to fetch eyes:", error);
         setAllEyes([]);
       } finally {
         setLoading(false);
@@ -148,7 +166,7 @@ export const NodePalette = memo(function NodePalette({
     return allEyes.filter(
       (eye) =>
         eye.name.toLowerCase().includes(lowerSearch) ||
-        eye.description.toLowerCase().includes(lowerSearch)
+        eye.description.toLowerCase().includes(lowerSearch),
     );
   }, [allEyes, search]);
 
@@ -159,7 +177,7 @@ export const NodePalette = memo(function NodePalette({
     return CONTROL_NODES.filter(
       (node) =>
         node.label.toLowerCase().includes(lowerSearch) ||
-        node.description.toLowerCase().includes(lowerSearch)
+        node.description.toLowerCase().includes(lowerSearch),
     );
   }, [search]);
 
@@ -171,11 +189,11 @@ export const NodePalette = memo(function NodePalette({
   // Drag start handler for Eye nodes
   const onEyeDragStart = useCallback(
     (event: React.DragEvent<HTMLDivElement>, eye: EyeDefinition) => {
-      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.setData(
-        'application/reactflow',
+        "application/reactflow",
         JSON.stringify({
-          type: 'eyeNode',
+          type: "eyeNode",
           data: {
             eyeId: eye.id,
             displayName: eye.name,
@@ -183,32 +201,41 @@ export const NodePalette = memo(function NodePalette({
             iconSvg: eye.iconSvg,
             stage: eye.stage,
           },
-        })
+        }),
       );
     },
-    []
+    [],
   );
 
   // Drag start handler for control nodes
   const onControlNodeDragStart = useCallback(
-    (event: React.DragEvent<HTMLDivElement>, node: typeof CONTROL_NODES[number]) => {
-      event.dataTransfer.effectAllowed = 'move';
+    (
+      event: React.DragEvent<HTMLDivElement>,
+      node: (typeof CONTROL_NODES)[number],
+    ) => {
+      event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.setData(
-        'application/reactflow',
+        "application/reactflow",
         JSON.stringify({
           type: node.type,
           data: {
             label: node.label,
-            ...(node.type === 'switch' && { switchConfig: node.defaultConfig }),
-            ...(node.type === 'if' && { ifConfig: node.defaultConfig }),
-            ...(node.type === 'loop_over_items' && { loopConfig: node.defaultConfig }),
-            ...(node.type === 'terminal' && { verdict: node.defaultConfig.verdict }),
-            ...(node.type === 'user_input' && { promptKey: node.defaultConfig.promptKey }),
+            ...(node.type === "switch" && { switchConfig: node.defaultConfig }),
+            ...(node.type === "if" && { ifConfig: node.defaultConfig }),
+            ...(node.type === "loop_over_items" && {
+              loopConfig: node.defaultConfig,
+            }),
+            ...(node.type === "terminal" && {
+              verdict: node.defaultConfig.verdict,
+            }),
+            ...(node.type === "user_input" && {
+              promptKey: node.defaultConfig.promptKey,
+            }),
           },
-        })
+        }),
       );
     },
-    []
+    [],
   );
 
   // Collapsed view
@@ -223,8 +250,18 @@ export const NodePalette = memo(function NodePalette({
           className="p-2 hover:bg-brand-outline/20 rounded-md transition-colors"
           title={PALETTE_TEXT.EXPAND}
         >
-          <svg className="w-5 h-5 text-brand-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          <svg
+            className="w-5 h-5 text-brand-foreground"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 5l7 7-7 7"
+            />
           </svg>
         </button>
       </div>
@@ -245,8 +282,18 @@ export const NodePalette = memo(function NodePalette({
           className="p-1 hover:bg-brand-outline/20 rounded-md transition-colors"
           title={PALETTE_TEXT.COLLAPSE}
         >
-          <svg className="w-5 h-5 text-brand-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          <svg
+            className="w-5 h-5 text-brand-foreground"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
           </svg>
         </button>
       </div>
@@ -267,19 +314,24 @@ export const NodePalette = memo(function NodePalette({
         {/* Control Nodes Section */}
         <div className="border-b border-brand-outline">
           <button
-            onClick={() => toggleSection('control')}
+            onClick={() => toggleSection("control")}
             className="w-full flex items-center justify-between p-4 hover:bg-brand-outline/10 transition-colors"
           >
             <h3 className="text-sm font-semibold text-semantic-muted uppercase tracking-wider">
               Control Nodes
             </h3>
             <svg
-              className={`w-4 h-4 text-semantic-muted transition-transform ${expandedSections.control ? 'rotate-90' : ''}`}
+              className={`w-4 h-4 text-semantic-muted transition-transform ${expandedSections.control ? "rotate-90" : ""}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </button>
 
@@ -298,8 +350,12 @@ export const NodePalette = memo(function NodePalette({
                       <Icon className="w-6 h-6 text-brand-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-brand-foreground">{node.label}</div>
-                      <div className="text-xs text-semantic-muted mt-0.5">{node.description}</div>
+                      <div className="text-sm font-semibold text-brand-foreground">
+                        {node.label}
+                      </div>
+                      <div className="text-xs text-semantic-muted mt-0.5">
+                        {node.description}
+                      </div>
                     </div>
                   </div>
                 );
@@ -311,26 +367,33 @@ export const NodePalette = memo(function NodePalette({
         {/* Eyes Section */}
         <div>
           <button
-            onClick={() => toggleSection('eyes')}
+            onClick={() => toggleSection("eyes")}
             className="w-full flex items-center justify-between p-4 hover:bg-brand-outline/10 transition-colors"
           >
             <h3 className="text-sm font-semibold text-semantic-muted uppercase tracking-wider">
               Eyes
             </h3>
             <svg
-              className={`w-4 h-4 text-semantic-muted transition-transform ${expandedSections.eyes ? 'rotate-90' : ''}`}
+              className={`w-4 h-4 text-semantic-muted transition-transform ${expandedSections.eyes ? "rotate-90" : ""}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           </button>
 
           {expandedSections.eyes && (
             <div className="px-4 pb-4">
               {loading ? (
-                <div className="text-sm text-semantic-muted text-center py-4">Loading eyes...</div>
+                <div className="text-sm text-semantic-muted text-center py-4">
+                  Loading eyes...
+                </div>
               ) : filteredEyes.length > 0 ? (
                 <div className="space-y-2">
                   {filteredEyes.map((eye) => (
@@ -344,17 +407,25 @@ export const NodePalette = memo(function NodePalette({
                         <EyeIcon eye={eye.name} size={32} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-brand-foreground">{eye.name}</div>
-                        <div className="text-xs text-semantic-muted mt-0.5">{eye.description}</div>
+                        <div className="text-sm font-semibold text-brand-foreground">
+                          {eye.name}
+                        </div>
+                        <div className="text-xs text-semantic-muted mt-0.5">
+                          {eye.description}
+                        </div>
                         {eye.version && (
-                          <div className="text-xs text-brand-accent mt-1">v{eye.version}</div>
+                          <div className="text-xs text-brand-accent mt-1">
+                            v{eye.version}
+                          </div>
                         )}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-sm text-semantic-muted text-center py-4">{PALETTE_TEXT.NO_RESULTS}</div>
+                <div className="text-sm text-semantic-muted text-center py-4">
+                  {PALETTE_TEXT.NO_RESULTS}
+                </div>
               )}
             </div>
           )}

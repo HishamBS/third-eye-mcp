@@ -4,15 +4,15 @@
  * Discovers available models from all providers and caches them in the database
  */
 
-import { Buffer } from 'node:buffer';
-import { getDb } from '@third-eye/db';
-import { modelsCache, providerKeys } from '@third-eye/db/schema';
-import { ProviderFactory, BaseProvider } from '@third-eye/providers';
-import type { ProviderConfig } from '@third-eye/providers';
-import { PROVIDERS, type ProviderId } from '@third-eye/types';
-import { eq, and, desc } from 'drizzle-orm';
-import { decryptFromStorage } from './encryption';
-import { z } from 'zod';
+import { Buffer } from "node:buffer";
+import { getDb } from "@third-eye/db";
+import { modelsCache, providerKeys } from "@third-eye/db/schema";
+import { ProviderFactory, BaseProvider } from "@third-eye/providers";
+import type { ProviderConfig } from "@third-eye/providers";
+import { PROVIDERS, type ProviderId } from "@third-eye/types";
+import { eq, and, desc } from "drizzle-orm";
+import { decryptFromStorage } from "./encryption";
+import { z } from "zod";
 
 const CapabilitySchema = z
   .object({
@@ -48,10 +48,10 @@ interface NormalizedModel {
 }
 
 function isProviderId(value: unknown): value is ProviderId {
-  if (typeof value !== 'string') {
+  if (typeof value !== "string") {
     return false;
   }
-  return PROVIDERS.some(provider => provider === value);
+  return PROVIDERS.some((provider) => provider === value);
 }
 
 export interface ModelCacheEntry {
@@ -70,7 +70,10 @@ export interface ModelCacheEntry {
 export class ModelDiscoveryService {
   private static instance: ModelDiscoveryService | null = null;
   private discoveryInProgress = new Set<ProviderId>();
-  private static readonly providersRequiringApiKey = new Set<ProviderId>(['groq', 'openrouter']);
+  private static readonly providersRequiringApiKey = new Set<ProviderId>([
+    "groq",
+    "openrouter",
+  ]);
 
   static getInstance(): ModelDiscoveryService {
     if (!ModelDiscoveryService.instance) {
@@ -85,10 +88,12 @@ export class ModelDiscoveryService {
   async discoverAllModels(): Promise<void> {
     const providers = ProviderFactory.getSupportedProviders();
 
-    console.log('🔍 Starting model discovery for all providers...');
+    console.log("🔍 Starting model discovery for all providers...");
 
     const results = await Promise.allSettled(
-      providers.map((providerId: string) => this.discoverProviderModels(providerId as ProviderId))
+      providers.map((providerId: string) =>
+        this.discoverProviderModels(providerId as ProviderId),
+      ),
     );
 
     let successful = 0;
@@ -96,7 +101,7 @@ export class ModelDiscoveryService {
 
     results.forEach((result: PromiseSettledResult<number>, index: number) => {
       const providerId = providers[index];
-      if (result.status === 'fulfilled') {
+      if (result.status === "fulfilled") {
         successful++;
         console.log(`✅ ${providerId}: ${result.value} models discovered`);
       } else {
@@ -105,7 +110,9 @@ export class ModelDiscoveryService {
       }
     });
 
-    console.log(`🧿 Model discovery complete: ${successful} providers successful, ${failed} failed`);
+    console.log(
+      `🧿 Model discovery complete: ${successful} providers successful, ${failed} failed`,
+    );
   }
 
   /**
@@ -157,21 +164,22 @@ export class ModelDiscoveryService {
     // Type guard to ensure model has required properties
     if (
       !model ||
-      typeof model !== 'object' ||
-      !('id' in model) ||
-      typeof (model as { id: unknown }).id !== 'string'
+      typeof model !== "object" ||
+      !("id" in model) ||
+      typeof (model as { id: unknown }).id !== "string"
     ) {
-      throw new Error('Invalid model format: missing required id property');
+      throw new Error("Invalid model format: missing required id property");
     }
 
     const modelObj = model as ProviderModel;
     const capability: ModelCapability = {};
 
-    if (typeof modelObj.context_window === 'number') {
+    if (typeof modelObj.context_window === "number") {
       capability.ctx = modelObj.context_window;
     }
 
-    const displayName = typeof modelObj.name === 'string' ? modelObj.name : modelObj.id;
+    const displayName =
+      typeof modelObj.name === "string" ? modelObj.name : modelObj.id;
 
     return {
       id: modelObj.id,
@@ -181,13 +189,16 @@ export class ModelDiscoveryService {
     };
   }
 
-  private async cacheModels(providerId: ProviderId, models: unknown[]): Promise<void> {
+  private async cacheModels(
+    providerId: ProviderId,
+    models: unknown[],
+  ): Promise<void> {
     const { db } = getDb();
-    const { generateId } = await import('@third-eye/db/utils/uuid');
+    const { generateId } = await import("@third-eye/db/utils/uuid");
     const now = new Date();
 
     // Prepare data for batch insert
-    const cacheEntries = models.map(model => {
+    const cacheEntries = models.map((model) => {
       const normalized = this.normalizeModel(model);
       return {
         id: generateId(), // UUID for cache entry
@@ -204,7 +215,9 @@ export class ModelDiscoveryService {
       // Use transaction for atomic updates
       await db.transaction(async (tx) => {
         // Delete existing entries for this provider
-        await tx.delete(modelsCache).where(eq(modelsCache.provider, providerId));
+        await tx
+          .delete(modelsCache)
+          .where(eq(modelsCache.provider, providerId));
 
         // Insert new entries
         if (cacheEntries.length > 0) {
@@ -231,7 +244,7 @@ export class ModelDiscoveryService {
         .from(modelsCache)
         .where(eq(modelsCache.provider, providerId));
 
-      return results.map(row => ModelDiscoveryService.toCacheEntry(row));
+      return results.map((row) => ModelDiscoveryService.toCacheEntry(row));
     } catch (error) {
       console.error(`Failed to get cached models for ${providerId}:`, error);
       return [];
@@ -247,15 +260,18 @@ export class ModelDiscoveryService {
     try {
       const results = await db.select().from(modelsCache);
 
-      return results.map(row => ModelDiscoveryService.toCacheEntry(row));
+      return results.map((row) => ModelDiscoveryService.toCacheEntry(row));
     } catch (error) {
-      console.error('Failed to get all cached models:', error);
+      console.error("Failed to get all cached models:", error);
       return [];
     }
   }
 
-  private async createProviderInstance(providerId: ProviderId): Promise<BaseProvider | null> {
-    const requiresApiKey = ModelDiscoveryService.providersRequiringApiKey.has(providerId);
+  private async createProviderInstance(
+    providerId: ProviderId,
+  ): Promise<BaseProvider | null> {
+    const requiresApiKey =
+      ModelDiscoveryService.providersRequiringApiKey.has(providerId);
     const config = await this.resolveProviderConfig(providerId, requiresApiKey);
 
     if (requiresApiKey && !config.apiKey) {
@@ -265,7 +281,10 @@ export class ModelDiscoveryService {
     return ProviderFactory.createProvider(providerId, config);
   }
 
-  private async resolveProviderConfig(providerId: ProviderId, requiresApiKey: boolean): Promise<ProviderConfig> {
+  private async resolveProviderConfig(
+    providerId: ProviderId,
+    requiresApiKey: boolean,
+  ): Promise<ProviderConfig> {
     if (!requiresApiKey) {
       return this.defaultConfig(providerId);
     }
@@ -283,7 +302,9 @@ export class ModelDiscoveryService {
     return {};
   }
 
-  private async loadConfigFromDatabase(providerId: ProviderId): Promise<ProviderConfig | null> {
+  private async loadConfigFromDatabase(
+    providerId: ProviderId,
+  ): Promise<ProviderConfig | null> {
     const { db } = getDb();
 
     const row = await db
@@ -292,7 +313,7 @@ export class ModelDiscoveryService {
       .where(eq(providerKeys.provider, providerId))
       .orderBy(desc(providerKeys.createdAt))
       .limit(1)
-      .then(result => result.at(0) ?? null);
+      .then((result) => result.at(0) ?? null);
 
     if (!row) {
       return null;
@@ -308,39 +329,52 @@ export class ModelDiscoveryService {
     return { ...baseConfig, apiKey };
   }
 
-  private loadConfigFromEnvironment(providerId: ProviderId): ProviderConfig | null {
-    if (providerId === 'groq') {
+  private loadConfigFromEnvironment(
+    providerId: ProviderId,
+  ): ProviderConfig | null {
+    if (providerId === "groq") {
       const apiKey = process.env.GROQ_API_KEY;
-      return apiKey ? { baseUrl: 'https://api.groq.com/openai/v1', apiKey } : null;
+      return apiKey
+        ? { baseUrl: "https://api.groq.com/openai/v1", apiKey }
+        : null;
     }
-    if (providerId === 'openrouter') {
+    if (providerId === "openrouter") {
       const apiKey = process.env.OPENROUTER_API_KEY;
-      return apiKey ? { baseUrl: 'https://openrouter.ai/api/v1', apiKey } : null;
+      return apiKey
+        ? { baseUrl: "https://openrouter.ai/api/v1", apiKey }
+        : null;
     }
     return null;
   }
 
   private defaultConfig(providerId: ProviderId): ProviderConfig {
     switch (providerId) {
-      case 'groq':
-        return { baseUrl: 'https://api.groq.com/openai/v1' };
-      case 'openrouter':
-        return { baseUrl: 'https://openrouter.ai/api/v1' };
-      case 'ollama':
-        return { baseUrl: 'http://127.0.0.1:11434' };
-      case 'lmstudio':
-        return { baseUrl: 'http://127.0.0.1:1234/v1' };
+      case "groq":
+        return { baseUrl: "https://api.groq.com/openai/v1" };
+      case "openrouter":
+        return { baseUrl: "https://openrouter.ai/api/v1" };
+      case "ollama":
+        return { baseUrl: "http://127.0.0.1:11434" };
+      case "lmstudio":
+        return { baseUrl: "http://127.0.0.1:1234/v1" };
       default:
         return {};
     }
   }
 
-  private static toCacheEntry(row: typeof modelsCache.$inferSelect): ModelCacheEntry {
+  private static toCacheEntry(
+    row: typeof modelsCache.$inferSelect,
+  ): ModelCacheEntry {
     const capabilityResult = CapabilitySchema.safeParse(row.capabilityJson);
-    const capability = capabilityResult.success && capabilityResult.data ? capabilityResult.data : {};
+    const capability =
+      capabilityResult.success && capabilityResult.data
+        ? capabilityResult.data
+        : {};
 
     if (!isProviderId(row.provider)) {
-      throw new Error(`Unknown provider stored in models cache: ${row.provider}`);
+      throw new Error(
+        `Unknown provider stored in models cache: ${row.provider}`,
+      );
     }
 
     return {
@@ -363,15 +397,20 @@ export class ModelDiscoveryService {
       const result = await db
         .select({ model: modelsCache.model })
         .from(modelsCache)
-        .where(and(
-          eq(modelsCache.provider, providerId),
-          eq(modelsCache.model, modelName)
-        ))
+        .where(
+          and(
+            eq(modelsCache.provider, providerId),
+            eq(modelsCache.model, modelName),
+          ),
+        )
         .limit(1);
 
       return result.length > 0;
     } catch (error) {
-      console.error(`Failed to check if model exists: ${providerId}/${modelName}`, error);
+      console.error(
+        `Failed to check if model exists: ${providerId}/${modelName}`,
+        error,
+      );
       return false;
     }
   }
@@ -379,17 +418,22 @@ export class ModelDiscoveryService {
   /**
    * Get model capabilities
    */
-  async getModelCapabilities(providerId: ProviderId, modelName: string): Promise<ModelCacheEntry['capability'] | null> {
+  async getModelCapabilities(
+    providerId: ProviderId,
+    modelName: string,
+  ): Promise<ModelCacheEntry["capability"] | null> {
     const { db } = getDb();
 
     try {
       const result = await db
         .select({ capabilityJson: modelsCache.capabilityJson })
         .from(modelsCache)
-        .where(and(
-          eq(modelsCache.provider, providerId),
-          eq(modelsCache.model, modelName)
-        ))
+        .where(
+          and(
+            eq(modelsCache.provider, providerId),
+            eq(modelsCache.model, modelName),
+          ),
+        )
         .limit(1);
 
       if (result.length === 0) {
@@ -397,9 +441,12 @@ export class ModelDiscoveryService {
       }
 
       const parseResult = CapabilitySchema.safeParse(result[0].capabilityJson);
-      return parseResult.success ? parseResult.data ?? null : null;
+      return parseResult.success ? (parseResult.data ?? null) : null;
     } catch (error) {
-      console.error(`Failed to get model capabilities: ${providerId}/${modelName}`, error);
+      console.error(
+        `Failed to get model capabilities: ${providerId}/${modelName}`,
+        error,
+      );
       return null;
     }
   }
@@ -420,31 +467,33 @@ export class ModelDiscoveryService {
 
     // Filter by provider if specified
     if (requirements.provider) {
-      candidates = candidates.filter(m => m.provider === requirements.provider);
+      candidates = candidates.filter(
+        (m) => m.provider === requirements.provider,
+      );
     }
 
     // Filter by minimum context
-    if (typeof requirements.minContext === 'number') {
+    if (typeof requirements.minContext === "number") {
       const minimumContext = requirements.minContext;
-      candidates = candidates.filter(model => {
+      candidates = candidates.filter((model) => {
         const context = model.capability.ctx;
-        return typeof context === 'number' && context >= minimumContext;
+        return typeof context === "number" && context >= minimumContext;
       });
     }
 
     // Filter by vision requirement
     if (requirements.requiresVision) {
-      candidates = candidates.filter(m => m.capability.vision === true);
+      candidates = candidates.filter((m) => m.capability.vision === true);
     }
 
     // Filter by JSON mode requirement
     if (requirements.requiresJsonMode) {
-      candidates = candidates.filter(m => m.capability.jsonMode === true);
+      candidates = candidates.filter((m) => m.capability.jsonMode === true);
     }
 
     // Filter by family if specified
     if (requirements.family) {
-      candidates = candidates.filter(m => m.family === requirements.family);
+      candidates = candidates.filter((m) => m.family === requirements.family);
     }
 
     if (candidates.length === 0) {
@@ -452,7 +501,9 @@ export class ModelDiscoveryService {
     }
 
     // Sort by context size (descending) and return the best match
-    candidates.sort((a, b) => (b.capability.ctx || 0) - (a.capability.ctx || 0));
+    candidates.sort(
+      (a, b) => (b.capability.ctx || 0) - (a.capability.ctx || 0),
+    );
 
     return candidates[0];
   }
@@ -483,8 +534,9 @@ export class ModelDiscoveryService {
     };
     let lastRefresh: Date | null = null;
 
-    allModels.forEach(model => {
-      providerCounts[model.provider] = (providerCounts[model.provider] || 0) + 1;
+    allModels.forEach((model) => {
+      providerCounts[model.provider] =
+        (providerCounts[model.provider] || 0) + 1;
 
       if (!lastRefresh || model.lastSeen > lastRefresh) {
         lastRefresh = model.lastSeen;

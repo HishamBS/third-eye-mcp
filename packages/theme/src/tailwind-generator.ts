@@ -13,7 +13,12 @@
  * - Changes to themes.ts automatically propagate to Tailwind
  */
 
-import { THEMES, SHARED_EYE_COLORS, type ThemeName, type ThemeMode } from './themes';
+import {
+  THEMES,
+  SHARED_EYE_COLORS,
+  type ThemeName,
+  type ThemeMode,
+} from "./themes";
 
 /**
  * Converts hex color to RGB space-separated string for Tailwind CSS variables
@@ -34,7 +39,10 @@ export function hexToRgb(hex: string): string {
  * Generates Tailwind CSS variable definitions for all themes
  * Returns an object suitable for Tailwind's addBase() plugin
  */
-export function generateTailwindThemeVariables(): Record<string, Record<string, string>> {
+export function generateTailwindThemeVariables(): Record<
+  string,
+  Record<string, string>
+> {
   const cssVariables: Record<string, Record<string, string>> = {};
 
   // Add :root fallback with Overseer dark theme (default)
@@ -42,52 +50,63 @@ export function generateTailwindThemeVariables(): Record<string, Record<string, 
   // Prevents FOUC (Flash of Unstyled Content) on initial page load
   const overseerDark = THEMES.overseer.dark;
   // Mode-aware foreground: light text for dark mode, dark text for light mode
-  const rootForeground = overseerDark.mode === 'dark' ? '#F8FAFC' : overseerDark.colors.brand.ink;
-  cssVariables[':root'] = {
-    '--color-primary': hexToRgb(overseerDark.colors.brand.primary),
-    '--color-accent': hexToRgb(overseerDark.colors.brand.accent),
-    '--color-ink': hexToRgb(overseerDark.colors.brand.ink),
-    '--color-paper': hexToRgb(overseerDark.colors.brand.paper),
-    '--color-paper-elev': hexToRgb(overseerDark.colors.brand.paperElev),
-    '--color-outline': hexToRgb(overseerDark.colors.brand.outline),
-    '--color-foreground': hexToRgb(rootForeground),
-    '--color-success': hexToRgb(overseerDark.colors.semantic.success),
-    '--color-warning': hexToRgb(overseerDark.colors.semantic.warning),
-    '--color-error': hexToRgb(overseerDark.colors.semantic.error),
-    '--color-info': hexToRgb(overseerDark.colors.semantic.info),
-    '--color-muted': hexToRgb(overseerDark.colors.semantic.muted),
+  const rootForeground =
+    overseerDark.mode === "dark" ? "#F8FAFC" : overseerDark.colors.brand.ink;
+  cssVariables[":root"] = {
+    "--color-primary": hexToRgb(overseerDark.colors.brand.primary),
+    "--color-accent": hexToRgb(overseerDark.colors.brand.accent),
+    "--color-ink": hexToRgb(overseerDark.colors.brand.ink),
+    "--color-paper": hexToRgb(overseerDark.colors.brand.paper),
+    "--color-paper-elev": hexToRgb(overseerDark.colors.brand.paperElev),
+    "--color-outline": hexToRgb(overseerDark.colors.brand.outline),
+    "--color-foreground": hexToRgb(rootForeground),
+    "--color-success": hexToRgb(overseerDark.colors.semantic.success),
+    "--color-warning": hexToRgb(overseerDark.colors.semantic.warning),
+    "--color-error": hexToRgb(overseerDark.colors.semantic.error),
+    "--color-info": hexToRgb(overseerDark.colors.semantic.info),
+    "--color-muted": hexToRgb(overseerDark.colors.semantic.muted),
   };
 
   // Generate variables for each theme and mode
-  const themeNames: ThemeName[] = ['overseer', 'aurora', 'midnight', 'sakura', 'horizon', 'emerald', 'obsidian'];
-  const modes: ThemeMode[] = ['dark', 'light'];
+  const themeNames: ThemeName[] = [
+    "overseer",
+    "aurora",
+    "midnight",
+    "sakura",
+    "horizon",
+    "emerald",
+    "obsidian",
+  ];
+  const modes: ThemeMode[] = ["dark", "light"];
 
   for (const themeName of themeNames) {
     for (const mode of modes) {
       const theme = THEMES[themeName][mode];
-      const selector = mode === 'dark'
-        ? `:root[data-theme="${themeName}"][data-mode="dark"]`
-        : `:root[data-theme="${themeName}"][data-mode="light"]`;
+      const selector =
+        mode === "dark"
+          ? `:root[data-theme="${themeName}"][data-mode="dark"]`
+          : `:root[data-theme="${themeName}"][data-mode="light"]`;
 
       // Mode-aware foreground: light text for dark mode, dark text for light mode
-      const foregroundColor = theme.mode === 'dark' ? '#F8FAFC' : theme.colors.brand.ink;
+      const foregroundColor =
+        theme.mode === "dark" ? "#F8FAFC" : theme.colors.brand.ink;
 
       cssVariables[selector] = {
         // Brand colors
-        '--color-primary': hexToRgb(theme.colors.brand.primary),
-        '--color-accent': hexToRgb(theme.colors.brand.accent),
-        '--color-ink': hexToRgb(theme.colors.brand.ink),
-        '--color-paper': hexToRgb(theme.colors.brand.paper),
-        '--color-paper-elev': hexToRgb(theme.colors.brand.paperElev),
-        '--color-outline': hexToRgb(theme.colors.brand.outline),
-        '--color-foreground': hexToRgb(foregroundColor),
+        "--color-primary": hexToRgb(theme.colors.brand.primary),
+        "--color-accent": hexToRgb(theme.colors.brand.accent),
+        "--color-ink": hexToRgb(theme.colors.brand.ink),
+        "--color-paper": hexToRgb(theme.colors.brand.paper),
+        "--color-paper-elev": hexToRgb(theme.colors.brand.paperElev),
+        "--color-outline": hexToRgb(theme.colors.brand.outline),
+        "--color-foreground": hexToRgb(foregroundColor),
 
         // Semantic colors
-        '--color-success': hexToRgb(theme.colors.semantic.success),
-        '--color-warning': hexToRgb(theme.colors.semantic.warning),
-        '--color-error': hexToRgb(theme.colors.semantic.error),
-        '--color-info': hexToRgb(theme.colors.semantic.info),
-        '--color-muted': hexToRgb(theme.colors.semantic.muted),
+        "--color-success": hexToRgb(theme.colors.semantic.success),
+        "--color-warning": hexToRgb(theme.colors.semantic.warning),
+        "--color-error": hexToRgb(theme.colors.semantic.error),
+        "--color-info": hexToRgb(theme.colors.semantic.info),
+        "--color-muted": hexToRgb(theme.colors.semantic.muted),
       };
     }
   }

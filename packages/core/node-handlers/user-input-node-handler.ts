@@ -4,29 +4,38 @@
  * Pauses pipeline execution and waits for user to provide input via API
  */
 
-import type { PipelineDagNode } from '@third-eye/types';
-import type { NodeHandler, ExecutionContext, NodeExecutionResult } from './base-handler';
+import type { PipelineDagNode } from "@third-eye/types";
+import type {
+  NodeHandler,
+  ExecutionContext,
+  NodeExecutionResult,
+} from "./base-handler";
 
 export class UserInputNodeHandler implements NodeHandler {
   canHandle(node: PipelineDagNode): boolean {
-    return node.type === 'user_input';
+    return node.type === "user_input";
   }
 
-  async execute(node: PipelineDagNode, context: ExecutionContext): Promise<NodeExecutionResult> {
-    if (node.type !== 'user_input') {
-      throw new Error(`UserInputNodeHandler cannot handle node type: ${node.type}`);
+  async execute(
+    node: PipelineDagNode,
+    context: ExecutionContext,
+  ): Promise<NodeExecutionResult> {
+    if (node.type !== "user_input") {
+      throw new Error(
+        `UserInputNodeHandler cannot handle node type: ${node.type}`,
+      );
     }
 
     // User input nodes pause execution immediately
     // The execution engine will emit a WebSocket event and wait for resume
     return {
       nodeId: node.id,
-      status: 'awaiting_input',
-      verdict: 'AWAIT_INPUT',
+      status: "awaiting_input",
+      verdict: "AWAIT_INPUT",
       output: {
-        type: 'user_input',
+        type: "user_input",
         promptKey: node.promptKey,
-        message: 'Awaiting user input',
+        message: "Awaiting user input",
       },
       latencyMs: 0,
       metadata: {

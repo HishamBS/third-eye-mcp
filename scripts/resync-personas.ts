@@ -7,10 +7,10 @@
  * Replaces version 1 with latest persona content including new UI field
  */
 
-import { seedDefaults } from '../packages/db/defaults';
+import { seedDefaults } from "../packages/db/defaults";
 
 async function resyncPersonas() {
-  console.log('🔄 Re-syncing personas to default catalog...\n');
+  console.log("🔄 Re-syncing personas to default catalog...\n");
   await seedDefaults({
     force: true,
     subsets: { personas: true },
@@ -21,11 +21,11 @@ async function resyncPersonas() {
 if (import.meta.main) {
   resyncPersonas()
     .then(() => {
-      console.log('\n🎉 Persona re-sync successful!');
+      console.log("\n🎉 Persona re-sync successful!");
       process.exit(0);
     })
     .catch((error) => {
-      console.error('\n❌ Re-sync failed:', error);
+      console.error("\n❌ Re-sync failed:", error);
       process.exit(1);
     });
 }

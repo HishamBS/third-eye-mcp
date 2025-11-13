@@ -1,8 +1,8 @@
-import { serve } from 'bun';
-import { spawn } from 'child_process';
-import app from './index';
-import { createWebSocketHandler, wsManager } from './websocket';
-import { getConfig } from '@third-eye/config';
+import { serve } from "bun";
+import { spawn } from "child_process";
+import app from "./index";
+import { createWebSocketHandler, wsManager } from "./websocket";
+import { getConfig } from "@third-eye/config";
 
 /**
  * Third Eye MCP Server
@@ -14,10 +14,12 @@ const config = getConfig();
 const PORT = config.server.port;
 const HOST = config.server.host;
 
-if (config.security.bindWarning && (HOST === '0.0.0.0' || HOST === '::')) {
-  console.warn('\n⚠️  WARNING: Third Eye MCP is binding to a public interface.');
-  console.warn('   This exposes the server to your local network.');
-  console.warn('   Set MCP_HOST=127.0.0.1 to keep the instance local-first.\n');
+if (config.security.bindWarning && (HOST === "0.0.0.0" || HOST === "::")) {
+  console.warn(
+    "\n⚠️  WARNING: Third Eye MCP is binding to a public interface.",
+  );
+  console.warn("   This exposes the server to your local network.");
+  console.warn("   Set MCP_HOST=127.0.0.1 to keep the instance local-first.\n");
 }
 
 // Create WebSocket handler
@@ -41,12 +43,17 @@ const server = serve({
 });
 
 // Cleanup interval for stale connections
-setInterval(() => {
-  wsManager.cleanup();
-}, 5 * 60 * 1000); // Every 5 minutes
+setInterval(
+  () => {
+    wsManager.cleanup();
+  },
+  5 * 60 * 1000,
+); // Every 5 minutes
 
 console.log(`🚀 Third Eye MCP Server running at http://${HOST}:${PORT}`);
-console.log(`📡 WebSocket endpoint: ws://${HOST}:${PORT}/ws/monitor?sessionId=<id>`);
+console.log(
+  `📡 WebSocket endpoint: ws://${HOST}:${PORT}/ws/monitor?sessionId=<id>`,
+);
 
 // Auto-open portal in browser if configured
 if (config.ui.autoOpen) {
@@ -55,12 +62,16 @@ if (config.ui.autoOpen) {
   setTimeout(() => {
     console.log(`\n🌐 Opening Third Eye Portal: ${portalUrl}`);
 
-    const command = process.platform === 'darwin' ? 'open' :
-                   process.platform === 'win32' ? 'start' : 'xdg-open';
+    const command =
+      process.platform === "darwin"
+        ? "open"
+        : process.platform === "win32"
+          ? "start"
+          : "xdg-open";
 
     const browserProcess = spawn(command, [portalUrl], {
       detached: true,
-      stdio: 'ignore'
+      stdio: "ignore",
     });
 
     browserProcess.unref();
@@ -68,14 +79,14 @@ if (config.ui.autoOpen) {
 }
 
 // Graceful shutdown
-process.on('SIGINT', () => {
-  console.log('\n🛑 Shutting down server...');
+process.on("SIGINT", () => {
+  console.log("\n🛑 Shutting down server...");
   server.stop();
   process.exit(0);
 });
 
-process.on('SIGTERM', () => {
-  console.log('\n🛑 Shutting down server...');
+process.on("SIGTERM", () => {
+  console.log("\n🛑 Shutting down server...");
   server.stop();
   process.exit(0);
 });

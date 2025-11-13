@@ -5,12 +5,18 @@
  * Returns E_PIPELINE_ORDER when illegal calls are made
  */
 
-import type { EyeName } from '@third-eye/types';
-import { EyeId } from '@third-eye/constants';
+import type { EyeName } from "@third-eye/types";
+import { EyeId } from "@third-eye/constants";
 
 export interface PipelineState {
   sessionId: string;
-  currentPhase: 'initialization' | 'clarification' | 'planning' | 'implementation' | 'review' | 'completion';
+  currentPhase:
+    | "initialization"
+    | "clarification"
+    | "planning"
+    | "implementation"
+    | "review"
+    | "completion";
   completedEyes: EyeName[];
   lastEye?: EyeName;
   isCodeRelated: boolean;
@@ -18,11 +24,12 @@ export interface PipelineState {
 }
 
 export interface OrderViolation {
-  code: 'E_PIPELINE_ORDER';
+  code: "E_PIPELINE_ORDER";
   violation: string; // INTERNAL ONLY - not exposed to agents
   expectedNext: string[]; // INTERNAL ONLY - not exposed to agents
   fixInstructions: string; // INTERNAL ONLY - not exposed to agents
-  examplePayload?: { // INTERNAL ONLY - not exposed to agents
+  examplePayload?: {
+    // INTERNAL ONLY - not exposed to agents
     eye: string;
     input: Record<string, any>;
     description: string;
@@ -78,7 +85,7 @@ export class OrderGuard {
     if (!state) {
       state = {
         sessionId,
-        currentPhase: 'initialization',
+        currentPhase: "initialization",
         completedEyes: [],
         isCodeRelated: false,
         createdAt: new Date(),
@@ -99,26 +106,28 @@ export class OrderGuard {
     }
 
     // Check initialization phase
-    if (state.currentPhase === 'initialization') {
+    if (state.currentPhase === "initialization") {
       if (eyeName !== EyeId.SHARINGAN) {
         return {
-          code: 'E_PIPELINE_ORDER',
+          code: "E_PIPELINE_ORDER",
           violation: `Cannot call ${eyeName} in initialization phase`,
           expectedNext: [EyeId.SHARINGAN],
-          fixInstructions: 'Call Sharingan first to detect ambiguity and determine if task is code-related',
+          fixInstructions:
+            "Call Sharingan first to detect ambiguity and determine if task is code-related",
         };
       }
       return null;
     }
 
     // Check clarification phase
-    if (state.currentPhase === 'clarification') {
+    if (state.currentPhase === "clarification") {
       if (!state.completedEyes.includes(EyeId.SHARINGAN as EyeName)) {
         return {
-          code: 'E_PIPELINE_ORDER',
+          code: "E_PIPELINE_ORDER",
           violation: `${eyeName} called before Sharingan completed`,
           expectedNext: [EyeId.SHARINGAN as EyeName],
-          fixInstructions: 'Complete Sharingan analysis first to detect ambiguity',
+          fixInstructions:
+            "Complete Sharingan analysis first to detect ambiguity",
         };
       }
 
@@ -126,46 +135,68 @@ export class OrderGuard {
         return null; // Always allowed after Sharingan
       }
 
-      if (eyeName === EyeId.JOGAN && state.completedEyes.includes(EyeId.KYUUBI as EyeName)) {
+      if (
+        eyeName === EyeId.JOGAN &&
+        state.completedEyes.includes(EyeId.KYUUBI as EyeName)
+      ) {
         return null; // Allowed after Kyuubi
       }
 
-      if (eyeName === EyeId.JOGAN && !state.completedEyes.includes(EyeId.KYUUBI as EyeName)) {
+      if (
+        eyeName === EyeId.JOGAN &&
+        !state.completedEyes.includes(EyeId.KYUUBI as EyeName)
+      ) {
         return {
-          code: 'E_PIPELINE_ORDER',
-          violation: 'Jōgan called before Kyuubi',
+          code: "E_PIPELINE_ORDER",
+          violation: "Jōgan called before Kyuubi",
           expectedNext: [EyeId.KYUUBI as EyeName],
-          fixInstructions: 'Use Kyuubi to optimize clarity before intent confirmation',
+          fixInstructions:
+            "Use Kyuubi to optimize clarity before intent confirmation",
           examplePayload: {
             eye: EyeId.KYUUBI,
             input: {
-              ambiguous_prompt: 'make it better',
-              clarifying_questions: ['What specifically needs improvement?', 'What are your success criteria?'],
+              ambiguous_prompt: "make it better",
+              clarifying_questions: [
+                "What specifically needs improvement?",
+                "What are your success criteria?",
+              ],
             },
-            description: 'Restructure ambiguous prompt into ROLE/TASK/CONTEXT/REQUIREMENTS/OUTPUT format',
+            description:
+              "Restructure ambiguous prompt into ROLE/TASK/CONTEXT/REQUIREMENTS/OUTPUT format",
           },
         };
       }
 
       return {
-        code: 'E_PIPELINE_ORDER',
+        code: "E_PIPELINE_ORDER",
         violation: `${eyeName} not allowed in clarification phase`,
-        expectedNext: state.completedEyes.includes(EyeId.KYUUBI as EyeName) ? [EyeId.JOGAN as EyeName] : [EyeId.KYUUBI as EyeName],
-        fixInstructions: 'Follow clarification sequence: Sharingan → Kyuubi → Jōgan',
+        expectedNext: state.completedEyes.includes(EyeId.KYUUBI as EyeName)
+          ? [EyeId.JOGAN as EyeName]
+          : [EyeId.KYUUBI as EyeName],
+        fixInstructions:
+          "Follow clarification sequence: Sharingan → Kyuubi → Jōgan",
       };
     }
 
     // Check planning/implementation phase
-    if (state.currentPhase === 'planning' || state.currentPhase === 'implementation') {
-      const requiredPrereqs: EyeName[] = [EyeId.SHARINGAN as EyeName, EyeId.JOGAN as EyeName];
-      const missingPrereqs = requiredPrereqs.filter(eye => !state.completedEyes.includes(eye));
+    if (
+      state.currentPhase === "planning" ||
+      state.currentPhase === "implementation"
+    ) {
+      const requiredPrereqs: EyeName[] = [
+        EyeId.SHARINGAN as EyeName,
+        EyeId.JOGAN as EyeName,
+      ];
+      const missingPrereqs = requiredPrereqs.filter(
+        (eye) => !state.completedEyes.includes(eye),
+      );
 
       if (missingPrereqs.length > 0) {
         return {
-          code: 'E_PIPELINE_ORDER',
-          violation: `${eyeName} called before completing prerequisites: ${missingPrereqs.join(', ')}`,
+          code: "E_PIPELINE_ORDER",
+          violation: `${eyeName} called before completing prerequisites: ${missingPrereqs.join(", ")}`,
           expectedNext: missingPrereqs,
-          fixInstructions: `Complete clarification phase first: ${missingPrereqs.join(' → ')}`,
+          fixInstructions: `Complete clarification phase first: ${missingPrereqs.join(" → ")}`,
         };
       }
 
@@ -175,23 +206,35 @@ export class OrderGuard {
           return null; // Always allowed for planning/review
         }
 
-        if (eyeName === EyeId.MANGEKYO && state.completedEyes.includes(EyeId.RINNEGAN as EyeName)) {
+        if (
+          eyeName === EyeId.MANGEKYO &&
+          state.completedEyes.includes(EyeId.RINNEGAN as EyeName)
+        ) {
           return null; // Implementation phases after planning
         }
 
-        if (eyeName === EyeId.MANGEKYO && !state.completedEyes.includes(EyeId.RINNEGAN as EyeName)) {
+        if (
+          eyeName === EyeId.MANGEKYO &&
+          !state.completedEyes.includes(EyeId.RINNEGAN as EyeName)
+        ) {
           return {
-            code: 'E_PIPELINE_ORDER',
-            violation: 'Mangekyō called before Rinnegan planning',
+            code: "E_PIPELINE_ORDER",
+            violation: "Mangekyō called before Rinnegan planning",
             expectedNext: [EyeId.RINNEGAN as EyeName],
-            fixInstructions: 'Create implementation plan with Rinnegan before starting Mangekyō phases',
+            fixInstructions:
+              "Create implementation plan with Rinnegan before starting Mangekyō phases",
             examplePayload: {
               eye: EyeId.RINNEGAN,
               input: {
-                task: 'Build a REST API for user authentication',
-                requirements: ['JWT tokens', 'bcrypt hashing', 'email verification'],
+                task: "Build a REST API for user authentication",
+                requirements: [
+                  "JWT tokens",
+                  "bcrypt hashing",
+                  "email verification",
+                ],
               },
-              description: 'Generate strategic plan with file impact table and implementation steps',
+              description:
+                "Generate strategic plan with file impact table and implementation steps",
             },
           };
         }
@@ -199,17 +242,22 @@ export class OrderGuard {
         // Tenseigan/Byakugan not allowed in code branch
         if (eyeName === EyeId.TENSEIGAN || eyeName === EyeId.BYAKUGAN) {
           return {
-            code: 'E_PIPELINE_ORDER',
+            code: "E_PIPELINE_ORDER",
             violation: `${eyeName} not allowed in code branch`,
-            expectedNext: [EyeId.RINNEGAN as EyeName, EyeId.MANGEKYO as EyeName],
-            fixInstructions: 'For code tasks, use Rinnegan → Mangekyō sequence. Tenseigan/Byakugan are for text analysis.',
+            expectedNext: [
+              EyeId.RINNEGAN as EyeName,
+              EyeId.MANGEKYO as EyeName,
+            ],
+            fixInstructions:
+              "For code tasks, use Rinnegan → Mangekyō sequence. Tenseigan/Byakugan are for text analysis.",
             examplePayload: {
               eye: EyeId.RINNEGAN,
               input: {
-                task: 'Implement user authentication',
-                phase: 'planning',
+                task: "Implement user authentication",
+                phase: "planning",
               },
-              description: 'Rinnegan handles code planning; Tenseigan/Byakugan are for text validation',
+              description:
+                "Rinnegan handles code planning; Tenseigan/Byakugan are for text validation",
             },
           };
         }
@@ -225,17 +273,22 @@ export class OrderGuard {
 
         if (eyeName === EyeId.MANGEKYO) {
           return {
-            code: 'E_PIPELINE_ORDER',
-            violation: 'Mangekyō not allowed in text branch',
-            expectedNext: [EyeId.TENSEIGAN as EyeName, EyeId.BYAKUGAN as EyeName],
-            fixInstructions: 'For text tasks, use Tenseigan → Byakugan sequence. Mangekyō is for code implementation.',
+            code: "E_PIPELINE_ORDER",
+            violation: "Mangekyō not allowed in text branch",
+            expectedNext: [
+              EyeId.TENSEIGAN as EyeName,
+              EyeId.BYAKUGAN as EyeName,
+            ],
+            fixInstructions:
+              "For text tasks, use Tenseigan → Byakugan sequence. Mangekyō is for code implementation.",
             examplePayload: {
               eye: EyeId.TENSEIGAN,
               input: {
-                draft_md: 'Your text content with claims [citations]',
-                mode: 'validate_claims',
+                draft_md: "Your text content with claims [citations]",
+                mode: "validate_claims",
               },
-              description: 'Tenseigan validates factual claims; Mangekyō is for code review',
+              description:
+                "Tenseigan validates factual claims; Mangekyō is for code review",
             },
           };
         }
@@ -243,13 +296,14 @@ export class OrderGuard {
     }
 
     // Check completion phase
-    if (state.currentPhase === 'completion') {
+    if (state.currentPhase === "completion") {
       if (eyeName !== EyeId.RINNEGAN) {
         return {
-          code: 'E_PIPELINE_ORDER',
+          code: "E_PIPELINE_ORDER",
           violation: `Only Rinnegan final approval allowed in completion phase, not ${eyeName}`,
           expectedNext: [EyeId.RINNEGAN as EyeName],
-          fixInstructions: 'Use Rinnegan for final approval once all gates return ok=true',
+          fixInstructions:
+            "Use Rinnegan for final approval once all gates return ok=true",
         };
       }
       return null;
@@ -264,7 +318,7 @@ export class OrderGuard {
   recordEyeCompletion(
     sessionId: string,
     eyeName: EyeName,
-    result: { code: string; metadata?: Record<string, unknown> }
+    result: { code: string; metadata?: Record<string, unknown> },
   ): void {
     const state = this.sessions.get(sessionId);
     if (!state) return;
@@ -277,28 +331,31 @@ export class OrderGuard {
 
     // Update phase based on completion
     if (eyeName === EyeId.SHARINGAN) {
-      state.currentPhase = 'clarification';
+      state.currentPhase = "clarification";
 
       const metadata = result.metadata;
-      if (metadata && 'isCodeRelated' in metadata) {
+      if (metadata && "isCodeRelated" in metadata) {
         const value = metadata.isCodeRelated;
-        if (typeof value === 'boolean') {
+        if (typeof value === "boolean") {
           state.isCodeRelated = value;
         }
       }
     }
 
     if (eyeName === EyeId.JOGAN) {
-      state.currentPhase = 'planning';
+      state.currentPhase = "planning";
     }
 
     if (eyeName === EyeId.RINNEGAN && state.completedEyes.length > 3) {
-      state.currentPhase = 'completion';
+      state.currentPhase = "completion";
     }
 
-    if ((eyeName === EyeId.MANGEKYO && state.isCodeRelated) ||
-        ((eyeName === EyeId.TENSEIGAN || eyeName === EyeId.BYAKUGAN) && !state.isCodeRelated)) {
-      state.currentPhase = 'implementation';
+    if (
+      (eyeName === EyeId.MANGEKYO && state.isCodeRelated) ||
+      ((eyeName === EyeId.TENSEIGAN || eyeName === EyeId.BYAKUGAN) &&
+        !state.isCodeRelated)
+    ) {
+      state.currentPhase = "implementation";
     }
   }
 
@@ -319,10 +376,10 @@ export class OrderGuard {
     }
 
     switch (state.currentPhase) {
-      case 'initialization':
+      case "initialization":
         return [EyeId.SHARINGAN as EyeName];
 
-      case 'clarification':
+      case "clarification":
         if (!state.completedEyes.includes(EyeId.KYUUBI as EyeName)) {
           return [EyeId.KYUUBI as EyeName];
         }
@@ -331,17 +388,21 @@ export class OrderGuard {
         }
         return [EyeId.RINNEGAN as EyeName];
 
-      case 'planning':
+      case "planning":
         return [EyeId.RINNEGAN as EyeName];
 
-      case 'implementation':
+      case "implementation":
         if (state.isCodeRelated) {
           return [EyeId.MANGEKYO as EyeName, EyeId.RINNEGAN as EyeName];
         } else {
-          return [EyeId.TENSEIGAN as EyeName, EyeId.BYAKUGAN as EyeName, EyeId.RINNEGAN as EyeName];
+          return [
+            EyeId.TENSEIGAN as EyeName,
+            EyeId.BYAKUGAN as EyeName,
+            EyeId.RINNEGAN as EyeName,
+          ];
         }
 
-      case 'completion':
+      case "completion":
         return [EyeId.RINNEGAN as EyeName];
 
       default:

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { SKIP_LINK, ARIA_LABELS } from '@/constants/accessibility';
+import { SKIP_LINK, ARIA_LABELS } from "@/constants/accessibility";
 
 /**
  * SkipLink Component - Phase 20.1

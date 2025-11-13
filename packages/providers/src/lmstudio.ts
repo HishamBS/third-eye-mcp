@@ -1,5 +1,12 @@
-import { z } from 'zod';
-import { BaseProvider, type CompletionRequest, type CompletionResponse, type HealthStatus, type ModelInfo, type ProviderConfig } from './base';
+import { z } from "zod";
+import {
+  BaseProvider,
+  type CompletionRequest,
+  type CompletionResponse,
+  type HealthStatus,
+  type ModelInfo,
+  type ProviderConfig,
+} from "./base";
 
 const LMStudioModelSchema = z.object({
   id: z.string(),
@@ -14,11 +21,13 @@ const LMStudioChoiceSchema = z.object({
   finish_reason: z.string().optional().nullable(),
 });
 
-const LMStudioUsageSchema = z.object({
-  prompt_tokens: z.number().optional(),
-  completion_tokens: z.number().optional(),
-  total_tokens: z.number().optional(),
-}).optional();
+const LMStudioUsageSchema = z
+  .object({
+    prompt_tokens: z.number().optional(),
+    completion_tokens: z.number().optional(),
+    total_tokens: z.number().optional(),
+  })
+  .optional();
 
 const LMStudioCompletionResponseSchema = z.object({
   id: z.string(),
@@ -33,13 +42,13 @@ export class LMStudioProvider extends BaseProvider {
   constructor(config: ProviderConfig = {}) {
     super({
       ...config,
-      baseUrl: config.baseUrl || 'http://127.0.0.1:1234/v1',
+      baseUrl: config.baseUrl || "http://127.0.0.1:1234/v1",
     });
-    this.baseUrl = this.config.baseUrl ?? 'http://127.0.0.1:1234/v1';
+    this.baseUrl = this.config.baseUrl ?? "http://127.0.0.1:1234/v1";
   }
 
   get name(): string {
-    return 'lmstudio';
+    return "lmstudio";
   }
 
   get requiresApiKey(): boolean {
@@ -49,7 +58,7 @@ export class LMStudioProvider extends BaseProvider {
   async listModels(): Promise<ModelInfo[]> {
     try {
       const response = await this.fetchWithRetry(`${this.baseUrl}/models`, {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
 
       if (!response.ok) {
@@ -58,14 +67,16 @@ export class LMStudioProvider extends BaseProvider {
 
       const payload = LMStudioModelsResponseSchema.parse(await response.json());
 
-      return payload.data.map(model => ({
+      return payload.data.map((model) => ({
         id: model.id,
         name: model.id,
         context_window: this.estimateContextWindow(model.id),
         pricing: undefined,
       }));
     } catch (error) {
-      throw new Error(`Failed to list LM Studio models: ${this.normalizeError(error)}`);
+      throw new Error(
+        `Failed to list LM Studio models: ${this.normalizeError(error)}`,
+      );
     }
   }
 
@@ -81,25 +92,30 @@ export class LMStudioProvider extends BaseProvider {
         top_p: request.top_p,
         stop: request.stop,
       };
-      
+
       // Only include response_format if it's 'text' (LM Studio doesn't support 'json_object')
-      if (request.response_format && request.response_format.type === 'text') {
+      if (request.response_format && request.response_format.type === "text") {
         requestBody.response_format = request.response_format;
       }
       // If json_object is requested, we omit response_format and rely on prompt instructions
-      
-      const response = await this.fetchWithRetry(`${this.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
-      });
+
+      const response = await this.fetchWithRetry(
+        `${this.baseUrl}/chat/completions`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        },
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`LM Studio completion failed: ${errorText}`);
       }
 
-      const payload = LMStudioCompletionResponseSchema.parse(await response.json());
+      const payload = LMStudioCompletionResponseSchema.parse(
+        await response.json(),
+      );
       const usage = payload.usage ?? {};
       const choice = payload.choices[0];
 
@@ -115,7 +131,9 @@ export class LMStudioProvider extends BaseProvider {
         finish_reason: this.normalizeFinishReason(choice.finish_reason),
       };
     } catch (error) {
-      throw new Error(`LM Studio completion error: ${this.normalizeError(error)}`);
+      throw new Error(
+        `LM Studio completion error: ${this.normalizeError(error)}`,
+      );
     }
   }
 
@@ -124,7 +142,7 @@ export class LMStudioProvider extends BaseProvider {
 
     try {
       const response = await this.fetchWithRetry(`${this.baseUrl}/models`, {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
 
       return {
@@ -142,12 +160,12 @@ export class LMStudioProvider extends BaseProvider {
   }
 
   private estimateContextWindow(modelName: string): number {
-    if (modelName.includes('32k')) return 32768;
-    if (modelName.includes('16k')) return 16384;
-    if (modelName.includes('8k')) return 8192;
-    if (modelName.includes('llama')) return 8192;
-    if (modelName.includes('mistral')) return 8192;
-    if (modelName.includes('gemma')) return 8192;
+    if (modelName.includes("32k")) return 32768;
+    if (modelName.includes("16k")) return 16384;
+    if (modelName.includes("8k")) return 8192;
+    if (modelName.includes("llama")) return 8192;
+    if (modelName.includes("mistral")) return 8192;
+    if (modelName.includes("gemma")) return 8192;
     return 4096;
   }
 }

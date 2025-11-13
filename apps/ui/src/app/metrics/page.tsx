@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
-import MetricsOverview from '@/components/MetricsOverview';
-import type { MetricsData } from '@/components/MetricsOverview';
-import { UI_HELP_TEXT } from '@third-eye/constants';
-import { API_BASE_URL } from '@/consts/api';
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import MetricsOverview from "@/components/MetricsOverview";
+import type { MetricsData } from "@/components/MetricsOverview";
+import { UI_HELP_TEXT } from "@third-eye/constants";
+import { API_BASE_URL } from "@/consts/api";
 
 export default function MetricsPage() {
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
@@ -18,12 +18,12 @@ export default function MetricsPage() {
     setError(null);
     try {
       const response = await fetch(`${API_BASE_URL}/api/metrics`);
-      if (!response.ok) throw new Error('Failed to fetch metrics');
+      if (!response.ok) throw new Error("Failed to fetch metrics");
 
       const result = await response.json();
       // Handle wrapped response from createSuccessResponse
       const apiData = result.data || result;
-      
+
       // Transform API response to MetricsData format
       setMetrics({
         providers: [], // Not provided by current API
@@ -33,7 +33,11 @@ export default function MetricsPage() {
         approvalRate: apiData.approvalRate || 0,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : UI_HELP_TEXT.ERROR_METRICS_FETCH_FAILED);
+      setError(
+        err instanceof Error
+          ? err.message
+          : UI_HELP_TEXT.ERROR_METRICS_FETCH_FAILED,
+      );
     } finally {
       setLoadingMetrics(false);
     }
@@ -57,12 +61,19 @@ export default function MetricsPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-semantic-muted transition-colors hover:text-brand-accent">
+              <Link
+                href="/"
+                className="text-semantic-muted transition-colors hover:text-brand-accent"
+              >
                 ← Home
               </Link>
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Observability</p>
-                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">Provider & Budget Metrics</h1>
+                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">
+                  Observability
+                </p>
+                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">
+                  Provider & Budget Metrics
+                </h1>
               </div>
             </div>
           </div>

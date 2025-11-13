@@ -1,28 +1,43 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
-import { GlassCard } from '@/components/ui/GlassCard';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { GlassCard } from "@/components/ui/GlassCard";
 import {
-  Eye, Zap, PlayCircle, ShieldAlert, FolderTree, Trophy,
-  Download, MessageSquare, History, ArrowRight, Activity,
-  Cpu, CheckCircle2, Beaker, Monitor
-} from 'lucide-react';
-import { PROVIDERS } from '@third-eye/types/enums';
-import { UI_HELP_TEXT, PLATFORM_HIGHLIGHTS } from '@third-eye/constants';
-import { API_BASE_URL } from '@/consts/api';
-import { ANIMATION_DURATION } from '@/constants/timing';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS } from '@/constants/color-mappings';
-import { GRADIENT, SHADOW } from '@/constants/design-tokens';
+  Eye,
+  Zap,
+  PlayCircle,
+  ShieldAlert,
+  FolderTree,
+  Trophy,
+  Download,
+  MessageSquare,
+  History,
+  ArrowRight,
+  Activity,
+  Cpu,
+  CheckCircle2,
+  Beaker,
+  Monitor,
+} from "lucide-react";
+import { PROVIDERS } from "@third-eye/types/enums";
+import { UI_HELP_TEXT, PLATFORM_HIGHLIGHTS } from "@third-eye/constants";
+import { API_BASE_URL } from "@/consts/api";
+import { ANIMATION_DURATION } from "@/constants/timing";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS,
+} from "@/constants/color-mappings";
+import { GRADIENT, SHADOW } from "@/constants/design-tokens";
 
 interface RealtimeStats {
   sessions: number;
   runs: number;
   successRate: number;
   avgLatency: number;
-  providers: Array<{ id: string; status: 'online' | 'offline' }>;
+  providers: Array<{ id: string; status: "online" | "offline" }>;
 }
 
 // Icon mapping for Platform Highlights
@@ -64,7 +79,7 @@ export default function HomePage() {
           const result = await metricsRes.json();
           // Handle wrapped response from createSuccessResponse
           const metrics = result.data || result;
-          setStats(prev => ({
+          setStats((prev) => ({
             ...prev,
             sessions: metrics.totalSessions || 0,
             runs: metrics.totalRuns || metrics.totalCalls || 0,
@@ -73,7 +88,7 @@ export default function HomePage() {
           }));
         }
       } catch (err) {
-        console.warn('Metrics endpoint unavailable');
+        console.warn("Metrics endpoint unavailable");
       }
 
       // Fetch health via backend server (CORS fixed)
@@ -82,27 +97,29 @@ export default function HomePage() {
         if (healthRes.ok) {
           const health = await healthRes.json();
           const providers = [...PROVIDERS]; // Use SSOT constant from @third-eye/types
-          setStats(prev => ({
+          setStats((prev) => ({
             ...prev,
-            providers: providers.map(id => ({
+            providers: providers.map((id) => ({
               id,
-              status: health.checks?.providers?.[id] ? 'online' as const : 'offline' as const,
+              status: health.checks?.providers?.[id]
+                ? ("online" as const)
+                : ("offline" as const),
             })),
           }));
         }
       } catch (err) {
-        console.warn('Health endpoint unavailable');
+        console.warn("Health endpoint unavailable");
         // Set all providers to offline
-        setStats(prev => ({
+        setStats((prev) => ({
           ...prev,
-          providers: ['groq', 'openrouter', 'ollama', 'lmstudio'].map(id => ({
+          providers: ["groq", "openrouter", "ollama", "lmstudio"].map((id) => ({
             id,
-            status: 'offline' as const,
+            status: "offline" as const,
           })),
         }));
       }
     } catch (error) {
-      console.error('Failed to fetch stats:', error);
+      console.error("Failed to fetch stats:", error);
     } finally {
       setLoading(false);
     }
@@ -111,7 +128,9 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-brand-paper">
       <section className="relative overflow-hidden py-20">
-        <div className={`absolute inset-0 bg-gradient-to-br ${GRADIENT.heroBackground}`} />
+        <div
+          className={`absolute inset-0 bg-gradient-to-br ${GRADIENT.heroBackground}`}
+        />
 
         <div className="relative mx-auto max-w-7xl px-6 text-center">
           <motion.div
@@ -129,7 +148,9 @@ export default function HomePage() {
                 className="h-32 w-auto"
                 style={{ filter: `drop-shadow(${SHADOW.glow})` }}
               />
-              <h1 className={`text-6xl font-bold bg-gradient-to-r ${GRADIENT.hero} bg-clip-text text-transparent`}>
+              <h1
+                className={`text-6xl font-bold bg-gradient-to-r ${GRADIENT.hero} bg-clip-text text-transparent`}
+              >
                 Third Eye MCP
               </h1>
             </div>
@@ -171,9 +192,13 @@ export default function HomePage() {
             </h2>
             <div className="flex items-center space-x-4">
               {loading ? (
-                <div className={`h-2 w-2 rounded-full ${STATUS_TEXT_COLORS.warning} animate-pulse`} />
+                <div
+                  className={`h-2 w-2 rounded-full ${STATUS_TEXT_COLORS.warning} animate-pulse`}
+                />
               ) : (
-                <div className={`h-2 w-2 rounded-full ${STATUS_TEXT_COLORS.success} animate-pulse`} />
+                <div
+                  className={`h-2 w-2 rounded-full ${STATUS_TEXT_COLORS.success} animate-pulse`}
+                />
               )}
               <span className="text-sm text-semantic-muted">Real-time</span>
             </div>
@@ -182,28 +207,42 @@ export default function HomePage() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
             <div className="rounded-lg border border-brand-outline/30 bg-brand-paperElev p-4">
               <div className="text-sm text-semantic-muted">Sessions</div>
-              <div className="text-3xl font-bold text-brand-foreground mt-1">{stats.sessions}</div>
+              <div className="text-3xl font-bold text-brand-foreground mt-1">
+                {stats.sessions}
+              </div>
             </div>
             <div className="rounded-lg border border-brand-outline/30 bg-brand-paperElev p-4">
               <div className="text-sm text-semantic-muted">Runs</div>
-              <div className="text-3xl font-bold text-brand-foreground mt-1">{stats.runs}</div>
+              <div className="text-3xl font-bold text-brand-foreground mt-1">
+                {stats.runs}
+              </div>
             </div>
             <div className="rounded-lg border border-brand-outline/30 bg-brand-paperElev p-4">
               <div className="text-sm text-semantic-muted">Success Rate</div>
-              <div className={`text-3xl font-bold ${STATUS_TEXT_COLORS.success} mt-1`}>{stats.successRate}%</div>
+              <div
+                className={`text-3xl font-bold ${STATUS_TEXT_COLORS.success} mt-1`}
+              >
+                {stats.successRate}%
+              </div>
             </div>
             <div className="rounded-lg border border-brand-outline/30 bg-brand-paperElev p-4">
               <div className="text-sm text-semantic-muted">Avg Latency</div>
-              <div className={`text-3xl font-bold ${STATUS_TEXT_COLORS.info} mt-1`}>{stats.avgLatency}ms</div>
+              <div
+                className={`text-3xl font-bold ${STATUS_TEXT_COLORS.info} mt-1`}
+              >
+                {stats.avgLatency}ms
+              </div>
             </div>
             <div className="rounded-lg border border-brand-outline/30 bg-brand-paperElev p-4">
               <div className="text-sm text-semantic-muted mb-2">Providers</div>
               <div className="flex items-center space-x-1">
-                {stats.providers.map(p => (
+                {stats.providers.map((p) => (
                   <div
                     key={p.id}
                     className={`h-3 w-3 rounded-full ${
-                      p.status === 'online' ? STATUS_BG_COLORS.success : STATUS_BG_COLORS.muted
+                      p.status === "online"
+                        ? STATUS_BG_COLORS.success
+                        : STATUS_BG_COLORS.muted
                     }`}
                     title={`${p.id}: ${p.status}`}
                   />
@@ -214,16 +253,23 @@ export default function HomePage() {
 
           <div className="rounded-xl border border-brand-outline/30 bg-brand-paperElev p-6">
             <div className="flex items-center justify-center space-x-3 text-semantic-muted">
-              <Cpu className="h-5 w-5 animate-spin" style={{ animationDuration: '3s' }} />
+              <Cpu
+                className="h-5 w-5 animate-spin"
+                style={{ animationDuration: "3s" }}
+              />
               <span>Monitoring pipeline executions...</span>
-              <CheckCircle2 className={`h-5 w-5 ${STATUS_TEXT_COLORS.success}`} />
+              <CheckCircle2
+                className={`h-5 w-5 ${STATUS_TEXT_COLORS.success}`}
+              />
             </div>
           </div>
         </GlassCard>
       </section>
 
       <section className="mx-auto max-w-7xl px-6 py-12">
-        <h2 className={`text-4xl font-bold text-center mb-4 bg-gradient-to-r ${GRADIENT.brandPrimary} bg-clip-text text-transparent`}>
+        <h2
+          className={`text-4xl font-bold text-center mb-4 bg-gradient-to-r ${GRADIENT.brandPrimary} bg-clip-text text-transparent`}
+        >
           {UI_HELP_TEXT.DASHBOARD_PLATFORM_HIGHLIGHTS_TITLE}
         </h2>
         <p className="text-center text-semantic-muted mb-12 max-w-2xl mx-auto">
@@ -239,16 +285,24 @@ export default function HomePage() {
               transition={{ delay: index * 0.1 }}
             >
               <Link href={feature.href}>
-                <GlassCard className={`group cursor-pointer hover:border-brand-accent/60 transition-all ${ANIMATION_DURATION.NORMAL} p-6 h-full`}>
-                  <div className={`inline-flex rounded-xl bg-gradient-to-br ${feature.color} p-3 text-brand-foreground mb-4`}>
+                <GlassCard
+                  className={`group cursor-pointer hover:border-brand-accent/60 transition-all ${ANIMATION_DURATION.NORMAL} p-6 h-full`}
+                >
+                  <div
+                    className={`inline-flex rounded-xl bg-gradient-to-br ${feature.color} p-3 text-brand-foreground mb-4`}
+                  >
                     {ICON_MAP[feature.iconName]}
                   </div>
                   <h3 className="text-xl font-semibold text-brand-foreground mb-2 group-hover:text-brand-accent transition-colors">
                     {feature.title}
                   </h3>
-                  <p className="text-sm text-semantic-muted mb-4">{feature.description}</p>
+                  <p className="text-sm text-semantic-muted mb-4">
+                    {feature.description}
+                  </p>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-brand-accent font-mono">{feature.demo}</span>
+                    <span className="text-xs text-brand-accent font-mono">
+                      {feature.demo}
+                    </span>
                     <ArrowRight className="h-4 w-4 text-semantic-muted group-hover:text-brand-accent group-hover:translate-x-1 transition-all" />
                   </div>
                 </GlassCard>
@@ -268,7 +322,9 @@ export default function HomePage() {
             <Link href="/playground">
               <GlassCard className="group cursor-pointer hover:border-brand-accent/60 transition-all p-8 text-center h-full">
                 <Beaker className="h-12 w-12 mx-auto mb-4 text-brand-accent group-hover:scale-110 transition-transform" />
-                <h3 className="text-xl font-semibold text-brand-foreground mb-2">Playground</h3>
+                <h3 className="text-xl font-semibold text-brand-foreground mb-2">
+                  Playground
+                </h3>
                 <p className="text-sm text-semantic-muted mb-4">
                   Test individual Eyes with custom inputs
                 </p>
@@ -288,7 +344,9 @@ export default function HomePage() {
             <Link href="/monitor">
               <GlassCard className="group cursor-pointer hover:border-brand-accent/60 transition-all p-8 text-center h-full">
                 <Monitor className="h-12 w-12 mx-auto mb-4 text-brand-accent group-hover:scale-110 transition-transform" />
-                <h3 className="text-xl font-semibold text-brand-foreground mb-2">Monitor</h3>
+                <h3 className="text-xl font-semibold text-brand-foreground mb-2">
+                  Monitor
+                </h3>
                 <p className="text-sm text-semantic-muted mb-4">
                   Watch real-time agent conversations
                 </p>
@@ -308,7 +366,9 @@ export default function HomePage() {
             <Link href="/connections">
               <GlassCard className="group cursor-pointer hover:border-brand-accent/60 transition-all p-8 text-center h-full">
                 <Activity className="h-12 w-12 mx-auto mb-4 text-brand-accent group-hover:scale-110 transition-transform" />
-                <h3 className="text-xl font-semibold text-brand-foreground mb-2">Connect</h3>
+                <h3 className="text-xl font-semibold text-brand-foreground mb-2">
+                  Connect
+                </h3>
                 <p className="text-sm text-semantic-muted mb-4">
                   Link your AI agent via MCP
                 </p>

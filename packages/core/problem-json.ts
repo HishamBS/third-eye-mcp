@@ -4,55 +4,57 @@
  * Standardized HTTP error responses following RFC7807 specification
  */
 
-import { z } from 'zod';
-import { ALL_EYE_IDS } from '@third-eye/constants';
+import { z } from "zod";
+import { ALL_EYE_IDS } from "@third-eye/constants";
 
 // RFC7807 Problem Details schema
-export const ProblemDetailsSchema = z.object({
-  type: z.string().url().optional(),
-  title: z.string(),
-  status: z.number().int().min(100).max(599).optional(),
-  detail: z.string().optional(),
-  instance: z.string().optional(),
-  // Extension members (additional properties allowed)
-}).passthrough();
+export const ProblemDetailsSchema = z
+  .object({
+    type: z.string().url().optional(),
+    title: z.string(),
+    status: z.number().int().min(100).max(599).optional(),
+    detail: z.string().optional(),
+    instance: z.string().optional(),
+    // Extension members (additional properties allowed)
+  })
+  .passthrough();
 
 export type ProblemDetails = z.infer<typeof ProblemDetailsSchema>;
 
 // Common error types for Third Eye MCP
 export const ERROR_TYPES = {
   // Pipeline Errors
-  PIPELINE_ORDER: 'https://third-eye-mcp.dev/errors/pipeline-order',
-  EYE_NOT_FOUND: 'https://third-eye-mcp.dev/errors/eye-not-found',
-  EYE_VALIDATION: 'https://third-eye-mcp.dev/errors/eye-validation',
-  EYE_EXECUTION: 'https://third-eye-mcp.dev/errors/eye-execution',
+  PIPELINE_ORDER: "https://third-eye-mcp.dev/errors/pipeline-order",
+  EYE_NOT_FOUND: "https://third-eye-mcp.dev/errors/eye-not-found",
+  EYE_VALIDATION: "https://third-eye-mcp.dev/errors/eye-validation",
+  EYE_EXECUTION: "https://third-eye-mcp.dev/errors/eye-execution",
 
   // Configuration Errors
-  ROUTING_CONFIG: 'https://third-eye-mcp.dev/errors/routing-config',
-  PROVIDER_KEY: 'https://third-eye-mcp.dev/errors/provider-key',
-  MODEL_UNAVAILABLE: 'https://third-eye-mcp.dev/errors/model-unavailable',
+  ROUTING_CONFIG: "https://third-eye-mcp.dev/errors/routing-config",
+  PROVIDER_KEY: "https://third-eye-mcp.dev/errors/provider-key",
+  MODEL_UNAVAILABLE: "https://third-eye-mcp.dev/errors/model-unavailable",
 
   // Session Errors
-  SESSION_NOT_FOUND: 'https://third-eye-mcp.dev/errors/session-not-found',
-  SESSION_EXPIRED: 'https://third-eye-mcp.dev/errors/session-expired',
-  SESSION_CONFLICT: 'https://third-eye-mcp.dev/errors/session-conflict',
+  SESSION_NOT_FOUND: "https://third-eye-mcp.dev/errors/session-not-found",
+  SESSION_EXPIRED: "https://third-eye-mcp.dev/errors/session-expired",
+  SESSION_CONFLICT: "https://third-eye-mcp.dev/errors/session-conflict",
 
   // Database Errors
-  DB_CONNECTION: 'https://third-eye-mcp.dev/errors/db-connection',
-  DB_MIGRATION: 'https://third-eye-mcp.dev/errors/db-migration',
-  DB_CONSTRAINT: 'https://third-eye-mcp.dev/errors/db-constraint',
+  DB_CONNECTION: "https://third-eye-mcp.dev/errors/db-connection",
+  DB_MIGRATION: "https://third-eye-mcp.dev/errors/db-migration",
+  DB_CONSTRAINT: "https://third-eye-mcp.dev/errors/db-constraint",
 
   // Authentication Errors
-  ENCRYPTION_FAILED: 'https://third-eye-mcp.dev/errors/encryption-failed',
-  PASSPHRASE_INVALID: 'https://third-eye-mcp.dev/errors/passphrase-invalid',
+  ENCRYPTION_FAILED: "https://third-eye-mcp.dev/errors/encryption-failed",
+  PASSPHRASE_INVALID: "https://third-eye-mcp.dev/errors/passphrase-invalid",
 
   // Input Validation Errors
-  INVALID_INPUT: 'https://third-eye-mcp.dev/errors/invalid-input',
-  SCHEMA_VALIDATION: 'https://third-eye-mcp.dev/errors/schema-validation',
+  INVALID_INPUT: "https://third-eye-mcp.dev/errors/invalid-input",
+  SCHEMA_VALIDATION: "https://third-eye-mcp.dev/errors/schema-validation",
 
   // Generic
-  INTERNAL_ERROR: 'https://third-eye-mcp.dev/errors/internal-error',
-  NOT_IMPLEMENTED: 'https://third-eye-mcp.dev/errors/not-implemented',
+  INTERNAL_ERROR: "https://third-eye-mcp.dev/errors/internal-error",
+  NOT_IMPLEMENTED: "https://third-eye-mcp.dev/errors/not-implemented",
 } as const;
 
 // HTTP status codes mapping
@@ -101,7 +103,8 @@ export class ProblemJsonFormatter {
       problem.type = options.type;
       // Auto-assign status code if type is known
       if (!options.status && options.type in ERROR_STATUS_CODES) {
-        problem.status = ERROR_STATUS_CODES[options.type as keyof typeof ERROR_STATUS_CODES];
+        problem.status =
+          ERROR_STATUS_CODES[options.type as keyof typeof ERROR_STATUS_CODES];
       }
     }
 
@@ -137,14 +140,16 @@ export class ProblemJsonFormatter {
   }): ProblemDetails {
     return this.createProblem({
       type: ERROR_TYPES.PIPELINE_ORDER,
-      title: 'Pipeline Order Violation',
+      title: "Pipeline Order Violation",
       detail: violation.violation,
-      instance: violation.sessionId ? `/sessions/${violation.sessionId}` : undefined,
+      instance: violation.sessionId
+        ? `/sessions/${violation.sessionId}`
+        : undefined,
       extensions: {
         eye: violation.eye,
         expectedNext: violation.expectedNext,
         fixInstructions: violation.fixInstructions,
-        code: 'E_PIPELINE_ORDER',
+        code: "E_PIPELINE_ORDER",
       },
     });
   }
@@ -155,7 +160,7 @@ export class ProblemJsonFormatter {
   static eyeNotFound(eyeName: string): ProblemDetails {
     return this.createProblem({
       type: ERROR_TYPES.EYE_NOT_FOUND,
-      title: 'Eye Not Found',
+      title: "Eye Not Found",
       detail: `Eye implementation not found: ${eyeName}`,
       extensions: {
         eyeName,
@@ -170,8 +175,8 @@ export class ProblemJsonFormatter {
   static eyeValidation(eyeName: string, errors: string[]): ProblemDetails {
     return this.createProblem({
       type: ERROR_TYPES.EYE_VALIDATION,
-      title: 'Eye Validation Failed',
-      detail: `Eye response validation failed: ${errors.join(', ')}`,
+      title: "Eye Validation Failed",
+      detail: `Eye response validation failed: ${errors.join(", ")}`,
       extensions: {
         eyeName,
         validationErrors: errors,
@@ -185,11 +190,11 @@ export class ProblemJsonFormatter {
   static routingConfig(eyeName: string): ProblemDetails {
     return this.createProblem({
       type: ERROR_TYPES.ROUTING_CONFIG,
-      title: 'Routing Configuration Missing',
+      title: "Routing Configuration Missing",
       detail: `No routing configuration found for Eye: ${eyeName}. Run migration 0004 to seed routing.`,
       extensions: {
         eyeName,
-        solution: 'Run migration 0004 to seed routing configuration',
+        solution: "Run migration 0004 to seed routing configuration",
       },
     });
   }
@@ -200,11 +205,11 @@ export class ProblemJsonFormatter {
   static providerKey(provider: string): ProblemDetails {
     return this.createProblem({
       type: ERROR_TYPES.PROVIDER_KEY,
-      title: 'Provider API Key Missing',
+      title: "Provider API Key Missing",
       detail: `No API key configured for provider: ${provider}. Add key via UI Settings or .env file.`,
       extensions: {
         provider,
-        solution: 'Add API key via UI Settings or environment variables',
+        solution: "Add API key via UI Settings or environment variables",
       },
     });
   }
@@ -215,7 +220,7 @@ export class ProblemJsonFormatter {
   static sessionNotFound(sessionId: string): ProblemDetails {
     return this.createProblem({
       type: ERROR_TYPES.SESSION_NOT_FOUND,
-      title: 'Session Not Found',
+      title: "Session Not Found",
       detail: `Session does not exist: ${sessionId}`,
       instance: `/sessions/${sessionId}`,
       extensions: {
@@ -230,7 +235,7 @@ export class ProblemJsonFormatter {
   static validationError(field: string, errors: string[]): ProblemDetails {
     return this.createProblem({
       type: ERROR_TYPES.SCHEMA_VALIDATION,
-      title: 'Input Validation Failed',
+      title: "Input Validation Failed",
       detail: `Validation failed for field: ${field}`,
       extensions: {
         field,
@@ -245,11 +250,11 @@ export class ProblemJsonFormatter {
   static databaseConnection(error: string): ProblemDetails {
     return this.createProblem({
       type: ERROR_TYPES.DB_CONNECTION,
-      title: 'Database Connection Failed',
-      detail: 'Unable to connect to database',
+      title: "Database Connection Failed",
+      detail: "Unable to connect to database",
       extensions: {
         error,
-        solution: 'Check database configuration and ensure database is running',
+        solution: "Check database configuration and ensure database is running",
       },
     });
   }
@@ -260,11 +265,11 @@ export class ProblemJsonFormatter {
   static encryptionFailed(operation: string): ProblemDetails {
     return this.createProblem({
       type: ERROR_TYPES.ENCRYPTION_FAILED,
-      title: 'Encryption Operation Failed',
+      title: "Encryption Operation Failed",
       detail: `Failed to ${operation} encrypted data`,
       extensions: {
         operation,
-        solution: 'Check passphrase file and encryption configuration',
+        solution: "Check passphrase file and encryption configuration",
       },
     });
   }
@@ -272,11 +277,14 @@ export class ProblemJsonFormatter {
   /**
    * Create internal error problem
    */
-  static internalError(error: string, context?: Record<string, unknown>): ProblemDetails {
+  static internalError(
+    error: string,
+    context?: Record<string, unknown>,
+  ): ProblemDetails {
     return this.createProblem({
       type: ERROR_TYPES.INTERNAL_ERROR,
-      title: 'Internal Server Error',
-      detail: 'An unexpected error occurred',
+      title: "Internal Server Error",
+      detail: "An unexpected error occurred",
       extensions: {
         error,
         context,
@@ -287,26 +295,29 @@ export class ProblemJsonFormatter {
   /**
    * Convert any error to problem+json format
    */
-  static fromError(error: Error, context?: Record<string, unknown>): ProblemDetails {
+  static fromError(
+    error: Error,
+    context?: Record<string, unknown>,
+  ): ProblemDetails {
     // Check if error already has problem details
-    if ('type' in error && 'title' in error) {
+    if ("type" in error && "title" in error) {
       return error as unknown as ProblemDetails;
     }
 
     // Map common error types
-    if (error.message.includes('not found')) {
+    if (error.message.includes("not found")) {
       return this.createProblem({
         type: ERROR_TYPES.NOT_IMPLEMENTED,
-        title: 'Resource Not Found',
+        title: "Resource Not Found",
         detail: error.message,
         extensions: context,
       });
     }
 
-    if (error.message.includes('validation')) {
+    if (error.message.includes("validation")) {
       return this.createProblem({
         type: ERROR_TYPES.SCHEMA_VALIDATION,
-        title: 'Validation Error',
+        title: "Validation Error",
         detail: error.message,
         extensions: context,
       });
@@ -325,7 +336,9 @@ export class ProblemJsonFormatter {
   static validate(problem: unknown): ProblemDetails {
     const result = ProblemDetailsSchema.safeParse(problem);
     if (!result.success) {
-      throw new Error(`Invalid problem details: ${result.error.issues.map(i => i.message).join(', ')}`);
+      throw new Error(
+        `Invalid problem details: ${result.error.issues.map((i) => i.message).join(", ")}`,
+      );
     }
     return result.data;
   }
@@ -341,7 +354,7 @@ export class ProblemJsonFormatter {
    * Get content type for HTTP responses
    */
   static getContentType(): string {
-    return 'application/problem+json';
+    return "application/problem+json";
   }
 }
 
@@ -358,7 +371,7 @@ export class ThirdEyeProblem extends Error {
 
   constructor(problem: ProblemDetails) {
     super(problem.title);
-    this.name = 'ThirdEyeProblem';
+    this.name = "ThirdEyeProblem";
     this.type = problem.type || ERROR_TYPES.INTERNAL_ERROR;
     this.title = problem.title;
     this.status = problem.status;

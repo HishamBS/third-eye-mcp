@@ -1,22 +1,22 @@
-import { Hono } from 'hono';
-import { nanoid } from 'nanoid';
-import { getDb } from '@third-eye/db';
-import { personas, personaVersions } from '@third-eye/db';
-import { personaBlueprints } from '@third-eye/db/schema';
+import { Hono } from "hono";
+import { nanoid } from "nanoid";
+import { getDb } from "@third-eye/db";
+import { personas, personaVersions } from "@third-eye/db";
+import { personaBlueprints } from "@third-eye/db/schema";
 // DEFAULT_PERSONA_MAP removed - all personas in database
-import { EyeId } from '@third-eye/constants';
-import { eq, and, desc } from 'drizzle-orm';
-import { getEyeIdByName, getEyeNameById } from '@third-eye/db/utils/lookups';
-import { generateId } from '@third-eye/db/utils/uuid';
+import { EyeId } from "@third-eye/constants";
+import { eq, and, desc } from "drizzle-orm";
+import { getEyeIdByName, getEyeNameById } from "@third-eye/db/utils/lookups";
+import { generateId } from "@third-eye/db/utils/uuid";
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
   createErrorResponse,
   createInternalErrorResponse,
   requestIdMiddleware,
-  errorHandler
-} from '../middleware/response';
-import { z } from 'zod';
+  errorHandler,
+} from "../middleware/response";
+import { z } from "zod";
 
 /**
  * Personas Management Routes
@@ -26,21 +26,25 @@ import { z } from 'zod';
 
 const app = new Hono();
 
-app.use('*', requestIdMiddleware());
-app.use('*', errorHandler());
+app.use("*", requestIdMiddleware());
+app.use("*", errorHandler());
 
 // Get all persona blueprints
-app.get('/blueprints', async (c) => {
+app.get("/blueprints", async (c) => {
   try {
     const { db } = getDb();
     const dbBlueprints = await db.select().from(personaBlueprints);
-    
-    const blueprints = dbBlueprints.map(blueprint => {
-      const capabilities = JSON.parse(blueprint.capabilities as string) as string[];
+
+    const blueprints = dbBlueprints.map((blueprint) => {
+      const capabilities = JSON.parse(
+        blueprint.capabilities as string,
+      ) as string[];
       const phases = JSON.parse(blueprint.phases as string);
       const envelopeContract = JSON.parse(blueprint.envelopeContract as string);
-      const reminders = JSON.parse((blueprint.reminders || '[]') as string) as string[];
-      
+      const reminders = JSON.parse(
+        (blueprint.reminders || "[]") as string,
+      ) as string[];
+
       return {
         id: blueprint.eyeId,
         eyeId: blueprint.eyeId as EyeId,
@@ -65,32 +69,40 @@ app.get('/blueprints', async (c) => {
 
     return createSuccessResponse(c, blueprints);
   } catch (error) {
-    console.error('Failed to fetch persona blueprints:', error);
-    return createInternalErrorResponse(c, 'Failed to fetch persona blueprints');
+    console.error("Failed to fetch persona blueprints:", error);
+    return createInternalErrorResponse(c, "Failed to fetch persona blueprints");
   }
 });
 
 // Get single blueprint by eyeId
-app.get('/blueprints/:eyeId', async (c) => {
+app.get("/blueprints/:eyeId", async (c) => {
   try {
-    const eyeId = c.req.param('eyeId');
+    const eyeId = c.req.param("eyeId");
     const { db } = getDb();
-    
+
     const blueprint = await db
       .select()
       .from(personaBlueprints)
       .where(eq(personaBlueprints.eyeId, eyeId))
       .get();
-    
+
     if (!blueprint) {
-      return createErrorResponse(c, { title: 'Blueprint Not Found', status: 404, detail: 'Blueprint not found' });
+      return createErrorResponse(c, {
+        title: "Blueprint Not Found",
+        status: 404,
+        detail: "Blueprint not found",
+      });
     }
-    
-    const capabilities = JSON.parse(blueprint.capabilities as string) as string[];
+
+    const capabilities = JSON.parse(
+      blueprint.capabilities as string,
+    ) as string[];
     const phases = JSON.parse(blueprint.phases as string);
     const envelopeContract = JSON.parse(blueprint.envelopeContract as string);
-    const reminders = JSON.parse((blueprint.reminders || '[]') as string) as string[];
-    
+    const reminders = JSON.parse(
+      (blueprint.reminders || "[]") as string,
+    ) as string[];
+
     const result = {
       id: blueprint.eyeId,
       eyeId: blueprint.eyeId as EyeId,
@@ -114,15 +126,15 @@ app.get('/blueprints/:eyeId', async (c) => {
 
     return createSuccessResponse(c, result);
   } catch (error) {
-    console.error('Failed to fetch blueprint:', error);
-    return createInternalErrorResponse(c, 'Failed to fetch blueprint');
+    console.error("Failed to fetch blueprint:", error);
+    return createInternalErrorResponse(c, "Failed to fetch blueprint");
   }
 });
 
 // Update blueprint
-app.put('/blueprints/:eyeId', async (c) => {
+app.put("/blueprints/:eyeId", async (c) => {
   try {
-    const eyeId = c.req.param('eyeId');
+    const eyeId = c.req.param("eyeId");
     const body = await c.req.json();
     const { db } = getDb();
     const now = new Date();
@@ -142,17 +154,20 @@ app.put('/blueprints/:eyeId', async (c) => {
       updatedAt: now,
     };
 
-    await db.insert(personaBlueprints)
+    await db
+      .insert(personaBlueprints)
       .values(updatedBlueprint)
       .onConflictDoUpdate({
         target: personaBlueprints.eyeId,
         set: updatedBlueprint,
       });
 
-    return createSuccessResponse(c, { message: 'Blueprint updated successfully' });
+    return createSuccessResponse(c, {
+      message: "Blueprint updated successfully",
+    });
   } catch (error) {
-    console.error('Failed to update blueprint:', error);
-    return createInternalErrorResponse(c, 'Failed to update blueprint');
+    console.error("Failed to update blueprint:", error);
+    return createInternalErrorResponse(c, "Failed to update blueprint");
   }
 });
 
@@ -185,7 +200,7 @@ const createPersonaSchema = z.object({
 });
 
 // Get all personas for all Eyes - returns flat array with name field
-app.get('/', async (c) => {
+app.get("/", async (c) => {
   try {
     const { db } = getDb();
     const allPersonas = await db
@@ -196,15 +211,19 @@ app.get('/', async (c) => {
 
     // Ensure all personas have valid eyeId references and convert eyeId to eyeName
     // NO FALLBACKS - if eyeId is invalid, exclude persona and log error
-    const personasWithNames: Array<typeof personas.$inferSelect & { eyeName: string }> = [];
+    const personasWithNames: Array<
+      typeof personas.$inferSelect & { eyeName: string }
+    > = [];
     const invalidPersonas: Array<{ personaId: string; eyeId: string }> = [];
 
     for (const persona of allPersonas) {
       const eyeName = await getEyeNameById(persona.eyeId);
-      
+
       if (!eyeName) {
         // Invalid eyeId reference - log error and exclude from response
-        console.error(`[PERSONAS API] Persona ${persona.id} has invalid eyeId: ${persona.eyeId}. Excluding from response.`);
+        console.error(
+          `[PERSONAS API] Persona ${persona.id} has invalid eyeId: ${persona.eyeId}. Excluding from response.`,
+        );
         invalidPersonas.push({ personaId: persona.id, eyeId: persona.eyeId });
         continue;
       }
@@ -217,26 +236,33 @@ app.get('/', async (c) => {
 
     // Log warning if any invalid personas found
     if (invalidPersonas.length > 0) {
-      console.warn(`[PERSONAS API] Found ${invalidPersonas.length} persona(s) with invalid eyeId references. These were excluded from the response.`, invalidPersonas);
+      console.warn(
+        `[PERSONAS API] Found ${invalidPersonas.length} persona(s) with invalid eyeId references. These were excluded from the response.`,
+        invalidPersonas,
+      );
     }
 
     return createSuccessResponse(c, personasWithNames);
   } catch (error) {
-    console.error('Failed to fetch personas:', error);
-    return createInternalErrorResponse(c, 'Failed to fetch personas');
+    console.error("Failed to fetch personas:", error);
+    return createInternalErrorResponse(c, "Failed to fetch personas");
   }
 });
 
 // Get personas for specific Eye
-app.get('/:eye', async (c) => {
+app.get("/:eye", async (c) => {
   try {
-    const eyeName = c.req.param('eye');
+    const eyeName = c.req.param("eye");
     const { db } = getDb();
 
     // Convert eye name to UUID
     const eyeId = await getEyeIdByName(eyeName);
     if (!eyeId) {
-      return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
+      return createErrorResponse(c, {
+        title: "Eye Not Found",
+        status: 404,
+        detail: "The requested eye could not be found",
+      });
     }
 
     const eyePersonas = await db
@@ -248,10 +274,14 @@ app.get('/:eye', async (c) => {
 
     if (eyePersonas.length === 0) {
       // All personas should exist in database (seeded on startup)
-      return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
+      return createErrorResponse(c, {
+        title: "Eye Not Found",
+        status: 404,
+        detail: "The requested eye could not be found",
+      });
     }
 
-    const active = eyePersonas.find(p => p.active);
+    const active = eyePersonas.find((p) => p.active);
 
     return createSuccessResponse(c, {
       eye: eyeName,
@@ -259,21 +289,25 @@ app.get('/:eye', async (c) => {
       activeVersion: active?.version || null,
     });
   } catch (error) {
-    console.error('Failed to fetch personas:', error);
-    return createInternalErrorResponse(c, 'Failed to fetch personas');
+    console.error("Failed to fetch personas:", error);
+    return createInternalErrorResponse(c, "Failed to fetch personas");
   }
 });
 
 // Get active persona for specific Eye
-app.get('/:eye/active', async (c) => {
+app.get("/:eye/active", async (c) => {
   try {
-    const eyeName = c.req.param('eye');
+    const eyeName = c.req.param("eye");
     const { db } = getDb();
 
     // Convert eye name to UUID
     const eyeId = await getEyeIdByName(eyeName);
     if (!eyeId) {
-      return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
+      return createErrorResponse(c, {
+        title: "Eye Not Found",
+        status: 404,
+        detail: "The requested eye could not be found",
+      });
     }
 
     const active = await db
@@ -287,17 +321,21 @@ app.get('/:eye/active', async (c) => {
     }
 
     // All personas should exist in database (seeded on startup)
-    return createErrorResponse(c, { title: 'Persona Not Found', status: 404, detail: `No active persona for ${eyeName}` });
+    return createErrorResponse(c, {
+      title: "Persona Not Found",
+      status: 404,
+      detail: `No active persona for ${eyeName}`,
+    });
   } catch (error) {
-    console.error('Failed to fetch active persona:', error);
-    return createInternalErrorResponse(c, 'Failed to fetch active persona');
+    console.error("Failed to fetch active persona:", error);
+    return createInternalErrorResponse(c, "Failed to fetch active persona");
   }
 });
 
 // Create new persona version (staged, not active)
-app.post('/:eye', validateBodyWithEnvelope(createPersonaSchema), async (c) => {
+app.post("/:eye", validateBodyWithEnvelope(createPersonaSchema), async (c) => {
   try {
-    const eyeName = c.req.param('eye');
+    const eyeName = c.req.param("eye");
     const {
       name,
       metadataJson,
@@ -307,15 +345,19 @@ app.post('/:eye', validateBodyWithEnvelope(createPersonaSchema), async (c) => {
       envelopeJson,
       remindersJson,
       notes,
-      llmConfigJson
-    } = c.get('validatedBody');
+      llmConfigJson,
+    } = c.get("validatedBody");
 
     const { db } = getDb();
 
     // Convert eye name to UUID
     const eyeId = await getEyeIdByName(eyeName);
     if (!eyeId) {
-      return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
+      return createErrorResponse(c, {
+        title: "Eye Not Found",
+        status: 404,
+        detail: "The requested eye could not be found",
+      });
     }
 
     // Get latest version number
@@ -363,23 +405,27 @@ app.post('/:eye', validateBodyWithEnvelope(createPersonaSchema), async (c) => {
       persona: inserted,
     });
   } catch (error) {
-    console.error('Failed to create persona:', error);
-    return createInternalErrorResponse(c, 'Failed to create persona');
+    console.error("Failed to create persona:", error);
+    return createInternalErrorResponse(c, "Failed to create persona");
   }
 });
 
 // Activate a specific persona version
-app.patch('/:eye/activate/:version', async (c) => {
+app.patch("/:eye/activate/:version", async (c) => {
   try {
-    const eyeName = c.req.param('eye');
-    const version = parseInt(c.req.param('version'));
+    const eyeName = c.req.param("eye");
+    const version = parseInt(c.req.param("version"));
 
     const { db } = getDb();
 
     // Convert eye name to UUID
     const eyeId = await getEyeIdByName(eyeName);
     if (!eyeId) {
-      return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
+      return createErrorResponse(c, {
+        title: "Eye Not Found",
+        status: 404,
+        detail: "The requested eye could not be found",
+      });
     }
 
     // Check if version exists
@@ -390,7 +436,11 @@ app.patch('/:eye/activate/:version', async (c) => {
       .get();
 
     if (!targetPersona) {
-      return createErrorResponse(c, { title: 'Persona Version Not Found', status: 404, detail: 'The requested persona version could not be found' });
+      return createErrorResponse(c, {
+        title: "Persona Version Not Found",
+        status: 404,
+        detail: "The requested persona version could not be found",
+      });
     }
 
     // Deactivate all versions for this Eye
@@ -415,16 +465,16 @@ app.patch('/:eye/activate/:version', async (c) => {
 
     // Broadcast persona change via WebSocket
     try {
-      const { wsManager } = await import('../websocket');
+      const { wsManager } = await import("../websocket");
       wsManager.broadcast({
-        type: 'persona_activated',
+        type: "persona_activated",
         eye: eyeName, // Send eye name for frontend
         eyeId, // Include UUID
         version,
         persona: activated,
       });
     } catch (e) {
-      console.debug('WebSocket broadcast skipped:', e);
+      console.debug("WebSocket broadcast skipped:", e);
     }
 
     return createSuccessResponse(c, {
@@ -433,23 +483,27 @@ app.patch('/:eye/activate/:version', async (c) => {
       persona: activated,
     });
   } catch (error) {
-    console.error('Failed to activate persona:', error);
-    return createInternalErrorResponse(c, 'Failed to activate persona');
+    console.error("Failed to activate persona:", error);
+    return createInternalErrorResponse(c, "Failed to activate persona");
   }
 });
 
 // Delete a persona version (cannot delete active version)
-app.delete('/:eye/:version', async (c) => {
+app.delete("/:eye/:version", async (c) => {
   try {
-    const eyeName = c.req.param('eye');
-    const version = parseInt(c.req.param('version'));
+    const eyeName = c.req.param("eye");
+    const version = parseInt(c.req.param("version"));
 
     const { db } = getDb();
 
     // Convert eye name to UUID
     const eyeId = await getEyeIdByName(eyeName);
     if (!eyeId) {
-      return createErrorResponse(c, { title: 'Eye Not Found', status: 404, detail: 'The requested eye could not be found' });
+      return createErrorResponse(c, {
+        title: "Eye Not Found",
+        status: 404,
+        detail: "The requested eye could not be found",
+      });
     }
 
     const targetPersona = await db
@@ -459,11 +513,19 @@ app.delete('/:eye/:version', async (c) => {
       .get();
 
     if (!targetPersona) {
-      return createErrorResponse(c, { title: 'Persona Version Not Found', status: 404, detail: 'The requested persona version could not be found' });
+      return createErrorResponse(c, {
+        title: "Persona Version Not Found",
+        status: 404,
+        detail: "The requested persona version could not be found",
+      });
     }
 
     if (targetPersona.active) {
-      return createErrorResponse(c, { title: 'Cannot Delete Active Version', status: 400, detail: 'Cannot delete the currently active persona version' });
+      return createErrorResponse(c, {
+        title: "Cannot Delete Active Version",
+        status: 400,
+        detail: "Cannot delete the currently active persona version",
+      });
     }
 
     await db
@@ -476,17 +538,17 @@ app.delete('/:eye/:version', async (c) => {
       message: `Persona version ${version} deleted`,
     });
   } catch (error) {
-    console.error('Failed to delete persona:', error);
-    return createInternalErrorResponse(c, 'Failed to delete persona');
+    console.error("Failed to delete persona:", error);
+    return createInternalErrorResponse(c, "Failed to delete persona");
   }
 });
 
 // Versioning endpoints
 
 // GET /personas/:id/versions - Get all versions of a persona
-app.get('/:id/versions', async (c) => {
+app.get("/:id/versions", async (c) => {
   try {
-    const personaId = c.req.param('id');
+    const personaId = c.req.param("id");
     const { db } = getDb();
 
     const versions = await db
@@ -498,15 +560,15 @@ app.get('/:id/versions', async (c) => {
 
     return createSuccessResponse(c, { versions });
   } catch (error) {
-    console.error('Failed to get persona versions:', error);
-    return createInternalErrorResponse(c, 'Failed to get persona versions');
+    console.error("Failed to get persona versions:", error);
+    return createInternalErrorResponse(c, "Failed to get persona versions");
   }
 });
 
 // POST /personas/:id/versions - Create new version (snapshot current)
-app.post('/:id/versions', async (c) => {
+app.post("/:id/versions", async (c) => {
   try {
-    const personaId = c.req.param('id');
+    const personaId = c.req.param("id");
     const { db } = getDb();
 
     // Get current persona
@@ -517,7 +579,11 @@ app.post('/:id/versions', async (c) => {
       .get();
 
     if (!persona) {
-      return createErrorResponse(c, { title: 'Persona Not Found', status: 404, detail: 'The requested persona could not be found' });
+      return createErrorResponse(c, {
+        title: "Persona Not Found",
+        status: 404,
+        detail: "The requested persona could not be found",
+      });
     }
 
     // Get latest version number
@@ -543,23 +609,23 @@ app.post('/:id/versions', async (c) => {
         voice: persona.voice,
       },
       createdAt: new Date(),
-      createdBy: 'user',
+      createdBy: "user",
     };
 
     await db.insert(personaVersions).values(newVersion).run();
 
     return createSuccessResponse(c, { version: newVersion });
   } catch (error) {
-    console.error('Failed to create persona version:', error);
-    return createInternalErrorResponse(c, 'Failed to create persona version');
+    console.error("Failed to create persona version:", error);
+    return createInternalErrorResponse(c, "Failed to create persona version");
   }
 });
 
 // POST /personas/:id/restore/:versionId - Restore to specific version
-app.post('/:id/restore/:versionId', async (c) => {
+app.post("/:id/restore/:versionId", async (c) => {
   try {
-    const personaId = c.req.param('id');
-    const versionId = c.req.param('versionId');
+    const personaId = c.req.param("id");
+    const versionId = c.req.param("versionId");
     const { db } = getDb();
 
     // Get version
@@ -570,17 +636,26 @@ app.post('/:id/restore/:versionId', async (c) => {
       .get();
 
     if (!version) {
-      return createErrorResponse(c, { title: 'Version Not Found', status: 404, detail: 'The requested version could not be found' });
+      return createErrorResponse(c, {
+        title: "Version Not Found",
+        status: 404,
+        detail: "The requested version could not be found",
+      });
     }
 
     if (version.personaId !== personaId) {
-      return createErrorResponse(c, { title: 'Version Mismatch', status: 400, detail: 'Version does not belong to this persona' });
+      return createErrorResponse(c, {
+        title: "Version Mismatch",
+        status: 400,
+        detail: "Version does not belong to this persona",
+      });
     }
 
     // Update persona with version data
-    const settings = typeof version.settings === 'string'
-      ? JSON.parse(version.settings)
-      : version.settings || {};
+    const settings =
+      typeof version.settings === "string"
+        ? JSON.parse(version.settings)
+        : version.settings || {};
 
     await db
       .update(personas)
@@ -598,17 +673,17 @@ app.post('/:id/restore/:versionId', async (c) => {
       message: `Restored to version ${version.versionNumber}`,
     });
   } catch (error) {
-    console.error('Failed to restore persona version:', error);
-    return createInternalErrorResponse(c, 'Failed to restore persona version');
+    console.error("Failed to restore persona version:", error);
+    return createInternalErrorResponse(c, "Failed to restore persona version");
   }
 });
 
 // GET /personas/:id/diff/:v1/:v2 - Get diff between two versions
-app.get('/:id/diff/:v1/:v2', async (c) => {
+app.get("/:id/diff/:v1/:v2", async (c) => {
   try {
-    const personaId = c.req.param('id');
-    const v1Id = c.req.param('v1');
-    const v2Id = c.req.param('v2');
+    const personaId = c.req.param("id");
+    const v1Id = c.req.param("v1");
+    const v2Id = c.req.param("v2");
     const { db } = getDb();
 
     const version1 = await db
@@ -624,7 +699,11 @@ app.get('/:id/diff/:v1/:v2', async (c) => {
       .get();
 
     if (!version1 || !version2) {
-      return createErrorResponse(c, { title: 'Versions Not Found', status: 404, detail: 'One or both versions could not be found' });
+      return createErrorResponse(c, {
+        title: "Versions Not Found",
+        status: 404,
+        detail: "One or both versions could not be found",
+      });
     }
 
     // Simple diff
@@ -637,7 +716,9 @@ app.get('/:id/diff/:v1/:v2', async (c) => {
       settings: {
         v1: version1.settings,
         v2: version2.settings,
-        changed: JSON.stringify(version1.settings) !== JSON.stringify(version2.settings),
+        changed:
+          JSON.stringify(version1.settings) !==
+          JSON.stringify(version2.settings),
       },
       versionNumbers: {
         v1: version1.versionNumber,
@@ -647,8 +728,8 @@ app.get('/:id/diff/:v1/:v2', async (c) => {
 
     return createSuccessResponse(c, { diff });
   } catch (error) {
-    console.error('Failed to generate diff:', error);
-    return createInternalErrorResponse(c, 'Failed to generate diff');
+    console.error("Failed to generate diff:", error);
+    return createInternalErrorResponse(c, "Failed to generate diff");
   }
 });
 

@@ -64,9 +64,10 @@ Phase 4 transforms the Third Eye pipeline builder from a traditional "fixed pipe
 **Location**: `apps/ui/src/components/pipeline-builder/CapabilityMatrix.tsx`
 
 **Props**:
+
 ```typescript
 interface CapabilityMatrixProps {
-  mode: 'dynamic' | 'constrained' | 'fixed';
+  mode: "dynamic" | "constrained" | "fixed";
   highlightedEyes?: string[]; // For showing active routing decision
 }
 ```
@@ -74,14 +75,18 @@ interface CapabilityMatrixProps {
 **Features**:
 
 #### Eye Capability Cards
+
 Each eye shown as a card with:
+
 - Eye icon and name
 - Description (one-liner)
 - Capability tags (visual chips)
 - Status indicator (active/inactive)
 
 #### Capability Tags
+
 Visual representation of what each eye does:
+
 - **overseer**: `routing`, `analysis`, `decision-making`
 - **sharingan**: `ambiguity-detection`, `clarification`, `questions`
 - **kyuubi**: `structuring`, `guidance`, `framework`
@@ -92,6 +97,7 @@ Visual representation of what each eye does:
 - **byakugan**: `final-review`, `delivery`, `output`
 
 #### Layout
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │  Capability Matrix - What Each Eye Can Do          │
@@ -120,6 +126,7 @@ Visual representation of what each eye does:
 ```
 
 #### Interactivity
+
 - **Hover**: Show full description + example scenarios
 - **Click**: Show eye details modal (persona, examples, model recommendations)
 - **Highlight**: When routing decision is shown, highlight selected eyes
@@ -135,6 +142,7 @@ Visual representation of what each eye does:
 **Location**: `apps/ui/src/components/pipeline-builder/DynamicRouteVisualizer.tsx`
 
 **Props**:
+
 ```typescript
 interface DynamicRouteVisualizerProps {
   sessionId: string;
@@ -152,7 +160,7 @@ interface RoutingDecision {
   };
   selectedEyes: string[];
   reasoning: string;
-  executionMode: 'sequential' | 'parallel';
+  executionMode: "sequential" | "parallel";
   createdAt: number;
 }
 ```
@@ -160,6 +168,7 @@ interface RoutingDecision {
 **Features**:
 
 #### Visual Flow
+
 ```
 Request → Analysis → Capability Matching → Selected Eyes
 ```
@@ -183,6 +192,7 @@ Request → Analysis → Capability Matching → Selected Eyes
    - Estimated steps count
 
 **Layout**:
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │  Request: "Create 500-word palm care guide"         │
@@ -214,6 +224,7 @@ Request → Analysis → Capability Matching → Selected Eyes
 **Location**: `apps/ui/src/components/pipeline-builder/LiveRoutingPanel.tsx`
 
 **Props**:
+
 ```typescript
 interface LiveRoutingPanelProps {
   maxSessions?: number; // Default 10
@@ -224,6 +235,7 @@ interface LiveRoutingPanelProps {
 **Features**:
 
 #### Session List
+
 - Most recent sessions first
 - Session ID + timestamp
 - Request summary (first 50 chars)
@@ -231,16 +243,19 @@ interface LiveRoutingPanelProps {
 - Routing mode indicator
 
 #### Real-time Updates
+
 - WebSocket integration
 - New sessions appear at top
 - Highlight new sessions (fade animation)
 
 #### Filtering
+
 - Filter by routing mode (dynamic/constrained/fixed)
 - Filter by date range
 - Search by request text
 
 **Layout**:
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │  Live Routing Decisions                      [≡]    │
@@ -262,6 +277,7 @@ interface LiveRoutingPanelProps {
 ```
 
 **Data Source**:
+
 - `GET /api/routing-decisions?limit=10&sort=desc`
 - `WebSocket: routing_decision_created`
 
@@ -274,10 +290,11 @@ interface LiveRoutingPanelProps {
 **Location**: `apps/ui/src/components/pipeline-builder/PipelineModeSelector.tsx`
 
 **Props**:
+
 ```typescript
 interface PipelineModeSelectorProps {
-  currentMode: 'dynamic' | 'constrained' | 'fixed';
-  onModeChange: (mode: 'dynamic' | 'constrained' | 'fixed') => void;
+  currentMode: "dynamic" | "constrained" | "fixed";
+  onModeChange: (mode: "dynamic" | "constrained" | "fixed") => void;
 }
 ```
 
@@ -304,6 +321,7 @@ interface PipelineModeSelectorProps {
    - Badge: "Consistent"
 
 **Layout**:
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │  Select Routing Mode:                                │
@@ -388,6 +406,7 @@ export default function PipelinesPage() {
 ### New Endpoints
 
 #### 1. Get Eye Capabilities
+
 ```
 GET /api/eyes
 Response: {
@@ -406,6 +425,7 @@ Response: {
 ```
 
 #### 2. Get Routing Decisions
+
 ```
 GET /api/routing-decisions?limit=10&sort=desc
 Response: {
@@ -416,6 +436,7 @@ Response: {
 ```
 
 #### 3. Get Routing Decision by Session
+
 ```
 GET /api/routing-decisions/:sessionId
 Response: {
@@ -428,12 +449,15 @@ Response: {
 ### WebSocket Events
 
 #### routing_decision_created
+
 ```json
 {
   "type": "routing_decision_created",
   "data": {
     "sessionId": "abc123",
-    "decision": { /* RoutingDecision */ }
+    "decision": {
+      /* RoutingDecision */
+    }
   }
 }
 ```
@@ -449,45 +473,63 @@ Response: {
 
 export const EYE_CAPABILITIES = {
   overseer: {
-    tags: ['routing', 'analysis', 'decision-making', 'orchestration'],
-    description: 'Analyzes requests and dynamically routes to appropriate eyes',
-    scenarios: ['All requests - determines optimal eye sequence']
+    tags: ["routing", "analysis", "decision-making", "orchestration"],
+    description: "Analyzes requests and dynamically routes to appropriate eyes",
+    scenarios: ["All requests - determines optimal eye sequence"],
   },
   sharingan: {
-    tags: ['ambiguity-detection', 'clarification', 'questions', 'disambiguation'],
-    description: 'Detects ambiguities and asks clarifying questions',
-    scenarios: ['Vague requests', 'Missing context', 'Unclear requirements']
+    tags: [
+      "ambiguity-detection",
+      "clarification",
+      "questions",
+      "disambiguation",
+    ],
+    description: "Detects ambiguities and asks clarifying questions",
+    scenarios: ["Vague requests", "Missing context", "Unclear requirements"],
   },
   kyuubi: {
-    tags: ['structuring', 'guidance', 'framework', 'content-planning'],
-    description: 'Provides structural guidance and content frameworks',
-    scenarios: ['Content creation', 'Document structuring', 'Planning']
+    tags: ["structuring", "guidance", "framework", "content-planning"],
+    description: "Provides structural guidance and content frameworks",
+    scenarios: ["Content creation", "Document structuring", "Planning"],
   },
   jogan: {
-    tags: ['intent-confirmation', 'approval', 'scope-validation', 'human-in-loop'],
-    description: 'Confirms user intent before proceeding with tasks',
-    scenarios: ['High-impact actions', 'Scope confirmation', 'User approval needed']
+    tags: [
+      "intent-confirmation",
+      "approval",
+      "scope-validation",
+      "human-in-loop",
+    ],
+    description: "Confirms user intent before proceeding with tasks",
+    scenarios: [
+      "High-impact actions",
+      "Scope confirmation",
+      "User approval needed",
+    ],
   },
   rinnegan: {
-    tags: ['feasibility', 'validation', 'planning', 'resource-estimation'],
-    description: 'Validates feasibility and provides planning guidance',
-    scenarios: ['Complex tasks', 'Multi-step planning', 'Resource validation']
+    tags: ["feasibility", "validation", "planning", "resource-estimation"],
+    description: "Validates feasibility and provides planning guidance",
+    scenarios: ["Complex tasks", "Multi-step planning", "Resource validation"],
   },
   mangekyo: {
-    tags: ['code-review', 'security', 'best-practices', 'quality-assurance'],
-    description: 'Reviews code for quality, security, and best practices',
-    scenarios: ['Code review', 'Security audit', 'Technical validation']
+    tags: ["code-review", "security", "best-practices", "quality-assurance"],
+    description: "Reviews code for quality, security, and best practices",
+    scenarios: ["Code review", "Security audit", "Technical validation"],
   },
   tenseigan: {
-    tags: ['quality-check', 'completeness', 'refinement', 'polish'],
-    description: 'Validates quality and completeness of outputs',
-    scenarios: ['Output validation', 'Completeness check', 'Quality assurance']
+    tags: ["quality-check", "completeness", "refinement", "polish"],
+    description: "Validates quality and completeness of outputs",
+    scenarios: ["Output validation", "Completeness check", "Quality assurance"],
   },
   byakugan: {
-    tags: ['final-review', 'delivery', 'output-formatting', 'presentation'],
-    description: 'Final review and output preparation for delivery',
-    scenarios: ['Final validation', 'Output formatting', 'Delivery preparation']
-  }
+    tags: ["final-review", "delivery", "output-formatting", "presentation"],
+    description: "Final review and output preparation for delivery",
+    scenarios: [
+      "Final validation",
+      "Output formatting",
+      "Delivery preparation",
+    ],
+  },
 } as const;
 ```
 
@@ -498,6 +540,7 @@ export const EYE_CAPABILITIES = {
 ### Phase 4A: Core Components (Days 22-24)
 
 **Tasks**:
+
 1. Create `CapabilityMatrix.tsx` component
 2. Create `DynamicRouteVisualizer.tsx` component
 3. Create `LiveRoutingPanel.tsx` component
@@ -507,12 +550,14 @@ export const EYE_CAPABILITIES = {
 7. Create routing decisions API endpoints
 
 **Deliverables**:
+
 - Functional capability matrix view
 - Live routing decision panel
 - Mode switching works
 - No more "default pipeline" diagram
 
 **Acceptance Criteria**:
+
 - `/pipelines` page shows capability matrix (not pipeline)
 - Users can see live routing decisions
 - Mode selector toggles between views
@@ -523,6 +568,7 @@ export const EYE_CAPABILITIES = {
 ### Phase 4B: Enhanced Features (Days 25-26)
 
 **Tasks**:
+
 1. Add PolicyBuilder inline component
 2. Add policy preview feature ("With these constraints, Overseer might...")
 3. Enhance capability matrix with filtering
@@ -530,11 +576,13 @@ export const EYE_CAPABILITIES = {
 5. Add session comparison feature
 
 **Deliverables**:
+
 - Policy builder integrated in constrained mode
 - Policy preview shows expected routing
 - Enhanced filtering and search
 
 **Acceptance Criteria**:
+
 - Policy creation works from /pipelines page
 - Policy preview accurately predicts routing
 - Filtering works across all panels
@@ -544,6 +592,7 @@ export const EYE_CAPABILITIES = {
 ### Phase 4C: Template Enhancement (Days 27-28)
 
 **Tasks**:
+
 1. Enhance TemplateDesigner with visual editor
 2. Create TemplateLibrary inline component
 3. Add predefined templates (Fast Code Review, Research Article, Security Audit)
@@ -551,12 +600,14 @@ export const EYE_CAPABILITIES = {
 5. Add usage analytics display
 
 **Deliverables**:
+
 - Visual template editor with drag-and-drop
 - Template library with predefined templates
 - Import/export functionality
 - Usage analytics per template
 
 **Acceptance Criteria**:
+
 - Users can create templates visually
 - Predefined templates available
 - Import/export works
@@ -621,12 +672,14 @@ export const EYE_CAPABILITIES = {
 **New Behavior**: Capability matrix with routing mode selector
 
 **Migration Steps**:
+
 1. Show migration banner on first visit: "Pipeline Builder has been upgraded to Dynamic Routing"
 2. Explain three modes: Dynamic (new default), Constrained, Fixed
 3. Offer tour of new features
 4. Old custom pipelines migrated to Fixed Templates
 
 **Communication**:
+
 ```
 🎉 Pipeline Builder Upgraded!
 

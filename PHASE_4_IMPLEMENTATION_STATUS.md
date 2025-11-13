@@ -13,12 +13,14 @@ Phase 4 has successfully transformed the Third Eye pipeline builder from a **tra
 ### Key Transformation
 
 **BEFORE Phase 4**:
+
 - Fixed linear pipeline diagram
 - All eyes shown in predetermined sequence
 - Users assumed pipeline always runs the same way
 - No visibility into Overseer's routing decisions
 
 **AFTER Phase 4**:
+
 - Capability matrix showing eye capabilities
 - Three routing modes: Dynamic, Constrained, Fixed
 - Live routing decision visualizer
@@ -31,18 +33,18 @@ Phase 4 has successfully transformed the Third Eye pipeline builder from a **tra
 
 ### ✅ Phase 4A Core Components (100%)
 
-| Component | Status | Lines | Purpose |
-|-----------|--------|-------|---------|
-| Eye Capabilities SSOT | ✅ Complete | 94 | Centralized capability definitions |
-| Routing Decisions API | ✅ Complete | 266 | Backend endpoints for routing data |
-| Eyes API Update | ✅ Complete | - | Returns capability_tags |
-| useRoutingDecisions Hook | ✅ Complete | 173 | Fetch routing decisions |
-| useEyeCapabilities Hook | ✅ Complete | 127 | Fetch eye capabilities |
-| CapabilityMatrix Component | ✅ Complete | 294 | Show what eyes CAN do |
-| DynamicRouteVisualizer | ✅ Complete | 195 | Show Overseer's reasoning |
-| LiveRoutingPanel | ✅ Complete | 188 | Real-time session list |
-| PipelineModeSelector | ✅ Complete | 126 | Toggle routing modes |
-| /pipelines Page Integration | ✅ Complete | 112 | Unified page layout |
+| Component                   | Status      | Lines | Purpose                            |
+| --------------------------- | ----------- | ----- | ---------------------------------- |
+| Eye Capabilities SSOT       | ✅ Complete | 94    | Centralized capability definitions |
+| Routing Decisions API       | ✅ Complete | 266   | Backend endpoints for routing data |
+| Eyes API Update             | ✅ Complete | -     | Returns capability_tags            |
+| useRoutingDecisions Hook    | ✅ Complete | 173   | Fetch routing decisions            |
+| useEyeCapabilities Hook     | ✅ Complete | 127   | Fetch eye capabilities             |
+| CapabilityMatrix Component  | ✅ Complete | 294   | Show what eyes CAN do              |
+| DynamicRouteVisualizer      | ✅ Complete | 195   | Show Overseer's reasoning          |
+| LiveRoutingPanel            | ✅ Complete | 188   | Real-time session list             |
+| PipelineModeSelector        | ✅ Complete | 126   | Toggle routing modes               |
+| /pipelines Page Integration | ✅ Complete | 112   | Unified page layout                |
 
 **Total Lines of Code**: 1,575 lines across 10 new/updated files
 
@@ -57,6 +59,7 @@ Phase 4 has successfully transformed the Third Eye pipeline builder from a **tra
 **Purpose**: Single source of truth for eye capabilities
 
 **Capabilities Defined**:
+
 ```typescript
 overseer:   routing, analysis, decision-making, orchestration
 sharingan:  ambiguity-detection, clarification, questions, disambiguation
@@ -69,6 +72,7 @@ byakugan:   final-review, delivery, output-formatting, presentation
 ```
 
 **Routing Modes**:
+
 - `fully_dynamic`: Overseer decides everything (recommended)
 - `constrained`: Overseer + policy constraints
 - `fixed`: Predefined template sequence
@@ -78,9 +82,11 @@ byakugan:   final-review, delivery, output-formatting, presentation
 ### 2. Backend API Layer
 
 #### Routing Decisions API
+
 **File**: `apps/server/src/routes/routing-decisions.ts` (266 lines)
 
 **Endpoints**:
+
 ```typescript
 GET /api/routing-decisions
   - List routing decisions with pagination
@@ -97,6 +103,7 @@ GET /api/routing-decisions/:id
 ```
 
 **Response Format**:
+
 ```typescript
 {
   id: string;
@@ -115,9 +122,11 @@ GET /api/routing-decisions/:id
 ```
 
 #### Eyes API Update
+
 **File**: `apps/server/src/routes/eyes.ts` (updated)
 
 **Change**: Now returns `capabilityTags` from database
+
 ```typescript
 GET /api/eyes/all
   - Returns all eyes with capability_tags
@@ -130,9 +139,11 @@ GET /api/eyes/all
 ### 3. Frontend Hooks
 
 #### useRoutingDecisions Hook
+
 **File**: `apps/ui/src/hooks/useRoutingDecisions.ts` (173 lines)
 
 **Hooks Provided**:
+
 ```typescript
 useRoutingDecisions({ limit, offset, sort })
   - List routing decisions with pagination
@@ -149,9 +160,11 @@ useRoutingDecision(decisionId)
 ```
 
 #### useEyeCapabilities Hook
+
 **File**: `apps/ui/src/hooks/useEyeCapabilities.ts` (127 lines)
 
 **Hooks Provided**:
+
 ```typescript
 useEyeCapabilities()
   - Get all eyes with capability tags
@@ -171,9 +184,11 @@ getEyesByCapability(eyes, tag) - Filter by tag
 ### 4. UI Components
 
 #### CapabilityMatrix Component
+
 **File**: `apps/ui/src/components/pipeline-builder/CapabilityMatrix.tsx` (294 lines)
 
 **Features**:
+
 - Eye capability cards (NOT pipeline diagram)
 - Shows: icon, name, description, capability tags
 - Click to open eye detail modal
@@ -181,6 +196,7 @@ getEyesByCapability(eyes, tag) - Filter by tag
 - Mode-specific info panels
 
 **Visual Layout**:
+
 ```
 ┌─────────────────────────────────────┐
 │  Capability Matrix                  │
@@ -192,9 +208,11 @@ getEyesByCapability(eyes, tag) - Filter by tag
 ```
 
 #### DynamicRouteVisualizer Component
+
 **File**: `apps/ui/src/components/pipeline-builder/DynamicRouteVisualizer.tsx` (195 lines)
 
 **Features**:
+
 - Shows Overseer's routing decision for a session
 - Request analysis section (type, domain, complexity)
 - Overseer reasoning panel (why eyes were chosen)
@@ -202,6 +220,7 @@ getEyesByCapability(eyes, tag) - Filter by tag
 - Execution mode indicator (sequential/parallel)
 
 **Visual Layout**:
+
 ```
 ┌─────────────────────────────────────┐
 │  Request Analysis                   │
@@ -216,9 +235,11 @@ getEyesByCapability(eyes, tag) - Filter by tag
 ```
 
 #### LiveRoutingPanel Component
+
 **File**: `apps/ui/src/components/pipeline-builder/LiveRoutingPanel.tsx` (188 lines)
 
 **Features**:
+
 - Real-time list of recent routing decisions
 - Session cards with session ID, timestamp, type
 - Selected eyes shown as icon sequence
@@ -226,6 +247,7 @@ getEyesByCapability(eyes, tag) - Filter by tag
 - Auto-refresh support (future WebSocket integration)
 
 **Visual Layout**:
+
 ```
 ┌─────────────────────────────────────┐
 │  Live Routing Decisions      [↻]   │
@@ -241,15 +263,18 @@ getEyesByCapability(eyes, tag) - Filter by tag
 ```
 
 #### PipelineModeSelector Component
+
 **File**: `apps/ui/src/components/pipeline-builder/PipelineModeSelector.tsx` (126 lines)
 
 **Features**:
+
 - Three mode cards: Dynamic, Constrained, Fixed
 - Visual selection indicator (checkmark)
 - Mode descriptions and badges
 - Detailed explanation panel for selected mode
 
 **Visual Layout**:
+
 ```
 ┌──────────────────────────────────────┐
 │  Select Routing Mode:                │
@@ -260,9 +285,11 @@ getEyesByCapability(eyes, tag) - Filter by tag
 ```
 
 #### /pipelines Page Integration
+
 **File**: `apps/ui/src/app/pipelines/page.tsx` (112 lines)
 
 **Layout**:
+
 ```
 ┌─────────────────────────────────────────────────┐
 │  Pipeline Builder                               │
@@ -281,6 +308,7 @@ getEyesByCapability(eyes, tag) - Filter by tag
 ```
 
 **State Management**:
+
 - Mode selection (dynamic/constrained/fixed)
 - Selected session ID (for visualizer)
 - Mode changes clear selected session
@@ -290,12 +318,14 @@ getEyesByCapability(eyes, tag) - Filter by tag
 ## Architecture Changes
 
 ### FROM: Fixed Pipeline View
+
 - PipelineCanvasEnhanced as primary view
 - All eyes shown in linear sequence
 - React Flow canvas with nodes and edges
 - Assumption: pipeline always runs the same way
 
 ### TO: Capability-Based Dynamic View
+
 - CapabilityMatrix as primary view (Dynamic mode)
 - Eyes shown as capability cards
 - No fixed sequence assumption
@@ -317,6 +347,7 @@ getEyesByCapability(eyes, tag) - Filter by tag
 ### Tables Used (from Phase 1-A1)
 
 **routing_decisions**:
+
 ```sql
 CREATE TABLE routing_decisions (
   id TEXT PRIMARY KEY,
@@ -330,6 +361,7 @@ CREATE TABLE routing_decisions (
 ```
 
 **eyes.capability_tags**:
+
 ```sql
 ALTER TABLE eyes ADD COLUMN capability_tags TEXT NOT NULL DEFAULT '[]';
 ```
@@ -343,11 +375,13 @@ ALTER TABLE eyes ADD COLUMN capability_tags TEXT NOT NULL DEFAULT '[]';
 ### Manual Testing Required
 
 ✅ **Backend APIs**:
+
 - [ ] GET /api/eyes/all returns capability_tags
 - [ ] GET /api/routing-decisions works (may be empty)
 - [ ] GET /api/routing-decisions/session/:id works
 
 ✅ **Frontend Components**:
+
 - [ ] CapabilityMatrix renders eye cards
 - [ ] Eye detail modal opens on click
 - [ ] Mode selector toggles correctly
@@ -355,6 +389,7 @@ ALTER TABLE eyes ADD COLUMN capability_tags TEXT NOT NULL DEFAULT '[]';
 - [ ] DynamicRouteVisualizer displays decision data
 
 ✅ **Integration**:
+
 - [ ] /pipelines page loads without errors
 - [ ] Mode switching updates content
 - [ ] Session selection shows visualizer
@@ -363,17 +398,20 @@ ALTER TABLE eyes ADD COLUMN capability_tags TEXT NOT NULL DEFAULT '[]';
 ### Test Scenarios
 
 **Scenario 1: View Capability Matrix**
+
 1. Navigate to `/pipelines`
 2. Should see: Mode selector defaulting to "Dynamic"
 3. Should see: Capability matrix with 8 eye cards
 4. Click eye card → modal opens with details
 
 **Scenario 2: View Routing Decision** (requires session data)
+
 1. In Live Routing Panel, click a session
 2. Should see: DynamicRouteVisualizer appears
 3. Should show: Request analysis, reasoning, selected eyes
 
 **Scenario 3: Switch Modes**
+
 1. Click "Constrained" mode
 2. Should see: Capability matrix + policy builder placeholder
 3. Click "Fixed" mode
@@ -432,12 +470,14 @@ apps/ui/src/
 ## User Experience Impact
 
 ### Before Phase 4
+
 - Users saw fixed pipeline diagram
 - Thought all eyes always run
 - No visibility into routing logic
 - Couldn't customize routing behavior
 
 ### After Phase 4
+
 - Users see capability-based view
 - Understand dynamic routing concept
 - Can see Overseer's decisions
@@ -497,15 +537,18 @@ apps/ui/src/
 ### For Existing Users
 
 **What Changed**:
+
 - `/pipelines` page now shows capability matrix by default
 - Old pipeline editor still available in "Fixed" mode
 - New concept: Three routing modes
 
 **User Action Required**:
+
 - None - backward compatible
 - To use old editor: Switch to "Fixed" mode
 
 **Communication**:
+
 ```
 🎉 Pipeline Builder Upgraded!
 
@@ -577,6 +620,7 @@ Your existing custom pipelines are safe in Fixed mode.
 **Key Achievement**: The `/pipelines` page now clearly communicates that Third Eye uses **dynamic routing** based on **eye capabilities**, not a fixed predetermined sequence.
 
 **Next Steps** (Optional):
+
 - Phase 4B: Enhanced features (policy builder, filtering, search)
 - Phase 4C: Template enhancements (library, analytics, import/export)
 

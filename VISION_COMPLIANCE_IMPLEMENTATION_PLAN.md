@@ -9,6 +9,7 @@
 **Timeline**: Ready for immediate release after approval
 
 **Success criteria**:
+
 - ✅ 95%+ format compliance across all providers
 - ✅ Eyes ASK questions instead of GENERATE content
 - ✅ Human interaction pause/resume mechanism implemented
@@ -33,6 +34,7 @@
 **File**: `packages/core/src/models.ts`
 
 **Tasks**:
+
 - [ ] Create `packages/core/src/models.ts` file
 - [ ] Add GROQ_MODELS constants (PRIMARY, COST_OPTIMIZED)
 - [ ] Add OPENROUTER_MODELS constants (STRUCTURED_FORMATTING, CRITICAL_REASONING, SPECIALIZED_REASONING)
@@ -45,6 +47,7 @@
 - [ ] Export all constants and types
 
 **Acceptance criteria**:
+
 - ✅ All model identifiers in SSOT module
 - ✅ TypeScript types for all constants
 - ✅ Eye-to-model mapping complete for 8 eyes × 4 providers
@@ -60,6 +63,7 @@
 **File**: `packages/providers/src/base.ts`
 
 **Tasks**:
+
 - [ ] Read current CompletionRequest interface
 - [ ] Add `tools` parameter (optional array of tool definitions)
 - [ ] Add `tool_choice` parameter (optional, controls tool selection)
@@ -73,9 +77,10 @@
 - [ ] Ensure backward compatibility (all new fields optional)
 
 **Type definitions**:
+
 ```typescript
 export interface ToolDefinition {
-  type: 'function';
+  type: "function";
   function: FunctionDefinition;
 }
 
@@ -87,7 +92,7 @@ export interface FunctionDefinition {
 
 export interface ToolCall {
   id?: string;
-  type: 'function';
+  type: "function";
   function: FunctionCall;
 }
 
@@ -99,16 +104,20 @@ export interface FunctionCall {
 export interface CompletionRequest {
   model: string;
   messages: Array<{
-    role: 'system' | 'user' | 'assistant';
+    role: "system" | "user" | "assistant";
     content: string;
   }>;
   temperature?: number;
   max_tokens?: number;
   top_p?: number;
   stop?: string[];
-  response_format?: { type: 'json_object' | 'text' };
+  response_format?: { type: "json_object" | "text" };
   tools?: ToolDefinition[]; // NEW
-  tool_choice?: 'none' | 'auto' | 'required' | { type: 'function'; function: { name: string } }; // NEW
+  tool_choice?:
+    | "none"
+    | "auto"
+    | "required"
+    | { type: "function"; function: { name: string } }; // NEW
 }
 
 export interface CompletionResponse {
@@ -116,11 +125,11 @@ export interface CompletionResponse {
   choices: Array<{
     index: number;
     message: {
-      role: 'assistant';
+      role: "assistant";
       content: string | null;
       tool_calls?: ToolCall[]; // NEW
     };
-    finish_reason: 'stop' | 'tool_calls' | 'length' | string;
+    finish_reason: "stop" | "tool_calls" | "length" | string;
   }>;
   usage?: {
     prompt_tokens: number;
@@ -131,6 +140,7 @@ export interface CompletionResponse {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Tools parameter matches OpenAI spec
 - ✅ Backward compatible (optional fields)
 - ✅ Type-safe interfaces
@@ -146,6 +156,7 @@ export interface CompletionResponse {
 **File**: `packages/providers/src/groq.ts`
 
 **Tasks**:
+
 - [ ] Read current Groq provider implementation
 - [ ] Update complete() method signature
 - [ ] Add tools parameter to request body (if provided)
@@ -160,6 +171,7 @@ export interface CompletionResponse {
 - [ ] Test with llama-3-groq-70b-tool-use model
 
 **Implementation details**:
+
 ```typescript
 async complete(request: CompletionRequest): Promise<CompletionResponse> {
   const requestBody: Record<string, unknown> = {
@@ -198,6 +210,7 @@ async complete(request: CompletionRequest): Promise<CompletionResponse> {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Sends tools and tool_choice to Groq API
 - ✅ Parses tool_calls from response
 - ✅ Handles arguments as JSON string
@@ -215,6 +228,7 @@ async complete(request: CompletionRequest): Promise<CompletionResponse> {
 **File**: `packages/providers/src/openrouter.ts`
 
 **Tasks**:
+
 - [ ] Read current OpenRouter provider implementation
 - [ ] Fix existing bug: Enable response_format (currently not sent)
 - [ ] Update complete() method signature
@@ -232,6 +246,7 @@ async complete(request: CompletionRequest): Promise<CompletionResponse> {
 **Bug fix note**: Current implementation doesn't send response_format at all (lines 94-104)
 
 **Acceptance criteria**:
+
 - ✅ Sends response_format (bug fixed)
 - ✅ Sends tools and tool_choice to OpenRouter API
 - ✅ Parses tool_calls from response
@@ -250,6 +265,7 @@ async complete(request: CompletionRequest): Promise<CompletionResponse> {
 **File**: `packages/providers/src/ollama.ts`
 
 **Tasks**:
+
 - [ ] Read current Ollama provider implementation
 - [ ] Update complete() method signature
 - [ ] Add tools parameter to request body (if provided)
@@ -267,6 +283,7 @@ async complete(request: CompletionRequest): Promise<CompletionResponse> {
 **Ollama-specific note**: Research shows Ollama's tool_calls[0].function.arguments is already parsed object, not JSON string
 
 **Acceptance criteria**:
+
 - ✅ Sends tools to Ollama API
 - ✅ Parses tool_calls from response
 - ✅ Handles arguments as either string or object
@@ -285,6 +302,7 @@ async complete(request: CompletionRequest): Promise<CompletionResponse> {
 **File**: `packages/providers/src/lmstudio.ts`
 
 **Tasks**:
+
 - [ ] Read current LM Studio provider implementation
 - [ ] Remove code that strips response_format (lines 79-86 - currently removes json_object mode)
 - [ ] Update complete() method signature
@@ -303,6 +321,7 @@ async complete(request: CompletionRequest): Promise<CompletionResponse> {
 **Bug fix note**: Current implementation explicitly strips json_object mode (see PROVIDER_API_FORMATS.md)
 
 **Acceptance criteria**:
+
 - ✅ Sends response_format (bug fixed)
 - ✅ Sends tools and tool_choice to LM Studio API
 - ✅ Parses tool_calls from response
@@ -322,6 +341,7 @@ async complete(request: CompletionRequest): Promise<CompletionResponse> {
 **File**: `packages/core/src/schemas.ts`
 
 **Tasks**:
+
 - [ ] Create `packages/core/src/schemas.ts` file
 - [ ] Define base EyeEnvelope schema (common fields)
 - [ ] Define OverseerEnvelope schema (routing-specific fields)
@@ -339,15 +359,16 @@ async complete(request: CompletionRequest): Promise<CompletionResponse> {
 - [ ] Validate schemas are JSON Schema Draft 7 compatible
 
 **Base schema structure**:
+
 ```typescript
 /**
  * SSOT Status codes for eye responses
  */
 export enum EyeStatusCode {
-  OK = 'OK',
-  ERROR = 'ERROR',
-  NEEDS_HUMAN_INPUT = 'NEEDS_HUMAN_INPUT',
-  BLOCKED = 'BLOCKED',
+  OK = "OK",
+  ERROR = "ERROR",
+  NEEDS_HUMAN_INPUT = "NEEDS_HUMAN_INPUT",
+  BLOCKED = "BLOCKED",
 }
 
 /**
@@ -376,11 +397,12 @@ interface OverseerEnvelope extends BaseEyeEnvelope {
 ```
 
 **Function calling tool definition**:
+
 ```typescript
 export function createToolDefinition(eyeName: string): ToolDefinition {
   const schema = getSchemaForEye(eyeName);
   return {
-    type: 'function',
+    type: "function",
     function: {
       name: `submit_${eyeName}_result`,
       description: `Submit ${eyeName} eye analysis result`,
@@ -391,6 +413,7 @@ export function createToolDefinition(eyeName: string): ToolDefinition {
 ```
 
 **Acceptance criteria**:
+
 - ✅ All 8 eye schemas defined
 - ✅ Schemas match current envelope structure
 - ✅ JSON Schema Draft 7 compatible
@@ -410,6 +433,7 @@ export function createToolDefinition(eyeName: string): ToolDefinition {
 **File**: `packages/core/orchestrator.ts`
 
 **Tasks**:
+
 - [ ] Read current orchestrator implementation
 - [ ] Import models from packages/core/src/models.ts
 - [ ] Import schemas from packages/core/src/schemas.ts
@@ -427,6 +451,7 @@ export function createToolDefinition(eyeName: string): ToolDefinition {
 - [ ] Update unit tests for function calling
 
 **Implementation details**:
+
 ```typescript
 import { getModelForEye } from './models';
 import { createToolDefinition } from './schemas';
@@ -475,6 +500,7 @@ async executeEye(eyeName: string, context: unknown): Promise<EyeEnvelope> {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Uses getModelForEye() for optimal model selection
 - ✅ Creates tool definition for each eye
 - ✅ Forces specific tool choice (no auto mode)
@@ -505,11 +531,13 @@ async executeEye(eyeName: string, context: unknown): Promise<EyeEnvelope> {
 ### 2.1: Implement Pause/Resume Mechanism
 
 **Files**:
+
 - `packages/core/orchestrator.ts`
 - `packages/core/types.ts`
 - `packages/db/schema.ts`
 
 **Tasks**:
+
 - [ ] Add PipelineState type (RUNNING, PAUSED, COMPLETED, ERROR)
 - [ ] Add pauseReason field to PipelineContext
 - [ ] Add pendingQuestions field to PipelineContext
@@ -531,6 +559,7 @@ async executeEye(eyeName: string, context: unknown): Promise<EyeEnvelope> {
 - [ ] Update integration tests for human interaction flow
 
 **Database schema**:
+
 ```sql
 CREATE TABLE pipeline_states (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -562,6 +591,7 @@ CREATE TABLE human_responses (
 ```
 
 **Orchestrator implementation**:
+
 ```typescript
 async executeEye(eyeName: string, context: unknown): Promise<EyeEnvelope> {
   const result = await this.callProvider(eyeName, context);
@@ -621,6 +651,7 @@ async resumePipeline(runId: string, humanResponse: unknown): Promise<EyeEnvelope
 ```
 
 **Acceptance criteria**:
+
 - ✅ Pipeline pauses when eye returns NEEDS_HUMAN_INPUT
 - ✅ Pipeline state persisted to database
 - ✅ Pending questions stored
@@ -639,11 +670,13 @@ async resumePipeline(runId: string, humanResponse: unknown): Promise<EyeEnvelope
 ### 2.2: Add NEEDS_HUMAN_INPUT Status Code Handling
 
 **Files**:
+
 - `packages/core/src/schemas.ts`
 - `packages/mcp/server.ts`
 - `packages/core/orchestrator.ts`
 
 **Tasks**:
+
 - [ ] Verify NEEDS_HUMAN_INPUT in EyeStatusCode enum (should exist from 1.7)
 - [ ] Update MCP server to recognize NEEDS_HUMAN_INPUT
 - [ ] Add formatPendingQuestions() helper in MCP server
@@ -659,6 +692,7 @@ async resumePipeline(runId: string, humanResponse: unknown): Promise<EyeEnvelope
 - [ ] Update integration tests for MCP pause/resume
 
 **MCP server implementation**:
+
 ```typescript
 // In tools/call handler
 if (result.code === EyeStatusCode.NEEDS_HUMAN_INPUT) {
@@ -700,6 +734,7 @@ if (result.code === EyeStatusCode.NEEDS_HUMAN_INPUT) {
 ```
 
 **Acceptance criteria**:
+
 - ✅ MCP recognizes NEEDS_HUMAN_INPUT status
 - ✅ MCP returns formatted questions to agent
 - ✅ MCP provides clear resume instructions
@@ -719,6 +754,7 @@ if (result.code === EyeStatusCode.NEEDS_HUMAN_INPUT) {
 **Goal**: Change personas from GENERATING content to ASKING questions and WAITING for input
 
 **Common pattern for all personas**:
+
 1. Remove examples showing content generation
 2. Add examples showing question asking
 3. Emphasize WAITING for responses
@@ -733,6 +769,7 @@ if (result.code === EyeStatusCode.NEEDS_HUMAN_INPUT) {
 #### 2.3: Rewrite Overseer Persona
 
 **Tasks**:
+
 - [ ] Read current Overseer persona (lines 46-120)
 - [ ] Remove examples showing routing decision generation
 - [ ] Add instruction: "Determine which eyes to consult, then WAIT for their analysis"
@@ -744,6 +781,7 @@ if (result.code === EyeStatusCode.NEEDS_HUMAN_INPUT) {
 - [ ] Add unit tests for Overseer persona rendering
 
 **Before**:
+
 ```typescript
 // OLD: Overseer generates routing decision
 data: {
@@ -755,6 +793,7 @@ data: {
 ```
 
 **After**:
+
 ```typescript
 // NEW: Overseer identifies required eyes and invokes them
 systemPrompt: `You are Overseer, the orchestration eye.
@@ -778,6 +817,7 @@ data: {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Persona emphasizes coordination, not decision-making
 - ✅ Examples show eye invocation
 - ✅ No routing decision in output
@@ -791,6 +831,7 @@ data: {
 #### 2.4: Rewrite Sharingan Persona (Ambiguity Detection)
 
 **Tasks**:
+
 - [ ] Read current Sharingan persona (lines 121-180)
 - [ ] Remove examples showing question generation
 - [ ] Add instruction: "Identify ambiguities, then ASK the human via agent"
@@ -803,6 +844,7 @@ data: {
 - [ ] Add unit tests for Sharingan persona rendering
 
 **Before**:
+
 ```typescript
 // OLD: Sharingan generates questions in output
 data: {
@@ -814,6 +856,7 @@ data: {
 ```
 
 **After**:
+
 ```typescript
 // NEW: Sharingan detects ambiguities and returns NEEDS_HUMAN_INPUT
 systemPrompt: `You are Sharingan, the ambiguity detection eye.
@@ -848,6 +891,7 @@ data: {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Persona emphasizes ASKING not GENERATING
 - ✅ Returns NEEDS_HUMAN_INPUT when ambiguities found
 - ✅ Questions included in response
@@ -862,6 +906,7 @@ data: {
 #### 2.5: Rewrite Kyuubi Persona (Content Structuring)
 
 **Tasks**:
+
 - [ ] Read current Kyuubi persona (lines 181-235)
 - [ ] Remove examples showing brief generation
 - [ ] Add instruction: "Wait for human responses, then refine the brief"
@@ -874,6 +919,7 @@ data: {
 - [ ] Add unit tests for Kyuubi persona rendering
 
 **Before**:
+
 ```typescript
 // OLD: Kyuubi generates the brief
 data: {
@@ -886,6 +932,7 @@ data: {
 ```
 
 **After**:
+
 ```typescript
 // NEW: Kyuubi refines based on human input
 systemPrompt: `You are Kyuubi, the content structuring eye.
@@ -917,6 +964,7 @@ data: {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Persona emphasizes REFINEMENT not CREATION
 - ✅ Examples show refinement based on human input
 - ✅ Quality scoring included
@@ -930,6 +978,7 @@ data: {
 #### 2.6: Rewrite Jōgan Persona (Intent Confirmation)
 
 **Tasks**:
+
 - [ ] Read current Jōgan persona (lines 236-290)
 - [ ] Remove examples showing automatic confirmation
 - [ ] Add instruction: "Present refined brief to human for confirmation"
@@ -942,6 +991,7 @@ data: {
 - [ ] Add unit tests for Jōgan persona rendering
 
 **Before**:
+
 ```typescript
 // OLD: Jōgan auto-confirms
 data: {
@@ -951,6 +1001,7 @@ data: {
 ```
 
 **After**:
+
 ```typescript
 // NEW: Jōgan asks human for confirmation
 systemPrompt: `You are Jōgan, the intent understanding eye.
@@ -986,6 +1037,7 @@ data: {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Persona emphasizes CONFIRMATION not AUTO-APPROVAL
 - ✅ Returns NEEDS_HUMAN_INPUT to ask for confirmation
 - ✅ Handles approval and rejection
@@ -999,6 +1051,7 @@ data: {
 #### 2.7: Rewrite Rinnegan Persona (Feasibility Analysis)
 
 **Tasks**:
+
 - [ ] Read current Rinnegan persona (lines 291-345)
 - [ ] Update instruction: "Analyze feasibility and identify constraints"
 - [ ] Add instruction: "Return NEEDS_HUMAN_INPUT if critical constraints detected"
@@ -1011,6 +1064,7 @@ data: {
 - [ ] Add unit tests for Rinnegan persona rendering
 
 **After**:
+
 ```typescript
 systemPrompt: `You are Rinnegan, the feasibility analysis eye.
 Your role: Analyze technical and practical feasibility of the request.
@@ -1040,6 +1094,7 @@ data: {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Persona emphasizes ANALYSIS
 - ✅ Returns NEEDS_HUMAN_INPUT for critical constraints
 - ✅ Constraint classification included
@@ -1052,6 +1107,7 @@ data: {
 #### 2.8: Rewrite Mangekyō Persona (Validation & Critique)
 
 **Tasks**:
+
 - [ ] Read current Mangekyō persona (lines 346-400)
 - [ ] Update instruction: "Validate brief against requirements and provide critique"
 - [ ] Add instruction: "Identify gaps without fabricating solutions"
@@ -1064,6 +1120,7 @@ data: {
 - [ ] Add unit tests for Mangekyō persona rendering
 
 **After**:
+
 ```typescript
 systemPrompt: `You are Mangekyō, the validation and critique eye.
 Your role: Validate the brief against requirements and identify gaps.
@@ -1093,6 +1150,7 @@ data: {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Persona emphasizes VALIDATION not FIXING
 - ✅ Gap detection without fabrication
 - ✅ Validation scoring included
@@ -1105,6 +1163,7 @@ data: {
 #### 2.9: Rewrite Tenseigan Persona (Quality Assurance)
 
 **Tasks**:
+
 - [ ] Read current Tenseigan persona (lines 401-455)
 - [ ] Update instruction: "Perform quality assurance and format verification"
 - [ ] Add instruction: "Check adherence to structure"
@@ -1117,6 +1176,7 @@ data: {
 - [ ] Add unit tests for Tenseigan persona rendering
 
 **After**:
+
 ```typescript
 systemPrompt: `You are Tenseigan, the quality assurance eye.
 Your role: Perform final quality assurance checks.
@@ -1143,6 +1203,7 @@ data: {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Persona emphasizes QA not IMPROVEMENT
 - ✅ Quality metrics included
 - ✅ Format compliance checking
@@ -1155,6 +1216,7 @@ data: {
 #### 2.10: Rewrite Byakugan Persona (Final Review)
 
 **Tasks**:
+
 - [ ] Read current Byakugan persona (lines 456-510)
 - [ ] Update instruction: "Perform holistic final review"
 - [ ] Add instruction: "Edge case detection and sign-off"
@@ -1167,6 +1229,7 @@ data: {
 - [ ] Add unit tests for Byakugan persona rendering
 
 **After**:
+
 ```typescript
 systemPrompt: `You are Byakugan, the final review eye.
 Your role: Perform comprehensive final review and sign-off.
@@ -1193,6 +1256,7 @@ data: {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Persona emphasizes REVIEW not MODIFICATION
 - ✅ Edge case detection included
 - ✅ Sign-off mechanism included
@@ -1207,6 +1271,7 @@ data: {
 **File**: `packages/mcp/server.ts`
 
 **Tasks**:
+
 - [ ] Read current MCP server response (lines 402-420)
 - [ ] Identify eye exposure: `history: result.results` field
 - [ ] Remove `history` field from MCP response
@@ -1219,49 +1284,64 @@ data: {
 - [ ] Validate agents cannot see eye details
 
 **Before**:
+
 ```typescript
 return {
-  content: [{
-    type: "text",
-    text: JSON.stringify({
-      status: "success",
-      code,
-      verdict,
-      summary,
-      metadata,
-      data: finalResult,
-      history: result.results, // ❌ EXPOSES ALL EYES
-    }, null, 2),
-  }],
+  content: [
+    {
+      type: "text",
+      text: JSON.stringify(
+        {
+          status: "success",
+          code,
+          verdict,
+          summary,
+          metadata,
+          data: finalResult,
+          history: result.results, // ❌ EXPOSES ALL EYES
+        },
+        null,
+        2,
+      ),
+    },
+  ],
 };
 ```
 
 **After**:
+
 ```typescript
 // Log history internally for debugging
-this.logger.debug('Eye execution history:', result.results);
+this.logger.debug("Eye execution history:", result.results);
 
 // Return only final result to agent
 return {
-  content: [{
-    type: "text",
-    text: JSON.stringify({
-      status: "success",
-      code,
-      verdict,
-      summary,
-      metadata: {
-        ...metadata,
-        // No eye details exposed
-      },
-      data: finalResult,
-      // ✅ NO HISTORY FIELD
-    }, null, 2),
-  }],
+  content: [
+    {
+      type: "text",
+      text: JSON.stringify(
+        {
+          status: "success",
+          code,
+          verdict,
+          summary,
+          metadata: {
+            ...metadata,
+            // No eye details exposed
+          },
+          data: finalResult,
+          // ✅ NO HISTORY FIELD
+        },
+        null,
+        2,
+      ),
+    },
+  ],
 };
 ```
 
 **Acceptance criteria**:
+
 - ✅ History field removed from MCP response
 - ✅ Eye details not exposed to agents
 - ✅ Internal logging preserved for debugging
@@ -1276,10 +1356,12 @@ return {
 ### 2.12: Implement Intent Confirmation Flow
 
 **Files**:
+
 - `packages/core/orchestrator.ts`
 - `packages/mcp/server.ts`
 
 **Tasks**:
+
 - [ ] Add confirmIntent() method to orchestrator
 - [ ] Update pipeline execution to include confirmation step
 - [ ] Ensure Jōgan eye returns NEEDS_HUMAN_INPUT for confirmation
@@ -1293,6 +1375,7 @@ return {
 - [ ] Validate against vision: "👁️ Jōgan: Confirming intent with human..."
 
 **Implementation**:
+
 ```typescript
 async executeIntentConfirmation(brief: unknown): Promise<IntentConfirmationResult> {
   // Jōgan returns NEEDS_HUMAN_INPUT with confirmation question
@@ -1335,6 +1418,7 @@ async handleIntentConfirmationResponse(runId: string, response: IntentResponse):
 ```
 
 **Acceptance criteria**:
+
 - ✅ Jōgan returns NEEDS_HUMAN_INPUT for confirmation
 - ✅ Pipeline pauses for human response
 - ✅ Approval continues pipeline
@@ -1359,6 +1443,7 @@ async handleIntentConfirmationResponse(runId: string, response: IntentResponse):
 ### 3.1: Test All Providers with Function Calling
 
 **Tasks**:
+
 - [ ] Create test suite for Groq provider
 - [ ] Test Groq with llama-3-groq-70b-tool-use model
 - [ ] Measure success rate over 20 requests per eye (160 total)
@@ -1386,6 +1471,7 @@ async handleIntentConfirmationResponse(runId: string, response: IntentResponse):
 - [ ] Re-test until success rate targets met
 
 **Test scenarios per eye**:
+
 1. Simple request (no ambiguity)
 2. Ambiguous request (requires clarification)
 3. Complex request (multiple eyes)
@@ -1393,6 +1479,7 @@ async handleIntentConfirmationResponse(runId: string, response: IntentResponse):
 5. Invalid request (error handling)
 
 **Acceptance criteria**:
+
 - ✅ Groq: ≥95% success rate
 - ✅ OpenRouter: ≥92% success rate
 - ✅ Ollama: ≥90% success rate
@@ -1408,6 +1495,7 @@ async handleIntentConfirmationResponse(runId: string, response: IntentResponse):
 ### 3.2: End-to-End Pipeline Testing
 
 **Tasks**:
+
 - [ ] Create E2E test: simple request (no ambiguity, no confirmation)
 - [ ] Create E2E test: ambiguous request (Sharingan asks questions)
 - [ ] Create E2E test: intent confirmation (Jōgan asks for approval)
@@ -1426,6 +1514,7 @@ async handleIntentConfirmationResponse(runId: string, response: IntentResponse):
 - [ ] Document E2E test results
 
 **Acceptance criteria**:
+
 - ✅ All E2E scenarios pass
 - ✅ Pause/resume works correctly
 - ✅ Error recovery functional
@@ -1441,6 +1530,7 @@ async handleIntentConfirmationResponse(runId: string, response: IntentResponse):
 ### 3.3: Human Interaction Testing
 
 **Tasks**:
+
 - [ ] Create test: Sharingan asks questions, human responds
 - [ ] Create test: Jōgan asks for confirmation, human approves
 - [ ] Create test: Jōgan asks for confirmation, human rejects
@@ -1455,6 +1545,7 @@ async handleIntentConfirmationResponse(runId: string, response: IntentResponse):
 - [ ] Document human interaction test results
 
 **Acceptance criteria**:
+
 - ✅ All human interaction scenarios pass
 - ✅ Questions formatted clearly for agents
 - ✅ Agents understand pause state
@@ -1470,6 +1561,7 @@ async handleIntentConfirmationResponse(runId: string, response: IntentResponse):
 ### 3.4: Success Rate Validation
 
 **Tasks**:
+
 - [ ] Compile all test results
 - [ ] Calculate provider-specific success rates
 - [ ] Calculate eye-specific success rates
@@ -1484,6 +1576,7 @@ async handleIntentConfirmationResponse(runId: string, response: IntentResponse):
 - [ ] Sign off on validation
 
 **Success rate targets**:
+
 - Groq: ≥95%
 - OpenRouter: ≥92%
 - Ollama: ≥90%
@@ -1491,6 +1584,7 @@ async handleIntentConfirmationResponse(runId: string, response: IntentResponse):
 - **Weighted average: ≥95%** ✅
 
 **Acceptance criteria**:
+
 - ✅ All provider targets met
 - ✅ Overall target ≥95% met
 - ✅ Validation report complete
@@ -1511,6 +1605,7 @@ async handleIntentConfirmationResponse(runId: string, response: IntentResponse):
 ### 4.1: Update Documentation
 
 **Tasks**:
+
 - [ ] Update README.md with new function calling approach
 - [ ] Update ARCHITECTURE.md with pause/resume mechanism
 - [ ] Update API_REFERENCE.md with NEEDS_HUMAN_INPUT status
@@ -1529,6 +1624,7 @@ async handleIntentConfirmationResponse(runId: string, response: IntentResponse):
 - [ ] Get documentation review approval
 
 **Acceptance criteria**:
+
 - ✅ All documentation updated
 - ✅ Migration guide complete
 - ✅ Examples working
@@ -1543,6 +1639,7 @@ async handleIntentConfirmationResponse(runId: string, response: IntentResponse):
 **File**: `MIGRATION_GUIDE.md`
 
 **Tasks**:
+
 - [ ] Document breaking changes
 - [ ] Document new features (function calling, pause/resume)
 - [ ] Document persona changes
@@ -1557,6 +1654,7 @@ async handleIntentConfirmationResponse(runId: string, response: IntentResponse):
 - [ ] Test migration guide with sample project
 
 **Acceptance criteria**:
+
 - ✅ Breaking changes documented
 - ✅ Migration steps clear
 - ✅ Code examples provided
@@ -1570,6 +1668,7 @@ async handleIntentConfirmationResponse(runId: string, response: IntentResponse):
 ### 4.3: Final Commit and Push
 
 **Tasks**:
+
 - [ ] Run all tests one final time
 - [ ] Validate all tests pass
 - [ ] Run linter
@@ -1590,6 +1689,7 @@ async handleIntentConfirmationResponse(runId: string, response: IntentResponse):
 - [ ] Create pull request (if required)
 
 **Commit message template**:
+
 ```
 feat(vision-compliance): achieve 100% vision compliance with 95%+ format reliability
 
@@ -1655,6 +1755,7 @@ Tests added: [count] tests
 ```
 
 **Acceptance criteria**:
+
 - ✅ All tests pass
 - ✅ Linter clean
 - ✅ Type checker clean
@@ -1675,12 +1776,14 @@ Tests added: [count] tests
 **Total tasks**: 136 checkable items
 
 **Breakdown by phase**:
+
 - Phase 1 (Foundation): 42 tasks
 - Phase 2 (Vision Alignment): 48 tasks
 - Phase 3 (Testing): 28 tasks
 - Phase 4 (Documentation): 18 tasks
 
 **Expected outcomes**:
+
 - ✅ 95%+ format compliance (93-96% actual)
 - ✅ 100% vision compliance
 - ✅ Eyes ASK not GENERATE
@@ -1698,22 +1801,27 @@ Tests added: [count] tests
 ## Risk Mitigation
 
 **Risk 1: Model availability**
+
 - Mitigation: All recommended models verified as available (2025-11-10)
 - Fallback: Alternative models documented for each provider
 
 **Risk 2: API compatibility changes**
+
 - Mitigation: Using stable OpenAI-compatible APIs
 - Fallback: Version pinning + monitoring for deprecations
 
 **Risk 3: Success rate targets not met**
+
 - Mitigation: Conservative targets (95% vs potential 98%)
 - Fallback: Hybrid approach (function calling + JSON schema per provider)
 
 **Risk 4: Database migration issues**
+
 - Mitigation: Comprehensive migration testing
 - Fallback: Rollback procedure documented
 
 **Risk 5: Breaking changes for existing users**
+
 - Mitigation: Detailed migration guide + backward compatibility where possible
 - Fallback: Support for legacy mode (1 release cycle)
 
@@ -1722,6 +1830,7 @@ Tests added: [count] tests
 ## Post-Release Monitoring
 
 **Metrics to track**:
+
 - [ ] Provider-specific success rates
 - [ ] Eye-specific success rates
 - [ ] Human interaction success rates
@@ -1734,6 +1843,7 @@ Tests added: [count] tests
 **Monitoring period**: 30 days post-release
 
 **Success criteria**:
+
 - Success rates remain ≥95%
 - No critical bugs reported
 - Human interaction flows stable

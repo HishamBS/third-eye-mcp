@@ -1,7 +1,7 @@
-import { getDb } from '@third-eye/db';
-import { getConfig } from '@third-eye/config';
-import { ProviderFactory } from '@third-eye/providers';
-import type { ProviderId } from '@third-eye/types';
+import { getDb } from "@third-eye/db";
+import { getConfig } from "@third-eye/config";
+import { ProviderFactory } from "@third-eye/providers";
+import type { ProviderId } from "@third-eye/types";
 
 interface HealthCheckResult {
   ok: boolean;
@@ -33,7 +33,7 @@ function setCache(key: string, result: unknown) {
  * Check database health by running a test query
  */
 export async function checkDatabaseHealth(): Promise<HealthCheckResult> {
-  const cached = getCached<HealthCheckResult>('db');
+  const cached = getCached<HealthCheckResult>("db");
   if (cached) return cached;
 
   const startTime = Date.now();
@@ -41,20 +41,20 @@ export async function checkDatabaseHealth(): Promise<HealthCheckResult> {
   try {
     const { sqlite } = getDb();
 
-    sqlite.query('SELECT 1').get();
+    sqlite.query("SELECT 1").get();
 
     const latency = Date.now() - startTime;
     const result = { ok: true, latency_ms: latency };
 
-    setCache('db', result);
+    setCache("db", result);
     return result;
   } catch (error) {
     const result = {
       ok: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     };
 
-    setCache('db', result);
+    setCache("db", result);
     return result;
   }
 }
@@ -62,7 +62,9 @@ export async function checkDatabaseHealth(): Promise<HealthCheckResult> {
 /**
  * Check provider health by attempting to list models
  */
-export async function checkProviderHealth(providerId: ProviderId): Promise<boolean> {
+export async function checkProviderHealth(
+  providerId: ProviderId,
+): Promise<boolean> {
   const cacheKey = `provider_${providerId}`;
   const cached = getCached<boolean>(cacheKey);
   if (cached !== null) return cached;
@@ -105,7 +107,7 @@ export async function checkAllProvidersHealth(): Promise<ProviderHealth> {
   await Promise.all(
     providers.map(async (providerId) => {
       results[providerId] = await checkProviderHealth(providerId);
-    })
+    }),
   );
 
   return results;
@@ -115,7 +117,7 @@ export async function checkAllProvidersHealth(): Promise<ProviderHealth> {
  * Get overall system health
  */
 export async function getSystemHealth(): Promise<{
-  status: 'healthy' | 'degraded' | 'down';
+  status: "healthy" | "degraded" | "down";
   database: HealthCheckResult;
   providers: ProviderHealth;
   uptime_seconds: number;
@@ -129,20 +131,21 @@ export async function getSystemHealth(): Promise<{
   ]);
 
   // Determine overall status
-  let status: 'healthy' | 'degraded' | 'down';
+  let status: "healthy" | "degraded" | "down";
 
   if (!dbHealth.ok) {
-    status = 'down';
+    status = "down";
   } else {
-    const healthyProviders = Object.values(providersHealth).filter(Boolean).length;
+    const healthyProviders =
+      Object.values(providersHealth).filter(Boolean).length;
     const totalProviders = Object.keys(providersHealth).length;
 
     if (healthyProviders === 0 && totalProviders > 0) {
-      status = 'degraded';
+      status = "degraded";
     } else if (healthyProviders < totalProviders) {
-      status = 'degraded';
+      status = "degraded";
     } else {
-      status = 'healthy';
+      status = "healthy";
     }
   }
 
@@ -150,7 +153,7 @@ export async function getSystemHealth(): Promise<{
   const uptime_seconds = Math.floor(process.uptime());
 
   // Get version from package.json or environment
-  const version = process.env.npm_package_version || '1.0.0';
+  const version = process.env.npm_package_version || "1.0.0";
 
   const { server } = getConfig();
   const host = server.host;

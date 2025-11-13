@@ -3,6 +3,7 @@
 **Goal:** Reinstate the dynamic routing pipeline, orchestration engine, and MCP bridge so agents can execute end-to-end flows with precise telemetry and resume behaviour.
 
 ## Outcomes
+
 - Auto-router generates, persists, and resumes capability plans without static pipeline lists.
 - Orchestrator runs eyes with deterministic prompts, provider overrides, guard enforcement, and retry logic.
 - Order guard tracks progress and prevents out-of-order execution.
@@ -11,6 +12,7 @@
 ## Stories
 
 ### Story 3.1 · Order Guard & Capability Progress
+
 - **Objective:** Restore `packages/core/order-guard.ts` with session-scoped plan management and progress tracking.
 - **Acceptance Criteria**
   1. `setDynamicPlan`, `validateOrder`, `recordEyeCompletion`, `getCapabilityProgress`, `serializeCapabilityProgress` implemented.
@@ -22,6 +24,7 @@
   - Vitest covering positive and negative flows; integration verifying UI timeline uses progress state.
 
 ### Story 3.2 · Orchestrator Prompt & Retry Flow
+
 - **Objective:** Rebuild `packages/core/orchestrator.ts` with clean run lifecycle.
 - **Acceptance Criteria**
   1. `runEye` constructs prompt via renderer, resolves provider, executes call with deterministic settings.
@@ -35,6 +38,7 @@
   - Unit tests mocking provider responses (success, invalid JSON, guard failure).
 
 ### Story 3.3 · Auto Router Execute & Resume
+
 - **Objective:** Implement `executeFlow` and `resumeFlow` with pause handling and session persistence.
 - **Acceptance Criteria**
   1. `executeFlow` creates session, generates capability plan, runs pipeline until completion or pause; returns structured result (status, code, summary, metadata, capabilityPlan, clarifications, history).
@@ -47,6 +51,7 @@
   - Integration tests using mocked providers to simulate pause/resume; scenario harness verifying real runs.
 
 ### Story 3.4 · MCP Server & Webhook
+
 - **Objective:** Restore `packages/mcp/server.ts` to expose single tool and integrate with auto-router.
 - **Acceptance Criteria**
   1. `resources/list` not implemented; `tools/list` returns only `third_eye_overseer` with JSON schema describing inputs.
@@ -59,6 +64,7 @@
   - Manual run + scenario harness; ensure Warp/Cursor integrate without manual configuration.
 
 ### Story 3.5 · Provider Management & Secrets
+
 - **Objective:** Recreate provider registry and encryption for API keys.
 - **Acceptance Criteria**
   1. Config UI + server endpoints read/write provider settings (provider, model, temperature, base URL, API key).
@@ -71,15 +77,18 @@
   - Unit tests for encryption helpers; manual validation with LM Studio + Groq.
 
 ## Dependencies
+
 - Epics 01 & 02 (constants, personas, clarifications) provide inputs.
 
 ## Risks & Mitigations
+
 - **Risk:** Provider returns non-JSON even with response-format.
-  - *Mitigation:* Implement robust parsing, self-checks, optional fallback to stricter model.
+  - _Mitigation:_ Implement robust parsing, self-checks, optional fallback to stricter model.
 - **Risk:** Resume logic accidentally replays guidance eyes.
-  - *Mitigation:* Persist progress with index pointer; add integration tests covering resume.
+  - _Mitigation:_ Persist progress with index pointer; add integration tests covering resume.
 
 ## Acceptance Checklist
+
 - [ ] Auto-router executes + resumes full capability plan.
 - [ ] Orchestrator retries produce compliant envelopes without heuristics.
 - [ ] Order guard timeline aligns with UI.

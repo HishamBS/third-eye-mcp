@@ -1,12 +1,16 @@
-'use client';
+"use client";
 
-import { memo } from 'react';
-import { Handle, Position, type NodeProps } from 'reactflow';
-import { EyeIcon, getEyeColor } from '@/components/EyeIcon';
-import type { EyeStage } from './constants';
-import type { EyeName } from '@third-eye/types';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
-import { ANIMATION_DURATION } from '@/constants/timing';
+import { memo } from "react";
+import { Handle, Position, type NodeProps } from "reactflow";
+import { EyeIcon, getEyeColor } from "@/components/EyeIcon";
+import type { EyeStage } from "./constants";
+import type { EyeName } from "@third-eye/types";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
+import { ANIMATION_DURATION } from "@/constants/timing";
 
 /**
  * Eye Node Data Structure
@@ -30,15 +34,25 @@ export interface EyeNodeData {
  * - Input/Output handles
  * - Icon, name, badge, stage display
  * - Expandable capabilities (on selected)
- * 
+ *
  * Per SSOT: All eye metadata (displayName, stage, capabilities) must come from database
  */
-function EyeNodeComponent({ data, selected, dragging }: NodeProps<EyeNodeData>) {
-  const { eyeId, capabilities = [], stage: dataStage, displayName: dataDisplayName, iconSvg } = data;
+function EyeNodeComponent({
+  data,
+  selected,
+  dragging,
+}: NodeProps<EyeNodeData>) {
+  const {
+    eyeId,
+    capabilities = [],
+    stage: dataStage,
+    displayName: dataDisplayName,
+    iconSvg,
+  } = data;
 
   // Use provided data from database, fallback to eyeId if not provided
   const displayName = dataDisplayName || eyeId;
-  const stage = dataStage || 'GUIDANCE'; // Default fallback - should always be provided from DB
+  const stage = dataStage || "GUIDANCE"; // Default fallback - should always be provided from DB
 
   // Get Eye-specific color from theme SSOT
   const eyeColor = getEyeColor(eyeId);
@@ -46,16 +60,16 @@ function EyeNodeComponent({ data, selected, dragging }: NodeProps<EyeNodeData>) 
   // Stage color classes (Tailwind)
   const getStageColorClass = (s: EyeStage): string => {
     switch (s) {
-      case 'GUIDANCE':
-        return '${STATUS_TEXT_COLORS.info}';
-      case 'VALIDATION':
-        return '${STATUS_TEXT_COLORS.success}';
-      case 'ROUTER':
-        return 'text-brand-primary';
-      case 'BOTH':
-        return 'text-brand-accent';
+      case "GUIDANCE":
+        return "${STATUS_TEXT_COLORS.info}";
+      case "VALIDATION":
+        return "${STATUS_TEXT_COLORS.success}";
+      case "ROUTER":
+        return "text-brand-primary";
+      case "BOTH":
+        return "text-brand-accent";
       default:
-        return 'text-semantic-muted';
+        return "text-semantic-muted";
     }
   };
 
@@ -64,8 +78,8 @@ function EyeNodeComponent({ data, selected, dragging }: NodeProps<EyeNodeData>) 
       className={`
         relative min-w-[180px] rounded-lg border-2 bg-brand-paper p-4
         transition-all ${ANIMATION_DURATION.FAST} ease-in-out
-        ${selected ? 'border-dashed shadow-2xl' : 'border-solid shadow-lg'}
-        ${dragging ? 'cursor-grabbing opacity-80' : 'cursor-grab opacity-100'}
+        ${selected ? "border-dashed shadow-2xl" : "border-solid shadow-lg"}
+        ${dragging ? "cursor-grabbing opacity-80" : "cursor-grab opacity-100"}
       `}
       style={{ borderColor: eyeColor }}
     >
@@ -88,7 +102,9 @@ function EyeNodeComponent({ data, selected, dragging }: NodeProps<EyeNodeData>) 
       </div>
 
       {/* Stage Badge */}
-      <div className={`text-center text-xs uppercase tracking-wider font-medium mb-1 ${getStageColorClass(stage)}`}>
+      <div
+        className={`text-center text-xs uppercase tracking-wider font-medium mb-1 ${getStageColorClass(stage)}`}
+      >
         {stage}
       </div>
 
@@ -121,4 +137,4 @@ function EyeNodeComponent({ data, selected, dragging }: NodeProps<EyeNodeData>) 
  * Memoized Eye Node (Performance optimization per R04)
  */
 export const EyeNode = memo(EyeNodeComponent);
-EyeNode.displayName = 'EyeNode';
+EyeNode.displayName = "EyeNode";

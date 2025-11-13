@@ -76,19 +76,19 @@ export const ANIMATION_DURATION = {
    * Fast animations (200ms)
    * Use for: quick interactions like hover, focus, button presses
    */
-  FAST: 'duration-200',
+  FAST: "duration-200",
 
   /**
    * Normal animations (300ms)
    * Use for: standard transitions, modal entrances, tab switches
    */
-  NORMAL: 'duration-300',
+  NORMAL: "duration-300",
 
   /**
    * Slow animations (500ms)
    * Use for: smooth, noticeable changes like page transitions, complex transforms
    */
-  SLOW: 'duration-500',
+  SLOW: "duration-500",
 } as const;
 
 /**

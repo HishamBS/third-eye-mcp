@@ -1,42 +1,53 @@
 #!/usr/bin/env bun
 
-import { spawn, exec, execSync, ChildProcess } from 'child_process';
-import { resolve } from 'path';
-import { existsSync, mkdirSync, writeFileSync, readFileSync, rmSync, appendFileSync, readdirSync, statSync, renameSync } from 'fs';
-import { homedir } from 'os';
-import { select, input, confirm } from '@inquirer/prompts';
-import ora, { Ora } from 'ora';
-import kleur from 'kleur';
-import { CLI_BIN, CLI_EXEC, TOOL_NAME, DATA_DIRECTORY } from '@third-eye/types';
+import { spawn, exec, execSync, ChildProcess } from "child_process";
+import { resolve } from "path";
+import {
+  existsSync,
+  mkdirSync,
+  writeFileSync,
+  readFileSync,
+  rmSync,
+  appendFileSync,
+  readdirSync,
+  statSync,
+  renameSync,
+} from "fs";
+import { homedir } from "os";
+import { select, input, confirm } from "@inquirer/prompts";
+import ora, { Ora } from "ora";
+import kleur from "kleur";
+import { CLI_BIN, CLI_EXEC, TOOL_NAME, DATA_DIRECTORY } from "@third-eye/types";
 
-const VERSION = process.env.npm_package_version || JSON.parse(
-  readFileSync(resolve(import.meta.dir, '../package.json'), 'utf-8')
-).version;
+const VERSION =
+  process.env.npm_package_version ||
+  JSON.parse(readFileSync(resolve(import.meta.dir, "../package.json"), "utf-8"))
+    .version;
 const SERVER_PORT = process.env.PORT ? parseInt(process.env.PORT) : 7070;
 const UI_PORT = process.env.UI_PORT ? parseInt(process.env.UI_PORT) : 3300;
 
 const THIRD_EYE_DIR = resolve(homedir(), DATA_DIRECTORY);
-const PIDS_DIR = resolve(THIRD_EYE_DIR, 'pids');
-const LOGS_DIR = resolve(THIRD_EYE_DIR, 'logs');
-const SERVER_PID_FILE = resolve(PIDS_DIR, 'server.pid');
-const UI_PID_FILE = resolve(PIDS_DIR, 'ui.pid');
-const SERVER_LOG_FILE = resolve(LOGS_DIR, 'server.log');
-const UI_LOG_FILE = resolve(LOGS_DIR, 'ui.log');
-const BUILD_LOG_FILE = resolve(LOGS_DIR, 'build.log');
-const RELEASE_HISTORY_FILE = resolve(THIRD_EYE_DIR, 'release-history.json');
+const PIDS_DIR = resolve(THIRD_EYE_DIR, "pids");
+const LOGS_DIR = resolve(THIRD_EYE_DIR, "logs");
+const SERVER_PID_FILE = resolve(PIDS_DIR, "server.pid");
+const UI_PID_FILE = resolve(PIDS_DIR, "ui.pid");
+const SERVER_LOG_FILE = resolve(LOGS_DIR, "server.log");
+const UI_LOG_FILE = resolve(LOGS_DIR, "ui.log");
+const BUILD_LOG_FILE = resolve(LOGS_DIR, "build.log");
+const RELEASE_HISTORY_FILE = resolve(THIRD_EYE_DIR, "release-history.json");
 
 // Cleanup patterns for stale source artifacts (R13: SSOT for cleanup logic)
 const CLEANUP_PATTERNS = {
-  SOURCE_JS: ['**/*.js', '!*.config.js'],
-  SOURCE_MAPS: ['**/*.js.map', '**/*.d.ts.map'],
-  TYPE_DEFS: ['**/*.d.ts'],
-  BUILD_INFO: ['*.tsbuildinfo']
+  SOURCE_JS: ["**/*.js", "!*.config.js"],
+  SOURCE_MAPS: ["**/*.js.map", "**/*.d.ts.map"],
+  TYPE_DEFS: ["**/*.d.ts"],
+  BUILD_INFO: ["*.tsbuildinfo"],
 } as const;
 
 const CLEANUP_DIRS = [
-  'packages/*/src',
-  'apps/ui/src',
-  'apps/server/src'
+  "packages/*/src",
+  "apps/ui/src",
+  "apps/server/src",
 ] as const;
 
 interface CliArgs {
@@ -56,14 +67,14 @@ interface CliArgs {
 function showHelp() {
   console.log(`
 ${kleur.bold().magenta(`🧿 Third Eye MCP v${VERSION}`)}
-${kleur.gray('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')}
-${kleur.white('Local-first AI orchestration layer for multi-provider LLM workflows')}
+${kleur.gray("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")}
+${kleur.white("Local-first AI orchestration layer for multi-provider LLM workflows")}
 
-${kleur.cyan('USAGE:')}
+${kleur.cyan("USAGE:")}
   ${CLI_EXEC} <command> [options]
-  ${CLI_BIN} <command> [options]   ${kleur.gray('(after global install)')}
+  ${CLI_BIN} <command> [options]   ${kleur.gray("(after global install)")}
 
-${kleur.cyan('COMMANDS:')}
+${kleur.cyan("COMMANDS:")}
   up              Start services (detached by default)
   stop            Stop all services gracefully
   restart         Restart all services
@@ -75,7 +86,7 @@ ${kleur.cyan('COMMANDS:')}
   release         Interactive release assistant
   release:ship    Run full release pipeline (version → tests → publish)
 
-${kleur.cyan('OPTIONS:')}
+${kleur.cyan("OPTIONS:")}
   --foreground    Run in foreground with live output
   --verbose       Show detailed output
   --quiet         Minimal output
@@ -87,7 +98,7 @@ ${kleur.cyan('OPTIONS:')}
   --quick         Skip updates and stale checks (just start)
   --nuclear       Full clean (remove node_modules, reinstall)
 
-${kleur.cyan('EXAMPLES:')}
+${kleur.cyan("EXAMPLES:")}
   ${CLI_EXEC} up
   ${CLI_EXEC} up --foreground --verbose
   ${CLI_EXEC} up --no-ui --port 8080
@@ -99,49 +110,49 @@ ${kleur.cyan('EXAMPLES:')}
   ${CLI_EXEC} restart
   ${CLI_EXEC} release:ship
 
-For documentation: ${kleur.underline('https://github.com/third-eye-mcp')}
+For documentation: ${kleur.underline("https://github.com/third-eye-mcp")}
 `);
 }
 
 function parseArgs(): CliArgs {
   const args = process.argv.slice(2);
-  const parsed: CliArgs = { command: args[0] || 'help' };
+  const parsed: CliArgs = { command: args[0] || "help" };
 
   for (let i = 1; i < args.length; i++) {
     const arg = args[i];
     switch (arg) {
-      case '--foreground':
-      case '-f':
+      case "--foreground":
+      case "-f":
         parsed.foreground = true;
         break;
-      case '--verbose':
-      case '-v':
+      case "--verbose":
+      case "-v":
         parsed.verbose = true;
         break;
-      case '--quiet':
-      case '-q':
+      case "--quiet":
+      case "-q":
         parsed.quiet = true;
         break;
-      case '--no-ui':
+      case "--no-ui":
         parsed.noUi = true;
         break;
-      case '--port':
+      case "--port":
         parsed.port = parseInt(args[++i]);
         break;
-      case '--ui-port':
+      case "--ui-port":
         parsed.uiPort = parseInt(args[++i]);
         break;
-      case '--tail':
-      case '-t':
+      case "--tail":
+      case "-t":
         parsed.tail = true;
         break;
-      case '--skip-update':
+      case "--skip-update":
         parsed.skipUpdate = true;
         break;
-      case '--nuclear':
+      case "--nuclear":
         parsed.nuclear = true;
         break;
-      case '--quick':
+      case "--quick":
         parsed.quick = true;
         break;
     }
@@ -152,7 +163,12 @@ function parseArgs(): CliArgs {
 
 function commandExists(command: string): boolean {
   try {
-    execSync(process.platform === 'win32' ? `where ${command}` : `command -v ${command}`, { stdio: 'ignore' });
+    execSync(
+      process.platform === "win32"
+        ? `where ${command}`
+        : `command -v ${command}`,
+      { stdio: "ignore" },
+    );
     return true;
   } catch {
     return false;
@@ -160,7 +176,7 @@ function commandExists(command: string): boolean {
 }
 
 function ensureDirectories() {
-  [THIRD_EYE_DIR, PIDS_DIR, LOGS_DIR].forEach(dir => {
+  [THIRD_EYE_DIR, PIDS_DIR, LOGS_DIR].forEach((dir) => {
     if (!existsSync(dir)) {
       mkdirSync(dir, { recursive: true });
     }
@@ -175,7 +191,13 @@ function hasNodeModules(path: string): boolean {
   }
 }
 
-function runInstallCommand(command: string, args: string[], cwd: string, label: string, verbose: boolean): Promise<void> {
+function runInstallCommand(
+  command: string,
+  args: string[],
+  cwd: string,
+  label: string,
+  verbose: boolean,
+): Promise<void> {
   return new Promise((resolve, reject) => {
     if (verbose) {
       console.log(`📦 ${label}`);
@@ -185,39 +207,43 @@ function runInstallCommand(command: string, args: string[], cwd: string, label: 
 
     const child = spawn(command, args, {
       cwd,
-      stdio: verbose ? 'inherit' : 'pipe',
+      stdio: verbose ? "inherit" : "pipe",
     });
 
-    let output = '';
+    let output = "";
     if (!verbose) {
-      child.stdout?.on('data', (chunk) => {
+      child.stdout?.on("data", (chunk) => {
         output += chunk.toString();
       });
-      child.stderr?.on('data', (chunk) => {
+      child.stderr?.on("data", (chunk) => {
         output += chunk.toString();
       });
     }
 
-    child.on('error', (error) => {
+    child.on("error", (error) => {
       reject(error);
     });
 
-    child.on('close', (code) => {
+    child.on("close", (code) => {
       if (code === 0) {
         if (!verbose) {
-          console.log('      ✓ done');
+          console.log("      ✓ done");
         }
         resolve();
       } else {
         if (!verbose && output.trim().length > 0) {
           console.error(output.trim());
         }
-        const nodeModulesPath = resolve(cwd, 'node_modules');
+        const nodeModulesPath = resolve(cwd, "node_modules");
         if (hasNodeModules(nodeModulesPath)) {
-          console.warn(`⚠️  ${command} ${args.join(' ')} exited with code ${code}, but dependencies appear to be installed.`);
+          console.warn(
+            `⚠️  ${command} ${args.join(" ")} exited with code ${code}, but dependencies appear to be installed.`,
+          );
           resolve();
         } else {
-          reject(new Error(`${command} ${args.join(' ')} exited with code ${code}`));
+          reject(
+            new Error(`${command} ${args.join(" ")} exited with code ${code}`),
+          );
         }
       }
     });
@@ -226,32 +252,45 @@ function runInstallCommand(command: string, args: string[], cwd: string, label: 
 
 async function ensureDependencies(verbose: boolean) {
   const projectRoot = getProjectRoot();
-  const rootNodeModules = resolve(projectRoot, 'node_modules');
-  const uiNodeModules = resolve(projectRoot, 'apps/ui/node_modules');
+  const rootNodeModules = resolve(projectRoot, "node_modules");
+  const uiNodeModules = resolve(projectRoot, "apps/ui/node_modules");
 
   const needsRootInstall = !hasNodeModules(rootNodeModules);
   if (needsRootInstall) {
-    await installWithFallback(projectRoot, 'root dependencies', verbose);
+    await installWithFallback(projectRoot, "root dependencies", verbose);
   } else if (verbose) {
-    console.log('📦 Root dependencies already installed');
+    console.log("📦 Root dependencies already installed");
   }
 
   const needsUiInstall = !hasNodeModules(uiNodeModules);
   if (needsUiInstall) {
-    await installWithFallback(resolve(projectRoot, 'apps/ui'), 'UI dependencies', verbose);
+    await installWithFallback(
+      resolve(projectRoot, "apps/ui"),
+      "UI dependencies",
+      verbose,
+    );
   } else if (verbose) {
-    console.log('📦 UI dependencies already installed');
+    console.log("📦 UI dependencies already installed");
   }
 }
 
-async function installWithFallback(cwd: string, label: string, verbose: boolean) {
-  const strategies: Array<{ cmd: string; args: string[]; display: string }> = [];
+async function installWithFallback(
+  cwd: string,
+  label: string,
+  verbose: boolean,
+) {
+  const strategies: Array<{ cmd: string; args: string[]; display: string }> =
+    [];
 
-  if (commandExists('bun')) strategies.push({ cmd: 'bun', args: ['install'], display: 'bun install' });
-  if (commandExists('npm')) strategies.push({ cmd: 'npm', args: ['install'], display: 'npm install' });
+  if (commandExists("bun"))
+    strategies.push({ cmd: "bun", args: ["install"], display: "bun install" });
+  if (commandExists("npm"))
+    strategies.push({ cmd: "npm", args: ["install"], display: "npm install" });
 
   if (strategies.length === 0) {
-    throw new Error('No package manager found (bun/npm). Install bun for the best experience.');
+    throw new Error(
+      "No package manager found (bun/npm). Install bun for the best experience.",
+    );
   }
 
   const labelPrefix = `Installing ${label}`;
@@ -259,9 +298,15 @@ async function installWithFallback(cwd: string, label: string, verbose: boolean)
 
   for (const strategy of strategies) {
     try {
-      await runInstallCommand(strategy.cmd, strategy.args, cwd, `${labelPrefix} (${strategy.display})...`, verbose);
+      await runInstallCommand(
+        strategy.cmd,
+        strategy.args,
+        cwd,
+        `${labelPrefix} (${strategy.display})...`,
+        verbose,
+      );
       // Verify install succeeded by checking node_modules
-      const nodeModulesPath = resolve(cwd, 'node_modules');
+      const nodeModulesPath = resolve(cwd, "node_modules");
       if (hasNodeModules(nodeModulesPath)) {
         return;
       }
@@ -280,10 +325,14 @@ async function prepareDatabase(verbose: boolean) {
   const start = Date.now();
 
   try {
-    const [{ getDb, getDbPath, personas, mcpIntegrations, schema }, { count }, { seedDefaults }] = await Promise.all([
-      import('@third-eye/db'),
-      import('drizzle-orm'),
-      import('@third-eye/db/defaults')
+    const [
+      { getDb, getDbPath, personas, mcpIntegrations, schema },
+      { count },
+      { seedDefaults },
+    ] = await Promise.all([
+      import("@third-eye/db"),
+      import("drizzle-orm"),
+      import("@third-eye/db/defaults"),
     ]);
 
     // Clean up stale WAL files before database initialization
@@ -291,22 +340,22 @@ async function prepareDatabase(verbose: boolean) {
     const dbPath = getDbPath();
     const walFile = `${dbPath}-wal`;
     const shmFile = `${dbPath}-shm`;
-    
+
     // Close any existing database connection first to release file locks
     try {
-      const { closeDb } = await import('@third-eye/db');
+      const { closeDb } = await import("@third-eye/db");
       closeDb();
     } catch (err) {
       // Ignore if closeDb doesn't exist or fails
     }
-    
+
     // Clean up WAL/SHM files if database doesn't exist OR if they're stale
     // These files can lock the directory even when the DB file is missing
     // Also check for stale WAL files when DB exists (they may be corrupted)
     const dbExists = existsSync(dbPath);
     const walExists = existsSync(walFile);
     const shmExists = existsSync(shmFile);
-    
+
     if (!dbExists) {
       // Database doesn't exist - clean up orphaned WAL files
       if (walExists) {
@@ -317,11 +366,13 @@ async function prepareDatabase(verbose: boolean) {
           }
         } catch (err) {
           if (verbose) {
-            console.log(`   ⚠️  Could not remove WAL file (may be locked): ${err instanceof Error ? err.message : String(err)}`);
+            console.log(
+              `   ⚠️  Could not remove WAL file (may be locked): ${err instanceof Error ? err.message : String(err)}`,
+            );
           }
         }
       }
-      
+
       if (shmExists) {
         try {
           rmSync(shmFile, { force: true });
@@ -330,7 +381,9 @@ async function prepareDatabase(verbose: boolean) {
           }
         } catch (err) {
           if (verbose) {
-            console.log(`   ⚠️  Could not remove SHM file (may be locked): ${err instanceof Error ? err.message : String(err)}`);
+            console.log(
+              `   ⚠️  Could not remove SHM file (may be locked): ${err instanceof Error ? err.message : String(err)}`,
+            );
           }
         }
       }
@@ -340,7 +393,7 @@ async function prepareDatabase(verbose: boolean) {
       try {
         const dbStats = statSync(dbPath);
         let shouldClean = false;
-        
+
         if (walExists) {
           const walStats = statSync(walFile);
           // Clean if WAL is empty (0 bytes) or older than DB (indicates stale state)
@@ -348,7 +401,7 @@ async function prepareDatabase(verbose: boolean) {
             shouldClean = true;
           }
         }
-        
+
         if (shmExists) {
           const shmStats = statSync(shmFile);
           // Clean if SHM is older than DB (indicates stale state)
@@ -356,7 +409,7 @@ async function prepareDatabase(verbose: boolean) {
             shouldClean = true;
           }
         }
-        
+
         if (shouldClean) {
           // Actively remove stale/corrupted WAL files before database access
           // This prevents disk I/O errors during PRAGMA journal_mode = WAL
@@ -368,11 +421,13 @@ async function prepareDatabase(verbose: boolean) {
               }
             } catch (err) {
               if (verbose) {
-                console.warn(`   ⚠️  Could not remove WAL file: ${err instanceof Error ? err.message : String(err)}`);
+                console.warn(
+                  `   ⚠️  Could not remove WAL file: ${err instanceof Error ? err.message : String(err)}`,
+                );
               }
             }
           }
-          
+
           if (shmExists) {
             try {
               rmSync(shmFile, { force: true });
@@ -381,7 +436,9 @@ async function prepareDatabase(verbose: boolean) {
               }
             } catch (err) {
               if (verbose) {
-                console.warn(`   ⚠️  Could not remove SHM file: ${err instanceof Error ? err.message : String(err)}`);
+                console.warn(
+                  `   ⚠️  Could not remove SHM file: ${err instanceof Error ? err.message : String(err)}`,
+                );
               }
             }
           }
@@ -392,7 +449,9 @@ async function prepareDatabase(verbose: boolean) {
     }
 
     const { db } = getDb();
-    const scopedLog = verbose ? (message: string) => console.log(`   ${message}`) : () => {};
+    const scopedLog = verbose
+      ? (message: string) => console.log(`   ${message}`)
+      : () => {};
     const report = await seedDefaults({ log: scopedLog });
 
     const personaCounts = await db
@@ -409,15 +468,24 @@ async function prepareDatabase(verbose: boolean) {
 
     if (verbose) {
       const duration = ((Date.now() - start) / 1000).toFixed(1);
-      console.log('\n🗄  Database ready');
+      console.log("\n🗄  Database ready");
       console.log(`   Path: ${dbPath}`);
-      console.log(`   Personas: ${report.personas ? 'seeded defaults' : personaCount}`);
-      console.log(`   Blueprints: ${report.blueprints ? 'seeded' : 'already exists'}`);
-      console.log(`   Integrations: ${report.integrations ? 'seeded defaults' : integrationCount}`);
+      console.log(
+        `   Personas: ${report.personas ? "seeded defaults" : personaCount}`,
+      );
+      console.log(
+        `   Blueprints: ${report.blueprints ? "seeded" : "already exists"}`,
+      );
+      console.log(
+        `   Integrations: ${report.integrations ? "seeded defaults" : integrationCount}`,
+      );
       console.log(`   Prep time: ${duration}s\n`);
     }
   } catch (error) {
-    console.error('❌ Failed to prepare database:', error instanceof Error ? error.message : error);
+    console.error(
+      "❌ Failed to prepare database:",
+      error instanceof Error ? error.message : error,
+    );
     process.exit(1);
   }
 }
@@ -430,7 +498,7 @@ function log(message: string, verbose: boolean = false) {
 
 function checkEnvironment() {
   if (!parseArgs().quiet) {
-    log('🔍 Pre-flight checks...');
+    log("🔍 Pre-flight checks...");
   }
 
   // Check Bun/Node version
@@ -439,7 +507,7 @@ function checkEnvironment() {
     log(`   ✓ Bun ${bunVersion}`, true);
   } else {
     const nodeVersion = process.version;
-    const majorVersion = parseInt(nodeVersion.slice(1).split('.')[0]);
+    const majorVersion = parseInt(nodeVersion.slice(1).split(".")[0]);
     if (majorVersion < 18) {
       console.error(`   ✗ Node.js 18+ required (found ${nodeVersion})`);
       process.exit(1);
@@ -449,46 +517,52 @@ function checkEnvironment() {
 
   // Check Git (required for bun install with git dependencies)
   try {
-    execSync('git --version', { stdio: 'pipe' });
-    log('   ✓ Git installed', true);
+    execSync("git --version", { stdio: "pipe" });
+    log("   ✓ Git installed", true);
   } catch {
-    console.error('❌ Git not installed');
-    console.error('   Git is required for package installation.');
-    console.error('   Install from: https://git-scm.com/downloads');
+    console.error("❌ Git not installed");
+    console.error("   Git is required for package installation.");
+    console.error("   Install from: https://git-scm.com/downloads");
     process.exit(1);
   }
 
   // Validate lock file (detect corruption or merge conflicts)
   const projectRoot = getProjectRoot();
-  const lockPath = resolve(projectRoot, 'bun.lock');
+  const lockPath = resolve(projectRoot, "bun.lock");
   if (existsSync(lockPath)) {
     try {
-      const lockContent = readFileSync(lockPath, 'utf-8');
+      const lockContent = readFileSync(lockPath, "utf-8");
 
       // Check for git merge conflict markers
-      if (lockContent.includes('<<<<<<< ') || lockContent.includes('>>>>>>> ') || lockContent.includes('======= ')) {
-        console.error('❌ bun.lock has merge conflicts');
-        console.error('   Fix: rm bun.lock && bun install');
+      if (
+        lockContent.includes("<<<<<<< ") ||
+        lockContent.includes(">>>>>>> ") ||
+        lockContent.includes("======= ")
+      ) {
+        console.error("❌ bun.lock has merge conflicts");
+        console.error("   Fix: rm bun.lock && bun install");
         process.exit(1);
       }
 
       // Try to parse as binary/text (bun.lock is binary but we check for obvious corruption)
       // If it's suspiciously small or has NULL bytes in wrong places, it's likely corrupted
       if (lockContent.length < 10) {
-        throw new Error('Lock file too small');
+        throw new Error("Lock file too small");
       }
 
-      log('   ✓ Lock file valid', true);
+      log("   ✓ Lock file valid", true);
     } catch (error) {
-      console.error(`❌ bun.lock corrupted: ${error instanceof Error ? error.message : String(error)}`);
-      console.error('   Fixing: rm bun.lock && bun install');
+      console.error(
+        `❌ bun.lock corrupted: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      console.error("   Fixing: rm bun.lock && bun install");
 
       // Auto-fix by removing and reinstalling
       try {
         rmSync(lockPath);
-        console.log('   Removed corrupted lock file, reinstalling...');
-        execSync('bun install', { cwd: projectRoot, stdio: 'inherit' });
-        log('   ✓ Lock file recreated', true);
+        console.log("   Removed corrupted lock file, reinstalling...");
+        execSync("bun install", { cwd: projectRoot, stdio: "inherit" });
+        log("   ✓ Lock file recreated", true);
       } catch (fixError) {
         console.error(`   ✗ Auto-fix failed: ${fixError}`);
         process.exit(1);
@@ -498,10 +572,12 @@ function checkEnvironment() {
 
   // Check available memory (warn if < 2GB free)
   try {
-    const os = require('os');
-    const freeMemGB = os.freemem() / (1024 ** 3);
+    const os = require("os");
+    const freeMemGB = os.freemem() / 1024 ** 3;
     if (freeMemGB < 2) {
-      console.warn(`⚠️  Low memory: ${freeMemGB.toFixed(1)}GB free (recommend 2GB+)`);
+      console.warn(
+        `⚠️  Low memory: ${freeMemGB.toFixed(1)}GB free (recommend 2GB+)`,
+      );
     } else {
       log(`   ✓ Memory: ${freeMemGB.toFixed(1)}GB free`, true);
     }
@@ -510,7 +586,7 @@ function checkEnvironment() {
   }
 
   ensureDirectories();
-  log('   ✓ Database directory ready', true);
+  log("   ✓ Database directory ready", true);
 
   // Check ports availability (cross-platform)
   const portsToCheck = [SERVER_PORT];
@@ -518,13 +594,13 @@ function checkEnvironment() {
 
   for (const port of portsToCheck) {
     try {
-      if (process.platform === 'win32') {
+      if (process.platform === "win32") {
         // Windows: use netstat
-        execSync(`netstat -ano | findstr :${port}`, { stdio: 'ignore' });
+        execSync(`netstat -ano | findstr :${port}`, { stdio: "ignore" });
         log(`   ⚠ Port ${port} in use`, true);
       } else {
         // Unix: use lsof
-        execSync(`lsof -ti:${port}`, { stdio: 'ignore' });
+        execSync(`lsof -ti:${port}`, { stdio: "ignore" });
         log(`   ⚠ Port ${port} in use`, true);
       }
     } catch {
@@ -533,23 +609,26 @@ function checkEnvironment() {
   }
 
   // Check disk space (Unix only, non-critical)
-  if (process.platform !== 'win32') {
+  if (process.platform !== "win32") {
     try {
-      const stats = execSync('df -h . | tail -1').toString();
+      const stats = execSync("df -h . | tail -1").toString();
       const available = stats.split(/\s+/)[3];
       log(`   ✓ Disk space: ${available} free`, true);
     } catch {}
   }
 }
 
-async function killProcessesByPattern(pattern: string, description: string): Promise<number> {
+async function killProcessesByPattern(
+  pattern: string,
+  description: string,
+): Promise<number> {
   let killed = 0;
 
-  if (process.platform === 'win32') {
+  if (process.platform === "win32") {
     // Windows: use tasklist and taskkill
     try {
-      const output = execSync('tasklist /FO CSV /NH', { encoding: 'utf-8' });
-      const lines = output.trim().split('\n');
+      const output = execSync("tasklist /FO CSV /NH", { encoding: "utf-8" });
+      const lines = output.trim().split("\n");
 
       for (const line of lines) {
         // CSV format: "ImageName","PID","SessionName","Session#","MemUsage"
@@ -559,12 +638,16 @@ async function killProcessesByPattern(pattern: string, description: string): Pro
           const pid = parseInt(pidStr);
 
           // Check if process name matches pattern
-          if (imageName.toLowerCase().includes(pattern.toLowerCase()) && !isNaN(pid) && pid > 0) {
+          if (
+            imageName.toLowerCase().includes(pattern.toLowerCase()) &&
+            !isNaN(pid) &&
+            pid > 0
+          ) {
             try {
-              execSync(`taskkill /F /PID ${pid}`, { stdio: 'ignore' });
+              execSync(`taskkill /F /PID ${pid}`, { stdio: "ignore" });
               log(`   ✓ Killed ${description} (PID ${pid})`);
               killed++;
-              await new Promise(resolve => setTimeout(resolve, 300));
+              await new Promise((resolve) => setTimeout(resolve, 300));
             } catch (err) {
               // Process might have already exited
             }
@@ -577,9 +660,12 @@ async function killProcessesByPattern(pattern: string, description: string): Pro
   } else {
     // Unix: use ps and grep
     try {
-      const psOutput = execSync(`ps aux | grep -E "${pattern}" | grep -v grep`, { encoding: 'utf-8' })
+      const psOutput = execSync(
+        `ps aux | grep -E "${pattern}" | grep -v grep`,
+        { encoding: "utf-8" },
+      )
         .trim()
-        .split('\n')
+        .split("\n")
         .filter(Boolean);
 
       for (const line of psOutput) {
@@ -588,10 +674,10 @@ async function killProcessesByPattern(pattern: string, description: string): Pro
 
         if (!isNaN(pid) && pid > 0) {
           try {
-            process.kill(pid, 'SIGTERM');
+            process.kill(pid, "SIGTERM");
             log(`   ✓ Killed ${description} (PID ${pid})`);
             killed++;
-            await new Promise(resolve => setTimeout(resolve, 300));
+            await new Promise((resolve) => setTimeout(resolve, 300));
           } catch (err) {
             // Process might have already exited
           }
@@ -607,7 +693,7 @@ async function killProcessesByPattern(pattern: string, description: string): Pro
 
 async function cleanStaleProcesses(ports: number[]) {
   if (!parseArgs().quiet) {
-    log('🔄 Cleaning up stale processes...');
+    log("🔄 Cleaning up stale processes...");
   }
 
   let killed = 0;
@@ -617,10 +703,12 @@ async function cleanStaleProcesses(ports: number[]) {
     try {
       let pids: string[] = [];
 
-      if (process.platform === 'win32') {
+      if (process.platform === "win32") {
         // Windows: use netstat to find PIDs using the port
-        const output = execSync(`netstat -ano | findstr :${port}`, { encoding: 'utf-8' });
-        const lines = output.trim().split('\n');
+        const output = execSync(`netstat -ano | findstr :${port}`, {
+          encoding: "utf-8",
+        });
+        const lines = output.trim().split("\n");
 
         for (const line of lines) {
           // Extract PID from last column
@@ -634,25 +722,25 @@ async function cleanStaleProcesses(ports: number[]) {
         // Kill each PID with taskkill
         for (const pid of pids) {
           try {
-            execSync(`taskkill /F /PID ${pid}`, { stdio: 'ignore' });
+            execSync(`taskkill /F /PID ${pid}`, { stdio: "ignore" });
             log(`   ✓ Freed port ${port} (killed PID ${pid})`);
             killed++;
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise((resolve) => setTimeout(resolve, 500));
           } catch {}
         }
       } else {
         // Unix: use lsof
-        pids = execSync(`lsof -ti:${port}`, { encoding: 'utf-8' })
+        pids = execSync(`lsof -ti:${port}`, { encoding: "utf-8" })
           .trim()
-          .split('\n')
+          .split("\n")
           .filter(Boolean);
 
         for (const pid of pids) {
           try {
-            process.kill(parseInt(pid), 'SIGTERM');
+            process.kill(parseInt(pid), "SIGTERM");
             log(`   ✓ Freed port ${port} (killed PID ${pid})`);
             killed++;
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise((resolve) => setTimeout(resolve, 500));
           } catch {}
         }
       }
@@ -661,23 +749,35 @@ async function cleanStaleProcesses(ports: number[]) {
 
   // Kill zombie processes by pattern (catches detached/crashed processes)
   // Windows pattern matching is different (process name only, not full command)
-  if (process.platform === 'win32') {
-    killed += await killProcessesByPattern('node.exe', 'zombie Node.js process');
-    killed += await killProcessesByPattern('bun.exe', 'zombie Bun process');
+  if (process.platform === "win32") {
+    killed += await killProcessesByPattern(
+      "node.exe",
+      "zombie Node.js process",
+    );
+    killed += await killProcessesByPattern("bun.exe", "zombie Bun process");
   } else {
-    killed += await killProcessesByPattern('next-server', 'zombie Next.js server');
-    killed += await killProcessesByPattern('node.*next dev.*3300', 'zombie Next.js dev process');
-    killed += await killProcessesByPattern('bun run --cwd apps/ui dev', 'zombie Bun UI process');
+    killed += await killProcessesByPattern(
+      "next-server",
+      "zombie Next.js server",
+    );
+    killed += await killProcessesByPattern(
+      "node.*next dev.*3300",
+      "zombie Next.js dev process",
+    );
+    killed += await killProcessesByPattern(
+      "bun run --cwd apps/ui dev",
+      "zombie Bun UI process",
+    );
   }
 
   if (killed === 0 && !parseArgs().quiet) {
-    log('   ✓ No stale processes found');
+    log("   ✓ No stale processes found");
   }
 }
 
 function getPid(file: string): number | null {
   try {
-    const pid = parseInt(readFileSync(file, 'utf-8').trim());
+    const pid = parseInt(readFileSync(file, "utf-8").trim());
     try {
       process.kill(pid, 0);
       return pid;
@@ -699,8 +799,12 @@ function appendLog(file: string, data: string) {
   appendFileSync(file, `[${timestamp}] ${data}`);
 }
 
-async function waitForHealth(url: string, serviceName: string, maxAttempts: number = 30): Promise<boolean> {
-  let lastError: string = '';
+async function waitForHealth(
+  url: string,
+  serviceName: string,
+  maxAttempts: number = 30,
+): Promise<boolean> {
+  let lastError: string = "";
   for (let i = 0; i < maxAttempts; i++) {
     try {
       const response = await fetch(url, { signal: AbortSignal.timeout(3000) });
@@ -712,67 +816,73 @@ async function waitForHealth(url: string, serviceName: string, maxAttempts: numb
     } catch (err) {
       lastError = err instanceof Error ? err.message : String(err);
       if (i % 5 === 0 && i > 0) {
-        console.log(kleur.dim(`  Waiting for ${serviceName}... (${lastError})`));
+        console.log(
+          kleur.dim(`  Waiting for ${serviceName}... (${lastError})`),
+        );
       }
     }
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
-  console.error(kleur.red(`✗ ${serviceName} health check failed: ${lastError}`));
+  console.error(
+    kleur.red(`✗ ${serviceName} health check failed: ${lastError}`),
+  );
   return false;
 }
 
 function getProjectRoot(): string {
   let current = process.cwd();
-  const root = resolve('/');
+  const root = resolve("/");
 
   while (current !== root) {
-    const packagePath = resolve(current, 'package.json');
+    const packagePath = resolve(current, "package.json");
     if (existsSync(packagePath)) {
       try {
         const pkg = require(packagePath);
-        if (pkg.name === 'third-eye-mcp') {
+        if (pkg.name === "third-eye-mcp") {
           return current;
         }
       } catch {}
     }
-    current = resolve(current, '..');
+    current = resolve(current, "..");
   }
   return process.cwd();
 }
 
 function readPackageVersion(projectRoot: string): string {
-  const pkgPath = resolve(projectRoot, 'package.json');
-  return JSON.parse(readFileSync(pkgPath, 'utf-8')).version;
+  const pkgPath = resolve(projectRoot, "package.json");
+  return JSON.parse(readFileSync(pkgPath, "utf-8")).version;
 }
 
 function getGitStatus(projectRoot: string): string {
   try {
-    return execSync('git status --porcelain', { cwd: projectRoot }).toString().trim();
+    return execSync("git status --porcelain", { cwd: projectRoot })
+      .toString()
+      .trim();
   } catch {
-    return '';
+    return "";
   }
 }
 
 function runStep(command: string, projectRoot: string, label?: string) {
   const header = label ? `${label}: ${command}` : command;
-  console.log(`\n${kleur.cyan('▶')} ${header}`);
-  execSync(command, { cwd: projectRoot, stdio: 'inherit' });
+  console.log(`\n${kleur.cyan("▶")} ${header}`);
+  execSync(command, { cwd: projectRoot, stdio: "inherit" });
 }
 
 function stageReleaseFiles(projectRoot: string) {
   try {
-    runStep('git add -u', projectRoot, 'git');
+    runStep("git add -u", projectRoot, "git");
   } catch (error) {
-    console.warn('⚠️  Failed to stage tracked changes with git add -u');
+    console.warn("⚠️  Failed to stage tracked changes with git add -u");
     throw error;
   }
 
-  const changelogPath = resolve(projectRoot, 'CHANGELOG.md');
+  const changelogPath = resolve(projectRoot, "CHANGELOG.md");
   if (existsSync(changelogPath)) {
     try {
-      runStep('git add CHANGELOG.md', projectRoot, 'git');
+      runStep("git add CHANGELOG.md", projectRoot, "git");
     } catch (error) {
-      console.warn('⚠️  Unable to stage CHANGELOG.md');
+      console.warn("⚠️  Unable to stage CHANGELOG.md");
       throw error;
     }
   }
@@ -783,8 +893,10 @@ async function runReleasePipeline() {
   const initialStatus = getGitStatus(projectRoot);
 
   if (initialStatus.length > 0) {
-    console.error('❌ Working tree must be clean before running the automated release pipeline.');
-    console.error('   Please commit or stash changes, then retry.');
+    console.error(
+      "❌ Working tree must be clean before running the automated release pipeline.",
+    );
+    console.error("   Please commit or stash changes, then retry.");
     process.exit(1);
   }
 
@@ -793,63 +905,75 @@ async function runReleasePipeline() {
 
   const targetVersion = readPackageVersion(projectRoot);
   if (targetVersion === previousVersion) {
-    console.log('\nℹ️  Version unchanged. Release pipeline aborted.');
+    console.log("\nℹ️  Version unchanged. Release pipeline aborted.");
     return;
   }
 
   console.log(`\n🎯 Target version: v${targetVersion}`);
 
-  console.log('\n🛡️  Running release gate (bun run release:prepare:dry)…');
+  console.log("\n🛡️  Running release gate (bun run release:prepare:dry)…");
   try {
-    runStep('bun run release:prepare:dry', projectRoot, 'bun');
+    runStep("bun run release:prepare:dry", projectRoot, "bun");
   } catch (error) {
-    console.error('\n❌ Release gate failed. Fix the reported issues and rerun the pipeline.');
+    console.error(
+      "\n❌ Release gate failed. Fix the reported issues and rerun the pipeline.",
+    );
     throw error;
   }
 
   const commitConfirmed = await confirm({
-    message: 'Stage release files and create the release commit?',
+    message: "Stage release files and create the release commit?",
     default: true,
   });
 
   if (!commitConfirmed) {
-    console.log('Release pipeline cancelled before commit.');
+    console.log("Release pipeline cancelled before commit.");
     return;
   }
 
   stageReleaseFiles(projectRoot);
 
-  const staged = execSync('git diff --cached --name-only', { cwd: projectRoot }).toString().trim();
+  const staged = execSync("git diff --cached --name-only", { cwd: projectRoot })
+    .toString()
+    .trim();
   let commitCreated = false;
   if (!staged) {
-    console.warn('⚠️  No changes staged. Ensure version bump and changelog updates completed.');
+    console.warn(
+      "⚠️  No changes staged. Ensure version bump and changelog updates completed.",
+    );
   } else {
-    runStep(`git commit -m "chore(release): v${targetVersion}"`, projectRoot, 'git');
+    runStep(
+      `git commit -m "chore(release): v${targetVersion}"`,
+      projectRoot,
+      "git",
+    );
     commitCreated = true;
   }
 
   const remainingStatus = getGitStatus(projectRoot);
   if (remainingStatus.length > 0) {
-    console.error('\n❌ Uncommitted changes detected. Resolve them before publishing.');
+    console.error(
+      "\n❌ Uncommitted changes detected. Resolve them before publishing.",
+    );
     process.exit(1);
   }
 
   if (!commitCreated) {
-    console.log('\nℹ️  No release commit created; skipping automated publish.');
+    console.log("\nℹ️  No release commit created; skipping automated publish.");
     return;
   }
 
   const publishConfirmed = await confirm({
-    message: 'Publish to npm now?',
+    message: "Publish to npm now?",
     default: true,
   });
 
   if (!publishConfirmed) {
-    console.log('Release pipeline cancelled before npm publish.');
+    console.log("Release pipeline cancelled before npm publish.");
     return;
   }
 
-  runStep('bun run release:publish', projectRoot, 'bun');
+  runStep("bun run release:publish", projectRoot, "bun");
 
   const tagConfirmed = await confirm({
     message: `Create git tag v${targetVersion}?`,
@@ -857,22 +981,26 @@ async function runReleasePipeline() {
   });
 
   if (tagConfirmed) {
-    runStep(`git tag -a v${targetVersion} -m "Third Eye MCP v${targetVersion}"`, projectRoot, 'git');
+    runStep(
+      `git tag -a v${targetVersion} -m "Third Eye MCP v${targetVersion}"`,
+      projectRoot,
+      "git",
+    );
   }
 
   const pushConfirmed = await confirm({
-    message: 'Push branch and tags to origin?',
+    message: "Push branch and tags to origin?",
     default: true,
   });
 
   if (pushConfirmed) {
-    runStep('git push origin HEAD', projectRoot, 'git');
+    runStep("git push origin HEAD", projectRoot, "git");
     if (tagConfirmed) {
-      runStep(`git push origin v${targetVersion}`, projectRoot, 'git');
+      runStep(`git push origin v${targetVersion}`, projectRoot, "git");
     }
   }
 
-  console.log('\n🎉 Release pipeline completed successfully.');
+  console.log("\n🎉 Release pipeline completed successfully.");
 }
 
 /**
@@ -880,7 +1008,9 @@ async function runReleasePipeline() {
  * Per R13: Prevents .js/.d.ts pollution in src/
  */
 function cleanSourceArtifacts(projectRoot: string, quiet: boolean): number {
-  const spinner = quiet ? null : ora('Cleaning stale source artifacts...').start();
+  const spinner = quiet
+    ? null
+    : ora("Cleaning stale source artifacts...").start();
   let filesRemoved = 0;
 
   try {
@@ -890,8 +1020,8 @@ function cleanSourceArtifacts(projectRoot: string, quiet: boolean): number {
       '-o -name "*.d.ts"',
       '-o -name "*.js.map"',
       '-o -name "*.d.ts.map"',
-      '-o -name "*.tsbuildinfo"'
-    ].join(' ');
+      '-o -name "*.tsbuildinfo"',
+    ].join(" ");
 
     for (const dir of CLEANUP_DIRS) {
       const fullPath = resolve(projectRoot, dir);
@@ -900,8 +1030,11 @@ function cleanSourceArtifacts(projectRoot: string, quiet: boolean): number {
       const findCmd = `find ${fullPath} \\( ${patterns} \\) 2>/dev/null || true`;
 
       try {
-        const output = execSync(findCmd, { encoding: 'utf-8' });
-        const files = output.trim().split('\n').filter(f => f.length > 0);
+        const output = execSync(findCmd, { encoding: "utf-8" });
+        const files = output
+          .trim()
+          .split("\n")
+          .filter((f) => f.length > 0);
 
         for (const file of files) {
           try {
@@ -920,14 +1053,14 @@ function cleanSourceArtifacts(projectRoot: string, quiet: boolean): number {
       if (filesRemoved > 0) {
         spinner.succeed(`Cleaned ${filesRemoved} stale source artifacts`);
       } else {
-        spinner.succeed('No stale source artifacts found');
+        spinner.succeed("No stale source artifacts found");
       }
     }
 
     return filesRemoved;
   } catch (error) {
     if (spinner) {
-      spinner.fail('Failed to clean source artifacts');
+      spinner.fail("Failed to clean source artifacts");
     }
     if (!quiet) {
       console.error(kleur.yellow(`Warning: ${error}`));
@@ -941,15 +1074,21 @@ function cleanSourceArtifacts(projectRoot: string, quiet: boolean): number {
  * Per R12: Keep dependencies fresh
  * Implements exponential backoff for network failures
  */
-async function updateDependencies(projectRoot: string, skipUpdate: boolean, quiet: boolean): Promise<void> {
+async function updateDependencies(
+  projectRoot: string,
+  skipUpdate: boolean,
+  quiet: boolean,
+): Promise<void> {
   if (skipUpdate) {
     if (!quiet) {
-      console.log(kleur.gray('⏭️  Skipping dependency updates (--skip-update)'));
+      console.log(
+        kleur.gray("⏭️  Skipping dependency updates (--skip-update)"),
+      );
     }
     return;
   }
 
-  const spinner = quiet ? null : ora('Updating dependencies...').start();
+  const spinner = quiet ? null : ora("Updating dependencies...").start();
   const maxAttempts = 3;
   const timeout = 120000; // 2 minutes per attempt
 
@@ -959,25 +1098,33 @@ async function updateDependencies(projectRoot: string, skipUpdate: boolean, quie
   async function updateWithRetry(cwd: string, label: string): Promise<boolean> {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        execSync('bun update', {
+        execSync("bun update", {
           cwd,
-          stdio: quiet ? 'ignore' : 'inherit',
-          timeout
+          stdio: quiet ? "ignore" : "inherit",
+          timeout,
         });
         return true;
       } catch (error) {
         if (attempt < maxAttempts) {
           const delay = Math.pow(2, attempt) * 1000; // Exponential backoff: 2s, 4s, 8s
           if (spinner) {
-            spinner.text = `${label} failed (attempt ${attempt}/${maxAttempts}), retrying in ${delay/1000}s...`;
+            spinner.text = `${label} failed (attempt ${attempt}/${maxAttempts}), retrying in ${delay / 1000}s...`;
           } else if (!quiet) {
-            console.log(kleur.yellow(`   ⚠ ${label} failed (attempt ${attempt}/${maxAttempts}), retrying in ${delay/1000}s...`));
+            console.log(
+              kleur.yellow(
+                `   ⚠ ${label} failed (attempt ${attempt}/${maxAttempts}), retrying in ${delay / 1000}s...`,
+              ),
+            );
           }
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
         } else {
           // Final attempt failed
           if (!quiet) {
-            console.warn(kleur.yellow(`   ⚠ ${label} failed after ${maxAttempts} attempts`));
+            console.warn(
+              kleur.yellow(
+                `   ⚠ ${label} failed after ${maxAttempts} attempts`,
+              ),
+            );
           }
           return false;
         }
@@ -988,35 +1135,42 @@ async function updateDependencies(projectRoot: string, skipUpdate: boolean, quie
 
   try {
     // Update root dependencies with retry
-    const rootSuccess = await updateWithRetry(projectRoot, 'Root dependency update');
+    const rootSuccess = await updateWithRetry(
+      projectRoot,
+      "Root dependency update",
+    );
 
     // Update UI dependencies with retry
-    const uiPath = resolve(projectRoot, 'apps/ui');
+    const uiPath = resolve(projectRoot, "apps/ui");
     let uiSuccess = true;
     if (existsSync(uiPath)) {
-      uiSuccess = await updateWithRetry(uiPath, 'UI dependency update');
+      uiSuccess = await updateWithRetry(uiPath, "UI dependency update");
     }
 
     if (spinner) {
       if (rootSuccess && uiSuccess) {
-        spinner.succeed('Dependencies updated');
+        spinner.succeed("Dependencies updated");
       } else {
-        spinner.warn('Dependencies updated (some failed, using cached versions)');
+        spinner.warn(
+          "Dependencies updated (some failed, using cached versions)",
+        );
       }
     }
 
     // Don't block startup if updates failed - cached dependencies may work
     if (!rootSuccess || !uiSuccess) {
       if (!quiet) {
-        console.log(kleur.gray('   Continuing with cached dependencies...'));
+        console.log(kleur.gray("   Continuing with cached dependencies..."));
       }
     }
   } catch (error) {
     if (spinner) {
-      spinner.warn('Dependency update failed, using cached versions');
+      spinner.warn("Dependency update failed, using cached versions");
     }
     if (!quiet) {
-      console.warn(kleur.yellow(`   Continuing with cached dependencies: ${error}`));
+      console.warn(
+        kleur.yellow(`   Continuing with cached dependencies: ${error}`),
+      );
     }
     // Don't throw - allow startup to proceed with cached dependencies
   }
@@ -1024,19 +1178,19 @@ async function updateDependencies(projectRoot: string, skipUpdate: boolean, quie
 
 function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
   if (!quiet) {
-    console.log(kleur.cyan('🔍 Checking for stale package builds...'));
+    console.log(kleur.cyan("🔍 Checking for stale package builds..."));
   }
 
   const cleaned: string[] = [];
   const packagesToRebuild: string[] = [];
 
   // Check packages/*/dist folders
-  const packagesDir = resolve(projectRoot, 'packages');
+  const packagesDir = resolve(projectRoot, "packages");
   if (existsSync(packagesDir)) {
     const packages = readdirSync(packagesDir);
     for (const pkg of packages) {
-      const distPath = resolve(packagesDir, pkg, 'dist');
-      const srcPath = resolve(packagesDir, pkg, 'src');
+      const distPath = resolve(packagesDir, pkg, "dist");
+      const srcPath = resolve(packagesDir, pkg, "src");
 
       // Skip if no src directory (not a buildable package)
       if (!existsSync(srcPath)) {
@@ -1053,24 +1207,31 @@ function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
       try {
         // Get the newest file in dist/ (not folder timestamp)
         const distFiles = readdirSync(distPath, { recursive: true })
-          .filter(f => typeof f === 'string' && (f.endsWith('.js') || f.endsWith('.d.ts')))
-          .map(f => resolve(distPath, f));
+          .filter(
+            (f) =>
+              typeof f === "string" &&
+              (f.endsWith(".js") || f.endsWith(".d.ts")),
+          )
+          .map((f) => resolve(distPath, f));
 
-        const distMtime = distFiles.length > 0
-          ? Math.max(...distFiles.map(f => {
-              try {
-                return statSync(f).mtimeMs;
-              } catch {
-                return 0;
-              }
-            }))
-          : 0; // Force rebuild if no dist files exist
+        const distMtime =
+          distFiles.length > 0
+            ? Math.max(
+                ...distFiles.map((f) => {
+                  try {
+                    return statSync(f).mtimeMs;
+                  } catch {
+                    return 0;
+                  }
+                }),
+              )
+            : 0; // Force rebuild if no dist files exist
 
-        const srcFiles = readdirSync(srcPath, { recursive: true }).filter(f =>
-          typeof f === 'string' && f.endsWith('.ts')
+        const srcFiles = readdirSync(srcPath, { recursive: true }).filter(
+          (f) => typeof f === "string" && f.endsWith(".ts"),
         );
 
-        let hasNewerSource = srcFiles.some(file => {
+        let hasNewerSource = srcFiles.some((file) => {
           const srcFile = resolve(srcPath, file);
           try {
             return statSync(srcFile).mtimeMs > distMtime;
@@ -1081,14 +1242,14 @@ function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
 
         // CRITICAL FIX: Also check defaults/ folder for db package
         // Seed data changes must trigger rebuilds (per R01: SSOT)
-        if (!hasNewerSource && pkg === 'db') {
-          const defaultsPath = resolve(packagesDir, pkg, 'defaults');
+        if (!hasNewerSource && pkg === "db") {
+          const defaultsPath = resolve(packagesDir, pkg, "defaults");
           if (existsSync(defaultsPath)) {
-            const defaultsFiles = readdirSync(defaultsPath, { recursive: true }).filter(f =>
-              typeof f === 'string' && f.endsWith('.ts')
-            );
-            
-            hasNewerSource = defaultsFiles.some(file => {
+            const defaultsFiles = readdirSync(defaultsPath, {
+              recursive: true,
+            }).filter((f) => typeof f === "string" && f.endsWith(".ts"));
+
+            hasNewerSource = defaultsFiles.some((file) => {
               const defaultsFile = resolve(defaultsPath, file);
               try {
                 return statSync(defaultsFile).mtimeMs > distMtime;
@@ -1114,20 +1275,22 @@ function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
   }
 
   // Check apps/ui/.next
-  const nextBuildPath = resolve(projectRoot, 'apps/ui/.next');
+  const nextBuildPath = resolve(projectRoot, "apps/ui/.next");
   if (existsSync(nextBuildPath)) {
     rmSync(nextBuildPath, { recursive: true, force: true });
-    cleaned.push('apps/ui/.next');
+    cleaned.push("apps/ui/.next");
   }
 
   if (cleaned.length > 0 && !quiet) {
-    console.log(kleur.yellow(`🧹 Cleaned stale builds: ${cleaned.join(', ')}`));
+    console.log(kleur.yellow(`🧹 Cleaned stale builds: ${cleaned.join(", ")}`));
   }
 
   // Rebuild cleaned packages
   if (packagesToRebuild.length > 0) {
     if (!quiet) {
-      console.log(kleur.cyan(`🔨 Rebuilding packages: ${packagesToRebuild.join(', ')}`));
+      console.log(
+        kleur.cyan(`🔨 Rebuilding packages: ${packagesToRebuild.join(", ")}`),
+      );
     }
 
     // Helper function to log to both console and file
@@ -1142,7 +1305,7 @@ function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
 
       // Always log to file
       try {
-        appendFileSync(BUILD_LOG_FILE, logMsg + '\n');
+        appendFileSync(BUILD_LOG_FILE, logMsg + "\n");
       } catch {
         // Ignore file write errors
       }
@@ -1157,13 +1320,13 @@ function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
       }
     };
 
-    buildLog(`Detected stale package(s): ${packagesToRebuild.join(', ')}`);
+    buildLog(`Detected stale package(s): ${packagesToRebuild.join(", ")}`);
     buildLog(`Rebuilding ALL packages to ensure correct dependency order...`);
 
     try {
       execSync(`bun run build:packages`, {
         cwd: projectRoot,
-        stdio: quiet ? 'pipe' : 'inherit',
+        stdio: quiet ? "pipe" : "inherit",
       });
       buildLog(`✓ Successfully rebuilt all packages`);
     } catch (err) {
@@ -1171,52 +1334,72 @@ function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
       const hintMsg = kleur.dim(`  Run manually: bun run build:packages`);
       buildLog(errorMsg, true);
       buildLog(hintMsg, true);
-      buildLog(`Error details: ${err instanceof Error ? err.message : String(err)}`, true);
+      buildLog(
+        `Error details: ${err instanceof Error ? err.message : String(err)}`,
+        true,
+      );
 
       // CRITICAL: Throw error to prevent starting with stale packages
-      throw new Error(`Package rebuild failed. Cannot start services with stale builds.`);
+      throw new Error(
+        `Package rebuild failed. Cannot start services with stale builds.`,
+      );
     }
 
     // Verify all rebuilds succeeded by checking dist directories exist AND contain files
     for (const pkg of packagesToRebuild) {
-      const distPath = resolve(packagesDir, pkg, 'dist');
-      const tsbuildInfoPath = resolve(packagesDir, pkg, 'tsconfig.tsbuildinfo');
-      
+      const distPath = resolve(packagesDir, pkg, "dist");
+      const tsbuildInfoPath = resolve(packagesDir, pkg, "tsconfig.tsbuildinfo");
+
       // Check if dist exists
       if (!existsSync(distPath)) {
         // If tsbuildinfo exists but dist doesn't, TypeScript thinks it's up to date
         // Force clean rebuild by removing tsbuildinfo
         if (existsSync(tsbuildInfoPath)) {
-          buildLog(`⚠ Warning: ${pkg}/dist missing but tsbuildinfo exists - forcing clean rebuild`, true);
+          buildLog(
+            `⚠ Warning: ${pkg}/dist missing but tsbuildinfo exists - forcing clean rebuild`,
+            true,
+          );
           try {
             rmSync(tsbuildInfoPath, { force: true });
           } catch {
             // Ignore cleanup errors
           }
         }
-        
+
         // Try to force rebuild this package
         buildLog(`Attempting forced rebuild of ${pkg}...`, true);
         try {
           execSync(`bun run tsc --build packages/${pkg}`, {
             cwd: projectRoot,
-            stdio: quiet ? 'pipe' : 'inherit',
+            stdio: quiet ? "pipe" : "inherit",
           });
         } catch (err) {
-          const errorMsg = kleur.red(`✗ FATAL: Rebuild verification failed for '${pkg}' - dist directory missing`);
+          const errorMsg = kleur.red(
+            `✗ FATAL: Rebuild verification failed for '${pkg}' - dist directory missing`,
+          );
           buildLog(errorMsg, true);
-          buildLog(`Error: ${err instanceof Error ? err.message : String(err)}`, true);
-          throw new Error(`Rebuild verification failed: ${pkg}/dist does not exist after build`);
+          buildLog(
+            `Error: ${err instanceof Error ? err.message : String(err)}`,
+            true,
+          );
+          throw new Error(
+            `Rebuild verification failed: ${pkg}/dist does not exist after build`,
+          );
         }
       }
-      
+
       // Verify dist actually contains compiled files (not just empty directory)
       try {
-        const distFiles = readdirSync(distPath, { recursive: true })
-          .filter(f => typeof f === 'string' && (f.endsWith('.js') || f.endsWith('.d.ts')));
-        
+        const distFiles = readdirSync(distPath, { recursive: true }).filter(
+          (f) =>
+            typeof f === "string" && (f.endsWith(".js") || f.endsWith(".d.ts")),
+        );
+
         if (distFiles.length === 0) {
-          buildLog(`⚠ Warning: ${pkg}/dist exists but is empty - forcing clean rebuild`, true);
+          buildLog(
+            `⚠ Warning: ${pkg}/dist exists but is empty - forcing clean rebuild`,
+            true,
+          );
           // Remove dist and tsbuildinfo to force full rebuild
           try {
             rmSync(distPath, { recursive: true, force: true });
@@ -1226,41 +1409,65 @@ function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
           } catch {
             // Ignore cleanup errors
           }
-          
+
           // Retry build
           buildLog(`Attempting forced rebuild of ${pkg}...`, true);
           try {
             execSync(`bun run tsc --build packages/${pkg}`, {
               cwd: projectRoot,
-              stdio: quiet ? 'pipe' : 'inherit',
+              stdio: quiet ? "pipe" : "inherit",
             });
-            
+
             // Verify again after rebuild
-            const retryFiles = readdirSync(distPath, { recursive: true })
-              .filter(f => typeof f === 'string' && (f.endsWith('.js') || f.endsWith('.d.ts')));
-            
+            const retryFiles = readdirSync(distPath, {
+              recursive: true,
+            }).filter(
+              (f) =>
+                typeof f === "string" &&
+                (f.endsWith(".js") || f.endsWith(".d.ts")),
+            );
+
             if (retryFiles.length === 0) {
-              const errorMsg = kleur.red(`✗ FATAL: Rebuild verification failed for '${pkg}' - dist directory is empty after rebuild`);
+              const errorMsg = kleur.red(
+                `✗ FATAL: Rebuild verification failed for '${pkg}' - dist directory is empty after rebuild`,
+              );
               buildLog(errorMsg, true);
-              throw new Error(`Rebuild verification failed: ${pkg}/dist is empty after build`);
+              throw new Error(
+                `Rebuild verification failed: ${pkg}/dist is empty after build`,
+              );
             }
           } catch (err) {
-            const errorMsg = kleur.red(`✗ FATAL: Rebuild verification failed for '${pkg}' - could not rebuild`);
+            const errorMsg = kleur.red(
+              `✗ FATAL: Rebuild verification failed for '${pkg}' - could not rebuild`,
+            );
             buildLog(errorMsg, true);
-            buildLog(`Error: ${err instanceof Error ? err.message : String(err)}`, true);
-            throw new Error(`Rebuild verification failed: ${pkg}/dist could not be rebuilt`);
+            buildLog(
+              `Error: ${err instanceof Error ? err.message : String(err)}`,
+              true,
+            );
+            throw new Error(
+              `Rebuild verification failed: ${pkg}/dist could not be rebuilt`,
+            );
           }
         }
       } catch (statErr) {
         // If we can't read dist, something is wrong
-        const errorMsg = kleur.red(`✗ FATAL: Rebuild verification failed for '${pkg}' - cannot read dist directory`);
+        const errorMsg = kleur.red(
+          `✗ FATAL: Rebuild verification failed for '${pkg}' - cannot read dist directory`,
+        );
         buildLog(errorMsg, true);
-        throw new Error(`Rebuild verification failed: ${pkg}/dist cannot be read`);
+        throw new Error(
+          `Rebuild verification failed: ${pkg}/dist cannot be read`,
+        );
       }
     }
 
     if (!quiet) {
-      console.log(kleur.green(`✓ Successfully rebuilt ${packagesToRebuild.length} package(s): ${packagesToRebuild.join(', ')}`));
+      console.log(
+        kleur.green(
+          `✓ Successfully rebuilt ${packagesToRebuild.length} package(s): ${packagesToRebuild.join(", ")}`,
+        ),
+      );
     }
     buildLog(`All ${packagesToRebuild.length} package(s) rebuilt successfully`);
   }
@@ -1270,7 +1477,11 @@ function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
  * Enable health monitoring with auto-restart for detached services
  * Checks services every 30 seconds and restarts if unhealthy
  */
-function enableHealthMonitoring(serverPort: number, uiPort: number, noUi: boolean): void {
+function enableHealthMonitoring(
+  serverPort: number,
+  uiPort: number,
+  noUi: boolean,
+): void {
   const monitorInterval = 30000; // 30 seconds
   const maxLogSize = 100 * 1024 * 1024; // 100MB
   let restartCount = { server: 0, ui: 0 };
@@ -1282,7 +1493,7 @@ function enableHealthMonitoring(serverPort: number, uiPort: number, noUi: boolea
       const serverPid = getPid(SERVER_PID_FILE);
       if (serverPid) {
         const response = await fetch(`http://127.0.0.1:${serverPort}/health`, {
-          signal: AbortSignal.timeout(5000)
+          signal: AbortSignal.timeout(5000),
         });
 
         if (!response.ok) {
@@ -1290,14 +1501,22 @@ function enableHealthMonitoring(serverPort: number, uiPort: number, noUi: boolea
         }
       } else {
         // PID file missing - process crashed
-        throw new Error('Server process not found');
+        throw new Error("Server process not found");
       }
     } catch (error) {
-      console.error(kleur.red(`\n⚠️  Server health check failed: ${error instanceof Error ? error.message : String(error)}`));
+      console.error(
+        kleur.red(
+          `\n⚠️  Server health check failed: ${error instanceof Error ? error.message : String(error)}`,
+        ),
+      );
 
       if (restartCount.server < maxRestarts) {
         restartCount.server++;
-        console.log(kleur.yellow(`   Attempting to restart server (attempt ${restartCount.server}/${maxRestarts})...`));
+        console.log(
+          kleur.yellow(
+            `   Attempting to restart server (attempt ${restartCount.server}/${maxRestarts})...`,
+          ),
+        );
 
         try {
           // Clean up stale PID
@@ -1308,9 +1527,9 @@ function enableHealthMonitoring(serverPort: number, uiPort: number, noUi: boolea
           // Restart server
           const projectRoot = getProjectRoot();
           const serverCmd = `bun run apps/server/src/start.ts >> ${SERVER_LOG_FILE} 2>&1`;
-          const serverProcess = spawn('sh', ['-c', serverCmd], {
+          const serverProcess = spawn("sh", ["-c", serverCmd], {
             cwd: projectRoot,
-            stdio: 'ignore',
+            stdio: "ignore",
             detached: true,
             env: { ...process.env, PORT: String(serverPort) },
           });
@@ -1318,13 +1537,19 @@ function enableHealthMonitoring(serverPort: number, uiPort: number, noUi: boolea
           if (serverProcess.pid) {
             savePid(SERVER_PID_FILE, serverProcess.pid);
             serverProcess.unref();
-            console.log(kleur.green(`   ✓ Server restarted (PID ${serverProcess.pid})`));
+            console.log(
+              kleur.green(`   ✓ Server restarted (PID ${serverProcess.pid})`),
+            );
           }
         } catch (restartError) {
-          console.error(kleur.red(`   ✗ Failed to restart server: ${restartError}`));
+          console.error(
+            kleur.red(`   ✗ Failed to restart server: ${restartError}`),
+          );
         }
       } else {
-        console.error(kleur.red(`   ✗ Server failed ${maxRestarts} times, giving up`));
+        console.error(
+          kleur.red(`   ✗ Server failed ${maxRestarts} times, giving up`),
+        );
         console.error(kleur.dim(`     Check logs: ${SERVER_LOG_FILE}`));
       }
     }
@@ -1335,7 +1560,7 @@ function enableHealthMonitoring(serverPort: number, uiPort: number, noUi: boolea
         const uiPid = getPid(UI_PID_FILE);
         if (uiPid) {
           const response = await fetch(`http://127.0.0.1:${uiPort}/`, {
-            signal: AbortSignal.timeout(5000)
+            signal: AbortSignal.timeout(5000),
           });
 
           if (!response.ok && response.status !== 404) {
@@ -1344,14 +1569,22 @@ function enableHealthMonitoring(serverPort: number, uiPort: number, noUi: boolea
           }
         } else {
           // PID file missing - process crashed
-          throw new Error('UI process not found');
+          throw new Error("UI process not found");
         }
       } catch (error) {
-        console.error(kleur.red(`\n⚠️  UI health check failed: ${error instanceof Error ? error.message : String(error)}`));
+        console.error(
+          kleur.red(
+            `\n⚠️  UI health check failed: ${error instanceof Error ? error.message : String(error)}`,
+          ),
+        );
 
         if (restartCount.ui < maxRestarts) {
           restartCount.ui++;
-          console.log(kleur.yellow(`   Attempting to restart UI (attempt ${restartCount.ui}/${maxRestarts})...`));
+          console.log(
+            kleur.yellow(
+              `   Attempting to restart UI (attempt ${restartCount.ui}/${maxRestarts})...`,
+            ),
+          );
 
           try {
             // Clean up stale PID
@@ -1362,22 +1595,28 @@ function enableHealthMonitoring(serverPort: number, uiPort: number, noUi: boolea
             // Restart UI
             const projectRoot = getProjectRoot();
             const uiCmd = `bun run --cwd apps/ui dev --port ${uiPort} >> ${UI_LOG_FILE} 2>&1`;
-            const uiProcess = spawn('sh', ['-c', uiCmd], {
+            const uiProcess = spawn("sh", ["-c", uiCmd], {
               cwd: projectRoot,
-              stdio: 'ignore',
+              stdio: "ignore",
               detached: true,
             });
 
             if (uiProcess.pid) {
               savePid(UI_PID_FILE, uiProcess.pid);
               uiProcess.unref();
-              console.log(kleur.green(`   ✓ UI restarted (PID ${uiProcess.pid})`));
+              console.log(
+                kleur.green(`   ✓ UI restarted (PID ${uiProcess.pid})`),
+              );
             }
           } catch (restartError) {
-            console.error(kleur.red(`   ✗ Failed to restart UI: ${restartError}`));
+            console.error(
+              kleur.red(`   ✗ Failed to restart UI: ${restartError}`),
+            );
           }
         } else {
-          console.error(kleur.red(`   ✗ UI failed ${maxRestarts} times, giving up`));
+          console.error(
+            kleur.red(`   ✗ UI failed ${maxRestarts} times, giving up`),
+          );
           console.error(kleur.dim(`     Check logs: ${UI_LOG_FILE}`));
         }
       }
@@ -1385,7 +1624,7 @@ function enableHealthMonitoring(serverPort: number, uiPort: number, noUi: boolea
 
     // Rotate logs if they're too large
     try {
-      [SERVER_LOG_FILE, UI_LOG_FILE].forEach(logFile => {
+      [SERVER_LOG_FILE, UI_LOG_FILE].forEach((logFile) => {
         if (existsSync(logFile)) {
           const stats = statSync(logFile);
           if (stats.size > maxLogSize) {
@@ -1403,34 +1642,44 @@ function enableHealthMonitoring(serverPort: number, uiPort: number, noUi: boolea
   }, monitorInterval);
 
   // Cleanup on process exit
-  process.on('SIGINT', () => clearInterval(monitor));
-  process.on('SIGTERM', () => clearInterval(monitor));
+  process.on("SIGINT", () => clearInterval(monitor));
+  process.on("SIGTERM", () => clearInterval(monitor));
 }
 
 /**
  * Auto-link CLI globally if not already linked
  * Makes 'bun third-eye-mcp' and 'bunx third-eye-mcp' work everywhere
  */
-async function ensureGlobalLink(projectRoot: string, quiet: boolean): Promise<void> {
+async function ensureGlobalLink(
+  projectRoot: string,
+  quiet: boolean,
+): Promise<void> {
   try {
     // Check if already linked by testing the command
-    execSync('which third-eye-mcp', { stdio: 'pipe' });
+    execSync("which third-eye-mcp", { stdio: "pipe" });
     if (!quiet) {
-      log('✓ CLI already linked globally');
+      log("✓ CLI already linked globally");
     }
   } catch {
     // Not linked, auto-link now
     if (!quiet) {
-      log('🔗 Auto-linking CLI globally...');
+      log("🔗 Auto-linking CLI globally...");
     }
     try {
-      execSync('bun link', { cwd: projectRoot, stdio: quiet ? 'pipe' : 'inherit' });
+      execSync("bun link", {
+        cwd: projectRoot,
+        stdio: quiet ? "pipe" : "inherit",
+      });
       if (!quiet) {
-        log('   ✓ CLI linked: You can now use "bun third-eye-mcp" or "bunx third-eye-mcp"');
+        log(
+          '   ✓ CLI linked: You can now use "bun third-eye-mcp" or "bunx third-eye-mcp"',
+        );
       }
     } catch (err) {
       if (!quiet) {
-        log('   ⚠ Auto-link failed (not critical, you can still use "bun up")');
+        log(
+          '   ⚠ Auto-link failed (not critical, you can still use "bun up")',
+        );
       }
     }
   }
@@ -1441,13 +1690,13 @@ async function ensureGlobalLink(projectRoot: string, quiet: boolean): Promise<vo
  * Ensures providers and configuration can work on first run
  */
 function ensureEnvFile(projectRoot: string, quiet: boolean): void {
-  const envPath = resolve(projectRoot, '.env');
-  const examplePath = resolve(projectRoot, '.env.example');
+  const envPath = resolve(projectRoot, ".env");
+  const examplePath = resolve(projectRoot, ".env.example");
 
   // If .env already exists, nothing to do
   if (existsSync(envPath)) {
     if (!quiet) {
-      log('✓ .env file exists');
+      log("✓ .env file exists");
     }
     return;
   }
@@ -1455,24 +1704,26 @@ function ensureEnvFile(projectRoot: string, quiet: boolean): void {
   // If .env.example doesn't exist, can't auto-create
   if (!existsSync(examplePath)) {
     if (!quiet) {
-      console.warn('⚠️  No .env.example found, skipping .env creation');
+      console.warn("⚠️  No .env.example found, skipping .env creation");
     }
     return;
   }
 
   // Copy .env.example to .env
   try {
-    const exampleContent = readFileSync(examplePath, 'utf-8');
+    const exampleContent = readFileSync(examplePath, "utf-8");
     writeFileSync(envPath, exampleContent);
 
     if (!quiet) {
-      console.log('📝 Created .env from .env.example');
-      console.log('   ⚠️  Configure your API keys in .env for provider access');
+      console.log("📝 Created .env from .env.example");
+      console.log("   ⚠️  Configure your API keys in .env for provider access");
       console.log(`   Location: ${envPath}`);
     }
   } catch (err) {
     if (!quiet) {
-      console.warn(`⚠️  Failed to create .env: ${err instanceof Error ? err.message : String(err)}`);
+      console.warn(
+        `⚠️  Failed to create .env: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   }
 }
@@ -1484,7 +1735,7 @@ async function startServices() {
 
   if (!args.quiet) {
     console.log(`\n${kleur.bold().magenta(`🧿 Third Eye MCP v${VERSION}`)}`);
-    console.log(kleur.gray('━'.repeat(60)));
+    console.log(kleur.gray("━".repeat(60)));
   }
 
   // Auto-link CLI globally (non-blocking, best-effort)
@@ -1496,17 +1747,22 @@ async function startServices() {
   // Nuclear mode: Full clean + reinstall
   if (args.nuclear) {
     if (!args.quiet) {
-      console.log(kleur.yellow('\n💣 Nuclear mode: Full clean + reinstall'));
+      console.log(kleur.yellow("\n💣 Nuclear mode: Full clean + reinstall"));
     }
-    const nuclearSpinner = args.quiet ? null : ora('Removing node_modules and build artifacts...').start();
+    const nuclearSpinner = args.quiet
+      ? null
+      : ora("Removing node_modules and build artifacts...").start();
     try {
-      execSync('rm -rf node_modules apps/ui/node_modules apps/*/dist packages/*/dist .next', {
-        cwd: projectRoot,
-        stdio: 'ignore'
-      });
-      if (nuclearSpinner) nuclearSpinner.succeed('Cleaned all artifacts');
+      execSync(
+        "rm -rf node_modules apps/ui/node_modules apps/*/dist packages/*/dist .next",
+        {
+          cwd: projectRoot,
+          stdio: "ignore",
+        },
+      );
+      if (nuclearSpinner) nuclearSpinner.succeed("Cleaned all artifacts");
     } catch (err) {
-      if (nuclearSpinner) nuclearSpinner.fail('Clean failed');
+      if (nuclearSpinner) nuclearSpinner.fail("Clean failed");
     }
   }
 
@@ -1520,14 +1776,20 @@ async function startServices() {
     cleanStaleBuilds(projectRoot, args.quiet);
   } else {
     if (!args.quiet) {
-      console.log(kleur.gray('⏭️  Quick mode: Skipping updates and stale checks'));
+      console.log(
+        kleur.gray("⏭️  Quick mode: Skipping updates and stale checks"),
+      );
     }
     // CRITICAL: Always clean .next even in quick mode (fixes module resolution issues)
-    const nextBuildPath = resolve(projectRoot, 'apps/ui/.next');
+    const nextBuildPath = resolve(projectRoot, "apps/ui/.next");
     if (existsSync(nextBuildPath)) {
       rmSync(nextBuildPath, { recursive: true, force: true });
       if (!args.quiet) {
-        console.log(kleur.yellow('🧹 Cleaned apps/ui/.next (required for module resolution)'));
+        console.log(
+          kleur.yellow(
+            "🧹 Cleaned apps/ui/.next (required for module resolution)",
+          ),
+        );
       }
     }
   }
@@ -1536,37 +1798,41 @@ async function startServices() {
   await cleanStaleProcesses([args.port || SERVER_PORT, args.uiPort || UI_PORT]);
 
   if (!args.quiet) {
-    log(`\n${kleur.green('🚀 Starting services')}${args.foreground ? kleur.gray(' (foreground)') : kleur.gray(' (detached)')}...`);
+    log(
+      `\n${kleur.green("🚀 Starting services")}${args.foreground ? kleur.gray(" (foreground)") : kleur.gray(" (detached)")}...`,
+    );
   }
 
   const serverStartTime = Date.now();
 
   // Use shell redirection for logging in detached mode (Bun doesn't support stream.Writable in stdio)
   const serverCmd = args.foreground
-    ? 'bun run apps/server/src/start.ts'
+    ? "bun run apps/server/src/start.ts"
     : `bun run apps/server/src/start.ts >> ${SERVER_LOG_FILE} 2>&1`;
 
   const serverProcess = args.foreground
-    ? spawn('bun', ['run', 'apps/server/src/start.ts'], {
+    ? spawn("bun", ["run", "apps/server/src/start.ts"], {
         cwd: projectRoot,
-        stdio: 'inherit',
+        stdio: "inherit",
         detached: false,
         env: { ...process.env, PORT: String(args.port || SERVER_PORT) },
       })
-    : spawn('sh', ['-c', serverCmd], {
+    : spawn("sh", ["-c", serverCmd], {
         cwd: projectRoot,
-        stdio: 'ignore',
+        stdio: "ignore",
         detached: true,
         env: { ...process.env, PORT: String(args.port || SERVER_PORT) },
       });
 
   // Monitor for unexpected process exits
-  serverProcess.on('exit', (code, signal) => {
+  serverProcess.on("exit", (code, signal) => {
     if (code !== 0 && code !== null) {
       console.error(kleur.red(`\n✗ Server process exited with code ${code}`));
       console.error(kleur.dim(`  Check logs: ${SERVER_LOG_FILE}`));
       if (!args.foreground) {
-        try { rmSync(SERVER_PID_FILE, { force: true }); } catch {}
+        try {
+          rmSync(SERVER_PID_FILE, { force: true });
+        } catch {}
       }
     }
   });
@@ -1578,19 +1844,34 @@ async function startServices() {
 
   let serverSpinner: Ora | null = null;
   if (!args.quiet) {
-    serverSpinner = ora({ text: `Server starting on port ${args.port || SERVER_PORT}...`, spinner: 'dots' }).start();
+    serverSpinner = ora({
+      text: `Server starting on port ${args.port || SERVER_PORT}...`,
+      spinner: "dots",
+    }).start();
   }
-  const serverHealthy = await waitForHealth(`http://127.0.0.1:${args.port || SERVER_PORT}/health`, 'Server', 30);
+  const serverHealthy = await waitForHealth(
+    `http://127.0.0.1:${args.port || SERVER_PORT}/health`,
+    "Server",
+    30,
+  );
   const serverTime = ((Date.now() - serverStartTime) / 1000).toFixed(1);
 
   if (serverSpinner) {
     if (serverHealthy) {
       serverSpinner.succeed(kleur.green(`Server healthy (${serverTime}s)`));
     } else {
-      serverSpinner.warn(kleur.yellow('Server may still be starting (check status); health endpoint not ready.'));
+      serverSpinner.warn(
+        kleur.yellow(
+          "Server may still be starting (check status); health endpoint not ready.",
+        ),
+      );
     }
   } else {
-    log(serverHealthy ? `   ✓ Server healthy (${serverTime}s)` : `   ⚠ Server may still be starting (check status in a moment)`);
+    log(
+      serverHealthy
+        ? `   ✓ Server healthy (${serverTime}s)`
+        : `   ⚠ Server may still be starting (check status in a moment)`,
+    );
   }
 
   let uiHealthy = false;
@@ -1604,24 +1885,37 @@ async function startServices() {
       : `bun run --cwd apps/ui dev --port ${args.uiPort || UI_PORT} >> ${UI_LOG_FILE} 2>&1`;
 
     uiProcess = args.foreground
-      ? spawn('bun', ['run', '--cwd', 'apps/ui', 'dev', '--port', String(args.uiPort || UI_PORT)], {
+      ? spawn(
+          "bun",
+          [
+            "run",
+            "--cwd",
+            "apps/ui",
+            "dev",
+            "--port",
+            String(args.uiPort || UI_PORT),
+          ],
+          {
+            cwd: projectRoot,
+            stdio: "inherit",
+            detached: false,
+          },
+        )
+      : spawn("sh", ["-c", uiCmd], {
           cwd: projectRoot,
-          stdio: 'inherit',
-          detached: false,
-        })
-      : spawn('sh', ['-c', uiCmd], {
-          cwd: projectRoot,
-          stdio: 'ignore',
+          stdio: "ignore",
           detached: true,
         });
 
     // Monitor for unexpected process exits
-    uiProcess.on('exit', (code, signal) => {
+    uiProcess.on("exit", (code, signal) => {
       if (code !== 0 && code !== null) {
         console.error(kleur.red(`\n✗ UI process exited with code ${code}`));
         console.error(kleur.dim(`  Check logs: ${UI_LOG_FILE}`));
         if (!args.foreground) {
-          try { rmSync(UI_PID_FILE, { force: true }); } catch {}
+          try {
+            rmSync(UI_PID_FILE, { force: true });
+          } catch {}
         }
       }
     });
@@ -1633,39 +1927,60 @@ async function startServices() {
 
     let uiSpinner: Ora | null = null;
     if (!args.quiet) {
-      uiSpinner = ora({ text: `UI starting on port ${args.uiPort || UI_PORT}...`, spinner: 'dots' }).start();
+      uiSpinner = ora({
+        text: `UI starting on port ${args.uiPort || UI_PORT}...`,
+        spinner: "dots",
+      }).start();
     }
-    uiHealthy = await waitForHealth(`http://127.0.0.1:${args.uiPort || UI_PORT}`, 'UI', 30);
+    uiHealthy = await waitForHealth(
+      `http://127.0.0.1:${args.uiPort || UI_PORT}`,
+      "UI",
+      30,
+    );
     const uiTime = ((Date.now() - uiStartTime) / 1000).toFixed(1);
 
     if (uiSpinner) {
       if (uiHealthy) {
         uiSpinner.succeed(kleur.green(`UI ready (${uiTime}s)`));
       } else {
-        uiSpinner.warn(kleur.yellow('UI may still be starting; visit the URL to confirm.'));
+        uiSpinner.warn(
+          kleur.yellow("UI may still be starting; visit the URL to confirm."),
+        );
       }
     } else {
-      log(uiHealthy ? `   ✓ UI ready (${uiTime}s)` : `   ⚠ UI may still be starting`);
+      log(
+        uiHealthy
+          ? `   ✓ UI ready (${uiTime}s)`
+          : `   ⚠ UI may still be starting`,
+      );
     }
   }
 
   // Fail-fast: Exit immediately if critical services failed health checks
   if (!serverHealthy) {
-    console.error(kleur.red('\n✗ STARTUP FAILED: Server did not become healthy'));
+    console.error(
+      kleur.red("\n✗ STARTUP FAILED: Server did not become healthy"),
+    );
     console.error(kleur.dim(`  Logs: ${SERVER_LOG_FILE}`));
-    console.error(kleur.dim(`  Try: cd ${projectRoot} && bun run --cwd apps/server dev`));
+    console.error(
+      kleur.dim(`  Try: cd ${projectRoot} && bun run --cwd apps/server dev`),
+    );
     console.error(kleur.dim(`       (to see error details)`));
     process.exit(1);
   }
 
   if (!uiHealthy && !args.noUi) {
-    console.error(kleur.red('\n✗ STARTUP FAILED: UI did not become healthy'));
+    console.error(kleur.red("\n✗ STARTUP FAILED: UI did not become healthy"));
     console.error(kleur.dim(`  Logs: ${UI_LOG_FILE}`));
     console.error(kleur.dim(`  Common causes:`));
     console.error(kleur.dim(`    - TypeScript compilation errors`));
-    console.error(kleur.dim(`    - Port ${args.uiPort || UI_PORT} already in use`));
+    console.error(
+      kleur.dim(`    - Port ${args.uiPort || UI_PORT} already in use`),
+    );
     console.error(kleur.dim(`    - Missing dependencies (try: bun install)`));
-    console.error(kleur.dim(`  Try: cd ${projectRoot} && bun run --cwd apps/ui dev`));
+    console.error(
+      kleur.dim(`  Try: cd ${projectRoot} && bun run --cwd apps/ui dev`),
+    );
     console.error(kleur.dim(`       (to see error details)`));
     process.exit(1);
   }
@@ -1673,53 +1988,68 @@ async function startServices() {
   const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
 
   if (!args.quiet) {
-    console.log(`\n${kleur.bold(kleur.green(`✨ Started in ${totalTime}s`))}\n`);
-    console.log(kleur.bold().magenta('🧿 Third-Eye MCP — READY'));
-    console.log(kleur.gray('━'.repeat(60)));
-    console.log(`• Server: ${kleur.cyan(`http://127.0.0.1:${args.port || SERVER_PORT}`)} ${serverHealthy ? kleur.green('✓') : kleur.red('✗ FAILED')}`);
+    console.log(
+      `\n${kleur.bold(kleur.green(`✨ Started in ${totalTime}s`))}\n`,
+    );
+    console.log(kleur.bold().magenta("🧿 Third-Eye MCP — READY"));
+    console.log(kleur.gray("━".repeat(60)));
+    console.log(
+      `• Server: ${kleur.cyan(`http://127.0.0.1:${args.port || SERVER_PORT}`)} ${serverHealthy ? kleur.green("✓") : kleur.red("✗ FAILED")}`,
+    );
     if (!args.noUi) {
-      console.log(`• UI:     ${kleur.cyan(`http://127.0.0.1:${args.uiPort || UI_PORT}`)} ${uiHealthy ? kleur.green('✓') : kleur.red('✗ FAILED')}`);
+      console.log(
+        `• UI:     ${kleur.cyan(`http://127.0.0.1:${args.uiPort || UI_PORT}`)} ${uiHealthy ? kleur.green("✓") : kleur.red("✗ FAILED")}`,
+      );
     }
     console.log(`• DB:     ${kleur.cyan(`~/${DATA_DIRECTORY}/mcp.db`)}`);
     console.log(`• Logs:   ${kleur.cyan(`~/${DATA_DIRECTORY}/logs/`)}`);
     if (!args.foreground) {
       const serverPid = getPid(SERVER_PID_FILE);
       const uiPid = !args.noUi ? getPid(UI_PID_FILE) : null;
-      console.log(`• PIDs:   server(${serverPid})${uiPid ? ` ui(${uiPid})` : ''}`);
+      console.log(
+        `• PIDs:   server(${serverPid})${uiPid ? ` ui(${uiPid})` : ""}`,
+      );
     }
-    console.log(`\n${kleur.cyan('📖 Next steps:')}`);
+    console.log(`\n${kleur.cyan("📖 Next steps:")}`);
     console.log(`   ${kleur.yellow(`${CLI_EXEC} status`)}  - Check status`);
     console.log(`   ${kleur.yellow(`${CLI_EXEC} logs`)}    - View logs`);
     console.log(`   ${kleur.yellow(`${CLI_EXEC} stop`)}    - Stop services`);
 
     if (args.foreground) {
-      console.log(kleur.gray('\nRunning in foreground. Press Ctrl+C to stop.'));
+      console.log(kleur.gray("\nRunning in foreground. Press Ctrl+C to stop."));
     } else {
-      console.log(kleur.gray('\nRunning in background. Safe to close terminal.'));
+      console.log(
+        kleur.gray("\nRunning in background. Safe to close terminal."),
+      );
     }
   }
 
   if (args.foreground) {
     const shutdown = () => {
-      console.log('\n📴 Shutting down services...');
-      if (serverProcess.pid) process.kill(serverProcess.pid, 'SIGTERM');
-      if (!args.noUi && uiProcess && uiProcess.pid) process.kill(uiProcess.pid, 'SIGTERM');
+      console.log("\n📴 Shutting down services...");
+      if (serverProcess.pid) process.kill(serverProcess.pid, "SIGTERM");
+      if (!args.noUi && uiProcess && uiProcess.pid)
+        process.kill(uiProcess.pid, "SIGTERM");
       process.exit(0);
     };
 
-    process.on('SIGINT', shutdown);
-    process.on('SIGTERM', shutdown);
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
 
     await new Promise(() => {});
   } else {
     // Enable health monitoring for detached mode
     // This will automatically restart services if they crash
-    enableHealthMonitoring(args.port || SERVER_PORT, args.uiPort || UI_PORT, args.noUi || false);
+    enableHealthMonitoring(
+      args.port || SERVER_PORT,
+      args.uiPort || UI_PORT,
+      args.noUi || false,
+    );
   }
 }
 
 async function stopServices() {
-  console.log('📴 Stopping services...\n');
+  console.log("📴 Stopping services...\n");
 
   const serverPid = getPid(SERVER_PID_FILE);
   const uiPid = getPid(UI_PID_FILE);
@@ -1728,7 +2058,7 @@ async function stopServices() {
 
   if (serverPid) {
     try {
-      process.kill(serverPid, 'SIGTERM');
+      process.kill(serverPid, "SIGTERM");
       console.log(`   ✓ Server stopped (PID ${serverPid})`);
       rmSync(SERVER_PID_FILE);
       stopped++;
@@ -1739,7 +2069,7 @@ async function stopServices() {
 
   if (uiPid) {
     try {
-      process.kill(uiPid, 'SIGTERM');
+      process.kill(uiPid, "SIGTERM");
       console.log(`   ✓ UI stopped (PID ${uiPid})`);
       rmSync(UI_PID_FILE);
       stopped++;
@@ -1749,28 +2079,35 @@ async function stopServices() {
   }
 
   if (stopped === 0) {
-    console.log('   ℹ No services were running');
+    console.log("   ℹ No services were running");
   } else {
-    console.log(`\n✅ Stopped ${stopped} service${stopped > 1 ? 's' : ''}`);
+    console.log(`\n✅ Stopped ${stopped} service${stopped > 1 ? "s" : ""}`);
   }
 }
 
 async function showStatus() {
-  console.log('🧿 Third Eye MCP - Status');
-  console.log('━'.repeat(60));
+  console.log("🧿 Third Eye MCP - Status");
+  console.log("━".repeat(60));
 
   const serverPid = getPid(SERVER_PID_FILE);
   const uiPid = getPid(UI_PID_FILE);
 
   if (serverPid) {
     try {
-      const stats = execSync(`ps -o etime,rss -p ${serverPid}`).toString().split('\n')[1].trim().split(/\s+/);
+      const stats = execSync(`ps -o etime,rss -p ${serverPid}`)
+        .toString()
+        .split("\n")[1]
+        .trim()
+        .split(/\s+/);
       const uptime = stats[0];
       const memory = Math.round(parseInt(stats[1]) / 1024);
       console.log(`Server:  ✓ Running (PID ${serverPid}, uptime ${uptime})`);
       console.log(`         Memory: ${memory}MB`);
 
-      const healthCheck = await waitForHealth(`http://127.0.0.1:${SERVER_PORT}/health`, 1);
+      const healthCheck = await waitForHealth(
+        `http://127.0.0.1:${SERVER_PORT}/health`,
+        1,
+      );
       if (healthCheck) {
         console.log(`         Health: ✓ Responding`);
       }
@@ -1778,12 +2115,16 @@ async function showStatus() {
       console.log(`Server:  ✗ Process not found`);
     }
   } else {
-    console.log('Server:  ○ Not running');
+    console.log("Server:  ○ Not running");
   }
 
   if (uiPid) {
     try {
-      const stats = execSync(`ps -o etime,rss -p ${uiPid}`).toString().split('\n')[1].trim().split(/\s+/);
+      const stats = execSync(`ps -o etime,rss -p ${uiPid}`)
+        .toString()
+        .split("\n")[1]
+        .trim()
+        .split(/\s+/);
       const uptime = stats[0];
       const memory = Math.round(parseInt(stats[1]) / 1024);
       console.log(`UI:      ✓ Running (PID ${uiPid}, uptime ${uptime})`);
@@ -1792,60 +2133,60 @@ async function showStatus() {
       console.log(`UI:      ✗ Process not found`);
     }
   } else {
-    console.log('UI:      ○ Not running');
+    console.log("UI:      ○ Not running");
   }
 
-  console.log('━'.repeat(60));
+  console.log("━".repeat(60));
 }
 
 async function showLogs() {
   const args = parseArgs();
 
   if (args.tail) {
-    console.log('📜 Tailing logs (Ctrl+C to stop)...\n');
-    const tail = spawn('tail', ['-f', SERVER_LOG_FILE, UI_LOG_FILE], {
-      stdio: 'inherit',
+    console.log("📜 Tailing logs (Ctrl+C to stop)...\n");
+    const tail = spawn("tail", ["-f", SERVER_LOG_FILE, UI_LOG_FILE], {
+      stdio: "inherit",
     });
     await new Promise(() => {});
   } else {
-    console.log('📜 Recent logs:\n');
-    console.log('━ SERVER ━'.repeat(10));
+    console.log("📜 Recent logs:\n");
+    console.log("━ SERVER ━".repeat(10));
     try {
       const serverLogs = execSync(`tail -20 ${SERVER_LOG_FILE}`).toString();
       console.log(serverLogs);
     } catch {
-      console.log('No server logs available');
+      console.log("No server logs available");
     }
 
-    console.log('\n━ UI ━'.repeat(10));
+    console.log("\n━ UI ━".repeat(10));
     try {
       const uiLogs = execSync(`tail -20 ${UI_LOG_FILE}`).toString();
       console.log(uiLogs);
     } catch {
-      console.log('No UI logs available');
+      console.log("No UI logs available");
     }
 
-    console.log('\n💡 Use --tail to follow logs in real-time');
+    console.log("\n💡 Use --tail to follow logs in real-time");
   }
 }
 
 async function restartServices() {
   await stopServices();
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 1000));
   await startServices();
 }
 
 async function startMCPServer() {
   await ensureDependencies(true);
   const projectRoot = getProjectRoot();
-  console.log('🧿 Starting Third Eye MCP Server (stdio mode)...\n');
+  console.log("🧿 Starting Third Eye MCP Server (stdio mode)...\n");
 
-  const server = spawn('bun', ['run', 'bin/mcp-server.ts'], {
+  const server = spawn("bun", ["run", "bin/mcp-server.ts"], {
     cwd: projectRoot,
-    stdio: 'inherit',
+    stdio: "inherit",
   });
 
-  server.on('exit', (code) => {
+  server.on("exit", (code) => {
     process.exit(code || 0);
   });
 
@@ -1853,31 +2194,38 @@ async function startMCPServer() {
 }
 
 async function openDbBrowser() {
-  console.log('🗄️  Opening DB browser...');
+  console.log("🗄️  Opening DB browser...");
   const url = `http://127.0.0.1:${UI_PORT}/db`;
 
-  const command = process.platform === 'darwin' ? 'open' :
-                 process.platform === 'win32' ? 'start' : 'xdg-open';
+  const command =
+    process.platform === "darwin"
+      ? "open"
+      : process.platform === "win32"
+        ? "start"
+        : "xdg-open";
 
-  spawn(command, [url], { detached: true, stdio: 'ignore' });
+  spawn(command, [url], { detached: true, stdio: "ignore" });
 }
 
-function bumpVersion(current: string, type: 'patch' | 'minor' | 'major'): string {
-  const parts = current.split('.').map(num => parseInt(num, 10));
+function bumpVersion(
+  current: string,
+  type: "patch" | "minor" | "major",
+): string {
+  const parts = current.split(".").map((num) => parseInt(num, 10));
   if (parts.length !== 3 || parts.some(Number.isNaN)) {
     throw new Error(`Invalid semantic version: ${current}`);
   }
 
   let [major, minor, patch] = parts;
   switch (type) {
-    case 'patch':
+    case "patch":
       patch += 1;
       break;
-    case 'minor':
+    case "minor":
       minor += 1;
       patch = 0;
       break;
-    case 'major':
+    case "major":
       major += 1;
       minor = 0;
       patch = 0;
@@ -1889,47 +2237,55 @@ function bumpVersion(current: string, type: 'patch' | 'minor' | 'major'): string
 
 async function runReleaseAssistant() {
   const projectRoot = getProjectRoot();
-  console.log('\n🚀 Third Eye MCP Release Assistant');
-  console.log('━'.repeat(60));
+  console.log("\n🚀 Third Eye MCP Release Assistant");
+  console.log("━".repeat(60));
   console.log(`Current version: v${VERSION}`);
 
-  const gitStatus = execSync('git status --porcelain', { cwd: projectRoot }).toString().trim();
+  const gitStatus = execSync("git status --porcelain", { cwd: projectRoot })
+    .toString()
+    .trim();
   if (gitStatus.length > 0) {
     const proceed = await confirm({
-      message: 'Working tree is dirty. Continue anyway?',
+      message: "Working tree is dirty. Continue anyway?",
       default: false,
     });
     if (!proceed) {
-      console.log('Release aborted. Clean your working tree and retry.');
+      console.log("Release aborted. Clean your working tree and retry.");
       return;
     }
   }
 
   const bumpChoice = await select<{ value: string } | string>({
-    message: 'Select version bump',
+    message: "Select version bump",
     choices: [
-      { name: `Patch (${bumpVersion(VERSION, 'patch')})`, value: 'patch' },
-      { name: `Minor (${bumpVersion(VERSION, 'minor')})`, value: 'minor' },
-      { name: `Major (${bumpVersion(VERSION, 'major')})`, value: 'major' },
-      { name: 'Custom…', value: 'custom' },
-      { name: 'Abort', value: 'abort' },
+      { name: `Patch (${bumpVersion(VERSION, "patch")})`, value: "patch" },
+      { name: `Minor (${bumpVersion(VERSION, "minor")})`, value: "minor" },
+      { name: `Major (${bumpVersion(VERSION, "major")})`, value: "major" },
+      { name: "Custom…", value: "custom" },
+      { name: "Abort", value: "abort" },
     ],
   });
 
-  if (bumpChoice === 'abort') {
-    console.log('Release aborted.');
+  if (bumpChoice === "abort") {
+    console.log("Release aborted.");
     return;
   }
 
   let targetVersion: string;
-  if (bumpChoice === 'custom') {
+  if (bumpChoice === "custom") {
     targetVersion = await input({
-      message: 'Enter the new version (semver)',
+      message: "Enter the new version (semver)",
       default: VERSION,
-      validate: (value) => /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-.]+)?(?:\+[0-9A-Za-z-.]+)?$/.test(value) || 'Invalid semantic version',
+      validate: (value) =>
+        /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-.]+)?(?:\+[0-9A-Za-z-.]+)?$/.test(
+          value,
+        ) || "Invalid semantic version",
     });
   } else {
-    targetVersion = bumpVersion(VERSION, bumpChoice as 'patch' | 'minor' | 'major');
+    targetVersion = bumpVersion(
+      VERSION,
+      bumpChoice as "patch" | "minor" | "major",
+    );
   }
 
   const confirmed = await confirm({
@@ -1938,59 +2294,72 @@ async function runReleaseAssistant() {
   });
 
   if (!confirmed) {
-    console.log('Release aborted.');
+    console.log("Release aborted.");
     return;
   }
 
-  console.log('\n📝 Updating package version...');
+  console.log("\n📝 Updating package version...");
   execSync(`npm version ${targetVersion} --no-git-tag-version`, {
     cwd: projectRoot,
-    stdio: 'inherit',
+    stdio: "inherit",
   });
 
-  const changelogPath = resolve(projectRoot, 'CHANGELOG.md');
+  const changelogPath = resolve(projectRoot, "CHANGELOG.md");
   const addNotes = await confirm({
-    message: 'Add release notes to CHANGELOG.md?',
+    message: "Add release notes to CHANGELOG.md?",
     default: true,
   });
 
   if (addNotes) {
     const notes = await input({
-      message: 'Release summary (Markdown)',
-      default: '- TBD',
+      message: "Release summary (Markdown)",
+      default: "- TBD",
     });
 
-    const existing = existsSync(changelogPath) ? readFileSync(changelogPath, 'utf-8') : '# Changelog\n\n';
-    const date = new Date().toISOString().split('T')[0];
+    const existing = existsSync(changelogPath)
+      ? readFileSync(changelogPath, "utf-8")
+      : "# Changelog\n\n";
+    const date = new Date().toISOString().split("T")[0];
     const entry = `## v${targetVersion} - ${date}\n\n${notes}\n\n`;
-    writeFileSync(changelogPath, `${existing.startsWith('# Changelog') ? existing : `# Changelog\n\n${existing}`}`
-      .replace('# Changelog', `# Changelog\n\n${entry}`));
+    writeFileSync(
+      changelogPath,
+      `${existing.startsWith("# Changelog") ? existing : `# Changelog\n\n${existing}`}`.replace(
+        "# Changelog",
+        `# Changelog\n\n${entry}`,
+      ),
+    );
   }
 
-  console.log('\n✅ Version updated.');
+  console.log("\n✅ Version updated.");
   try {
     const entry = {
       version: targetVersion,
       date: new Date().toISOString(),
-      changelog: addNotes ? 'updated' : 'skipped',
+      changelog: addNotes ? "updated" : "skipped",
     };
 
     let history: Array<typeof entry> = [];
     if (existsSync(RELEASE_HISTORY_FILE)) {
-      history = JSON.parse(readFileSync(RELEASE_HISTORY_FILE, 'utf-8'));
+      history = JSON.parse(readFileSync(RELEASE_HISTORY_FILE, "utf-8"));
     }
     history.unshift(entry);
-    writeFileSync(RELEASE_HISTORY_FILE, JSON.stringify(history.slice(0, 20), null, 2));
+    writeFileSync(
+      RELEASE_HISTORY_FILE,
+      JSON.stringify(history.slice(0, 20), null, 2),
+    );
     console.log(`🗂  Release history updated (${RELEASE_HISTORY_FILE})`);
   } catch (error) {
-    console.warn('⚠️  Failed to persist release history:', error instanceof Error ? error.message : error);
+    console.warn(
+      "⚠️  Failed to persist release history:",
+      error instanceof Error ? error.message : error,
+    );
   }
 
-  console.log('\nNext steps:');
-  console.log('  1. Review git diff and stage files.');
-  console.log('  2. Run `bun run release:prepare:dry` to verify artifacts.');
-  console.log('  3. Commit & tag release.');
-  console.log('  4. Publish with `bun run release:publish`.');
+  console.log("\nNext steps:");
+  console.log("  1. Review git diff and stage files.");
+  console.log("  2. Run `bun run release:prepare:dry` to verify artifacts.");
+  console.log("  3. Commit & tag release.");
+  console.log("  4. Publish with `bun run release:publish`.");
 }
 
 async function resetData() {
@@ -2000,16 +2369,16 @@ async function resetData() {
   });
 
   if (!confirmed) {
-    console.log('Reset cancelled.');
+    console.log("Reset cancelled.");
     return;
   }
 
   try {
     rmSync(THIRD_EYE_DIR, { recursive: true, force: true });
-    console.log('✅ Data reset successfully.');
+    console.log("✅ Data reset successfully.");
     console.log(`💡 Run "${CLI_EXEC} up" to reinitialize.`);
   } catch (error) {
-    console.error('❌ Failed to reset data:', error);
+    console.error("❌ Failed to reset data:", error);
     process.exit(1);
   }
 }
@@ -2017,39 +2386,43 @@ async function resetData() {
 async function main() {
   const args = parseArgs();
 
-  if (args.command === '--help' || args.command === '-h' || args.command === 'help') {
+  if (
+    args.command === "--help" ||
+    args.command === "-h" ||
+    args.command === "help"
+  ) {
     showHelp();
     return;
   }
 
   try {
     switch (args.command) {
-      case 'up':
+      case "up":
         await startServices();
         break;
 
-      case 'stop':
+      case "stop":
         await stopServices();
         break;
 
-      case 'restart':
+      case "restart":
         await restartServices();
         break;
 
-      case 'status':
+      case "status":
         await showStatus();
         break;
 
-      case 'logs':
+      case "logs":
         await showLogs();
         break;
 
-      case 'server':
+      case "server":
         await startMCPServer();
         break;
 
-      case 'db':
-        if (process.argv[3] === 'open') {
+      case "db":
+        if (process.argv[3] === "open") {
           await openDbBrowser();
         } else {
           console.error(`❌ Unknown db command. Try: ${CLI_EXEC} db open`);
@@ -2057,15 +2430,15 @@ async function main() {
         }
         break;
 
-      case 'reset':
+      case "reset":
         await resetData();
         break;
 
-      case 'release':
+      case "release":
         await runReleaseAssistant();
         break;
 
-      case 'release:ship':
+      case "release:ship":
         await runReleasePipeline();
         break;
 
@@ -2075,7 +2448,7 @@ async function main() {
         process.exit(1);
     }
   } catch (error) {
-    console.error('❌ Command failed:', error);
+    console.error("❌ Command failed:", error);
     console.error(`\n💡 For help, run: ${CLI_EXEC} --help`);
     process.exit(1);
   }

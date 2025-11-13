@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useCallback, useState, useMemo, useEffect } from 'react';
+import { useCallback, useState, useMemo, useEffect } from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -16,29 +16,43 @@ import ReactFlow, {
   type NodeChange,
   MarkerType,
   BackgroundVariant,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
-import { getEyeColor } from '@/components/EyeIcon';
-import { EyeNode } from './EyeNode';
-import { SwitchNode } from './SwitchNode';
-import { IFNode } from './IFNode';
-import { LoopNode } from './LoopNode';
-import { TerminalNode } from './TerminalNode';
-import { UserInputNode } from './UserInputNode';
-import { NodePalette } from './NodePalette';
-import { NodeEditModal } from './NodeEditModal';
-import { EdgeConfigModal } from './EdgeConfigModal';
-import { Toolbar } from './Toolbar';
-import { PersonaWizardModal } from '@/components/persona-form/PersonaWizardModal';
-import { PipelineTemplateSelector } from './PipelineTemplateSelector';
-import { SwitchNodeConfigModal } from './SwitchNodeConfigModal';
-import { IFNodeConfigModal } from './IFNodeConfigModal';
-import { LoopNodeConfigModal } from './LoopNodeConfigModal';
-import { CANVAS_SETTINGS, LAYOUT, PIPELINE_UI_TEXT } from './constants';
-import { API_BASE_URL } from '@/consts/api';
-import type { PipelineNode, PipelineEdge, EyeNodeData, EdgeConditionData } from '@/types/pipeline';
-import type { SwitchNodeConfig, IfNodeConfig, LoopNodeConfig } from '@third-eye/types/pipeline';
-import { useActivePipeline, usePipelines, useSavePipeline, useActivatePipeline } from '@/hooks/usePipelines';
+} from "reactflow";
+import "reactflow/dist/style.css";
+import { getEyeColor } from "@/components/EyeIcon";
+import { EyeNode } from "./EyeNode";
+import { SwitchNode } from "./SwitchNode";
+import { IFNode } from "./IFNode";
+import { LoopNode } from "./LoopNode";
+import { TerminalNode } from "./TerminalNode";
+import { UserInputNode } from "./UserInputNode";
+import { NodePalette } from "./NodePalette";
+import { NodeEditModal } from "./NodeEditModal";
+import { EdgeConfigModal } from "./EdgeConfigModal";
+import { Toolbar } from "./Toolbar";
+import { PersonaWizardModal } from "@/components/persona-form/PersonaWizardModal";
+import { PipelineTemplateSelector } from "./PipelineTemplateSelector";
+import { SwitchNodeConfigModal } from "./SwitchNodeConfigModal";
+import { IFNodeConfigModal } from "./IFNodeConfigModal";
+import { LoopNodeConfigModal } from "./LoopNodeConfigModal";
+import { CANVAS_SETTINGS, LAYOUT, PIPELINE_UI_TEXT } from "./constants";
+import { API_BASE_URL } from "@/consts/api";
+import type {
+  PipelineNode,
+  PipelineEdge,
+  EyeNodeData,
+  EdgeConditionData,
+} from "@/types/pipeline";
+import type {
+  SwitchNodeConfig,
+  IfNodeConfig,
+  LoopNodeConfig,
+} from "@third-eye/types/pipeline";
+import {
+  useActivePipeline,
+  usePipelines,
+  useSavePipeline,
+  useActivatePipeline,
+} from "@/hooks/usePipelines";
 
 /**
  * Validate nodes structure - throws error if malformed
@@ -46,7 +60,14 @@ import { useActivePipeline, usePipelines, useSavePipeline, useActivatePipeline }
  * Per R12: No fallbacks - throw error if data is invalid
  * Per R13: Valid node types from SSOT (registered node types)
  */
-const VALID_NODE_TYPES = ['eyeNode', 'switch', 'if', 'loop_over_items', 'terminal', 'user_input'] as const;
+const VALID_NODE_TYPES = [
+  "eyeNode",
+  "switch",
+  "if",
+  "loop_over_items",
+  "terminal",
+  "user_input",
+] as const;
 
 const validateNodes = (nodes: Node[]): void => {
   for (const node of nodes) {
@@ -54,20 +75,29 @@ const validateNodes = (nodes: Node[]): void => {
       throw new Error(`Node missing required property: id`);
     }
     if (!node.type || !VALID_NODE_TYPES.includes(node.type as any)) {
-      throw new Error(`Node ${node.id} has invalid type: ${node.type}. Expected one of: ${VALID_NODE_TYPES.join(', ')}`);
+      throw new Error(
+        `Node ${node.id} has invalid type: ${node.type}. Expected one of: ${VALID_NODE_TYPES.join(", ")}`,
+      );
     }
     if (!node.position) {
       throw new Error(`Node ${node.id} missing required property: position`);
     }
-    if (typeof node.position.x !== 'number' || typeof node.position.y !== 'number') {
-      throw new Error(`Node ${node.id} has invalid position: position must have numeric x and y properties`);
+    if (
+      typeof node.position.x !== "number" ||
+      typeof node.position.y !== "number"
+    ) {
+      throw new Error(
+        `Node ${node.id} has invalid position: position must have numeric x and y properties`,
+      );
     }
     if (!node.data) {
       throw new Error(`Node ${node.id} missing required property: data`);
     }
     // Only validate eyeId for eyeNode types
-    if (node.type === 'eyeNode' && !node.data.eyeId) {
-      throw new Error(`Eye node ${node.id} missing required property: data.eyeId`);
+    if (node.type === "eyeNode" && !node.data.eyeId) {
+      throw new Error(
+        `Eye node ${node.id} missing required property: data.eyeId`,
+      );
     }
   }
 };
@@ -89,38 +119,46 @@ const validateNodes = (nodes: Node[]): void => {
  * Per R13: All constants from SSOT
  */
 export function PipelineCanvasEnhanced() {
-  console.log('[DEBUG] PipelineCanvasEnhanced component mounting');
+  console.log("[DEBUG] PipelineCanvasEnhanced component mounting");
 
   // Memoize nodeTypes to prevent ReactFlow warning
-  const nodeTypes = useMemo(() => ({
-    eyeNode: EyeNode,
-    switch: SwitchNode,
-    if: IFNode,
-    loop_over_items: LoopNode,
-    terminal: TerminalNode,
-    user_input: UserInputNode,
-  }), []);
+  const nodeTypes = useMemo(
+    () => ({
+      eyeNode: EyeNode,
+      switch: SwitchNode,
+      if: IFNode,
+      loop_over_items: LoopNode,
+      terminal: TerminalNode,
+      user_input: UserInputNode,
+    }),
+    [],
+  );
 
   // Start with empty pipeline - load from database if needed
   const [nodes, setNodes, onNodesChange] = useNodesState<EyeNodeData>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<EdgeConditionData>([]);
-  
+
   // Wrap setNodes to validate nodes before setting
   // This ensures ReactFlow never receives invalid nodes
   // Per R12: No fallbacks - throw error if data is invalid
   const setNodesValidated = useCallback(
-    (nodesOrUpdater: Node<EyeNodeData>[] | ((nodes: Node<EyeNodeData>[]) => Node<EyeNodeData>[])) => {
+    (
+      nodesOrUpdater:
+        | Node<EyeNodeData>[]
+        | ((nodes: Node<EyeNodeData>[]) => Node<EyeNodeData>[]),
+    ) => {
       setNodes((currentNodes) => {
         // Use currentNodes from React state, not stale closure
-        const nodesToSet = typeof nodesOrUpdater === 'function'
-          ? nodesOrUpdater(currentNodes)
-          : nodesOrUpdater;
+        const nodesToSet =
+          typeof nodesOrUpdater === "function"
+            ? nodesOrUpdater(currentNodes)
+            : nodesOrUpdater;
 
         // DEBUG: Log nodes being set
-        console.log('[DEBUG] setNodesValidated called with:', {
-          isFunction: typeof nodesOrUpdater === 'function',
+        console.log("[DEBUG] setNodesValidated called with:", {
+          isFunction: typeof nodesOrUpdater === "function",
           nodesCount: nodesToSet.length,
-          nodes: nodesToSet.map(n => ({
+          nodes: nodesToSet.map((n) => ({
             id: n.id,
             type: n.type,
             hasPosition: !!n.position,
@@ -135,21 +173,24 @@ export function PipelineCanvasEnhanced() {
         }
 
         // DEBUG: Log after validation
-        console.log('[DEBUG] Validation passed, setting nodes');
+        console.log("[DEBUG] Validation passed, setting nodes");
 
         // Return validated nodes to React
         return nodesToSet;
       });
     },
-    [setNodes]
+    [setNodes],
   );
-  
+
   // START WITH BLANK CANVAS for N8N-style pipeline builder
   // Per vision: Dynamic routing via Overseer (not static templates)
   // Templates/sessions can be loaded via toolbar "Load" button
   // This allows professional pipeline creation from scratch
-  const [selectedNode, setSelectedNode] = useState<Node<EyeNodeData> | null>(null);
-  const [selectedEdge, setSelectedEdge] = useState<Edge<EdgeConditionData> | null>(null);
+  const [selectedNode, setSelectedNode] = useState<Node<EyeNodeData> | null>(
+    null,
+  );
+  const [selectedEdge, setSelectedEdge] =
+    useState<Edge<EdgeConditionData> | null>(null);
   const [paletteCollapsed, setPaletteCollapsed] = useState<boolean>(false);
   const [showMinimap, setShowMinimap] = useState<boolean>(true);
   const [showGrid, setShowGrid] = useState<boolean>(true);
@@ -157,18 +198,28 @@ export function PipelineCanvasEnhanced() {
 
   // Phase 16: Persona configuration modal state
   const [isPersonaModalOpen, setIsPersonaModalOpen] = useState(false);
-  const [selectedPersonaEye, setSelectedPersonaEye] = useState<{ id: string; name: string } | null>(null);
+  const [selectedPersonaEye, setSelectedPersonaEye] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   // Phase 19.4: Template selector modal state
   const [isTemplateSelectorOpen, setIsTemplateSelectorOpen] = useState(false);
 
   // Control node configuration modal states
-  const [selectedSwitchNode, setSelectedSwitchNode] = useState<Node<EyeNodeData> | null>(null);
-  const [selectedIFNode, setSelectedIFNode] = useState<Node<EyeNodeData> | null>(null);
-  const [selectedLoopNode, setSelectedLoopNode] = useState<Node<EyeNodeData> | null>(null);
+  const [selectedSwitchNode, setSelectedSwitchNode] =
+    useState<Node<EyeNodeData> | null>(null);
+  const [selectedIFNode, setSelectedIFNode] =
+    useState<Node<EyeNodeData> | null>(null);
+  const [selectedLoopNode, setSelectedLoopNode] =
+    useState<Node<EyeNodeData> | null>(null);
 
   // Load active/default pipeline from database
-  const { pipeline: activePipeline, loading: pipelineLoading, refetch: refetchPipeline } = useActivePipeline();
+  const {
+    pipeline: activePipeline,
+    loading: pipelineLoading,
+    refetch: refetchPipeline,
+  } = useActivePipeline();
 
   // Load all pipelines for toolbar dropdown (Quick Win #1 - fix undefined variable)
   const { pipelines } = usePipelines();
@@ -179,14 +230,14 @@ export function PipelineCanvasEnhanced() {
 
   // Load default pipeline on mount
   useEffect(() => {
-    console.log('[PipelineCanvas] Loading default pipeline on mount');
+    console.log("[PipelineCanvas] Loading default pipeline on mount");
     refetchPipeline();
   }, [refetchPipeline]);
 
   // Set nodes and edges when pipeline is loaded
   useEffect(() => {
     if (activePipeline && activePipeline.nodes && activePipeline.edges) {
-      console.log('[PipelineCanvas] Setting pipeline nodes and edges:', {
+      console.log("[PipelineCanvas] Setting pipeline nodes and edges:", {
         nodeCount: activePipeline.nodes.length,
         edgeCount: activePipeline.edges.length,
       });
@@ -201,17 +252,17 @@ export function PipelineCanvasEnhanced() {
       event.stopPropagation();
 
       if (!node.position) {
-        console.warn('[PipelineCanvas] Node has no position:', node.id);
+        console.warn("[PipelineCanvas] Node has no position:", node.id);
         return;
       }
 
       reactFlowInstance.setCenter(
         node.position.x + (node.width || CANVAS_SETTINGS.NODE_SPACING) / 2,
         node.position.y + (node.height || CANVAS_SETTINGS.NODE_SPACING) / 2,
-        { zoom: LAYOUT.ZOOM_TO_NODE_SCALE, duration: LAYOUT.ZOOM_DURATION }
+        { zoom: LAYOUT.ZOOM_TO_NODE_SCALE, duration: LAYOUT.ZOOM_DURATION },
       );
     },
-    [reactFlowInstance]
+    [reactFlowInstance],
   );
 
   // Click outside → fit view
@@ -229,22 +280,22 @@ export function PipelineCanvasEnhanced() {
 
       // Route to appropriate modal based on node type
       switch (node.type) {
-        case 'switch':
+        case "switch":
           setSelectedSwitchNode(node);
           break;
-        case 'if':
+        case "if":
           setSelectedIFNode(node);
           break;
-        case 'loop_over_items':
+        case "loop_over_items":
           setSelectedLoopNode(node);
           break;
-        case 'eyeNode':
+        case "eyeNode":
         default:
           setSelectedNode(node);
           break;
       }
     },
-    []
+    [],
   );
 
   // Double-click node → edit modal (Quick Win #3)
@@ -252,7 +303,7 @@ export function PipelineCanvasEnhanced() {
     (event: React.MouseEvent, node: Node<EyeNodeData>) => {
       handleNodeContextMenu(event, node);
     },
-    [handleNodeContextMenu]
+    [handleNodeContextMenu],
   );
 
   // Right-click edge → config modal
@@ -261,36 +312,41 @@ export function PipelineCanvasEnhanced() {
       event.preventDefault();
       setSelectedEdge(edge);
     },
-    []
+    [],
   );
 
   // Update node
   const handleNodeUpdate = useCallback(
     (nodeId: string, updates: Partial<EyeNodeData>) => {
-      setNodesValidated((nds) =>
-        nds.map((n) => (n.id === nodeId ? { ...n, data: { ...n.data, ...updates } } : n)) as Node<EyeNodeData>[]
+      setNodesValidated(
+        (nds) =>
+          nds.map((n) =>
+            n.id === nodeId ? { ...n, data: { ...n.data, ...updates } } : n,
+          ) as Node<EyeNodeData>[],
       );
     },
-    [setNodesValidated]
+    [setNodesValidated],
   );
 
   // Delete node
   const handleNodeDelete = useCallback(
     (nodeId: string) => {
       setNodesValidated((nds) => nds.filter((n) => n.id !== nodeId));
-      setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
+      setEdges((eds) =>
+        eds.filter((e) => e.source !== nodeId && e.target !== nodeId),
+      );
     },
-    [setNodesValidated, setEdges]
+    [setNodesValidated, setEdges],
   );
 
   // Update edge
   const handleEdgeUpdate = useCallback(
     (edgeId: string, updates: EdgeConditionData) => {
       setEdges((eds) =>
-        eds.map((e) => (e.id === edgeId ? { ...e, data: updates } : e))
+        eds.map((e) => (e.id === edgeId ? { ...e, data: updates } : e)),
       );
     },
-    [setEdges]
+    [setEdges],
   );
 
   // Delete edge
@@ -298,15 +354,18 @@ export function PipelineCanvasEnhanced() {
     (edgeId: string) => {
       setEdges((eds) => eds.filter((e) => e.id !== edgeId));
     },
-    [setEdges]
+    [setEdges],
   );
 
   // Phase 16: Persona configuration handlers
-  const handleConfigurePersona = useCallback((eyeId: string, eyeName: string) => {
-    setSelectedPersonaEye({ id: eyeId, name: eyeName });
-    setIsPersonaModalOpen(true);
-    setSelectedNode(null); // Close node edit modal
-  }, []);
+  const handleConfigurePersona = useCallback(
+    (eyeId: string, eyeName: string) => {
+      setSelectedPersonaEye({ id: eyeId, name: eyeName });
+      setIsPersonaModalOpen(true);
+      setSelectedNode(null); // Close node edit modal
+    },
+    [],
+  );
 
   const handleClosePersonaModal = useCallback(() => {
     setIsPersonaModalOpen(false);
@@ -315,67 +374,91 @@ export function PipelineCanvasEnhanced() {
 
   const handlePersonaSaved = useCallback(() => {
     // Could refresh node data here if needed
-    console.log('Persona saved for pipeline node');
+    console.log("Persona saved for pipeline node");
   }, []);
 
   // Control node configuration save handlers
-  const handleSaveSwitchConfig = useCallback((config: SwitchNodeConfig) => {
-    if (!selectedSwitchNode) return;
-    setNodesValidated((nds) =>
-      nds.map((n) =>
-        n.id === selectedSwitchNode.id
-          ? { ...n, data: { ...n.data, switchConfig: config } }
-          : n
-      ) as Node<EyeNodeData>[]
-    );
-    setSelectedSwitchNode(null);
-  }, [selectedSwitchNode, setNodesValidated]);
+  const handleSaveSwitchConfig = useCallback(
+    (config: SwitchNodeConfig) => {
+      if (!selectedSwitchNode) return;
+      setNodesValidated(
+        (nds) =>
+          nds.map((n) =>
+            n.id === selectedSwitchNode.id
+              ? { ...n, data: { ...n.data, switchConfig: config } }
+              : n,
+          ) as Node<EyeNodeData>[],
+      );
+      setSelectedSwitchNode(null);
+    },
+    [selectedSwitchNode, setNodesValidated],
+  );
 
-  const handleSaveIFConfig = useCallback((config: IfNodeConfig) => {
-    if (!selectedIFNode) return;
-    setNodesValidated((nds) =>
-      nds.map((n) =>
-        n.id === selectedIFNode.id
-          ? { ...n, data: { ...n.data, ifConfig: config } }
-          : n
-      ) as Node<EyeNodeData>[]
-    );
-    setSelectedIFNode(null);
-  }, [selectedIFNode, setNodesValidated]);
+  const handleSaveIFConfig = useCallback(
+    (config: IfNodeConfig) => {
+      if (!selectedIFNode) return;
+      setNodesValidated(
+        (nds) =>
+          nds.map((n) =>
+            n.id === selectedIFNode.id
+              ? { ...n, data: { ...n.data, ifConfig: config } }
+              : n,
+          ) as Node<EyeNodeData>[],
+      );
+      setSelectedIFNode(null);
+    },
+    [selectedIFNode, setNodesValidated],
+  );
 
-  const handleSaveLoopConfig = useCallback((config: LoopNodeConfig) => {
-    if (!selectedLoopNode) return;
-    setNodesValidated((nds) =>
-      nds.map((n) =>
-        n.id === selectedLoopNode.id
-          ? { ...n, data: { ...n.data, loopConfig: config } }
-          : n
-      ) as Node<EyeNodeData>[]
-    );
-    setSelectedLoopNode(null);
-  }, [selectedLoopNode, setNodesValidated]);
+  const handleSaveLoopConfig = useCallback(
+    (config: LoopNodeConfig) => {
+      if (!selectedLoopNode) return;
+      setNodesValidated(
+        (nds) =>
+          nds.map((n) =>
+            n.id === selectedLoopNode.id
+              ? { ...n, data: { ...n.data, loopConfig: config } }
+              : n,
+          ) as Node<EyeNodeData>[],
+      );
+      setSelectedLoopNode(null);
+    },
+    [selectedLoopNode, setNodesValidated],
+  );
 
   // Phase 19.4: Template loading handler
   const handleLoadTemplate = useCallback(
-    (template: { nodes: readonly PipelineNode[]; edges: readonly PipelineEdge[]; workflowJson?: unknown }) => {
+    (template: {
+      nodes: readonly PipelineNode[];
+      edges: readonly PipelineEdge[];
+      workflowJson?: unknown;
+    }) => {
       // Parse workflowJson if provided and is a string
       let workflow = template;
       if (template.workflowJson) {
-        workflow = typeof template.workflowJson === 'string'
-          ? JSON.parse(template.workflowJson)
-          : template.workflowJson;
+        workflow =
+          typeof template.workflowJson === "string"
+            ? JSON.parse(template.workflowJson)
+            : template.workflowJson;
       }
-      
-      const templateNodes = [...(workflow.nodes || template.nodes)] as PipelineNode[];
+
+      const templateNodes = [
+        ...(workflow.nodes || template.nodes),
+      ] as PipelineNode[];
       validateNodes(templateNodes);
       setNodesValidated(templateNodes as Node<EyeNodeData>[]);
-      setEdges([...(workflow.edges || template.edges)] as Edge<EdgeConditionData>[]);
+      setEdges([
+        ...(workflow.edges || template.edges),
+      ] as Edge<EdgeConditionData>[]);
       // Fit view after loading template
       setTimeout(() => {
-        reactFlowInstance.fitView({ padding: LAYOUT.FIT_VIEW_PADDING, duration: LAYOUT.ZOOM_DURATION });
+        reactFlowInstance.fitView({
+          padding: LAYOUT.FIT_VIEW_PADDING,
+          duration: LAYOUT.ZOOM_DURATION,
+        });
       }, 100);
     },
-    [setNodesValidated, setEdges, reactFlowInstance]
+    [setNodesValidated, setEdges, reactFlowInstance],
   );
 
   // Handle new connections
@@ -385,22 +468,22 @@ export function PipelineCanvasEnhanced() {
         addEdge(
           {
             ...params,
-            type: 'smoothstep',
+            type: "smoothstep",
             animated: true,
             markerEnd: { type: MarkerType.ArrowClosed },
           },
-          eds
-        )
+          eds,
+        ),
       );
     },
-    [setEdges]
+    [setEdges],
   );
 
   // Drag and drop from palette
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
-      const data = event.dataTransfer.getData('application/reactflow');
+      const data = event.dataTransfer.getData("application/reactflow");
       if (!data) return;
 
       const { type, data: nodeData } = JSON.parse(data);
@@ -418,12 +501,12 @@ export function PipelineCanvasEnhanced() {
 
       setNodesValidated((nds) => [...nds, newNode]);
     },
-    [reactFlowInstance, setNodesValidated]
+    [reactFlowInstance, setNodesValidated],
   );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
+    event.dataTransfer.dropEffect = "move";
   }, []);
 
   // Get node color for minimap
@@ -445,7 +528,7 @@ export function PipelineCanvasEnhanced() {
       // If validation passes, apply the changes
       onNodesChange(changes);
     },
-    [nodes, onNodesChange]
+    [nodes, onNodesChange],
   );
 
   // Validate nodes before ReactFlow renders them - prevents crashes from invalid position
@@ -454,17 +537,20 @@ export function PipelineCanvasEnhanced() {
     if (nodes.length === 0) {
       return nodes;
     }
-    
+
     // DEBUG: Log nodes in state before validation
-    console.log('[DEBUG] validatedNodes useMemo - nodes in state:', nodes.map(n => ({
-      id: n.id,
-      type: n.type,
-      hasPosition: !!n.position,
-      position: n.position,
-      positionType: typeof n.position,
-      positionKeys: n.position ? Object.keys(n.position) : [],
-    })));
-    
+    console.log(
+      "[DEBUG] validatedNodes useMemo - nodes in state:",
+      nodes.map((n) => ({
+        id: n.id,
+        type: n.type,
+        hasPosition: !!n.position,
+        position: n.position,
+        positionType: typeof n.position,
+        positionKeys: n.position ? Object.keys(n.position) : [],
+      })),
+    );
+
     // Validate all nodes - throws error if any are malformed (no fallback)
     validateNodes(nodes as PipelineNode[]);
     return nodes;
@@ -473,36 +559,42 @@ export function PipelineCanvasEnhanced() {
   // Toolbar handlers (Quick Wins #4-6: Real implementations)
   const handleSave = useCallback(async () => {
     if (!activePipeline?.id) {
-      const name = prompt('Enter pipeline name:');
+      const name = prompt("Enter pipeline name:");
       if (!name) return;
-      const result = await savePipeline(null, name, '', validatedNodes as PipelineNode[], edges as PipelineEdge[]);
+      const result = await savePipeline(
+        null,
+        name,
+        "",
+        validatedNodes as PipelineNode[],
+        edges as PipelineEdge[],
+      );
       if (result) {
-        console.log('Pipeline saved:', result);
+        console.log("Pipeline saved:", result);
         await refetchPipeline();
       }
     } else {
       const result = await savePipeline(
         activePipeline.id,
         activePipeline.name,
-        activePipeline.description || '',
+        activePipeline.description || "",
         validatedNodes as PipelineNode[],
-        edges as PipelineEdge[]
+        edges as PipelineEdge[],
       );
-      if (result) console.log('Pipeline updated:', result);
+      if (result) console.log("Pipeline updated:", result);
     }
   }, [validatedNodes, edges, activePipeline, savePipeline, refetchPipeline]);
 
   const handleActivate = useCallback(async () => {
     if (!activePipeline?.id) {
-      alert('Please save the pipeline first');
+      alert("Please save the pipeline first");
       return;
     }
     const success = await activatePipeline(activePipeline.id);
-    if (success) console.log('Pipeline activated');
+    if (success) console.log("Pipeline activated");
   }, [activePipeline, activatePipeline]);
 
   const handleNew = useCallback(() => {
-    if (confirm('Clear current pipeline and start fresh?')) {
+    if (confirm("Clear current pipeline and start fresh?")) {
       setNodesValidated([]);
       setEdges([]);
     }
@@ -514,12 +606,14 @@ export function PipelineCanvasEnhanced() {
       edges,
       metadata: {
         exportedAt: new Date().toISOString(),
-        version: '1.0',
+        version: "1.0",
       },
     };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `pipeline-${Date.now()}.json`;
     a.click();
@@ -527,9 +621,9 @@ export function PipelineCanvasEnhanced() {
   }, [validatedNodes, edges]);
 
   const handleImport = useCallback(() => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'application/json';
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
@@ -546,23 +640,28 @@ export function PipelineCanvasEnhanced() {
   const handleValidate = useCallback(() => {
     try {
       validateNodes(validatedNodes as PipelineNode[]);
-      alert('Pipeline validation passed!');
+      alert("Pipeline validation passed!");
     } catch (error) {
-      alert(`Validation error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(
+        `Validation error: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }, [validatedNodes]);
 
-  const handleAutoLayout = useCallback(() => console.log('Auto layout'), []);
+  const handleAutoLayout = useCallback(() => console.log("Auto layout"), []);
 
   const handleZoomFit = useCallback(() => {
-    reactFlowInstance.fitView({ padding: LAYOUT.FIT_VIEW_PADDING, duration: LAYOUT.ZOOM_DURATION });
+    reactFlowInstance.fitView({
+      padding: LAYOUT.FIT_VIEW_PADDING,
+      duration: LAYOUT.ZOOM_DURATION,
+    });
   }, [reactFlowInstance]);
 
   // Keyboard shortcuts (Quick Win #7)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Escape - deselect all
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         setSelectedNode(null);
         setSelectedSwitchNode(null);
         setSelectedIFNode(null);
@@ -570,7 +669,7 @@ export function PipelineCanvasEnhanced() {
         setSelectedEdge(null);
       }
       // Delete/Backspace - delete selected
-      if (e.key === 'Delete' || e.key === 'Backspace') {
+      if (e.key === "Delete" || e.key === "Backspace") {
         if (selectedNode) {
           handleNodeDelete(selectedNode.id);
           setSelectedNode(null);
@@ -580,8 +679,8 @@ export function PipelineCanvasEnhanced() {
         }
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedNode, selectedEdge, handleNodeDelete, handleEdgeDelete]);
 
   return (
@@ -621,7 +720,9 @@ export function PipelineCanvasEnhanced() {
         {nodes.length === 0 && !pipelineLoading && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="text-center text-semantic-muted">
-              <p className="text-lg font-medium mb-2">Start Building Your Pipeline</p>
+              <p className="text-lg font-medium mb-2">
+                Start Building Your Pipeline
+              </p>
               <p className="text-sm">{PIPELINE_UI_TEXT.EMPTY_STATE_NO_NODES}</p>
             </div>
           </div>
@@ -692,7 +793,11 @@ export function PipelineCanvasEnhanced() {
         <SwitchNodeConfigModal
           isOpen={!!selectedSwitchNode}
           onClose={() => setSelectedSwitchNode(null)}
-          config={selectedSwitchNode?.data?.switchConfig as SwitchNodeConfig | undefined}
+          config={
+            selectedSwitchNode?.data?.switchConfig as
+              | SwitchNodeConfig
+              | undefined
+          }
           onSave={handleSaveSwitchConfig}
         />
 
@@ -706,7 +811,9 @@ export function PipelineCanvasEnhanced() {
         <LoopNodeConfigModal
           isOpen={!!selectedLoopNode}
           onClose={() => setSelectedLoopNode(null)}
-          config={selectedLoopNode?.data?.loopConfig as LoopNodeConfig | undefined}
+          config={
+            selectedLoopNode?.data?.loopConfig as LoopNodeConfig | undefined
+          }
           onSave={handleSaveLoopConfig}
         />
 

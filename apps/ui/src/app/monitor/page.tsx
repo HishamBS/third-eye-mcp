@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Monitor Page - The Crown Jewel
@@ -7,36 +7,48 @@
  * Professional implementation with SSOT constants, strict typing, and no hardcoded values.
  */
 
-import { Suspense, useEffect, useState, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
-import { Eye, Download } from 'lucide-react';
-import { exportSession, type ExportFormat, type ExportEvent } from '@third-eye/utils';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { useWebSocket, type WSMessage } from '@/hooks/useWebSocket';
-import { useUI } from '@/contexts/UIContext';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE, STATUS_BG_COLORS } from '@/constants/color-mappings';
-import { ConversationEntry, type ConversationEntryData } from '@/components/monitor/ConversationEntry';
-import { TabButton } from '@/components/monitor/TabButton';
-import { StatusBadge } from '@/components/monitor/StatusBadge';
-import { ViewModeDescription } from '@/components/ViewModeToggle';
-import { RoutingDecisionPanel } from '@/components/monitor/RoutingDecisionPanel';
-import { ConversationTimeline } from '@/components/conversation/ConversationTimeline';
-import { useConversationTimeline } from '@/hooks/useConversationTimeline';
-import type { EyeName } from '@third-eye/types';
-import { API_BASE_URL } from '@/consts/api';
-import { API_ROUTES } from '@/constants/api-routes';
+import { Suspense, useEffect, useState, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { Eye, Download } from "lucide-react";
+import {
+  exportSession,
+  type ExportFormat,
+  type ExportEvent,
+} from "@third-eye/utils";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { useWebSocket, type WSMessage } from "@/hooks/useWebSocket";
+import { useUI } from "@/contexts/UIContext";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+  STATUS_BG_COLORS,
+} from "@/constants/color-mappings";
+import {
+  ConversationEntry,
+  type ConversationEntryData,
+} from "@/components/monitor/ConversationEntry";
+import { TabButton } from "@/components/monitor/TabButton";
+import { StatusBadge } from "@/components/monitor/StatusBadge";
+import { ViewModeDescription } from "@/components/ViewModeToggle";
+import { RoutingDecisionPanel } from "@/components/monitor/RoutingDecisionPanel";
+import { ConversationTimeline } from "@/components/conversation/ConversationTimeline";
+import { useConversationTimeline } from "@/hooks/useConversationTimeline";
+import type { EyeName } from "@third-eye/types";
+import { API_BASE_URL } from "@/consts/api";
+import { API_ROUTES } from "@/constants/api-routes";
 import {
   MONITOR_TABS,
   MonitorTabId,
   SpeakerType,
   type Speaker,
   ApprovalStatus,
-} from '@third-eye/constants';
-import type { EyeSequence } from '@third-eye/eyes';
+} from "@third-eye/constants";
+import type { EyeSequence } from "@third-eye/eyes";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 interface SessionSummary {
   readonly sessionId: string;
@@ -90,19 +102,21 @@ function normalizeEyeName(value?: string | null): EyeName | undefined {
   if (!value) return undefined;
   // Normalize format (replace hyphens/colons with underscores) and return as EyeName
   // No validation against hardcoded list - database is SSOT
-  const normalized = value.replace(/[-:]/g, '_');
+  const normalized = value.replace(/[-:]/g, "_");
   return normalized as EyeName;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
-  if (value && typeof value === 'object' && !Array.isArray(value)) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
     return value as Record<string, unknown>;
   }
   return undefined;
 }
 
 function getString(value: unknown): string | undefined {
-  return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
+  return typeof value === "string" && value.trim().length > 0
+    ? value
+    : undefined;
 }
 
 function firstString(values: ReadonlyArray<unknown>): string | undefined {
@@ -119,24 +133,31 @@ function deriveSpeaker(params: {
   readonly data?: Record<string, unknown>;
   readonly speaker?: string;
 }): Speaker {
-  const candidateSpeaker = params.speaker || (params.data ? getString(params.data.speaker) : undefined);
+  const candidateSpeaker =
+    params.speaker ||
+    (params.data ? getString(params.data.speaker) : undefined);
 
   if (candidateSpeaker === SpeakerType.AGENT) return SpeakerType.AGENT;
   if (candidateSpeaker === SpeakerType.HUMAN) return SpeakerType.HUMAN;
 
-  const resolvedEye = normalizeEyeName(candidateSpeaker)
-    || normalizeEyeName(params.eye)
-    || (params.data ? normalizeEyeName(getString(params.data.eye)) : undefined);
+  const resolvedEye =
+    normalizeEyeName(candidateSpeaker) ||
+    normalizeEyeName(params.eye) ||
+    (params.data ? normalizeEyeName(getString(params.data.eye)) : undefined);
 
   if (resolvedEye) {
     return resolvedEye;
   }
 
-  if (params.type === 'agent_message' || params.type === 'agent_response') {
+  if (params.type === "agent_message" || params.type === "agent_response") {
     return SpeakerType.AGENT;
   }
 
-  if (params.type === 'user_input' || params.type === 'user_input_request' || params.type === 'user_input_received') {
+  if (
+    params.type === "user_input" ||
+    params.type === "user_input_request" ||
+    params.type === "user_input_received"
+  ) {
     return SpeakerType.HUMAN;
   }
 
@@ -145,21 +166,25 @@ function deriveSpeaker(params: {
 
 function normalizeApiEvent(event: ApiPipelineEvent): ConversationEntryData {
   const data = asRecord(event.dataJson);
-  const message = firstString([
-    event.md,
-    data?.md,
-    data?.details,
-    data?.summary,
-  ]) || 'Processing...';
+  const message =
+    firstString([event.md, data?.md, data?.details, data?.summary]) ||
+    "Processing...";
 
   // Phase 18: Extract stage field from event data
   const stageValue = data?.stage || event.stage;
-  const stage = (stageValue === 'guidance' || stageValue === 'validation') ? stageValue : undefined;
+  const stage =
+    stageValue === "guidance" || stageValue === "validation"
+      ? stageValue
+      : undefined;
 
   return {
     id: event.id,
     timestamp: new Date(event.createdAt),
-    speaker: deriveSpeaker({ type: event.type, eye: event.eye || undefined, data }),
+    speaker: deriveSpeaker({
+      type: event.type,
+      eye: event.eye || undefined,
+      data,
+    }),
     message,
     stage,
     metadata: {
@@ -169,13 +194,18 @@ function normalizeApiEvent(event: ApiPipelineEvent): ConversationEntryData {
   };
 }
 
-function normalizeWebSocketMessage(message: WSMessage): ConversationEntryData | null {
+function normalizeWebSocketMessage(
+  message: WSMessage,
+): ConversationEntryData | null {
   const payload = asRecord(message.data);
   if (!payload) return null;
 
   const result = asRecord(payload.result);
   const ui = asRecord(payload.ui);
-  const timestampMs = typeof payload.timestamp === 'number' ? payload.timestamp : message.timestamp;
+  const timestampMs =
+    typeof payload.timestamp === "number"
+      ? payload.timestamp
+      : message.timestamp;
 
   const idParts = [
     getString(payload.runId),
@@ -185,24 +215,30 @@ function normalizeWebSocketMessage(message: WSMessage): ConversationEntryData | 
     timestampMs ? String(timestampMs) : undefined,
   ].filter(Boolean);
 
-  const id = idParts.length > 0
-    ? `ws-${idParts.join(':')}`
-    : `ws-${typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : String(Date.now())}`;
+  const id =
+    idParts.length > 0
+      ? `ws-${idParts.join(":")}`
+      : `ws-${typeof crypto !== "undefined" && typeof crypto.randomUUID === "function" ? crypto.randomUUID() : String(Date.now())}`;
 
-  const code = getString(payload.code) || (result ? getString(result.code) : undefined);
+  const code =
+    getString(payload.code) || (result ? getString(result.code) : undefined);
 
-  const messageText = firstString([
-    ui?.details,
-    ui?.summary,
-    ui?.title,
-    payload.md,
-    result?.md,
-    payload.error,
-  ]) || 'Processing...';
+  const messageText =
+    firstString([
+      ui?.details,
+      ui?.summary,
+      ui?.title,
+      payload.md,
+      result?.md,
+      payload.error,
+    ]) || "Processing...";
 
   // Phase 18: Extract stage field from WebSocket payload
   const stageValue = payload.stage;
-  const stage = (stageValue === 'guidance' || stageValue === 'validation') ? stageValue : undefined;
+  const stage =
+    stageValue === "guidance" || stageValue === "validation"
+      ? stageValue
+      : undefined;
 
   return {
     id,
@@ -225,7 +261,7 @@ function normalizeWebSocketMessage(message: WSMessage): ConversationEntryData | 
 function MonitorContent() {
   const searchParams = useSearchParams();
   const { selectedSessionId, setSelectedSession, viewMode } = useUI();
-  const sessionIdFromQuery = searchParams.get('sessionId');
+  const sessionIdFromQuery = searchParams.get("sessionId");
   const sessionId = sessionIdFromQuery ?? selectedSessionId ?? null;
 
   const [entries, setEntries] = useState<readonly ConversationEntryData[]>([]);
@@ -234,7 +270,9 @@ function MonitorContent() {
   const [error, setError] = useState<string | null>(null);
   const [autoScroll, setAutoScroll] = useState(true);
   const conversationEndRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<MonitorTabId>(MonitorTabId.TIMELINE);
+  const [activeTab, setActiveTab] = useState<MonitorTabId>(
+    MonitorTabId.TIMELINE,
+  );
 
   const [clarifications, setClarifications] = useState<{
     readonly outstanding: readonly ClarificationItem[];
@@ -247,7 +285,9 @@ function MonitorContent() {
     tenseigan: null,
     byakugan: null,
   });
-  const [routingDecision, setRoutingDecision] = useState<EyeSequence | null>(null);
+  const [routingDecision, setRoutingDecision] = useState<EyeSequence | null>(
+    null,
+  );
 
   // Phase 5: Narrative timeline hook
   const {
@@ -281,31 +321,33 @@ function MonitorContent() {
         ]);
 
         if (!summaryRes.ok || !eventsRes.ok) {
-          throw new Error('Failed to load session data');
+          throw new Error("Failed to load session data");
         }
 
         const summaryResult = await summaryRes.json();
         const eventsResult = await eventsRes.json();
-        
+
         // Handle wrapped response from createSuccessResponse
         const summaryData = summaryResult.data || summaryResult;
         const eventsData = eventsResult.data || eventsResult;
 
         setSummary({
           sessionId: summaryData.id || sessionId,
-          status: summaryData.status || 'unknown',
+          status: summaryData.status || "unknown",
           eventCount: eventsData.length || 0,
           eyes: Array.isArray(summaryData.eyes) ? summaryData.eyes : [],
           createdAt: new Date(summaryData.createdAt || Date.now()),
         });
 
         const normalizedEntries = Array.isArray(eventsData)
-          ? eventsData.map((event: ApiPipelineEvent) => normalizeApiEvent(event))
+          ? eventsData.map((event: ApiPipelineEvent) =>
+              normalizeApiEvent(event),
+            )
           : [];
 
         setEntries(normalizedEntries);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error occurred');
+        setError(err instanceof Error ? err.message : "Unknown error occurred");
       } finally {
         setLoading(false);
       }
@@ -318,7 +360,7 @@ function MonitorContent() {
     if (!sessionId) return;
 
     const unsubscribe = subscribe((message) => {
-      if (message.type === 'pipeline_event') {
+      if (message.type === "pipeline_event") {
         const entry = normalizeWebSocketMessage(message);
         if (entry) {
           setEntries((prev) => [...prev, entry]);
@@ -333,40 +375,42 @@ function MonitorContent() {
 
   useEffect(() => {
     if (autoScroll && conversationEndRef.current) {
-      conversationEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      conversationEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [entries, autoScroll]);
 
   const fetchClarifications = async () => {
     if (!sessionId) return;
     try {
-      const res = await fetch(`${API_BASE_URL}${API_ROUTES.SESSION_CLARIFICATIONS(sessionId)}`);
+      const res = await fetch(
+        `${API_BASE_URL}${API_ROUTES.SESSION_CLARIFICATIONS(sessionId)}`,
+      );
       if (res.ok) {
         const result = await res.json();
         // Backend returns array directly (wrapped in createSuccessResponse)
         const data = result.data || result;
         const clarificationsArray = Array.isArray(data) ? data : [];
-        
+
         const outstanding: ClarificationItem[] = [];
         const resolved: ResolvedClarificationItem[] = [];
 
         for (const q of clarificationsArray) {
-          if (q && typeof q === 'object') {
+          if (q && typeof q === "object") {
             if (q.answer) {
               resolved.push({
                 id: q.id || crypto.randomUUID(),
-                field: q.field || 'unknown',
-                question: q.text || q.question || '',
+                field: q.field || "unknown",
+                question: q.text || q.question || "",
                 answer: q.answer,
                 answeredAt: new Date(q.answeredAt || Date.now()),
-                status: 'resolved',
+                status: "resolved",
               });
             } else {
               outstanding.push({
                 id: q.id || crypto.randomUUID(),
-                field: q.field || 'unknown',
-                question: q.text || q.question || '',
-                status: 'pending',
+                field: q.field || "unknown",
+                question: q.text || q.question || "",
+                status: "pending",
               });
             }
           }
@@ -375,37 +419,50 @@ function MonitorContent() {
         setClarifications({ outstanding, resolved });
       }
     } catch (err) {
-      console.error('Failed to fetch clarifications:', err);
+      console.error("Failed to fetch clarifications:", err);
     }
   };
 
   const fetchIntentConfirmations = async () => {
     if (!sessionId) return;
     try {
-      const res = await fetch(`${API_BASE_URL}${API_ROUTES.SESSION_INTENT_CONFIRMATIONS(sessionId)}`);
+      const res = await fetch(
+        `${API_BASE_URL}${API_ROUTES.SESSION_INTENT_CONFIRMATIONS(sessionId)}`,
+      );
       if (res.ok) {
         const result = await res.json();
         // Backend returns single object or null (wrapped in createSuccessResponse)
         const data = result.data !== undefined ? result.data : result;
-        
-        if (data && typeof data === 'object') {
+
+        if (data && typeof data === "object") {
           setIntentData({
-            intentAnalysis: data.intentAnalysis as Record<string, unknown> | undefined,
-            confirmationPrompt: typeof data.confirmationPrompt === 'string' ? data.confirmationPrompt : undefined,
-            response: typeof data.response === 'string' ? data.response : undefined,
-            userIdentity: typeof data.userIdentity === 'string' ? data.userIdentity : undefined,
+            intentAnalysis: data.intentAnalysis as
+              | Record<string, unknown>
+              | undefined,
+            confirmationPrompt:
+              typeof data.confirmationPrompt === "string"
+                ? data.confirmationPrompt
+                : undefined,
+            response:
+              typeof data.response === "string" ? data.response : undefined,
+            userIdentity:
+              typeof data.userIdentity === "string"
+                ? data.userIdentity
+                : undefined,
           });
         }
       }
     } catch (err) {
-      console.error('Failed to fetch intent confirmations:', err);
+      console.error("Failed to fetch intent confirmations:", err);
     }
   };
 
   const fetchRoutingDecision = async () => {
     if (!sessionId) return;
     try {
-      const res = await fetch(`${API_BASE_URL}${API_ROUTES.SESSION_ROUTING(sessionId)}`);
+      const res = await fetch(
+        `${API_BASE_URL}${API_ROUTES.SESSION_ROUTING(sessionId)}`,
+      );
       if (res.ok) {
         const result = await res.json();
         // Backend returns { routing: { flow, taskType, reasoning, recommendedEye } } or { routing: null }
@@ -415,14 +472,14 @@ function MonitorContent() {
         }
       }
     } catch (err) {
-      console.error('Failed to fetch routing decision:', err);
+      console.error("Failed to fetch routing decision:", err);
     }
   };
 
   useEffect(() => {
-    const mangekyoEvent = entries.find((e) => e.speaker === 'mangekyo');
-    const tenseiganEvent = entries.find((e) => e.speaker === 'tenseigan');
-    const byakuganEvent = entries.find((e) => e.speaker === 'byakugan');
+    const mangekyoEvent = entries.find((e) => e.speaker === "mangekyo");
+    const tenseiganEvent = entries.find((e) => e.speaker === "tenseigan");
+    const byakuganEvent = entries.find((e) => e.speaker === "byakugan");
 
     setEvidenceData({
       mangekyo: mangekyoEvent?.metadata?.dataJson || null,
@@ -445,19 +502,28 @@ function MonitorContent() {
         <div className="border-b border-brand-outline/60 bg-brand-paperElev/50">
           <div className="mx-auto max-w-7xl px-6 py-6">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-semantic-muted transition-colors hover:text-brand-accent">
+              <Link
+                href="/"
+                className="text-semantic-muted transition-colors hover:text-brand-accent"
+              >
                 ← Home
               </Link>
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Real-time</p>
-                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">Monitor</h1>
+                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">
+                  Real-time
+                </p>
+                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">
+                  Monitor
+                </h1>
               </div>
             </div>
           </div>
         </div>
         <div className="mx-auto max-w-4xl px-6 py-16 text-center">
           <GlassCard className="py-12">
-            <p className="text-lg text-brand-foreground mb-2">No Session Selected</p>
+            <p className="text-lg text-brand-foreground mb-2">
+              No Session Selected
+            </p>
             <p className="text-sm text-semantic-muted mb-6">
               Select a session to watch real-time agent conversations
             </p>
@@ -479,12 +545,19 @@ function MonitorContent() {
         <div className="border-b border-brand-outline/60 bg-brand-paperElev/50">
           <div className="mx-auto max-w-7xl px-6 py-6">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-semantic-muted transition-colors hover:text-brand-accent">
+              <Link
+                href="/"
+                className="text-semantic-muted transition-colors hover:text-brand-accent"
+              >
                 ← Home
               </Link>
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Real-time</p>
-                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">Monitor</h1>
+                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">
+                  Real-time
+                </p>
+                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">
+                  Monitor
+                </h1>
               </div>
             </div>
           </div>
@@ -508,30 +581,45 @@ function MonitorContent() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-semantic-muted transition-colors hover:text-brand-accent">
+              <Link
+                href="/"
+                className="text-semantic-muted transition-colors hover:text-brand-accent"
+              >
                 ← Home
               </Link>
               <div>
                 <div className="flex items-center gap-3">
-                  <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Real-time Monitor</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">
+                    Real-time Monitor
+                  </p>
                   <div className="flex items-center gap-2">
-                    <div className={`h-2 w-2 rounded-full ${
-                      connectionStatus === 'connected' ? `${STATUS_BG_COLORS.success} animate-pulse` :
-                      connectionStatus === 'reconnecting' ? `${STATUS_BG_COLORS.warning} animate-pulse` :
-                      STATUS_BG_COLORS.error
-                    }`} />
+                    <div
+                      className={`h-2 w-2 rounded-full ${
+                        connectionStatus === "connected"
+                          ? `${STATUS_BG_COLORS.success} animate-pulse`
+                          : connectionStatus === "reconnecting"
+                            ? `${STATUS_BG_COLORS.warning} animate-pulse`
+                            : STATUS_BG_COLORS.error
+                      }`}
+                    />
                     <span className="text-xs text-semantic-muted">
-                      {connectionStatus === 'connected' ? 'Live' :
-                       connectionStatus === 'reconnecting' ? 'Reconnecting...' :
-                       'Disconnected'}
+                      {connectionStatus === "connected"
+                        ? "Live"
+                        : connectionStatus === "reconnecting"
+                          ? "Reconnecting..."
+                          : "Disconnected"}
                     </span>
                   </div>
                 </div>
-                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">Session {sessionId?.slice(0, 8)}...</h1>
+                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">
+                  Session {sessionId?.slice(0, 8)}...
+                </h1>
                 {summary && (
                   <p className="mt-1 text-sm text-semantic-muted">
                     Status: {summary.status} · {summary.eventCount} events
-                    {summary.eyes && summary.eyes.length > 0 && ` · Eyes: ${summary.eyes.join(', ')}`}
+                    {summary.eyes &&
+                      summary.eyes.length > 0 &&
+                      ` · Eyes: ${summary.eyes.join(", ")}`}
                   </p>
                 )}
               </div>
@@ -554,47 +642,59 @@ function MonitorContent() {
       <div className="mx-auto max-w-7xl px-6 py-8">
         <ViewModeDescription />
 
-        <div className="mt-6 mb-6 flex gap-2 border-b border-brand-outline/30" role="tablist">
-          {MONITOR_TABS
-            .filter((tab) => viewMode === 'expert' || tab.id !== MonitorTabId.RAW_JSON)
-            .map((tab) => (
-              <TabButton
-                key={tab.id}
-                tab={tab}
-                isActive={activeTab === tab.id}
-                onClick={() => setActiveTab(tab.id)}
-              />
-            ))}
+        <div
+          className="mt-6 mb-6 flex gap-2 border-b border-brand-outline/30"
+          role="tablist"
+        >
+          {MONITOR_TABS.filter(
+            (tab) => viewMode === "expert" || tab.id !== MonitorTabId.RAW_JSON,
+          ).map((tab) => (
+            <TabButton
+              key={tab.id}
+              tab={tab}
+              isActive={activeTab === tab.id}
+              onClick={() => setActiveTab(tab.id)}
+            />
+          ))}
         </div>
 
         <GlassCard className="p-6">
           {activeTab === MonitorTabId.TIMELINE && (
             <>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-brand-foreground">Timeline</h2>
+                <h2 className="text-xl font-semibold text-brand-foreground">
+                  Timeline
+                </h2>
                 <div className="flex items-center gap-4">
                   <div className="text-xs text-semantic-muted">
-                    {entries.length} {entries.length === 1 ? 'event' : 'events'}
+                    {entries.length} {entries.length === 1 ? "event" : "events"}
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => {
-                        const exportEvents: ExportEvent[] = entries.map(e => ({
-                          id: e.id || '',
-                          sessionId: sessionId || '',
-                          eyeId: e.eyeId,
-                          eyeName: e.eyeName,
-                          stage: e.stage,
-                          status: e.status,
-                          message: e.message || '',
-                          timestamp: e.timestamp || new Date().toISOString(),
-                          latencyMs: e.latencyMs,
-                          data: e.data,
-                        }));
-                        exportSession('markdown', sessionId || 'unknown', exportEvents, {
-                          agent: summary?.agentName || 'Unknown Agent',
-                          createdAt: entries[0]?.timestamp,
-                        });
+                        const exportEvents: ExportEvent[] = entries.map(
+                          (e) => ({
+                            id: e.id || "",
+                            sessionId: sessionId || "",
+                            eyeId: e.eyeId,
+                            eyeName: e.eyeName,
+                            stage: e.stage,
+                            status: e.status,
+                            message: e.message || "",
+                            timestamp: e.timestamp || new Date().toISOString(),
+                            latencyMs: e.latencyMs,
+                            data: e.data,
+                          }),
+                        );
+                        exportSession(
+                          "markdown",
+                          sessionId || "unknown",
+                          exportEvents,
+                          {
+                            agent: summary?.agentName || "Unknown Agent",
+                            createdAt: entries[0]?.timestamp,
+                          },
+                        );
                       }}
                       className="flex items-center gap-1 rounded-md bg-brand-accent/10 px-3 py-1.5 text-xs font-medium text-brand-accent hover:bg-brand-accent/20 transition-colors"
                       title="Export as Markdown"
@@ -604,22 +704,29 @@ function MonitorContent() {
                     </button>
                     <button
                       onClick={() => {
-                        const exportEvents: ExportEvent[] = entries.map(e => ({
-                          id: e.id || '',
-                          sessionId: sessionId || '',
-                          eyeId: e.eyeId,
-                          eyeName: e.eyeName,
-                          stage: e.stage,
-                          status: e.status,
-                          message: e.message || '',
-                          timestamp: e.timestamp || new Date().toISOString(),
-                          latencyMs: e.latencyMs,
-                          data: e.data,
-                        }));
-                        exportSession('pdf', sessionId || 'unknown', exportEvents, {
-                          agent: summary?.agentName || 'Unknown Agent',
-                          createdAt: entries[0]?.timestamp,
-                        });
+                        const exportEvents: ExportEvent[] = entries.map(
+                          (e) => ({
+                            id: e.id || "",
+                            sessionId: sessionId || "",
+                            eyeId: e.eyeId,
+                            eyeName: e.eyeName,
+                            stage: e.stage,
+                            status: e.status,
+                            message: e.message || "",
+                            timestamp: e.timestamp || new Date().toISOString(),
+                            latencyMs: e.latencyMs,
+                            data: e.data,
+                          }),
+                        );
+                        exportSession(
+                          "pdf",
+                          sessionId || "unknown",
+                          exportEvents,
+                          {
+                            agent: summary?.agentName || "Unknown Agent",
+                            createdAt: entries[0]?.timestamp,
+                          },
+                        );
                       }}
                       className="flex items-center gap-1 rounded-md bg-brand-accent/10 px-3 py-1.5 text-xs font-medium text-brand-accent hover:bg-brand-accent/20 transition-colors"
                       title="Export as PDF"
@@ -629,22 +736,29 @@ function MonitorContent() {
                     </button>
                     <button
                       onClick={() => {
-                        const exportEvents: ExportEvent[] = entries.map(e => ({
-                          id: e.id || '',
-                          sessionId: sessionId || '',
-                          eyeId: e.eyeId,
-                          eyeName: e.eyeName,
-                          stage: e.stage,
-                          status: e.status,
-                          message: e.message || '',
-                          timestamp: e.timestamp || new Date().toISOString(),
-                          latencyMs: e.latencyMs,
-                          data: e.data,
-                        }));
-                        exportSession('json', sessionId || 'unknown', exportEvents, {
-                          agent: summary?.agentName || 'Unknown Agent',
-                          createdAt: entries[0]?.timestamp,
-                        });
+                        const exportEvents: ExportEvent[] = entries.map(
+                          (e) => ({
+                            id: e.id || "",
+                            sessionId: sessionId || "",
+                            eyeId: e.eyeId,
+                            eyeName: e.eyeName,
+                            stage: e.stage,
+                            status: e.status,
+                            message: e.message || "",
+                            timestamp: e.timestamp || new Date().toISOString(),
+                            latencyMs: e.latencyMs,
+                            data: e.data,
+                          }),
+                        );
+                        exportSession(
+                          "json",
+                          sessionId || "unknown",
+                          exportEvents,
+                          {
+                            agent: summary?.agentName || "Unknown Agent",
+                            createdAt: entries[0]?.timestamp,
+                          },
+                        );
                       }}
                       className="flex items-center gap-1 rounded-md bg-brand-accent/10 px-3 py-1.5 text-xs font-medium text-brand-accent hover:bg-brand-accent/20 transition-colors"
                       title="Export as JSON"
@@ -661,7 +775,9 @@ function MonitorContent() {
               ) : entries.length === 0 ? (
                 <div className="py-16 text-center">
                   <Eye className="h-12 w-12 mx-auto mb-4 text-semantic-muted" />
-                  <p className="text-lg text-brand-foreground mb-2">No Conversation Yet</p>
+                  <p className="text-lg text-brand-foreground mb-2">
+                    No Conversation Yet
+                  </p>
                   <p className="text-sm text-semantic-muted">
                     Waiting for agent to start communicating...
                   </p>
@@ -669,7 +785,11 @@ function MonitorContent() {
               ) : (
                 <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
                   {entries.map((entry, index) => (
-                    <ConversationEntry key={entry.id} entry={entry} index={index} />
+                    <ConversationEntry
+                      key={entry.id}
+                      entry={entry}
+                      index={index}
+                    />
                   ))}
                   <div ref={conversationEndRef} />
                 </div>
@@ -680,8 +800,13 @@ function MonitorContent() {
           {activeTab === MonitorTabId.NARRATIVE && (
             <>
               <div className="mb-6">
-                <h2 className="text-xl font-semibold text-brand-foreground">Narrative</h2>
-                <p className="text-sm text-semantic-muted mt-1">Human-readable conversation flow showing the story of pipeline execution</p>
+                <h2 className="text-xl font-semibold text-brand-foreground">
+                  Narrative
+                </h2>
+                <p className="text-sm text-semantic-muted mt-1">
+                  Human-readable conversation flow showing the story of pipeline
+                  execution
+                </p>
               </div>
               <ConversationTimeline
                 events={narrativeEvents}
@@ -692,47 +817,90 @@ function MonitorContent() {
           )}
 
           {activeTab === MonitorTabId.ROUTING && (
-            <RoutingDecisionPanel routing={routingDecision} sessionId={sessionId || undefined} />
+            <RoutingDecisionPanel
+              routing={routingDecision}
+              sessionId={sessionId || undefined}
+            />
           )}
 
           {activeTab === MonitorTabId.CLARIFICATIONS && (
             <>
               <div className="mb-6">
-                <h2 className="text-xl font-semibold text-brand-foreground">Clarifications</h2>
-                <p className="text-sm text-semantic-muted mt-1">Questions and answers that clarify task requirements</p>
+                <h2 className="text-xl font-semibold text-brand-foreground">
+                  Clarifications
+                </h2>
+                <p className="text-sm text-semantic-muted mt-1">
+                  Questions and answers that clarify task requirements
+                </p>
               </div>
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-sm font-semibold text-brand-accent mb-3">Outstanding</h3>
+                  <h3 className="text-sm font-semibold text-brand-accent mb-3">
+                    Outstanding
+                  </h3>
                   <div className="space-y-3">
                     {clarifications.outstanding.length === 0 ? (
-                      <div className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.warning} ${STATUS_BG_COLORS_SUBTLE.warning} p-4`}>
-                        <p className={`text-sm ${STATUS_TEXT_COLORS.warning}`}>No pending clarifications</p>
+                      <div
+                        className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.warning} ${STATUS_BG_COLORS_SUBTLE.warning} p-4`}
+                      >
+                        <p className={`text-sm ${STATUS_TEXT_COLORS.warning}`}>
+                          No pending clarifications
+                        </p>
                       </div>
                     ) : (
                       clarifications.outstanding.map((c) => (
-                        <div key={c.id} className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.warning} ${STATUS_BG_COLORS_SUBTLE.warning} p-4`}>
-                          <p className={`text-xs ${STATUS_TEXT_COLORS.warning} mb-1 font-semibold uppercase`}>{c.field}</p>
-                          <p className={`text-sm ${STATUS_TEXT_COLORS.warning}`}>{c.question}</p>
+                        <div
+                          key={c.id}
+                          className={`rounded-xl border ${STATUS_BORDER_COLORS_SUBTLE.warning} ${STATUS_BG_COLORS_SUBTLE.warning} p-4`}
+                        >
+                          <p
+                            className={`text-xs ${STATUS_TEXT_COLORS.warning} mb-1 font-semibold uppercase`}
+                          >
+                            {c.field}
+                          </p>
+                          <p
+                            className={`text-sm ${STATUS_TEXT_COLORS.warning}`}
+                          >
+                            {c.question}
+                          </p>
                         </div>
                       ))
                     )}
                   </div>
                 </div>
                 <div>
-                  <h3 className={`text-sm font-semibold ${STATUS_TEXT_COLORS.success} mb-3`}>Resolved</h3>
+                  <h3
+                    className={`text-sm font-semibold ${STATUS_TEXT_COLORS.success} mb-3`}
+                  >
+                    Resolved
+                  </h3>
                   <div className="space-y-3">
                     {clarifications.resolved.length === 0 ? (
                       <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
-                        <p className="text-sm text-semantic-muted">No resolved clarifications yet</p>
+                        <p className="text-sm text-semantic-muted">
+                          No resolved clarifications yet
+                        </p>
                       </div>
                     ) : (
                       clarifications.resolved.map((c) => (
-                        <div key={c.id} className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
-                          <p className="text-xs text-semantic-muted mb-1 font-semibold uppercase">{c.field}</p>
-                          <p className="text-sm text-semantic-muted font-medium mb-1">{c.question}</p>
-                          <p className={`text-sm ${STATUS_TEXT_COLORS.success}`}>{c.answer}</p>
-                          <p className="text-xs text-semantic-muted mt-2">Answered: {new Date(c.answeredAt).toLocaleString()}</p>
+                        <div
+                          key={c.id}
+                          className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4"
+                        >
+                          <p className="text-xs text-semantic-muted mb-1 font-semibold uppercase">
+                            {c.field}
+                          </p>
+                          <p className="text-sm text-semantic-muted font-medium mb-1">
+                            {c.question}
+                          </p>
+                          <p
+                            className={`text-sm ${STATUS_TEXT_COLORS.success}`}
+                          >
+                            {c.answer}
+                          </p>
+                          <p className="text-xs text-semantic-muted mt-2">
+                            Answered: {new Date(c.answeredAt).toLocaleString()}
+                          </p>
                         </div>
                       ))
                     )}
@@ -745,48 +913,73 @@ function MonitorContent() {
           {activeTab === MonitorTabId.INTENT && (
             <>
               <div className="mb-6">
-                <h2 className="text-xl font-semibold text-brand-foreground">Intent Confirmation</h2>
-                <p className="text-sm text-semantic-muted mt-1">Human approval of scope and effort before work proceeds</p>
+                <h2 className="text-xl font-semibold text-brand-foreground">
+                  Intent Confirmation
+                </h2>
+                <p className="text-sm text-semantic-muted mt-1">
+                  Human approval of scope and effort before work proceeds
+                </p>
               </div>
               <div className="space-y-4">
                 {intentData ? (
                   <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <p className="text-sm font-semibold text-brand-foreground">Intent Analysis</p>
+                        <p className="text-sm font-semibold text-brand-foreground">
+                          Intent Analysis
+                        </p>
                         {intentData.intentAnalysis && (
                           <div className="mt-2 space-y-1 text-xs text-semantic-muted">
-                            {Object.entries(intentData.intentAnalysis).map(([key, value]) => (
-                              <p key={key}>
-                                <span className="font-semibold uppercase">{key}:</span> {
-                                  Array.isArray(value) ? value.join(', ') : String(value)
-                                }
-                              </p>
-                            ))}
+                            {Object.entries(intentData.intentAnalysis).map(
+                              ([key, value]) => (
+                                <p key={key}>
+                                  <span className="font-semibold uppercase">
+                                    {key}:
+                                  </span>{" "}
+                                  {Array.isArray(value)
+                                    ? value.join(", ")
+                                    : String(value)}
+                                </p>
+                              ),
+                            )}
                           </div>
                         )}
                       </div>
                       <StatusBadge
                         status={
-                          intentData.response === 'approved' ? ApprovalStatus.APPROVED :
-                          intentData.response === 'rejected' ? ApprovalStatus.REJECTED :
-                          ApprovalStatus.PENDING
+                          intentData.response === "approved"
+                            ? ApprovalStatus.APPROVED
+                            : intentData.response === "rejected"
+                              ? ApprovalStatus.REJECTED
+                              : ApprovalStatus.PENDING
                         }
                         size="sm"
                       />
                     </div>
                     {intentData.confirmationPrompt && (
                       <div className="mt-4 rounded-lg border border-brand-outline/30 bg-brand-paperElev/50 p-3">
-                        <p className="text-xs text-semantic-muted mb-1">Confirmation Prompt:</p>
-                        <p className="text-sm text-semantic-muted">{intentData.confirmationPrompt}</p>
+                        <p className="text-xs text-semantic-muted mb-1">
+                          Confirmation Prompt:
+                        </p>
+                        <p className="text-sm text-semantic-muted">
+                          {intentData.confirmationPrompt}
+                        </p>
                       </div>
                     )}
-                    {intentData.response === 'approved' && intentData.userIdentity && (
-                      <div className="mt-3 flex items-center gap-2">
-                        <StatusBadge status={ApprovalStatus.APPROVED} size="sm" />
-                        <span className={`text-sm font-semibold ${STATUS_TEXT_COLORS.success}`}>Approved by {intentData.userIdentity}</span>
-                      </div>
-                    )}
+                    {intentData.response === "approved" &&
+                      intentData.userIdentity && (
+                        <div className="mt-3 flex items-center gap-2">
+                          <StatusBadge
+                            status={ApprovalStatus.APPROVED}
+                            size="sm"
+                          />
+                          <span
+                            className={`text-sm font-semibold ${STATUS_TEXT_COLORS.success}`}
+                          >
+                            Approved by {intentData.userIdentity}
+                          </span>
+                        </div>
+                      )}
                   </div>
                 ) : (
                   <div className="text-center py-16">
@@ -802,94 +995,174 @@ function MonitorContent() {
           {activeTab === MonitorTabId.EVIDENCE && (
             <>
               <div className="mb-6">
-                <h2 className="text-xl font-semibold text-brand-foreground">Evidence & Validation</h2>
-                <p className="text-sm text-semantic-muted mt-1">Quality gates, code review, and factual verification results</p>
+                <h2 className="text-xl font-semibold text-brand-foreground">
+                  Evidence & Validation
+                </h2>
+                <p className="text-sm text-semantic-muted mt-1">
+                  Quality gates, code review, and factual verification results
+                </p>
               </div>
               <div className="space-y-6">
                 <div>
-                  <h3 className={`text-sm font-semibold ${STATUS_TEXT_COLORS.info} mb-3`}>Code Review (Mangekyō)</h3>
+                  <h3
+                    className={`text-sm font-semibold ${STATUS_TEXT_COLORS.info} mb-3`}
+                  >
+                    Code Review (Mangekyō)
+                  </h3>
                   {evidenceData.mangekyo ? (
                     <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
-                      {evidenceData.mangekyo.qualityScore && typeof evidenceData.mangekyo.qualityScore === 'number' && (
-                        <>
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm text-brand-foreground">Quality Score</span>
-                            <span className={`text-lg font-semibold ${STATUS_TEXT_COLORS.success}`}>{evidenceData.mangekyo.qualityScore}/100</span>
+                      {evidenceData.mangekyo.qualityScore &&
+                        typeof evidenceData.mangekyo.qualityScore ===
+                          "number" && (
+                          <>
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="text-sm text-brand-foreground">
+                                Quality Score
+                              </span>
+                              <span
+                                className={`text-lg font-semibold ${STATUS_TEXT_COLORS.success}`}
+                              >
+                                {evidenceData.mangekyo.qualityScore}/100
+                              </span>
+                            </div>
+                            <div className="h-2 w-full rounded-full bg-brand-paperElev">
+                              <div
+                                className={`h-2 rounded-full ${STATUS_BG_COLORS.success}`}
+                                style={{
+                                  width: `${evidenceData.mangekyo.qualityScore}%`,
+                                }}
+                              />
+                            </div>
+                          </>
+                        )}
+                      {evidenceData.mangekyo.issues &&
+                        Array.isArray(evidenceData.mangekyo.issues) && (
+                          <div className="mt-3 space-y-2">
+                            {evidenceData.mangekyo.issues.map(
+                              (issue, idx: number) => (
+                                <p
+                                  key={idx}
+                                  className="text-sm text-semantic-muted"
+                                >
+                                  •{" "}
+                                  {typeof issue === "string"
+                                    ? issue
+                                    : JSON.stringify(issue)}
+                                </p>
+                              ),
+                            )}
                           </div>
-                          <div className="h-2 w-full rounded-full bg-brand-paperElev">
-                            <div className={`h-2 rounded-full ${STATUS_BG_COLORS.success}`} style={{ width: `${evidenceData.mangekyo.qualityScore}%` }} />
-                          </div>
-                        </>
-                      )}
-                      {evidenceData.mangekyo.issues && Array.isArray(evidenceData.mangekyo.issues) && (
-                        <div className="mt-3 space-y-2">
-                          {evidenceData.mangekyo.issues.map((issue, idx: number) => (
-                            <p key={idx} className="text-sm text-semantic-muted">• {typeof issue === 'string' ? issue : JSON.stringify(issue)}</p>
-                          ))}
-                        </div>
-                      )}
-                      {!evidenceData.mangekyo.qualityScore && !evidenceData.mangekyo.issues && (
-                        <pre className="text-xs text-semantic-muted overflow-x-auto">{JSON.stringify(evidenceData.mangekyo, null, 2)}</pre>
-                      )}
+                        )}
+                      {!evidenceData.mangekyo.qualityScore &&
+                        !evidenceData.mangekyo.issues && (
+                          <pre className="text-xs text-semantic-muted overflow-x-auto">
+                            {JSON.stringify(evidenceData.mangekyo, null, 2)}
+                          </pre>
+                        )}
                     </div>
                   ) : (
                     <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
-                      <p className="text-sm text-semantic-muted">No code review data yet</p>
+                      <p className="text-sm text-semantic-muted">
+                        No code review data yet
+                      </p>
                     </div>
                   )}
                 </div>
 
                 <div>
-                  <h3 className={`text-sm font-semibold ${STATUS_TEXT_COLORS.info} mb-3`}>Evidence Validation (Tenseigan)</h3>
+                  <h3
+                    className={`text-sm font-semibold ${STATUS_TEXT_COLORS.info} mb-3`}
+                  >
+                    Evidence Validation (Tenseigan)
+                  </h3>
                   {evidenceData.tenseigan ? (
                     <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
-                      {evidenceData.tenseigan.citations && Array.isArray(evidenceData.tenseigan.citations) ? (
+                      {evidenceData.tenseigan.citations &&
+                      Array.isArray(evidenceData.tenseigan.citations) ? (
                         <div className="space-y-2">
-                          <p className="text-sm text-semantic-muted mb-2">Found {evidenceData.tenseigan.citations.length} citation(s)</p>
-                          {evidenceData.tenseigan.citations.map((citation, idx: number) => (
-                            <div key={idx} className={`text-xs text-semantic-muted border-l-2 ${STATUS_BORDER_COLORS.info} pl-3`}>
-                              {typeof citation === 'object' && citation !== null ? JSON.stringify(citation) : String(citation)}
-                            </div>
-                          ))}
+                          <p className="text-sm text-semantic-muted mb-2">
+                            Found {evidenceData.tenseigan.citations.length}{" "}
+                            citation(s)
+                          </p>
+                          {evidenceData.tenseigan.citations.map(
+                            (citation, idx: number) => (
+                              <div
+                                key={idx}
+                                className={`text-xs text-semantic-muted border-l-2 ${STATUS_BORDER_COLORS.info} pl-3`}
+                              >
+                                {typeof citation === "object" &&
+                                citation !== null
+                                  ? JSON.stringify(citation)
+                                  : String(citation)}
+                              </div>
+                            ),
+                          )}
                         </div>
                       ) : (
-                        <pre className="text-xs text-semantic-muted overflow-x-auto">{JSON.stringify(evidenceData.tenseigan, null, 2)}</pre>
+                        <pre className="text-xs text-semantic-muted overflow-x-auto">
+                          {JSON.stringify(evidenceData.tenseigan, null, 2)}
+                        </pre>
                       )}
                     </div>
                   ) : (
                     <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
-                      <p className="text-sm text-semantic-muted">No evidence validation data yet</p>
+                      <p className="text-sm text-semantic-muted">
+                        No evidence validation data yet
+                      </p>
                     </div>
                   )}
                 </div>
 
                 <div>
-                  <h3 className={`text-sm font-semibold ${STATUS_TEXT_COLORS.success} mb-3`}>Final Approval (Byakugan)</h3>
+                  <h3
+                    className={`text-sm font-semibold ${STATUS_TEXT_COLORS.success} mb-3`}
+                  >
+                    Final Approval (Byakugan)
+                  </h3>
                   {evidenceData.byakugan ? (
-                    <div className={`rounded-xl border p-4 ${
-                      evidenceData.byakugan.approved ? `${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success}` : `${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error}`
-                    }`}>
+                    <div
+                      className={`rounded-xl border p-4 ${
+                        evidenceData.byakugan.approved
+                          ? `${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success}`
+                          : `${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error}`
+                      }`}
+                    >
                       <div className="flex items-center gap-2 mb-2">
                         <StatusBadge
-                          status={evidenceData.byakugan.approved ? ApprovalStatus.APPROVED : ApprovalStatus.REJECTED}
+                          status={
+                            evidenceData.byakugan.approved
+                              ? ApprovalStatus.APPROVED
+                              : ApprovalStatus.REJECTED
+                          }
                           size="sm"
                         />
-                        <span className={`text-sm font-semibold ${evidenceData.byakugan.approved ? STATUS_TEXT_COLORS.success : STATUS_TEXT_COLORS.error}`}>
-                          {evidenceData.byakugan.approved ? 'APPROVED FOR DELIVERY' : 'REJECTED - NEEDS REVISION'}
+                        <span
+                          className={`text-sm font-semibold ${evidenceData.byakugan.approved ? STATUS_TEXT_COLORS.success : STATUS_TEXT_COLORS.error}`}
+                        >
+                          {evidenceData.byakugan.approved
+                            ? "APPROVED FOR DELIVERY"
+                            : "REJECTED - NEEDS REVISION"}
                         </span>
                       </div>
-                      {evidenceData.byakugan.summary && typeof evidenceData.byakugan.summary === 'string' && (
-                        <p className={`text-xs ${evidenceData.byakugan.approved ? STATUS_TEXT_COLORS.success : STATUS_TEXT_COLORS.error}`}>
-                          {evidenceData.byakugan.summary}
-                        </p>
-                      )}
+                      {evidenceData.byakugan.summary &&
+                        typeof evidenceData.byakugan.summary === "string" && (
+                          <p
+                            className={`text-xs ${evidenceData.byakugan.approved ? STATUS_TEXT_COLORS.success : STATUS_TEXT_COLORS.error}`}
+                          >
+                            {evidenceData.byakugan.summary}
+                          </p>
+                        )}
                       {!evidenceData.byakugan.summary && (
-                        <pre className="text-xs text-semantic-muted overflow-x-auto mt-2">{JSON.stringify(evidenceData.byakugan, null, 2)}</pre>
+                        <pre className="text-xs text-semantic-muted overflow-x-auto mt-2">
+                          {JSON.stringify(evidenceData.byakugan, null, 2)}
+                        </pre>
                       )}
                     </div>
                   ) : (
                     <div className="rounded-xl border border-brand-outline/30 bg-brand-paper/50 p-4">
-                      <p className="text-sm text-semantic-muted">No final approval data yet</p>
+                      <p className="text-sm text-semantic-muted">
+                        No final approval data yet
+                      </p>
                     </div>
                   )}
                 </div>
@@ -901,11 +1174,19 @@ function MonitorContent() {
             <>
               <div className="mb-6 flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold text-brand-foreground">Raw JSON</h2>
-                  <p className="text-sm text-semantic-muted mt-1">Complete pipeline event data</p>
+                  <h2 className="text-xl font-semibold text-brand-foreground">
+                    Raw JSON
+                  </h2>
+                  <p className="text-sm text-semantic-muted mt-1">
+                    Complete pipeline event data
+                  </p>
                 </div>
                 <button
-                  onClick={() => navigator.clipboard.writeText(JSON.stringify(entries, null, 2))}
+                  onClick={() =>
+                    navigator.clipboard.writeText(
+                      JSON.stringify(entries, null, 2),
+                    )
+                  }
                   className="rounded-lg bg-brand-accent px-4 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-accent/90 transition-colors"
                 >
                   Copy All
@@ -932,11 +1213,13 @@ function MonitorContent() {
 
 export default function MonitorPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-brand-paper flex items-center justify-center">
-        <div className="text-brand-foreground">Loading monitor...</div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-brand-paper flex items-center justify-center">
+          <div className="text-brand-foreground">Loading monitor...</div>
+        </div>
+      }
+    >
       <MonitorContent />
     </Suspense>
   );

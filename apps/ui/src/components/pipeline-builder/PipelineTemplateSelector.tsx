@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useCallback, useState, useEffect } from 'react';
-import { X } from 'lucide-react';
-import { TEMPLATE_TEXT } from './constants';
-import { useFocusTrap } from '@/hooks/useFocusTrap';
-import { ARIA_LABELS } from '@/constants/accessibility';
-import { API_BASE_URL } from '@/consts/api';
-import type { PipelineNode, PipelineEdge } from '@/types/pipeline';
+import { useCallback, useState, useEffect } from "react";
+import { X } from "lucide-react";
+import { TEMPLATE_TEXT } from "./constants";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { ARIA_LABELS } from "@/constants/accessibility";
+import { API_BASE_URL } from "@/consts/api";
+import type { PipelineNode, PipelineEdge } from "@/types/pipeline";
 
 /**
  * PipelineTemplateSelector Component - Phase 19.4
@@ -53,26 +53,29 @@ export function PipelineTemplateSelector({
       try {
         const response = await fetch(`${API_BASE_URL}/api/pipelines`);
         if (!response.ok) {
-          throw new Error('Failed to fetch pipelines');
+          throw new Error("Failed to fetch pipelines");
         }
         const envelope = await response.json();
         const pipelines = envelope.data || [];
-        
+
         // Convert database pipelines to template format
         const templatesFromDb: PipelineTemplate[] = pipelines.map((p: any) => {
           const workflow = p.workflowJson || {};
           return {
             id: p.id,
             name: p.name,
-            description: p.description || '',
+            description: p.description || "",
             nodes: workflow.nodes || [],
             edges: workflow.edges || [],
           };
         });
-        
+
         setTemplates(templatesFromDb);
       } catch (error) {
-        console.error('[PipelineTemplateSelector] Failed to fetch pipelines:', error);
+        console.error(
+          "[PipelineTemplateSelector] Failed to fetch pipelines:",
+          error,
+        );
         setTemplates([]);
       } finally {
         setLoading(false);
@@ -96,7 +99,7 @@ export function PipelineTemplateSelector({
       });
       onClose();
     },
-    [onSelect, onClose]
+    [onSelect, onClose],
   );
 
   if (!isOpen) return null;
@@ -116,10 +119,16 @@ export function PipelineTemplateSelector({
         {/* Header */}
         <div className="mb-6 flex items-start justify-between">
           <div>
-            <h2 id="template-selector-title" className="text-2xl font-bold text-brand-foreground">
+            <h2
+              id="template-selector-title"
+              className="text-2xl font-bold text-brand-foreground"
+            >
               {TEMPLATE_TEXT.SELECTOR_TITLE}
             </h2>
-            <p id="template-selector-description" className="mt-1 text-sm text-semantic-muted">
+            <p
+              id="template-selector-description"
+              className="mt-1 text-sm text-semantic-muted"
+            >
               {TEMPLATE_TEXT.SELECTOR_SUBTITLE}
             </p>
           </div>
@@ -135,31 +144,40 @@ export function PipelineTemplateSelector({
         {/* Templates Grid */}
         <div className="space-y-4">
           {loading ? (
-            <div className="text-center py-8 text-semantic-muted">Loading templates...</div>
+            <div className="text-center py-8 text-semantic-muted">
+              Loading templates...
+            </div>
           ) : templates.length === 0 ? (
-            <div className="text-center py-8 text-semantic-muted">No pipeline templates available. Create pipelines in the database.</div>
+            <div className="text-center py-8 text-semantic-muted">
+              No pipeline templates available. Create pipelines in the database.
+            </div>
           ) : (
             templates.map((template) => (
-            <button
-              key={template.id}
-              onClick={() => handleSelect(template)}
-              className="w-full rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5 text-left transition-all hover:border-brand-accent hover:bg-brand-paperElev hover:shadow-lg"
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-brand-foreground">{template.name}</h3>
-                  <p className="mt-1 text-sm text-semantic-muted">{template.description}</p>
-                  <div className="mt-3 flex items-center gap-4 text-xs text-semantic-muted">
-                    <span>{template.nodes.length} Eyes</span>
-                    <span>{template.edges.length} Connections</span>
+              <button
+                key={template.id}
+                onClick={() => handleSelect(template)}
+                className="w-full rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5 text-left transition-all hover:border-brand-accent hover:bg-brand-paperElev hover:shadow-lg"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-brand-foreground">
+                      {template.name}
+                    </h3>
+                    <p className="mt-1 text-sm text-semantic-muted">
+                      {template.description}
+                    </p>
+                    <div className="mt-3 flex items-center gap-4 text-xs text-semantic-muted">
+                      <span>{template.nodes.length} Eyes</span>
+                      <span>{template.edges.length} Connections</span>
+                    </div>
+                  </div>
+                  <div className="ml-4 rounded-lg bg-brand-accent/10 px-3 py-1 text-xs font-medium text-brand-accent">
+                    {TEMPLATE_TEXT.LOAD_BUTTON}
                   </div>
                 </div>
-                <div className="ml-4 rounded-lg bg-brand-accent/10 px-3 py-1 text-xs font-medium text-brand-accent">
-                  {TEMPLATE_TEXT.LOAD_BUTTON}
-                </div>
-              </div>
-            </button>
-          )))}
+              </button>
+            ))
+          )}
         </div>
 
         {/* Footer */}

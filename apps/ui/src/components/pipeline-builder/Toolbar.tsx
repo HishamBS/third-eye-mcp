@@ -1,9 +1,13 @@
-'use client';
+"use client";
 
-import { memo, useState, useCallback } from 'react';
-import { TOOLBAR_TEXT, LAYOUT } from './constants';
-import type { Pipeline } from '@/types/pipeline';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { memo, useState, useCallback } from "react";
+import { TOOLBAR_TEXT, LAYOUT } from "./constants";
+import type { Pipeline } from "@/types/pipeline";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
 
 /**
  * Toolbar Props
@@ -65,7 +69,7 @@ export const Toolbar = memo(function Toolbar({
       onActivate(pipelineId);
       setShowPipelineMenu(false);
     },
-    [onActivate]
+    [onActivate],
   );
 
   return (
@@ -82,8 +86,18 @@ export const Toolbar = memo(function Toolbar({
             className="px-4 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-foreground font-medium text-sm hover:bg-brand-outline/10 transition-colors flex items-center gap-2"
           >
             <span>{activePipeline?.name || TOOLBAR_TEXT.SYSTEM_DEFAULT}</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
             </svg>
           </button>
 
@@ -97,18 +111,22 @@ export const Toolbar = memo(function Toolbar({
                     onClick={() => handlePipelineSelect(pipeline.id)}
                     className={`w-full text-left px-4 py-2 text-sm hover:bg-brand-outline/10 transition-colors ${
                       activePipeline?.id === pipeline.id
-                        ? 'bg-brand-primary/10 text-brand-primary font-medium'
-                        : 'text-brand-foreground'
+                        ? "bg-brand-primary/10 text-brand-primary font-medium"
+                        : "text-brand-foreground"
                     }`}
                   >
                     <div className="font-medium">{pipeline.name}</div>
                     {pipeline.description && (
-                      <div className="text-xs text-semantic-muted mt-0.5">{pipeline.description}</div>
+                      <div className="text-xs text-semantic-muted mt-0.5">
+                        {pipeline.description}
+                      </div>
                     )}
                   </button>
                 ))
               ) : (
-                <div className="px-4 py-3 text-sm text-semantic-muted text-center">No saved pipelines</div>
+                <div className="px-4 py-3 text-sm text-semantic-muted text-center">
+                  No saved pipelines
+                </div>
               )}
             </div>
           )}
@@ -194,8 +212,8 @@ export const Toolbar = memo(function Toolbar({
               onClick={onToggleMinimap}
               className={`px-3 py-2 border rounded-md text-sm transition-colors ${
                 showMinimap
-                  ? 'bg-brand-primary text-brand-foreground border-brand-primary'
-                  : 'bg-brand-paper text-brand-foreground border-brand-outline hover:bg-brand-outline/10'
+                  ? "bg-brand-primary text-brand-foreground border-brand-primary"
+                  : "bg-brand-paper text-brand-foreground border-brand-outline hover:bg-brand-outline/10"
               }`}
             >
               {TOOLBAR_TEXT.TOGGLE_MINIMAP}
@@ -205,8 +223,8 @@ export const Toolbar = memo(function Toolbar({
               onClick={onToggleGrid}
               className={`px-3 py-2 border rounded-md text-sm transition-colors ${
                 showGrid
-                  ? 'bg-brand-primary text-brand-foreground border-brand-primary'
-                  : 'bg-brand-paper text-brand-foreground border-brand-outline hover:bg-brand-outline/10'
+                  ? "bg-brand-primary text-brand-foreground border-brand-primary"
+                  : "bg-brand-paper text-brand-foreground border-brand-outline hover:bg-brand-outline/10"
               }`}
             >
               {TOOLBAR_TEXT.TOGGLE_GRID}
@@ -218,15 +236,20 @@ export const Toolbar = memo(function Toolbar({
         <button
           onClick={() => setExpanded(!expanded)}
           className="px-3 py-2 bg-brand-paper border border-brand-outline rounded-md text-brand-foreground text-sm hover:bg-brand-outline/10 transition-colors"
-          title={expanded ? 'Show Less' : TOOLBAR_TEXT.MORE_ACTIONS}
+          title={expanded ? "Show Less" : TOOLBAR_TEXT.MORE_ACTIONS}
         >
           <svg
-            className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`}
+            className={`w-4 h-4 transition-transform ${expanded ? "rotate-180" : ""}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </button>
       </div>

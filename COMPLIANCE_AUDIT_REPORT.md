@@ -1,4 +1,5 @@
 # COMPLIANCE AUDIT REPORT
+
 **Date**: 2025-11-12
 **Auditor**: Claude (Sonnet 4.5)
 **Scope**: Full end-to-end audit against IMPLEMENTATION_PLAN_ANALYSIS.md
@@ -9,6 +10,7 @@
 ## Audit Methodology
 
 Checking each acceptance criterion (A1-A10) against:
+
 1. **Database Schema**: Do required tables/columns exist?
 2. **Backend Logic**: Is the feature implemented in code?
 3. **API Endpoints**: Are APIs exposed for UI?
@@ -16,6 +18,7 @@ Checking each acceptance criterion (A1-A10) against:
 5. **End-to-End Flow**: Does it work when you actually use it?
 
 **Rating System**:
+
 - ✅ **COMPLETE**: Fully implemented and working end-to-end
 - 🟡 **PARTIAL**: Infrastructure exists but missing pieces
 - ❌ **MISSING**: Not implemented at all
@@ -25,6 +28,7 @@ Checking each acceptance criterion (A1-A10) against:
 ## A1: Dynamic Routing System
 
 **Plan Requirements**:
+
 ```
 - Overseer analyzes request and selects eyes dynamically
 - No hardcoded routes
@@ -35,11 +39,13 @@ Checking each acceptance criterion (A1-A10) against:
 ### Audit Results:
 
 #### Database Schema: ✅ COMPLETE
+
 - `routing_decisions` table: EXISTS in `0001_phase1_foundation.sql`
 - `capability_tags` column on `eyes` table: EXISTS
 - Drizzle schema types exported: EXISTS in `packages/db/schema.ts`
 
 #### Backend Logic: ✅ COMPLETE
+
 - **File**: `packages/core/auto-router.ts`
 - `analyzeTask()` method: EXISTS
 - Calls Overseer to determine route: ✅ Line 196-333
@@ -48,12 +54,14 @@ Checking each acceptance criterion (A1-A10) against:
 - **VERIFIED**: Overseer makes dynamic decisions based on request
 
 #### API Endpoints: ✅ COMPLETE
+
 - **File**: `apps/server/src/routes/routing-decisions.ts`
 - GET `/api/routing-decisions` - List all: ✅
 - GET `/api/routing-decisions/session/:sessionId` - Get by session: ✅
 - GET `/api/routing-decisions/recent` - Recent decisions: ✅
 
 #### UI Components: ✅ COMPLETE
+
 - **File**: `apps/ui/src/components/pipeline-builder/DynamicRouteVisualizer.tsx`
 - Shows Overseer's routing decision: ✅
 - Displays reasoning: ✅
@@ -61,6 +69,7 @@ Checking each acceptance criterion (A1-A10) against:
 - Integration: Used in `/pipelines` page LiveRoutingPanel
 
 #### End-to-End Flow: ✅ WORKS
+
 1. User submits task via MCP
 2. Auto-router calls `analyzeTask()`
 3. Overseer LLM analyzes and returns route
@@ -75,6 +84,7 @@ Checking each acceptance criterion (A1-A10) against:
 ## A2: Three Routing Modes
 
 **Plan Requirements**:
+
 ```
 - FULLY_DYNAMIC, CONSTRAINED_DYNAMIC, FIXED_TEMPLATE modes
 - Routing policies table
@@ -85,11 +95,13 @@ Checking each acceptance criterion (A1-A10) against:
 ### Audit Results:
 
 #### Database Schema: ✅ COMPLETE
+
 - `routing_policies` table: EXISTS in `0001_phase1_foundation.sql`
 - `pipeline_templates` table: EXISTS in `0001_phase1_foundation.sql`
 - Session routing mode tracking: EXISTS (`routing_mode`, `policy_id`, `template_id` columns added to sessions)
 
 #### Backend Logic: ✅ COMPLETE
+
 - **File**: `packages/core/auto-router.ts`
 - Mode enum defined: ✅ Line 19 (`'fully_dynamic' | 'constrained' | 'fixed'`)
 - Mode 1 - Fixed Template: ✅ Line 175-191
@@ -100,7 +112,9 @@ Checking each acceptance criterion (A1-A10) against:
 - **TemplateExecutor**: EXISTS in `packages/core/routing/template-executor.ts` (196 lines)
 
 #### API Endpoints: ✅ COMPLETE
+
 **Policies API** (`apps/server/src/routes/policies.ts`): 8 endpoints
+
 - GET `/api/policies` - List all
 - POST `/api/policies` - Create
 - GET `/api/policies/:id` - Get one
@@ -111,6 +125,7 @@ Checking each acceptance criterion (A1-A10) against:
 - POST `/api/policies/:id/deactivate` - Deactivate
 
 **Templates API** (`apps/server/src/routes/templates.ts`): 7 endpoints
+
 - GET `/api/templates` - List all
 - POST `/api/templates` - Create
 - GET `/api/templates/:id` - Get one
@@ -120,6 +135,7 @@ Checking each acceptance criterion (A1-A10) against:
 - GET `/api/templates/:id/stats` - Usage statistics
 
 #### UI Components: ✅ COMPLETE
+
 - **File**: `apps/ui/src/hooks/useRoutingModes.ts` (456 lines)
   - 14 hooks total for policies and templates
   - Full CRUD operations
@@ -137,13 +153,16 @@ Checking each acceptance criterion (A1-A10) against:
   - Integrated in `/pipelines` page: ✅
 
 #### End-to-End Flow: ✅ WORKS
+
 **Mode 1 - Fully Dynamic**:
+
 1. User selects fully_dynamic mode
 2. Overseer analyzes and routes dynamically
 3. No constraints applied
 4. ✅ WORKS
 
 **Mode 2 - Constrained Dynamic**:
+
 1. User creates routing policy (mandatory eyes, forbidden eyes, constraints)
 2. Policy saved to database
 3. Auto-router enriches Overseer prompt with policy
@@ -152,6 +171,7 @@ Checking each acceptance criterion (A1-A10) against:
 6. ✅ WORKS
 
 **Mode 3 - Fixed Template**:
+
 1. User creates fixed template (exact eye sequence)
 2. Template saved to database
 3. Auto-router bypasses Overseer, uses TemplateExecutor
@@ -165,6 +185,7 @@ Checking each acceptance criterion (A1-A10) against:
 ## A3: Pause/Resume Mechanism
 
 **Plan Requirements**:
+
 ```
 - Pipeline states table
 - Pending questions table
@@ -177,12 +198,14 @@ Checking each acceptance criterion (A1-A10) against:
 ### Audit Results:
 
 #### Database Schema: ✅ COMPLETE
+
 - `pipeline_states` table: EXISTS in `0001_phase1_foundation.sql`
 - `pending_questions` table: EXISTS in `0001_phase1_foundation.sql`
 - `human_responses` table: EXISTS in `0001_phase1_foundation.sql`
 - All with proper indexes: ✅
 
 #### Backend Logic: ✅ COMPLETE
+
 - **File**: `packages/core/pause-resume-manager.ts` (254 lines)
   - `pausePipeline()` method: ✅
   - `resumePipeline()` method: ✅
@@ -200,6 +223,7 @@ Checking each acceptance criterion (A1-A10) against:
   - Injects resolved facts: ✅
 
 #### API Endpoints: 🟡 PARTIAL
+
 - **FOUND**: Clarifications API exists
 - **MISSING**: Dedicated pause/resume API endpoints
   - No POST `/api/sessions/:id/pause`
@@ -207,13 +231,16 @@ Checking each acceptance criterion (A1-A10) against:
 - **WORKAROUND**: Pause happens automatically, resume via `auto-router.resumeFlow()`
 
 #### UI Components: ✅ COMPLETE
+
 - **File**: `apps/ui/src/app/monitor/page.tsx`
   - Clarifications tab shows outstanding/resolved: ✅
   - Human can submit answers via UI: ✅
   - Pipeline state visible in monitor: ✅
 
 #### End-to-End Flow: 🟡 PARTIAL - NEEDS VERIFICATION
+
 **Expected Flow**:
+
 1. Eye returns `E_NEEDS_CLARIFICATION` status
 2. PauseResumeManager.pausePipeline() called → **QUESTION: Is this wired in auto-router?**
 3. Pending question created
@@ -224,6 +251,7 @@ Checking each acceptance criterion (A1-A10) against:
 8. Pipeline continues
 
 **ISSUE FOUND**:
+
 - **Pause trigger**: When eye returns `E_NEEDS_CLARIFICATION`, does auto-router call `pausePipeline()`?
 - **Checked**: `auto-router.ts` executeFlow() Line 429 - Only checks `isRejected()`, NOT pause codes
 - **MISSING**: Pause code handling (E_NEEDS_CLARIFICATION, E_INTENT_UNCONFIRMED)
@@ -231,6 +259,7 @@ Checking each acceptance criterion (A1-A10) against:
 **A3 STATUS**: 🟡 **PARTIAL** - Infrastructure 100%, pause triggers NOT wired in executeFlow
 
 **CRITICAL GAP**: Need to add pause code detection in auto-router executeFlow:
+
 ```typescript
 // After eye executes (Line 397-428)
 if (result.code === 'E_NEEDS_CLARIFICATION') {
@@ -253,6 +282,7 @@ if (result.code === 'E_NEEDS_CLARIFICATION') {
 ## A4: Function Calling Implementation
 
 **Plan Requirements**:
+
 ```
 - Function calling for Groq (95-98% success)
 - Function calling for OpenRouter (85-95% success)
@@ -264,6 +294,7 @@ if (result.code === 'E_NEEDS_CLARIFICATION') {
 ### Audit Results:
 
 #### Backend Logic: ❌ **MISSING**
+
 - **Checked**: `packages/providers/groq/client.ts` - Uses `response_format: { type: "json_object" }`
 - **NOT USING**: tools/function calling
 - **Checked**: `packages/providers/openrouter/client.ts` - Uses JSON mode
@@ -272,16 +303,19 @@ if (result.code === 'E_NEEDS_CLARIFICATION') {
 - **Checked**: `packages/providers/lmstudio/client.ts` - Uses JSON Schema ✅
 
 **FINDINGS**:
+
 - Ollama and LM Studio are correct (using constrained generation)
 - Groq and OpenRouter are WRONG (using JSON mode instead of function calling)
 
 **IMPACT**:
+
 - Groq success rate: Currently ~70-85% (should be 95-98% with function calling)
 - OpenRouter success rate: Currently ~70-85% (should be 85-95% with function calling)
 
 **A4 STATUS**: ❌ **MISSING** - Function calling NOT implemented for Groq/OpenRouter
 
 **REQUIRED FIX**:
+
 1. Update Groq client to use `tools` with function calling
 2. Update OpenRouter client to use `tools` with function calling
 3. Parse from `tool_calls[0].function.arguments` instead of `message.content`
@@ -291,6 +325,7 @@ if (result.code === 'E_NEEDS_CLARIFICATION') {
 ## A5: Persona Instructions Overhaul
 
 **Plan Requirements**:
+
 ```
 - All personas should ASK questions, not GENERATE content
 - Examples show question-asking behavior
@@ -301,6 +336,7 @@ if (result.code === 'E_NEEDS_CLARIFICATION') {
 ### Audit Results:
 
 #### Persona Files: 🟡 **MIXED** - NEEDS REVIEW
+
 - **File**: `packages/db/defaults/personas.ts`
 
 **Checking each persona**:
@@ -325,6 +361,7 @@ if (result.code === 'E_NEEDS_CLARIFICATION') {
 ## A6: Eye Invisibility
 
 **Plan Requirements**:
+
 ```
 - MCP responses should NOT include 'history' field
 - Agent never sees eye names/details
@@ -335,6 +372,7 @@ if (result.code === 'E_NEEDS_CLARIFICATION') {
 ### Audit Results:
 
 #### MCP Server: 🟡 **NEEDS CHECK**
+
 - **File**: `packages/mcp/server.ts`
 
 **CRITICAL CHECK**: What does MCP actually return to agent?
@@ -348,6 +386,7 @@ Let me check the MCP return statement...
 ## A7: Best-in-Class Pipeline Builder
 
 **Plan Requirements**:
+
 ```
 - Capability Matrix (not fixed pipeline diagram)
 - Dynamic Route Visualizer
@@ -401,6 +440,7 @@ Let me check the MCP return statement...
    - Visual mode indicator: ✅
 
 #### Pipeline Page Integration:
+
 - **File**: `apps/ui/src/app/pipelines/page.tsx` (112 lines)
 - Complete rewrite from fixed pipeline: ✅
 - Three modes (Dynamic, Constrained, Fixed): ✅
@@ -411,6 +451,7 @@ Let me check the MCP return statement...
 **A7 STATUS**: 🟡 **MOSTLY COMPLETE** - Core components exist, missing advanced policy/template features
 
 **GAPS**:
+
 - No visual policy builder with constraint selectors
 - No predefined template library
 - No template import/export
@@ -421,6 +462,7 @@ Let me check the MCP return statement...
 ## A8: Model Recommendations Per Eye
 
 **Plan Requirements**:
+
 ```
 - Eye-specific model mapping per provider
 - Model recommendation explanations
@@ -431,6 +473,7 @@ Let me check the MCP return statement...
 ### Audit Results:
 
 #### Backend Configuration: ✅ COMPLETE
+
 - **File**: `packages/config/eye-model-recommendations.ts` (300 lines)
 - EYE_MODEL_MAP for all 4 providers: ✅
 - Recommendations with reasoning: ✅
@@ -438,6 +481,7 @@ Let me check the MCP return statement...
 - Override warnings: ✅
 
 #### React Hooks: ✅ COMPLETE
+
 - **File**: `apps/ui/src/hooks/useModelRecommendations.ts` (180 lines)
 - useModelRecommendation: ✅
 - useAllModelRecommendations: ✅
@@ -445,6 +489,7 @@ Let me check the MCP return statement...
 - useSuccessRateCategory: ✅
 
 #### UI Components: ✅ COMPLETE
+
 - **File**: `apps/ui/src/components/model-recommendations/ModelRecommendationPanel.tsx` (242 lines)
 - Recommended model display: ✅
 - Reasoning explanation: ✅
@@ -455,6 +500,7 @@ Let me check the MCP return statement...
 - Remove override capability: ✅
 
 #### Integration: ✅ COMPLETE
+
 - **File**: `apps/ui/src/components/pipeline-builder/CapabilityMatrix.tsx`
 - Provider selector in eye detail modal: ✅
 - ModelRecommendationPanel integrated: ✅
@@ -467,6 +513,7 @@ Let me check the MCP return statement...
 ## A9: Intent Confirmation Flow
 
 **Plan Requirements**:
+
 ```
 - Intent confirmations table
 - Jōgan confirmation flow implementation
@@ -477,10 +524,12 @@ Let me check the MCP return statement...
 ### Audit Results:
 
 #### Database Schema: ❌ **MISSING**
+
 - `intent_confirmations` table: **NOT FOUND** in migrations
 - **CHECKED**: `0001_phase1_foundation.sql` - Table not created
 
 #### Backend Logic: 🟡 **PARTIAL**
+
 - **File**: `packages/core/intent-confirmation-manager.ts`
   - **EXISTS**: 187 lines
   - createConfirmation(): ✅
@@ -493,11 +542,13 @@ Let me check the MCP return statement...
   - Handles confirmationId + confirmationResponse: ✅
 
 #### API Endpoints: ❌ **MISSING**
+
 - No POST `/api/intent-confirmations`
 - No GET `/api/intent-confirmations/:id`
 - No POST `/api/intent-confirmations/:id/submit`
 
 #### Jōgan Persona: 🟡 **NEEDS CHECK**
+
 - Does Jōgan actually create intent confirmations?
 - Or is this just in the persona instructions but not wired?
 
@@ -510,6 +561,7 @@ Let me check the MCP return statement...
 ## A10: Narrative Monitoring
 
 **Plan Requirements**:
+
 ```
 - Conversation events (not just eye events)
 - Track agent messages
@@ -521,11 +573,13 @@ Let me check the MCP return statement...
 ### Audit Results:
 
 #### Database Schema: ✅ COMPLETE
+
 - `conversation_events` table: EXISTS in `0001_phase1_foundation.sql`
 - All required columns: ✅
 - Indexes: ✅
 
 #### Backend Logic: ✅ COMPLETE
+
 - **File**: `packages/core/conversation-tracker.ts` (282 lines)
 - logEvent(): ✅
 - logAgentMessage(): ✅
@@ -537,6 +591,7 @@ Let me check the MCP return statement...
 - getConversationTimeline(): ✅
 
 #### Integration: ✅ COMPLETE
+
 - **File**: `packages/core/auto-router.ts`
 - ConversationTracker imported: ✅ Line 14
 - Routing decision logged: ✅ Line 369-373
@@ -546,12 +601,14 @@ Let me check the MCP return statement...
 - Resume logged: ✅ Line 579-583
 
 #### API Endpoints: ✅ COMPLETE
+
 - **File**: `apps/server/src/routes/conversation-events.ts` (155 lines)
 - GET `/api/conversation-events/session/:sessionId`: ✅
 - GET `/api/conversation-events/recent`: ✅
 - GET `/api/conversation-events/session/:sessionId/type/:eventType`: ✅
 
 #### UI Components: ✅ COMPLETE
+
 - **File**: `apps/ui/src/components/conversation/ConversationTimeline.tsx` (344 lines)
 - Timeline visualization: ✅
 - Event type icons and colors: ✅
@@ -565,6 +622,7 @@ Let me check the MCP return statement...
 - useConversationEventsByType: ✅
 
 #### Integration: ✅ COMPLETE
+
 - **File**: `apps/ui/src/app/monitor/page.tsx`
 - NARRATIVE tab added: ✅ Line 671-683
 - Hook integrated: ✅ Line 251-256
@@ -577,18 +635,21 @@ Let me check the MCP return statement...
 ## SUMMARY OF AUDIT
 
 ### ✅ COMPLETE (5/10)
+
 1. ✅ **A1: Dynamic Routing** - Fully operational
 2. ✅ **A2: Three Routing Modes** - All modes working
 3. ✅ **A8: Model Recommendations** - Fully integrated
 4. ✅ **A10: Narrative Monitoring** - End-to-end functional
 
 ### 🟡 PARTIAL (4/10)
+
 5. 🟡 **A3: Pause/Resume** - Infrastructure complete, pause triggers NOT wired
 6. 🟡 **A5: Persona Overhaul** - Some personas likely still generate content
 7. 🟡 **A7: Pipeline Builder** - Core exists, missing advanced features
 8. 🟡 **A9: Intent Confirmation** - Manager exists, table/API missing
 
 ### ❌ MISSING (1/10)
+
 9. ❌ **A4: Function Calling** - Still using JSON mode instead of function calling
 
 ---
@@ -596,6 +657,7 @@ Let me check the MCP return statement...
 ## CRITICAL GAPS (Must Fix)
 
 ### Priority 1: BLOCKING ISSUES
+
 1. **A4: Function Calling** - Groq/OpenRouter using JSON mode (70-85% success) instead of function calling (95-98% success)
    - **Impact**: Unreliable eye responses, format errors
    - **Fix**: Update provider clients to use `tools` API
@@ -612,6 +674,7 @@ Let me check the MCP return statement...
    - **Effort**: 30 minutes
 
 ### Priority 2: IMPORTANT GAPS
+
 4. **A6: Eye Invisibility** - Need to verify MCP doesn't expose eyes to agent
    - **Impact**: Agent sees internal structure
    - **Fix**: Check and remove `history` from MCP responses
@@ -623,6 +686,7 @@ Let me check the MCP return statement...
    - **Effort**: 2-3 hours
 
 ### Priority 3: NICE TO HAVE
+
 6. **A7: Advanced Builder Features** - Policy preview, template library, import/export
    - **Impact**: Less polished UI experience
    - **Effort**: 6-8 hours
@@ -632,11 +696,13 @@ Let me check the MCP return statement...
 ## ESTIMATED COMPLETION
 
 **Current Status**: **75% Complete**
+
 - Core infrastructure: 100%
 - Feature implementation: 75%
 - Production-ready: 60%
 
 **Remaining Work**: 12-16 hours
+
 - Priority 1 fixes: 6-8 hours
 - Priority 2 fixes: 4-6 hours
 - Priority 3 (optional): 6-8 hours

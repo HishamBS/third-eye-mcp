@@ -1068,7 +1068,7 @@ Response (not ready):
 export const PERSONA_CONTENT = {
   overseer: overseer_PERSONA,
   sharingan: sharingan_PERSONA,
-  "kyuubi": kyuubi_PERSONA,
+  kyuubi: kyuubi_PERSONA,
   jogan: jogan_PERSONA,
   rinnegan: rinnegan_PERSONA,
   mangekyo: mangekyo_PERSONA,
@@ -1096,7 +1096,8 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
   {
     eye: EyeId.SHARINGAN,
     name: "Sharingan",
-    description: "Ambiguity detector that guides agents to identify unclear requirements.",
+    description:
+      "Ambiguity detector that guides agents to identify unclear requirements.",
     version: 2, // Phase 1-A5: Incremented version
     mission: PERSONA_CONTENT.sharingan,
   },
@@ -1127,14 +1128,16 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
   {
     eye: EyeId.MANGEKYO,
     name: "Mangekyō",
-    description: "Code quality guide that asks questions about structure, safety, and testing.",
+    description:
+      "Code quality guide that asks questions about structure, safety, and testing.",
     version: 2, // Phase 1-A5: Incremented version
     mission: PERSONA_CONTENT.mangekyo,
   },
   {
     eye: EyeId.TENSEIGAN,
     name: "Tenseigan",
-    description: "Evidence guide that helps agents think through citation and verification needs.",
+    description:
+      "Evidence guide that helps agents think through citation and verification needs.",
     version: 2, // Phase 1-A5: Incremented version
     mission: PERSONA_CONTENT.tenseigan,
   },

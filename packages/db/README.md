@@ -6,7 +6,7 @@ Third Eye MCP acts as an Overseer for AI agents (Claude, ChatGPT, Cursor, etc.),
 
 ## 🎯 Key Features
 
-- **Zero Hallucinations**: Every output validated through multi-stage checks  
+- **Zero Hallucinations**: Every output validated through multi-stage checks
 - **8 Specialized Eyes**: From ambiguity detection to final approval
 - **Real-Time Monitoring**: Live dashboard showing pipeline execution
 - **Local-First**: BYO API keys, your data stays private
@@ -60,12 +60,12 @@ Add to \`~/Library/Application Support/Claude/claude_desktop_config.json\`:
 
 \`\`\`json
 {
-  "mcpServers": {
-    "third-eye": {
-      "command": "node",
-      "args": ["/absolute/path/to/third-eye-mcp/mcp-bridge/build/index.js"]
-    }
-  }
+"mcpServers": {
+"third-eye": {
+"command": "node",
+"args": ["/absolute/path/to/third-eye-mcp/mcp-bridge/build/index.js"]
+}
+}
 }
 \`\`\`
 
@@ -76,16 +76,17 @@ Restart Claude Desktop.
 ### Test Backend Eyes Directly
 
 \`\`\`bash
+
 # Test Sharingan (ambiguity detection)
+
 curl -X POST http://localhost:7070/eyes/sharingan/clarify \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "payload": { "prompt": "make it better" },
-    "context": { "session_id": "test-123", "lang": "auto", "budget_tokens": 0 }
-  }'
+-H "Content-Type: application/json" \\
+-d '{
+"payload": { "prompt": "make it better" },
+"context": { "session_id": "test-123", "lang": "auto", "budget_tokens": 0 }
+}'
 \`\`\`
 
 ## 📦 Project Structure
 
 All Eyes implement real validation logic - no placeholders or stubs.
-

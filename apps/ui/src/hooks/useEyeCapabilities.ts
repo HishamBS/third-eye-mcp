@@ -6,8 +6,8 @@
  * Per R13: Centralized API logic in hooks
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import { useAPI } from './useAPI';
+import { useState, useCallback, useEffect } from "react";
+import { useAPI } from "./useAPI";
 
 // ============================================================================
 // Types
@@ -49,15 +49,15 @@ export function useEyeCapabilities() {
       const response = await api.get<{
         success: boolean;
         data: EyeWithCapabilities[];
-      }>('/api/eyes/all');
+      }>("/api/eyes/all");
 
       if (response.success && Array.isArray(response.data)) {
         setEyes(response.data);
       } else {
-        throw new Error('Failed to fetch eyes');
+        throw new Error("Failed to fetch eyes");
       }
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch eyes'));
+      setError(err instanceof Error ? err : new Error("Failed to fetch eyes"));
     } finally {
       setLoading(false);
     }
@@ -100,7 +100,7 @@ export function useEyeCapability(eyeId: string | null) {
         throw new Error(`Eye ${eyeId} not found`);
       }
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch eye'));
+      setError(err instanceof Error ? err : new Error("Failed to fetch eye"));
       setEye(null);
     } finally {
       setLoading(false);
@@ -117,7 +117,9 @@ export function useEyeCapability(eyeId: string | null) {
 /**
  * Helper: Get all unique capability tags across all eyes
  */
-export function getAllCapabilityTags(eyes: readonly EyeWithCapabilities[]): readonly string[] {
+export function getAllCapabilityTags(
+  eyes: readonly EyeWithCapabilities[],
+): readonly string[] {
   const allTags = new Set<string>();
   for (const eye of eyes) {
     for (const tag of eye.capabilityTags) {
@@ -132,7 +134,7 @@ export function getAllCapabilityTags(eyes: readonly EyeWithCapabilities[]): read
  */
 export function getEyesByCapability(
   eyes: readonly EyeWithCapabilities[],
-  capabilityTag: string
+  capabilityTag: string,
 ): readonly EyeWithCapabilities[] {
   return eyes.filter((eye) => eye.capabilityTags.includes(capabilityTag));
 }

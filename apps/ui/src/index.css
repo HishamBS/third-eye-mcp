@@ -1,5 +1,5 @@
-@import '@fontsource-variable/inter';
-@import '@fontsource/geist-mono';
+@import "@fontsource-variable/inter";
+@import "@fontsource/geist-mono";
 
 @tailwind base;
 @tailwind components;
@@ -9,11 +9,12 @@
   body {
     background-color: rgb(var(--color-paper));
     color: rgb(var(--color-foreground));
-    font-family: 'InterVariable', ui-sans-serif, system-ui, sans-serif;
+    font-family: "InterVariable", ui-sans-serif, system-ui, sans-serif;
   }
 
-  code, pre {
-    font-family: 'GeistMono', ui-monospace, 'SFMono-Regular', monospace;
+  code,
+  pre {
+    font-family: "GeistMono", ui-monospace, "SFMono-Regular", monospace;
   }
 
   /* Details/summary elements using theme CSS variables (SSOT) */
@@ -52,6 +53,8 @@
 
 @layer utilities {
   .shadow-glass {
-    box-shadow: 0 10px 30px rgb(var(--color-ink) / 0.35), inset 0 1px 0 rgb(var(--color-foreground) / 0.05);
+    box-shadow:
+      0 10px 30px rgb(var(--color-ink) / 0.35),
+      inset 0 1px 0 rgb(var(--color-foreground) / 0.05);
   }
 }

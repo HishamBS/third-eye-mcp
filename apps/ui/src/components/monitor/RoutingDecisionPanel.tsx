@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Routing Decision Panel - Phase 17
@@ -14,13 +14,17 @@
  * Per R13: All text from SSOT constants
  */
 
-import { memo } from 'react';
-import { GlassCard } from '../ui/GlassCard';
-import { EyeIcon } from '../EyeIcon';
-import { Route, ArrowRight, Info, Zap } from 'lucide-react';
-import type { EyeSequence, EyeRouteStep } from '@third-eye/eyes';
-import type { EyeName } from '@third-eye/types';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { memo } from "react";
+import { GlassCard } from "../ui/GlassCard";
+import { EyeIcon } from "../EyeIcon";
+import { Route, ArrowRight, Info, Zap } from "lucide-react";
+import type { EyeSequence, EyeRouteStep } from "@third-eye/eyes";
+import type { EyeName } from "@third-eye/types";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
 
 /**
  * Props for RoutingDecisionPanel
@@ -33,16 +37,16 @@ interface RoutingDecisionPanelProps {
 /**
  * Get stage badge color
  */
-function getStageBadgeClass(stage: EyeRouteStep['stage']): string {
+function getStageBadgeClass(stage: EyeRouteStep["stage"]): string {
   switch (stage) {
-    case 'guidance':
-      return '${STATUS_BG_COLORS_SUBTLE.info} ${STATUS_TEXT_COLORS.info} ${STATUS_BORDER_COLORS_SUBTLE.info}';
-    case 'validation':
-      return '${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success} ${STATUS_BORDER_COLORS_SUBTLE.success}';
-    case 'both':
-      return '${STATUS_BG_COLORS_SUBTLE.info} ${STATUS_TEXT_COLORS.info} ${STATUS_BORDER_COLORS_SUBTLE.info}';
+    case "guidance":
+      return "${STATUS_BG_COLORS_SUBTLE.info} ${STATUS_TEXT_COLORS.info} ${STATUS_BORDER_COLORS_SUBTLE.info}";
+    case "validation":
+      return "${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success} ${STATUS_BORDER_COLORS_SUBTLE.success}";
+    case "both":
+      return "${STATUS_BG_COLORS_SUBTLE.info} ${STATUS_TEXT_COLORS.info} ${STATUS_BORDER_COLORS_SUBTLE.info}";
     default:
-      return '${STATUS_BG_COLORS_SUBTLE.idle} text-semantic-muted ${STATUS_BORDER_COLORS_SUBTLE.idle}';
+      return "${STATUS_BG_COLORS_SUBTLE.idle} text-semantic-muted ${STATUS_BORDER_COLORS_SUBTLE.idle}";
   }
 }
 
@@ -50,9 +54,9 @@ function getStageBadgeClass(stage: EyeRouteStep['stage']): string {
  * Get confidence color based on score
  */
 function getConfidenceColor(confidence: number): string {
-  if (confidence >= 0.8) return '${STATUS_TEXT_COLORS.success}';
-  if (confidence >= 0.6) return '${STATUS_TEXT_COLORS.warning}';
-  return '${STATUS_TEXT_COLORS.error}';
+  if (confidence >= 0.8) return "${STATUS_TEXT_COLORS.success}";
+  if (confidence >= 0.6) return "${STATUS_TEXT_COLORS.warning}";
+  return "${STATUS_TEXT_COLORS.error}";
 }
 
 /**
@@ -94,7 +98,9 @@ export const RoutingDecisionPanel = memo(function RoutingDecisionPanel({
           <div className="flex items-center gap-2">
             <Zap className="w-4 h-4 text-brand-accent" />
             <span className="text-sm text-semantic-muted">Confidence:</span>
-            <span className={`text-base font-semibold ${getConfidenceColor(routing.confidence)}`}>
+            <span
+              className={`text-base font-semibold ${getConfidenceColor(routing.confidence)}`}
+            >
               {confidencePercent}%
             </span>
           </div>
@@ -153,7 +159,9 @@ export const RoutingDecisionPanel = memo(function RoutingDecisionPanel({
                       <span className="font-semibold text-brand-foreground">
                         {displayName}
                       </span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full border ${getStageBadgeClass(step.stage)}`}>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full border ${getStageBadgeClass(step.stage)}`}
+                      >
                         {step.stage.toUpperCase()}
                       </span>
                     </div>

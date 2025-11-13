@@ -9,17 +9,21 @@
  * Per R13: Interfaces exported for SSOT
  */
 
-import { randomUUID } from 'node:crypto';
-import type { Database } from 'bun:sqlite';
+import { randomUUID } from "node:crypto";
+import type { Database } from "bun:sqlite";
 
 /**
  * Pipeline state for pause/resume
  */
 export interface PipelineState {
   readonly sessionId: string;
-  readonly status: 'running' | 'paused_for_human' | 'paused_for_agent' | 'completed';
+  readonly status:
+    | "running"
+    | "paused_for_human"
+    | "paused_for_agent"
+    | "completed";
   readonly currentEye: string;
-  readonly pauseReason?: 'clarification' | 'confirmation' | 'validation_failed';
+  readonly pauseReason?: "clarification" | "confirmation" | "validation_failed";
   readonly pendingData?: Record<string, unknown>;
   readonly resumeToken: string;
   readonly pausedAt?: number;
@@ -35,7 +39,7 @@ export interface PendingQuestion {
   readonly eyeName: string;
   readonly questions: readonly string[];
   readonly context?: Record<string, unknown>;
-  readonly status: 'pending' | 'answered' | 'expired';
+  readonly status: "pending" | "answered" | "expired";
   readonly createdAt: number;
   readonly expiresAt: number;
 }
@@ -48,7 +52,7 @@ export interface HumanResponse {
   readonly questionId: string;
   readonly sessionId: string;
   readonly answers: Record<string, unknown>;
-  readonly source: 'human' | 'agent';
+  readonly source: "human" | "agent";
   readonly validated: boolean;
   readonly createdAt: number;
 }
@@ -65,17 +69,22 @@ export class PauseResumeManager {
   async pausePipeline(params: {
     sessionId: string;
     currentEye: string;
-    reason?: 'clarification' | 'confirmation' | 'validation_failed';
+    reason?: "clarification" | "confirmation" | "validation_failed";
     pendingData?: Record<string, unknown>;
     expiresInMs?: number;
   }): Promise<PipelineState> {
     const resumeToken = randomUUID();
     const pausedAt = Date.now();
-    const expiresAt = params.expiresInMs ? pausedAt + params.expiresInMs : undefined;
+    const expiresAt = params.expiresInMs
+      ? pausedAt + params.expiresInMs
+      : undefined;
 
     const state: PipelineState = {
       sessionId: params.sessionId,
-      status: params.reason === 'confirmation' ? 'paused_for_human' : 'paused_for_agent',
+      status:
+        params.reason === "confirmation"
+          ? "paused_for_human"
+          : "paused_for_agent",
       currentEye: params.currentEye,
       pauseReason: params.reason,
       pendingData: params.pendingData,
@@ -96,7 +105,7 @@ export class PauseResumeManager {
            pending_data = excluded.pending_data,
            resume_token = excluded.resume_token,
            paused_at = excluded.paused_at,
-           expires_at = excluded.expires_at`
+           expires_at = excluded.expires_at`,
       )
       .run(
         state.sessionId,
@@ -106,7 +115,7 @@ export class PauseResumeManager {
         state.pendingData ? JSON.stringify(state.pendingData) : null,
         state.resumeToken,
         state.pausedAt ?? null,
-        state.expiresAt ?? null
+        state.expiresAt ?? null,
       );
 
     return state;
@@ -115,13 +124,16 @@ export class PauseResumeManager {
   /**
    * Resume pipeline from paused state
    */
-  async resumePipeline(sessionId: string, resumeToken: string): Promise<PipelineState> {
+  async resumePipeline(
+    sessionId: string,
+    resumeToken: string,
+  ): Promise<PipelineState> {
     // Load state from database
     const row = this.db
       .prepare(
         `SELECT session_id, status, current_eye, pause_reason, pending_data, resume_token, paused_at, expires_at
          FROM pipeline_states
-         WHERE session_id = ? AND resume_token = ?`
+         WHERE session_id = ? AND resume_token = ?`,
       )
       .get(sessionId, resumeToken) as
       | {
@@ -137,7 +149,9 @@ export class PauseResumeManager {
       | undefined;
 
     if (!row) {
-      throw new Error(`Pipeline state not found for session ${sessionId} with token ${resumeToken}`);
+      throw new Error(
+        `Pipeline state not found for session ${sessionId} with token ${resumeToken}`,
+      );
     }
 
     // Check expiration
@@ -146,16 +160,25 @@ export class PauseResumeManager {
     }
 
     // Check status
-    if (row.status !== 'paused_for_human' && row.status !== 'paused_for_agent') {
+    if (
+      row.status !== "paused_for_human" &&
+      row.status !== "paused_for_agent"
+    ) {
       throw new Error(`Cannot resume pipeline with status: ${row.status}`);
     }
 
     const state: PipelineState = {
       sessionId: row.session_id,
-      status: 'running',
+      status: "running",
       currentEye: row.current_eye,
-      pauseReason: row.pause_reason as 'clarification' | 'confirmation' | 'validation_failed' | undefined,
-      pendingData: row.pending_data ? (JSON.parse(row.pending_data) as Record<string, unknown>) : undefined,
+      pauseReason: row.pause_reason as
+        | "clarification"
+        | "confirmation"
+        | "validation_failed"
+        | undefined,
+      pendingData: row.pending_data
+        ? (JSON.parse(row.pending_data) as Record<string, unknown>)
+        : undefined,
       resumeToken: row.resume_token,
       pausedAt: row.paused_at ?? undefined,
       expiresAt: row.expires_at ?? undefined,
@@ -163,7 +186,9 @@ export class PauseResumeManager {
 
     // Update status to running
     this.db
-      .prepare(`UPDATE pipeline_states SET status = 'running' WHERE session_id = ?`)
+      .prepare(
+        `UPDATE pipeline_states SET status = 'running' WHERE session_id = ?`,
+      )
       .run(sessionId);
 
     return state;
@@ -177,7 +202,7 @@ export class PauseResumeManager {
       .prepare(
         `SELECT session_id, status, current_eye, pause_reason, pending_data, resume_token, paused_at, expires_at
          FROM pipeline_states
-         WHERE session_id = ?`
+         WHERE session_id = ?`,
       )
       .get(sessionId) as
       | {
@@ -198,10 +223,20 @@ export class PauseResumeManager {
 
     return {
       sessionId: row.session_id,
-      status: row.status as 'running' | 'paused_for_human' | 'paused_for_agent' | 'completed',
+      status: row.status as
+        | "running"
+        | "paused_for_human"
+        | "paused_for_agent"
+        | "completed",
       currentEye: row.current_eye,
-      pauseReason: row.pause_reason as 'clarification' | 'confirmation' | 'validation_failed' | undefined,
-      pendingData: row.pending_data ? (JSON.parse(row.pending_data) as Record<string, unknown>) : undefined,
+      pauseReason: row.pause_reason as
+        | "clarification"
+        | "confirmation"
+        | "validation_failed"
+        | undefined,
+      pendingData: row.pending_data
+        ? (JSON.parse(row.pending_data) as Record<string, unknown>)
+        : undefined,
       resumeToken: row.resume_token,
       pausedAt: row.paused_at ?? undefined,
       expiresAt: row.expires_at ?? undefined,
@@ -213,7 +248,9 @@ export class PauseResumeManager {
    */
   async completePipeline(sessionId: string): Promise<void> {
     this.db
-      .prepare(`UPDATE pipeline_states SET status = 'completed' WHERE session_id = ?`)
+      .prepare(
+        `UPDATE pipeline_states SET status = 'completed' WHERE session_id = ?`,
+      )
       .run(sessionId);
   }
 
@@ -237,7 +274,7 @@ export class PauseResumeManager {
       eyeName: params.eyeName,
       questions: params.questions,
       context: params.context,
-      status: 'pending',
+      status: "pending",
       createdAt,
       expiresAt,
     };
@@ -245,7 +282,7 @@ export class PauseResumeManager {
     this.db
       .prepare(
         `INSERT INTO pending_questions (id, session_id, eye_name, questions, context, status, created_at, expires_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         question.id,
@@ -255,7 +292,7 @@ export class PauseResumeManager {
         question.context ? JSON.stringify(question.context) : null,
         question.status,
         question.createdAt,
-        question.expiresAt
+        question.expiresAt,
       );
 
     return question;
@@ -264,13 +301,15 @@ export class PauseResumeManager {
   /**
    * Get pending questions for session
    */
-  async getPendingQuestions(sessionId: string): Promise<readonly PendingQuestion[]> {
+  async getPendingQuestions(
+    sessionId: string,
+  ): Promise<readonly PendingQuestion[]> {
     const rows = this.db
       .prepare(
         `SELECT id, session_id, eye_name, questions, context, status, created_at, expires_at
          FROM pending_questions
          WHERE session_id = ? AND status = 'pending'
-         ORDER BY created_at DESC`
+         ORDER BY created_at DESC`,
       )
       .all(sessionId) as Array<{
       id: string;
@@ -283,13 +322,15 @@ export class PauseResumeManager {
       expires_at: number;
     }>;
 
-    return rows.map(row => ({
+    return rows.map((row) => ({
       id: row.id,
       sessionId: row.session_id,
       eyeName: row.eye_name,
       questions: JSON.parse(row.questions) as string[],
-      context: row.context ? (JSON.parse(row.context) as Record<string, unknown>) : undefined,
-      status: row.status as 'pending' | 'answered' | 'expired',
+      context: row.context
+        ? (JSON.parse(row.context) as Record<string, unknown>)
+        : undefined,
+      status: row.status as "pending" | "answered" | "expired",
       createdAt: row.created_at,
       expiresAt: row.expires_at,
     }));
@@ -302,7 +343,7 @@ export class PauseResumeManager {
     questionId: string;
     sessionId: string;
     answers: Record<string, unknown>;
-    source: 'human' | 'agent';
+    source: "human" | "agent";
   }): Promise<HumanResponse> {
     const id = randomUUID();
     const createdAt = Date.now();
@@ -321,7 +362,7 @@ export class PauseResumeManager {
     this.db
       .prepare(
         `INSERT INTO human_responses (id, question_id, session_id, answers, source, validated, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         response.id,
@@ -330,7 +371,7 @@ export class PauseResumeManager {
         JSON.stringify(response.answers),
         response.source,
         response.validated ? 1 : 0,
-        response.createdAt
+        response.createdAt,
       );
 
     // Mark question as answered
@@ -344,13 +385,15 @@ export class PauseResumeManager {
   /**
    * Get human responses for question
    */
-  async getHumanResponses(questionId: string): Promise<readonly HumanResponse[]> {
+  async getHumanResponses(
+    questionId: string,
+  ): Promise<readonly HumanResponse[]> {
     const rows = this.db
       .prepare(
         `SELECT id, question_id, session_id, answers, source, validated, created_at
          FROM human_responses
          WHERE question_id = ?
-         ORDER BY created_at DESC`
+         ORDER BY created_at DESC`,
       )
       .all(questionId) as Array<{
       id: string;
@@ -362,12 +405,12 @@ export class PauseResumeManager {
       created_at: number;
     }>;
 
-    return rows.map(row => ({
+    return rows.map((row) => ({
       id: row.id,
       questionId: row.question_id,
       sessionId: row.session_id,
       answers: JSON.parse(row.answers) as Record<string, unknown>,
-      source: row.source as 'human' | 'agent',
+      source: row.source as "human" | "agent",
       validated: row.validated === 1,
       createdAt: row.created_at,
     }));
@@ -382,7 +425,7 @@ export class PauseResumeManager {
       .prepare(
         `UPDATE pending_questions
          SET status = 'expired'
-         WHERE status = 'pending' AND expires_at < ?`
+         WHERE status = 'pending' AND expires_at < ?`,
       )
       .run(now);
 

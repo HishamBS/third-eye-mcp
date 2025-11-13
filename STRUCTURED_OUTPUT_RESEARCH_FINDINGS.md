@@ -25,16 +25,19 @@ After deep research into 2024-2025 literature, benchmarks, and best practices, h
 ### 1. Function Calling Performance on Small Models
 
 #### What Works Well
+
 - **Llama 3.1 8B**: 76.1 score on Nexus benchmark (nested tool calling)
 - **Qwen 3 8B/14B**: Near GPT-4 performance (0.971 F1 score)
 - **Function calling IS the best trained capability** in modern LLMs
 
 #### What Doesn't Work Well
+
 - **Mistral 7B**: Struggles with parallel tool calls
 - **Not all providers support function calling** (Ollama, LM Studio have varying support)
 - **Small models (< 8B) have inconsistent function calling** implementation
 
 #### Evidence
+
 > "Llama 3.1 8B-Instruct stands out as the best overall choice for function calling applications"
 >
 > "Mistral 7B struggles to generate parallel tool calls correctly"
@@ -50,30 +53,35 @@ After deep research into 2024-2025 literature, benchmarks, and best practices, h
 #### The Performance Hierarchy (from research)
 
 **1st Place: Structured Outputs (OpenAI strict mode)**
+
 - **100% compliance** with JSON schema
 - Uses constrained decoding + fine-tuning
 - **Only available on gpt-4o-2024-08-06 and gpt-4o-mini**
 - NOT available for local small models
 
 **2nd Place: Constrained Generation (Outlines, Guidance, XGrammar)**
+
 - **100% compliance** with grammar/schema constraints
 - Works with ALL local models (Llama, Mistral, Qwen, etc.)
 - Logit filtering at token level
 - Open source and local
 
 **3rd Place: Function Calling**
+
 - **High reliability** (95-98% on good models)
 - Native capability for modern LLMs
 - Provider-dependent implementation
 - Not available on all frameworks
 
 **4th Place: JSON Mode**
+
 - **Guarantees valid JSON** but not schema compliance
 - ~70-80% schema compliance
 - Wide model support
 - Requires validation layer
 
 **5th Place: Prompt-based JSON**
+
 - **30-70% success rate** (highly variable)
 - No guarantees
 - Fails on complex schemas
@@ -104,6 +112,7 @@ After deep research into 2024-2025 literature, benchmarks, and best practices, h
 Constrained generation (also called guided generation) uses **logit filtering** to ensure the model can ONLY produce tokens that match your schema.
 
 **How it works**:
+
 1. Define JSON schema or grammar
 2. At each token generation step, filter out invalid tokens
 3. Model can only choose from valid tokens
@@ -112,24 +121,28 @@ Constrained generation (also called guided generation) uses **logit filtering** 
 #### Major Frameworks (2024 benchmarks)
 
 **XGrammar** (Best overall - November 2024)
+
 - Up to 14x faster than other solutions
 - Supports JSON schema + Context-Free Grammar
 - Integrates with SGLang, vLLM, MLX
 - **Winner for production use**
 
 **Guidance** (Best for flexibility)
+
 - Compatible with llama.cpp, Transformers, OpenAI
 - Higher throughput than Outlines
 - Active development
 - **Winner for development**
 
 **Outlines** (Mature, widely used)
+
 - Pioneer in constrained generation
 - Large community
 - Slower compilation times
 - **Winner for stability**
 
 **llama.cpp** (Best for local inference)
+
 - Built-in grammar support
 - Fast inference
 - Lower-level control
@@ -138,6 +151,7 @@ Constrained generation (also called guided generation) uses **logit filtering** 
 #### Performance Data (2024 benchmarks)
 
 From "Generating Structured Outputs from Language Models" (January 2025):
+
 - **Guidance**: Highest throughput (faster than no constraints!)
 - **XGrammar**: 3.5x faster on JSON, 10x faster on CFG
 - **Outlines**: Slower compilation, good runtime
@@ -176,12 +190,14 @@ From "Generating Structured Outputs from Language Models" (January 2025):
 #### Best Practices from Research
 
 **What HELPS**:
+
 - ✅ Specific, non-intimate roles ("tech expert", "code reviewer")
 - ✅ Gender-neutral terms
 - ✅ Two-step approach (assign role, then task)
 - ✅ Task-specific personas (not generic)
 
 **What DOESN'T HELP**:
+
 - ❌ Generic personas ("helpful assistant")
 - ❌ Overly creative/anthropomorphic personas
 - ❌ Personas for factual/objective tasks
@@ -190,6 +206,7 @@ From "Generating Structured Outputs from Language Models" (January 2025):
 #### Advanced: Multi-Persona Prompting
 
 **Solo Performance Prompting (SPP)** - New 2024 technique:
+
 - Instructs LLM to summon multiple internal personas
 - They collaborate on the task
 - Better for complex reasoning tasks
@@ -210,6 +227,7 @@ From "Generating Structured Outputs from Language Models" (January 2025):
 #### Actual Failure Rates from 2024 Research
 
 **StructuredRAG Benchmark** (August 2024):
+
 - **Llama 3 8B-instruct**: 71.7% success rate (JSON mode)
 - **Gemini 1.5 Pro**: 93.4% success rate
 - **Common failures**: Type errors (string vs int), missing fields, format errors
@@ -221,6 +239,7 @@ From "Generating Structured Outputs from Language Models" (January 2025):
 > Source: StructuredRAG paper (2024)
 
 This explains YOUR failures:
+
 - LLM produces conversational text before/after JSON
 - Type mismatches (`"75"` instead of `75`)
 - Missing required fields
@@ -229,6 +248,7 @@ This explains YOUR failures:
 #### Your Current Success Rate Estimate
 
 Based on your envelope complexity (12+ fields, 3 nesting levels, canonical matching):
+
 - **Small models (7-8B)**: ~30-50% success rate
 - **Medium models (13-14B)**: ~50-70% success rate
 - **Large models (70B+)**: ~70-85% success rate
@@ -244,6 +264,7 @@ This matches your experience: "llms always fail to use our strict json format"
 **Use**: Outlines, Guidance, or XGrammar
 
 **Why**:
+
 - ✅ **100% compliance** on ANY model size
 - ✅ Works with your local Llama/Mistral/Qwen models
 - ✅ No retries needed
@@ -282,6 +303,7 @@ response = generator(persona_prompt)
 ```
 
 **Benefits for your system**:
+
 - Keep your current envelope structure
 - Works with small local models
 - No provider dependency
@@ -294,17 +316,20 @@ response = generator(persona_prompt)
 **Use**: Native tool calling via provider API
 
 **Why**:
+
 - ✅ High reliability (95-98% on Llama 3.1 8B+)
 - ✅ Native LLM capability
 - ✅ Provider handles validation
 - ✅ Works well for small models
 
 **Limitations**:
+
 - ⚠️ Requires Llama 3.1 8B+ or Qwen 3 (not all models)
 - ⚠️ Provider-dependent (Groq, OpenRouter support varies)
 - ⚠️ May not work with local frameworks
 
 **When to use**:
+
 - If you're using Groq/OpenRouter with Llama 3.1 8B+
 - If function calling is well-supported in your stack
 - If you want to align with industry standards
@@ -316,11 +341,13 @@ response = generator(persona_prompt)
 **Use**: OpenAI API with `strict: true`
 
 **Why**:
+
 - ✅ **100% compliance** guaranteed
 - ✅ gpt-4o-mini is cost-effective
 - ✅ No implementation complexity
 
 **Limitations**:
+
 - ❌ Only works with OpenAI models (not local)
 - ❌ Costs money per request
 - ❌ Requires internet connection
@@ -332,6 +359,7 @@ response = generator(persona_prompt)
 **Use**: Much simpler envelope structure
 
 **Why**:
+
 - ✅ Easier for models to produce
 - ✅ Higher success rate than current
 - ✅ Minimal code changes
@@ -355,15 +383,15 @@ Instead of current 12+ fields with nesting.
 
 ## 📊 Performance Comparison Summary
 
-| Approach | Small Model Success Rate | Speed | Implementation | Local Support |
-|----------|-------------------------|-------|----------------|---------------|
-| **Current (Strict JSON)** | 30-70% | Slow (retries) | Complex | ✅ Yes |
-| **Constrained Generation** | **100%** | **Fast** | **Medium** | **✅ Yes** |
-| **Function Calling** | 95-98%* | Fast | Simple | ⚠️ Limited |
-| **OpenAI Strict Mode** | 100% | Fast | Simple | ❌ No (cloud only) |
-| **Simplified JSON** | 70-85% | Medium | Simple | ✅ Yes |
+| Approach                   | Small Model Success Rate | Speed          | Implementation | Local Support      |
+| -------------------------- | ------------------------ | -------------- | -------------- | ------------------ |
+| **Current (Strict JSON)**  | 30-70%                   | Slow (retries) | Complex        | ✅ Yes             |
+| **Constrained Generation** | **100%**                 | **Fast**       | **Medium**     | **✅ Yes**         |
+| **Function Calling**       | 95-98%\*                 | Fast           | Simple         | ⚠️ Limited         |
+| **OpenAI Strict Mode**     | 100%                     | Fast           | Simple         | ❌ No (cloud only) |
+| **Simplified JSON**        | 70-85%                   | Medium         | Simple         | ✅ Yes             |
 
-*Only on Llama 3.1 8B+, Qwen 3 8B+
+\*Only on Llama 3.1 8B+, Qwen 3 8B+
 
 ---
 
@@ -396,12 +424,14 @@ Instead of current 12+ fields with nesting.
 **Primary Recommendation: Constrained Generation with Outlines or Guidance**
 
 **Why**:
+
 1. You're using local models (Llama, Mistral, Qwen)
 2. You need 100% reliability (can't afford failures)
 3. You have complex nested schemas
 4. You want to support small models (8B-14B)
 
 **Implementation Priority**:
+
 1. **Week 1**: Test Outlines with your current envelope schema
 2. **Week 1**: Measure success rate improvement
 3. **Week 2**: Integrate into orchestrator
@@ -456,6 +486,7 @@ Instead of current 12+ fields with nesting.
 **The ACTUAL best solution is**: **Constrained generation** (Outlines/Guidance/XGrammar)
 
 This gives you:
+
 - ✅ 100% reliability on ANY model
 - ✅ Works with your local 8B-14B models
 - ✅ Keeps your complex envelope structure

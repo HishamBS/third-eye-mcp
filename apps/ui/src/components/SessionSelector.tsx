@@ -1,15 +1,20 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useRef } from 'react';
-import { useUI } from '@/contexts/UIContext';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { API_BASE_URL } from '@/consts/api';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE, STATUS_BG_COLORS } from '@/constants/color-mappings';
-import { TIMING } from '@/constants/timing';
-import { ROUTES } from '@/constants/routes';
-import { ARIA_LABELS } from '@/constants/accessibility';
-import { MESSAGES } from '@/constants/messages';
+import { useEffect, useState, useRef } from "react";
+import { useUI } from "@/contexts/UIContext";
+import { motion, AnimatePresence } from "framer-motion";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { API_BASE_URL } from "@/consts/api";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+  STATUS_BG_COLORS,
+} from "@/constants/color-mappings";
+import { TIMING } from "@/constants/timing";
+import { ROUTES } from "@/constants/routes";
+import { ARIA_LABELS } from "@/constants/accessibility";
+import { MESSAGES } from "@/constants/messages";
 
 // API response session (before normalization)
 interface RawSession {
@@ -40,7 +45,7 @@ interface SessionSelectorProps {
   className?: string;
 }
 
-export function SessionSelector({ className = '' }: SessionSelectorProps) {
+export function SessionSelector({ className = "" }: SessionSelectorProps) {
   const { selectedSessionId, setSelectedSession } = useUI();
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -58,7 +63,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
   const fetchActiveSessions = async () => {
     try {
       setLoading(true);
-            const response = await fetch(`${API_BASE_URL}/api/session/active`);
+      const response = await fetch(`${API_BASE_URL}/api/session/active`);
 
       if (response.ok) {
         const result = await response.json();
@@ -66,11 +71,11 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
         const normalized: ActiveSession[] = (data.sessions || [])
           .map((session: RawSession) => {
             const createdAt = new Date(session.createdAt);
-            const lastActivity = session.lastActivity ? new Date(session.lastActivity) : createdAt;
+            const lastActivity = session.lastActivity
+              ? new Date(session.lastActivity)
+              : createdAt;
             const displayName =
-              session.displayName ||
-              session.agentName ||
-              session.sessionId;
+              session.displayName || session.agentName || session.sessionId;
             return {
               ...session,
               createdAt,
@@ -79,12 +84,15 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
               agentName: session.agentName || displayName,
             } as ActiveSession;
           })
-          .sort((a: ActiveSession, b: ActiveSession) => b.createdAt.getTime() - a.createdAt.getTime());
+          .sort(
+            (a: ActiveSession, b: ActiveSession) =>
+              b.createdAt.getTime() - a.createdAt.getTime(),
+          );
 
         setSessions(normalized);
       }
     } catch (error) {
-      console.error('Failed to fetch active sessions:', error);
+      console.error("Failed to fetch active sessions:", error);
     } finally {
       setLoading(false);
     }
@@ -118,12 +126,15 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isOpen]);
 
-  const selectedSession = sessions.find(s => s.sessionId === selectedSessionId);
+  const selectedSession = sessions.find(
+    (s) => s.sessionId === selectedSessionId,
+  );
 
   const handleSelectAndNavigate = (sessionId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -133,29 +144,36 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
     router.push(`${ROUTES.MONITOR}?sessionId=${sessionId}`);
   };
 
-  const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
+  const handleDeleteSession = async (
+    sessionId: string,
+    e: React.MouseEvent,
+  ) => {
     e.stopPropagation(); // Prevent session selection
 
     if (!confirm(MESSAGES.CONFIRM_DELETE_SESSION)) return;
 
     try {
-            const response = await fetch(`${API_BASE_URL}/api/session/bulk`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch(`${API_BASE_URL}/api/session/bulk`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionIds: [sessionId] }),
       });
 
       if (response.ok) {
         // Remove from UI immediately
-        setSessions(prev => prev.filter(s => s.sessionId !== sessionId));
+        setSessions((prev) => prev.filter((s) => s.sessionId !== sessionId));
         if (selectedSessionId === sessionId) {
           setSelectedSession(null);
           setHasUserInteracted(true);
           if (pathname === ROUTES.MONITOR) {
-            const params = new URLSearchParams(searchParams ? Array.from(searchParams.entries()) : []);
-            params.delete('sessionId');
+            const params = new URLSearchParams(
+              searchParams ? Array.from(searchParams.entries()) : [],
+            );
+            params.delete("sessionId");
             const next = params.toString();
-            router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+            router.replace(next ? `${pathname}?${next}` : pathname, {
+              scroll: false,
+            });
           }
         }
         // Refresh to confirm
@@ -164,7 +182,7 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
         alert(MESSAGES.ERROR_DELETE_SESSION);
       }
     } catch (error) {
-      console.error('Error deleting session:', error);
+      console.error("Error deleting session:", error);
       alert(MESSAGES.ERROR_DELETE_SESSION_GENERIC);
     }
   };
@@ -172,9 +190,9 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
   const handleDeleteAllSessions = async () => {
     try {
       setDeleting(true);
-      
+
       // Get all session IDs to delete
-      const sessionIds = sessions.map(s => s.sessionId);
+      const sessionIds = sessions.map((s) => s.sessionId);
 
       if (sessionIds.length === 0) {
         setShowDeleteConfirm(false);
@@ -183,8 +201,8 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
       }
 
       const response = await fetch(`${API_BASE_URL}/api/session/bulk`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionIds }),
       });
 
@@ -198,10 +216,14 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
         setHasUserInteracted(true);
         setShowDeleteConfirm(false);
         if (pathname === ROUTES.MONITOR) {
-          const params = new URLSearchParams(searchParams ? Array.from(searchParams.entries()) : []);
-          params.delete('sessionId');
+          const params = new URLSearchParams(
+            searchParams ? Array.from(searchParams.entries()) : [],
+          );
+          params.delete("sessionId");
           const next = params.toString();
-          router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+          router.replace(next ? `${pathname}?${next}` : pathname, {
+            scroll: false,
+          });
         }
 
         // Show success only if we actually deleted something
@@ -213,11 +235,11 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
         // Refresh from server to confirm
         setTimeout(() => fetchActiveSessions(), TIMING.POLL_RETRY_MS);
       } else {
-        console.error('Failed to delete sessions');
+        console.error("Failed to delete sessions");
         alert(MESSAGES.ERROR_DELETE_SESSIONS);
       }
     } catch (error) {
-      console.error('Error deleting sessions:', error);
+      console.error("Error deleting sessions:", error);
       alert(MESSAGES.ERROR_DELETE_SESSIONS_GENERIC);
     } finally {
       setDeleting(false);
@@ -232,11 +254,13 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
         className="flex items-center gap-3 rounded-xl border border-brand-outline/40 bg-brand-paper/80 px-4 py-2.5 text-sm transition-all hover:border-brand-accent/60 hover:bg-brand-paper min-w-[180px]"
       >
         <div className="flex items-center gap-2">
-          <div className={`h-2 w-2 rounded-full ${selectedSession ? `${STATUS_BG_COLORS.success} animate-pulse` : 'bg-brand-outline'}`} />
+          <div
+            className={`h-2 w-2 rounded-full ${selectedSession ? `${STATUS_BG_COLORS.success} animate-pulse` : "bg-brand-outline"}`}
+          />
           <span className="font-medium text-brand-foreground">
             {selectedSession
-              ? `${selectedSession.displayName.substring(0, 24)}${selectedSession.displayName.length > 24 ? '…' : ''}`
-              : 'No Session Selected'}
+              ? `${selectedSession.displayName.substring(0, 24)}${selectedSession.displayName.length > 24 ? "…" : ""}`
+              : "No Session Selected"}
           </span>
         </div>
 
@@ -254,10 +278,14 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
               setIsOpen(false);
               setHasUserInteracted(true);
               if (pathname === ROUTES.MONITOR) {
-                const params = new URLSearchParams(searchParams ? Array.from(searchParams.entries()) : []);
-                params.delete('sessionId');
+                const params = new URLSearchParams(
+                  searchParams ? Array.from(searchParams.entries()) : [],
+                );
+                params.delete("sessionId");
                 const next = params.toString();
-                router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+                router.replace(next ? `${pathname}?${next}` : pathname, {
+                  scroll: false,
+                });
               }
             }}
             className="h-4 w-4 text-semantic-muted hover:text-brand-foreground transition-colors cursor-pointer flex items-center justify-center"
@@ -265,33 +293,47 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
+              if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 e.stopPropagation();
                 setSelectedSession(null);
                 setIsOpen(false);
                 setHasUserInteracted(true);
                 if (pathname === ROUTES.MONITOR) {
-                  const params = new URLSearchParams(searchParams ? Array.from(searchParams.entries()) : []);
-                  params.delete('sessionId');
+                  const params = new URLSearchParams(
+                    searchParams ? Array.from(searchParams.entries()) : [],
+                  );
+                  params.delete("sessionId");
                   const next = params.toString();
-                  router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+                  router.replace(next ? `${pathname}?${next}` : pathname, {
+                    scroll: false,
+                  });
                 }
               }
             }}
           >
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </div>
         ) : (
           <svg
-            className={`h-4 w-4 text-semantic-muted transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            className={`h-4 w-4 text-semantic-muted transition-transform ${isOpen ? "rotate-180" : ""}`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         )}
       </button>
@@ -308,19 +350,26 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
           >
             <div className="border-b border-brand-outline/30 px-4 py-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-brand-foreground">Active Sessions</h3>
+                <h3 className="text-sm font-semibold text-brand-foreground">
+                  Active Sessions
+                </h3>
                 <button
                   onClick={fetchActiveSessions}
                   disabled={loading}
                   className="rounded-lg p-1 text-semantic-muted transition-colors hover:bg-brand-paper hover:text-brand-accent disabled:opacity-50"
                 >
                   <svg
-                    className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+                    className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
                   </svg>
                 </button>
               </div>
@@ -329,7 +378,9 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
             <div className="max-h-96 overflow-y-auto p-2">
               {sessions.length === 0 ? (
                 <div className="py-8 text-center">
-                  <p className="text-sm text-semantic-muted">No active sessions</p>
+                  <p className="text-sm text-semantic-muted">
+                    No active sessions
+                  </p>
                   <p className="mt-1 text-xs text-semantic-muted">
                     Connect an MCP agent to start a session
                   </p>
@@ -338,39 +389,51 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
                 <div className="space-y-1">
                   {sessions.map((session) => {
                     const isSelected = session.sessionId === selectedSessionId;
-                    const timeSinceActivity = Date.now() - new Date(session.lastActivity).getTime();
+                    const timeSinceActivity =
+                      Date.now() - new Date(session.lastActivity).getTime();
                     const isRecent = timeSinceActivity < 60000; // Less than 1 minute
 
                     return (
-                    <div
-                      key={session.sessionId}
-                      onClick={() => {
-                        setHasUserInteracted(true);
-                        setSelectedSession(session.sessionId);
-                        setIsOpen(false);
-                        if (pathname === ROUTES.MONITOR) {
-                          const params = new URLSearchParams(searchParams ? Array.from(searchParams.entries()) : []);
-                          params.set('sessionId', session.sessionId);
-                          router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-                        }
-                      }}
+                      <div
+                        key={session.sessionId}
+                        onClick={() => {
+                          setHasUserInteracted(true);
+                          setSelectedSession(session.sessionId);
+                          setIsOpen(false);
+                          if (pathname === ROUTES.MONITOR) {
+                            const params = new URLSearchParams(
+                              searchParams
+                                ? Array.from(searchParams.entries())
+                                : [],
+                            );
+                            params.set("sessionId", session.sessionId);
+                            router.replace(`${pathname}?${params.toString()}`, {
+                              scroll: false,
+                            });
+                          }
+                        }}
                         className={`w-full rounded-lg border p-3 cursor-pointer transition-all ${
                           isSelected
-                            ? 'border-brand-accent/60 bg-brand-accent/10'
-                            : 'border-brand-outline/20 bg-brand-paper/60 hover:border-brand-accent/40 hover:bg-brand-paper'
+                            ? "border-brand-accent/60 bg-brand-accent/10"
+                            : "border-brand-outline/20 bg-brand-paper/60 hover:border-brand-accent/40 hover:bg-brand-paper"
                         }`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <div className={`h-2 w-2 rounded-full ${isRecent ? `${STATUS_BG_COLORS.success} animate-pulse` : STATUS_BG_COLORS.warning}`} />
+                              <div
+                                className={`h-2 w-2 rounded-full ${isRecent ? `${STATUS_BG_COLORS.success} animate-pulse` : STATUS_BG_COLORS.warning}`}
+                              />
                               <span className="truncate text-sm font-medium text-brand-foreground">
                                 {session.displayName}
                               </span>
                             </div>
-                            {session.agentName && session.agentName !== session.displayName && (
-                              <p className="mt-1 text-xs text-semantic-muted truncate">{session.agentName}</p>
-                            )}
+                            {session.agentName &&
+                              session.agentName !== session.displayName && (
+                                <p className="mt-1 text-xs text-semantic-muted truncate">
+                                  {session.agentName}
+                                </p>
+                              )}
                             <div className="mt-1 flex items-center gap-2 text-xs text-semantic-muted">
                               <span className="truncate">{session.model}</span>
                               <span>•</span>
@@ -380,26 +443,58 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
 
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={(e) => handleSelectAndNavigate(session.sessionId, e)}
+                              onClick={(e) =>
+                                handleSelectAndNavigate(session.sessionId, e)
+                              }
                               className="rounded p-1 text-semantic-muted hover:text-brand-accent transition-colors"
                               title={ARIA_LABELS.SELECT_AND_VIEW_SESSION}
                             >
-                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              <svg
+                                className="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                />
                               </svg>
                             </button>
                             <button
-                              onClick={(e) => handleDeleteSession(session.sessionId, e)}
+                              onClick={(e) =>
+                                handleDeleteSession(session.sessionId, e)
+                              }
                               className={`rounded p-1 text-semantic-muted ${STATUS_BG_COLORS_SUBTLE.error} hover:${STATUS_TEXT_COLORS.error} transition-colors`}
                               title={ARIA_LABELS.DELETE_SESSION}
                             >
-                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              <svg
+                                className="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
                               </svg>
                             </button>
                             {isSelected && (
-                              <svg className="h-5 w-5 flex-shrink-0 text-brand-accent" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              <svg
+                                className="h-5 w-5 flex-shrink-0 text-brand-accent"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
                               </svg>
                             )}
                           </div>
@@ -447,9 +542,13 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
               className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-brand-outline/40 bg-brand-paperElev p-6 shadow-2xl"
             >
               <div className="mb-4">
-                <h3 className="text-lg font-semibold text-brand-foreground">Delete All Sessions?</h3>
+                <h3 className="text-lg font-semibold text-brand-foreground">
+                  Delete All Sessions?
+                </h3>
                 <p className="mt-2 text-sm text-semantic-muted">
-                  This will permanently delete all {sessions.length} session{sessions.length !== 1 ? 's' : ''} and their associated data. This action cannot be undone.
+                  This will permanently delete all {sessions.length} session
+                  {sessions.length !== 1 ? "s" : ""} and their associated data.
+                  This action cannot be undone.
                 </p>
               </div>
 
@@ -484,10 +583,22 @@ export function SessionSelector({ className = '' }: SessionSelectorProps) {
             className={`fixed bottom-6 right-6 z-50 rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success} px-6 py-3 shadow-lg backdrop-blur-sm`}
           >
             <div className="flex items-center gap-3">
-              <svg className={`h-5 w-5 ${STATUS_TEXT_COLORS.success}`} fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              <svg
+                className={`h-5 w-5 ${STATUS_TEXT_COLORS.success}`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
               </svg>
-              <span className={`text-sm font-medium ${STATUS_TEXT_COLORS.success}`}>All sessions deleted successfully</span>
+              <span
+                className={`text-sm font-medium ${STATUS_TEXT_COLORS.success}`}
+              >
+                All sessions deleted successfully
+              </span>
             </div>
           </motion.div>
         )}

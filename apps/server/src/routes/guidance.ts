@@ -1,19 +1,19 @@
-import { Hono } from 'hono';
-import { getWorkflowGuidance } from '@third-eye/core/guidance';
+import { Hono } from "hono";
+import { getWorkflowGuidance } from "@third-eye/core/guidance";
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
   createErrorResponse,
   createInternalErrorResponse,
   requestIdMiddleware,
-  errorHandler
-} from '../middleware/response';
-import { z } from 'zod';
+  errorHandler,
+} from "../middleware/response";
+import { z } from "zod";
 
 const app = new Hono();
 
-app.use('*', requestIdMiddleware());
-app.use('*', errorHandler());
+app.use("*", requestIdMiddleware());
+app.use("*", errorHandler());
 
 // Zod schemas for validation
 const guidanceRequestSchema = z.object({
@@ -33,9 +33,10 @@ const delegateRequestSchema = z.object({
  * This is the "Smart MCP" meta-tool that makes Third Eye a must-use server.
  * It analyzes the current task and workflow state to recommend the optimal next Eye.
  */
-app.post('/', validateBodyWithEnvelope(guidanceRequestSchema), async (c) => {
+app.post("/", validateBodyWithEnvelope(guidanceRequestSchema), async (c) => {
   try {
-    const { task_description, current_state, last_eye_response, session_id } = c.get('validatedBody');
+    const { task_description, current_state, last_eye_response, session_id } =
+      c.get("validatedBody");
 
     const guidance = getWorkflowGuidance({
       taskDescription: task_description,
@@ -53,7 +54,10 @@ app.post('/', validateBodyWithEnvelope(guidanceRequestSchema), async (c) => {
       },
     });
   } catch (error) {
-    return createInternalErrorResponse(c, `Failed to generate guidance: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return createInternalErrorResponse(
+      c,
+      `Failed to generate guidance: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 });
 
@@ -62,20 +66,27 @@ app.post('/', validateBodyWithEnvelope(guidanceRequestSchema), async (c) => {
  *
  * Given an Eye response, determines if automatic delegation to another Eye is recommended
  */
-app.post('/delegate', validateBodyWithEnvelope(delegateRequestSchema), async (c) => {
-  try {
-    const { eye_response } = c.get('validatedBody');
+app.post(
+  "/delegate",
+  validateBodyWithEnvelope(delegateRequestSchema),
+  async (c) => {
+    try {
+      const { eye_response } = c.get("validatedBody");
 
-    const { shouldDelegate } = await import('@third-eye/core/guidance');
-    const delegation = shouldDelegate(eye_response);
+      const { shouldDelegate } = await import("@third-eye/core/guidance");
+      const delegation = shouldDelegate(eye_response);
 
-    return createSuccessResponse(c, {
-      ok: true,
-      ...delegation,
-    });
-  } catch (error) {
-    return createInternalErrorResponse(c, `Failed to check delegation: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-});
+      return createSuccessResponse(c, {
+        ok: true,
+        ...delegation,
+      });
+    } catch (error) {
+      return createInternalErrorResponse(
+        c,
+        `Failed to check delegation: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  },
+);
 
 export default app;

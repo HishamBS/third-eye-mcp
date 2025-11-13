@@ -1,7 +1,7 @@
-import { getDb } from './index';
-import { runs, eyeLeaderboard } from './schema';
-import { eq, sql, and, gte } from 'drizzle-orm';
-import { getEyeIdByName } from './utils/lookups';
+import { getDb } from "./index";
+import { runs, eyeLeaderboard } from "./schema";
+import { eq, sql, and, gte } from "drizzle-orm";
+import { getEyeIdByName } from "./utils/lookups";
 
 /**
  * Calculate Eye trend from runs data
@@ -11,7 +11,7 @@ import { getEyeIdByName } from './utils/lookups';
  * V1: Uses UUID lookup for eye identification
  */
 export async function calculateEyeTrend(eyeName: string): Promise<{
-  trend: 'up' | 'down' | 'stable';
+  trend: "up" | "down" | "stable";
   changePercent: number;
   currentWeekRuns: number;
   previousWeekRuns: number;
@@ -33,12 +33,7 @@ export async function calculateEyeTrend(eyeName: string): Promise<{
   const allRuns = await db
     .select()
     .from(runs)
-    .where(
-      and(
-        eq(runs.eyeId, eyeId),
-        gte(runs.createdAt, previousWeekStart)
-      )
-    )
+    .where(and(eq(runs.eyeId, eyeId), gte(runs.createdAt, previousWeekStart)))
     .all();
 
   // Split into current and previous week
@@ -55,10 +50,11 @@ export async function calculateEyeTrend(eyeName: string): Promise<{
   // Calculate approval rates for each period
   const currentWeekApprovals = currentWeekRuns.filter((run) => {
     try {
-      const output = typeof run.outputJson === 'string'
-        ? JSON.parse(run.outputJson)
-        : run.outputJson;
-      return output?.verdict === 'APPROVED';
+      const output =
+        typeof run.outputJson === "string"
+          ? JSON.parse(run.outputJson)
+          : run.outputJson;
+      return output?.verdict === "APPROVED";
     } catch {
       return false;
     }
@@ -66,39 +62,45 @@ export async function calculateEyeTrend(eyeName: string): Promise<{
 
   const previousWeekApprovals = previousWeekRuns.filter((run) => {
     try {
-      const output = typeof run.outputJson === 'string'
-        ? JSON.parse(run.outputJson)
-        : run.outputJson;
-      return output?.verdict === 'APPROVED';
+      const output =
+        typeof run.outputJson === "string"
+          ? JSON.parse(run.outputJson)
+          : run.outputJson;
+      return output?.verdict === "APPROVED";
     } catch {
       return false;
     }
   }).length;
 
-  const currentWeekApprovalRate = currentWeekRuns.length > 0
-    ? (currentWeekApprovals / currentWeekRuns.length) * 100
-    : 0;
+  const currentWeekApprovalRate =
+    currentWeekRuns.length > 0
+      ? (currentWeekApprovals / currentWeekRuns.length) * 100
+      : 0;
 
-  const previousWeekApprovalRate = previousWeekRuns.length > 0
-    ? (previousWeekApprovals / previousWeekRuns.length) * 100
-    : 0;
+  const previousWeekApprovalRate =
+    previousWeekRuns.length > 0
+      ? (previousWeekApprovals / previousWeekRuns.length) * 100
+      : 0;
 
   // Calculate percentage change
   let changePercent = 0;
-  let trend: 'up' | 'down' | 'stable' = 'stable';
+  let trend: "up" | "down" | "stable" = "stable";
 
   if (previousWeekApprovalRate > 0) {
-    changePercent = ((currentWeekApprovalRate - previousWeekApprovalRate) / previousWeekApprovalRate) * 100;
+    changePercent =
+      ((currentWeekApprovalRate - previousWeekApprovalRate) /
+        previousWeekApprovalRate) *
+      100;
 
     // ±5% threshold for trend determination
     if (changePercent > 5) {
-      trend = 'up';
+      trend = "up";
     } else if (changePercent < -5) {
-      trend = 'down';
+      trend = "down";
     }
   } else if (currentWeekApprovalRate > 0) {
     // If previous week had no data but current week does, trend is up
-    trend = 'up';
+    trend = "up";
     changePercent = 100;
   }
 
@@ -131,12 +133,7 @@ export async function updateEyeLeaderboard(eyeName: string): Promise<void> {
   const eyeRuns = await db
     .select()
     .from(runs)
-    .where(
-      and(
-        eq(runs.eyeId, eyeId),
-        gte(runs.createdAt, fourteenDaysAgo)
-      )
-    )
+    .where(and(eq(runs.eyeId, eyeId), gte(runs.createdAt, fourteenDaysAgo)))
     .all();
 
   if (eyeRuns.length === 0) {
@@ -151,10 +148,11 @@ export async function updateEyeLeaderboard(eyeName: string): Promise<void> {
     totalLatency += run.latencyMs || 0;
 
     try {
-      const output = typeof run.outputJson === 'string'
-        ? JSON.parse(run.outputJson)
-        : run.outputJson;
-      if (output?.verdict === 'APPROVED') {
+      const output =
+        typeof run.outputJson === "string"
+          ? JSON.parse(run.outputJson)
+          : run.outputJson;
+      if (output?.verdict === "APPROVED") {
         totalApprovals++;
       }
     } catch {
@@ -180,17 +178,18 @@ export async function updateEyeLeaderboard(eyeName: string): Promise<void> {
 
     const dayApprovals = dayRuns.filter((run) => {
       try {
-        const output = typeof run.outputJson === 'string'
-          ? JSON.parse(run.outputJson)
-          : run.outputJson;
-        return output?.verdict === 'APPROVED';
+        const output =
+          typeof run.outputJson === "string"
+            ? JSON.parse(run.outputJson)
+            : run.outputJson;
+        return output?.verdict === "APPROVED";
       } catch {
         return false;
       }
     }).length;
 
     trendData.push({
-      day: dayStart.toISOString().split('T')[0]??"",
+      day: dayStart.toISOString().split("T")[0] ?? "",
       runs: dayRuns.length,
       approvals: dayApprovals,
     });
@@ -216,7 +215,7 @@ export async function updateEyeLeaderboard(eyeName: string): Promise<void> {
       .where(eq(eyeLeaderboard.eyeId, eyeId))
       .run();
   } else {
-    const { generateId } = await import('./utils/uuid');
+    const { generateId } = await import("./utils/uuid");
     await db
       .insert(eyeLeaderboard)
       .values({
@@ -236,16 +235,18 @@ export async function updateEyeLeaderboard(eyeName: string): Promise<void> {
  * Get leaderboard data for all Eyes
  * V1: Uses UUID internally but returns eye names for display
  */
-export async function getEyeLeaderboards(): Promise<Array<{
-  eye: string;
-  totalRuns: number;
-  approvalRate: number;
-  avgLatency: number;
-  trend: 'up' | 'down' | 'stable';
-  trendData?: Array<{ day: string; runs: number; approvals: number }>;
-}>> {
+export async function getEyeLeaderboards(): Promise<
+  Array<{
+    eye: string;
+    totalRuns: number;
+    approvalRate: number;
+    avgLatency: number;
+    trend: "up" | "down" | "stable";
+    trendData?: Array<{ day: string; runs: number; approvals: number }>;
+  }>
+> {
   const { db } = getDb();
-  const { getEyeNameById } = await import('./utils/lookups');
+  const { getEyeNameById } = await import("./utils/lookups");
 
   const leaderboards = await db.select().from(eyeLeaderboard).all();
 
@@ -254,7 +255,7 @@ export async function getEyeLeaderboards(): Promise<Array<{
     leaderboards.map(async (board) => {
       const eyeName = await getEyeNameById(board.eyeId);
       if (!eyeName) return null;
-      
+
       const trendInfo = await calculateEyeTrend(eyeName);
       return {
         eye: eyeName,
@@ -262,9 +263,11 @@ export async function getEyeLeaderboards(): Promise<Array<{
         approvalRate: board.approvalRate,
         avgLatency: board.avgLatency,
         trend: trendInfo.trend,
-        trendData: board.trendData as Array<{ day: string; runs: number; approvals: number }> | undefined,
+        trendData: board.trendData as
+          | Array<{ day: string; runs: number; approvals: number }>
+          | undefined,
       };
-    })
+    }),
   );
 
   return results.filter((r): r is NonNullable<typeof r> => r !== null);
@@ -320,9 +323,9 @@ export async function createDatabaseIndexes(): Promise<void> {
       ON runs(created_at)
     `);
 
-    console.log('✅ Database indexes created successfully');
+    console.log("✅ Database indexes created successfully");
   } catch (error) {
-    console.error('❌ Failed to create database indexes:', error);
+    console.error("❌ Failed to create database indexes:", error);
     throw error;
   }
 }
@@ -338,7 +341,7 @@ export async function analyzeQuery(query: string): Promise<unknown[]> {
     const results = await db.all(sql.raw(`EXPLAIN QUERY PLAN ${query}`));
     return results;
   } catch (error) {
-    console.error('Failed to analyze query:', error);
+    console.error("Failed to analyze query:", error);
     throw error;
   }
 }

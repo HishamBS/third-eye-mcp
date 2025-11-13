@@ -3,6 +3,7 @@
 **Goal:** Re-establish every shared constant, taxonomy, and theme definition that anchors the platform. Provide bulletproof tooling (build scripts, seeds, linting) so downstream modules inherit consistent data without literals or heuristics.
 
 ## Outcomes
+
 - All enums, tokens, and helpers defined under `packages/constants` and `packages/types` with exhaustive TypeScript coverage.
 - Stage templates, clarification prompts, and capability plans exposed via reusable helpers.
 - Theme system (six themes × light/dark) implemented and consumable by UI.
@@ -11,6 +12,7 @@
 ## Stories
 
 ### Story 1.1 · Rebuild Taxonomy & Clarification Constants
+
 - **Objective:** Restore `packages/constants/taxonomy.ts` and `packages/constants/clarifications.ts` with full enum coverage and helpers.
 - **Acceptance Criteria**
   1. Enums cover `EyeId`, `EyeStageToken`, `EyeStatusCode`, `RequestType`, `ContentDomain`, `CapabilityTag`, `UiTextToken`, `UiIconToken`, `UiColorToken`.
@@ -24,6 +26,7 @@
   - Vitest: `packages/constants/__tests__/taxonomy.test.ts`, `clarifications.test.ts`.
 
 ### Story 1.2 · Recreate Stage Templates & Capability Planner
+
 - **Objective:** Implement `packages/constants/stage-envelopes.ts` and `packages/constants/capability-plan.ts` exactly as described.
 - **Acceptance Criteria**
   1. Each eye/stage pair has template with `allowedCodes`, JSON skeleton, checklist.
@@ -37,6 +40,7 @@
   - Vitest snapshot of template map; capability resolver route tests for all request types.
 
 ### Story 1.3 · Theme Registry & Design Tokens
+
 - **Objective:** Rebuild theme tokens and consumption utilities.
 - **Acceptance Criteria**
   1. Theme registry exports six named themes with light/dark palettes, typography, spacing, radii, shadows.
@@ -49,9 +53,10 @@
   - Unit test ensuring theme definitions present; Playwright smoke test toggling themes.
 
 ### Story 1.4 · Build & Tooling Pipeline Restoration
+
 - **Objective:** Reinstate Bun/TypeScript build scripts and ensure repo compiles cleanly.
 - **Acceptance Criteria**
-  1. `package.json` scripts (build:* , typecheck, lint, vitest) run successfully.
+  1. `package.json` scripts (build:\* , typecheck, lint, vitest) run successfully.
   2. `tsconfig` settings enforce strict mode and path aliases for packages.
   3. CI/CLI outputs friendly logs; build caches regenerated as needed.
 - **Dev Notes**
@@ -60,15 +65,18 @@
   - Run `bun run build:packages`, `bun run typecheck`, targeted `vitest` suites.
 
 ## Dependencies
+
 - None (foundational).
 
 ## Risks & Mitigations
+
 - **Risk:** Missing enum values from lost work.
-  - *Mitigation:* Cross-reference RESTORATION_PLAN + new vision doc; add tests to prevent regressions.
+  - _Mitigation:_ Cross-reference RESTORATION_PLAN + new vision doc; add tests to prevent regressions.
 - **Risk:** Theme tokens diverge from UI expectations.
-  - *Mitigation:* Validate with UI designers/vision sections; include visual regression notes.
+  - _Mitigation:_ Validate with UI designers/vision sections; include visual regression notes.
 
 ## Acceptance Checklist
+
 - [ ] Constants compiled and exported.
 - [ ] Stage templates verified against persona examples.
 - [ ] Capability planner returns correct sequences for scenario matrix.

@@ -6,48 +6,50 @@
 
 export const API_ROUTES = {
   // Eyes (unified - no built-in vs custom distinction)
-  EYES: '/api/eyes',
-  EYES_ALL: '/api/eyes/all',
+  EYES: "/api/eyes",
+  EYES_ALL: "/api/eyes/all",
   EYES_BY_ID: (id: string) => `/api/eyes/${id}`,
 
   // Personas
-  PERSONAS: '/api/personas',
+  PERSONAS: "/api/personas",
   PERSONAS_BY_EYE: (eye: string) => `/api/personas/${eye}`,
   PERSONAS_ACTIVE: (eye: string) => `/api/personas/${eye}/active`,
-  PERSONAS_ACTIVATE: (eye: string, version: number) => `/api/personas/${eye}/activate/${version}`,
+  PERSONAS_ACTIVATE: (eye: string, version: number) =>
+    `/api/personas/${eye}/activate/${version}`,
 
   // Pipelines
-  PIPELINES: '/api/pipelines',
+  PIPELINES: "/api/pipelines",
   PIPELINES_BY_ID: (id: string) => `/api/pipelines/${id}`,
   PIPELINES_EXECUTE: (id: string) => `/api/pipelines/${id}/execute`,
   PIPELINES_RUNS: (id: string) => `/api/pipelines/${id}/runs`,
   PIPELINES_VERSIONS: (name: string) => `/api/pipelines/name/${name}/versions`,
 
   // Sessions
-  SESSION: '/api/session',
-  SESSION_ACTIVE: '/api/session/active',
+  SESSION: "/api/session",
+  SESSION_ACTIVE: "/api/session/active",
   SESSION_BY_ID: (id: string) => `/api/session/${id}`,
   SESSION_RUNS: (id: string) => `/api/session/${id}/runs`,
   SESSION_EVENTS: (id: string) => `/api/session/${id}/events`,
   SESSION_KILL: (id: string) => `/api/session/${id}/kill`,
   SESSION_CLARIFICATIONS: (id: string) => `/api/session/${id}/clarifications`,
-  SESSION_INTENT_CONFIRMATIONS: (id: string) => `/api/session/${id}/intent-confirmations`,
+  SESSION_INTENT_CONFIRMATIONS: (id: string) =>
+    `/api/session/${id}/intent-confirmations`,
   SESSION_ROUTING: (id: string) => `/api/session/${id}/routing`,
   SESSION_CONTEXT: (id: string) => `/api/session/${id}/context`,
 
   // Routing
-  ROUTING: '/api/routing',
+  ROUTING: "/api/routing",
   ROUTING_BY_EYE: (eye: string) => `/api/routing/${eye}`,
 
   // Database
-  DATABASE_TABLES: '/api/database/tables',
+  DATABASE_TABLES: "/api/database/tables",
 
   // Integrations
-  INTEGRATIONS: '/api/integrations',
+  INTEGRATIONS: "/api/integrations",
   INTEGRATIONS_BY_ID: (id: string) => `/api/integrations/${id}`,
   INTEGRATIONS_CONFIG: (id: string) => `/api/integrations/${id}/config`,
 
   // Metrics
-  METRICS: '/api/metrics',
-  METRICS_LEADERBOARDS: '/api/metrics/leaderboards',
+  METRICS: "/api/metrics",
+  METRICS_LEADERBOARDS: "/api/metrics/leaderboards",
 } as const;

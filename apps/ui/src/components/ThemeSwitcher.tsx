@@ -1,10 +1,14 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { type ThemeName, THEME_METADATA, DEFAULT_THEME } from '@third-eye/theme';
-import { useUI } from '@/contexts/UIContext';
-import { ARIA_LABELS } from '@/constants/accessibility';
-import { STATUS_TEXT_COLORS } from '@/constants/color-mappings';
+import { useState } from "react";
+import {
+  type ThemeName,
+  THEME_METADATA,
+  DEFAULT_THEME,
+} from "@third-eye/theme";
+import { useUI } from "@/contexts/UIContext";
+import { ARIA_LABELS } from "@/constants/accessibility";
+import { STATUS_TEXT_COLORS } from "@/constants/color-mappings";
 
 export function ThemeSwitcher() {
   const { theme, setTheme, darkMode, setDarkMode } = useUI();
@@ -16,16 +20,20 @@ export function ThemeSwitcher() {
   };
 
   // Safely get current theme with fallback to default or first theme
-  const currentTheme = THEME_METADATA.find(t => t.value === theme) 
-    || THEME_METADATA.find(t => t.value === DEFAULT_THEME)
-    || THEME_METADATA[0];
+  const currentTheme =
+    THEME_METADATA.find((t) => t.value === theme) ||
+    THEME_METADATA.find((t) => t.value === DEFAULT_THEME) ||
+    THEME_METADATA[0];
 
   return (
     <div className="flex items-center gap-4 shrink-0">
       {/* Theme Button */}
       <div className="relative">
         <button
-          onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsOpen(!isOpen);
+          }}
           className="flex items-center gap-2 rounded-full border border-brand-outline/50 bg-brand-paper px-3 py-1.5 text-sm transition-colors hover:border-brand-accent hover:bg-brand-paperElev whitespace-nowrap"
           aria-label={`Switch theme, current: ${currentTheme.label}`}
           aria-expanded={isOpen}
@@ -44,7 +52,12 @@ export function ThemeSwitcher() {
             stroke="currentColor"
             aria-hidden="true"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </button>
 
@@ -73,12 +86,12 @@ export function ThemeSwitcher() {
                     onClick={() => selectTheme(t.value)}
                     className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                       theme === t.value
-                        ? 'bg-brand-accent text-brand-foreground'
-                        : 'text-semantic-muted hover:bg-brand-paperElev hover:text-brand-foreground'
+                        ? "bg-brand-accent text-brand-foreground"
+                        : "text-semantic-muted hover:bg-brand-paperElev hover:text-brand-foreground"
                     }`}
                     role="menuitem"
                     aria-label={`Select ${t.label} theme`}
-                    aria-current={theme === t.value ? 'true' : undefined}
+                    aria-current={theme === t.value ? "true" : undefined}
                   >
                     <div
                       className="h-4 w-4 rounded-full"
@@ -93,7 +106,11 @@ export function ThemeSwitcher() {
                         viewBox="0 0 20 20"
                         aria-hidden="true"
                       >
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     )}
                   </button>
@@ -106,10 +123,13 @@ export function ThemeSwitcher() {
 
       {/* Mode Toggle */}
       <button
-        onClick={(e) => { e.stopPropagation(); setDarkMode(!darkMode); }}
+        onClick={(e) => {
+          e.stopPropagation();
+          setDarkMode(!darkMode);
+        }}
         className="rounded-full border border-brand-outline/50 bg-brand-paper p-1.5 transition-colors hover:border-brand-accent hover:bg-brand-paperElev shrink-0"
         aria-label={ARIA_LABELS.TOGGLE_THEME}
-        title={`Switch to ${darkMode ? 'light' : 'dark'} mode`}
+        title={`Switch to ${darkMode ? "light" : "dark"} mode`}
       >
         {!darkMode ? (
           <svg
@@ -118,7 +138,11 @@ export function ThemeSwitcher() {
             viewBox="0 0 20 20"
             aria-hidden="true"
           >
-            <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+              clipRule="evenodd"
+            />
           </svg>
         ) : (
           <svg
@@ -134,4 +158,3 @@ export function ThemeSwitcher() {
     </div>
   );
 }
-

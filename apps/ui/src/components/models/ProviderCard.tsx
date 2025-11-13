@@ -1,13 +1,28 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, XCircle, RefreshCw, ChevronDown, ChevronUp, Search } from 'lucide-react';
-import { GlassCard } from '@/components/ui/GlassCard';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
-import { MESSAGES } from '@/constants/messages';
-import { PROVIDERS, type CapabilityFilter, DEFAULT_CAPABILITY_FILTER } from '@/constants/models';
-import type { ProviderDefinition } from '@/constants/models';
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  CheckCircle2,
+  XCircle,
+  RefreshCw,
+  ChevronDown,
+  ChevronUp,
+  Search,
+} from "lucide-react";
+import { GlassCard } from "@/components/ui/GlassCard";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
+import { MESSAGES } from "@/constants/messages";
+import {
+  PROVIDERS,
+  type CapabilityFilter,
+  DEFAULT_CAPABILITY_FILTER,
+} from "@/constants/models";
+import type { ProviderDefinition } from "@/constants/models";
 
 interface ModelInfo {
   name: string;
@@ -40,8 +55,10 @@ export function ProviderCard({
   expanded,
   onToggle,
 }: ProviderCardProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [capabilityFilter, setCapabilityFilter] = useState<CapabilityFilter>(DEFAULT_CAPABILITY_FILTER);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [capabilityFilter, setCapabilityFilter] = useState<CapabilityFilter>(
+    DEFAULT_CAPABILITY_FILTER,
+  );
 
   const filteredModels = useMemo(() => {
     return models.filter((model) => {
@@ -50,10 +67,12 @@ export function ProviderCard({
         model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         model.displayName?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesVision = !capabilityFilter.vision || model.capability?.vision;
+      const matchesVision =
+        !capabilityFilter.vision || model.capability?.vision;
       const matchesJson = !capabilityFilter.json || model.capability?.jsonMode;
       const matchesCtx =
-        !capabilityFilter.minCtx || (model.capability?.ctx || 0) >= capabilityFilter.minCtx;
+        !capabilityFilter.minCtx ||
+        (model.capability?.ctx || 0) >= capabilityFilter.minCtx;
 
       return matchesSearch && matchesVision && matchesJson && matchesCtx;
     });
@@ -70,13 +89,15 @@ export function ProviderCard({
           className="flex flex-1 items-center gap-3 text-left transition-colors hover:opacity-80"
         >
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold text-brand-foreground">{provider.name}</h3>
+            <h3 className="text-lg font-semibold text-brand-foreground">
+              {provider.name}
+            </h3>
             {health !== undefined && (
               <span
                 className={`flex items-center ${
                   health ? STATUS_TEXT_COLORS.success : STATUS_TEXT_COLORS.error
                 }`}
-                title={health ? 'Online' : 'Offline'}
+                title={health ? "Online" : "Offline"}
               >
                 {health ? (
                   <CheckCircle2 className="h-5 w-5" />
@@ -115,14 +136,16 @@ export function ProviderCard({
         {expanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
+            animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="mt-4 overflow-hidden"
           >
             {modelCount === 0 ? (
               <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4 text-center text-sm text-semantic-muted">
-                {provider.requiresKey ? MESSAGES.ADD_API_KEY_SETTINGS : MESSAGES.CLICK_REFRESH_LOAD_MODELS}
+                {provider.requiresKey
+                  ? MESSAGES.ADD_API_KEY_SETTINGS
+                  : MESSAGES.CLICK_REFRESH_LOAD_MODELS}
               </div>
             ) : (
               <div className="space-y-3">
@@ -144,7 +167,10 @@ export function ProviderCard({
                         type="checkbox"
                         checked={capabilityFilter.vision}
                         onChange={(e) =>
-                          setCapabilityFilter({ ...capabilityFilter, vision: e.target.checked })
+                          setCapabilityFilter({
+                            ...capabilityFilter,
+                            vision: e.target.checked,
+                          })
                         }
                         className="rounded border-brand-outline/50"
                       />
@@ -155,7 +181,10 @@ export function ProviderCard({
                         type="checkbox"
                         checked={capabilityFilter.json}
                         onChange={(e) =>
-                          setCapabilityFilter({ ...capabilityFilter, json: e.target.checked })
+                          setCapabilityFilter({
+                            ...capabilityFilter,
+                            json: e.target.checked,
+                          })
                         }
                         className="rounded border-brand-outline/50"
                       />
@@ -185,7 +214,9 @@ export function ProviderCard({
                           {model.displayName || model.name}
                         </div>
                         {model.family && (
-                          <div className="mt-1 text-xs text-semantic-muted">Family: {model.family}</div>
+                          <div className="mt-1 text-xs text-semantic-muted">
+                            Family: {model.family}
+                          </div>
                         )}
                         {model.capability && (
                           <div className="mt-1 flex flex-wrap gap-1">
@@ -214,7 +245,8 @@ export function ProviderCard({
                         )}
                         {model.lastSeen && (
                           <div className="mt-1 text-xs text-semantic-muted">
-                            Last seen: {new Date(model.lastSeen).toLocaleString()}
+                            Last seen:{" "}
+                            {new Date(model.lastSeen).toLocaleString()}
                           </div>
                         )}
                       </div>
@@ -229,4 +261,3 @@ export function ProviderCard({
     </GlassCard>
   );
 }
-

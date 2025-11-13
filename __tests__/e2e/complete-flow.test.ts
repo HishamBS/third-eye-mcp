@@ -1,13 +1,20 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { spawn, type ChildProcess } from 'child_process';
-import { resolve } from 'path';
-import { homedir } from 'os';
-import { existsSync } from 'fs';
-import { getDb, providerKeys, personas, eyesRouting, sessions, runs } from '@third-eye/db';
-import { eq, sql } from 'drizzle-orm';
-import { TOOL_NAME } from '@third-eye/types';
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { spawn, type ChildProcess } from "child_process";
+import { resolve } from "path";
+import { homedir } from "os";
+import { existsSync } from "fs";
+import {
+  getDb,
+  providerKeys,
+  personas,
+  eyesRouting,
+  sessions,
+  runs,
+} from "@third-eye/db";
+import { eq, sql } from "drizzle-orm";
+import { TOOL_NAME } from "@third-eye/types";
 
 /**
  * W0-VERIFY: Comprehensive E2E Test Suite
@@ -24,13 +31,13 @@ import { TOOL_NAME } from '@third-eye/types';
  * 7. Order Guard Behavior
  */
 
-const DB_PATH = resolve(homedir(), '.third-eye-mcp/mcp.db');
-const API_URL = 'http://127.0.0.1:7070';
+const DB_PATH = resolve(homedir(), ".third-eye-mcp/mcp.db");
+const API_URL = "http://127.0.0.1:7070";
 
-describe('E2E Complete Flow Test Suite', () => {
+describe("E2E Complete Flow Test Suite", () => {
   let mcpClient: Client;
   let mcpTransport: StdioClientTransport;
-  let db: ReturnType<typeof getDb>['db'];
+  let db: ReturnType<typeof getDb>["db"];
   let testSessionId: string | null = null;
 
   // Capture all logs for debugging
@@ -38,13 +45,15 @@ describe('E2E Complete Flow Test Suite', () => {
   const serverErrors: string[] = [];
 
   beforeAll(async () => {
-    console.log('\n📋 E2E Test Suite Starting...\n');
+    console.log("\n📋 E2E Test Suite Starting...\n");
     console.log(`Database: ${DB_PATH}`);
     console.log(`API: ${API_URL}\n`);
 
     // Verify database exists
     if (!existsSync(DB_PATH)) {
-      throw new Error(`Database not found at ${DB_PATH}. Run setup first: bun run setup`);
+      throw new Error(
+        `Database not found at ${DB_PATH}. Run setup first: bun run setup`,
+      );
     }
 
     // Open database connection using drizzle
@@ -52,31 +61,31 @@ describe('E2E Complete Flow Test Suite', () => {
     db = dbInstance.db;
 
     // Create MCP client
-    const serverPath = resolve(process.cwd(), 'bin/mcp-server.ts');
+    const serverPath = resolve(process.cwd(), "bin/mcp-server.ts");
 
     mcpTransport = new StdioClientTransport({
-      command: 'bun',
-      args: ['run', serverPath],
+      command: "bun",
+      args: ["run", serverPath],
       env: {
         ...process.env,
-        NODE_ENV: 'test',
-        MCP_AUTO_OPEN: 'false', // Don't open browser
+        NODE_ENV: "test",
+        MCP_AUTO_OPEN: "false", // Don't open browser
       },
     });
 
     mcpClient = new Client(
       {
-        name: 'e2e-test-client',
-        version: '1.0.0',
+        name: "e2e-test-client",
+        version: "1.0.0",
       },
       {
         capabilities: {},
-      }
+      },
     );
 
     await mcpClient.connect(mcpTransport);
 
-    console.log('✅ MCP Client connected\n');
+    console.log("✅ MCP Client connected\n");
   }, 30000);
 
   afterAll(async () => {
@@ -87,30 +96,30 @@ describe('E2E Complete Flow Test Suite', () => {
 
     // Print captured logs for debugging
     if (serverLogs.length > 0) {
-      console.log('\n\n📝 SERVER LOGS:\n');
-      serverLogs.forEach(log => console.log(log));
+      console.log("\n\n📝 SERVER LOGS:\n");
+      serverLogs.forEach((log) => console.log(log));
     }
 
     if (serverErrors.length > 0) {
-      console.error('\n\n❌ SERVER ERRORS:\n');
-      serverErrors.forEach(err => console.error(err));
+      console.error("\n\n❌ SERVER ERRORS:\n");
+      serverErrors.forEach((err) => console.error(err));
     }
 
-    console.log('\n✅ E2E Test Suite Completed\n');
+    console.log("\n✅ E2E Test Suite Completed\n");
   });
 
   /**
    * TEST 1: MCP Client Connection
    */
-  describe('Test 1: MCP Client Connection', () => {
-    it('should connect to MCP server via stdio', async () => {
+  describe("Test 1: MCP Client Connection", () => {
+    it("should connect to MCP server via stdio", async () => {
       expect(mcpClient).toBeDefined();
     });
 
-    it('should list available tools', async () => {
+    it("should list available tools", async () => {
       const result = await mcpClient.request(
-        { method: 'tools/list' },
-        {} as any
+        { method: "tools/list" },
+        {} as any,
       );
 
       expect(result).toBeDefined();
@@ -118,10 +127,10 @@ describe('E2E Complete Flow Test Suite', () => {
       expect(Array.isArray((result as any).tools)).toBe(true);
     });
 
-    it('should expose ONLY third_eye_overseer tool (Golden Rule #1)', async () => {
+    it("should expose ONLY third_eye_overseer tool (Golden Rule #1)", async () => {
       const result = await mcpClient.request(
-        { method: 'tools/list' },
-        {} as any
+        { method: "tools/list" },
+        {} as any,
       );
 
       const tools = (result as any).tools;
@@ -133,24 +142,24 @@ describe('E2E Complete Flow Test Suite', () => {
       expect(tools[0].name).toBe(TOOL_NAME);
     });
 
-    it('should NOT expose individual Eye tools', async () => {
+    it("should NOT expose individual Eye tools", async () => {
       const result = await mcpClient.request(
-        { method: 'tools/list' },
-        {} as any
+        { method: "tools/list" },
+        {} as any,
       );
 
       const tools = (result as any).tools as Array<{ name: string }>;
-      const toolNames = tools.map(t => t.name.toLowerCase());
+      const toolNames = tools.map((t) => t.name.toLowerCase());
 
       // List of Eye names that should NEVER appear
       const forbiddenNames = [
-        'sharingan',
-        'jogan',
-        'rinnegan',
-        'mangekyo',
-        'tenseigan',
-        'byakugan',
-        'kyuubi',
+        "sharingan",
+        "jogan",
+        "rinnegan",
+        "mangekyo",
+        "tenseigan",
+        "byakugan",
+        "kyuubi",
       ];
 
       for (const forbidden of forbiddenNames) {
@@ -163,19 +172,19 @@ describe('E2E Complete Flow Test Suite', () => {
   /**
    * TEST 2: Simple Task Execution
    */
-  describe('Test 2: Simple Task Execution', () => {
-    it('should call third_eye_overseer with simple task', async () => {
+  describe("Test 2: Simple Task Execution", () => {
+    it("should call third_eye_overseer with simple task", async () => {
       const result = await mcpClient.request(
         {
-          method: 'tools/call',
+          method: "tools/call",
           params: {
             name: TOOL_NAME,
             arguments: {
-              task: 'Write a hello world function in Python',
+              task: "Write a hello world function in Python",
             },
           },
         },
-        {} as any
+        {} as any,
       );
 
       expect(result).toBeDefined();
@@ -183,18 +192,18 @@ describe('E2E Complete Flow Test Suite', () => {
       expect((result as any).content.length).toBeGreaterThan(0);
     });
 
-    it('should return response with sessionId', async () => {
+    it("should return response with sessionId", async () => {
       const result = await mcpClient.request(
         {
-          method: 'tools/call',
+          method: "tools/call",
           params: {
             name: TOOL_NAME,
             arguments: {
-              task: 'Create a simple add function',
+              task: "Create a simple add function",
             },
           },
         },
-        {} as any
+        {} as any,
       );
 
       const responseText = (result as any).content[0].text;
@@ -202,37 +211,37 @@ describe('E2E Complete Flow Test Suite', () => {
 
       expect(response.metadata).toBeDefined();
       expect(response.metadata.sessionId).toBeDefined();
-      expect(typeof response.metadata.sessionId).toBe('string');
+      expect(typeof response.metadata.sessionId).toBe("string");
 
       // Save for later tests
       testSessionId = response.metadata.sessionId;
     });
 
-    it('should return response with verdict (APPROVED/REJECTED)', async () => {
+    it("should return response with verdict (APPROVED/REJECTED)", async () => {
       const result = await mcpClient.request(
         {
-          method: 'tools/call',
+          method: "tools/call",
           params: {
             name: TOOL_NAME,
             arguments: {
-              task: 'Review this code: function add(a, b) { return a + b; }',
+              task: "Review this code: function add(a, b) { return a + b; }",
             },
           },
         },
-        {} as any
+        {} as any,
       );
 
       const responseText = (result as any).content[0].text;
       const response = JSON.parse(responseText);
 
       expect(response.verdict).toBeDefined();
-      expect(['APPROVED', 'REJECTED']).toContain(response.verdict);
+      expect(["APPROVED", "REJECTED"]).toContain(response.verdict);
     });
 
-    it('should return response with expected structure', async () => {
+    it("should return response with expected structure", async () => {
       const result = await mcpClient.request(
         {
-          method: 'tools/call',
+          method: "tools/call",
           params: {
             name: TOOL_NAME,
             arguments: {
@@ -240,81 +249,92 @@ describe('E2E Complete Flow Test Suite', () => {
             },
           },
         },
-        {} as any
+        {} as any,
       );
 
       const responseText = (result as any).content[0].text;
       const response = JSON.parse(responseText);
 
       // Required fields
-      expect(response).toHaveProperty('code');
-      expect(response).toHaveProperty('verdict');
-      expect(response).toHaveProperty('summary');
-      expect(response).toHaveProperty('metadata');
+      expect(response).toHaveProperty("code");
+      expect(response).toHaveProperty("verdict");
+      expect(response).toHaveProperty("summary");
+      expect(response).toHaveProperty("metadata");
     });
   });
 
   /**
    * TEST 3: Groq API Integration
    */
-  describe('Test 3: Groq API Integration', () => {
-    it('should check if Groq API key is configured', async () => {
-      const result = await db.select().from(providerKeys).where(eq(providerKeys.provider, 'groq'));
+  describe("Test 3: Groq API Integration", () => {
+    it("should check if Groq API key is configured", async () => {
+      const result = await db
+        .select()
+        .from(providerKeys)
+        .where(eq(providerKeys.provider, "groq"));
 
       if (result.length === 0) {
-        console.warn('\n⚠️  WARNING: No Groq API key configured. Skipping Groq tests.\n');
+        console.warn(
+          "\n⚠️  WARNING: No Groq API key configured. Skipping Groq tests.\n",
+        );
         return;
       }
 
       expect(result.length).toBeGreaterThan(0);
     });
 
-    it('should use JSON mode for LLM responses (response_format)', async () => {
+    it("should use JSON mode for LLM responses (response_format)", async () => {
       // Check if Groq key exists
-      const result = await db.select().from(providerKeys).where(eq(providerKeys.provider, 'groq'));
+      const result = await db
+        .select()
+        .from(providerKeys)
+        .where(eq(providerKeys.provider, "groq"));
 
       if (result.length === 0) {
-        console.warn('⚠️  Skipping: No Groq API key');
+        console.warn("⚠️  Skipping: No Groq API key");
         return;
       }
 
       // Execute task
       const taskResult = await mcpClient.request(
         {
-          method: 'tools/call',
+          method: "tools/call",
           params: {
             name: TOOL_NAME,
             arguments: {
-              task: 'Analyze this code snippet: const x = 10;',
+              task: "Analyze this code snippet: const x = 10;",
             },
           },
         },
-        {} as any
+        {} as any,
       );
 
       const responseText = (taskResult as any).content[0].text;
       const response = JSON.parse(responseText);
 
       // Should complete without "LLM response does not match schema" errors
-      expect(response.code).not.toBe('EYE_ERROR');
+      expect(response.code).not.toBe("EYE_ERROR");
 
       // Response should be valid JSON (we just parsed it)
-      expect(response).toBeTypeOf('object');
+      expect(response).toBeTypeOf("object");
     });
 
     it('should NOT have "LLM response does not match schema" errors', async () => {
       // Check if Groq key exists
-      const result = await db.select().from(providerKeys).where(eq(providerKeys.provider, 'groq'));
+      const result = await db
+        .select()
+        .from(providerKeys)
+        .where(eq(providerKeys.provider, "groq"));
 
       if (result.length === 0) {
-        console.warn('⚠️  Skipping: No Groq API key');
+        console.warn("⚠️  Skipping: No Groq API key");
         return;
       }
 
       // Execute task and check runs table for errors
       const taskResult = await mcpClient.request(
         {
-          method: 'tools/call',
+          method: "tools/call",
           params: {
             name: TOOL_NAME,
             arguments: {
@@ -322,7 +342,7 @@ describe('E2E Complete Flow Test Suite', () => {
             },
           },
         },
-        {} as any
+        {} as any,
       );
 
       const responseText = (taskResult as any).content[0].text;
@@ -332,11 +352,14 @@ describe('E2E Complete Flow Test Suite', () => {
 
       if (sessionId) {
         // Check runs for this session
-        const sessionRuns = await db.select().from(runs).where(eq(runs.sessionId, sessionId));
+        const sessionRuns = await db
+          .select()
+          .from(runs)
+          .where(eq(runs.sessionId, sessionId));
 
         // No runs should have "does not match schema" in input
         for (const run of sessionRuns) {
-          expect(run.inputMd).not.toContain('does not match schema');
+          expect(run.inputMd).not.toContain("does not match schema");
         }
       }
     });
@@ -345,47 +368,58 @@ describe('E2E Complete Flow Test Suite', () => {
   /**
    * TEST 4: Persona Loading
    */
-  describe('Test 4: Persona Loading', () => {
-    it('should have personas seeded in database', async () => {
-      const result = await db.select().from(personas).where(eq(personas.active, true));
+  describe("Test 4: Persona Loading", () => {
+    it("should have personas seeded in database", async () => {
+      const result = await db
+        .select()
+        .from(personas)
+        .where(eq(personas.active, true));
 
       expect(result.length).toBeGreaterThan(0);
     });
 
-    it('should load persona for each Eye', async () => {
-      const result = await db.select().from(personas).where(eq(personas.active, true));
+    it("should load persona for each Eye", async () => {
+      const result = await db
+        .select()
+        .from(personas)
+        .where(eq(personas.active, true));
 
-      const eyeNames = result.map(p => p.eye);
+      const eyeNames = result.map((p) => p.eye);
 
-      expect(eyeNames).toContain('sharingan');
-      expect(eyeNames).toContain('jogan');
-      expect(eyeNames).toContain('rinnegan');
+      expect(eyeNames).toContain("sharingan");
+      expect(eyeNames).toContain("jogan");
+      expect(eyeNames).toContain("rinnegan");
     });
 
-    it('should use persona content as system prompt', async () => {
-      const result = await db.select().from(personas).where(eq(personas.eye, 'sharingan'));
+    it("should use persona content as system prompt", async () => {
+      const result = await db
+        .select()
+        .from(personas)
+        .where(eq(personas.eye, "sharingan"));
       const persona = result[0];
 
       expect(persona).toBeDefined();
       expect(persona.content).toBeDefined();
       expect(persona.content.length).toBeGreaterThan(50);
 
-      console.log(`\n📝 Sharingan persona (first 100 chars): ${persona.content.substring(0, 100)}...\n`);
+      console.log(
+        `\n📝 Sharingan persona (first 100 chars): ${persona.content.substring(0, 100)}...\n`,
+      );
     });
 
-    it('should have Eye routing configured for all Eyes', async () => {
+    it("should have Eye routing configured for all Eyes", async () => {
       const routing = await db.select().from(eyesRouting);
 
       expect(routing.length).toBeGreaterThan(0);
 
       // Check critical Eyes
-      const eyeNames = routing.map(r => r.eye);
-      expect(eyeNames).toContain('sharingan');
-      expect(eyeNames).toContain('jogan');
-      expect(eyeNames).toContain('rinnegan');
+      const eyeNames = routing.map((r) => r.eye);
+      expect(eyeNames).toContain("sharingan");
+      expect(eyeNames).toContain("jogan");
+      expect(eyeNames).toContain("rinnegan");
     });
 
-    it('should have valid provider and model in routing', async () => {
+    it("should have valid provider and model in routing", async () => {
       const routing = await db.select().from(eyesRouting);
 
       for (const route of routing) {
@@ -393,7 +427,9 @@ describe('E2E Complete Flow Test Suite', () => {
         expect(route.primaryModel).toBeDefined();
 
         // Provider should be one of: groq, ollama, openrouter, lmstudio
-        expect(['groq', 'ollama', 'openrouter', 'lmstudio']).toContain(route.primaryProvider);
+        expect(["groq", "ollama", "openrouter", "lmstudio"]).toContain(
+          route.primaryProvider,
+        );
       }
     });
   });
@@ -401,25 +437,25 @@ describe('E2E Complete Flow Test Suite', () => {
   /**
    * TEST 5: Session Management
    */
-  describe('Test 5: Session Management', () => {
-    it('should create session on first task', async () => {
+  describe("Test 5: Session Management", () => {
+    it("should create session on first task", async () => {
       const before = await db.select({ count: sql`COUNT(*)` }).from(sessions);
       const beforeCount = Number(before[0].count);
 
       await mcpClient.request(
         {
-          method: 'tools/call',
+          method: "tools/call",
           params: {
             name: TOOL_NAME,
             arguments: {
-              task: 'Session test task 1',
+              task: "Session test task 1",
               config: {
-                agentName: 'SessionTestAgent',
+                agentName: "SessionTestAgent",
               },
             },
           },
         },
-        {} as any
+        {} as any,
       );
 
       const after = await db.select({ count: sql`COUNT(*)` }).from(sessions);
@@ -428,45 +464,45 @@ describe('E2E Complete Flow Test Suite', () => {
       expect(afterCount).toBeGreaterThanOrEqual(beforeCount);
     });
 
-    it('should reuse same session for multiple tasks from same agent', async () => {
+    it("should reuse same session for multiple tasks from same agent", async () => {
       // Task 1
       const result1 = await mcpClient.request(
         {
-          method: 'tools/call',
+          method: "tools/call",
           params: {
             name: TOOL_NAME,
             arguments: {
-              task: 'Multi-task test 1',
+              task: "Multi-task test 1",
               config: {
-                agentName: 'MultiTaskTestAgent',
+                agentName: "MultiTaskTestAgent",
               },
             },
           },
         },
-        {} as any
+        {} as any,
       );
 
       const response1 = JSON.parse((result1 as any).content[0].text);
       const sessionId1 = response1.metadata?.sessionId;
 
       // Wait a bit
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Task 2
       const result2 = await mcpClient.request(
         {
-          method: 'tools/call',
+          method: "tools/call",
           params: {
             name: TOOL_NAME,
             arguments: {
-              task: 'Multi-task test 2',
+              task: "Multi-task test 2",
               config: {
-                agentName: 'MultiTaskTestAgent',
+                agentName: "MultiTaskTestAgent",
               },
             },
           },
         },
-        {} as any
+        {} as any,
       );
 
       const response2 = JSON.parse((result2 as any).content[0].text);
@@ -476,34 +512,40 @@ describe('E2E Complete Flow Test Suite', () => {
       expect(sessionId1).toBe(sessionId2);
     });
 
-    it('should query database for sessions by agentName', async () => {
-      const sessionList = await db.select().from(sessions).where(eq(sessions.agentName, 'MultiTaskTestAgent'));
+    it("should query database for sessions by agentName", async () => {
+      const sessionList = await db
+        .select()
+        .from(sessions)
+        .where(eq(sessions.agentName, "MultiTaskTestAgent"));
 
       // Should have only 1 session for this agent
       expect(sessionList.length).toBe(1);
     });
 
-    it('should update last_activity on each task', async () => {
+    it("should update last_activity on each task", async () => {
       const result = await mcpClient.request(
         {
-          method: 'tools/call',
+          method: "tools/call",
           params: {
             name: TOOL_NAME,
             arguments: {
-              task: 'Activity tracking test',
+              task: "Activity tracking test",
               config: {
-                agentName: 'ActivityTestAgent',
+                agentName: "ActivityTestAgent",
               },
             },
           },
         },
-        {} as any
+        {} as any,
       );
 
       const response = JSON.parse((result as any).content[0].text);
       const sessionId = response.metadata?.sessionId;
 
-      const sessionList = await db.select().from(sessions).where(eq(sessions.id, sessionId));
+      const sessionList = await db
+        .select()
+        .from(sessions)
+        .where(eq(sessions.id, sessionId));
       const session = sessionList[0];
 
       expect(session).toBeDefined();
@@ -514,29 +556,35 @@ describe('E2E Complete Flow Test Suite', () => {
   /**
    * TEST 6: Monitor UI Integration
    */
-  describe('Test 6: Monitor UI Integration', () => {
-    it('should check if server is running', async () => {
+  describe("Test 6: Monitor UI Integration", () => {
+    it("should check if server is running", async () => {
       try {
         const response = await fetch(`${API_URL}/health`);
         expect(response.ok).toBe(true);
       } catch (error) {
-        console.warn('\n⚠️  WARNING: Server not running. Start with: bun run dev\n');
+        console.warn(
+          "\n⚠️  WARNING: Server not running. Start with: bun run dev\n",
+        );
         throw error;
       }
     });
 
     it('should fetch session events without "Failed to fetch" error', async () => {
       if (!testSessionId) {
-        console.warn('⚠️  Skipping: No test session ID available');
+        console.warn("⚠️  Skipping: No test session ID available");
         return;
       }
 
       try {
-        const response = await fetch(`${API_URL}/api/sessions/${testSessionId}/events`);
+        const response = await fetch(
+          `${API_URL}/api/sessions/${testSessionId}/events`,
+        );
 
         if (!response.ok) {
           const text = await response.text();
-          console.error(`❌ Failed to fetch events: ${response.status} ${text}`);
+          console.error(
+            `❌ Failed to fetch events: ${response.status} ${text}`,
+          );
         }
 
         expect(response.ok).toBe(true);
@@ -544,33 +592,35 @@ describe('E2E Complete Flow Test Suite', () => {
         const data = await response.json();
         expect(Array.isArray(data)).toBe(true);
       } catch (error) {
-        console.error('❌ Failed to fetch session events:', error);
+        console.error("❌ Failed to fetch session events:", error);
         throw error;
       }
     });
 
-    it('should fetch session summary', async () => {
+    it("should fetch session summary", async () => {
       if (!testSessionId) {
-        console.warn('⚠️  Skipping: No test session ID available');
+        console.warn("⚠️  Skipping: No test session ID available");
         return;
       }
 
       try {
-        const response = await fetch(`${API_URL}/api/sessions/${testSessionId}/summary`);
+        const response = await fetch(
+          `${API_URL}/api/sessions/${testSessionId}/summary`,
+        );
 
         expect(response.ok).toBe(true);
 
         const data = await response.json();
-        expect(data).toHaveProperty('eventCount');
-        expect(data).toHaveProperty('eyes');
+        expect(data).toHaveProperty("eventCount");
+        expect(data).toHaveProperty("eyes");
         expect(Array.isArray(data.eyes)).toBe(true);
       } catch (error) {
-        console.error('❌ Failed to fetch session summary:', error);
+        console.error("❌ Failed to fetch session summary:", error);
         throw error;
       }
     });
 
-    it('should fetch all sessions list', async () => {
+    it("should fetch all sessions list", async () => {
       try {
         const response = await fetch(`${API_URL}/api/sessions`);
 
@@ -579,7 +629,7 @@ describe('E2E Complete Flow Test Suite', () => {
         const data = await response.json();
         expect(Array.isArray(data)).toBe(true);
       } catch (error) {
-        console.error('❌ Failed to fetch sessions list:', error);
+        console.error("❌ Failed to fetch sessions list:", error);
         throw error;
       }
     });
@@ -588,19 +638,19 @@ describe('E2E Complete Flow Test Suite', () => {
   /**
    * TEST 7: Order Guard Behavior
    */
-  describe('Test 7: Order Guard Behavior', () => {
-    it('should allow auto-router mode (overseer)', async () => {
+  describe("Test 7: Order Guard Behavior", () => {
+    it("should allow auto-router mode (overseer)", async () => {
       const result = await mcpClient.request(
         {
-          method: 'tools/call',
+          method: "tools/call",
           params: {
             name: TOOL_NAME,
             arguments: {
-              task: 'Order guard test: auto-router should work',
+              task: "Order guard test: auto-router should work",
             },
           },
         },
-        {} as any
+        {} as any,
       );
 
       expect(result).toBeDefined();
@@ -609,10 +659,10 @@ describe('E2E Complete Flow Test Suite', () => {
       const response = JSON.parse(responseText);
 
       // Should not be order violation
-      expect(response.code).not.toBe('NEED_MORE_CONTEXT');
+      expect(response.code).not.toBe("NEED_MORE_CONTEXT");
     });
 
-    it('should prevent direct Eye calls (order violation)', async () => {
+    it("should prevent direct Eye calls (order violation)", async () => {
       // This test simulates calling an Eye directly (which should fail)
       // In normal MCP usage, only overseer is exposed, so this shouldn't happen
       // But internally, order guard should block out-of-order calls
@@ -620,7 +670,10 @@ describe('E2E Complete Flow Test Suite', () => {
       // We can't test this directly through MCP (Golden Rule #1), but we can
       // verify that the order guard is working by checking database runs
 
-      const orderGuardRuns = await db.select().from(runs).where(eq(runs.provider, 'order-guard'));
+      const orderGuardRuns = await db
+        .select()
+        .from(runs)
+        .where(eq(runs.provider, "order-guard"));
 
       // If order guard is working, there should be NO order-guard runs
       // (since all calls go through overseer/auto-router)
@@ -630,18 +683,18 @@ describe('E2E Complete Flow Test Suite', () => {
       expect(Array.isArray(orderGuardRuns)).toBe(true);
     });
 
-    it('should NOT expose Eye names in error messages (Golden Rule #1)', async () => {
+    it("should NOT expose Eye names in error messages (Golden Rule #1)", async () => {
       const result = await mcpClient.request(
         {
-          method: 'tools/call',
+          method: "tools/call",
           params: {
             name: TOOL_NAME,
             arguments: {
-              task: '', // Empty task to potentially trigger error
+              task: "", // Empty task to potentially trigger error
             },
           },
         },
-        {} as any
+        {} as any,
       );
 
       const responseText = (result as any).content[0].text;
@@ -649,13 +702,13 @@ describe('E2E Complete Flow Test Suite', () => {
 
       // Check that response doesn't contain internal Eye names
       const forbiddenNames = [
-        'sharingan',
-        'jogan',
-        'rinnegan',
-        'mangekyo',
-        'tenseigan',
-        'byakugan',
-        'kyuubi',
+        "sharingan",
+        "jogan",
+        "rinnegan",
+        "mangekyo",
+        "tenseigan",
+        "byakugan",
+        "kyuubi",
       ];
 
       for (const forbidden of forbiddenNames) {

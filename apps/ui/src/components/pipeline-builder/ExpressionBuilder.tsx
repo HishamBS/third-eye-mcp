@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { memo, useState, useCallback, useMemo } from 'react';
-import { Plus, Trash2, Code, WandSparkles } from 'lucide-react';
-import { ANIMATION_DURATION } from '@/constants/timing';
+import { memo, useState, useCallback, useMemo } from "react";
+import { Plus, Trash2, Code, WandSparkles } from "lucide-react";
+import { ANIMATION_DURATION } from "@/constants/timing";
 
 /**
  * Expression Builder Component - SSOT for visual expression construction
@@ -21,30 +21,42 @@ import { ANIMATION_DURATION } from '@/constants/timing';
  * Available operators for simple mode
  */
 const OPERATORS = [
-  { value: '==', label: 'Equals (==)', jsonLogic: '==' },
-  { value: '!=', label: 'Not Equals (!=)', jsonLogic: '!=' },
-  { value: '>', label: 'Greater Than (>)', jsonLogic: '>' },
-  { value: '>=', label: 'Greater or Equal (>=)', jsonLogic: '>=' },
-  { value: '<', label: 'Less Than (<)', jsonLogic: '<' },
-  { value: '<=', label: 'Less or Equal (<=)', jsonLogic: '<=' },
-  { value: 'in', label: 'In Array (in)', jsonLogic: 'in' },
-  { value: 'contains', label: 'Contains', jsonLogic: 'in' },
+  { value: "==", label: "Equals (==)", jsonLogic: "==" },
+  { value: "!=", label: "Not Equals (!=)", jsonLogic: "!=" },
+  { value: ">", label: "Greater Than (>)", jsonLogic: ">" },
+  { value: ">=", label: "Greater or Equal (>=)", jsonLogic: ">=" },
+  { value: "<", label: "Less Than (<)", jsonLogic: "<" },
+  { value: "<=", label: "Less or Equal (<=)", jsonLogic: "<=" },
+  { value: "in", label: "In Array (in)", jsonLogic: "in" },
+  { value: "contains", label: "Contains", jsonLogic: "in" },
 ] as const;
 
 /**
  * Available fields from execution context
  */
 const AVAILABLE_FIELDS = [
-  { value: 'verdict', label: 'Verdict', path: 'verdict' },
-  { value: 'output.score', label: 'Output Score', path: 'output.score' },
-  { value: 'output.verdict', label: 'Output Verdict', path: 'output.verdict' },
-  { value: 'output.confidence', label: 'Output Confidence', path: 'output.confidence' },
-  { value: 'metadata.category', label: 'Metadata Category', path: 'metadata.category' },
-  { value: 'metadata.priority', label: 'Metadata Priority', path: 'metadata.priority' },
-  { value: 'metadata.tags', label: 'Metadata Tags', path: 'metadata.tags' },
-  { value: 'loop.index', label: 'Loop Index', path: 'loop.index' },
-  { value: 'loop.item', label: 'Loop Item', path: 'loop.item' },
-  { value: 'loop.total', label: 'Loop Total', path: 'loop.total' },
+  { value: "verdict", label: "Verdict", path: "verdict" },
+  { value: "output.score", label: "Output Score", path: "output.score" },
+  { value: "output.verdict", label: "Output Verdict", path: "output.verdict" },
+  {
+    value: "output.confidence",
+    label: "Output Confidence",
+    path: "output.confidence",
+  },
+  {
+    value: "metadata.category",
+    label: "Metadata Category",
+    path: "metadata.category",
+  },
+  {
+    value: "metadata.priority",
+    label: "Metadata Priority",
+    path: "metadata.priority",
+  },
+  { value: "metadata.tags", label: "Metadata Tags", path: "metadata.tags" },
+  { value: "loop.index", label: "Loop Index", path: "loop.index" },
+  { value: "loop.item", label: "Loop Item", path: "loop.item" },
+  { value: "loop.total", label: "Loop Total", path: "loop.total" },
 ] as const;
 
 /**
@@ -52,40 +64,40 @@ const AVAILABLE_FIELDS = [
  */
 const EXPRESSION_TEMPLATES = [
   {
-    label: 'Verdict is OK',
-    expression: { '==': [{ var: 'verdict' }, 'OK'] },
+    label: "Verdict is OK",
+    expression: { "==": [{ var: "verdict" }, "OK"] },
   },
   {
-    label: 'Score above 80',
-    expression: { '>': [{ var: 'output.score' }, 80] },
+    label: "Score above 80",
+    expression: { ">": [{ var: "output.score" }, 80] },
   },
   {
-    label: 'Score between 60-80',
+    label: "Score between 60-80",
     expression: {
       and: [
-        { '>=': [{ var: 'output.score' }, 60] },
-        { '<=': [{ var: 'output.score' }, 80] },
+        { ">=": [{ var: "output.score" }, 60] },
+        { "<=": [{ var: "output.score" }, 80] },
       ],
     },
   },
   {
-    label: 'High confidence',
-    expression: { '>': [{ var: 'output.confidence' }, 0.9] },
+    label: "High confidence",
+    expression: { ">": [{ var: "output.confidence" }, 0.9] },
   },
   {
-    label: 'Category is Security',
-    expression: { '==': [{ var: 'metadata.category' }, 'security'] },
+    label: "Category is Security",
+    expression: { "==": [{ var: "metadata.category" }, "security"] },
   },
   {
     label: 'Tags contains "urgent"',
-    expression: { in: ['urgent', { var: 'metadata.tags' }] },
+    expression: { in: ["urgent", { var: "metadata.tags" }] },
   },
 ] as const;
 
 /**
  * Chain operator types
  */
-type ChainOperator = 'and' | 'or';
+type ChainOperator = "and" | "or";
 
 /**
  * Simple condition structure
@@ -112,20 +124,26 @@ export interface ExpressionBuilderProps {
  */
 function validateJSONLogic(expr: unknown): { valid: boolean; error?: string } {
   if (!expr) {
-    return { valid: false, error: 'Expression cannot be empty' };
+    return { valid: false, error: "Expression cannot be empty" };
   }
 
-  if (typeof expr === 'string') {
+  if (typeof expr === "string") {
     try {
       const parsed = JSON.parse(expr);
       return validateJSONLogic(parsed);
     } catch (err) {
-      return { valid: false, error: `Invalid JSON: ${err instanceof Error ? err.message : 'Unknown error'}` };
+      return {
+        valid: false,
+        error: `Invalid JSON: ${err instanceof Error ? err.message : "Unknown error"}`,
+      };
     }
   }
 
-  if (typeof expr !== 'object' || expr === null) {
-    return { valid: false, error: 'Expression must be an object or valid JSON string' };
+  if (typeof expr !== "object" || expr === null) {
+    return {
+      valid: false,
+      error: "Expression must be an object or valid JSON string",
+    };
   }
 
   return { valid: true };
@@ -136,7 +154,7 @@ function validateJSONLogic(expr: unknown): { valid: boolean; error?: string } {
  */
 function conditionsToJSONLogic(
   conditions: SimpleCondition[],
-  chainOperator: ChainOperator
+  chainOperator: ChainOperator,
 ): unknown {
   if (conditions.length === 0) {
     return null;
@@ -154,16 +172,18 @@ function conditionsToJSONLogic(
     };
   }
 
-  const logicConditions = conditions.map((condition) => {
-    const operator = OPERATORS.find((op) => op.value === condition.operator);
-    if (!operator) {
-      return null;
-    }
+  const logicConditions = conditions
+    .map((condition) => {
+      const operator = OPERATORS.find((op) => op.value === condition.operator);
+      if (!operator) {
+        return null;
+      }
 
-    return {
-      [operator.jsonLogic]: [{ var: condition.field }, condition.value],
-    };
-  }).filter((c) => c !== null);
+      return {
+        [operator.jsonLogic]: [{ var: condition.field }, condition.value],
+      };
+    })
+    .filter((c) => c !== null);
 
   return {
     [chainOperator]: logicConditions,
@@ -177,7 +197,7 @@ function parseJSONLogicToConditions(expr: unknown): {
   conditions: SimpleCondition[];
   chainOperator: ChainOperator;
 } | null {
-  if (!expr || typeof expr !== 'object') {
+  if (!expr || typeof expr !== "object") {
     return null;
   }
 
@@ -192,7 +212,7 @@ function parseJSONLogicToConditions(expr: unknown): {
   const operatorKey = keys[0];
   const operatorMatch = OPERATORS.find((op) => op.jsonLogic === operatorKey);
 
-  if (operatorMatch && !['and', 'or'].includes(operatorKey)) {
+  if (operatorMatch && !["and", "or"].includes(operatorKey)) {
     const operands = exprObj[operatorKey] as unknown[];
     if (Array.isArray(operands) && operands.length === 2) {
       const field = (operands[0] as { var?: string })?.var;
@@ -208,14 +228,14 @@ function parseJSONLogicToConditions(expr: unknown): {
               value: value as string | number | boolean,
             },
           ],
-          chainOperator: 'and',
+          chainOperator: "and",
         };
       }
     }
   }
 
   // Chain condition case (and/or)
-  if (operatorKey === 'and' || operatorKey === 'or') {
+  if (operatorKey === "and" || operatorKey === "or") {
     const chainOperator = operatorKey as ChainOperator;
     const operands = exprObj[operatorKey] as unknown[];
 
@@ -226,7 +246,7 @@ function parseJSONLogicToConditions(expr: unknown): {
     const conditions: SimpleCondition[] = [];
 
     for (const operand of operands) {
-      if (typeof operand !== 'object' || operand === null) {
+      if (typeof operand !== "object" || operand === null) {
         continue;
       }
 
@@ -266,32 +286,34 @@ function parseJSONLogicToConditions(expr: unknown): {
 function ExpressionBuilderComponent({
   value,
   onChange,
-  placeholder = 'Build your expression...',
-  className = '',
+  placeholder = "Build your expression...",
+  className = "",
 }: ExpressionBuilderProps) {
-  const [mode, setMode] = useState<'simple' | 'advanced'>('simple');
-  const [chainOperator, setChainOperator] = useState<ChainOperator>('and');
+  const [mode, setMode] = useState<"simple" | "advanced">("simple");
+  const [chainOperator, setChainOperator] = useState<ChainOperator>("and");
   const [conditions, setConditions] = useState<SimpleCondition[]>(() => {
     const parsed = parseJSONLogicToConditions(value);
-    return parsed?.conditions ?? [
-      {
-        id: Math.random().toString(36).substring(7),
-        field: 'verdict',
-        operator: '==',
-        value: 'OK',
-      },
-    ];
+    return (
+      parsed?.conditions ?? [
+        {
+          id: Math.random().toString(36).substring(7),
+          field: "verdict",
+          operator: "==",
+          value: "OK",
+        },
+      ]
+    );
   });
   const [advancedText, setAdvancedText] = useState<string>(() =>
-    value ? JSON.stringify(value, null, 2) : ''
+    value ? JSON.stringify(value, null, 2) : "",
   );
   const [validationError, setValidationError] = useState<string | undefined>();
 
   const handleModeChange = useCallback(
-    (newMode: 'simple' | 'advanced') => {
-      if (newMode === 'advanced') {
+    (newMode: "simple" | "advanced") => {
+      if (newMode === "advanced") {
         const jsonLogic = conditionsToJSONLogic(conditions, chainOperator);
-        setAdvancedText(jsonLogic ? JSON.stringify(jsonLogic, null, 2) : '');
+        setAdvancedText(jsonLogic ? JSON.stringify(jsonLogic, null, 2) : "");
       } else {
         try {
           const parsed = JSON.parse(advancedText);
@@ -307,15 +329,15 @@ function ExpressionBuilderComponent({
       setMode(newMode);
       setValidationError(undefined);
     },
-    [conditions, chainOperator, advancedText]
+    [conditions, chainOperator, advancedText],
   );
 
   const handleAddCondition = useCallback(() => {
     const newCondition: SimpleCondition = {
       id: Math.random().toString(36).substring(7),
-      field: 'verdict',
-      operator: '==',
-      value: '',
+      field: "verdict",
+      operator: "==",
+      value: "",
     };
     setConditions((prev) => [...prev, newCondition]);
   }, []);
@@ -325,12 +347,16 @@ function ExpressionBuilderComponent({
   }, []);
 
   const handleConditionChange = useCallback(
-    (id: string, field: keyof SimpleCondition, value: string | number | boolean) => {
+    (
+      id: string,
+      field: keyof SimpleCondition,
+      value: string | number | boolean,
+    ) => {
       setConditions((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, [field]: value } : c))
+        prev.map((c) => (c.id === id ? { ...c, [field]: value } : c)),
       );
     },
-    []
+    [],
   );
 
   const handleSimpleModeUpdate = useCallback(() => {
@@ -339,7 +365,7 @@ function ExpressionBuilderComponent({
       onChange(jsonLogic);
       setValidationError(undefined);
     } else {
-      setValidationError('Invalid conditions');
+      setValidationError("Invalid conditions");
     }
   }, [conditions, chainOperator, onChange]);
 
@@ -355,7 +381,7 @@ function ExpressionBuilderComponent({
       }
     } catch (err) {
       setValidationError(
-        `Invalid JSON: ${err instanceof Error ? err.message : 'Unknown error'}`
+        `Invalid JSON: ${err instanceof Error ? err.message : "Unknown error"}`,
       );
     }
   }, [advancedText, onChange]);
@@ -373,15 +399,18 @@ function ExpressionBuilderComponent({
 
       setValidationError(undefined);
     },
-    [onChange]
+    [onChange],
   );
 
-  const handleChainOperatorChange = useCallback((newOperator: ChainOperator) => {
-    setChainOperator(newOperator);
-  }, []);
+  const handleChainOperatorChange = useCallback(
+    (newOperator: ChainOperator) => {
+      setChainOperator(newOperator);
+    },
+    [],
+  );
 
   const currentExpression = useMemo(() => {
-    if (mode === 'simple') {
+    if (mode === "simple") {
       return conditionsToJSONLogic(conditions, chainOperator);
     }
     try {
@@ -398,13 +427,13 @@ function ExpressionBuilderComponent({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => handleModeChange('simple')}
+            onClick={() => handleModeChange("simple")}
             className={`
               px-3 py-1.5 text-sm font-medium rounded-md transition-all ${ANIMATION_DURATION.FAST}
               ${
-                mode === 'simple'
-                  ? 'bg-brand-primary text-brand-background'
-                  : 'bg-brand-surface text-brand-foreground hover:bg-brand-outline/20'
+                mode === "simple"
+                  ? "bg-brand-primary text-brand-background"
+                  : "bg-brand-surface text-brand-foreground hover:bg-brand-outline/20"
               }
             `}
           >
@@ -412,13 +441,13 @@ function ExpressionBuilderComponent({
           </button>
           <button
             type="button"
-            onClick={() => handleModeChange('advanced')}
+            onClick={() => handleModeChange("advanced")}
             className={`
               flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${ANIMATION_DURATION.FAST}
               ${
-                mode === 'advanced'
-                  ? 'bg-brand-primary text-brand-background'
-                  : 'bg-brand-surface text-brand-foreground hover:bg-brand-outline/20'
+                mode === "advanced"
+                  ? "bg-brand-primary text-brand-background"
+                  : "bg-brand-surface text-brand-foreground hover:bg-brand-outline/20"
               }
             `}
           >
@@ -450,21 +479,23 @@ function ExpressionBuilderComponent({
       </div>
 
       {/* Simple Mode */}
-      {mode === 'simple' && (
+      {mode === "simple" && (
         <div className="space-y-3">
           {/* Chain Operator (only show if multiple conditions) */}
           {conditions.length > 1 && (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-semantic-muted">Join conditions with:</span>
+              <span className="text-sm text-semantic-muted">
+                Join conditions with:
+              </span>
               <button
                 type="button"
-                onClick={() => handleChainOperatorChange('and')}
+                onClick={() => handleChainOperatorChange("and")}
                 className={`
                   px-3 py-1 text-xs font-medium rounded transition-all ${ANIMATION_DURATION.FAST}
                   ${
-                    chainOperator === 'and'
-                      ? 'bg-brand-primary text-brand-background'
-                      : 'bg-brand-surface text-brand-foreground hover:bg-brand-outline/20'
+                    chainOperator === "and"
+                      ? "bg-brand-primary text-brand-background"
+                      : "bg-brand-surface text-brand-foreground hover:bg-brand-outline/20"
                   }
                 `}
               >
@@ -472,13 +503,13 @@ function ExpressionBuilderComponent({
               </button>
               <button
                 type="button"
-                onClick={() => handleChainOperatorChange('or')}
+                onClick={() => handleChainOperatorChange("or")}
                 className={`
                   px-3 py-1 text-xs font-medium rounded transition-all ${ANIMATION_DURATION.FAST}
                   ${
-                    chainOperator === 'or'
-                      ? 'bg-brand-primary text-brand-background'
-                      : 'bg-brand-surface text-brand-foreground hover:bg-brand-outline/20'
+                    chainOperator === "or"
+                      ? "bg-brand-primary text-brand-background"
+                      : "bg-brand-surface text-brand-foreground hover:bg-brand-outline/20"
                   }
                 `}
               >
@@ -498,7 +529,9 @@ function ExpressionBuilderComponent({
               <select
                 className="flex-1 px-3 py-2 text-sm bg-brand-surface border border-brand-outline rounded-md text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-primary"
                 value={condition.field}
-                onChange={(e) => handleConditionChange(condition.id, 'field', e.target.value)}
+                onChange={(e) =>
+                  handleConditionChange(condition.id, "field", e.target.value)
+                }
               >
                 {AVAILABLE_FIELDS.map((field) => (
                   <option key={field.value} value={field.path}>
@@ -509,7 +542,13 @@ function ExpressionBuilderComponent({
               <select
                 className="flex-1 px-3 py-2 text-sm bg-brand-surface border border-brand-outline rounded-md text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-primary"
                 value={condition.operator}
-                onChange={(e) => handleConditionChange(condition.id, 'operator', e.target.value)}
+                onChange={(e) =>
+                  handleConditionChange(
+                    condition.id,
+                    "operator",
+                    e.target.value,
+                  )
+                }
               >
                 {OPERATORS.map((op) => (
                   <option key={op.value} value={op.value}>
@@ -522,7 +561,9 @@ function ExpressionBuilderComponent({
                 className="flex-1 px-3 py-2 text-sm bg-brand-surface border border-brand-outline rounded-md text-brand-foreground placeholder-semantic-muted focus:outline-none focus:ring-2 focus:ring-brand-primary"
                 placeholder="Value"
                 value={condition.value}
-                onChange={(e) => handleConditionChange(condition.id, 'value', e.target.value)}
+                onChange={(e) =>
+                  handleConditionChange(condition.id, "value", e.target.value)
+                }
               />
               <button
                 type="button"
@@ -557,7 +598,7 @@ function ExpressionBuilderComponent({
       )}
 
       {/* Advanced Mode */}
-      {mode === 'advanced' && (
+      {mode === "advanced" && (
         <div className="space-y-3">
           <textarea
             className="w-full h-40 px-3 py-2 text-sm font-mono bg-brand-surface border border-brand-outline rounded-md text-brand-foreground placeholder-semantic-muted focus:outline-none focus:ring-2 focus:ring-brand-primary resize-y"
@@ -581,7 +622,9 @@ function ExpressionBuilderComponent({
       {/* Current Expression Preview */}
       {currentExpression && (
         <div className="p-3 bg-brand-surface border border-brand-outline rounded-md">
-          <div className="text-xs font-medium text-semantic-muted mb-1">Current Expression:</div>
+          <div className="text-xs font-medium text-semantic-muted mb-1">
+            Current Expression:
+          </div>
           <pre className="text-xs font-mono text-brand-foreground overflow-x-auto">
             {JSON.stringify(currentExpression, null, 2)}
           </pre>
@@ -595,4 +638,4 @@ function ExpressionBuilderComponent({
  * Memoized ExpressionBuilder (Performance optimization per R04)
  */
 export const ExpressionBuilder = memo(ExpressionBuilderComponent);
-ExpressionBuilder.displayName = 'ExpressionBuilder';
+ExpressionBuilder.displayName = "ExpressionBuilder";

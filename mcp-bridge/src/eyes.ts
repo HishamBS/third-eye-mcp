@@ -3,7 +3,13 @@ import { EyeOrchestrator } from "@third-eye/core";
 import { launchPortal } from "./portal.js";
 
 const orchestrator = new EyeOrchestrator();
-const RESERVED_WRAPPER_KEYS = new Set(["signal", "_meta", "requestId", "progressToken", "arguments"]);
+const RESERVED_WRAPPER_KEYS = new Set([
+  "signal",
+  "_meta",
+  "requestId",
+  "progressToken",
+  "arguments",
+]);
 
 type SessionContext = {
   session_id: string;
@@ -35,7 +41,9 @@ if (!API_KEY) {
   );
 }
 
-function extractEnvelope(raw: Record<string, unknown>): Record<string, unknown> {
+function extractEnvelope(
+  raw: Record<string, unknown>,
+): Record<string, unknown> {
   let envelope: Record<string, unknown> = raw;
   if (raw && typeof raw.arguments === "object" && raw.arguments !== null) {
     envelope = raw.arguments as Record<string, unknown>;
@@ -90,8 +98,14 @@ function coalesceContext(input: unknown): SessionContext {
   return base;
 }
 
-async function callEye(eyeName: string, input: string, body: Record<string, unknown>) {
-  console.info(`[Third Eye MCP] Executing ${eyeName} with input: ${input.substring(0, 100)}...`);
+async function callEye(
+  eyeName: string,
+  input: string,
+  body: Record<string, unknown>,
+) {
+  console.info(
+    `[Third Eye MCP] Executing ${eyeName} with input: ${input.substring(0, 100)}...`,
+  );
 
   const envelope = extractEnvelope(body);
   const mergedContext = coalesceContext(envelope.context);
@@ -99,10 +113,10 @@ async function callEye(eyeName: string, input: string, body: Record<string, unkn
 
   // Get or create session
   let sessionId = mergedContext.session_id;
-  if (!sessionId || sessionId.startsWith('sess-')) {
+  if (!sessionId || sessionId.startsWith("sess-")) {
     const session = await orchestrator.createSession({
-      agentName: 'MCP Agent',
-      model: 'claude-3.5-sonnet',
+      agentName: "MCP Agent",
+      model: "claude-3.5-sonnet",
     });
     sessionId = session.sessionId;
     cachedContext.session_id = sessionId;
@@ -128,7 +142,10 @@ async function callEye(eyeName: string, input: string, body: Record<string, unkn
 }
 
 export function buildEyes(server: McpServer) {
-  const sharedEnvelope = (payloadSchema: Record<string, unknown>, reasoningRequired: boolean) => ({
+  const sharedEnvelope = (
+    payloadSchema: Record<string, unknown>,
+    reasoningRequired: boolean,
+  ) => ({
     type: "object",
     properties: {
       context: contextSchema,
@@ -137,7 +154,9 @@ export function buildEyes(server: McpServer) {
         ? { type: "string", minLength: 1 }
         : { type: ["string", "null"], minLength: 1 },
     },
-    required: reasoningRequired ? ["context", "payload", "reasoning_md"] : ["context", "payload"],
+    required: reasoningRequired
+      ? ["context", "payload", "reasoning_md"]
+      : ["context", "payload"],
     additionalProperties: false,
   });
 
@@ -165,7 +184,7 @@ export function buildEyes(server: McpServer) {
     },
     async (args) => {
       const envelope = extractEnvelope(args as Record<string, unknown>);
-      const requestMd = (envelope.payload as any)?.request_md || '';
+      const requestMd = (envelope.payload as any)?.request_md || "";
       return callEye("overseer", requestMd, args as Record<string, unknown>);
     },
   );
@@ -188,7 +207,7 @@ export function buildEyes(server: McpServer) {
     },
     async (args) => {
       const envelope = extractEnvelope(args as Record<string, unknown>);
-      const prompt = (envelope.payload as any)?.prompt || '';
+      const prompt = (envelope.payload as any)?.prompt || "";
       return callEye("sharingan", prompt, args as Record<string, unknown>);
     },
   );
@@ -209,7 +228,8 @@ export function buildEyes(server: McpServer) {
         false,
       ),
     },
-    async (args) => callEye("/eyes/helper/rewrite_prompt", args as Record<string, unknown>),
+    async (args) =>
+      callEye("/eyes/helper/rewrite_prompt", args as Record<string, unknown>),
   );
 
   server.tool(
@@ -228,7 +248,8 @@ export function buildEyes(server: McpServer) {
         false,
       ),
     },
-    async (args) => callEye("/eyes/jogan/confirm_intent", args as Record<string, unknown>),
+    async (args) =>
+      callEye("/eyes/jogan/confirm_intent", args as Record<string, unknown>),
   );
 
   server.tool(
@@ -245,7 +266,11 @@ export function buildEyes(server: McpServer) {
         false,
       ),
     },
-    async (args) => callEye("/eyes/rinnegan/plan_requirements", args as Record<string, unknown>),
+    async (args) =>
+      callEye(
+        "/eyes/rinnegan/plan_requirements",
+        args as Record<string, unknown>,
+      ),
   );
 
   server.tool(
@@ -263,7 +288,8 @@ export function buildEyes(server: McpServer) {
         true,
       ),
     },
-    async (args) => callEye("/eyes/rinnegan/plan_review", args as Record<string, unknown>),
+    async (args) =>
+      callEye("/eyes/rinnegan/plan_review", args as Record<string, unknown>),
   );
 
   const mangekyoDiffSchema = {
@@ -303,7 +329,11 @@ export function buildEyes(server: McpServer) {
         true,
       ),
     },
-    async (args) => callEye("/eyes/mangekyo/review_scaffold", args as Record<string, unknown>),
+    async (args) =>
+      callEye(
+        "/eyes/mangekyo/review_scaffold",
+        args as Record<string, unknown>,
+      ),
   );
 
   server.tool(
@@ -311,7 +341,8 @@ export function buildEyes(server: McpServer) {
     {
       inputSchema: sharedEnvelope(mangekyoDiffSchema, true),
     },
-    async (args) => callEye("/eyes/mangekyo/review_impl", args as Record<string, unknown>),
+    async (args) =>
+      callEye("/eyes/mangekyo/review_impl", args as Record<string, unknown>),
   );
 
   server.tool(
@@ -330,7 +361,8 @@ export function buildEyes(server: McpServer) {
         true,
       ),
     },
-    async (args) => callEye("/eyes/mangekyo/review_tests", args as Record<string, unknown>),
+    async (args) =>
+      callEye("/eyes/mangekyo/review_tests", args as Record<string, unknown>),
   );
 
   server.tool(
@@ -338,7 +370,8 @@ export function buildEyes(server: McpServer) {
     {
       inputSchema: sharedEnvelope(mangekyoDiffSchema, true),
     },
-    async (args) => callEye("/eyes/mangekyo/review_docs", args as Record<string, unknown>),
+    async (args) =>
+      callEye("/eyes/mangekyo/review_docs", args as Record<string, unknown>),
   );
 
   server.tool(
@@ -356,7 +389,11 @@ export function buildEyes(server: McpServer) {
         true,
       ),
     },
-    async (args) => callEye("/eyes/tenseigan/validate_claims", args as Record<string, unknown>),
+    async (args) =>
+      callEye(
+        "/eyes/tenseigan/validate_claims",
+        args as Record<string, unknown>,
+      ),
   );
 
   server.tool(
@@ -375,7 +412,11 @@ export function buildEyes(server: McpServer) {
         true,
       ),
     },
-    async (args) => callEye("/eyes/byakugan/consistency_check", args as Record<string, unknown>),
+    async (args) =>
+      callEye(
+        "/eyes/byakugan/consistency_check",
+        args as Record<string, unknown>,
+      ),
   );
 
   server.tool(
@@ -407,6 +448,7 @@ export function buildEyes(server: McpServer) {
         false,
       ),
     },
-    async (args) => callEye("/eyes/rinnegan/final_approval", args as Record<string, unknown>),
+    async (args) =>
+      callEye("/eyes/rinnegan/final_approval", args as Record<string, unknown>),
   );
 }

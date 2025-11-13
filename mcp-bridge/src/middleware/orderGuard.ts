@@ -7,7 +7,11 @@
 
 export interface SessionHistory {
   executedEyes: string[];
-  currentWorkflow?: 'clarification' | 'planning' | 'implementation' | 'factChecking';
+  currentWorkflow?:
+    | "clarification"
+    | "planning"
+    | "implementation"
+    | "factChecking";
 }
 
 /**
@@ -15,31 +19,31 @@ export interface SessionHistory {
  */
 const PREREQUISITES: Record<string, string[]> = {
   // Clarification workflow
-  'kyuubi': ['sharingan'],
-  'jogan': ['kyuubi'],
+  kyuubi: ["sharingan"],
+  jogan: ["kyuubi"],
 
   // Planning workflow
-  'rinnegan:review': ['rinnegan:requirements'],
+  "rinnegan:review": ["rinnegan:requirements"],
 
   // Implementation workflow
-  'mangekyo:scaffold': ['rinnegan:review'],
-  'mangekyo:impl': ['mangekyo:scaffold'],
-  'mangekyo:tests': ['mangekyo:impl'],
-  'mangekyo:docs': ['mangekyo:tests'],
-  'rinnegan:approval': ['mangekyo:docs'],
+  "mangekyo:scaffold": ["rinnegan:review"],
+  "mangekyo:impl": ["mangekyo:scaffold"],
+  "mangekyo:tests": ["mangekyo:impl"],
+  "mangekyo:docs": ["mangekyo:tests"],
+  "rinnegan:approval": ["mangekyo:docs"],
 
   // Fact-checking workflow
-  'byakugan': ['tenseigan'],
+  byakugan: ["tenseigan"],
 };
 
 /**
  * Eyes that can start workflows (no prerequisites)
  */
 const ENTRY_POINTS = [
-  'sharingan',
-  'overseer',
-  'rinnegan:requirements',
-  'tenseigan',
+  "sharingan",
+  "overseer",
+  "rinnegan:requirements",
+  "tenseigan",
 ];
 
 export interface OrderGuardResult {
@@ -54,7 +58,7 @@ export interface OrderGuardResult {
  */
 export function orderGuard(
   eyeName: string,
-  sessionHistory: SessionHistory
+  sessionHistory: SessionHistory,
 ): OrderGuardResult {
   // Entry points are always allowed
   if (ENTRY_POINTS.includes(eyeName)) {
@@ -84,7 +88,7 @@ export function orderGuard(
       allowed: false,
       reason: `Missing required prerequisite steps before executing ${eyeName}`,
       missingPrerequisites,
-      suggestion: `Execute ${missingPrerequisites.join(' → ')} first`,
+      suggestion: `Execute ${missingPrerequisites.join(" → ")} first`,
     };
   }
 
@@ -94,21 +98,26 @@ export function orderGuard(
 /**
  * Detect workflow type based on executed Eyes
  */
-export function detectWorkflow(executedEyes: string[]): SessionHistory['currentWorkflow'] | undefined {
-  if (executedEyes.includes('sharingan') || executedEyes.includes('kyuubi')) {
-    return 'clarification';
+export function detectWorkflow(
+  executedEyes: string[],
+): SessionHistory["currentWorkflow"] | undefined {
+  if (executedEyes.includes("sharingan") || executedEyes.includes("kyuubi")) {
+    return "clarification";
   }
 
-  if (executedEyes.includes('rinnegan:requirements') || executedEyes.includes('rinnegan:review')) {
-    return 'planning';
+  if (
+    executedEyes.includes("rinnegan:requirements") ||
+    executedEyes.includes("rinnegan:review")
+  ) {
+    return "planning";
   }
 
-  if (executedEyes.some(eye => eye.startsWith('mangekyo:'))) {
-    return 'implementation';
+  if (executedEyes.some((eye) => eye.startsWith("mangekyo:"))) {
+    return "implementation";
   }
 
-  if (executedEyes.includes('tenseigan') || executedEyes.includes('byakugan')) {
-    return 'factChecking';
+  if (executedEyes.includes("tenseigan") || executedEyes.includes("byakugan")) {
+    return "factChecking";
   }
 
   return undefined;
@@ -117,23 +126,26 @@ export function detectWorkflow(executedEyes: string[]): SessionHistory['currentW
 /**
  * Get recommended next Eye based on current state
  */
-export function getRecommendedNextEye(sessionHistory: SessionHistory): string | null {
-  const lastEye = sessionHistory.executedEyes[sessionHistory.executedEyes.length - 1];
+export function getRecommendedNextEye(
+  sessionHistory: SessionHistory,
+): string | null {
+  const lastEye =
+    sessionHistory.executedEyes[sessionHistory.executedEyes.length - 1];
 
   if (!lastEye) {
-    return 'overseer'; // No history, start with overseer
+    return "overseer"; // No history, start with overseer
   }
 
   // Follow workflow chains
-  if (lastEye === 'sharingan') return 'kyuubi';
-  if (lastEye === 'kyuubi') return 'jogan';
-  if (lastEye === 'rinnegan:requirements') return 'rinnegan:review';
-  if (lastEye === 'rinnegan:review') return 'mangekyo:scaffold';
-  if (lastEye === 'mangekyo:scaffold') return 'mangekyo:impl';
-  if (lastEye === 'mangekyo:impl') return 'mangekyo:tests';
-  if (lastEye === 'mangekyo:tests') return 'mangekyo:docs';
-  if (lastEye === 'mangekyo:docs') return 'rinnegan:approval';
-  if (lastEye === 'tenseigan') return 'byakugan';
+  if (lastEye === "sharingan") return "kyuubi";
+  if (lastEye === "kyuubi") return "jogan";
+  if (lastEye === "rinnegan:requirements") return "rinnegan:review";
+  if (lastEye === "rinnegan:review") return "mangekyo:scaffold";
+  if (lastEye === "mangekyo:scaffold") return "mangekyo:impl";
+  if (lastEye === "mangekyo:impl") return "mangekyo:tests";
+  if (lastEye === "mangekyo:tests") return "mangekyo:docs";
+  if (lastEye === "mangekyo:docs") return "rinnegan:approval";
+  if (lastEye === "tenseigan") return "byakugan";
 
   return null; // Workflow complete or unknown
 }

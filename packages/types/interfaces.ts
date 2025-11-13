@@ -14,7 +14,7 @@ import type {
   ExportFormat,
   PromptCategory,
   PipelineCategory,
-} from './enums';
+} from "./enums";
 
 /**
  * Overseer JSON Envelope - Standard Eye response format
@@ -60,7 +60,7 @@ export interface ModelInfo {
 export interface CompletionRequest {
   model: string;
   messages: Array<{
-    role: 'system' | 'user' | 'assistant';
+    role: "system" | "user" | "assistant";
     content: string;
   }>;
   temperature?: number;
@@ -208,7 +208,7 @@ export interface Pipeline {
     steps: Array<{
       id: string;
       eye?: EyeName;
-      type?: 'condition' | 'user_input' | 'terminal';
+      type?: "condition" | "user_input" | "terminal";
       next?: string;
       condition?: string;
       true?: string;
@@ -242,10 +242,13 @@ export interface HealthResponse {
     ok: boolean;
     latencyMs: number;
   };
-  providers: Record<ProviderId, {
-    ok: boolean;
-    details?: string;
-  }>;
+  providers: Record<
+    ProviderId,
+    {
+      ok: boolean;
+      details?: string;
+    }
+  >;
 }
 
 /**
@@ -263,7 +266,7 @@ export interface AppSettings {
  */
 export interface RoutingDecision {
   sessionId: string;
-  taskType: 'code' | 'text' | 'unknown';
+  taskType: "code" | "text" | "unknown";
   recommendedFlow: EyeName[];
   primaryProvider: ProviderId;
   primaryModel: string;
@@ -345,15 +348,20 @@ export interface MetricsSummary {
   totalRuns: number;
   successRate: number;
   avgLatency: number;
-  providerStats: Record<ProviderId, {
-    runs: number;
-    avgLatency: number;
-    successRate: number;
-  }>;
-  eyeStats: Record<EyeName, {
-    runs: number;
-    approvalRate: number;
-    avgLatency: number;
-  }>;
+  providerStats: Record<
+    ProviderId,
+    {
+      runs: number;
+      avgLatency: number;
+      successRate: number;
+    }
+  >;
+  eyeStats: Record<
+    EyeName,
+    {
+      runs: number;
+      approvalRate: number;
+      avgLatency: number;
+    }
+  >;
 }
-

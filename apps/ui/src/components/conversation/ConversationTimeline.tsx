@@ -9,21 +9,21 @@
  * Per R13: All text and icons from SSOT
  */
 
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import { EYE_CAPABILITIES } from '@third-eye/config/eye-capabilities';
+import { useMemo } from "react";
+import { EYE_CAPABILITIES } from "@third-eye/config/eye-capabilities";
 
 /**
  * Conversation event type (matches backend CONVERSATION_EVENT_TYPES)
  */
 export type ConversationEventType =
-  | 'agent_message'
-  | 'human_message'
-  | 'routing_decision'
-  | 'pause'
-  | 'resume'
-  | 'error';
+  | "agent_message"
+  | "human_message"
+  | "routing_decision"
+  | "pause"
+  | "resume"
+  | "error";
 
 /**
  * Conversation event record from API
@@ -49,46 +49,46 @@ interface ConversationTimelineProps {
  */
 const EVENT_TYPE_CONFIG = {
   agent_message: {
-    icon: '🤖',
-    label: 'Agent Message',
-    bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-    borderColor: 'border-blue-200 dark:border-blue-800',
-    textColor: 'text-blue-900 dark:text-blue-100',
+    icon: "🤖",
+    label: "Agent Message",
+    bgColor: "bg-blue-50 dark:bg-blue-900/20",
+    borderColor: "border-blue-200 dark:border-blue-800",
+    textColor: "text-blue-900 dark:text-blue-100",
   },
   human_message: {
-    icon: '👤',
-    label: 'Human Message',
-    bgColor: 'bg-green-50 dark:bg-green-900/20',
-    borderColor: 'border-green-200 dark:border-green-800',
-    textColor: 'text-green-900 dark:text-green-100',
+    icon: "👤",
+    label: "Human Message",
+    bgColor: "bg-green-50 dark:bg-green-900/20",
+    borderColor: "border-green-200 dark:border-green-800",
+    textColor: "text-green-900 dark:text-green-100",
   },
   routing_decision: {
-    icon: '🧠',
-    label: 'Routing Decision',
-    bgColor: 'bg-purple-50 dark:bg-purple-900/20',
-    borderColor: 'border-purple-200 dark:border-purple-800',
-    textColor: 'text-purple-900 dark:text-purple-100',
+    icon: "🧠",
+    label: "Routing Decision",
+    bgColor: "bg-purple-50 dark:bg-purple-900/20",
+    borderColor: "border-purple-200 dark:border-purple-800",
+    textColor: "text-purple-900 dark:text-purple-100",
   },
   pause: {
-    icon: '⏸️',
-    label: 'Pipeline Paused',
-    bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
-    borderColor: 'border-yellow-200 dark:border-yellow-800',
-    textColor: 'text-yellow-900 dark:text-yellow-100',
+    icon: "⏸️",
+    label: "Pipeline Paused",
+    bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
+    borderColor: "border-yellow-200 dark:border-yellow-800",
+    textColor: "text-yellow-900 dark:text-yellow-100",
   },
   resume: {
-    icon: '▶️',
-    label: 'Pipeline Resumed',
-    bgColor: 'bg-green-50 dark:bg-green-900/20',
-    borderColor: 'border-green-200 dark:border-green-800',
-    textColor: 'text-green-900 dark:text-green-100',
+    icon: "▶️",
+    label: "Pipeline Resumed",
+    bgColor: "bg-green-50 dark:bg-green-900/20",
+    borderColor: "border-green-200 dark:border-green-800",
+    textColor: "text-green-900 dark:text-green-100",
   },
   error: {
-    icon: '❌',
-    label: 'Error',
-    bgColor: 'bg-red-50 dark:bg-red-900/20',
-    borderColor: 'border-red-200 dark:border-red-800',
-    textColor: 'text-red-900 dark:text-red-100',
+    icon: "❌",
+    label: "Error",
+    bgColor: "bg-red-50 dark:bg-red-900/20",
+    borderColor: "border-red-200 dark:border-red-800",
+    textColor: "text-red-900 dark:text-red-100",
   },
 } as const;
 
@@ -96,11 +96,11 @@ const EVENT_TYPE_CONFIG = {
  * Format timestamp
  */
 function formatTimestamp(date: string | Date): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
+  const d = typeof date === "string" ? new Date(date) : date;
+  return d.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
   });
 }
 
@@ -110,20 +110,23 @@ function formatTimestamp(date: string | Date): string {
 function getEyeIcon(speaker: string): string {
   const eyeName = speaker.toLowerCase();
   const eyeInfo = EYE_CAPABILITIES[eyeName as keyof typeof EYE_CAPABILITIES];
-  return eyeInfo?.icon || '👁️';
+  return eyeInfo?.icon || "👁️";
 }
 
 /**
  * Timeline event card component
  */
 function TimelineEventCard({ event }: { event: ConversationEventRecord }) {
-  const config = EVENT_TYPE_CONFIG[event.eventType] || EVENT_TYPE_CONFIG.agent_message;
-  const isAgent = event.eventType === 'agent_message';
-  const isHuman = event.eventType === 'human_message';
-  const isRoutingDecision = event.eventType === 'routing_decision';
+  const config =
+    EVENT_TYPE_CONFIG[event.eventType] || EVENT_TYPE_CONFIG.agent_message;
+  const isAgent = event.eventType === "agent_message";
+  const isHuman = event.eventType === "human_message";
+  const isRoutingDecision = event.eventType === "routing_decision";
 
   return (
-    <div className={`relative p-4 rounded-lg border ${config.bgColor} ${config.borderColor}`}>
+    <div
+      className={`relative p-4 rounded-lg border ${config.bgColor} ${config.borderColor}`}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
@@ -140,7 +143,7 @@ function TimelineEventCard({ event }: { event: ConversationEventRecord }) {
           {/* Speaker label */}
           <div>
             <span className={`font-semibold ${config.textColor} capitalize`}>
-              {isHuman ? 'Human' : isAgent ? event.speaker : config.label}
+              {isHuman ? "Human" : isAgent ? event.speaker : config.label}
             </span>
             <div className="text-xs text-gray-500 dark:text-gray-400">
               {formatTimestamp(event.createdAt)}
@@ -174,7 +177,7 @@ function TimelineEventCard({ event }: { event: ConversationEventRecord }) {
       )}
 
       {/* Metadata (for pauses) */}
-      {event.eventType === 'pause' && event.metadata?.reason && (
+      {event.eventType === "pause" && event.metadata?.reason && (
         <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
           Reason: {String(event.metadata.reason)}
         </div>
@@ -203,7 +206,11 @@ function EmptyState() {
 /**
  * Conversation Timeline - Main Component
  */
-export function ConversationTimeline({ events, loading, error }: ConversationTimelineProps) {
+export function ConversationTimeline({
+  events,
+  loading,
+  error,
+}: ConversationTimelineProps) {
   // Sort events by timestamp (most recent last for chronological order)
   const sortedEvents = useMemo(() => {
     return [...events].sort((a, b) => {
@@ -249,7 +256,7 @@ export function ConversationTimeline({ events, loading, error }: ConversationTim
           Conversation Timeline
         </h3>
         <span className="text-sm text-gray-500 dark:text-gray-400">
-          {sortedEvents.length} {sortedEvents.length === 1 ? 'event' : 'events'}
+          {sortedEvents.length} {sortedEvents.length === 1 ? "event" : "events"}
         </span>
       </div>
 
@@ -276,20 +283,23 @@ export function ConversationTimeline({ events, loading, error }: ConversationTim
       <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
         <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
           <div>
-            <strong>Agent Messages:</strong>{' '}
-            {sortedEvents.filter(e => e.eventType === 'agent_message').length}
+            <strong>Agent Messages:</strong>{" "}
+            {sortedEvents.filter((e) => e.eventType === "agent_message").length}
           </div>
           <div>
-            <strong>Human Messages:</strong>{' '}
-            {sortedEvents.filter(e => e.eventType === 'human_message').length}
+            <strong>Human Messages:</strong>{" "}
+            {sortedEvents.filter((e) => e.eventType === "human_message").length}
           </div>
           <div>
-            <strong>Routing Decisions:</strong>{' '}
-            {sortedEvents.filter(e => e.eventType === 'routing_decision').length}
+            <strong>Routing Decisions:</strong>{" "}
+            {
+              sortedEvents.filter((e) => e.eventType === "routing_decision")
+                .length
+            }
           </div>
           <div>
-            <strong>Pauses:</strong>{' '}
-            {sortedEvents.filter(e => e.eventType === 'pause').length}
+            <strong>Pauses:</strong>{" "}
+            {sortedEvents.filter((e) => e.eventType === "pause").length}
           </div>
         </div>
       </div>

@@ -7,8 +7,8 @@
  * Per R07: Strict typing, no 'any'
  */
 
-import type { PipelineTemplate } from './routing-modes';
-import type { Database } from 'bun:sqlite';
+import type { PipelineTemplate } from "./routing-modes";
+import type { Database } from "bun:sqlite";
 
 /**
  * Template execution result
@@ -35,7 +35,7 @@ export class TemplateExecutor {
       .prepare(
         `SELECT id, name, description, eyes, strict, auto_trigger_pattern, created_by, is_public, usage_count, created_at
          FROM pipeline_templates
-         WHERE id = ?`
+         WHERE id = ?`,
       )
       .get(templateId) as
       | {
@@ -73,13 +73,15 @@ export class TemplateExecutor {
   /**
    * Find template by auto-trigger pattern
    */
-  async findTemplateByPattern(request: string): Promise<PipelineTemplate | null> {
+  async findTemplateByPattern(
+    request: string,
+  ): Promise<PipelineTemplate | null> {
     const rows = this.db
       .prepare(
         `SELECT id, name, description, eyes, strict, auto_trigger_pattern, created_by, is_public, usage_count, created_at
          FROM pipeline_templates
          WHERE auto_trigger_pattern IS NOT NULL
-         ORDER BY usage_count DESC`
+         ORDER BY usage_count DESC`,
       )
       .all() as Array<{
       id: string;
@@ -98,7 +100,7 @@ export class TemplateExecutor {
     for (const row of rows) {
       if (row.auto_trigger_pattern) {
         try {
-          const regex = new RegExp(row.auto_trigger_pattern, 'i');
+          const regex = new RegExp(row.auto_trigger_pattern, "i");
           if (regex.test(request)) {
             return {
               id: row.id,
@@ -115,7 +117,10 @@ export class TemplateExecutor {
           }
         } catch (error) {
           // Invalid regex - skip
-          console.warn(`Invalid auto-trigger pattern for template ${row.id}:`, error);
+          console.warn(
+            `Invalid auto-trigger pattern for template ${row.id}:`,
+            error,
+          );
         }
       }
     }
@@ -134,7 +139,9 @@ export class TemplateExecutor {
 
     // Increment usage count
     this.db
-      .prepare(`UPDATE pipeline_templates SET usage_count = usage_count + 1 WHERE id = ?`)
+      .prepare(
+        `UPDATE pipeline_templates SET usage_count = usage_count + 1 WHERE id = ?`,
+      )
       .run(templateId);
 
     return {
@@ -142,7 +149,7 @@ export class TemplateExecutor {
       templateName: template.name,
       eyeSequence: template.eyes,
       strict: template.strict,
-      reasoning: `Using fixed template: ${template.name}${template.description ? ` - ${template.description}` : ''}`,
+      reasoning: `Using fixed template: ${template.name}${template.description ? ` - ${template.description}` : ""}`,
     };
   }
 
@@ -177,7 +184,7 @@ export class TemplateExecutor {
     this.db
       .prepare(
         `INSERT INTO pipeline_templates (id, name, description, eyes, strict, auto_trigger_pattern, created_by, is_public, usage_count, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         template.id,
@@ -189,7 +196,7 @@ export class TemplateExecutor {
         template.createdBy ?? null,
         template.isPublic ? 1 : 0,
         template.usageCount,
-        template.createdAt
+        template.createdAt,
       );
 
     return template;
@@ -198,7 +205,10 @@ export class TemplateExecutor {
   /**
    * List all templates (optionally filtered)
    */
-  async listTemplates(filters?: { isPublic?: boolean; createdBy?: string }): Promise<readonly PipelineTemplate[]> {
+  async listTemplates(filters?: {
+    isPublic?: boolean;
+    createdBy?: string;
+  }): Promise<readonly PipelineTemplate[]> {
     let query = `SELECT id, name, description, eyes, strict, auto_trigger_pattern, created_by, is_public, usage_count, created_at
                  FROM pipeline_templates WHERE 1=1`;
     const params: (string | number | boolean | null)[] = [];
@@ -228,7 +238,7 @@ export class TemplateExecutor {
       created_at: number;
     }>;
 
-    return rows.map(row => ({
+    return rows.map((row) => ({
       id: row.id,
       name: row.name,
       description: row.description ?? undefined,

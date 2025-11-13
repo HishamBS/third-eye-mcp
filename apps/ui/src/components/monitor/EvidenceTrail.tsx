@@ -1,18 +1,31 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Book, Brain, CheckCircle2, AlertTriangle, Search, FileText, Check, X } from 'lucide-react';
-import { EyeIcon } from '@/components/EyeIcon';
-import type { ReactNode } from 'react';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
-import { EVIDENCE_COLORS } from '@/constants/design-tokens';
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Book,
+  Brain,
+  CheckCircle2,
+  AlertTriangle,
+  Search,
+  FileText,
+  Check,
+  X,
+} from "lucide-react";
+import { EyeIcon } from "@/components/EyeIcon";
+import type { ReactNode } from "react";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
+import { EVIDENCE_COLORS } from "@/constants/design-tokens";
 
 interface Evidence {
   id: string;
   source: string;
   content: string;
-  type: 'citation' | 'analysis' | 'validation' | 'contradiction' | 'fact';
+  type: "citation" | "analysis" | "validation" | "contradiction" | "fact";
   confidence?: number;
   timestamp: number;
   eyeSource: string;
@@ -26,88 +39,91 @@ interface EvidenceTrailProps {
 }
 
 export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
-  const [selectedType, setSelectedType] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const evidenceItems = useMemo(() => {
     const items: Evidence[] = [];
 
-    events.forEach(event => {
+    events.forEach((event) => {
       if (event.eye && event.md) {
         // Extract evidence from Tenseigan (fact-checking)
-        if (event.eye === 'tenseigan') {
+        if (event.eye === "tenseigan") {
           items.push({
             id: `${event.id}-fact`,
             source: event.md,
             content: event.md,
-            type: 'fact',
+            type: "fact",
             confidence: event.dataJson?.confidence || 0,
             timestamp: new Date(event.createdAt).getTime(),
-            eyeSource: 'tenseigan',
-            verified: event.code === 'OK',
-            metadata: event.dataJson
+            eyeSource: "tenseigan",
+            verified: event.code === "OK",
+            metadata: event.dataJson,
           });
         }
 
         // Extract evidence from Byakugan (consistency checking)
-        if (event.eye === 'byakugan') {
+        if (event.eye === "byakugan") {
           items.push({
             id: `${event.id}-validation`,
             source: event.md,
             content: event.md,
-            type: 'validation',
+            type: "validation",
             confidence: event.dataJson?.confidence || 0,
             timestamp: new Date(event.createdAt).getTime(),
-            eyeSource: 'byakugan',
-            verified: event.code === 'OK',
-            metadata: event.dataJson
+            eyeSource: "byakugan",
+            verified: event.code === "OK",
+            metadata: event.dataJson,
           });
         }
 
         // Extract citations from any eye that mentions sources
-        if (event.md.includes('[') && event.md.includes(']')) {
+        if (event.md.includes("[") && event.md.includes("]")) {
           const citations = event.md.match(/\[([^\]]+)\]/g);
           citations?.forEach((citation, index) => {
             items.push({
               id: `${event.id}-citation-${index}`,
               source: citation,
               content: `Citation found: ${citation}`,
-              type: 'citation',
+              type: "citation",
               timestamp: new Date(event.createdAt).getTime(),
               eyeSource: event.eye,
               verified: true,
-              metadata: { originalText: event.md }
+              metadata: { originalText: event.md },
             });
           });
         }
 
         // Extract contradictions from rejection codes
-        if (event.code?.includes('REJECT_INCONSISTENT') || event.code?.includes('CONTRADICT')) {
+        if (
+          event.code?.includes("REJECT_INCONSISTENT") ||
+          event.code?.includes("CONTRADICT")
+        ) {
           items.push({
             id: `${event.id}-contradiction`,
             source: event.md,
             content: event.md,
-            type: 'contradiction',
+            type: "contradiction",
             confidence: event.dataJson?.confidence || 0,
             timestamp: new Date(event.createdAt).getTime(),
             eyeSource: event.eye,
             verified: true,
-            metadata: event.dataJson
+            metadata: event.dataJson,
           });
         }
 
         // Extract analysis from Rinnegan (planning) and Mangekyo (implementation)
-        if (event.eye === 'rinnegan' || event.eye === 'mangekyo') {
+        if (event.eye === "rinnegan" || event.eye === "mangekyo") {
           items.push({
             id: `${event.id}-analysis`,
             source: event.md,
             content: event.md,
-            type: 'analysis',
+            type: "analysis",
             confidence: event.dataJson?.confidence || 0,
             timestamp: new Date(event.createdAt).getTime(),
             eyeSource: event.eye,
-            verified: event.code === 'OK',
-            metadata: event.dataJson
+            verified: event.code === "OK",
+            metadata: event.dataJson,
           });
         }
       }
@@ -119,16 +135,17 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
   const filteredEvidence = useMemo(() => {
     let filtered = evidenceItems;
 
-    if (selectedType !== 'all') {
-      filtered = filtered.filter(item => item.type === selectedType);
+    if (selectedType !== "all") {
+      filtered = filtered.filter((item) => item.type === selectedType);
     }
 
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(item =>
-        item.content.toLowerCase().includes(term) ||
-        item.source.toLowerCase().includes(term) ||
-        item.eyeSource.toLowerCase().includes(term)
+      filtered = filtered.filter(
+        (item) =>
+          item.content.toLowerCase().includes(term) ||
+          item.source.toLowerCase().includes(term) ||
+          item.eyeSource.toLowerCase().includes(term),
       );
     }
 
@@ -141,10 +158,10 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
       analysis: 0,
       validation: 0,
       contradiction: 0,
-      fact: 0
+      fact: 0,
     };
 
-    evidenceItems.forEach(item => {
+    evidenceItems.forEach((item) => {
       stats[item.type]++;
     });
 
@@ -154,27 +171,41 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
   const getEvidenceIcon = (type: string): ReactNode => {
     const iconClass = "h-4 w-4";
     switch (type) {
-      case 'citation': return <Book className={iconClass} />;
-      case 'analysis': return <Brain className={iconClass} />;
-      case 'validation': return <CheckCircle2 className={iconClass} />;
-      case 'contradiction': return <AlertTriangle className={iconClass} />;
-      case 'fact': return <Search className={iconClass} />;
-      default: return <FileText className={iconClass} />;
+      case "citation":
+        return <Book className={iconClass} />;
+      case "analysis":
+        return <Brain className={iconClass} />;
+      case "validation":
+        return <CheckCircle2 className={iconClass} />;
+      case "contradiction":
+        return <AlertTriangle className={iconClass} />;
+      case "fact":
+        return <Search className={iconClass} />;
+      default:
+        return <FileText className={iconClass} />;
     }
   };
 
   const getEvidenceColor = (type: string, verified: boolean = true) => {
     switch (type) {
-      case 'citation':
-        return verified ? EVIDENCE_COLORS.citation.verified : EVIDENCE_COLORS.citation.unverified;
-      case 'analysis':
-        return verified ? EVIDENCE_COLORS.analysis.verified : EVIDENCE_COLORS.analysis.unverified;
-      case 'validation':
-        return verified ? EVIDENCE_COLORS.validation.verified : EVIDENCE_COLORS.validation.unverified;
-      case 'contradiction':
+      case "citation":
+        return verified
+          ? EVIDENCE_COLORS.citation.verified
+          : EVIDENCE_COLORS.citation.unverified;
+      case "analysis":
+        return verified
+          ? EVIDENCE_COLORS.analysis.verified
+          : EVIDENCE_COLORS.analysis.unverified;
+      case "validation":
+        return verified
+          ? EVIDENCE_COLORS.validation.verified
+          : EVIDENCE_COLORS.validation.unverified;
+      case "contradiction":
         return EVIDENCE_COLORS.contradiction;
-      case 'fact':
-        return verified ? EVIDENCE_COLORS.fact.verified : EVIDENCE_COLORS.fact.unverified;
+      case "fact":
+        return verified
+          ? EVIDENCE_COLORS.fact.verified
+          : EVIDENCE_COLORS.fact.unverified;
       default:
         return EVIDENCE_COLORS.default;
     }
@@ -195,14 +226,20 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
             animate={{ opacity: 1, y: 0 }}
             className={`cursor-pointer rounded-xl border p-3 text-center transition-all ${
               selectedType === type
-                ? 'border-brand-accent bg-brand-accent/20'
-                : 'border-brand-outline/30 bg-brand-paper/60 hover:bg-brand-paper/80'
+                ? "border-brand-accent bg-brand-accent/20"
+                : "border-brand-outline/30 bg-brand-paper/60 hover:bg-brand-paper/80"
             }`}
-            onClick={() => setSelectedType(selectedType === type ? 'all' : type)}
+            onClick={() =>
+              setSelectedType(selectedType === type ? "all" : type)
+            }
           >
             <div className="text-lg">{getEvidenceIcon(type)}</div>
-            <div className="mt-1 text-xs font-medium capitalize text-semantic-muted">{type}</div>
-            <div className="text-lg font-bold text-brand-foreground">{count}</div>
+            <div className="mt-1 text-xs font-medium capitalize text-semantic-muted">
+              {type}
+            </div>
+            <div className="text-lg font-bold text-brand-foreground">
+              {count}
+            </div>
           </motion.div>
         ))}
       </div>
@@ -220,8 +257,8 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
         </div>
         <button
           onClick={() => {
-            setSelectedType('all');
-            setSearchTerm('');
+            setSelectedType("all");
+            setSearchTerm("");
           }}
           className="rounded-lg border border-brand-outline/40 bg-brand-paper/60 px-4 py-2 text-sm text-semantic-muted hover:bg-brand-paper/80"
         >
@@ -240,8 +277,8 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
             >
               <p className="text-semantic-muted">
                 {evidenceItems.length === 0
-                  ? 'No evidence collected yet.'
-                  : 'No evidence matches your filters.'}
+                  ? "No evidence collected yet."
+                  : "No evidence matches your filters."}
               </p>
             </motion.div>
           ) : (
@@ -260,7 +297,10 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
                       className="flex h-8 w-8 items-center justify-center rounded-full text-sm"
                       style={{
                         backgroundColor: `${getEvidenceColor(evidence.type, evidence.verified)}20`,
-                        color: getEvidenceColor(evidence.type, evidence.verified)
+                        color: getEvidenceColor(
+                          evidence.type,
+                          evidence.verified,
+                        ),
                       }}
                     >
                       {getEvidenceIcon(evidence.type)}
@@ -273,12 +313,18 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
                         </span>
                         <span className="text-xs text-semantic-muted">•</span>
                         <div className="flex items-center space-x-1">
-                          <span className="text-xs">{getEyeIcon(evidence.eyeSource)}</span>
-                          <span className="text-xs text-semantic-muted">{evidence.eyeSource}</span>
+                          <span className="text-xs">
+                            {getEyeIcon(evidence.eyeSource)}
+                          </span>
+                          <span className="text-xs text-semantic-muted">
+                            {evidence.eyeSource}
+                          </span>
                         </div>
                         {evidence.confidence !== undefined && (
                           <>
-                            <span className="text-xs text-semantic-muted">•</span>
+                            <span className="text-xs text-semantic-muted">
+                              •
+                            </span>
                             <span className="text-xs text-semantic-muted">
                               {Math.round(evidence.confidence)}% confidence
                             </span>
@@ -290,16 +336,17 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
                         {evidence.content}
                       </p>
 
-                      {evidence.metadata && Object.keys(evidence.metadata).length > 0 && (
-                        <details className="mt-2">
-                          <summary className="cursor-pointer text-xs text-semantic-muted hover:text-semantic-muted">
-                            View metadata
-                          </summary>
-                          <pre className="mt-1 overflow-x-auto rounded bg-black/40 p-2 text-xs text-semantic-muted">
-                            {JSON.stringify(evidence.metadata, null, 2)}
-                          </pre>
-                        </details>
-                      )}
+                      {evidence.metadata &&
+                        Object.keys(evidence.metadata).length > 0 && (
+                          <details className="mt-2">
+                            <summary className="cursor-pointer text-xs text-semantic-muted hover:text-semantic-muted">
+                              View metadata
+                            </summary>
+                            <pre className="mt-1 overflow-x-auto rounded bg-black/40 p-2 text-xs text-semantic-muted">
+                              {JSON.stringify(evidence.metadata, null, 2)}
+                            </pre>
+                          </details>
+                        )}
                     </div>
                   </div>
 
@@ -308,9 +355,17 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
                       {new Date(evidence.timestamp).toLocaleTimeString()}
                     </span>
                     {evidence.verified !== undefined && (
-                      <span className={`flex items-center space-x-1 text-xs ${evidence.verified ? '${STATUS_TEXT_COLORS.success}' : '${STATUS_TEXT_COLORS.error}'}`}>
-                        {evidence.verified ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
-                        <span>{evidence.verified ? 'Verified' : 'Unverified'}</span>
+                      <span
+                        className={`flex items-center space-x-1 text-xs ${evidence.verified ? "${STATUS_TEXT_COLORS.success}" : "${STATUS_TEXT_COLORS.error}"}`}
+                      >
+                        {evidence.verified ? (
+                          <Check className="h-3 w-3" />
+                        ) : (
+                          <X className="h-3 w-3" />
+                        )}
+                        <span>
+                          {evidence.verified ? "Verified" : "Unverified"}
+                        </span>
                       </span>
                     )}
                   </div>
@@ -328,26 +383,34 @@ export function EvidenceTrail({ events, sessionId }: EvidenceTrailProps) {
           animate={{ opacity: 1, y: 0 }}
           className="rounded-xl border border-brand-outline/30 bg-brand-paper/60 p-4 backdrop-blur-sm"
         >
-          <h3 className="text-sm font-medium text-brand-foreground mb-3">Evidence Summary</h3>
+          <h3 className="text-sm font-medium text-brand-foreground mb-3">
+            Evidence Summary
+          </h3>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-semantic-muted">Total Evidence Items</p>
-              <p className="text-lg font-bold text-brand-foreground">{evidenceItems.length}</p>
+              <p className="text-lg font-bold text-brand-foreground">
+                {evidenceItems.length}
+              </p>
             </div>
             <div>
               <p className="text-semantic-muted">Verification Rate</p>
               <p className="text-lg font-bold text-brand-foreground">
                 {Math.round(
-                  (evidenceItems.filter(e => e.verified).length / evidenceItems.length) * 100
-                )}%
+                  (evidenceItems.filter((e) => e.verified).length /
+                    evidenceItems.length) *
+                    100,
+                )}
+                %
               </p>
             </div>
           </div>
 
           <div className="mt-3 pt-3 border-t border-brand-outline/30">
             <p className="text-xs text-semantic-muted">
-              Evidence is automatically collected from Eyes as they process your requests.
-              Tenseigan validates facts, Byakugan checks consistency, and other Eyes contribute analysis.
+              Evidence is automatically collected from Eyes as they process your
+              requests. Tenseigan validates facts, Byakugan checks consistency,
+              and other Eyes contribute analysis.
             </p>
           </div>
         </motion.div>

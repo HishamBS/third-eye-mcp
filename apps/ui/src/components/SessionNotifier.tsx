@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { toast, Toaster } from 'sonner';
-import { useUI } from '@/contexts/UIContext';
-import { useWebSocket } from '@/hooks/useWebSocket';
-import type { WSMessage } from '@third-eye/types';
-import { TOAST_STYLE } from '@/constants/design-tokens';
+import { useEffect } from "react";
+import { toast, Toaster } from "sonner";
+import { useUI } from "@/contexts/UIContext";
+import { useWebSocket } from "@/hooks/useWebSocket";
+import type { WSMessage } from "@third-eye/types";
+import { TOAST_STYLE } from "@/constants/design-tokens";
 
 // Session data structure from WebSocket message
 interface SessionData {
@@ -25,40 +25,57 @@ export function SessionNotifier() {
 
   const handleMessage = (message: WSMessage) => {
     // Handle new session creation
-    if (message.type === 'session_created') {
+    if (message.type === "session_created") {
       const newSessionId = message.sessionId;
       const session = (message as { session?: SessionData }).session;
-      const config = typeof session?.configJson === 'string'
-        ? JSON.parse(session.configJson)
-        : session?.configJson || {};
+      const config =
+        typeof session?.configJson === "string"
+          ? JSON.parse(session.configJson)
+          : session?.configJson || {};
 
-      const agentName = config.agentName || session?.agentName || 'Unknown Agent';
-      const displayName = config.displayName || session?.displayName || agentName;
-      const model = config.model || 'Unknown Model';
+      const agentName =
+        config.agentName || session?.agentName || "Unknown Agent";
+      const displayName =
+        config.displayName || session?.displayName || agentName;
+      const model = config.model || "Unknown Model";
 
       // If there's already a selected session, show notification
       if (selectedSessionId && selectedSessionId !== newSessionId) {
         toast(
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-brand-accent/20">
-              <svg className="h-5 w-5 text-brand-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <svg
+                className="h-5 w-5 text-brand-accent"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
               </svg>
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-brand-foreground">New Session Started</p>
-              <p className="mt-0.5 text-sm text-semantic-muted">{displayName}</p>
+              <p className="font-semibold text-brand-foreground">
+                New Session Started
+              </p>
+              <p className="mt-0.5 text-sm text-semantic-muted">
+                {displayName}
+              </p>
               <p className="mt-0.5 text-xs text-semantic-muted">{model}</p>
             </div>
           </div>,
           {
             duration: 8000,
             action: {
-              label: 'Switch',
+              label: "Switch",
               onClick: () => setSelectedSession(newSessionId),
             },
             style: TOAST_STYLE,
-          }
+          },
         );
       } else if (!selectedSessionId) {
         // If no session selected, auto-select the new one
@@ -70,29 +87,29 @@ export function SessionNotifier() {
           {
             duration: 4000,
             style: TOAST_STYLE,
-          }
+          },
         );
       }
     }
 
     // Handle session status changes
-    if (message.type === 'session_status_updated') {
+    if (message.type === "session_status_updated") {
       const sessionId = message.sessionId;
       const status = message.status;
 
       if (sessionId === selectedSessionId) {
-        if (status === 'completed') {
-          toast.success('Session completed successfully', {
+        if (status === "completed") {
+          toast.success("Session completed successfully", {
             duration: 4000,
             style: TOAST_STYLE,
           });
-        } else if (status === 'failed') {
-          toast.error('Session failed', {
+        } else if (status === "failed") {
+          toast.error("Session failed", {
             duration: 6000,
             style: TOAST_STYLE,
           });
-        } else if (status === 'killed') {
-          toast.warning('Session killed', {
+        } else if (status === "killed") {
+          toast.warning("Session killed", {
             duration: 4000,
             style: TOAST_STYLE,
           });

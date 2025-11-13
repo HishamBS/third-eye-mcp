@@ -1,5 +1,8 @@
-import type { SessionSettingsPayload, SessionOverview } from '../../types/pipeline';
-import SessionHeader from '../SessionHeader';
+import type {
+  SessionSettingsPayload,
+  SessionOverview,
+} from "../../types/pipeline";
+import SessionHeader from "../SessionHeader";
 
 export interface SessionSelectorProps {
   sessionId: string | null;
@@ -46,9 +49,9 @@ export function SessionSelector({
 }: SessionSelectorProps) {
   return (
     <SessionHeader
-      sessionId={sessionId ?? ''}
+      sessionId={sessionId ?? ""}
       onSessionSubmit={onChangeSession}
-      apiKey={apiKey ?? ''}
+      apiKey={apiKey ?? ""}
       onApiKeyChange={onApiKeyChange}
       noviceMode={noviceMode}
       personaMode={personaMode}

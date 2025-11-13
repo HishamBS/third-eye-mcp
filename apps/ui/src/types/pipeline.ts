@@ -1,24 +1,28 @@
 // Phase 10 imports - React Flow types for pipeline builder
-import type { Node, Edge } from 'reactflow';
-import type { EyeName } from '@third-eye/types';
-import type { EdgeConditionType } from '@/components/pipeline-builder/constants';
+import type { Node, Edge } from "reactflow";
+import type { EyeName } from "@third-eye/types";
+import type { EdgeConditionType } from "@/components/pipeline-builder/constants";
 
 export type EyeType =
-  | 'SHARINGAN'
-  | 'KYUUBI'
-  | 'JOGAN'
-  | 'RINNEGAN_PLAN'
-  | 'RINNEGAN_REVIEW'
-  | 'RINNEGAN_FINAL'
-  | 'MANGEKYO_SCAFFOLD'
-  | 'MANGEKYO_IMPL'
-  | 'MANGEKYO_TESTS'
-  | 'MANGEKYO_DOCS'
-  | 'TENSEIGAN'
-  | 'BYAKUGAN'
-  | 'RINNEGAN_FINAL';
+  | "SHARINGAN"
+  | "KYUUBI"
+  | "JOGAN"
+  | "RINNEGAN_PLAN"
+  | "RINNEGAN_REVIEW"
+  | "RINNEGAN_FINAL"
+  | "MANGEKYO_SCAFFOLD"
+  | "MANGEKYO_IMPL"
+  | "MANGEKYO_TESTS"
+  | "MANGEKYO_DOCS"
+  | "TENSEIGAN"
+  | "BYAKUGAN"
+  | "RINNEGAN_FINAL";
 
-export type PipelineEnvelopeType = 'eye_update' | 'settings_update' | 'tenseigan_claims' | 'user_input';
+export type PipelineEnvelopeType =
+  | "eye_update"
+  | "settings_update"
+  | "tenseigan_claims"
+  | "user_input";
 
 export interface PipelineEvent {
   type: PipelineEnvelopeType;
@@ -98,7 +102,7 @@ export interface ClarificationContext {
 export interface SessionOverview {
   session_id: string;
   title: string;
-  status: 'in_progress' | 'approved' | 'blocked';
+  status: "in_progress" | "approved" | "blocked";
   created_at: string | null;
   last_event_at: string | null;
   tenant?: string | null;
@@ -180,7 +184,7 @@ export interface EyeNodeData {
   capabilities?: string[];
   customConfig?: Record<string, unknown>;
   iconSvg?: string; // Custom SVG content from database
-  stage?: 'GUIDANCE' | 'VALIDATION' | 'ROUTER' | 'BOTH';
+  stage?: "GUIDANCE" | "VALIDATION" | "ROUTER" | "BOTH";
   label?: string; // For control nodes
   switchConfig?: Record<string, unknown>; // For switch nodes
   ifConfig?: Record<string, unknown>; // For if nodes
@@ -191,7 +195,13 @@ export interface EyeNodeData {
  * Valid Pipeline Node Types
  * Per R13: SSOT for node types
  */
-export type PipelineNodeType = 'eyeNode' | 'switch' | 'if' | 'loop_over_items' | 'terminal' | 'user_input';
+export type PipelineNodeType =
+  | "eyeNode"
+  | "switch"
+  | "if"
+  | "loop_over_items"
+  | "terminal"
+  | "user_input";
 
 /**
  * Pipeline Node - React Flow node supporting all node types
@@ -255,7 +265,12 @@ export interface CapabilityMapping {
  * Per R07: Explicitly typed validation errors
  */
 export interface PipelineValidationError {
-  type: 'orphan_node' | 'missing_overseer' | 'missing_approval' | 'incompatible_connection' | 'invalid_condition';
+  type:
+    | "orphan_node"
+    | "missing_overseer"
+    | "missing_approval"
+    | "incompatible_connection"
+    | "invalid_condition";
   nodeId?: string;
   edgeId?: string;
   message: string;
@@ -278,7 +293,7 @@ export interface EyeDefinition {
   iconSvg?: string;
   capabilities: string[];
   version?: number;
-  stage?: 'GUIDANCE' | 'VALIDATION' | 'ROUTER' | 'BOTH';
+  stage?: "GUIDANCE" | "VALIDATION" | "ROUTER" | "BOTH";
   inputSchema?: Record<string, unknown>;
   outputSchema?: Record<string, unknown>;
 }

@@ -13,7 +13,7 @@ import {
   calculateBackoffDelay,
   isRetryableError,
   categorizeRetryReason,
-} from '@third-eye/constants';
+} from "@third-eye/constants";
 
 /**
  * Retry attempt metadata for logging and analytics
@@ -44,7 +44,12 @@ export interface RetryOptions {
   context?: string;
 
   /** Callback invoked before each retry attempt */
-  onRetry?: (attempt: number, maxAttempts: number, delayMs: number, error: unknown) => void;
+  onRetry?: (
+    attempt: number,
+    maxAttempts: number,
+    delayMs: number,
+    error: unknown,
+  ) => void;
 
   /** Callback invoked when all retries exhausted */
   onExhausted?: (attempts: RetryAttempt[], finalError: unknown) => void;
@@ -57,7 +62,7 @@ export interface RetryOptions {
  * Sleep utility for async delay
  */
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -90,7 +95,7 @@ function sleep(ms: number): Promise<void> {
  */
 export async function withRetry<T>(
   fn: () => Promise<T>,
-  options: RetryOptions = {}
+  options: RetryOptions = {},
 ): Promise<RetryResult<T>> {
   const maxAttempts = options.maxAttempts ?? RETRY_CONFIG.MAX_ATTEMPTS;
   const attempts: RetryAttempt[] = [];
@@ -126,11 +131,11 @@ export async function withRetry<T>(
       });
 
       // Log attempt details
-      const context = options.context || 'Provider call';
+      const context = options.context || "Provider call";
       console.warn(
         `[Retry] ${context} - Attempt ${attemptNumber}/${maxAttempts} failed (${reason})${
-          retryable ? `, retrying after ${delayMs}ms` : ', non-retryable error'
-        }`
+          retryable ? `, retrying after ${delayMs}ms` : ", non-retryable error"
+        }`,
       );
 
       // If non-retryable or last attempt, fail immediately
@@ -164,7 +169,7 @@ export async function withRetry<T>(
     success: false,
     attempts,
     totalDurationMs,
-    finalError: new Error('Unexpected retry logic exit'),
+    finalError: new Error("Unexpected retry logic exit"),
   };
 }
 
@@ -194,7 +199,7 @@ export async function withRetry<T>(
  */
 export async function retryWithThrow<T>(
   fn: () => Promise<T>,
-  options: RetryOptions = {}
+  options: RetryOptions = {},
 ): Promise<T> {
   const result = await withRetry(fn, options);
 
@@ -203,5 +208,5 @@ export async function retryWithThrow<T>(
   }
 
   // All retries exhausted, throw final error
-  throw result.finalError || new Error('Retry failed without error details');
+  throw result.finalError || new Error("Retry failed without error details");
 }

@@ -1,10 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Search } from 'lucide-react';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE } from '@/constants/color-mappings';
-import { MESSAGES } from '@/constants/messages';
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Search } from "lucide-react";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
+import { MESSAGES } from "@/constants/messages";
 
 interface ModelInfo {
   name: string;
@@ -34,21 +37,21 @@ export function ModelSelector({
   onClose,
   isOpen,
 }: ModelSelectorProps) {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const filteredModels = useMemo(() => {
     return models.filter(
       (model) =>
         !searchTerm ||
         model.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        model.displayName?.toLowerCase().includes(searchTerm.toLowerCase())
+        model.displayName?.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }, [models, searchTerm]);
 
   const groupedModels = useMemo(() => {
     const groups: Record<string, ModelInfo[]> = {};
     filteredModels.forEach((model) => {
-      const family = model.family || 'Other';
+      const family = model.family || "Other";
       if (!groups[family]) {
         groups[family] = [];
       }
@@ -117,8 +120,8 @@ export function ModelSelector({
                     }}
                     className={`mb-1 w-full rounded-lg border p-3 text-left transition-colors ${
                       selectedModel === model.name
-                        ? 'border-brand-accent bg-brand-accent/10'
-                        : 'border-brand-outline/40 bg-brand-paper/70 hover:border-brand-accent/60 hover:bg-brand-paper'
+                        ? "border-brand-accent bg-brand-accent/10"
+                        : "border-brand-outline/40 bg-brand-paper/70 hover:border-brand-accent/60 hover:bg-brand-paper"
                     }`}
                   >
                     <div className="flex items-start justify-between">
@@ -166,4 +169,3 @@ export function ModelSelector({
     </div>
   );
 }
-

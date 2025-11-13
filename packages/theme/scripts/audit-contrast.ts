@@ -17,7 +17,9 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } {
 function getLuminance(r: number, g: number, b: number): number {
   const [rs, gs, bs] = [r, g, b].map((c) => {
     const sRGB = c / 255;
-    return sRGB <= 0.03928 ? sRGB / 12.92 : Math.pow((sRGB + 0.055) / 1.055, 2.4);
+    return sRGB <= 0.03928
+      ? sRGB / 12.92
+      : Math.pow((sRGB + 0.055) / 1.055, 2.4);
   });
   return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
 }
@@ -46,41 +48,113 @@ function meetsWCAG_AA(ratio: number, isLargeText: boolean = false): boolean {
 // Theme definitions (WCAG AAA compliant colors from themes.ts)
 const themes = {
   aurora: {
-    light: { primary: '#075985', accent: '#0C4A6E', ink: '#0F172A', paper: '#F0F9FF', outline: '#334155' },
-    dark: { primary: '#7DD3FC', accent: '#BAE6FD', ink: '#F0F9FF', paper: '#082F49', outline: '#7DD3FC' },
+    light: {
+      primary: "#075985",
+      accent: "#0C4A6E",
+      ink: "#0F172A",
+      paper: "#F0F9FF",
+      outline: "#334155",
+    },
+    dark: {
+      primary: "#7DD3FC",
+      accent: "#BAE6FD",
+      ink: "#F0F9FF",
+      paper: "#082F49",
+      outline: "#7DD3FC",
+    },
   },
   midnight: {
-    light: { primary: '#4338CA', accent: '#5B21B6', ink: '#0F172A', paper: '#F8FAFC', outline: '#334155' },
-    dark: { primary: '#A78BFA', accent: '#C4B5FD', ink: '#F8FAFC', paper: '#020617', outline: '#A78BFA' },
+    light: {
+      primary: "#4338CA",
+      accent: "#5B21B6",
+      ink: "#0F172A",
+      paper: "#F8FAFC",
+      outline: "#334155",
+    },
+    dark: {
+      primary: "#A78BFA",
+      accent: "#C4B5FD",
+      ink: "#F8FAFC",
+      paper: "#020617",
+      outline: "#A78BFA",
+    },
   },
   sakura: {
-    light: { primary: '#9F1239', accent: '#881337', ink: '#1F2937', paper: '#FDF2F8', outline: '#374151' },
-    dark: { primary: '#F9A8D4', accent: '#FBCFE8', ink: '#F9FAFB', paper: '#831843', outline: '#F9A8D4' },
+    light: {
+      primary: "#9F1239",
+      accent: "#881337",
+      ink: "#1F2937",
+      paper: "#FDF2F8",
+      outline: "#374151",
+    },
+    dark: {
+      primary: "#F9A8D4",
+      accent: "#FBCFE8",
+      ink: "#F9FAFB",
+      paper: "#831843",
+      outline: "#F9A8D4",
+    },
   },
   horizon: {
-    light: { primary: '#164E63', accent: '#164E63', ink: '#164E63', paper: '#ECFEFF', outline: '#334155' },
-    dark: { primary: '#67E8F9', accent: '#A5F3FC', ink: '#ECFEFF', paper: '#083344', outline: '#67E8F9' },
+    light: {
+      primary: "#164E63",
+      accent: "#164E63",
+      ink: "#164E63",
+      paper: "#ECFEFF",
+      outline: "#334155",
+    },
+    dark: {
+      primary: "#67E8F9",
+      accent: "#A5F3FC",
+      ink: "#ECFEFF",
+      paper: "#083344",
+      outline: "#67E8F9",
+    },
   },
   emerald: {
-    light: { primary: '#065F46', accent: '#064E3B', ink: '#064E3B', paper: '#ECFDF5', outline: '#334155' },
-    dark: { primary: '#6EE7B7', accent: '#A7F3D0', ink: '#D1FAE5', paper: '#022C22', outline: '#6EE7B7' },
+    light: {
+      primary: "#065F46",
+      accent: "#064E3B",
+      ink: "#064E3B",
+      paper: "#ECFDF5",
+      outline: "#334155",
+    },
+    dark: {
+      primary: "#6EE7B7",
+      accent: "#A7F3D0",
+      ink: "#D1FAE5",
+      paper: "#022C22",
+      outline: "#6EE7B7",
+    },
   },
   obsidian: {
-    light: { primary: '#1F2937', accent: '#374151', ink: '#111827', paper: '#F9FAFB', outline: '#374151' },
-    dark: { primary: '#F3F4F6', accent: '#E5E7EB', ink: '#F3F4F6', paper: '#111827', outline: '#6B7280' },
+    light: {
+      primary: "#1F2937",
+      accent: "#374151",
+      ink: "#111827",
+      paper: "#F9FAFB",
+      outline: "#374151",
+    },
+    dark: {
+      primary: "#F3F4F6",
+      accent: "#E5E7EB",
+      ink: "#F3F4F6",
+      paper: "#111827",
+      outline: "#6B7280",
+    },
   },
 };
 
-console.log('='.repeat(80));
-console.log('WCAG AAA CONTRAST AUDIT REPORT');
-console.log('='.repeat(80));
-console.log('');
-console.log('Standards:');
-console.log('  WCAG AAA Normal Text: 7:1 minimum');
-console.log('  WCAG AAA Large Text:  4.5:1 minimum');
-console.log('  WCAG AA Normal Text:  4.5:1 minimum');
-console.log('  WCAG AA Large Text:   3:1 minimum');
-console.log('');
+console.log("=".repeat(80));
+console.log("WCAG AAA CONTRAST AUDIT REPORT");
+console.log("=".repeat(80));
+console.log("");
+console.log("Standards:");
+console.log("  WCAG AAA Normal Text: 7:1 minimum");
+console.log("  WCAG AAA Large Text:  4.5:1 minimum");
+console.log("  WCAG AA Normal Text:  4.5:1 minimum");
+console.log("  WCAG AA Large Text:   3:1 minimum");
+console.log("");
 
 let totalTests = 0;
 let passedAAA = 0;
@@ -88,20 +162,40 @@ let passedAA = 0;
 let failed = 0;
 
 for (const [themeName, modes] of Object.entries(themes)) {
-  console.log('─'.repeat(80));
+  console.log("─".repeat(80));
   console.log(`Theme: ${themeName.toUpperCase()}`);
-  console.log('─'.repeat(80));
+  console.log("─".repeat(80));
 
   for (const [mode, colors] of Object.entries(modes)) {
     console.log(`\n${mode.toUpperCase()} MODE:`);
-    console.log('');
+    console.log("");
 
     // Critical tests: Text on background
     const tests = [
-      { name: 'Ink on Paper (body text)', fg: colors.ink, bg: colors.paper, isLarge: false },
-      { name: 'Primary on Paper (buttons)', fg: colors.primary, bg: colors.paper, isLarge: false },
-      { name: 'Accent on Paper (highlights)', fg: colors.accent, bg: colors.paper, isLarge: false },
-      { name: 'Outline on Paper (borders)', fg: colors.outline, bg: colors.paper, isLarge: true },
+      {
+        name: "Ink on Paper (body text)",
+        fg: colors.ink,
+        bg: colors.paper,
+        isLarge: false,
+      },
+      {
+        name: "Primary on Paper (buttons)",
+        fg: colors.primary,
+        bg: colors.paper,
+        isLarge: false,
+      },
+      {
+        name: "Accent on Paper (highlights)",
+        fg: colors.accent,
+        bg: colors.paper,
+        isLarge: false,
+      },
+      {
+        name: "Outline on Paper (borders)",
+        fg: colors.outline,
+        bg: colors.paper,
+        isLarge: true,
+      },
     ];
 
     for (const test of tests) {
@@ -114,38 +208,48 @@ for (const [themeName, modes] of Object.entries(themes)) {
       else if (aa) passedAA++;
       else failed++;
 
-      const status = aaa ? 'AAA ✓' : aa ? 'AA  ⚠' : 'FAIL ✗';
-      const requiredRatio = test.isLarge ? '4.5:1' : '7:1';
+      const status = aaa ? "AAA ✓" : aa ? "AA  ⚠" : "FAIL ✗";
+      const requiredRatio = test.isLarge ? "4.5:1" : "7:1";
 
-      console.log(`  ${test.name.padEnd(30)} ${ratio.toFixed(2)}:1 ${status} (req: ${requiredRatio})`);
+      console.log(
+        `  ${test.name.padEnd(30)} ${ratio.toFixed(2)}:1 ${status} (req: ${requiredRatio})`,
+      );
       console.log(`    FG: ${test.fg.padEnd(10)} BG: ${test.bg}`);
 
       if (!aaa) {
         if (aa) {
-          console.log(`    ⚠ WARNING: Passes AA but fails AAA (${ratio.toFixed(2)} < ${requiredRatio})`);
+          console.log(
+            `    ⚠ WARNING: Passes AA but fails AAA (${ratio.toFixed(2)} < ${requiredRatio})`,
+          );
         } else {
           console.log(`    ✗ CRITICAL: Fails WCAG AA minimum standards!`);
         }
       }
-      console.log('');
+      console.log("");
     }
   }
 }
 
-console.log('='.repeat(80));
-console.log('SUMMARY');
-console.log('='.repeat(80));
+console.log("=".repeat(80));
+console.log("SUMMARY");
+console.log("=".repeat(80));
 console.log(`Total Tests: ${totalTests}`);
-console.log(`AAA Compliant (7:1 / 4.5:1): ${passedAAA} (${((passedAAA/totalTests)*100).toFixed(1)}%)`);
-console.log(`AA Compliant (4.5:1 / 3:1):  ${passedAA} (${((passedAA/totalTests)*100).toFixed(1)}%)`);
-console.log(`Failed (<4.5:1 / <3:1):      ${failed} (${((failed/totalTests)*100).toFixed(1)}%)`);
-console.log('');
+console.log(
+  `AAA Compliant (7:1 / 4.5:1): ${passedAAA} (${((passedAAA / totalTests) * 100).toFixed(1)}%)`,
+);
+console.log(
+  `AA Compliant (4.5:1 / 3:1):  ${passedAA} (${((passedAA / totalTests) * 100).toFixed(1)}%)`,
+);
+console.log(
+  `Failed (<4.5:1 / <3:1):      ${failed} (${((failed / totalTests) * 100).toFixed(1)}%)`,
+);
+console.log("");
 
 if (passedAAA === totalTests) {
-  console.log('✓ ALL THEMES MEET WCAG AAA STANDARDS');
+  console.log("✓ ALL THEMES MEET WCAG AAA STANDARDS");
 } else if (passedAAA + passedAA === totalTests) {
-  console.log('⚠ Some themes only meet WCAG AA (need improvement for AAA)');
+  console.log("⚠ Some themes only meet WCAG AA (need improvement for AAA)");
 } else {
-  console.log('✗ CRITICAL: Some combinations fail basic WCAG AA standards');
+  console.log("✗ CRITICAL: Some combinations fail basic WCAG AA standards");
 }
-console.log('='.repeat(80));
+console.log("=".repeat(80));
