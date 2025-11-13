@@ -1,5 +1,5 @@
-import { EyeOrchestrator } from '@third-eye/core';
-import type { BaseEnvelope } from '@third-eye/eyes';
+import { EyeOrchestrator } from "@third-eye/core";
+import type { BaseEnvelope } from "@third-eye/eyes";
 
 /**
  * Pipeline Executor
@@ -14,7 +14,7 @@ export interface PipelineStep {
     skipIf?: {
       previousEye?: string;
       field?: string;
-      operator?: 'eq' | 'neq' | 'gt' | 'lt' | 'gte' | 'lte';
+      operator?: "eq" | "neq" | "gt" | "lt" | "gte" | "lte";
       value?: unknown;
     };
     continueOnFailure?: boolean;
@@ -62,10 +62,10 @@ export class PipelineExecutor {
   async execute(
     pipeline: PipelineDefinition,
     input: unknown,
-    sessionId?: string
+    sessionId?: string,
   ): Promise<PipelineResult> {
     const startTime = Date.now();
-    const stepResults: PipelineResult['steps'] = [];
+    const stepResults: PipelineResult["steps"] = [];
     const outputs: Record<string, BaseEnvelope | { error: string }> = {};
 
     for (const step of pipeline.steps) {
@@ -73,7 +73,10 @@ export class PipelineExecutor {
 
       // Evaluate conditions
       if (step.conditions?.skipIf) {
-        const shouldSkip = this.evaluateCondition(step.conditions.skipIf, outputs);
+        const shouldSkip = this.evaluateCondition(
+          step.conditions.skipIf,
+          outputs,
+        );
 
         if (shouldSkip) {
           stepResults.push({
@@ -89,7 +92,7 @@ export class PipelineExecutor {
         const result = await this.orchestrator.runEye(
           step.eye,
           { ...input, ...step.config },
-          sessionId
+          sessionId,
         );
 
         const stepLatency = Date.now() - stepStartTime;
@@ -104,7 +107,7 @@ export class PipelineExecutor {
         outputs[step.eye] = result;
 
         // Check if step failed
-        if (result.verdict === 'REJECTED' || result.code?.startsWith('E_')) {
+        if (result.verdict === "REJECTED" || result.code?.startsWith("E_")) {
           if (!step.conditions?.continueOnFailure) {
             // Stop pipeline execution on failure
             break;
@@ -112,7 +115,8 @@ export class PipelineExecutor {
         }
       } catch (error) {
         const stepLatency = Date.now() - stepStartTime;
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
 
         stepResults.push({
           eye: step.eye,
@@ -155,12 +159,12 @@ export class PipelineExecutor {
    * Evaluate conditional logic
    */
   private evaluateCondition(
-    condition: NonNullable<PipelineStep['conditions']>['skipIf'],
-    outputs: Record<string, BaseEnvelope | { error: string }>
+    condition: NonNullable<PipelineStep["conditions"]>["skipIf"],
+    outputs: Record<string, BaseEnvelope | { error: string }>,
   ): boolean {
     if (!condition) return false;
 
-    const { previousEye, field, operator = 'eq', value } = condition;
+    const { previousEye, field, operator = "eq", value } = condition;
 
     if (!previousEye || !field) return false;
 
@@ -172,17 +176,17 @@ export class PipelineExecutor {
 
     // Evaluate operator
     switch (operator) {
-      case 'eq':
+      case "eq":
         return fieldValue === value;
-      case 'neq':
+      case "neq":
         return fieldValue !== value;
-      case 'gt':
+      case "gt":
         return Number(fieldValue) > Number(value);
-      case 'lt':
+      case "lt":
         return Number(fieldValue) < Number(value);
-      case 'gte':
+      case "gte":
         return Number(fieldValue) >= Number(value);
-      case 'lte':
+      case "lte":
         return Number(fieldValue) <= Number(value);
       default:
         return false;
@@ -193,11 +197,16 @@ export class PipelineExecutor {
    * Get field value from object (supports dot notation)
    */
   private getFieldValue(obj: unknown, field: string): unknown {
-    const parts = field.split('.');
+    const parts = field.split(".");
     let value: unknown = obj;
 
     for (const part of parts) {
-      if (value && typeof value === 'object' && value !== null && part in value) {
+      if (
+        value &&
+        typeof value === "object" &&
+        value !== null &&
+        part in value
+      ) {
         value = (value as Record<string, unknown>)[part];
       } else {
         return undefined;
@@ -210,19 +219,22 @@ export class PipelineExecutor {
   /**
    * Validate pipeline definition
    */
-  validatePipeline(pipeline: PipelineDefinition): { valid: boolean; errors: string[] } {
+  validatePipeline(pipeline: PipelineDefinition): {
+    valid: boolean;
+    errors: string[];
+  } {
     const errors: string[] = [];
 
     if (!pipeline.id) {
-      errors.push('Pipeline must have an id');
+      errors.push("Pipeline must have an id");
     }
 
     if (!pipeline.name) {
-      errors.push('Pipeline must have a name');
+      errors.push("Pipeline must have a name");
     }
 
     if (!pipeline.steps || pipeline.steps.length === 0) {
-      errors.push('Pipeline must have at least one step');
+      errors.push("Pipeline must have at least one step");
     }
 
     if (pipeline.steps) {
@@ -239,7 +251,7 @@ export class PipelineExecutor {
 
           if (!previousEyeExists) {
             errors.push(
-              `Step ${index + 1} references non-existent previous eye: ${step.conditions.skipIf.previousEye}`
+              `Step ${index + 1} references non-existent previous eye: ${step.conditions.skipIf.previousEye}`,
             );
           }
         }
@@ -255,56 +267,53 @@ export class PipelineExecutor {
 
 /**
  * Example pipeline definitions
- * 
+ *
  * NOTE: These are test-only examples with hardcoded eye names.
  * For production, all pipelines should be loaded from the database (SSOT).
  * These examples are kept for documentation/testing purposes only.
  */
 export const examplePipelines: PipelineDefinition[] = [
   {
-    id: 'clarification-workflow',
-    name: 'Clarification Workflow',
-    description: 'Detect ambiguity, refine prompt, confirm intent',
+    id: "clarification-workflow",
+    name: "Clarification Workflow",
+    description: "Detect ambiguity, refine prompt, confirm intent",
     steps: [
-      { eye: 'sharingan' },
+      { eye: "sharingan" },
       {
-        eye: 'kyuubi',
+        eye: "kyuubi",
         conditions: {
           skipIf: {
-            previousEye: 'sharingan',
-            field: 'metadata.ambiguityScore',
-            operator: 'lt',
+            previousEye: "sharingan",
+            field: "metadata.ambiguityScore",
+            operator: "lt",
             value: 30,
           },
         },
       },
-      { eye: 'jogan' },
+      { eye: "jogan" },
     ],
   },
   {
-    id: 'full-implementation',
-    name: 'Full Implementation Pipeline',
-    description: 'Complete software development lifecycle',
+    id: "full-implementation",
+    name: "Full Implementation Pipeline",
+    description: "Complete software development lifecycle",
     steps: [
-      { eye: 'sharingan' },
-      { eye: 'kyuubi' },
-      { eye: 'jogan' },
-      { eye: 'rinnegan', config: { mode: 'requirements' } },
-      { eye: 'rinnegan', config: { mode: 'review' } },
-      { eye: 'mangekyo', config: { gate: 'scaffold' } },
-      { eye: 'mangekyo', config: { gate: 'impl' } },
-      { eye: 'mangekyo', config: { gate: 'tests' } },
-      { eye: 'mangekyo', config: { gate: 'docs' } },
-      { eye: 'rinnegan', config: { mode: 'approval' } },
+      { eye: "sharingan" },
+      { eye: "kyuubi" },
+      { eye: "jogan" },
+      { eye: "rinnegan", config: { mode: "requirements" } },
+      { eye: "rinnegan", config: { mode: "review" } },
+      { eye: "mangekyo", config: { gate: "scaffold" } },
+      { eye: "mangekyo", config: { gate: "impl" } },
+      { eye: "mangekyo", config: { gate: "tests" } },
+      { eye: "mangekyo", config: { gate: "docs" } },
+      { eye: "rinnegan", config: { mode: "approval" } },
     ],
   },
   {
-    id: 'fact-checking',
-    name: 'Fact Checking Pipeline',
-    description: 'Validate evidence and check consistency',
-    steps: [
-      { eye: 'tenseigan' },
-      { eye: 'byakugan' },
-    ],
+    id: "fact-checking",
+    name: "Fact Checking Pipeline",
+    description: "Validate evidence and check consistency",
+    steps: [{ eye: "tenseigan" }, { eye: "byakugan" }],
   },
 ];

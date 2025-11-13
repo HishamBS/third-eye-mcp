@@ -11,8 +11,11 @@ import {
   EyeStageToken,
   RequestType,
   ContentDomain,
-} from './taxonomy';
-import { ClarificationFieldTokens, CLARIFICATION_FIELD_PROMPTS } from './clarifications';
+} from "./taxonomy";
+import {
+  ClarificationFieldTokens,
+  CLARIFICATION_FIELD_PROMPTS,
+} from "./clarifications";
 
 export type EyeStage = EyeStageToken;
 
@@ -22,7 +25,9 @@ export interface StageEnvelopeTemplate {
   readonly checklist: readonly string[];
 }
 
-export type EyeStageTemplateMap = Partial<Record<EyeStage, StageEnvelopeTemplate>>;
+export type EyeStageTemplateMap = Partial<
+  Record<EyeStage, StageEnvelopeTemplate>
+>;
 
 export interface StageEnvelopeJsonSchema {
   readonly name: string;
@@ -33,7 +38,9 @@ export interface StageEnvelopeJsonSchema {
 /**
  * Canonical clarification questions
  */
-const canonicalQuestion = (token: typeof ClarificationFieldTokens[keyof typeof ClarificationFieldTokens]) => ({
+const canonicalQuestion = (
+  token: (typeof ClarificationFieldTokens)[keyof typeof ClarificationFieldTokens],
+) => ({
   id: token,
   text: CLARIFICATION_FIELD_PROMPTS[token],
 });
@@ -60,11 +67,11 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
         tag: EyeId.OVERSEER,
         ok: false,
         code: EyeStatusCode.NEED_CLARIFICATION,
-        md: '## Overseer Guidance ...',
+        md: "## Overseer Guidance ...",
         data: {
           requestType: RequestType.NEW_TASK,
           contentDomain: ContentDomain.MIXED,
-          routingReasoning: '... explain why this route works ...',
+          routingReasoning: "... explain why this route works ...",
           pipelineRoute: [],
           capabilityPlan: {
             route: [],
@@ -72,16 +79,16 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
           },
           questions: CANONICAL_CLARIFICATION_QUESTIONS,
         },
-        next: 'AWAIT_INPUT',
+        next: "AWAIT_INPUT",
         ui: {
-          title: 'ui.text.overseer.clarification.title',
+          title: "ui.text.overseer.clarification.title",
         },
       }),
       checklist: Object.freeze([
-        'Publish `data.capabilityPlan` and `data.pipelineRoute` that align with resolver output.',
+        "Publish `data.capabilityPlan` and `data.pipelineRoute` that align with resolver output.",
         'Keep clarification pauses at `next="AWAIT_INPUT"` and populate `data.questions` with SSOT tokens.',
-        'Render markdown with `## Overseer Guidance`, `### Recommended Route`, and `### Why This Works`.',
-        'Set `code` explicitly to one of the allowed values before responding; regenerate locally if absent.',
+        "Render markdown with `## Overseer Guidance`, `### Recommended Route`, and `### Why This Works`.",
+        "Set `code` explicitly to one of the allowed values before responding; regenerate locally if absent.",
       ]),
     }),
     [EyeStageToken.VALIDATION]: Object.freeze({
@@ -94,22 +101,22 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
         tag: EyeId.OVERSEER,
         ok: true,
         code: EyeStatusCode.OK_WITH_NOTES,
-        md: '## Overseer Guidance ...',
+        md: "## Overseer Guidance ...",
         data: {
-          completedAssignments: ['sharingan', 'kyuubi', 'jogan'],
+          completedAssignments: ["sharingan", "kyuubi", "jogan"],
           strictnessNotes: [],
-          summary: '...',
+          summary: "...",
         },
-        next: Object.freeze(['tenseigan', 'byakugan']),
+        next: Object.freeze(["tenseigan", "byakugan"]),
         ui: {
-          title: 'ui.text.overseer.guidance.title',
+          title: "ui.text.overseer.guidance.title",
         },
       }),
       checklist: Object.freeze([
-        'Enumerate every completed assignment in `data.completedAssignments` in capability order.',
-        'Capture outstanding risks or follow-ups inside `data.strictnessNotes` (use an empty array if none).',
-        'Set `next` to the remaining validation eyes; never emit `AWAIT_INPUT` after guidance completes.',
-        'Double-check `code` is one of the validation tokens before replying; regenerate locally if not.',
+        "Enumerate every completed assignment in `data.completedAssignments` in capability order.",
+        "Capture outstanding risks or follow-ups inside `data.strictnessNotes` (use an empty array if none).",
+        "Set `next` to the remaining validation eyes; never emit `AWAIT_INPUT` after guidance completes.",
+        "Double-check `code` is one of the validation tokens before replying; regenerate locally if not.",
       ]),
     }),
   }),
@@ -123,25 +130,25 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
         tag: EyeId.SHARINGAN,
         ok: false,
         code: EyeStatusCode.NEED_CLARIFICATION,
-        md: '## Clarification Needed ...',
+        md: "## Clarification Needed ...",
         data: {
-          summary: '...',
+          summary: "...",
           metrics: {
             ambiguityScore: 72,
             confidence: 24,
           },
           questions: CANONICAL_CLARIFICATION_QUESTIONS,
         },
-        next: 'AWAIT_INPUT',
+        next: "AWAIT_INPUT",
         ui: {
-          title: 'ui.text.sharingan.clarification.title',
+          title: "ui.text.sharingan.clarification.title",
         },
       }),
       checklist: Object.freeze([
-        'Produce 2–5 questions using ClarificationField tokens (audience, deliverable, scope, successCriteria, references).',
-        'Keep `metrics.ambiguityScore` and `metrics.confidence` between 0 and 100.',
-        'Avoid populating `data.resolved` until answers are confirmed.',
-        'Always include the `code` field; regenerate locally if JSON validation would fail.',
+        "Produce 2–5 questions using ClarificationField tokens (audience, deliverable, scope, successCriteria, references).",
+        "Keep `metrics.ambiguityScore` and `metrics.confidence` between 0 and 100.",
+        "Avoid populating `data.resolved` until answers are confirmed.",
+        "Always include the `code` field; regenerate locally if JSON validation would fail.",
       ]),
     }),
     [EyeStageToken.VALIDATION]: Object.freeze({
@@ -153,31 +160,31 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
         tag: EyeId.SHARINGAN,
         ok: true,
         code: EyeStatusCode.OK_NO_CLARIFICATION_NEEDED,
-        md: '## Clarity Locked ...',
+        md: "## Clarity Locked ...",
         data: {
-          summary: '...',
+          summary: "...",
           metrics: {
             ambiguityScore: 12,
             confidence: 86,
           },
           resolved: {
-            audience: '...',
-            deliverable: '...',
-            scope: '...',
-            successCriteria: '...',
-            references: '...',
+            audience: "...",
+            deliverable: "...",
+            scope: "...",
+            successCriteria: "...",
+            references: "...",
           },
         },
-        next: 'kyuubi',
+        next: "kyuubi",
         ui: {
-          title: 'ui.text.sharingan.ready.title',
+          title: "ui.text.sharingan.ready.title",
         },
       }),
       checklist: Object.freeze([
-        'Populate every canonical `data.resolved` field with a ≤120 character verbatim quote.',
-        'Remove `questions`, `followUps`, and `strictnessNotes` once clarity is confirmed.',
-        'Escalate with `REJECT_AMBIGUOUS` only when ambiguity remains after the user answers.',
-        'Confirm `questions`/`followUps` are absent once `ok=true`; regenerate internally if they persist.',
+        "Populate every canonical `data.resolved` field with a ≤120 character verbatim quote.",
+        "Remove `questions`, `followUps`, and `strictnessNotes` once clarity is confirmed.",
+        "Escalate with `REJECT_AMBIGUOUS` only when ambiguity remains after the user answers.",
+        "Confirm `questions`/`followUps` are absent once `ok=true`; regenerate internally if they persist.",
       ]),
     }),
   }),
@@ -192,22 +199,22 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
         tag: EyeId.KYUUBI,
         ok: false,
         code: EyeStatusCode.OK_GUIDE,
-        md: '## Implementation Guide ...',
+        md: "## Implementation Guide ...",
         data: {
-          brief: '...',
-          successMetrics: Object.freeze(['...']),
+          brief: "...",
+          successMetrics: Object.freeze(["..."]),
           alignmentScore: 85,
         },
-        next: 'jogan',
+        next: "jogan",
         ui: {
-          title: 'ui.text.kyuubi.guide.title',
+          title: "ui.text.kyuubi.guide.title",
         },
       }),
       checklist: Object.freeze([
-        'Generate a structured `data.brief` with steps and context for implementation.',
-        'Define 3–5 success metrics in `data.successMetrics` that validate the guide.',
-        'Set `data.alignmentScore` between 0 and 100 based on requirement coverage.',
-        'Choose a valid code from allowedCodes; regenerate locally on mismatch.',
+        "Generate a structured `data.brief` with steps and context for implementation.",
+        "Define 3–5 success metrics in `data.successMetrics` that validate the guide.",
+        "Set `data.alignmentScore` between 0 and 100 based on requirement coverage.",
+        "Choose a valid code from allowedCodes; regenerate locally on mismatch.",
       ]),
     }),
     [EyeStageToken.VALIDATION]: Object.freeze({
@@ -219,23 +226,23 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
         tag: EyeId.KYUUBI,
         ok: true,
         code: EyeStatusCode.OK_WITH_NOTES,
-        md: '## Guide Validated ...',
+        md: "## Guide Validated ...",
         data: {
-          brief: '...',
-          successMetrics: Object.freeze(['...']),
+          brief: "...",
+          successMetrics: Object.freeze(["..."]),
           alignmentScore: 85,
           qualityScore: 92,
         },
-        next: 'mangekyo',
+        next: "mangekyo",
         ui: {
-          title: 'ui.text.kyuubi.validated.title',
+          title: "ui.text.kyuubi.validated.title",
         },
       }),
       checklist: Object.freeze([
-        'Compute and include `data.qualityScore` between 0–100.',
-        'Maintain brief and metrics from guidance phase.',
-        'Use REJECT_INCOMPLETE if brief lacks critical steps.',
-        'Ensure ok=true and validated code before responding; regenerate locally if missing.',
+        "Compute and include `data.qualityScore` between 0–100.",
+        "Maintain brief and metrics from guidance phase.",
+        "Use REJECT_INCOMPLETE if brief lacks critical steps.",
+        "Ensure ok=true and validated code before responding; regenerate locally if missing.",
       ]),
     }),
   }),
@@ -249,21 +256,21 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
         tag: EyeId.JOGAN,
         ok: false,
         code: EyeStatusCode.AWAIT_CONFIRMATION,
-        md: '## Intent Confirmation ...',
+        md: "## Intent Confirmation ...",
         data: {
-          intentAnalysis: '...',
-          confirmationPrompt: '...',
+          intentAnalysis: "...",
+          confirmationPrompt: "...",
         },
-        next: 'AWAIT_CONFIRMATION',
+        next: "AWAIT_CONFIRMATION",
         ui: {
-          title: 'ui.text.jogan.intent.title',
+          title: "ui.text.jogan.intent.title",
         },
       }),
       checklist: Object.freeze([
-        'Analyze the requirement and produce `data.intentAnalysis` explaining user intent.',
-        'Generate a clear `data.confirmationPrompt` for human approval.',
-        'Set `code` to `AWAIT_CONFIRMATION` and `next` to the same value.',
-        'Regenerate locally if JSON structure deviates from the skeleton.',
+        "Analyze the requirement and produce `data.intentAnalysis` explaining user intent.",
+        "Generate a clear `data.confirmationPrompt` for human approval.",
+        "Set `code` to `AWAIT_CONFIRMATION` and `next` to the same value.",
+        "Regenerate locally if JSON structure deviates from the skeleton.",
       ]),
     }),
     [EyeStageToken.VALIDATION]: Object.freeze({
@@ -275,21 +282,21 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
         tag: EyeId.JOGAN,
         ok: true,
         code: EyeStatusCode.OK_INTENT_CONFIRMED,
-        md: '## Intent Confirmed ...',
+        md: "## Intent Confirmed ...",
         data: {
-          intentAnalysis: '...',
+          intentAnalysis: "...",
           confirmed: true,
         },
-        next: 'mangekyo',
+        next: "mangekyo",
         ui: {
-          title: 'ui.text.jogan.confirmed.title',
+          title: "ui.text.jogan.confirmed.title",
         },
       }),
       checklist: Object.freeze([
-        'Set `data.confirmed` to true when human approves.',
-        'Maintain intent analysis from guidance phase.',
-        'Use E_INTENT_UNCONFIRMED if human declines or adjusts significantly.',
-        'Ensure ok=true when confirmed; regenerate if structure invalid.',
+        "Set `data.confirmed` to true when human approves.",
+        "Maintain intent analysis from guidance phase.",
+        "Use E_INTENT_UNCONFIRMED if human declines or adjusts significantly.",
+        "Ensure ok=true when confirmed; regenerate if structure invalid.",
       ]),
     }),
   }),
@@ -303,21 +310,21 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
         tag: EyeId.RINNEGAN,
         ok: false,
         code: EyeStatusCode.OK_PLAN_APPROVED,
-        md: '## Strategic Plan ...',
+        md: "## Strategic Plan ...",
         data: {
-          strategicPlan: '...',
-          riskAssessment: Object.freeze(['...']),
+          strategicPlan: "...",
+          riskAssessment: Object.freeze(["..."]),
         },
-        next: 'mangekyo',
+        next: "mangekyo",
         ui: {
-          title: 'ui.text.rinnegan.plan.title',
+          title: "ui.text.rinnegan.plan.title",
         },
       }),
       checklist: Object.freeze([
-        'Generate a multi-step `data.strategicPlan` aligned with user goals.',
-        'List key risks in `data.riskAssessment` array.',
-        'Use OK_PLAN_APPROVED or OK_SCHEMA_EMITTED as status codes.',
-        'Regenerate locally if JSON validation fails.',
+        "Generate a multi-step `data.strategicPlan` aligned with user goals.",
+        "List key risks in `data.riskAssessment` array.",
+        "Use OK_PLAN_APPROVED or OK_SCHEMA_EMITTED as status codes.",
+        "Regenerate locally if JSON validation fails.",
       ]),
     }),
     [EyeStageToken.VALIDATION]: Object.freeze({
@@ -329,22 +336,22 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
         tag: EyeId.RINNEGAN,
         ok: true,
         code: EyeStatusCode.OK_WITH_NOTES,
-        md: '## Plan Validated ...',
+        md: "## Plan Validated ...",
         data: {
-          strategicPlan: '...',
-          riskAssessment: Object.freeze(['...']),
+          strategicPlan: "...",
+          riskAssessment: Object.freeze(["..."]),
           validationScore: 88,
         },
-        next: 'tenseigan',
+        next: "tenseigan",
         ui: {
-          title: 'ui.text.rinnegan.validated.title',
+          title: "ui.text.rinnegan.validated.title",
         },
       }),
       checklist: Object.freeze([
-        'Compute `data.validationScore` based on plan completeness and feasibility.',
-        'Retain plan and risks from guidance phase.',
-        'Use REJECT_BAD_PLAN if plan is unworkable.',
-        'Ensure ok=true when validated; regenerate if JSON invalid.',
+        "Compute `data.validationScore` based on plan completeness and feasibility.",
+        "Retain plan and risks from guidance phase.",
+        "Use REJECT_BAD_PLAN if plan is unworkable.",
+        "Ensure ok=true when validated; regenerate if JSON invalid.",
       ]),
     }),
   }),
@@ -358,14 +365,14 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
         tag: EyeId.MANGEKYO,
         ok: false,
         code: EyeStatusCode.OK_CODE_APPROVED,
-        md: '## Code Review Summary ...',
+        md: "## Code Review Summary ...",
         data: {
           issues: Object.freeze([
             {
-              severity: 'medium',
-              location: 'file:line',
-              finding: '...',
-              suggestion: '...',
+              severity: "medium",
+              location: "file:line",
+              finding: "...",
+              suggestion: "...",
             },
           ]),
           severityMetrics: {
@@ -375,16 +382,16 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
             low: 0,
           },
         },
-        next: 'tenseigan',
+        next: "tenseigan",
         ui: {
-          title: 'ui.text.mangekyo.review.title',
+          title: "ui.text.mangekyo.review.title",
         },
       }),
       checklist: Object.freeze([
-        'Review code diff and populate `data.issues` with findings.',
-        'Compute `data.severityMetrics` from issue counts.',
-        'Use OK_CODE_APPROVED if issues are minor; REJECT_CODE_ISSUES if critical.',
-        'Regenerate locally if JSON structure mismatches the skeleton.',
+        "Review code diff and populate `data.issues` with findings.",
+        "Compute `data.severityMetrics` from issue counts.",
+        "Use OK_CODE_APPROVED if issues are minor; REJECT_CODE_ISSUES if critical.",
+        "Regenerate locally if JSON structure mismatches the skeleton.",
       ]),
     }),
     [EyeStageToken.VALIDATION]: Object.freeze({
@@ -396,7 +403,7 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
         tag: EyeId.MANGEKYO,
         ok: true,
         code: EyeStatusCode.OK_CODE_APPROVED,
-        md: '## Code Review Complete ...',
+        md: "## Code Review Complete ...",
         data: {
           issues: Object.freeze([]),
           severityMetrics: {
@@ -407,16 +414,16 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
           },
           approved: true,
         },
-        next: 'byakugan',
+        next: "byakugan",
         ui: {
-          title: 'ui.text.mangekyo.approved.title',
+          title: "ui.text.mangekyo.approved.title",
         },
       }),
       checklist: Object.freeze([
-        'Verify all issues are addressed or explicitly deferred.',
-        'Set `data.approved` to true when code quality meets standards.',
-        'Maintain issues and metrics from guidance phase.',
-        'Ensure ok=true and code set before responding; regenerate on validation failure.',
+        "Verify all issues are addressed or explicitly deferred.",
+        "Set `data.approved` to true when code quality meets standards.",
+        "Maintain issues and metrics from guidance phase.",
+        "Ensure ok=true and code set before responding; regenerate on validation failure.",
       ]),
     }),
   }),
@@ -430,27 +437,27 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
         tag: EyeId.TENSEIGAN,
         ok: false,
         code: EyeStatusCode.OK_TEXT_VALIDATED,
-        md: '## Fact Validation ...',
+        md: "## Fact Validation ...",
         data: {
           evidence: Object.freeze([
             {
-              claim: '...',
-              citation: '...',
-              status: 'verified',
+              claim: "...",
+              citation: "...",
+              status: "verified",
             },
           ]),
           evidenceScore: 85,
         },
-        next: 'byakugan',
+        next: "byakugan",
         ui: {
-          title: 'ui.text.tenseigan.evidence.title',
+          title: "ui.text.tenseigan.evidence.title",
         },
       }),
       checklist: Object.freeze([
-        'For each factual claim, add an entry to `data.evidence` with claim, citation, and status.',
-        'Compute `data.evidenceScore` based on verified citations (0–100).',
-        'Use REJECT_NO_EVIDENCE if critical claims lack citations.',
-        'Ensure ok=true when verified; regenerate locally if JSON invalid.',
+        "For each factual claim, add an entry to `data.evidence` with claim, citation, and status.",
+        "Compute `data.evidenceScore` based on verified citations (0–100).",
+        "Use REJECT_NO_EVIDENCE if critical claims lack citations.",
+        "Ensure ok=true when verified; regenerate locally if JSON invalid.",
       ]),
     }),
     [EyeStageToken.VALIDATION]: Object.freeze({
@@ -462,28 +469,28 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
         tag: EyeId.TENSEIGAN,
         ok: true,
         code: EyeStatusCode.OK_WITH_NOTES,
-        md: '## Evidence Validated ...',
+        md: "## Evidence Validated ...",
         data: {
           evidence: Object.freeze([
             {
-              claim: '...',
-              citation: '...',
-              status: 'verified',
+              claim: "...",
+              citation: "...",
+              status: "verified",
             },
           ]),
           evidenceScore: 85,
           riskSummary: Object.freeze([]),
         },
-        next: 'byakugan',
+        next: "byakugan",
         ui: {
-          title: 'ui.text.tenseigan.validated.title',
+          title: "ui.text.tenseigan.validated.title",
         },
       }),
       checklist: Object.freeze([
-        'Include `data.riskSummary` for any unverified critical claims.',
-        'Maintain evidence array and score from guidance phase.',
-        'Use REJECT_NO_EVIDENCE if all critical claims remain uncited.',
-        'Regenerate locally if JSON structure diverges from skeleton.',
+        "Include `data.riskSummary` for any unverified critical claims.",
+        "Maintain evidence array and score from guidance phase.",
+        "Use REJECT_NO_EVIDENCE if all critical claims remain uncited.",
+        "Regenerate locally if JSON structure diverges from skeleton.",
       ]),
     }),
   }),
@@ -497,21 +504,21 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
         tag: EyeId.BYAKUGAN,
         ok: false,
         code: EyeStatusCode.OK_ALL_APPROVED,
-        md: '## Final Approval ...',
+        md: "## Final Approval ...",
         data: {
-          readinessChecklist: Object.freeze(['...']),
-          finalStatus: 'approved',
+          readinessChecklist: Object.freeze(["..."]),
+          finalStatus: "approved",
         },
-        next: 'COMPLETE',
+        next: "COMPLETE",
         ui: {
-          title: 'ui.text.byakugan.approval.title',
+          title: "ui.text.byakugan.approval.title",
         },
       }),
       checklist: Object.freeze([
-        'Compile `data.readinessChecklist` covering all validation criteria.',
+        "Compile `data.readinessChecklist` covering all validation criteria.",
         'Set `data.finalStatus` to "approved" when all checks pass.',
-        'Use OK_ALL_APPROVED or OK_CONSISTENT as status codes.',
-        'Regenerate locally if structure invalid.',
+        "Use OK_ALL_APPROVED or OK_CONSISTENT as status codes.",
+        "Regenerate locally if structure invalid.",
       ]),
     }),
     [EyeStageToken.VALIDATION]: Object.freeze({
@@ -523,22 +530,22 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
         tag: EyeId.BYAKUGAN,
         ok: true,
         code: EyeStatusCode.OK_ALL_APPROVED,
-        md: '## Approved for Production ...',
+        md: "## Approved for Production ...",
         data: {
-          readinessChecklist: Object.freeze(['...']),
-          finalStatus: 'approved',
+          readinessChecklist: Object.freeze(["..."]),
+          finalStatus: "approved",
           residualRisks: Object.freeze([]),
         },
-        next: 'END',
+        next: "END",
         ui: {
-          title: 'ui.text.byakugan.complete.title',
+          title: "ui.text.byakugan.complete.title",
         },
       }),
       checklist: Object.freeze([
-        'Include `data.residualRisks` for any known issues not blocking release.',
-        'Maintain checklist and status from guidance phase.',
-        'Use REJECT_INCONSISTENT if major contradictions detected.',
-        'Ensure ok=true when approved; regenerate if JSON validation fails.',
+        "Include `data.residualRisks` for any known issues not blocking release.",
+        "Maintain checklist and status from guidance phase.",
+        "Use REJECT_INCONSISTENT if major contradictions detected.",
+        "Ensure ok=true when approved; regenerate if JSON validation fails.",
       ]),
     }),
   }),
@@ -575,4 +582,3 @@ export function buildStageEnvelopeJsonSchema(
     return null;
   }
 }
-

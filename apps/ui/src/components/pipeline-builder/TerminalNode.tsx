@@ -1,10 +1,13 @@
-'use client';
+"use client";
 
-import { memo } from 'react';
-import { Handle, Position, type NodeProps } from 'reactflow';
-import { Flag, CheckCircle2, XCircle, AlertCircle, Clock } from 'lucide-react';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE } from '@/constants/color-mappings';
-import { ANIMATION_DURATION } from '@/constants/timing';
+import { memo } from "react";
+import { Handle, Position, type NodeProps } from "reactflow";
+import { Flag, CheckCircle2, XCircle, AlertCircle, Clock } from "lucide-react";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
+import { ANIMATION_DURATION } from "@/constants/timing";
 
 /**
  * Terminal Node Data Structure
@@ -20,23 +23,58 @@ export interface TerminalNodeData {
  * Verdict color mappings
  * Maps verdicts to semantic colors
  */
-const VERDICT_COLORS: Record<string, { text: string; bg: string; icon: typeof CheckCircle2 }> = {
-  OK: { text: STATUS_TEXT_COLORS.success, bg: STATUS_BG_COLORS_SUBTLE.success, icon: CheckCircle2 },
-  APPROVED: { text: STATUS_TEXT_COLORS.success, bg: STATUS_BG_COLORS_SUBTLE.success, icon: CheckCircle2 },
-  NEEDS_CLARIFICATION: { text: STATUS_TEXT_COLORS.warning, bg: STATUS_BG_COLORS_SUBTLE.warning, icon: AlertCircle },
-  NEEDS_REVISION: { text: STATUS_TEXT_COLORS.warning, bg: STATUS_BG_COLORS_SUBTLE.warning, icon: AlertCircle },
-  AWAIT_CONFIRMATION: { text: STATUS_TEXT_COLORS.info, bg: STATUS_BG_COLORS_SUBTLE.info, icon: Clock },
-  AWAIT_INPUT: { text: STATUS_TEXT_COLORS.info, bg: STATUS_BG_COLORS_SUBTLE.info, icon: Clock },
-  AWAIT_AGENT_PLAN: { text: STATUS_TEXT_COLORS.info, bg: STATUS_BG_COLORS_SUBTLE.info, icon: Clock },
-  FINAL_REVIEW_FAILED: { text: STATUS_TEXT_COLORS.error, bg: STATUS_BG_COLORS_SUBTLE.error, icon: XCircle },
-  END: { text: 'text-brand-foreground', bg: 'bg-brand-outline/20', icon: Flag },
+const VERDICT_COLORS: Record<
+  string,
+  { text: string; bg: string; icon: typeof CheckCircle2 }
+> = {
+  OK: {
+    text: STATUS_TEXT_COLORS.success,
+    bg: STATUS_BG_COLORS_SUBTLE.success,
+    icon: CheckCircle2,
+  },
+  APPROVED: {
+    text: STATUS_TEXT_COLORS.success,
+    bg: STATUS_BG_COLORS_SUBTLE.success,
+    icon: CheckCircle2,
+  },
+  NEEDS_CLARIFICATION: {
+    text: STATUS_TEXT_COLORS.warning,
+    bg: STATUS_BG_COLORS_SUBTLE.warning,
+    icon: AlertCircle,
+  },
+  NEEDS_REVISION: {
+    text: STATUS_TEXT_COLORS.warning,
+    bg: STATUS_BG_COLORS_SUBTLE.warning,
+    icon: AlertCircle,
+  },
+  AWAIT_CONFIRMATION: {
+    text: STATUS_TEXT_COLORS.info,
+    bg: STATUS_BG_COLORS_SUBTLE.info,
+    icon: Clock,
+  },
+  AWAIT_INPUT: {
+    text: STATUS_TEXT_COLORS.info,
+    bg: STATUS_BG_COLORS_SUBTLE.info,
+    icon: Clock,
+  },
+  AWAIT_AGENT_PLAN: {
+    text: STATUS_TEXT_COLORS.info,
+    bg: STATUS_BG_COLORS_SUBTLE.info,
+    icon: Clock,
+  },
+  FINAL_REVIEW_FAILED: {
+    text: STATUS_TEXT_COLORS.error,
+    bg: STATUS_BG_COLORS_SUBTLE.error,
+    icon: XCircle,
+  },
+  END: { text: "text-brand-foreground", bg: "bg-brand-outline/20", icon: Flag },
 };
 
 /**
  * Get verdict display info
  */
 function getVerdictInfo(verdict: string | undefined) {
-  const key = verdict || 'END';
+  const key = verdict || "END";
   return VERDICT_COLORS[key] || VERDICT_COLORS.END;
 }
 
@@ -54,8 +92,12 @@ function getVerdictInfo(verdict: string | undefined) {
  * Per R04: Memoized for performance
  * Per R07: Strict typing throughout
  */
-function TerminalNodeComponent({ data, selected, dragging }: NodeProps<TerminalNodeData>) {
-  const { label = 'Terminal', verdict = 'END' } = data;
+function TerminalNodeComponent({
+  data,
+  selected,
+  dragging,
+}: NodeProps<TerminalNodeData>) {
+  const { label = "Terminal", verdict = "END" } = data;
   const verdictInfo = getVerdictInfo(verdict);
   const VerdictIcon = verdictInfo.icon;
 
@@ -64,8 +106,8 @@ function TerminalNodeComponent({ data, selected, dragging }: NodeProps<TerminalN
       className={`
         relative min-w-[180px] rounded-lg border-2 bg-brand-paper p-4
         transition-all ${ANIMATION_DURATION.FAST} ease-in-out
-        ${selected ? 'border-dashed shadow-2xl border-brand-primary' : 'border-solid shadow-lg border-brand-outline'}
-        ${dragging ? 'cursor-grabbing opacity-80' : 'cursor-grab opacity-100'}
+        ${selected ? "border-dashed shadow-2xl border-brand-primary" : "border-solid shadow-lg border-brand-outline"}
+        ${dragging ? "cursor-grabbing opacity-80" : "cursor-grab opacity-100"}
       `}
     >
       {/* Input Handle (no output handle for terminal nodes) */}
@@ -97,7 +139,9 @@ function TerminalNodeComponent({ data, selected, dragging }: NodeProps<TerminalN
       </div>
 
       {/* Verdict Badge */}
-      <div className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full ${verdictInfo.bg} ${verdictInfo.text} flex items-center justify-center text-xs font-bold shadow-md`}>
+      <div
+        className={`absolute -bottom-2 -right-2 w-6 h-6 rounded-full ${verdictInfo.bg} ${verdictInfo.text} flex items-center justify-center text-xs font-bold shadow-md`}
+      >
         <VerdictIcon className="w-4 h-4" />
       </div>
     </div>
@@ -108,4 +152,4 @@ function TerminalNodeComponent({ data, selected, dragging }: NodeProps<TerminalN
  * Memoized Terminal Node (Performance optimization per R04)
  */
 export const TerminalNode = memo(TerminalNodeComponent);
-TerminalNode.displayName = 'TerminalNode';
+TerminalNode.displayName = "TerminalNode";

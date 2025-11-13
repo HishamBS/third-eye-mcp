@@ -1,39 +1,44 @@
-'use client';
+"use client";
 
-import type { FormEvent } from 'react';
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
-import { GlassCard } from '@/components/ui/GlassCard';
-import AuditTrail from '@/components/AuditTrail';
-import type { AuditRecord } from '@/components/AuditTrail';
-import { API_BASE_URL } from '@/consts/api';
+import type { FormEvent } from "react";
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { GlassCard } from "@/components/ui/GlassCard";
+import AuditTrail from "@/components/AuditTrail";
+import type { AuditRecord } from "@/components/AuditTrail";
+import { API_BASE_URL } from "@/consts/api";
 
 export default function AuditPage() {
   const [audit, setAudit] = useState<AuditRecord[]>([]);
   const [loadingAudit, setLoadingAudit] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [since, setSince] = useState('');
-  const [until, setUntil] = useState('');
-  const [tenant, setTenant] = useState('');
+  const [since, setSince] = useState("");
+  const [until, setUntil] = useState("");
+  const [tenant, setTenant] = useState("");
 
-  const fetchAudit = async (filters?: { limit?: number; since?: string; until?: string; tenant?: string }) => {
+  const fetchAudit = async (filters?: {
+    limit?: number;
+    since?: string;
+    until?: string;
+    tenant?: string;
+  }) => {
     setLoadingAudit(true);
     setError(null);
     try {
       const params = new URLSearchParams();
-      if (filters?.limit) params.set('limit', filters.limit.toString());
-      if (filters?.since) params.set('since', filters.since.toString());
-      if (filters?.until) params.set('until', filters.until.toString());
-      if (filters?.tenant) params.set('tenant', filters.tenant);
+      if (filters?.limit) params.set("limit", filters.limit.toString());
+      if (filters?.since) params.set("since", filters.since.toString());
+      if (filters?.until) params.set("until", filters.until.toString());
+      if (filters?.tenant) params.set("tenant", filters.tenant);
 
       const response = await fetch(`${API_BASE_URL}/api/audit?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch audit records');
+      if (!response.ok) throw new Error("Failed to fetch audit records");
 
       const data = await response.json();
       setAudit(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch audit');
+      setError(err instanceof Error ? err.message : "Failed to fetch audit");
     } finally {
       setLoadingAudit(false);
     }
@@ -60,12 +65,19 @@ export default function AuditPage() {
         <div className="mx-auto max-w-7xl px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
-              <Link href="/" className="text-semantic-muted transition-colors hover:text-brand-accent">
+              <Link
+                href="/"
+                className="text-semantic-muted transition-colors hover:text-brand-accent"
+              >
                 ← Home
               </Link>
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Security</p>
-                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">Audit Trail</h1>
+                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">
+                  Security
+                </p>
+                <h1 className="mt-1 text-2xl font-semibold text-brand-foreground">
+                  Audit Trail
+                </h1>
               </div>
             </div>
           </div>
@@ -81,7 +93,9 @@ export default function AuditPage() {
             <form onSubmit={handleSubmit}>
               <div className="grid gap-4 md:grid-cols-4">
                 <label className="flex flex-col gap-2">
-                  <span className="text-xs font-medium uppercase tracking-[0.2em] text-semantic-muted">Since</span>
+                  <span className="text-xs font-medium uppercase tracking-[0.2em] text-semantic-muted">
+                    Since
+                  </span>
                   <input
                     type="datetime-local"
                     value={since}
@@ -90,7 +104,9 @@ export default function AuditPage() {
                   />
                 </label>
                 <label className="flex flex-col gap-2">
-                  <span className="text-xs font-medium uppercase tracking-[0.2em] text-semantic-muted">Until</span>
+                  <span className="text-xs font-medium uppercase tracking-[0.2em] text-semantic-muted">
+                    Until
+                  </span>
                   <input
                     type="datetime-local"
                     value={until}
@@ -99,7 +115,9 @@ export default function AuditPage() {
                   />
                 </label>
                 <label className="flex flex-col gap-2">
-                  <span className="text-xs font-medium uppercase tracking-[0.2em] text-semantic-muted">Tenant</span>
+                  <span className="text-xs font-medium uppercase tracking-[0.2em] text-semantic-muted">
+                    Tenant
+                  </span>
                   <input
                     value={tenant}
                     onChange={(event) => setTenant(event.target.value)}

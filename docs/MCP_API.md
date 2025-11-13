@@ -45,6 +45,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 **Purpose**: Pipeline overview and workflow guidance. Always call this first.
 
 **Input Schema**:
+
 ```json
 {
   "context": "string (optional) - What you're trying to accomplish"
@@ -52,6 +53,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 ```
 
 **Output**:
+
 ```json
 {
   "tag": "overseer",
@@ -75,6 +77,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 **Purpose**: Ambiguity detection and classification (CODE vs GENERAL).
 
 **Input Schema**:
+
 ```json
 {
   "prompt": "string (required) - User prompt to analyze",
@@ -83,6 +86,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 ```
 
 **Output**:
+
 ```json
 {
   "tag": "sharingan",
@@ -102,6 +106,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 ```
 
 **Delegation Logic**:
+
 - If `ambiguous=true` and `x > 0`: Call `third_eye_prompt_helper` with clarifications
 - If `ambiguous=false` and `is_code_related=true`: Call `third_eye_rinnegan_plan_requirements`
 - If `ambiguous=false` and `is_code_related=false`: Proceed with text generation
@@ -113,6 +118,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 **Purpose**: Restructure ambiguous prompts into ROLE/TASK/CONTEXT/REQUIREMENTS/OUTPUT format.
 
 **Input Schema**:
+
 ```json
 {
   "prompt": "string (required) - Ambiguous prompt to restructure",
@@ -122,6 +128,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 ```
 
 **Output**:
+
 ```json
 {
   "tag": "helper",
@@ -142,6 +149,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 **Purpose**: Validate restructured prompts contain all required sections.
 
 **Input Schema**:
+
 ```json
 {
   "prompt": "string (required) - Restructured prompt to validate",
@@ -150,6 +158,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 ```
 
 **Output**:
+
 ```json
 {
   "tag": "jogan",
@@ -172,6 +181,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 **Purpose**: Provide plan schema and example.
 
 **Input Schema**:
+
 ```json
 {
   "task": "string (required) - Brief task description",
@@ -180,6 +190,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 ```
 
 **Output**:
+
 ```json
 {
   "tag": "rinnegan_requirements",
@@ -201,6 +212,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 **Purpose**: Review submitted plan against required structure.
 
 **Input Schema**:
+
 ```json
 {
   "plan": "string (required) - Implementation plan in markdown",
@@ -209,6 +221,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 ```
 
 **Output**:
+
 ```json
 {
   "tag": "rinnegan_review",
@@ -232,6 +245,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 **Purpose**: Validate file structure and architecture.
 
 **Input Schema**:
+
 ```json
 {
   "scaffold": "string (required) - Proposed file structure",
@@ -240,6 +254,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 ```
 
 **Output**:
+
 ```json
 {
   "tag": "mangekyo_scaffold",
@@ -263,6 +278,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 **Purpose**: Validate code diffs and implementation quality.
 
 **Input Schema**:
+
 ```json
 {
   "diffs": "string (required) - Code diffs in markdown fences",
@@ -272,6 +288,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 ```
 
 **Output**:
+
 ```json
 {
   "tag": "mangekyo_impl",
@@ -295,6 +312,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 **Purpose**: Validate test coverage and quality.
 
 **Input Schema**:
+
 ```json
 {
   "tests": "string (required) - Test code",
@@ -304,6 +322,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 ```
 
 **Output**:
+
 ```json
 {
   "tag": "mangekyo_tests",
@@ -327,6 +346,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 **Purpose**: Validate documentation completeness.
 
 **Input Schema**:
+
 ```json
 {
   "docs": "string (required) - Documentation in markdown",
@@ -335,6 +355,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 ```
 
 **Output**:
+
 ```json
 {
   "tag": "mangekyo_docs",
@@ -358,6 +379,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 **Purpose**: Aggregate all phase results for final go/no-go decision.
 
 **Input Schema**:
+
 ```json
 {
   "plan": "string (required) - Approved plan",
@@ -370,6 +392,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 ```
 
 **Output**:
+
 ```json
 {
   "tag": "rinnegan_approval",
@@ -399,6 +422,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 **Purpose**: Validate factual claims with citations.
 
 **Input Schema**:
+
 ```json
 {
   "content": "string (required) - Content with claims",
@@ -408,6 +432,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 ```
 
 **Output**:
+
 ```json
 {
   "tag": "tenseigan",
@@ -432,6 +457,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 **Purpose**: Detect contradictions against session history.
 
 **Input Schema**:
+
 ```json
 {
   "content": "string (required) - New content to check",
@@ -440,6 +466,7 @@ bun run /path/to/third-eye-mcp/bin/mcp-server.ts
 ```
 
 **Output**:
+
 ```json
 {
   "tag": "byakugan",
@@ -463,18 +490,19 @@ All Eyes return a standard JSON envelope:
 
 ```typescript
 interface Envelope {
-  tag: string;           // Eye identifier
-  ok: boolean;           // Success flag
-  code: string;          // Status code (OK_* or E_*)
-  md: string;            // Markdown explanation
-  data: object;          // Structured data
-  next: string;          // Suggested next action
+  tag: string; // Eye identifier
+  ok: boolean; // Success flag
+  code: string; // Status code (OK_* or E_*)
+  md: string; // Markdown explanation
+  data: object; // Structured data
+  next: string; // Suggested next action
 }
 ```
 
 ### Status Codes
 
 **Success codes** (ok=true):
+
 - `OK_OVERVIEW` - Navigator provided overview
 - `OK_CLEAR` - Sharingan found prompt clear
 - `OK_RESTRUCTURED` - Prompt helper restructured successfully
@@ -490,6 +518,7 @@ interface Envelope {
 - `OK_CONSISTENT` - No contradictions
 
 **Error codes** (ok=false):
+
 - `E_NEEDS_CLARIFICATION` - Sharingan found ambiguity
 - `E_INCOMPLETE_PROMPT` - Jōgan found missing sections
 - `E_PLAN_INCOMPLETE` - Rinnegan rejected plan
@@ -551,6 +580,7 @@ interface Envelope {
 If not using MCP, call Eyes via REST:
 
 ### Base URL
+
 ```
 http://localhost:7070
 ```

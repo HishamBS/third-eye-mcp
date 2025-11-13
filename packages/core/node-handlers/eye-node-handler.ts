@@ -8,10 +8,14 @@
  * - WebSocket event emission
  */
 
-import type { PipelineDagNode } from '@third-eye/types';
-import type { ProviderType } from '@third-eye/providers';
-import type { NodeHandler, ExecutionContext, NodeExecutionResult } from './base-handler';
-import { EyeOrchestrator } from '../orchestrator';
+import type { PipelineDagNode } from "@third-eye/types";
+import type { ProviderType } from "@third-eye/providers";
+import type {
+  NodeHandler,
+  ExecutionContext,
+  NodeExecutionResult,
+} from "./base-handler";
+import { EyeOrchestrator } from "../orchestrator";
 
 export class EyeNodeHandler implements NodeHandler {
   private orchestrator: EyeOrchestrator;
@@ -21,11 +25,14 @@ export class EyeNodeHandler implements NodeHandler {
   }
 
   canHandle(node: PipelineDagNode): boolean {
-    return node.type === 'Eye';
+    return node.type === "Eye";
   }
 
-  async execute(node: PipelineDagNode, context: ExecutionContext): Promise<NodeExecutionResult> {
-    if (node.type !== 'Eye') {
+  async execute(
+    node: PipelineDagNode,
+    context: ExecutionContext,
+  ): Promise<NodeExecutionResult> {
+    if (node.type !== "Eye") {
       throw new Error(`EyeNodeHandler cannot handle node type: ${node.type}`);
     }
 
@@ -34,11 +41,12 @@ export class EyeNodeHandler implements NodeHandler {
     try {
       // Build input from context
       const inputData = this.buildInput(context);
-      const inputMd = typeof inputData === 'string' ? inputData : JSON.stringify(inputData);
+      const inputMd =
+        typeof inputData === "string" ? inputData : JSON.stringify(inputData);
 
       // Execute Eye via EyeOrchestrator
       if (!node.eyeId) {
-        throw new Error('Eye node must have an eyeId property');
+        throw new Error("Eye node must have an eyeId property");
       }
       const providerOverride = node.providerOverride
         ? {
@@ -53,7 +61,7 @@ export class EyeNodeHandler implements NodeHandler {
         {
           providerOverride,
           // TODO: Map strictnessOverride to options when supported
-        }
+        },
       );
 
       const latencyMs = Date.now() - startTime;
@@ -63,7 +71,7 @@ export class EyeNodeHandler implements NodeHandler {
 
       return {
         nodeId: node.id,
-        status: 'success',
+        status: "success",
         verdict,
         output: result,
         latencyMs,
@@ -78,7 +86,7 @@ export class EyeNodeHandler implements NodeHandler {
 
       return {
         nodeId: node.id,
-        status: 'error',
+        status: "error",
         error: error instanceof Error ? error.message : String(error),
         latencyMs,
         metadata: {
@@ -109,36 +117,36 @@ export class EyeNodeHandler implements NodeHandler {
   private extractVerdict(result: unknown): string {
     // Type guard for Eye result structure
     if (
-      typeof result === 'object' &&
+      typeof result === "object" &&
       result !== null &&
-      'verdict' in result &&
-      typeof (result as { verdict: unknown }).verdict === 'string'
+      "verdict" in result &&
+      typeof (result as { verdict: unknown }).verdict === "string"
     ) {
       return (result as { verdict: string }).verdict;
     }
 
     // Check for ok/approved status
     if (
-      typeof result === 'object' &&
+      typeof result === "object" &&
       result !== null &&
-      'ok' in result &&
+      "ok" in result &&
       (result as { ok: unknown }).ok === true
     ) {
-      return 'APPROVED';
+      return "APPROVED";
     }
 
     // Check for response.ok pattern
     if (
-      typeof result === 'object' &&
+      typeof result === "object" &&
       result !== null &&
-      'response' in result &&
-      typeof (result as { response: unknown }).response === 'object' &&
+      "response" in result &&
+      typeof (result as { response: unknown }).response === "object" &&
       (result as { response: { ok?: boolean } }).response?.ok === true
     ) {
-      return 'APPROVED';
+      return "APPROVED";
     }
 
     // Default to OK for successful execution
-    return 'OK';
+    return "OK";
   }
 }

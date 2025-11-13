@@ -1,16 +1,16 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 import type {
   EyeState,
   PipelineEvent,
   PipelineStore,
   SessionSettingsPayload,
   EvidenceClaim,
-} from '../types/pipeline';
+} from "../types/pipeline";
 
 const MAX_EVENTS = 500;
 
 function normalizeEye(name?: string | null): string {
-  if (!name) return 'UNKNOWN';
+  if (!name) return "UNKNOWN";
   return name.toUpperCase();
 }
 
@@ -65,7 +65,10 @@ export const usePipelineStore = create<PipelineStore>((set, _get) => ({
   setClaims: (claims: EvidenceClaim[]) => set({ claims }),
   setConnectionState: (connected) => set({ connected }),
   setError: (message) => set({ error: message }),
-  incrementAttempts: () => set(({ connectionAttempts }) => ({ connectionAttempts: connectionAttempts + 1 })),
+  incrementAttempts: () =>
+    set(({ connectionAttempts }) => ({
+      connectionAttempts: connectionAttempts + 1,
+    })),
 }));
 
 export function selectEyeStates(): Record<string, EyeState> {

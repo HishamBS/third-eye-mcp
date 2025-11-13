@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { ChevronRight, Home } from 'lucide-react';
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { ChevronRight, Home } from "lucide-react";
 
 interface Breadcrumb {
   label: string;
@@ -10,33 +10,33 @@ interface Breadcrumb {
 }
 
 const ROUTE_LABELS: Record<string, string> = {
-  connections: 'Connections',
-  eyes: 'Eyes',
-  models: 'Models',
-  personas: 'Personas',
-  pipelines: 'Pipelines',
-  strictness: 'Strictness',
-  prompts: 'Prompts',
-  settings: 'Settings',
-  database: 'Database',
-  metrics: 'Metrics',
-  monitor: 'Monitor',
-  replay: 'Replay',
-  duel: 'Duel',
-  playground: 'Playground',
-  audit: 'Audit',
+  connections: "Connections",
+  eyes: "Eyes",
+  models: "Models",
+  personas: "Personas",
+  pipelines: "Pipelines",
+  strictness: "Strictness",
+  prompts: "Prompts",
+  settings: "Settings",
+  database: "Database",
+  metrics: "Metrics",
+  monitor: "Monitor",
+  replay: "Replay",
+  duel: "Duel",
+  playground: "Playground",
+  audit: "Audit",
 };
 
 export function Breadcrumbs() {
   const pathname = usePathname();
 
-  const breadcrumbs: Breadcrumb[] = [{ label: 'Home', href: '/' }];
+  const breadcrumbs: Breadcrumb[] = [{ label: "Home", href: "/" }];
 
-  if (pathname !== '/') {
-    const segments = pathname.split('/').filter(Boolean);
+  if (pathname !== "/") {
+    const segments = pathname.split("/").filter(Boolean);
 
     segments.forEach((segment, index) => {
-      const href = '/' + segments.slice(0, index + 1).join('/');
+      const href = "/" + segments.slice(0, index + 1).join("/");
 
       // Check if this is a dynamic ID segment (like session/abc123)
       const isId = /^[a-zA-Z0-9_-]{10,}$/.test(segment);
@@ -47,7 +47,9 @@ export function Breadcrumbs() {
         const parentLabel = ROUTE_LABELS[parentSegment] || parentSegment;
         breadcrumbs.push({ label: `${parentLabel} Detail`, href });
       } else {
-        const label = ROUTE_LABELS[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
+        const label =
+          ROUTE_LABELS[segment] ||
+          segment.charAt(0).toUpperCase() + segment.slice(1);
         breadcrumbs.push({ label, href });
       }
     });
@@ -82,8 +84,8 @@ export function Breadcrumbs() {
                   href={crumb.href}
                   className={`transition-colors ${
                     isLast
-                      ? 'text-brand-accent font-medium'
-                      : 'text-semantic-muted hover:text-brand-foreground'
+                      ? "text-brand-accent font-medium"
+                      : "text-semantic-muted hover:text-brand-foreground"
                   }`}
                 >
                   {crumb.label}

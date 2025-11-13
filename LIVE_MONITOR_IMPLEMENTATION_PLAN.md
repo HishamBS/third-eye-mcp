@@ -25,11 +25,13 @@ The Live Monitor is THE showcase that demonstrates Third Eye MCP's value to user
 ### What EXISTS ✅
 
 **Files**:
+
 - `apps/ui/src/app/monitor/page.tsx` - Main monitor page (920 lines)
 - `apps/ui/src/components/monitor/PipelineVisualization.tsx` - Pipeline viz (314 lines)
 - `apps/ui/src/components/monitor/tabs/EyesTab.tsx` - Eyes tab component
 
 **Features**:
+
 - 5 tabs: Timeline, Routing, Clarifications, Intent, Evidence
 - Real-time WebSocket updates
 - Export (MD, PDF, JSON)
@@ -38,6 +40,7 @@ The Live Monitor is THE showcase that demonstrates Third Eye MCP's value to user
 - Auto-scroll
 
 **Technology Stack**:
+
 - Next.js App Router
 - React + TypeScript
 - Framer Motion (animations)
@@ -51,25 +54,16 @@ The Live Monitor is THE showcase that demonstrates Third Eye MCP's value to user
 Based on analysis of 5 concrete examples, identified 10 critical gaps (see VISION_EXAMPLES_AND_LIVE_MONITOR_ANALYSIS.md).
 
 **Tier 1 (CRITICAL)**:
+
 1. Pause state visualization
 2. Loop-back arrow indication
 3. Human interaction flow (Eye → Agent → Human → Agent)
 4. Multi-pass differentiation (Pass 1 vs Pass 2)
 5. Beautiful output rendering (briefs, scores, constraints)
 
-**Tier 2 (HIGH)**:
-6. Wait timers & timeout warnings
-7. Agent relay event representation
-8. Conversation thread view
-9. Reasoning panels (WHY eye acted)
-10. Revision diffs (before/after comparison)
+**Tier 2 (HIGH)**: 6. Wait timers & timeout warnings 7. Agent relay event representation 8. Conversation thread view 9. Reasoning panels (WHY eye acted) 10. Revision diffs (before/after comparison)
 
-**Tier 3 (NICE TO HAVE)**:
-11. Pattern insights
-12. Narrative export
-13. Replay with pause points
-14. Real-time collaboration
-15. Performance dashboards
+**Tier 3 (NICE TO HAVE)**: 11. Pattern insights 12. Narrative export 13. Replay with pause points 14. Real-time collaboration 15. Performance dashboards
 
 ---
 
@@ -86,6 +80,7 @@ Based on analysis of 5 concrete examples, identified 10 critical gaps (see VISIO
 **Goal**: Show when pipeline is paused waiting for human input
 
 **Tasks**:
+
 - [ ] Create PauseStateIndicator component
 - [ ] Add "⏸️ PAUSED" status badge to timeline
 - [ ] Create ActiveQuestionPanel component (floating panel)
@@ -99,10 +94,14 @@ Based on analysis of 5 concrete examples, identified 10 critical gaps (see VISIO
 - [ ] Ensure accessibility (screen reader support)
 
 **Component structure**:
+
 ```typescript
 // components/monitor/PauseStateIndicator.tsx
 interface PauseStateIndicatorProps {
-  pauseReason: 'HUMAN_INPUT_REQUIRED' | 'INTENT_CONFIRMATION' | 'CONSTRAINT_DECISION';
+  pauseReason:
+    | "HUMAN_INPUT_REQUIRED"
+    | "INTENT_CONFIRMATION"
+    | "CONSTRAINT_DECISION";
   eyeName: string;
   questions: string[];
   elapsedTime: number; // ms
@@ -116,6 +115,7 @@ interface PauseStateIndicatorProps {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Pause state visible within 100ms of event
 - ✅ Prominent enough users can't miss it
 - ✅ Shows which eye is waiting
@@ -133,6 +133,7 @@ interface PauseStateIndicatorProps {
 **Goal**: Show when pipeline loops back from one eye to another after rejection/revision
 
 **Tasks**:
+
 - [ ] Update PipelineVisualization component to support loop arrows
 - [ ] Add curved arrow SVG from target eye back to source eye
 - [ ] Style loop arrows differently (dashed, different color)
@@ -146,10 +147,18 @@ interface PauseStateIndicatorProps {
 - [ ] Add Storybook stories for loop flows
 
 **SVG loop arrow example**:
+
 ```tsx
 <svg className="absolute inset-0 h-full w-full" style={{ zIndex: 2 }}>
   <defs>
-    <marker id="arrowhead-loop" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+    <marker
+      id="arrowhead-loop"
+      markerWidth="10"
+      markerHeight="10"
+      refX="9"
+      refY="3"
+      orient="auto"
+    >
       <polygon points="0 0, 10 3, 0 6" fill="#F59E0B" />
     </marker>
   </defs>
@@ -168,6 +177,7 @@ interface PauseStateIndicatorProps {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Loop arrows clearly visible
 - ✅ Different visual style from forward arrows
 - ✅ Animated (draws over 1 second)
@@ -185,6 +195,7 @@ interface PauseStateIndicatorProps {
 **Goal**: Visualize Eye → Agent → Human → Agent → Eye flow for each pause
 
 **Tasks**:
+
 - [ ] Create HumanInteractionFlow component
 - [ ] Design chat-like interface for interaction display
 - [ ] Add eye bubble (left side) with question
@@ -201,10 +212,16 @@ interface PauseStateIndicatorProps {
 - [ ] Add Storybook stories
 
 **Component structure**:
+
 ```tsx
 // components/monitor/HumanInteractionFlow.tsx
 interface InteractionStep {
-  type: 'eye_question' | 'agent_relay_out' | 'human_response' | 'agent_relay_in' | 'eye_receipt';
+  type:
+    | "eye_question"
+    | "agent_relay_out"
+    | "human_response"
+    | "agent_relay_in"
+    | "eye_receipt";
   timestamp: Date;
   actor: string; // Eye name, 'agent', 'human'
   content: string;
@@ -214,11 +231,12 @@ interface HumanInteractionFlowProps {
   interactionId: string;
   eyeName: string;
   steps: InteractionStep[];
-  status: 'in_progress' | 'completed';
+  status: "in_progress" | "completed";
 }
 ```
 
 **Visual layout**:
+
 ```
 [Sharingan] → [Agent] → [Human] → [Agent] → [Sharingan]
 "Asking 4     Relaying    "Indoor,   Submitting   Received
@@ -227,6 +245,7 @@ interface HumanInteractionFlowProps {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Clear left-to-right flow
 - ✅ All 5 steps shown
 - ✅ Timestamps accurate
@@ -244,6 +263,7 @@ interface HumanInteractionFlowProps {
 **Goal**: Clearly show when same eye executes multiple times (Pass 1 vs Pass 2)
 
 **Tasks**:
+
 - [ ] Add pass number detection logic
 - [ ] Update eye status to include pass number
 - [ ] Add "Pass 1", "Pass 2" badges to eye nodes
@@ -257,6 +277,7 @@ interface HumanInteractionFlowProps {
 - [ ] Add Storybook stories
 
 **Visual representation**:
+
 ```
 ┌─────────────────────────────┐
 │ Kyuubi                      │
@@ -269,10 +290,12 @@ interface HumanInteractionFlowProps {
 ```
 
 **Pass badge styles**:
+
 - Pass 1 (initial): Blue border
 - Pass 2+ (revision): Orange border with 🔄 icon
 
 **Comparison modal**:
+
 ```
 ┌─────────────────────────────────────────────┐
 │ Kyuubi - Pass Comparison                    │
@@ -293,6 +316,7 @@ interface HumanInteractionFlowProps {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Pass numbers clearly visible
 - ✅ Visual grouping of multiple passes
 - ✅ Comparison view functional
@@ -310,6 +334,7 @@ interface HumanInteractionFlowProps {
 **Goal**: Render eye outputs in beautiful, human-readable cards (not just raw JSON)
 
 **Tasks**:
+
 - [ ] Create EyeOutputCard component library
 - [ ] Create StructuredBriefCard component (Kyuubi output)
 - [ ] Create AmbiguityAnalysisCard component (Sharingan output)
@@ -326,6 +351,7 @@ interface HumanInteractionFlowProps {
 - [ ] Ensure accessibility (keyboard navigation, screen readers)
 
 **StructuredBriefCard example**:
+
 ```tsx
 // components/monitor/cards/StructuredBriefCard.tsx
 interface StructuredBriefCardProps {
@@ -366,6 +392,7 @@ interface StructuredBriefCardProps {
 ```
 
 **QualityScoreCard with visualization**:
+
 ```tsx
 ┌───────────────────────────────┐
 │ Quality Assessment            │
@@ -382,6 +409,7 @@ interface StructuredBriefCardProps {
 ```
 
 **ConstraintMatrixCard for Rinnegan**:
+
 ```tsx
 ┌─────────────────────────────────────────────────┐
 │ ⚠️ Feasibility Constraint Analysis              │
@@ -397,6 +425,7 @@ interface StructuredBriefCardProps {
 ```
 
 **Acceptance criteria**:
+
 - ✅ All eye output types have beautiful cards
 - ✅ Cards use brand + eye-specific colors
 - ✅ Expandable sections work
@@ -417,6 +446,7 @@ interface StructuredBriefCardProps {
 **Goal**: Show real-time countdown while waiting for human, warn before timeout
 
 **Tasks**:
+
 - [ ] Create WaitTimerComponent
 - [ ] Add elapsed time counter (updates every second)
 - [ ] Add timeout countdown (e.g., "Auto-timeout in 27m 14s")
@@ -431,6 +461,7 @@ interface StructuredBriefCardProps {
 - [ ] Add Storybook stories
 
 **Component structure**:
+
 ```tsx
 // components/monitor/WaitTimer.tsx
 interface WaitTimerProps {
@@ -448,6 +479,7 @@ interface WaitTimerProps {
 ```
 
 **Visual representation**:
+
 ```
 ┌────────────────────────────────────┐
 │ ⏸️ Waiting for Human               │
@@ -481,6 +513,7 @@ interface WaitTimerProps {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Timer updates every second
 - ✅ Timeout countdown accurate
 - ✅ Warning at 5 minutes
@@ -501,6 +534,7 @@ interface WaitTimerProps {
 **Goal**: Show before/after comparison when eye output is revised
 
 **Tasks**:
+
 - [ ] Create RevisionDiffViewer component
 - [ ] Implement side-by-side comparison view
 - [ ] Add inline diff highlighting (green for added, red for removed, yellow for changed)
@@ -515,10 +549,12 @@ interface WaitTimerProps {
 - [ ] Add Storybook stories
 
 **Library options**:
+
 - Use `diff` npm package for diffing logic
 - Use `react-diff-viewer` or custom implementation for rendering
 
 **Visual representation**:
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ Kyuubi - Brief Revision                                 │
@@ -548,6 +584,7 @@ interface WaitTimerProps {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Side-by-side comparison clear
 - ✅ Diff highlighting accurate
 - ✅ Nested object diffs work
@@ -568,6 +605,7 @@ interface WaitTimerProps {
 **Goal**: Explain WHY each eye took the action it did
 
 **Tasks**:
+
 - [ ] Create ReasoningPanel component
 - [ ] Add reasoning extraction from eye output
 - [ ] Display trigger events ("Ambiguity score 75/100")
@@ -580,6 +618,7 @@ interface WaitTimerProps {
 - [ ] Add Storybook stories
 
 **Component structure**:
+
 ```tsx
 // components/monitor/ReasoningPanel.tsx
 interface ReasoningPanelProps {
@@ -594,6 +633,7 @@ interface ReasoningPanelProps {
 ```
 
 **Visual representation**:
+
 ```
 ┌──────────────────────────────────────────────┐
 │ 🔍 Sharingan - Reasoning                     │
@@ -617,6 +657,7 @@ interface ReasoningPanelProps {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Reasoning panels for all eyes
 - ✅ Trigger/analysis/decision structure clear
 - ✅ Confidence scores displayed
@@ -634,6 +675,7 @@ interface ReasoningPanelProps {
 **Goal**: Upgrade timeline to show pause states, loop-backs, and human interactions visually
 
 **Tasks**:
+
 - [ ] Update ConversationEntry component to support pause states
 - [ ] Add pause state badge to timeline entries
 - [ ] Add loop-back indicator in timeline
@@ -648,12 +690,13 @@ interface ReasoningPanelProps {
 - [ ] Ensure timeline updates in real-time via WebSocket
 
 **Enhanced timeline entry types**:
+
 ```typescript
 // Original ConversationEntry supports:
 type ConversationEntryData = {
-  speaker: 'agent' | 'human' | EyeName;
+  speaker: "agent" | "human" | EyeName;
   message: string;
-  stage?: 'guidance' | 'validation';
+  stage?: "guidance" | "validation";
   metadata: {
     code?: string;
     dataJson?: Record<string, unknown>;
@@ -663,7 +706,7 @@ type ConversationEntryData = {
 // NEW: Enhanced with pause/loop/revision support
 type EnhancedConversationEntryData = ConversationEntryData & {
   pauseState?: {
-    status: 'paused' | 'resuming' | 'resumed';
+    status: "paused" | "resuming" | "resumed";
     reason: string;
     elapsedTime?: number;
   };
@@ -678,6 +721,7 @@ type EnhancedConversationEntryData = ConversationEntryData & {
 ```
 
 **Visual enhancements**:
+
 ```
 10:30:00 🧿 Overseer       Routing to Sharingan
 10:30:01 🔍 Sharingan      Detected ambiguity (75/100)
@@ -699,6 +743,7 @@ type EnhancedConversationEntryData = ConversationEntryData & {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Pause states clearly visible
 - ✅ Loop-backs indicated with arrows
 - ✅ Pass numbers shown for multi-pass
@@ -719,6 +764,7 @@ type EnhancedConversationEntryData = ConversationEntryData & {
 **Goal**: Enhance pipeline visualization to show pause states, loops, active flow
 
 **Tasks**:
+
 - [ ] Update eye node styling for pause state (pulsing yellow border)
 - [ ] Add "WAITING" badge to paused eye nodes
 - [ ] Add loop-back arrows (curved, dashed, orange)
@@ -733,10 +779,11 @@ type EnhancedConversationEntryData = ConversationEntryData & {
 - [ ] Add Storybook stories
 
 **Eye node states**:
+
 ```typescript
 type EyeNodeState = {
-  status: 'idle' | 'running' | 'completed' | 'paused' | 'failed';
-  verdict?: 'APPROVED' | 'REJECTED' | 'NEEDS_INPUT';
+  status: "idle" | "running" | "completed" | "paused" | "failed";
+  verdict?: "APPROVED" | "REJECTED" | "NEEDS_INPUT";
   passNumber?: number;
   isPaused?: boolean;
   isRevision?: boolean;
@@ -753,6 +800,7 @@ type EyeNodeState = {
 ```
 
 **Loop arrow styling**:
+
 ```tsx
 <motion.path
   d={`M ${fromX},${fromY} Q ${controlX},${controlY} ${toX},${toY}`}
@@ -768,6 +816,7 @@ type EyeNodeState = {
 ```
 
 **Active flow animation** (flowing dots):
+
 ```tsx
 <motion.circle
   r="4"
@@ -780,6 +829,7 @@ type EyeNodeState = {
 ```
 
 **Acceptance criteria**:
+
 - ✅ Pause state clearly visible
 - ✅ Loop arrows animated and clear
 - ✅ Active flow animation smooth
@@ -796,12 +846,14 @@ type EyeNodeState = {
 ## Summary: Live Monitor Transformation
 
 ### Before (Current State):
+
 - Event log with timeline
 - Basic eye status visualization
 - Separate tabs for different data
 - Static display
 
 ### After (Vision):
+
 - **Real-time theater** showing the drama of pipeline execution
 - **Pause states** prominently displayed with timers
 - **Loop-backs** visually clear with curved arrows and reasoning
@@ -813,6 +865,7 @@ type EyeNodeState = {
 - **Animated pipeline visualization** with active flow, pause states, loops
 
 ### User Experience Transformation:
+
 **Before**: "What happened?"
 **After**: "I can SEE it happening!"
 
@@ -827,6 +880,7 @@ type EyeNodeState = {
 ## Integration with Main Plan
 
 ### Updated Phase Structure:
+
 1. **Phase 1**: Foundation (Function Calling) - 42 tasks
 2. **Phase 2**: Vision Alignment (Personas, Pause/Resume) - 48 tasks
 3. **Phase 3**: Live Monitor (Visualization) - 52 tasks ← **NEW**
@@ -840,6 +894,7 @@ type EyeNodeState = {
 ## Success Criteria
 
 **Phase 3 Complete when**:
+
 - ✅ All Tier 1 features implemented (pause, loops, interaction, multi-pass, cards)
 - ✅ Live Monitor shows 5 examples from VISION_EXAMPLES_AND_LIVE_MONITOR_ANALYSIS.md beautifully
 - ✅ Users say "WOW, I can actually SEE what Third Eye is doing!"
@@ -854,12 +909,14 @@ type EyeNodeState = {
 ## Post-Phase 3: Tier 2 & 3 Features (Future)
 
 **Tier 2 (High Priority - Post-Release)**:
+
 - Conversation thread view for multi-turn interactions
 - Agent relay event representation
 - Pattern insights across sessions
 - Enhanced export (narrative style, visual diagrams)
 
 **Tier 3 (Nice to Have - Long-term)**:
+
 - Real-time collaboration (multiple users viewing same session)
 - Replay with interactive pause points
 - Performance dashboards and analytics

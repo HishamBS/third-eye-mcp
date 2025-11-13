@@ -1,33 +1,31 @@
-import type { Metadata, Viewport } from 'next';
-import '@fontsource-variable/inter';
-import '@fontsource/geist-mono';
-import '../index.css';
-import { UIProvider } from '@/contexts/UIContext';
-import { GlobalNav } from '@/components/GlobalNav';
-import { Breadcrumbs } from '@/components/Breadcrumbs';
-import { SecurityBanner } from '@/components/SecurityBanner';
-import { ThemeScript } from '@/components/ThemeScript';
-import { SessionNotifier } from '@/components/SessionNotifier';
-import { DialogProvider } from '@/hooks/useDialog';
-import { WelcomeModal } from '@/components/WelcomeModal';
-import { SkipLink } from '@/components/SkipLink';
+import type { Metadata, Viewport } from "next";
+import "@fontsource-variable/inter";
+import "@fontsource/geist-mono";
+import "../index.css";
+import { UIProvider } from "@/contexts/UIContext";
+import { GlobalNav } from "@/components/GlobalNav";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { SecurityBanner } from "@/components/SecurityBanner";
+import { ThemeScript } from "@/components/ThemeScript";
+import { SessionNotifier } from "@/components/SessionNotifier";
+import { DialogProvider } from "@/hooks/useDialog";
+import { WelcomeModal } from "@/components/WelcomeModal";
+import { SkipLink } from "@/components/SkipLink";
 
 // Force dynamic rendering for all pages to avoid prerendering issues with client hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: 'Third Eye MCP - Overseer',
-  description: 'Local-first AI orchestration layer with Eyes',
+  title: "Third Eye MCP - Overseer",
+  description: "Local-first AI orchestration layer with Eyes",
   icons: {
-    icon: [
-      { url: '/favicon.ico', type: 'image/x-icon' },
-    ],
-    shortcut: ['/favicon.ico'],
+    icon: [{ url: "/favicon.ico", type: "image/x-icon" }],
+    shortcut: ["/favicon.ico"],
   },
 };
 
 export const viewport: Viewport = {
-  width: 'device-width',
+  width: "device-width",
   initialScale: 1,
 };
 
@@ -37,13 +35,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" data-theme="overseer" data-mode="dark" suppressHydrationWarning>
+    <html
+      lang="en"
+      data-theme="overseer"
+      data-mode="dark"
+      suppressHydrationWarning
+    >
       <head>
         <meta charSet="utf-8" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any" />
         <ThemeScript />
       </head>
-      <body className="min-h-screen bg-brand-paper font-sans antialiased" suppressHydrationWarning>
+      <body
+        className="min-h-screen bg-brand-paper font-sans antialiased"
+        suppressHydrationWarning
+      >
         <SkipLink />
         <UIProvider>
           <SecurityBanner />

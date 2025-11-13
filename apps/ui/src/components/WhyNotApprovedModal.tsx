@@ -1,8 +1,12 @@
-import { useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import clsx from 'clsx';
-import type { EyeState } from '../types/pipeline';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import clsx from "clsx";
+import type { EyeState } from "../types/pipeline";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
 
 export interface WhyNotApprovedModalProps {
   eyeState: EyeState | null;
@@ -21,7 +25,7 @@ function parseIssues(state: EyeState | null): Issue[] {
   if (!state?.data?.issues_md) return [];
 
   const issuesText = state.data.issues_md as string;
-  const lines = issuesText.split('\n').filter(l => l.trim());
+  const lines = issuesText.split("\n").filter((l) => l.trim());
 
   const issues: Issue[] = [];
   let currentIssue: Partial<Issue> = {};
@@ -32,14 +36,19 @@ function parseIssues(state: EyeState | null): Issue[] {
       if (currentIssue.category && currentIssue.description) {
         issues.push(currentIssue as Issue);
       }
-      currentIssue = { category: line.replace(/\*\*/g, '').replace(':', '').trim() };
+      currentIssue = {
+        category: line.replace(/\*\*/g, "").replace(":", "").trim(),
+      };
     }
     // Issue descriptions
-    else if (line.startsWith('-') || line.startsWith('*')) {
-      currentIssue.description = line.replace(/^[-*]\s*/, '').trim();
+    else if (line.startsWith("-") || line.startsWith("*")) {
+      currentIssue.description = line.replace(/^[-*]\s*/, "").trim();
     }
     // Fix suggestions
-    else if (line.toLowerCase().includes('fix:') || line.toLowerCase().includes('suggestion:')) {
+    else if (
+      line.toLowerCase().includes("fix:") ||
+      line.toLowerCase().includes("suggestion:")
+    ) {
       currentIssue.fix = line.split(/fix:|suggestion:/i)[1]?.trim();
     }
     // Fallback - treat as description if we have a category
@@ -54,32 +63,50 @@ function parseIssues(state: EyeState | null): Issue[] {
 
   // Fallback to simple parsing if no structured issues found
   if (issues.length === 0) {
-    return [{
-      category: 'General',
-      description: issuesText,
-    }];
+    return [
+      {
+        category: "General",
+        description: issuesText,
+      },
+    ];
   }
 
   return issues;
 }
 
-function getMarkdown(state: EyeState | null, key: 'issues_md' | 'fix_instructions_md'): string {
-  if (!state?.data) return 'No details provided.';
+function getMarkdown(
+  state: EyeState | null,
+  key: "issues_md" | "fix_instructions_md",
+): string {
+  if (!state?.data) return "No details provided.";
   const value = state.data[key];
-  if (typeof value === 'string' && value.trim().length > 0) return value;
-  return 'No details provided.';
+  if (typeof value === "string" && value.trim().length > 0) return value;
+  return "No details provided.";
 }
 
-export function WhyNotApprovedModal({ eyeState, open, onClose, onResubmit }: WhyNotApprovedModalProps) {
+export function WhyNotApprovedModal({
+  eyeState,
+  open,
+  onClose,
+  onResubmit,
+}: WhyNotApprovedModalProps) {
   const parsedIssues = useMemo(() => parseIssues(eyeState), [eyeState]);
-  const fixes = useMemo(() => getMarkdown(eyeState, 'fix_instructions_md'), [eyeState]);
+  const fixes = useMemo(
+    () => getMarkdown(eyeState, "fix_instructions_md"),
+    [eyeState],
+  );
 
   const categoryColors: Record<string, string> = {
-    'Security': '${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error}',
-    'Performance': '${STATUS_BORDER_COLORS_SUBTLE.warning} ${STATUS_BG_COLORS_SUBTLE.warning}',
-    'Quality': '${STATUS_BORDER_COLORS_SUBTLE.info} ${STATUS_BG_COLORS_SUBTLE.info}',
-    'Documentation': '${STATUS_BORDER_COLORS_SUBTLE.info} ${STATUS_BG_COLORS_SUBTLE.info}',
-    'General': '${STATUS_BORDER_COLORS_SUBTLE.idle} ${STATUS_BG_COLORS_SUBTLE.idle}',
+    Security:
+      "${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error}",
+    Performance:
+      "${STATUS_BORDER_COLORS_SUBTLE.warning} ${STATUS_BG_COLORS_SUBTLE.warning}",
+    Quality:
+      "${STATUS_BORDER_COLORS_SUBTLE.info} ${STATUS_BG_COLORS_SUBTLE.info}",
+    Documentation:
+      "${STATUS_BORDER_COLORS_SUBTLE.info} ${STATUS_BG_COLORS_SUBTLE.info}",
+    General:
+      "${STATUS_BORDER_COLORS_SUBTLE.idle} ${STATUS_BG_COLORS_SUBTLE.idle}",
   };
 
   return (
@@ -99,11 +126,18 @@ export function WhyNotApprovedModal({ eyeState, open, onClose, onResubmit }: Why
           >
             <header className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Why not approved</p>
-                <h2 className="text-xl font-semibold text-brand-foreground">{eyeState.eye}</h2>
+                <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">
+                  Why not approved
+                </p>
+                <h2 className="text-xl font-semibold text-brand-foreground">
+                  {eyeState.eye}
+                </h2>
                 {eyeState.code && (
                   <p className="mt-1 text-xs text-semantic-muted">
-                    Status code <span className="font-mono text-brand-accent">{eyeState.code}</span>
+                    Status code{" "}
+                    <span className="font-mono text-brand-accent">
+                      {eyeState.code}
+                    </span>
                   </p>
                 )}
               </div>
@@ -117,19 +151,30 @@ export function WhyNotApprovedModal({ eyeState, open, onClose, onResubmit }: Why
             </header>
 
             <section className="mt-4 space-y-3">
-              <h3 className="text-sm font-semibold text-brand-foreground">Issues Found ({parsedIssues.length})</h3>
+              <h3 className="text-sm font-semibold text-brand-foreground">
+                Issues Found ({parsedIssues.length})
+              </h3>
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {parsedIssues.map((issue, index) => {
-                  const colorClass = categoryColors[issue.category] || categoryColors['General'];
+                  const colorClass =
+                    categoryColors[issue.category] || categoryColors["General"];
                   return (
-                    <article key={index} className={`rounded-lg border ${colorClass} p-3`}>
+                    <article
+                      key={index}
+                      className={`rounded-lg border ${colorClass} p-3`}
+                    >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
-                          <div className="text-xs font-semibold text-brand-foreground">{issue.category}</div>
-                          <div className="mt-1 text-xs text-semantic-muted">{issue.description}</div>
+                          <div className="text-xs font-semibold text-brand-foreground">
+                            {issue.category}
+                          </div>
+                          <div className="mt-1 text-xs text-semantic-muted">
+                            {issue.description}
+                          </div>
                           {issue.fix && (
                             <div className="mt-2 rounded bg-brand-paper/60 p-2 text-xs ${STATUS_TEXT_COLORS.success}">
-                              <span className="font-semibold">💡 Fix:</span> {issue.fix}
+                              <span className="font-semibold">💡 Fix:</span>{" "}
+                              {issue.fix}
                             </div>
                           )}
                         </div>
@@ -139,10 +184,14 @@ export function WhyNotApprovedModal({ eyeState, open, onClose, onResubmit }: Why
                 })}
               </div>
 
-              {fixes !== 'No details provided.' && (
+              {fixes !== "No details provided." && (
                 <article className="rounded-xl border border-brand-outline/40 bg-brand-paper/80 p-4 mt-4">
-                  <h3 className="text-sm font-semibold text-brand-foreground">General Fix Instructions</h3>
-                  <p className="mt-2 whitespace-pre-line text-xs text-semantic-muted">{fixes}</p>
+                  <h3 className="text-sm font-semibold text-brand-foreground">
+                    General Fix Instructions
+                  </h3>
+                  <p className="mt-2 whitespace-pre-line text-xs text-semantic-muted">
+                    {fixes}
+                  </p>
                 </article>
               )}
             </section>
@@ -158,7 +207,10 @@ export function WhyNotApprovedModal({ eyeState, open, onClose, onResubmit }: Why
               <button
                 type="button"
                 onClick={() => onResubmit?.()}
-                className={clsx('rounded-full bg-brand-accent px-4 py-2 font-semibold text-brand-foreground transition hover:bg-brand-primary', !onResubmit && 'cursor-not-allowed opacity-50')}
+                className={clsx(
+                  "rounded-full bg-brand-accent px-4 py-2 font-semibold text-brand-foreground transition hover:bg-brand-primary",
+                  !onResubmit && "cursor-not-allowed opacity-50",
+                )}
                 disabled={!onResubmit}
               >
                 Resubmit to host agent

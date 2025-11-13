@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { memo, useState, useCallback, useEffect } from 'react';
+import { memo, useState, useCallback, useEffect } from "react";
 import {
   EDGE_TEXT,
   EDGE_CONDITION_TYPES,
@@ -8,9 +8,13 @@ import {
   EDGE_CONDITION_DESCRIPTIONS,
   PIPELINE_DEFAULTS,
   type EdgeConditionType,
-} from './constants';
-import type { PipelineEdge, EdgeConditionData } from '@/types/pipeline';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+} from "./constants";
+import type { PipelineEdge, EdgeConditionData } from "@/types/pipeline";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
 
 /**
  * Edge Config Modal Props
@@ -46,7 +50,7 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
     condition: EDGE_CONDITION_TYPES.ALWAYS,
     threshold: PIPELINE_DEFAULTS.DEFAULT_THRESHOLD,
     maxIterations: PIPELINE_DEFAULTS.DEFAULT_MAX_ITERATIONS,
-    description: '',
+    description: "",
     enabled: true,
   });
 
@@ -56,8 +60,9 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
       setFormData({
         condition: edge.data?.condition || EDGE_CONDITION_TYPES.ALWAYS,
         threshold: edge.data?.threshold ?? PIPELINE_DEFAULTS.DEFAULT_THRESHOLD,
-        maxIterations: edge.data?.maxIterations ?? PIPELINE_DEFAULTS.DEFAULT_MAX_ITERATIONS,
-        description: edge.data?.description || '',
+        maxIterations:
+          edge.data?.maxIterations ?? PIPELINE_DEFAULTS.DEFAULT_MAX_ITERATIONS,
+        description: edge.data?.description || "",
         enabled: edge.data?.enabled ?? true,
       });
     }
@@ -72,7 +77,7 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
   const handleThresholdChange = useCallback((value: number) => {
     const clamped = Math.max(
       PIPELINE_DEFAULTS.MIN_THRESHOLD,
-      Math.min(PIPELINE_DEFAULTS.MAX_THRESHOLD, value)
+      Math.min(PIPELINE_DEFAULTS.MAX_THRESHOLD, value),
     );
     setFormData((prev) => ({ ...prev, threshold: clamped }));
   }, []);
@@ -81,7 +86,7 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
   const handleMaxIterationsChange = useCallback((value: number) => {
     const clamped = Math.max(
       PIPELINE_DEFAULTS.MIN_ITERATIONS,
-      Math.min(PIPELINE_DEFAULTS.MAX_ITERATIONS, value)
+      Math.min(PIPELINE_DEFAULTS.MAX_ITERATIONS, value),
     );
     setFormData((prev) => ({ ...prev, maxIterations: clamped }));
   }, []);
@@ -96,7 +101,7 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
   // Handle delete
   const handleDelete = useCallback(() => {
     if (!edge) return;
-    if (confirm('Delete this connection?')) {
+    if (confirm("Delete this connection?")) {
       onDelete(edge.id);
       onClose();
     }
@@ -105,20 +110,22 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
   // Handle keyboard shortcuts
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onClose();
-      } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
         handleSave();
       }
     },
-    [onClose, handleSave]
+    [onClose, handleSave],
   );
 
   if (!edge) return null;
 
   // Show inputs based on condition type
-  const showThresholdInput = formData.condition === EDGE_CONDITION_TYPES.SCORE_THRESHOLD;
-  const showIterationsInput = formData.condition === EDGE_CONDITION_TYPES.MAX_ITERATIONS;
+  const showThresholdInput =
+    formData.condition === EDGE_CONDITION_TYPES.SCORE_THRESHOLD;
+  const showIterationsInput =
+    formData.condition === EDGE_CONDITION_TYPES.MAX_ITERATIONS;
 
   return (
     <div
@@ -132,13 +139,25 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-brand-outline">
-          <h2 className="text-xl font-semibold text-brand-foreground">{EDGE_TEXT.TITLE}</h2>
+          <h2 className="text-xl font-semibold text-brand-foreground">
+            {EDGE_TEXT.TITLE}
+          </h2>
           <button
             onClick={onClose}
             className="p-1 hover:bg-brand-outline/20 rounded-md transition-colors"
           >
-            <svg className="w-5 h-5 text-brand-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-5 h-5 text-brand-foreground"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -151,14 +170,16 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
               {EDGE_TEXT.ENABLED_LABEL}
             </label>
             <button
-              onClick={() => setFormData((prev) => ({ ...prev, enabled: !prev.enabled }))}
+              onClick={() =>
+                setFormData((prev) => ({ ...prev, enabled: !prev.enabled }))
+              }
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                formData.enabled ? 'bg-brand-primary' : 'bg-brand-outline/40'
+                formData.enabled ? "bg-brand-primary" : "bg-brand-outline/40"
               }`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  formData.enabled ? 'translate-x-6' : 'translate-x-1'
+                  formData.enabled ? "translate-x-6" : "translate-x-1"
                 }`}
               />
             </button>
@@ -171,7 +192,9 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
             </label>
             <select
               value={formData.condition}
-              onChange={(e) => handleConditionChange(e.target.value as EdgeConditionType)}
+              onChange={(e) =>
+                handleConditionChange(e.target.value as EdgeConditionType)
+              }
               className="w-full px-3 py-2 bg-brand-paperElev border border-brand-outline rounded-md text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-primary"
             >
               {Object.entries(EDGE_CONDITION_LABELS).map(([key, label]) => (
@@ -214,7 +237,9 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
               <input
                 type="number"
                 value={formData.maxIterations}
-                onChange={(e) => handleMaxIterationsChange(Number(e.target.value))}
+                onChange={(e) =>
+                  handleMaxIterationsChange(Number(e.target.value))
+                }
                 min={PIPELINE_DEFAULTS.MIN_ITERATIONS}
                 max={PIPELINE_DEFAULTS.MAX_ITERATIONS}
                 className="w-full px-3 py-2 bg-brand-paperElev border border-brand-outline rounded-md text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-primary"
@@ -232,7 +257,12 @@ export const EdgeConfigModal = memo(function EdgeConfigModal({
             </label>
             <textarea
               value={formData.description}
-              onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
               placeholder="Optional description for this connection"
               rows={3}
               className="w-full px-3 py-2 bg-brand-paperElev border border-brand-outline rounded-md text-brand-foreground placeholder-brand-ink/50 focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"

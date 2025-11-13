@@ -1,15 +1,15 @@
-import { beforeAll, afterAll, beforeEach } from 'vitest';
-import { existsSync, unlinkSync } from 'fs';
-import { resolve } from 'path';
-import { tmpdir } from 'os';
+import { beforeAll, afterAll, beforeEach } from "vitest";
+import { existsSync, unlinkSync } from "fs";
+import { resolve } from "path";
+import { tmpdir } from "os";
 
 // Use a test-specific database
-const TEST_DB_PATH = resolve(tmpdir(), 'third-eye-test.db');
+const TEST_DB_PATH = resolve(tmpdir(), "third-eye-test.db");
 
 beforeAll(() => {
   // Set test environment variables
   process.env.MCP_DB = TEST_DB_PATH;
-  process.env.NODE_ENV = 'test';
+  process.env.NODE_ENV = "test";
 });
 
 beforeEach(() => {
@@ -18,7 +18,7 @@ beforeEach(() => {
     try {
       unlinkSync(TEST_DB_PATH);
     } catch (error) {
-      console.warn('Failed to delete test database:', error);
+      console.warn("Failed to delete test database:", error);
     }
   }
 });
@@ -29,7 +29,7 @@ afterAll(() => {
     try {
       unlinkSync(TEST_DB_PATH);
     } catch (error) {
-      console.warn('Failed to clean up test database:', error);
+      console.warn("Failed to clean up test database:", error);
     }
   }
   delete process.env.MCP_DB;

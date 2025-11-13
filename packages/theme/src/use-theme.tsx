@@ -1,15 +1,15 @@
 /**
  * Theme utilities for non-React environments
- * 
+ *
  * Note: The actual useTheme() React hook will be implemented in the UI package
  * where it can access browser APIs (localStorage, window).
  */
 
-import { getTheme as getThemeByName } from './themes';
-import type { Theme, ThemeName, ThemeMode } from './themes';
+import { getTheme as getThemeByName } from "./themes";
+import type { Theme, ThemeName, ThemeMode } from "./themes";
 
-export const DEFAULT_THEME: ThemeName = 'midnight';
-export const DEFAULT_MODE: ThemeMode = 'light';
+export const DEFAULT_THEME: ThemeName = "midnight";
+export const DEFAULT_MODE: ThemeMode = "light";
 
 /**
  * Get theme by name and mode

@@ -11,10 +11,10 @@ export interface ProviderDefinition {
 }
 
 export const PROVIDERS: readonly ProviderDefinition[] = [
-  { id: 'groq', name: 'Groq', requiresKey: true },
-  { id: 'openrouter', name: 'OpenRouter', requiresKey: true },
-  { id: 'ollama', name: 'Ollama', requiresKey: false },
-  { id: 'lmstudio', name: 'LM Studio', requiresKey: false },
+  { id: "groq", name: "Groq", requiresKey: true },
+  { id: "openrouter", name: "OpenRouter", requiresKey: true },
+  { id: "ollama", name: "Ollama", requiresKey: false },
+  { id: "lmstudio", name: "LM Studio", requiresKey: false },
 ] as const;
 
 export interface CapabilityFilter {
@@ -30,4 +30,3 @@ export const DEFAULT_CAPABILITY_FILTER: CapabilityFilter = {
 } as const;
 
 export const CONTEXT_SIZE_PRESETS = [0, 4, 8, 16, 32, 64, 128, 200] as const;
-

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { ANIMATION_DURATION } from '@/constants/timing';
+import { ANIMATION_DURATION } from "@/constants/timing";
 
 export interface ProviderMetrics {
   provider: string;
@@ -25,11 +25,16 @@ export interface MetricsOverviewProps {
   loading: boolean;
 }
 
-export default function MetricsOverview({ metrics, loading }: MetricsOverviewProps) {
+export default function MetricsOverview({
+  metrics,
+  loading,
+}: MetricsOverviewProps) {
   if (loading) {
     return (
       <div className="rounded-2xl border border-brand-outline/60 bg-brand-paperElev/70 p-6">
-        <p className="animate-pulse text-sm text-semantic-muted">Loading metrics...</p>
+        <p className="animate-pulse text-sm text-semantic-muted">
+          Loading metrics...
+        </p>
       </div>
     );
   }
@@ -46,33 +51,59 @@ export default function MetricsOverview({ metrics, loading }: MetricsOverviewPro
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-semantic-muted">Total Calls</p>
-          <p className="mt-2 text-2xl font-semibold text-brand-foreground">{(metrics.totalCalls || 0).toLocaleString()}</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-semantic-muted">
+            Total Calls
+          </p>
+          <p className="mt-2 text-2xl font-semibold text-brand-foreground">
+            {(metrics.totalCalls || 0).toLocaleString()}
+          </p>
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-semantic-muted">Total Tokens</p>
-          <p className="mt-2 text-2xl font-semibold text-brand-foreground">{(metrics.totalTokens || 0).toLocaleString()}</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-semantic-muted">
+            Total Tokens
+          </p>
+          <p className="mt-2 text-2xl font-semibold text-brand-foreground">
+            {(metrics.totalTokens || 0).toLocaleString()}
+          </p>
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-semantic-muted">Tokens/Session</p>
-          <p className="mt-2 text-2xl font-semibold text-brand-foreground">{(metrics.tokensPerSession || 0).toLocaleString()}</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-semantic-muted">
+            Tokens/Session
+          </p>
+          <p className="mt-2 text-2xl font-semibold text-brand-foreground">
+            {(metrics.tokensPerSession || 0).toLocaleString()}
+          </p>
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-semantic-muted">Approval Rate</p>
-          <p className="mt-2 text-2xl font-semibold ${STATUS_TEXT_COLORS.success}">{(metrics.approvalRate || 0).toFixed(1)}%</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-semantic-muted">
+            Approval Rate
+          </p>
+          <p className="mt-2 text-2xl font-semibold ${STATUS_TEXT_COLORS.success}">
+            {(metrics.approvalRate || 0).toFixed(1)}%
+          </p>
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-semantic-muted">Uptime</p>
-          <p className="mt-2 text-2xl font-semibold text-brand-foreground">{metrics.uptime > 0 ? (metrics.uptime / 3600).toFixed(1) + 'h' : 'N/A'}</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-semantic-muted">
+            Uptime
+          </p>
+          <p className="mt-2 text-2xl font-semibold text-brand-foreground">
+            {metrics.uptime > 0
+              ? (metrics.uptime / 3600).toFixed(1) + "h"
+              : "N/A"}
+          </p>
         </div>
       </div>
 
       {metrics.latencyHistogram && (
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-6">
-          <h2 className="mb-4 text-lg font-semibold text-brand-foreground">Latency Histogram</h2>
+          <h2 className="mb-4 text-lg font-semibold text-brand-foreground">
+            Latency Histogram
+          </h2>
           <div className="space-y-3">
             {Object.entries(metrics.latencyHistogram).map(([bucket, count]) => {
-              const maxCount = Math.max(...Object.values(metrics.latencyHistogram!));
+              const maxCount = Math.max(
+                ...Object.values(metrics.latencyHistogram!),
+              );
               const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0;
               return (
                 <div key={bucket}>
@@ -94,28 +125,35 @@ export default function MetricsOverview({ metrics, loading }: MetricsOverviewPro
       )}
 
       {metrics.providers && metrics.providers.length > 0 && (
-      <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-brand-foreground">Provider Performance</h2>
-        {metrics.providers.map((provider) => (
-          <div
-            key={provider.provider}
-            className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold text-brand-foreground">{provider.provider}</p>
-                <p className="text-xs text-semantic-muted">
-                  {provider.totalCalls} calls · {provider.avgLatency.toFixed(0)}ms avg
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold ${STATUS_TEXT_COLORS.success}">{provider.successRate.toFixed(1)}%</p>
-                <p className="text-xs text-semantic-muted">success rate</p>
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold text-brand-foreground">
+            Provider Performance
+          </h2>
+          {metrics.providers.map((provider) => (
+            <div
+              key={provider.provider}
+              className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-4"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-brand-foreground">
+                    {provider.provider}
+                  </p>
+                  <p className="text-xs text-semantic-muted">
+                    {provider.totalCalls} calls ·{" "}
+                    {provider.avgLatency.toFixed(0)}ms avg
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold ${STATUS_TEXT_COLORS.success}">
+                    {provider.successRate.toFixed(1)}%
+                  </p>
+                  <p className="text-xs text-semantic-muted">success rate</p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
       )}
     </div>
   );

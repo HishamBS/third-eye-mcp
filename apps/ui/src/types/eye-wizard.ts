@@ -3,7 +3,7 @@
  * Follows PersonaWizard pattern with strict typing (R07)
  */
 
-import type { Eye } from './api';
+import type { Eye } from "./api";
 
 /**
  * Wizard step identifiers
@@ -42,15 +42,25 @@ export interface EyeFormState {
  * Reducer action types
  */
 export type EyeFormAction =
-  | { readonly type: 'SET_STEP'; readonly payload: EyeWizardStep }
-  | { readonly type: 'NEXT_STEP' }
-  | { readonly type: 'PREVIOUS_STEP' }
-  | { readonly type: 'UPDATE_BASIC_INFO'; readonly payload: Partial<Pick<EyeFormData, 'name' | 'description' | 'iconSvg'>> }
-  | { readonly type: 'UPDATE_SCHEMAS'; readonly payload: Partial<Pick<EyeFormData, 'inputSchema' | 'outputSchema'>> }
-  | { readonly type: 'UPDATE_PERSONA'; readonly payload: string }
-  | { readonly type: 'RESET' }
-  | { readonly type: 'MARK_CLEAN' }
-  | { readonly type: 'LOAD_EYE_DATA'; readonly payload: Eye };
+  | { readonly type: "SET_STEP"; readonly payload: EyeWizardStep }
+  | { readonly type: "NEXT_STEP" }
+  | { readonly type: "PREVIOUS_STEP" }
+  | {
+      readonly type: "UPDATE_BASIC_INFO";
+      readonly payload: Partial<
+        Pick<EyeFormData, "name" | "description" | "iconSvg">
+      >;
+    }
+  | {
+      readonly type: "UPDATE_SCHEMAS";
+      readonly payload: Partial<
+        Pick<EyeFormData, "inputSchema" | "outputSchema">
+      >;
+    }
+  | { readonly type: "UPDATE_PERSONA"; readonly payload: string }
+  | { readonly type: "RESET" }
+  | { readonly type: "MARK_CLEAN" }
+  | { readonly type: "LOAD_EYE_DATA"; readonly payload: Eye };
 
 /**
  * Props for individual wizard step components
@@ -104,7 +114,9 @@ export function formDataToPayload(formData: EyeFormData): UpdateEyePayload {
     name: formData.name.trim(),
     description: formData.description.trim(),
     inputSchema: formData.inputSchema ? JSON.parse(formData.inputSchema) : {},
-    outputSchema: formData.outputSchema ? JSON.parse(formData.outputSchema) : {},
+    outputSchema: formData.outputSchema
+      ? JSON.parse(formData.outputSchema)
+      : {},
     iconSvg: formData.iconSvg.trim() || undefined,
     personaId: formData.personaId.trim() || undefined,
   };
@@ -116,21 +128,21 @@ export function formDataToPayload(formData: EyeFormData): UpdateEyePayload {
 export function eyeToFormData(eye: Eye): EyeFormData {
   // Helper to safely convert schema to string
   const schemaToString = (schema: unknown): string => {
-    if (typeof schema === 'string') {
+    if (typeof schema === "string") {
       return schema;
     }
-    if (schema && typeof schema === 'object') {
+    if (schema && typeof schema === "object") {
       return JSON.stringify(schema, null, 2);
     }
-    return '{}';
+    return "{}";
   };
 
   return {
-    name: eye.name || '',
-    description: eye.description || '',
-    iconSvg: (eye as { iconSvg?: string }).iconSvg || '', // Cast to access iconSvg (may not be in all Eye types)
+    name: eye.name || "",
+    description: eye.description || "",
+    iconSvg: (eye as { iconSvg?: string }).iconSvg || "", // Cast to access iconSvg (may not be in all Eye types)
     inputSchema: schemaToString(eye.inputSchema),
     outputSchema: schemaToString(eye.outputSchema),
-    personaId: eye.personaId || '',
+    personaId: eye.personaId || "",
   };
 }

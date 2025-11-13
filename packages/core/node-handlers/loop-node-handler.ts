@@ -9,8 +9,12 @@
  * Per R13: No magic numbers - all limits from config
  */
 
-import type { PipelineDagNode } from '@third-eye/types';
-import type { NodeHandler, ExecutionContext, NodeExecutionResult } from './base-handler';
+import type { PipelineDagNode } from "@third-eye/types";
+import type {
+  NodeHandler,
+  ExecutionContext,
+  NodeExecutionResult,
+} from "./base-handler";
 
 /**
  * Loop state for tracking iteration progress
@@ -28,11 +32,14 @@ interface LoopState {
 
 export class LoopNodeHandler implements NodeHandler {
   canHandle(node: PipelineDagNode): boolean {
-    return node.type === 'loop_over_items';
+    return node.type === "loop_over_items";
   }
 
-  async execute(node: PipelineDagNode, context: ExecutionContext): Promise<NodeExecutionResult> {
-    if (node.type !== 'loop_over_items') {
+  async execute(
+    node: PipelineDagNode,
+    context: ExecutionContext,
+  ): Promise<NodeExecutionResult> {
+    if (node.type !== "loop_over_items") {
       throw new Error(`LoopNodeHandler cannot handle node type: ${node.type}`);
     }
 
@@ -42,26 +49,30 @@ export class LoopNodeHandler implements NodeHandler {
       // Validate loop configuration
       const loopConfig = node.loopConfig;
       if (!loopConfig) {
-        throw new Error('Loop node must have loopConfig property');
+        throw new Error("Loop node must have loopConfig property");
       }
 
       // Get items to iterate from previous node output
       const items = this.extractItemsFromContext(context);
 
       // Get current loop state from metadata or initialize
-      const loopState = this.getOrInitializeLoopState(context, items, loopConfig);
+      const loopState = this.getOrInitializeLoopState(
+        context,
+        items,
+        loopConfig,
+      );
 
       // Validate max iterations
       if (loopState.index >= loopConfig.maxIterations) {
         return {
           nodeId: node.id,
-          status: 'success',
-          verdict: 'MAX_ITERATIONS_REACHED',
+          status: "success",
+          verdict: "MAX_ITERATIONS_REACHED",
           output: {
-            type: 'loop',
+            type: "loop",
             completed: true,
             totalIterations: loopState.index,
-            reason: 'max_iterations_reached',
+            reason: "max_iterations_reached",
           },
           latencyMs: Date.now() - startTime,
           metadata: {
@@ -76,10 +87,10 @@ export class LoopNodeHandler implements NodeHandler {
       if (!loopState.hasMore) {
         return {
           nodeId: node.id,
-          status: 'success',
-          verdict: 'LOOP_COMPLETE',
+          status: "success",
+          verdict: "LOOP_COMPLETE",
           output: {
-            type: 'loop',
+            type: "loop",
             completed: true,
             totalIterations: loopState.index,
             processedItems: loopState.total,
@@ -96,10 +107,10 @@ export class LoopNodeHandler implements NodeHandler {
       // Return current batch for processing
       return {
         nodeId: node.id,
-        status: 'success',
-        verdict: 'LOOP_CONTINUE',
+        status: "success",
+        verdict: "LOOP_CONTINUE",
         output: {
-          type: 'loop',
+          type: "loop",
           completed: false,
           currentBatch: loopState.currentBatch,
           batchIndex: loopState.index,
@@ -119,7 +130,7 @@ export class LoopNodeHandler implements NodeHandler {
     } catch (error) {
       return {
         nodeId: node.id,
-        status: 'error',
+        status: "error",
         error: `Loop execution failed: ${error instanceof Error ? error.message : String(error)}`,
         latencyMs: Date.now() - startTime,
       };
@@ -134,7 +145,7 @@ export class LoopNodeHandler implements NodeHandler {
     const lastResult = Array.from(context.previousResults.values()).pop();
 
     if (!lastResult) {
-      throw new Error('No previous results available for loop iteration');
+      throw new Error("No previous results available for loop iteration");
     }
 
     // Try to extract items from output
@@ -146,7 +157,7 @@ export class LoopNodeHandler implements NodeHandler {
     }
 
     // Check if output has items property
-    if (output && typeof output === 'object' && 'items' in output) {
+    if (output && typeof output === "object" && "items" in output) {
       const items = (output as { items: unknown }).items;
       if (Array.isArray(items)) {
         return items;
@@ -154,14 +165,16 @@ export class LoopNodeHandler implements NodeHandler {
     }
 
     // Check if output has data property
-    if (output && typeof output === 'object' && 'data' in output) {
+    if (output && typeof output === "object" && "data" in output) {
       const data = (output as { data: unknown }).data;
       if (Array.isArray(data)) {
         return data;
       }
     }
 
-    throw new Error('Previous node output does not contain iterable items array');
+    throw new Error(
+      "Previous node output does not contain iterable items array",
+    );
   }
 
   /**
@@ -170,13 +183,18 @@ export class LoopNodeHandler implements NodeHandler {
   private getOrInitializeLoopState(
     context: ExecutionContext,
     items: unknown[],
-    config: NonNullable<PipelineDagNode['loopConfig']>
+    config: NonNullable<PipelineDagNode["loopConfig"]>,
   ): LoopState {
     // Check if we have existing loop state from previous iteration
     const lastResult = Array.from(context.previousResults.values()).pop();
-    const existingLoopIndex = lastResult?.metadata?.loopIndex as number | undefined;
+    const existingLoopIndex = lastResult?.metadata?.loopIndex as
+      | number
+      | undefined;
 
-    if (existingLoopIndex !== undefined && typeof existingLoopIndex === 'number') {
+    if (
+      existingLoopIndex !== undefined &&
+      typeof existingLoopIndex === "number"
+    ) {
       // Continue existing loop
       const nextIndex = existingLoopIndex + 1;
       const batchSize = config.batchSize ?? 1;

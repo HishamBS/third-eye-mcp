@@ -15,7 +15,7 @@ Send the user’s prompt in the \\"task\\" field (include optional context if yo
 
 Wait for the overseer’s guidance, follow it, and only then respond to the user. Never call internal Eyes directly.
 `,
-  }
+  },
 );
 
 buildEyes(server);

@@ -1,9 +1,20 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { Play, Pause, SkipBack, SkipForward, Rewind, FastForward } from 'lucide-react';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import {
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Rewind,
+  FastForward,
+} from "lucide-react";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
 
 interface PipelineEvent {
   id: string;
@@ -44,7 +55,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
     if (isPlaying && currentIndex < totalEvents - 1) {
       const interval = 1000 / speed;
       intervalRef.current = setInterval(() => {
-        setCurrentIndex(prev => {
+        setCurrentIndex((prev) => {
           if (prev >= totalEvents - 1) {
             setIsPlaying(false);
             return prev;
@@ -79,11 +90,11 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
   };
 
   const handleSkipForward = () => {
-    setCurrentIndex(prev => Math.min(prev + 1, totalEvents - 1));
+    setCurrentIndex((prev) => Math.min(prev + 1, totalEvents - 1));
   };
 
   const handleSkipBackward = () => {
-    setCurrentIndex(prev => Math.max(prev - 1, 0));
+    setCurrentIndex((prev) => Math.max(prev - 1, 0));
   };
 
   const handleScrub = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,19 +109,19 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
   };
 
   const formatTimestamp = (date: Date) => {
-    return new Date(date).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      fractionalSecondDigits: 1
+    return new Date(date).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      fractionalSecondDigits: 1,
     });
   };
 
   const getEventStatusColor = (code: string | null) => {
-    if (!code) return 'bg-brand-paper0';
-    if (code.startsWith('OK')) return STATUS_BG_COLORS.success;
-    if (code.startsWith('REJECT')) return STATUS_BG_COLORS.error;
-    if (code.startsWith('NEED')) return STATUS_BG_COLORS.warning;
+    if (!code) return "bg-brand-paper0";
+    if (code.startsWith("OK")) return STATUS_BG_COLORS.success;
+    if (code.startsWith("REJECT")) return STATUS_BG_COLORS.error;
+    if (code.startsWith("NEED")) return STATUS_BG_COLORS.warning;
     return STATUS_BG_COLORS.info;
   };
 
@@ -127,13 +138,17 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-brand-foreground">🎬 Replay Theater</h2>
+          <h2 className="text-2xl font-bold text-brand-foreground">
+            🎬 Replay Theater
+          </h2>
           <p className="mt-1 text-sm text-semantic-muted">
             Session: {sessionId} • {totalEvents} events
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-semantic-muted">Event {currentIndex + 1} / {totalEvents}</span>
+          <span className="text-sm text-semantic-muted">
+            Event {currentIndex + 1} / {totalEvents}
+          </span>
         </div>
       </div>
 
@@ -148,9 +163,11 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
         >
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className={`h-3 w-3 rounded-full ${getEventStatusColor(currentEvent.code)}`} />
+              <div
+                className={`h-3 w-3 rounded-full ${getEventStatusColor(currentEvent.code)}`}
+              />
               <span className="text-lg font-semibold text-brand-foreground">
-                {currentEvent.eye || 'System'}
+                {currentEvent.eye || "System"}
               </span>
               <span className="rounded-full bg-brand-accent/20 px-2 py-0.5 text-xs font-medium text-brand-accent">
                 {currentEvent.type}
@@ -171,20 +188,23 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
 
           {currentEvent.md && (
             <div className="rounded-lg bg-brand-paper/50 p-4">
-              <p className="text-sm leading-relaxed text-semantic-muted">{currentEvent.md}</p>
+              <p className="text-sm leading-relaxed text-semantic-muted">
+                {currentEvent.md}
+              </p>
             </div>
           )}
 
-          {currentEvent.dataJson && Object.keys(currentEvent.dataJson).length > 0 && (
-            <details className="mt-3">
-              <summary className="cursor-pointer text-xs font-semibold uppercase text-semantic-muted hover:text-semantic-muted">
-                Data JSON
-              </summary>
-              <pre className="mt-2 overflow-x-auto rounded-lg bg-brand-ink p-3 text-xs text-semantic-muted">
-                {JSON.stringify(currentEvent.dataJson, null, 2)}
-              </pre>
-            </details>
-          )}
+          {currentEvent.dataJson &&
+            Object.keys(currentEvent.dataJson).length > 0 && (
+              <details className="mt-3">
+                <summary className="cursor-pointer text-xs font-semibold uppercase text-semantic-muted hover:text-semantic-muted">
+                  Data JSON
+                </summary>
+                <pre className="mt-2 overflow-x-auto rounded-lg bg-brand-ink p-3 text-xs text-semantic-muted">
+                  {JSON.stringify(currentEvent.dataJson, null, 2)}
+                </pre>
+              </details>
+            )}
         </motion.div>
       )}
 
@@ -199,7 +219,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
             onChange={handleScrub}
             className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-brand-paperElev"
             style={{
-              background: `linear-gradient(to right, rgb(124 58 237) 0%, rgb(124 58 237) ${progress}%, rgb(51 65 85) ${progress}%, rgb(51 65 85) 100%)`
+              background: `linear-gradient(to right, rgb(124 58 237) 0%, rgb(124 58 237) ${progress}%, rgb(51 65 85) ${progress}%, rgb(51 65 85) 100%)`,
             }}
           />
           <div className="absolute inset-x-0 top-full mt-1 flex justify-between text-xs text-semantic-muted">
@@ -216,10 +236,10 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
               onClick={() => setCurrentIndex(index)}
               className={`h-8 min-w-[32px] flex-shrink-0 rounded text-xs font-medium transition ${
                 index === currentIndex
-                  ? 'bg-brand-accent text-brand-foreground'
-                  : 'bg-brand-paperElev text-semantic-muted hover:bg-brand-outline/80'
+                  ? "bg-brand-accent text-brand-foreground"
+                  : "bg-brand-paperElev text-semantic-muted hover:bg-brand-outline/80"
               }`}
-              title={`${event.eye || 'System'} - ${event.type}`}
+              title={`${event.eye || "System"} - ${event.type}`}
             >
               {index + 1}
             </button>
@@ -249,9 +269,13 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
           <button
             onClick={togglePlayPause}
             className="rounded-lg bg-brand-accent p-3 text-brand-foreground transition hover:bg-brand-accent/90"
-            title={isPlaying ? 'Pause' : 'Play'}
+            title={isPlaying ? "Pause" : "Play"}
           >
-            {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+            {isPlaying ? (
+              <Pause className="h-6 w-6" />
+            ) : (
+              <Play className="h-6 w-6" />
+            )}
           </button>
 
           <button

@@ -12,46 +12,44 @@ Status: Shipped
 
 The updated playground delivers a full local-first diagnostic surface for Overseer flows and individual Eye runs.
 
-- **Dual Modes**  
-  - *Overseer Pipeline*: the primary form submits a task to `POST /api/mcp/run`, passes the active strictness profile, and streams the full dynamic pipeline.  
-  - *Eye Test Panel*: a second form targets `POST /api/eyes/:eyeId/test`, allowing direct execution of a single Eye with ad‑hoc input. Responses surface the raw envelope, alongside a prettified summary card.
+- **Dual Modes**
+  - _Overseer Pipeline_: the primary form submits a task to `POST /api/mcp/run`, passes the active strictness profile, and streams the full dynamic pipeline.
+  - _Eye Test Panel_: a second form targets `POST /api/eyes/:eyeId/test`, allowing direct execution of a single Eye with ad‑hoc input. Responses surface the raw envelope, alongside a prettified summary card.
 
-- **Session Cohesion**  
-  - Every playground session reuses the global session selector. Selecting a session updates the URL query string (`/monitor?sessionId=…`) so the monitor view opens in sync.  
+- **Session Cohesion**
+  - Every playground session reuses the global session selector. Selecting a session updates the URL query string (`/monitor?sessionId=…`) so the monitor view opens in sync.
   - Sessions created on demand use the slug pattern `<tool>-<agent>-NN` (for example `third_eye_overseer-claude-desktop-04`), matching the naming logic in `SessionManager`.
 
-- **Local-First UX**  
-  - Endpoints intentionally remain unauthenticated—mirroring the desktop, single-user environment the product targets.  
+- **Local-First UX**
+  - Endpoints intentionally remain unauthenticated—mirroring the desktop, single-user environment the product targets.
   - Results cache in the existing session timeline, giving immediate parity with the monitor view and keeping all Eye outputs in one place.
 
-- **Strictness Awareness**  
+- **Strictness Awareness**
   - The strictness slider writes 0–100 values consistently (UI, docs, DB seed, auto-router), so every test run honors the same thresholds.
-
 
 ## Model Duel Mode
 
 Duel mode now offers a model-agnostic comparison harness fully driven by backend data.
 
-- **Dynamic Provider Catalogue**  
-  - The UI fetches `/api/models` to populate supported providers/models (Groq, Ollama, LM Studio). No more hardcoded competitors.  
+- **Dynamic Provider Catalogue**
+  - The UI fetches `/api/models` to populate supported providers/models (Groq, Ollama, LM Studio). No more hardcoded competitors.
   - Model refreshes surface provider authentication errors with explicit 401 responses, helping diagnose key issues quickly.
 
-- **Flexible Competitors**  
+- **Flexible Competitors**
   - Users can stage 2–4 configurations, each with provider + model selection. The POST body to `/api/duel` (and `/api/duel/v2`) passes these configs, which the backend feeds into `EyeOrchestrator.runEye` via provider overrides.
 
-- **Rich Telemetry**  
-  - Duel results include provider labels, model names, latency, token usage, verdicts, and a composite score, making side-by-side evaluation actionable.  
+- **Rich Telemetry**
+  - Duel results include provider labels, model names, latency, token usage, verdicts, and a composite score, making side-by-side evaluation actionable.
   - Pipeline events and duel result cards mirror the provider metadata so the monitor, duel dashboard, and stored history stay in sync.
 
-- **Graceful Defaults**  
-  - Legacy identifiers (e.g., `groq:llama-3.3-70b-versatile`) continue to work through parsing helpers that map providers/models sensibly.  
+- **Graceful Defaults**
+  - Legacy identifiers (e.g., `groq:llama-3.3-70b-versatile`) continue to work through parsing helpers that map providers/models sensibly.
   - Errors remain local-friendly—no external tooling or auth layers block experimentation.
 
 ## Quality Signals
 
 - Automated suites run through `bun test` / `bun run test:coverage` (Vitest) and `bun run test:e2e` (Playwright). Coverage spans MCP tool discovery, strictness/context propagation, envelope validation, duel scoring, and UI smoke paths.
 - Manual validation through the playground, monitor (including kill switch + reruns), and duel UI confirms session synchronisation, preset alignment, provider/model overrides, and clear error surfacing for provider authentication misconfiguration.
-
 
 ## 📖 Table of Contents
 
@@ -75,7 +73,7 @@ Third Eye MCP is **NOT** a content generator or validator that agents submit wor
 ### The Vision in Three Sentences
 
 1. **Human sees magic**: User talks to AI agent naturally, agent asks smart clarifying questions and delivers better results - user never knows Third Eye exists
-2. **Agent gets superpowers**: Agent silently consults Third Eye for guidance before creating, and validation after creating - seamless integration via MCP protocol  
+2. **Agent gets superpowers**: Agent silently consults Third Eye for guidance before creating, and validation after creating - seamless integration via MCP protocol
 3. **Developer watches live**: Real-time web portal shows the agent's complete "thought process" as a conversation between Eyes - like watching the agent think
 
 ### What Makes This Revolutionary
@@ -93,6 +91,7 @@ Third Eye MCP is **NOT** a content generator or validator that agents submit wor
 ### What Third Eye Really Is
 
 **NOT:**
+
 - ❌ A linear validation pipeline that every request goes through
 - ❌ A content generator that creates work for agents
 - ❌ A rigid rule-based system with hardcoded logic
@@ -100,6 +99,7 @@ Third Eye MCP is **NOT** a content generator or validator that agents submit wor
 - ❌ A blocker or rejection machine
 
 **IS:**
+
 - ✅ An intelligent overseer that empowers AI agents with inner perception
 - ✅ A dynamic routing system where Overseer LLM decides the validation flow
 - ✅ Completely invisible to human users (seamless agent experience)
@@ -114,18 +114,21 @@ Third Eye MCP is **NOT** a content generator or validator that agents submit wor
 **Three Fundamental Principles:**
 
 #### 1. Invisible Empowerment
+
 - Human talks to agent naturally
-- Agent consults Third Eye silently in background  
+- Agent consults Third Eye silently in background
 - Human sees better results, not the machinery
 - **Example**: User asks for "palm care report", agent asks clarifying questions (guided by Sharingan), user thinks agent is just being thorough
 
 #### 2. LLM Intelligence Over Rules
+
 - No hardcoded pipeline logic
 - Overseer LLM analyzes each request
 - Decides optimal validation route dynamically
 - **Example**: "Review this code" → Mangekyo only. "Generate report" → Full text pipeline
 
 #### 3. Guidance + Validation (Two Phases)
+
 - **GUIDANCE Phase**: Before agent creates content
   - Eyes provide criteria, ask questions, refine requirements
   - Agent uses this guidance to create better content
@@ -140,6 +143,7 @@ Third Eye MCP is **NOT** a content generator or validator that agents submit wor
 ### Realization 1: DYNAMIC PIPELINE - Not Linear!
 
 **❌ WRONG (Initial Understanding):**
+
 ```
 Every request → Overseer → Sharingan → Prompt Helper → Jogan → Rinnegan → Mangekyo → Tenseigan → Byakugan
 ```
@@ -148,13 +152,13 @@ Every request → Overseer → Sharingan → Prompt Helper → Jogan → Rinnega
 
 Overseer is the **INTELLIGENT ROUTER** that decides the pipeline based on request analysis:
 
-| Request Example | Pipeline Route | Reasoning |
-|----------------|----------------|-----------|
-| "Generate a report" | Sharingan → Prompt Helper → Jogan → Tenseigan → Byakugan | Text content needs ambiguity check, refinement, intent confirmation, fact validation, and final approval |
-| "Review this code" | Mangekyo only | Already have content, skip guidance Eyes, go straight to code review |
-| "Is this claim accurate?" | Tenseigan only | Single validation task - just fact-checking needed |
-| "Plan this feature" | Sharingan → Prompt Helper → Jogan → Rinnegan | Planning task - needs clarity, refinement, intent, then plan review (not code) |
-| "Here's my draft code + tests" | Mangekyo → Tenseigan | Code validation + any factual claims check |
+| Request Example                | Pipeline Route                                           | Reasoning                                                                                                |
+| ------------------------------ | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| "Generate a report"            | Sharingan → Prompt Helper → Jogan → Tenseigan → Byakugan | Text content needs ambiguity check, refinement, intent confirmation, fact validation, and final approval |
+| "Review this code"             | Mangekyo only                                            | Already have content, skip guidance Eyes, go straight to code review                                     |
+| "Is this claim accurate?"      | Tenseigan only                                           | Single validation task - just fact-checking needed                                                       |
+| "Plan this feature"            | Sharingan → Prompt Helper → Jogan → Rinnegan             | Planning task - needs clarity, refinement, intent, then plan review (not code)                           |
+| "Here's my draft code + tests" | Mangekyo → Tenseigan                                     | Code validation + any factual claims check                                                               |
 
 **Key Insight**: Overseer LLM decides on the fly - no rigid patterns!
 
@@ -165,10 +169,10 @@ The Overseer persona includes intelligent request analysis logic:
 ```typescript
 interface OverseerIntelligence {
   analyzeRequest(task: string): {
-    requestType: 'new_task' | 'draft_review' | 'validation_only';
-    contentDomain: 'code' | 'text' | 'plan' | 'mixed';
-    complexity: 'simple' | 'moderate' | 'complex';
-    pipelineRoute: EyeId[];  // LLM-decided!
+    requestType: "new_task" | "draft_review" | "validation_only";
+    contentDomain: "code" | "text" | "plan" | "mixed";
+    complexity: "simple" | "moderate" | "complex";
+    pipelineRoute: EyeId[]; // LLM-decided!
     routingReasoning: string;
   };
 }
@@ -183,7 +187,7 @@ interface OverseerIntelligence {
 
 2. **Content Domain**:
    - `code`: Implementation, scaffolding, tests, documentation
-   - `text`: Articles, guides, documentation, claims, narratives  
+   - `text`: Articles, guides, documentation, claims, narratives
    - `plan`: Requirements, architecture, roadmaps
    - `mixed`: Combination (e.g., plan + code, text + citations)
 
@@ -222,9 +226,10 @@ Each Eye generates a `ui` field in their response for human-readable monitoring:
 ```
 
 **UI Field Structure**:
+
 - `title`: 2-4 words describing Eye action
 - `summary`: One sentence for collapsed view
-- `details`: 2-3 conversational sentences for expanded view  
+- `details`: 2-3 conversational sentences for expanded view
 - `icon`: Emoji representing Eye/action
 - `color`: Tailwind color for visual coding
 
@@ -233,10 +238,11 @@ Each Eye generates a `ui` field in their response for human-readable monitoring:
 **Three events per Eye** for detailed real-time monitoring:
 
 1. **eye_started**: Eye begins analysis
-2. **eye_analyzing**: Eye in progress (optional, for long operations)  
+2. **eye_analyzing**: Eye in progress (optional, for long operations)
 3. **eye_complete**: Eye finished with results
 
 **Plus special events**:
+
 - **agent_message**: Agent communicating with human or Third Eye
 - **session_status**: Session state changes (active, awaiting_input, complete, etc.)
 - **pipeline_event**: Generic pipeline milestones
@@ -338,7 +344,7 @@ I LOVE this! Like watching the agent's inner thoughts:
     2. Indoor or outdoor care?
     3. Target audience level?
     4. Desired report length?
-    
+
     Agent, please ask the human these questions.
   </LogEntry>
 
@@ -374,7 +380,7 @@ I LOVE this! Like watching the agent's inner thoughts:
     - Length: 500 words
     - Format: How-to guide with practical steps
     - Must include: Common Saudi indoor palm species, watering schedule, light requirements
-    
+
     Quality score: 95/100. Ready for intent confirmation.
   </LogEntry>
 
@@ -384,7 +390,7 @@ I LOVE this! Like watching the agent's inner thoughts:
     - Primary: CREATE + EDUCATE
     - Scope: Moderate (500 words, focused region)
     - Requirements: Species info, care instructions, regional considerations
-    
+
     Agent, confirm with human: You will create a 500-word beginner's guide about caring for indoor palms in Saudi Arabia. If confirmed, create draft and submit for my review.
   </LogEntry>
 
@@ -415,7 +421,7 @@ I LOVE this! Like watching the agent's inner thoughts:
     - ❌ 2 claims lack evidence:
       1. "Phoenix palms are most common in Saudi homes" - needs source
       2. "Water every 7-10 days" - needs regional data citation
-    
+
     Agent, add citations for these 2 claims and resubmit.
   </LogEntry>
 
@@ -460,113 +466,113 @@ Intelligence - Uses LLM strength (understanding context) not weakness (following
 ### High-Level Component Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         HUMAN USER                               │
-│                  (Completely Unaware of Third Eye)               │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             │ Natural conversation
-                             ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        AI AGENT (Claude)                         │
-│                   With MCP Client Integration                    │
-└───┬─────────────────────────────────────────────────────────┬───┘
-    │                                                          │
-    │ Silent MCP stdio call                                   │ Returns guidance/
-    │ third_eye_overseer(task)                                           │ validation
-    ▼                                                          │
-┌───────────────────────────────────────────────────────────────┐ │
-│               THIRD EYE MCP SERVER (stdio)                   │ │
-│                  packages/mcp/server.ts                       │ │
-│                                                               │ │
-│  Tool: third_eye_overseer                                                │ │
-│  ├─ No rejection logic                                        │ │
-│  ├─ Forwards ALL requests to AutoRouter                      │ │
-│  └─ Returns results to agent                                 │ │
-└───┬──────────────────────────────────────────────────────────┬┘
-    │                                                          │
-    │ HTTP call to backend                                    │
-    ▼                                                          │
-┌───────────────────────────────────────────────────────────────┐ │
-│              BACKEND SERVER (Hono + Bun)                     │ │
-│                 apps/server/src/start.ts                      │ │
-│                                                               │ │
-│  ┌─────────────────────────────────────────────────────┐   │ │
-│  │          AUTO ROUTER                                 │   │ │
-│  │   packages/core/auto-router.ts                       │   │ │
-│  │                                                       │   │ │
-│  │  1. Call Overseer → Get pipelineRoute               │   │ │
-│  │  2. Execute dynamic route                            │   │ │
-│  │  3. Emit WebSocket events for each Eye              │   │ │
-│  │  4. Handle AWAIT_INPUT/AWAIT_REVISION                │   │ │
-│  │  5. Return final results                             │   │ │
-│  └─────────────────────────────────────────────────────┘   │ │
-│                                                               │ │
-│  ┌─────────────────────────────────────────────────────┐   │ │
-│  │          EYE ORCHESTRATOR                            │   │ │
-│  │   packages/core/orchestrator.ts                      │   │ │
-│  │                                                       │   │ │
-│  │  • Loads Eye personas from database                 │   │ │
-│  │  • Calls LLM provider (Groq/Ollama/etc)             │   │ │
-│  │  • Parses Eye responses                              │   │ │
-│  │  • Validates response structure                      │   │ │
-│  └─────────────────────────────────────────────────────┘   │ │
-│                                                               │ │
-│  ┌─────────────────────────────────────────────────────┐   │ │
-│  │       WEBSOCKET MANAGER                              │   │ │
-│  │   apps/server/src/websocket.ts                       │   │ │
-│  │                                                       │   │ │
-│  │  Methods:                                             │   │ │
-│  │  • emitEyeStarted(sessionId, eye, ui)                │   │ │
-│  │  • emitEyeAnalyzing(sessionId, eye, progress)        │   │ │
-│  │  • emitEyeComplete(sessionId, eye, result)           │   │ │
-│  │  • emitAgentMessage(sessionId, direction, message)   │   │ │
-│  │  • emitSessionStatus(sessionId, status)              │   │ │
-│  │  • broadcastToSession(sessionId, event)              │   │ │
-│  └─────────────────────────────────────────────────────┘   │ │
-│                                                               │ │
-│  ┌─────────────────────────────────────────────────────┐   │ │
-│  │          DATABASE (SQLite + Drizzle)                 │   │ │
-│  │   packages/db/index.ts                                │   │ │
-│  │                                                       │   │ │
-│  │  Tables:                                              │   │ │
-│  │  • personas - Eye persona definitions                │   │ │
-│  │  • sessions - User sessions                          │   │ │
-│  │  • runs - Eye execution metrics                   │   │ │
-│  │  • pipeline_events - WebSocket event log             │   │ │
-│  │  • eye_routing - Routing configuration               │   │ │
-│  │  • provider_keys - Encrypted API keys + metadata     │   │ │
-│  │  • mcp_integrations - MCP server configs             │   │ │
-│  └─────────────────────────────────────────────────────┘   │ │
-└────────────────────────────────┬──────────────────────────────┘ │
-                                 │                                │
-                                 │ WebSocket                      │
-                                 │ Real-time events               │
-                                 ▼                                │
-┌─────────────────────────────────────────────────────────────────┐ │
-│                  FRONTEND WEB PORTAL (Next.js 15)                │ │
-│                      apps/ui/src/app                              │ │
-│                                                                   │ │
-│  Pages:                                                           │ │
-│  • /monitor - Real-time conversation log                        │ │
-│  • /sessions - Session history                                  │ │
-│  • /eyes - Eye status and configuration                         │ │
-│  • /personas - Persona management                               │ │
-│  • /pipelines - Pipeline visualization                          │ │
-│  • /playground/[sessionId] - Run Overseer flows or single       │ │
-│    Eye test passes in isolation                                 │ │
-│  • /duel - Launch side-by-side model comparisons                │ │
-│                                                                   │ │
-│  Components:                                                      │ │
-│  • ConversationLog - Chat-like event display                    │ │
-│  • PipelineFlow - Visual pipeline diagram                       │ │
-│  • EyeCard - Individual Eye status                              │ │
-│  • SessionMemory - Context tracking                             │ │
-│  • DuelMode - Provider/model selector with live verdicts        │ │
-│  • PlaygroundTaskForm / EyeTestPanel - Overseer pipeline +      │ │
-│    single-Eye testers                                           │ │
-└───────────────────────────────────────────────────────────────────┘
 
+┌─────────────────────────────────────────────────────────────────┐
+│ HUMAN USER │
+│ (Completely Unaware of Third Eye) │
+└────────────────────────────┬────────────────────────────────────┘
+│
+│ Natural conversation
+▼
+┌─────────────────────────────────────────────────────────────────┐
+│ AI AGENT (Claude) │
+│ With MCP Client Integration │
+└───┬─────────────────────────────────────────────────────────┬───┘
+│ │
+│ Silent MCP stdio call │ Returns guidance/
+│ third_eye_overseer(task) │ validation
+▼ │
+┌───────────────────────────────────────────────────────────────┐ │
+│ THIRD EYE MCP SERVER (stdio) │ │
+│ packages/mcp/server.ts │ │
+│ │ │
+│ Tool: third_eye_overseer │ │
+│ ├─ No rejection logic │ │
+│ ├─ Forwards ALL requests to AutoRouter │ │
+│ └─ Returns results to agent │ │
+└───┬──────────────────────────────────────────────────────────┬┘
+│ │
+│ HTTP call to backend │
+▼ │
+┌───────────────────────────────────────────────────────────────┐ │
+│ BACKEND SERVER (Hono + Bun) │ │
+│ apps/server/src/start.ts │ │
+│ │ │
+│ ┌─────────────────────────────────────────────────────┐ │ │
+│ │ AUTO ROUTER │ │ │
+│ │ packages/core/auto-router.ts │ │ │
+│ │ │ │ │
+│ │ 1. Call Overseer → Get pipelineRoute │ │ │
+│ │ 2. Execute dynamic route │ │ │
+│ │ 3. Emit WebSocket events for each Eye │ │ │
+│ │ 4. Handle AWAIT_INPUT/AWAIT_REVISION │ │ │
+│ │ 5. Return final results │ │ │
+│ └─────────────────────────────────────────────────────┘ │ │
+│ │ │
+│ ┌─────────────────────────────────────────────────────┐ │ │
+│ │ EYE ORCHESTRATOR │ │ │
+│ │ packages/core/orchestrator.ts │ │ │
+│ │ │ │ │
+│ │ • Loads Eye personas from database │ │ │
+│ │ • Calls LLM provider (Groq/Ollama/etc) │ │ │
+│ │ • Parses Eye responses │ │ │
+│ │ • Validates response structure │ │ │
+│ └─────────────────────────────────────────────────────┘ │ │
+│ │ │
+│ ┌─────────────────────────────────────────────────────┐ │ │
+│ │ WEBSOCKET MANAGER │ │ │
+│ │ apps/server/src/websocket.ts │ │ │
+│ │ │ │ │
+│ │ Methods: │ │ │
+│ │ • emitEyeStarted(sessionId, eye, ui) │ │ │
+│ │ • emitEyeAnalyzing(sessionId, eye, progress) │ │ │
+│ │ • emitEyeComplete(sessionId, eye, result) │ │ │
+│ │ • emitAgentMessage(sessionId, direction, message) │ │ │
+│ │ • emitSessionStatus(sessionId, status) │ │ │
+│ │ • broadcastToSession(sessionId, event) │ │ │
+│ └─────────────────────────────────────────────────────┘ │ │
+│ │ │
+│ ┌─────────────────────────────────────────────────────┐ │ │
+│ │ DATABASE (SQLite + Drizzle) │ │ │
+│ │ packages/db/index.ts │ │ │
+│ │ │ │ │
+│ │ Tables: │ │ │
+│ │ • personas - Eye persona definitions │ │ │
+│ │ • sessions - User sessions │ │ │
+│ │ • runs - Eye execution metrics │ │ │
+│ │ • pipeline_events - WebSocket event log │ │ │
+│ │ • eye_routing - Routing configuration │ │ │
+│ │ • provider_keys - Encrypted API keys + metadata │ │ │
+│ │ • mcp_integrations - MCP server configs │ │ │
+│ └─────────────────────────────────────────────────────┘ │ │
+└────────────────────────────────┬──────────────────────────────┘ │
+│ │
+│ WebSocket │
+│ Real-time events │
+▼ │
+┌─────────────────────────────────────────────────────────────────┐ │
+│ FRONTEND WEB PORTAL (Next.js 15) │ │
+│ apps/ui/src/app │ │
+│ │ │
+│ Pages: │ │
+│ • /monitor - Real-time conversation log │ │
+│ • /sessions - Session history │ │
+│ • /eyes - Eye status and configuration │ │
+│ • /personas - Persona management │ │
+│ • /pipelines - Pipeline visualization │ │
+│ • /playground/[sessionId] - Run Overseer flows or single │ │
+│ Eye test passes in isolation │ │
+│ • /duel - Launch side-by-side model comparisons │ │
+│ │ │
+│ Components: │ │
+│ • ConversationLog - Chat-like event display │ │
+│ • PipelineFlow - Visual pipeline diagram │ │
+│ • EyeCard - Individual Eye status │ │
+│ • SessionMemory - Context tracking │ │
+│ • DuelMode - Provider/model selector with live verdicts │ │
+│ • PlaygroundTaskForm / EyeTestPanel - Overseer pipeline + │ │
+│ single-Eye testers │ │
+└───────────────────────────────────────────────────────────────────┘
 
 ### Data Flow Diagram
 
@@ -706,9 +712,11 @@ Intelligence - Uses LLM strength (understanding context) not weakness (following
 ### Component Responsibilities
 
 #### 1. MCP Server (`packages/mcp/server.ts`)
+
 **Role**: stdio interface for AI agents
 
 **Responsibilities**:
+
 - Expose only `third_eye_overseer` via the MCP SDK (Golden Rule #1).
 - Capture client metadata during MCP initialize handshake and attach it to new sessions.
 - Invoke `autoRouter` directly inside the stdio process—no HTTP hop required.
@@ -716,6 +724,7 @@ Intelligence - Uses LLM strength (understanding context) not weakness (following
 - Format `autoRouter` responses back into MCP `toolResult` envelopes (error/success/ask-for-input).
 
 **Key Functions**:
+
 ```typescript
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const args = request.params.arguments ?? {};
@@ -728,15 +737,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
   const contextOptions = (() => {
     if (isPlainObject(args.context)) {
-      return { ...(args.context as Record<string, unknown>), mcpClient: buildSessionMetadata() };
+      return {
+        ...(args.context as Record<string, unknown>),
+        mcpClient: buildSessionMetadata(),
+      };
     }
     return { mcpClient: buildSessionMetadata() };
   })();
 
-  const result = await autoRouter.executeFlow(task, undefined, providedSessionId, {
-    strictness: strictnessOptions,
-    context: contextOptions,
-  });
+  const result = await autoRouter.executeFlow(
+    task,
+    undefined,
+    providedSessionId,
+    {
+      strictness: strictnessOptions,
+      context: contextOptions,
+    },
+  );
 
   await openBrowserForSession(result.sessionId);
   return formatToolResult(result);
@@ -744,9 +761,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 ```
 
 #### 2. AutoRouter (`packages/core/auto-router.ts`)
+
 **Role**: Dynamic pipeline orchestration
 
 **Responsibilities**:
+
 - Call Overseer to get pipelineRoute
 - Execute Eyes in the decided order
 - Emit WebSocket events for monitoring
@@ -755,6 +774,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 - Manage session state
 
 **Key Functions**:
+
 ```typescript
 async executeFlow(input: string, routing?: RoutingDecision, providedSessionId?: string, options: AutoRouterOptions = {}) {
   const decision = routing ?? await this.analyzeTask(input, undefined, providedSessionId, options);
@@ -816,9 +836,11 @@ async executeFlow(input: string, routing?: RoutingDecision, providedSessionId?: 
 ```
 
 #### 3. Eye Orchestrator (`packages/core/orchestrator.ts`)
+
 **Role**: Execute individual Eyes
 
 **Responsibilities**:
+
 - Create ad-hoc sessions when an Eye is invoked directly (manual tests, kill switch reruns).
 - Guard pipeline order with `OrderGuard` unless AutoRouter marked the session as trusted.
 - Resolve routing (provider/model + override), decrypt provider credentials, and load the active persona from SQLite.
@@ -826,7 +848,8 @@ async executeFlow(input: string, routing?: RoutingDecision, providedSessionId?: 
 - Persist run metrics (`runs`), append pipeline events, emit telemetry, and surface order violations as structured envelopes.
 
 **Key Functions**:
-```typescript
+
+````typescript
 async runEye(
   eyeName: string,
   input: string,
@@ -975,17 +998,20 @@ async runEye(
 
   return envelope;
 }
-```
+````
 
 #### 4. WebSocket Manager (`apps/server/src/websocket.ts`)
+
 **Role**: Real-time event broadcasting
 
 **Responsibilities**:
+
 - Track active connections per session and manage heartbeat ping/pong timeouts (30 s ping, 45 s timeout with backoff hints).
 - Relay server-side events to clients; persistence is handled upstream before `broadcastToSession` is invoked.
 - Bridge Bun server events to the core layer via `registerWebSocketBridge`.
 
 **Key Functions**:
+
 ```typescript
 broadcastToSession(sessionId: string, message: WSMessage) {
   const connectionIds = this.sessionConnections.get(sessionId);
@@ -1009,11 +1035,13 @@ broadcastToSession(sessionId: string, message: WSMessage) {
 ```
 
 #### 5. Database Layer (`packages/db/index.ts`)
+
 **Role**: Data persistence and querying
 
 **Key Tables**:
 
 **personas**:
+
 ```sql
 CREATE TABLE personas (
   id TEXT PRIMARY KEY,
@@ -1028,6 +1056,7 @@ CREATE UNIQUE INDEX personas_eye_version ON personas(eye, version);
 ```
 
 **sessions**:
+
 ```sql
 CREATE TABLE sessions (
   id TEXT PRIMARY KEY,
@@ -1042,6 +1071,7 @@ CREATE TABLE sessions (
 ```
 
 **pipeline_events**:
+
 ```sql
 CREATE TABLE pipeline_events (
   id TEXT PRIMARY KEY,
@@ -1058,6 +1088,7 @@ CREATE TABLE pipeline_events (
 ```
 
 **runs**:
+
 ```sql
 CREATE TABLE runs (
   id TEXT PRIMARY KEY,
@@ -1076,40 +1107,48 @@ CREATE TABLE runs (
 ```
 
 #### 6. Frontend Monitor Page (`apps/ui/src/app/monitor/page.tsx`)
+
 **Role**: Real-time visualization
 
 **Components**:
+
 - `<ConversationLog>` - Chat-style event display
 - `<PipelineFlow>` - Visual pipeline diagram
 - `<SessionSelector>` - Switch between sessions
 - `<EventFilter>` - Filter by event type/eye
 
 **WebSocket Integration**:
+
 ```typescript
 useEffect(() => {
-  const baseWsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://127.0.0.1:7070';
-  const ws = new WebSocket(`${baseWsUrl.replace(/\/$/, '')}/ws/monitor?sessionId=${sessionId}`);
+  const baseWsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://127.0.0.1:7070";
+  const ws = new WebSocket(
+    `${baseWsUrl.replace(/\/$/, "")}/ws/monitor?sessionId=${sessionId}`,
+  );
   let pingTimer: NodeJS.Timeout | undefined;
 
   ws.onmessage = (event) => {
     const message = JSON.parse(event.data);
 
-    if (message.type === 'ping') {
-      ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
+    if (message.type === "ping") {
+      ws.send(JSON.stringify({ type: "pong", timestamp: Date.now() }));
       return;
     }
 
-    if (message.type === 'pipeline_event') {
-      setEvents(prev => [...prev, message.data]);
+    if (message.type === "pipeline_event") {
+      setEvents((prev) => [...prev, message.data]);
     }
 
-    if (message.type === 'run_completed') {
+    if (message.type === "run_completed") {
       fetchRuns(); // refresh rest view
     }
   };
 
   ws.onopen = () => {
-    pingTimer = setInterval(() => ws.send(JSON.stringify({ type: 'ping' })), 30000);
+    pingTimer = setInterval(
+      () => ws.send(JSON.stringify({ type: "ping" })),
+      30000,
+    );
   };
 
   return () => {
@@ -1120,8 +1159,6 @@ useEffect(() => {
 ```
 
 ---
-
-
 
 ## Current Implementation Highlights
 
@@ -1137,12 +1174,12 @@ useEffect(() => {
 - **Provider Key Stewardship** – Keys are stored encrypted (AES-256-GCM) via the passphrase at `~/.third-eye-mcp/.passphrase`; routing tables enforce provider/model pairing with optional overrides per run.
 - **Local-First Footprint** – All routes, including the Eye test endpoint, remain unauthenticated by design, keeping setup friction minimal for single-user desktop deployments.
 
-
 ## Complete Eye Persona Specifications
 
 ### Overview
 
 Each Eye operates in TWO phases:
+
 1. **GUIDANCE Phase** - Before agent creates content
 2. **VALIDATION Phase** - After agent creates content
 
@@ -1155,6 +1192,7 @@ All Eyes must include a `ui` field in responses for web monitoring.
 **Purpose**: Intelligent request analysis and dynamic routing
 
 **Persona Highlights**:
+
 ```
 You are the BRAIN of Third Eye MCP. For every request, you decide the pipeline route.
 
@@ -1214,6 +1252,7 @@ You are the BRAIN of Third Eye MCP. For every request, you decide the pipeline r
 ```
 
 **Two-Phase Operation**:
+
 - Overseer only operates at session start (GUIDANCE only)
 - Not called during VALIDATION phase
 
@@ -1224,6 +1263,7 @@ You are the BRAIN of Third Eye MCP. For every request, you decide the pipeline r
 **Purpose**: Detect ambiguity and ensure clarity
 
 **Persona Highlights**:
+
 ```
 You are Sharingan - the Eye that sees through vagueness.
 
@@ -1304,6 +1344,7 @@ Response:
 **Purpose**: Refine and structure requirements
 
 **Persona Highlights**:
+
 ```
 You are Prompt Helper - the Eye that transforms vague ideas into structured specs.
 
@@ -1405,6 +1446,7 @@ Response:
 **Purpose**: Confirm scope and intent
 
 **Persona Highlights**:
+
 ```
 You are Jogan - the Eye that sees true intent.
 
@@ -1495,6 +1537,7 @@ Response:
 **Purpose**: Plan and requirements validation
 
 **Persona Highlights**:
+
 ```
 You are Rinnegan - the Eye that sees all paths and possibilities.
 
@@ -1584,6 +1627,7 @@ Response:
 **Purpose**: Code review and quality validation
 
 **Persona Highlights**:
+
 ```
 You are Mangekyo - the Eye that sees code patterns and anti-patterns.
 
@@ -1721,6 +1765,7 @@ Response (No Issues):
 **Purpose**: Evidence and fact validation
 
 **Persona Highlights**:
+
 ```
 You are Tenseigan - the Eye that sees truth and evidence.
 
@@ -1843,6 +1888,7 @@ Response (All Claims Cited):
 **Purpose**: Final approval and completeness check
 
 **Persona Highlights**:
+
 ```
 You are Byakugan - the Eye that sees everything, the final guardian.
 

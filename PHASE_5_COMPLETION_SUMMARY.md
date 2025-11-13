@@ -20,11 +20,13 @@ Both features are **fully integrated into the UI**, backed by **comprehensive in
 ## 1. Model Recommendation System (100% Complete)
 
 ### Overview
+
 Per **A8** from Implementation Plan: Different eyes need different model types for optimal performance.
 
 ### Implemented Components
 
 #### A. SSOT Configuration (`packages/config/eye-model-recommendations.ts` - 300 lines)
+
 - **Eye-Model Mapping**: Researched recommendations for each eye per provider
 - **4 Providers**: Groq (95-98% success), OpenRouter (85-95%), Ollama (100%), LM Studio (100%)
 - **8 Eyes**: Each eye has optimized model per provider with reasoning and strengths
@@ -32,15 +34,20 @@ Per **A8** from Implementation Plan: Different eyes need different model types f
 - **Override Warnings**: SSOT for warning messages
 
 **Key Exports**:
+
 ```typescript
-export const EYE_MODEL_MAP: Record<ProviderId, Record<string, ModelRecommendation>>
-export function getRecommendedModel(eyeName: string, provider: ProviderId)
-export function getAllRecommendationsForProvider(provider: ProviderId)
-export const MODEL_OVERRIDE_WARNINGS
-export const SUCCESS_RATE_CATEGORIES
+export const EYE_MODEL_MAP: Record<
+  ProviderId,
+  Record<string, ModelRecommendation>
+>;
+export function getRecommendedModel(eyeName: string, provider: ProviderId);
+export function getAllRecommendationsForProvider(provider: ProviderId);
+export const MODEL_OVERRIDE_WARNINGS;
+export const SUCCESS_RATE_CATEGORIES;
 ```
 
 **Example Recommendations**:
+
 - **Groq**: llama-3-groq-70b-tool-use for all eyes (95-98% success, function calling)
 - **OpenRouter**: Mixed models (Llama 3.3, Qwen 2.5, DeepSeek R1) based on eye purpose (85-95%)
 - **Ollama**: qwen2.5:7b or llama3.2:8b (100% reliability with JSON schema)
@@ -49,14 +56,16 @@ export const SUCCESS_RATE_CATEGORIES
 #### B. React Hooks (`apps/ui/src/hooks/useModelRecommendations.ts` - 180 lines)
 
 **Hooks Implemented**:
+
 ```typescript
-useModelRecommendation(eyeName, provider)     // Get recommendation for eye+provider
-useAllModelRecommendations(provider)          // Get all recommendations for provider
-useModelOverride()                             // Manage custom model overrides
-useSuccessRateCategory(recommendation)         // Get success category (Excellent/Good/Fair/Poor)
+useModelRecommendation(eyeName, provider); // Get recommendation for eye+provider
+useAllModelRecommendations(provider); // Get all recommendations for provider
+useModelOverride(); // Manage custom model overrides
+useSuccessRateCategory(recommendation); // Get success category (Excellent/Good/Fair/Poor)
 ```
 
 **Features**:
+
 - ✅ Memoized computations with useMemo
 - ✅ Local state management for overrides
 - ✅ Success rate categorization (Excellent 95%+, Good 85-94%, Fair 70-84%, Poor <70%)
@@ -65,6 +74,7 @@ useSuccessRateCategory(recommendation)         // Get success category (Excellen
 #### C. ModelRecommendationPanel Component (`apps/ui/src/components/model-recommendations/ModelRecommendationPanel.tsx` - 242 lines)
 
 **UI Features**:
+
 - ✅ Recommended model display with reasoning
 - ✅ Strengths badges
 - ✅ Expected success rate with color-coded category badge
@@ -74,6 +84,7 @@ useSuccessRateCategory(recommendation)         // Get success category (Excellen
 - ✅ Remove override capability
 
 **Styling**:
+
 - Color-coded success rate badges (green, blue, yellow, red)
 - Dark mode support throughout
 - Responsive design
@@ -82,6 +93,7 @@ useSuccessRateCategory(recommendation)         // Get success category (Excellen
 #### D. Integration into CapabilityMatrix (`apps/ui/src/components/pipeline-builder/CapabilityMatrix.tsx`)
 
 **Integration Points**:
+
 - ✅ Imported ModelRecommendationPanel
 - ✅ Added provider selector dropdown to EyeDetailModal
 - ✅ Displays ModelRecommendationPanel below eye details
@@ -89,6 +101,7 @@ useSuccessRateCategory(recommendation)         // Get success category (Excellen
 - ✅ Increased modal size for better content display (max-w-3xl, max-h-85vh)
 
 **User Flow**:
+
 1. User clicks eye card in CapabilityMatrix
 2. Eye detail modal opens showing capabilities
 3. User selects provider from dropdown (Groq, OpenRouter, Ollama, LM Studio)
@@ -100,6 +113,7 @@ useSuccessRateCategory(recommendation)         // Get success category (Excellen
 ## 2. Narrative Monitoring (100% Complete)
 
 ### Overview
+
 Tracks agent and human messages to show the "story" of pipeline execution. Provides human-readable conversation flow alongside technical timeline.
 
 ### Implemented Components
@@ -107,6 +121,7 @@ Tracks agent and human messages to show the "story" of pipeline execution. Provi
 #### A. Database Schema
 
 **Migration** (`packages/db/migrations/0001_phase1_foundation.sql`):
+
 ```sql
 CREATE TABLE IF NOT EXISTS conversation_events (
   id TEXT PRIMARY KEY NOT NULL,
@@ -125,15 +140,18 @@ CREATE INDEX idx_conversation_events_created ON conversation_events(created_at D
 ```
 
 **Drizzle Schema** (`packages/db/schema.ts`):
+
 ```typescript
-export const conversationEvents = sqliteTable('conversation_events', {
+export const conversationEvents = sqliteTable("conversation_events", {
   id: text().primaryKey(),
-  sessionId: text().notNull().references(() => sessions.id),
+  sessionId: text()
+    .notNull()
+    .references(() => sessions.id),
   eventType: text().notNull(),
   speaker: text().notNull(),
   message: text().notNull(),
-  metadata: text({ mode: 'json' }),
-  createdAt: integer({ mode: 'timestamp' }).notNull(),
+  metadata: text({ mode: "json" }),
+  createdAt: integer({ mode: "timestamp" }).notNull(),
 });
 
 export type ConversationEvent = typeof conversationEvents.$inferSelect;
@@ -143,18 +161,20 @@ export type NewConversationEvent = typeof conversationEvents.$inferInsert;
 #### B. ConversationTracker Class (`packages/core/conversation-tracker.ts` - 282 lines)
 
 **Event Type Constants (SSOT)**:
+
 ```typescript
 export const CONVERSATION_EVENT_TYPES = {
-  AGENT_MESSAGE: 'agent_message',
-  HUMAN_MESSAGE: 'human_message',
-  ROUTING_DECISION: 'routing_decision',
-  PAUSE: 'pause',
-  RESUME: 'resume',
-  ERROR: 'error',
+  AGENT_MESSAGE: "agent_message",
+  HUMAN_MESSAGE: "human_message",
+  ROUTING_DECISION: "routing_decision",
+  PAUSE: "pause",
+  RESUME: "resume",
+  ERROR: "error",
 } as const;
 ```
 
 **Core Methods**:
+
 ```typescript
 logEvent(event: ConversationEventData): string
 logAgentMessage(sessionId, eyeName, message, metadata?): string
@@ -166,6 +186,7 @@ logError(sessionId, eyeName, error, metadata?): string
 ```
 
 **Retrieval Methods**:
+
 ```typescript
 getConversationTimeline(sessionId): readonly ConversationEventRecord[]
 getRecentEvents(limit = 50): readonly ConversationEventRecord[]
@@ -173,6 +194,7 @@ getEventsByType(sessionId, eventType): readonly ConversationEventRecord[]
 ```
 
 **Cleanup**:
+
 ```typescript
 deleteOldEvents(daysOld: number): number
 ```
@@ -180,6 +202,7 @@ deleteOldEvents(daysOld: number): number
 #### C. API Routes (`apps/server/src/routes/conversation-events.ts` - 155 lines)
 
 **3 Endpoints**:
+
 ```typescript
 GET /api/conversation-events/session/:sessionId           // Get timeline for session
 GET /api/conversation-events/recent?limit=N               // Get recent events
@@ -187,27 +210,31 @@ GET /api/conversation-events/session/:sessionId/type/:eventType  // Get events b
 ```
 
 **Features**:
+
 - ✅ Response envelope pattern (success, data, message)
 - ✅ Input validation with Zod
 - ✅ Error handling with try-catch
 - ✅ Event type validation (agent_message, human_message, routing_decision, pause, resume, error)
 
 **Registered in** `apps/server/src/index.ts`:
+
 ```typescript
-import conversationEventsRoutes from './routes/conversation-events';
-app.route('/api/conversation-events', conversationEventsRoutes);
+import conversationEventsRoutes from "./routes/conversation-events";
+app.route("/api/conversation-events", conversationEventsRoutes);
 ```
 
 #### D. React Hooks (`apps/ui/src/hooks/useConversationTimeline.ts` - 165 lines)
 
 **3 Hooks**:
+
 ```typescript
-useConversationTimeline(sessionId)              // Fetch timeline for session
-useRecentConversationEvents(limit = 50)         // Fetch recent events
-useConversationEventsByType(sessionId, eventType)  // Fetch by type
+useConversationTimeline(sessionId); // Fetch timeline for session
+useRecentConversationEvents((limit = 50)); // Fetch recent events
+useConversationEventsByType(sessionId, eventType); // Fetch by type
 ```
 
 **Features**:
+
 - ✅ Loading state management
 - ✅ Error state management
 - ✅ Refetch capability
@@ -217,6 +244,7 @@ useConversationEventsByType(sessionId, eventType)  // Fetch by type
 #### E. ConversationTimeline Component (`apps/ui/src/components/conversation/ConversationTimeline.tsx` - 344 lines)
 
 **UI Features**:
+
 - ✅ Timeline visualization with dots and connecting line
 - ✅ Event type icons (🤖 Agent, 👤 Human, 🧠 Routing, ⏸️ Pause, ▶️ Resume, ❌ Error)
 - ✅ Eye icons from EYE_CAPABILITIES config
@@ -229,6 +257,7 @@ useConversationEventsByType(sessionId, eventType)  // Fetch by type
 - ✅ Dark mode support
 
 **Event Type Configuration (SSOT)**:
+
 ```typescript
 const EVENT_TYPE_CONFIG = {
   agent_message: { icon: '🤖', label: 'Agent Message', bgColor, borderColor, textColor },
@@ -243,6 +272,7 @@ const EVENT_TYPE_CONFIG = {
 #### F. Monitor Page Integration (`apps/ui/src/app/monitor/page.tsx`)
 
 **New NARRATIVE Tab**:
+
 - ✅ Added to MONITOR_TABS constants (`packages/constants/monitor-tabs.ts`)
 - ✅ Tab ID: `'narrative'`
 - ✅ Tab Icon: `'message-circle'` (lucide-react)
@@ -250,6 +280,7 @@ const EVENT_TYPE_CONFIG = {
 - ✅ Tab Description: `"Human-readable conversation flow showing the story of pipeline execution"`
 
 **Integration**:
+
 ```typescript
 // Import
 import { ConversationTimeline } from '@/components/conversation/ConversationTimeline';
@@ -279,6 +310,7 @@ const {
 ```
 
 **Monitor Page Tabs** (6 total):
+
 1. Timeline - Chat-style conversation log with Eye responses
 2. **Narrative** - Human-readable conversation flow (NEW)
 3. Routing - Overseer-determined dynamic Eye sequence
@@ -292,21 +324,24 @@ const {
 ## Code Metrics
 
 ### Files Created/Modified
-| Category | Files | Lines |
-|----------|-------|-------|
-| **Model Recommendations** | 4 files | 700+ lines |
-| **Narrative Monitoring** | 7 files | 1,100+ lines |
-| **Total** | **11 files** | **1,800+ lines** |
+
+| Category                  | Files        | Lines            |
+| ------------------------- | ------------ | ---------------- |
+| **Model Recommendations** | 4 files      | 700+ lines       |
+| **Narrative Monitoring**  | 7 files      | 1,100+ lines     |
+| **Total**                 | **11 files** | **1,800+ lines** |
 
 ### Detailed Breakdown
 
 #### Model Recommendations
+
 - `packages/config/eye-model-recommendations.ts` - 300 lines
 - `apps/ui/src/hooks/useModelRecommendations.ts` - 180 lines
 - `apps/ui/src/components/model-recommendations/ModelRecommendationPanel.tsx` - 242 lines
 - `apps/ui/src/components/pipeline-builder/CapabilityMatrix.tsx` - Modified (~50 lines added)
 
 #### Narrative Monitoring
+
 - `packages/db/migrations/0001_phase1_foundation.sql` - Modified (+18 lines)
 - `packages/db/schema.ts` - Modified (+11 lines)
 - `packages/core/conversation-tracker.ts` - 282 lines (NEW)
@@ -322,12 +357,14 @@ const {
 ## Engineering Standards Compliance
 
 ### R01: SSOT & DRY ✅
+
 - **Model Recommendations**: EYE_MODEL_MAP, MODEL_OVERRIDE_WARNINGS, SUCCESS_RATE_CATEGORIES
 - **Narrative Monitoring**: CONVERSATION_EVENT_TYPES, EVENT_TYPE_CONFIG
 - **Monitor Tabs**: MONITOR_TAB_LABELS, MONITOR_TAB_ICONS, MONITOR_TAB_DESCRIPTIONS
 - **No duplication** of logic, config, or constants
 
 ### R02: Separation of Concerns ✅
+
 - **Data Layer**: Database schema, ConversationTracker class
 - **API Layer**: API routes with input validation
 - **Business Logic**: Hooks for data fetching and management
@@ -335,30 +372,35 @@ const {
 - Clear boundaries between layers
 
 ### R03: Mirror Existing Architecture ✅
+
 - **Pattern Matching**: Followed existing hooks pattern (useModelRecommendation, useConversationTimeline)
 - **Component Structure**: Followed existing component patterns (ModelRecommendationPanel, ConversationTimeline)
 - **API Routes**: Followed existing route structure (conversation-events.ts matches policies.ts, templates.ts)
 - **SSOT Structure**: Followed existing config pattern (eye-model-recommendations.ts matches eye-capabilities.ts)
 
 ### R04: Performance First ✅
+
 - **React**: useCallback, useMemo throughout
 - **Database**: 3 indexes on conversation_events table
 - **API**: Pagination support (limit parameter)
 - **Component**: Memoized event sorting in ConversationTimeline
 
 ### R05: Security ✅
+
 - **Input Validation**: Zod schemas in API routes
 - **SQL Injection**: Parameterized queries in ConversationTracker
 - **Foreign Keys**: Proper references to sessions table
 - **Error Handling**: Try-catch blocks, error states in UI
 
 ### R07: Strict Typing ✅
+
 - **Zero 'any' types** across all files
 - **Proper interfaces**: ConversationEventRecord, ModelRecommendation, ConversationEventData
 - **Type exports**: ConversationEvent, NewConversationEvent from Drizzle schema
 - **Readonly types**: readonly arrays, as const objects
 
 ### R13: No Magic Numbers or Strings ✅
+
 - **Model Warnings**: MODEL_OVERRIDE_WARNINGS constant
 - **Success Categories**: SUCCESS_RATE_CATEGORIES constant
 - **Event Types**: CONVERSATION_EVENT_TYPES constant
@@ -370,6 +412,7 @@ const {
 ## Testing Checklist
 
 ### Model Recommendations
+
 - [ ] Click eye card in CapabilityMatrix
 - [ ] Eye detail modal opens
 - [ ] Select different providers from dropdown
@@ -385,6 +428,7 @@ const {
 - [ ] Verify recommendation restored
 
 ### Narrative Monitoring
+
 - [ ] Navigate to /monitor page
 - [ ] Select session
 - [ ] Click "Narrative" tab
@@ -407,35 +451,50 @@ const {
 ## Integration Notes
 
 ### Backend Integration Required (Future Work)
+
 To fully utilize narrative monitoring, the pipeline execution needs to call ConversationTracker methods:
 
 ```typescript
 // In pipeline orchestrator or eye execution:
-import { ConversationTracker } from '@third-eye/core/conversation-tracker';
+import { ConversationTracker } from "@third-eye/core/conversation-tracker";
 
 const tracker = new ConversationTracker(db);
 
 // Log routing decision
-tracker.logRoutingDecision(sessionId, ['overseer', 'sharingan', 'kyuubi'], 'Selected these eyes for ambiguity handling');
+tracker.logRoutingDecision(
+  sessionId,
+  ["overseer", "sharingan", "kyuubi"],
+  "Selected these eyes for ambiguity handling",
+);
 
 // Log agent message
-tracker.logAgentMessage(sessionId, 'sharingan', 'I detected the following ambiguities: ...');
+tracker.logAgentMessage(
+  sessionId,
+  "sharingan",
+  "I detected the following ambiguities: ...",
+);
 
 // Log human message
-tracker.logHumanMessage(sessionId, 'The target domain is healthcare');
+tracker.logHumanMessage(sessionId, "The target domain is healthcare");
 
 // Log pause
-tracker.logPause(sessionId, 'sharingan', 'Waiting for human clarification');
+tracker.logPause(sessionId, "sharingan", "Waiting for human clarification");
 
 // Log resume
-tracker.logResume(sessionId, 'Pipeline resumed after human provided answers');
+tracker.logResume(sessionId, "Pipeline resumed after human provided answers");
 
 // Log error
-tracker.logError(sessionId, 'kyuubi', 'Failed to generate guidance: API timeout');
+tracker.logError(
+  sessionId,
+  "kyuubi",
+  "Failed to generate guidance: API timeout",
+);
 ```
 
 ### Model Override Integration (Future Work)
+
 Model overrides are currently stored in React state. For persistence:
+
 1. Add `model_overrides` table to database
 2. Create API endpoints for override CRUD
 3. Update `useModelOverride` hook to use API instead of local state
@@ -447,6 +506,7 @@ Model overrides are currently stored in React state. For persistence:
 ### Phase 5 Status: ✅ 100% COMPLETE
 
 Both major features are **production-ready**:
+
 - ✅ Fully implemented with comprehensive infrastructure
 - ✅ Integrated into UI with polished components
 - ✅ Following all engineering standards (SSOT, strict typing, performance, security)
@@ -456,11 +516,13 @@ Both major features are **production-ready**:
 - ✅ Dark mode support throughout
 
 ### Known Limitations
+
 1. **Narrative Monitoring**: Requires backend integration to populate conversation_events table during pipeline execution
 2. **Model Overrides**: Currently stored in React state; not persisted to database
 3. **E2E Testing**: Manual testing required as automated E2E tests not implemented
 
 ### Recommended Next Steps
+
 1. **Backend Integration**: Add ConversationTracker calls to pipeline orchestrator
 2. **Model Override Persistence**: Add database table and API for model overrides
 3. **Production Deployment**: Deploy to staging for user testing
@@ -478,6 +540,7 @@ Both major features are **production-ready**:
 Both features are production-ready, fully integrated, and follow all engineering standards. The implementation adds **1,800+ lines of production code** across 11 files, maintaining the high quality bar established in Phases 1-4.
 
 **Overall POC-to-Production Status**:
+
 - Phase 1: ✅ 150% Complete
 - Phase 2: ✅ 100% Complete
 - Phase 3: ✅ 100% Complete

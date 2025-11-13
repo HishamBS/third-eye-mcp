@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useCallback } from 'react';
-import { SCHEMA_TEMPLATES, BUTTON_LABELS } from './constants';
+import { useCallback } from "react";
+import { SCHEMA_TEMPLATES, BUTTON_LABELS } from "./constants";
 
 /**
  * SchemaTemplateSelector Component - Phase 19.3
@@ -16,7 +16,9 @@ interface SchemaTemplateSelectorProps {
   readonly onSelect: (inputSchema: string, outputSchema: string) => void;
 }
 
-export function SchemaTemplateSelector({ onSelect }: SchemaTemplateSelectorProps) {
+export function SchemaTemplateSelector({
+  onSelect,
+}: SchemaTemplateSelectorProps) {
   const handleTemplateSelect = useCallback(
     (templateKey: keyof typeof SCHEMA_TEMPLATES) => {
       const template = SCHEMA_TEMPLATES[templateKey];
@@ -24,12 +26,14 @@ export function SchemaTemplateSelector({ onSelect }: SchemaTemplateSelectorProps
       const outputSchemaStr = JSON.stringify(template.output, null, 2);
       onSelect(inputSchemaStr, outputSchemaStr);
     },
-    [onSelect]
+    [onSelect],
   );
 
   return (
     <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/70 p-5">
-      <h3 className="mb-3 text-lg font-semibold text-brand-foreground">Schema Templates</h3>
+      <h3 className="mb-3 text-lg font-semibold text-brand-foreground">
+        Schema Templates
+      </h3>
       <p className="mb-4 text-sm text-semantic-muted">
         Start with a pre-built schema template for common patterns
       </p>
@@ -37,10 +41,14 @@ export function SchemaTemplateSelector({ onSelect }: SchemaTemplateSelectorProps
         {Object.entries(SCHEMA_TEMPLATES).map(([key, template]) => (
           <button
             key={key}
-            onClick={() => handleTemplateSelect(key as keyof typeof SCHEMA_TEMPLATES)}
+            onClick={() =>
+              handleTemplateSelect(key as keyof typeof SCHEMA_TEMPLATES)
+            }
             className="text-left rounded-lg border border-brand-outline/50 bg-brand-paperElev p-4 transition-all hover:border-brand-accent hover:bg-brand-accent/5"
           >
-            <h4 className="font-semibold text-brand-foreground mb-1">{template.name}</h4>
+            <h4 className="font-semibold text-brand-foreground mb-1">
+              {template.name}
+            </h4>
             <p className="text-xs text-semantic-muted">
               {BUTTON_LABELS.USE_TEMPLATE}
             </p>

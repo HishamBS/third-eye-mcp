@@ -1,21 +1,27 @@
-import { Hono } from 'hono';
-import { nanoid } from 'nanoid';
-import { getDb } from '@third-eye/db';
-import { pipelineEvents, eyes, personaBlueprints, eyesRouting, personas } from '@third-eye/db';
-import { EyeOrchestrator } from '@third-eye/core';
-import { sessionManager } from '@third-eye/core/session-manager';
-import { eq, desc, inArray, and, sql } from 'drizzle-orm';
-import type { Envelope } from '@third-eye/types';
-import { getDefaultRouting } from '../lib/defaults';
+import { Hono } from "hono";
+import { nanoid } from "nanoid";
+import { getDb } from "@third-eye/db";
+import {
+  pipelineEvents,
+  eyes,
+  personaBlueprints,
+  eyesRouting,
+  personas,
+} from "@third-eye/db";
+import { EyeOrchestrator } from "@third-eye/core";
+import { sessionManager } from "@third-eye/core/session-manager";
+import { eq, desc, inArray, and, sql } from "drizzle-orm";
+import type { Envelope } from "@third-eye/types";
+import { getDefaultRouting } from "../lib/defaults";
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
   createErrorResponse,
   createInternalErrorResponse,
   requestIdMiddleware,
-  errorHandler
-} from '../middleware/response';
-import { z } from 'zod';
+  errorHandler,
+} from "../middleware/response";
+import { z } from "zod";
 
 /**
  * Eyes API Routes - Data-Driven Unified System
@@ -35,7 +41,10 @@ import { z } from 'zod';
 const app = new Hono();
 const orchestrator = new EyeOrchestrator();
 
-async function getActivePersonasMap(db: ReturnType<typeof getDb>['db'], eyeIds: string[]) {
+async function getActivePersonasMap(
+  db: ReturnType<typeof getDb>["db"],
+  eyeIds: string[],
+) {
   if (eyeIds.length === 0) {
     return new Map<string, typeof personas.$inferSelect>();
   }
@@ -63,32 +72,36 @@ async function getActivePersonasMap(db: ReturnType<typeof getDb>['db'], eyeIds: 
   return map;
 }
 
-app.use('*', requestIdMiddleware());
-app.use('*', errorHandler());
+app.use("*", requestIdMiddleware());
+app.use("*", errorHandler());
 
 // Zod schemas for validation
 const eyeRequestSchema = z.object({
-  context: z.object({
-    session_id: z.string().optional(),
-    description: z.string().optional(),
-  }).optional(),
+  context: z
+    .object({
+      session_id: z.string().optional(),
+      description: z.string().optional(),
+    })
+    .optional(),
   sessionId: z.string().optional(),
   input: z.string().optional(),
-  payload: z.object({
-    prompt: z.string().optional(),
-    clarifications: z.any().optional(),
-    task: z.string().optional(),
-    plan: z.any().optional(),
-    scaffold: z.any().optional(),
-    diffs: z.any().optional(),
-    reasoning: z.any().optional(),
-    tests: z.any().optional(),
-    coverage: z.any().optional(),
-    docs: z.any().optional(),
-    content: z.any().optional(),
-    sources: z.any().optional(),
-    implementation: z.any().optional(),
-  }).optional(),
+  payload: z
+    .object({
+      prompt: z.string().optional(),
+      clarifications: z.any().optional(),
+      task: z.string().optional(),
+      plan: z.any().optional(),
+      scaffold: z.any().optional(),
+      diffs: z.any().optional(),
+      reasoning: z.any().optional(),
+      tests: z.any().optional(),
+      coverage: z.any().optional(),
+      docs: z.any().optional(),
+      content: z.any().optional(),
+      sources: z.any().optional(),
+      implementation: z.any().optional(),
+    })
+    .optional(),
   prompt: z.string().optional(),
   task: z.string().optional(),
   plan: z.any().optional(),
@@ -120,26 +133,33 @@ const eyeTestSchema = z.object({
 });
 
 // Helper to log pipeline events
-async function logPipelineEvent(sessionId: string, eye: string, response: Envelope) {
+async function logPipelineEvent(
+  sessionId: string,
+  eye: string,
+  response: Envelope,
+) {
   try {
     const { db } = getDb();
-    await db.insert(pipelineEvents).values({
-      id: nanoid(),
-      sessionId,
-      eye,
-      type: 'eye_call',
-      code: response.code,
-      md: response.md,
-      dataJson: response.data,
-      nextAction: response.next,
-      createdAt: new Date(),
-    }).run();
+    await db
+      .insert(pipelineEvents)
+      .values({
+        id: nanoid(),
+        sessionId,
+        eye,
+        type: "eye_call",
+        code: response.code,
+        md: response.md,
+        dataJson: response.data,
+        nextAction: response.next,
+        createdAt: new Date(),
+      })
+      .run();
 
     // Broadcast to WebSocket
     try {
-      const { wsManager } = await import('../websocket');
+      const { wsManager } = await import("../websocket");
       wsManager.broadcastToSession(sessionId, {
-        type: 'pipeline_event',
+        type: "pipeline_event",
         sessionId,
         data: {
           eye,
@@ -150,10 +170,10 @@ async function logPipelineEvent(sessionId: string, eye: string, response: Envelo
         timestamp: Date.now(),
       });
     } catch (e) {
-      console.debug('WebSocket broadcast skipped:', e);
+      console.debug("WebSocket broadcast skipped:", e);
     }
   } catch (error) {
-    console.error('Failed to log pipeline event:', error);
+    console.error("Failed to log pipeline event:", error);
   }
 }
 
@@ -162,8 +182,8 @@ async function logPipelineEvent(sessionId: string, eye: string, response: Envelo
 /**
  * POST /eyes/:id/test - Execute a single Eye for playground validation
  */
-app.post('/:id/test', async (c) => {
-  const eyeId = c.req.param('id');
+app.post("/:id/test", async (c) => {
+  const eyeId = c.req.param("id");
 
   try {
     const body = await c.req.json();
@@ -172,10 +192,10 @@ app.post('/:id/test', async (c) => {
 
     if (!candidateInput || candidateInput.trim().length === 0) {
       return createErrorResponse(c, {
-        title: 'Invalid input',
+        title: "Invalid input",
         status: 400,
         detail: 'Provide a non-empty string in "input", "prompt", or "task".',
-        code: 'E_EMPTY_INPUT',
+        code: "E_EMPTY_INPUT",
       });
     }
 
@@ -189,20 +209,27 @@ app.post('/:id/test', async (c) => {
 
     if (!sessionId) {
       const session = await sessionManager.createSession({
-        agentName: 'Playground Tester',
+        agentName: "Playground Tester",
         metadata: {
           entryTool: eyeId,
-          source: 'playground',
+          source: "playground",
         },
       });
       sessionId = session.id;
     }
 
     if (!sessionId) {
-      return createInternalErrorResponse(c, 'Failed to create playground session for Eye execution');
+      return createInternalErrorResponse(
+        c,
+        "Failed to create playground session for Eye execution",
+      );
     }
 
-    const result = await orchestrator.runEye(eyeId, candidateInput.trim(), sessionId);
+    const result = await orchestrator.runEye(
+      eyeId,
+      candidateInput.trim(),
+      sessionId,
+    );
     await logPipelineEvent(sessionId, eyeId, result as Envelope);
 
     return createSuccessResponse(c, {
@@ -212,15 +239,18 @@ app.post('/:id/test', async (c) => {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(c, {
-        title: 'Validation Error',
+        title: "Validation Error",
         status: 400,
-        detail: error.issues.map((issue) => issue.message).join('; '),
-        code: 'E_INVALID_PAYLOAD',
+        detail: error.issues.map((issue) => issue.message).join("; "),
+        code: "E_INVALID_PAYLOAD",
       });
     }
 
-    console.error('[Eyes API] Failed to execute Eye:', error);
-    return createInternalErrorResponse(c, error instanceof Error ? error.message : 'Failed to execute Eye');
+    console.error("[Eyes API] Failed to execute Eye:", error);
+    return createInternalErrorResponse(
+      c,
+      error instanceof Error ? error.message : "Failed to execute Eye",
+    );
   }
 });
 
@@ -230,7 +260,7 @@ app.post('/:id/test', async (c) => {
  * Database is the only source of truth
  * Phase 4: Returns capability_tags from eyes table for CapabilityMatrix component
  */
-app.get('/all', async (c) => {
+app.get("/all", async (c) => {
   const { db } = getDb();
 
   const allEyes = await db
@@ -243,9 +273,10 @@ app.get('/all', async (c) => {
   // Map eyes to response format with capability_tags
   const eyeData = allEyes.map((eye) => {
     // Parse capability_tags from JSON column (Phase 1-A1)
-    const capabilityTags = typeof eye.capabilityTags === 'string'
-      ? JSON.parse(eye.capabilityTags)
-      : (eye.capabilityTags || []);
+    const capabilityTags =
+      typeof eye.capabilityTags === "string"
+        ? JSON.parse(eye.capabilityTags)
+        : eye.capabilityTags || [];
 
     return {
       id: eye.id,
@@ -269,8 +300,8 @@ app.get('/all', async (c) => {
  * GET /eyes/:name/icon - Get icon SVG for an Eye by name
  * Used by EyeIcon component to fetch custom SVG icons
  */
-app.get('/:name/icon', async (c) => {
-  const eyeName = c.req.param('name');
+app.get("/:name/icon", async (c) => {
+  const eyeName = c.req.param("name");
 
   try {
     const { db } = getDb();
@@ -285,7 +316,7 @@ app.get('/:name/icon', async (c) => {
 
     if (!eye || !eye.iconSvg) {
       return createErrorResponse(c, {
-        title: 'Eye Icon Not Found',
+        title: "Eye Icon Not Found",
         status: 404,
         detail: `Icon for eye ${eyeName} not found`,
       });
@@ -295,7 +326,10 @@ app.get('/:name/icon', async (c) => {
       iconSvg: eye.iconSvg,
     });
   } catch (error) {
-    return createInternalErrorResponse(c, `Failed to fetch eye icon: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return createInternalErrorResponse(
+      c,
+      `Failed to fetch eye icon: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 });
 
@@ -303,21 +337,17 @@ app.get('/:name/icon', async (c) => {
  * GET /eyes/:id - Get specific Eye by ID from unified database table
  * NO hardcoded checks, database is the only source of truth
  */
-app.get('/:id', async (c) => {
-  const eyeId = c.req.param('id');
+app.get("/:id", async (c) => {
+  const eyeId = c.req.param("id");
 
   try {
     const { db } = getDb();
 
-    const eye = await db
-      .select()
-      .from(eyes)
-      .where(eq(eyes.id, eyeId))
-      .get();
+    const eye = await db.select().from(eyes).where(eq(eyes.id, eyeId)).get();
 
     if (!eye) {
       return createErrorResponse(c, {
-        title: 'Eye Not Found',
+        title: "Eye Not Found",
         status: 404,
         detail: `Eye ${eyeId} not found`,
       });
@@ -335,7 +365,9 @@ app.get('/:id', async (c) => {
       name: eye.name,
       version: eye.version,
       description: eye.description,
-      capabilities: blueprint ? JSON.parse(blueprint.capabilities as string) : [],
+      capabilities: blueprint
+        ? JSON.parse(blueprint.capabilities as string)
+        : [],
       inputSchema: eye.inputSchemaJson,
       outputSchema: eye.outputSchemaJson,
       personaId: eye.personaId,
@@ -343,15 +375,18 @@ app.get('/:id', async (c) => {
       createdAt: eye.createdAt,
     });
   } catch (error) {
-    return createInternalErrorResponse(c, `Failed to fetch Eye: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return createInternalErrorResponse(
+      c,
+      `Failed to fetch Eye: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 });
 
 /**
  * GET /eyes/:id/personas - Get all persona versions for specific Eye
  */
-app.get('/:id/personas', async (c) => {
-  const eyeId = c.req.param('id');
+app.get("/:id/personas", async (c) => {
+  const eyeId = c.req.param("id");
 
   try {
     const { db } = getDb();
@@ -362,7 +397,7 @@ app.get('/:id/personas', async (c) => {
       .orderBy(desc(personas.version))
       .all();
 
-    const active = eyePersonas.find(p => p.active);
+    const active = eyePersonas.find((p) => p.active);
 
     return createSuccessResponse(c, {
       eye: eyeId,
@@ -370,7 +405,7 @@ app.get('/:id/personas', async (c) => {
       activeVersion: active?.version || null,
     });
   } catch (error) {
-    return createInternalErrorResponse(c, 'Failed to fetch Eye personas');
+    return createInternalErrorResponse(c, "Failed to fetch Eye personas");
   }
 });
 
@@ -378,17 +413,21 @@ app.get('/:id/personas', async (c) => {
  * PATCH /eyes/:id/name - Update Eye display name
  * SSOT: Updates eyes.description directly (database is single source of truth)
  */
-app.patch('/:id/name', async (c) => {
+app.patch("/:id/name", async (c) => {
   try {
-    const eyeId = c.req.param('id');
+    const eyeId = c.req.param("id");
     const body = await c.req.json();
     const { displayName } = body;
 
-    if (!displayName || typeof displayName !== 'string' || displayName.trim().length === 0) {
+    if (
+      !displayName ||
+      typeof displayName !== "string" ||
+      displayName.trim().length === 0
+    ) {
       return createErrorResponse(c, {
-        title: 'Validation Error',
+        title: "Validation Error",
         status: 400,
-        detail: 'Display name is required'
+        detail: "Display name is required",
       });
     }
 
@@ -403,9 +442,9 @@ app.patch('/:id/name', async (c) => {
 
     if (!existing) {
       return createErrorResponse(c, {
-        title: 'Eye Not Found',
+        title: "Eye Not Found",
         status: 404,
-        detail: `Eye with id ${eyeId} not found`
+        detail: `Eye with id ${eyeId} not found`,
       });
     }
 
@@ -421,11 +460,11 @@ app.patch('/:id/name', async (c) => {
     return createSuccessResponse(c, {
       eye: eyeId,
       displayName: displayName.trim(),
-      message: 'Eye display name updated successfully',
+      message: "Eye display name updated successfully",
     });
   } catch (error) {
-    console.error('[Eyes API] Failed to update Eye name:', error);
-    return createInternalErrorResponse(c, 'Failed to update Eye name');
+    console.error("[Eyes API] Failed to update Eye name:", error);
+    return createInternalErrorResponse(c, "Failed to update Eye name");
   }
 });
 
@@ -433,162 +472,209 @@ app.patch('/:id/name', async (c) => {
  * POST /eyes/custom - Create new Eye
  * Unified endpoint - all eyes use same creation flow (seeded on first run, user-created after)
  */
-app.post('/custom', validateBodyWithEnvelope(createCustomEyeSchema), async (c) => {
-  try {
-    const { name, description, inputSchema, outputSchema, personaId, defaultRouting } = c.get('validatedBody');
-    console.log('[Eye] Creating with data:', { name, description, hasInputSchema: !!inputSchema, hasOutputSchema: !!outputSchema });
+app.post(
+  "/custom",
+  validateBodyWithEnvelope(createCustomEyeSchema),
+  async (c) => {
+    try {
+      const {
+        name,
+        description,
+        inputSchema,
+        outputSchema,
+        personaId,
+        defaultRouting,
+      } = c.get("validatedBody");
+      console.log("[Eye] Creating with data:", {
+        name,
+        description,
+        hasInputSchema: !!inputSchema,
+        hasOutputSchema: !!outputSchema,
+      });
 
-    const { db } = getDb();
+      const { db } = getDb();
 
-    // Check if Eye with this name already exists
-    const existing = await db
-      .select()
-      .from(eyes)
-      .where(eq(eyes.name, name))
-      .orderBy(desc(eyes.version))
-      .limit(1)
-      .all();
-
-    const nextVersion = existing.length > 0 ? existing[0].version + 1 : 1;
-
-    const id = nanoid();
-    const now = new Date();
-
-    // Deactivate previous versions
-    if (existing.length > 0) {
-      await db
-        .update(eyes)
-        .set({ active: false })
+      // Check if Eye with this name already exists
+      const existing = await db
+        .select()
+        .from(eyes)
         .where(eq(eyes.name, name))
+        .orderBy(desc(eyes.version))
+        .limit(1)
+        .all();
+
+      const nextVersion = existing.length > 0 ? existing[0].version + 1 : 1;
+
+      const id = nanoid();
+      const now = new Date();
+
+      // Deactivate previous versions
+      if (existing.length > 0) {
+        await db
+          .update(eyes)
+          .set({ active: false })
+          .where(eq(eyes.name, name))
+          .run();
+      }
+
+      // Insert new version
+      await db
+        .insert(eyes)
+        .values({
+          id,
+          name,
+          version: nextVersion,
+          description,
+          inputSchemaJson: inputSchema,
+          outputSchemaJson: outputSchema,
+          personaId: personaId || null,
+          iconSvg: "",
+          active: true,
+          createdAt: now,
+        })
         .run();
+
+      // Auto-create routing entry if it doesn't exist
+      const existingRouting = await db
+        .select()
+        .from(eyesRouting)
+        .where(eq(eyesRouting.eyeId, id))
+        .get();
+
+      if (!existingRouting) {
+        const defaultRouting = await getDefaultRouting();
+
+        await db
+          .insert(eyesRouting)
+          .values({
+            id: nanoid(),
+            eyeId: id,
+            primaryProvider: defaultRouting.primaryProvider,
+            primaryModel: defaultRouting.primaryModel,
+            fallbackProvider: defaultRouting.fallbackProvider,
+            fallbackModel: defaultRouting.fallbackModel,
+          })
+          .run();
+        console.log(`[Eye] Auto-created routing for ${name}`);
+      }
+
+      // Auto-create persona blueprint if it doesn't exist
+      const existingBlueprint = await db
+        .select()
+        .from(personaBlueprints)
+        .where(eq(personaBlueprints.eyeId, id))
+        .get();
+
+      if (!existingBlueprint) {
+        // Create minimal blueprint with basic structure
+        const minimalBlueprint = {
+          eyeId: id,
+          name: name,
+          description: description,
+          version: String(nextVersion),
+          capabilities: JSON.stringify([]), // Empty capabilities array - user can add later
+          mission: `Mission for ${name}: ${description}`,
+          phases: JSON.stringify({
+            guidance: null,
+            validation: null,
+          }),
+          envelopeContract: JSON.stringify({
+            requiredKeys: ["tag", "ok", "code", "data", "ui", "next"],
+            requiredDataKeys: [],
+            requiredUiKeys: ["title", "summary", "details", "icon", "color"],
+          }),
+          reminders: JSON.stringify([]),
+          notes: null,
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        await db.insert(personaBlueprints).values(minimalBlueprint).run();
+        console.log(`[Eye] Auto-created persona blueprint for ${name}`);
+      }
+
+      console.log("[Eye] Successfully created:", {
+        id,
+        name,
+        version: nextVersion,
+      });
+      return createSuccessResponse(
+        c,
+        { id, version: nextVersion, message: "Eye created successfully" },
+        { status: 201 },
+      );
+    } catch (error) {
+      console.error("[Eye] Creation failed:", error);
+      return createInternalErrorResponse(
+        c,
+        `Failed to create eye: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
-
-    // Insert new version
-    await db.insert(eyes).values({
-      id,
-      name,
-      version: nextVersion,
-      description,
-      inputSchemaJson: inputSchema,
-      outputSchemaJson: outputSchema,
-      personaId: personaId || null,
-      iconSvg: '',
-      active: true,
-      createdAt: now,
-    }).run();
-
-    // Auto-create routing entry if it doesn't exist
-    const existingRouting = await db
-      .select()
-      .from(eyesRouting)
-      .where(eq(eyesRouting.eyeId, id))
-      .get();
-
-    if (!existingRouting) {
-      const defaultRouting = await getDefaultRouting();
-
-      await db.insert(eyesRouting).values({
-        id: nanoid(),
-        eyeId: id,
-        primaryProvider: defaultRouting.primaryProvider,
-        primaryModel: defaultRouting.primaryModel,
-        fallbackProvider: defaultRouting.fallbackProvider,
-        fallbackModel: defaultRouting.fallbackModel,
-      }).run();
-      console.log(`[Eye] Auto-created routing for ${name}`);
-    }
-
-    // Auto-create persona blueprint if it doesn't exist
-    const existingBlueprint = await db
-      .select()
-      .from(personaBlueprints)
-      .where(eq(personaBlueprints.eyeId, id))
-      .get();
-
-    if (!existingBlueprint) {
-      // Create minimal blueprint with basic structure
-      const minimalBlueprint = {
-        eyeId: id,
-        name: name,
-        description: description,
-        version: String(nextVersion),
-        capabilities: JSON.stringify([]), // Empty capabilities array - user can add later
-        mission: `Mission for ${name}: ${description}`,
-        phases: JSON.stringify({
-          guidance: null,
-          validation: null,
-        }),
-        envelopeContract: JSON.stringify({
-          requiredKeys: ['tag', 'ok', 'code', 'data', 'ui', 'next'],
-          requiredDataKeys: [],
-          requiredUiKeys: ['title', 'summary', 'details', 'icon', 'color'],
-        }),
-        reminders: JSON.stringify([]),
-        notes: null,
-        createdAt: now,
-        updatedAt: now,
-      };
-
-      await db.insert(personaBlueprints).values(minimalBlueprint).run();
-      console.log(`[Eye] Auto-created persona blueprint for ${name}`);
-    }
-
-    console.log('[Eye] Successfully created:', { id, name, version: nextVersion });
-    return createSuccessResponse(c, { id, version: nextVersion, message: 'Eye created successfully' }, { status: 201 });
-  } catch (error) {
-    console.error('[Eye] Creation failed:', error);
-    return createInternalErrorResponse(c, `Failed to create eye: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-});
+  },
+);
 
 /**
  * PUT /eyes/custom/:id - Update existing Eye
  * Unified endpoint - all eyes use same update flow
  */
-app.put('/custom/:id', validateBodyWithEnvelope(createCustomEyeSchema), async (c) => {
-  const id = c.req.param('id');
-  const { name, description, inputSchema, outputSchema, personaId, defaultRouting } = c.get('validatedBody');
-
-  const { db } = getDb();
-
-  // Check if Eye exists
-  const existing = await db
-    .select()
-    .from(eyes)
-    .where(eq(eyes.id, id))
-    .limit(1)
-    .all();
-
-  if (existing.length === 0) {
-    return createErrorResponse(c, {
-      title: 'Eye Not Found',
-      status: 404,
-      detail: `Eye with id ${id} not found`
-    });
-  }
-
-  // Update the Eye
-  await db
-    .update(eyes)
-    .set({
+app.put(
+  "/custom/:id",
+  validateBodyWithEnvelope(createCustomEyeSchema),
+  async (c) => {
+    const id = c.req.param("id");
+    const {
+      name,
       description,
-      inputSchemaJson: inputSchema,
-      outputSchemaJson: outputSchema,
-      personaId: personaId || null,
-      iconSvg: '',
-    })
-      .where(eq(eyes.id, id))
-    .run();
+      inputSchema,
+      outputSchema,
+      personaId,
+      defaultRouting,
+    } = c.get("validatedBody");
 
-  return createSuccessResponse(c, { id, message: 'Custom Eye updated successfully' });
-});
+    const { db } = getDb();
+
+    // Check if Eye exists
+    const existing = await db
+      .select()
+      .from(eyes)
+      .where(eq(eyes.id, id))
+      .limit(1)
+      .all();
+
+    if (existing.length === 0) {
+      return createErrorResponse(c, {
+        title: "Eye Not Found",
+        status: 404,
+        detail: `Eye with id ${id} not found`,
+      });
+    }
+
+    // Update the Eye
+    await db
+      .update(eyes)
+      .set({
+        description,
+        inputSchemaJson: inputSchema,
+        outputSchemaJson: outputSchema,
+        personaId: personaId || null,
+        iconSvg: "",
+      })
+      .where(eq(eyes.id, id))
+      .run();
+
+    return createSuccessResponse(c, {
+      id,
+      message: "Custom Eye updated successfully",
+    });
+  },
+);
 
 /**
  * DELETE /eyes/custom/:id - Delete (deactivate) Eye
  * Unified endpoint - all eyes use same deletion flow
  */
-app.delete('/custom/:id', async (c) => {
-  const id = c.req.param('id');
+app.delete("/custom/:id", async (c) => {
+  const id = c.req.param("id");
 
   const { db } = getDb();
 
@@ -601,35 +687,31 @@ app.delete('/custom/:id', async (c) => {
 
   if (existing.length === 0) {
     return createErrorResponse(c, {
-      title: 'Eye Not Found',
+      title: "Eye Not Found",
       status: 404,
-      detail: `Eye with id ${id} not found`
+      detail: `Eye with id ${id} not found`,
     });
   }
 
-  await db
-    .update(eyes)
-    .set({ active: false })
-      .where(eq(eyes.id, id))
-    .run();
+  await db.update(eyes).set({ active: false }).where(eq(eyes.id, id)).run();
 
-  return createSuccessResponse(c, { message: 'Eye deleted successfully' });
+  return createSuccessResponse(c, { message: "Eye deleted successfully" });
 });
 
 /**
  * POST /eyes/custom/:id/test - Test an Eye with sample input
  * Unified endpoint - all eyes use same test flow
  */
-app.post('/custom/:id/test', async (c) => {
-  const id = c.req.param('id');
+app.post("/custom/:id/test", async (c) => {
+  const id = c.req.param("id");
   const body = await c.req.json();
   const testInput = body.input || body.testInput;
 
   if (!testInput) {
     return createErrorResponse(c, {
-      title: 'Missing Input',
+      title: "Missing Input",
       status: 400,
-      detail: 'testInput field is required'
+      detail: "testInput field is required",
     });
   }
 
@@ -644,9 +726,9 @@ app.post('/custom/:id/test', async (c) => {
 
   if (eye.length === 0) {
     return createErrorResponse(c, {
-      title: 'Eye Not Found',
+      title: "Eye Not Found",
       status: 404,
-      detail: `Eye with id ${id} not found`
+      detail: `Eye with id ${id} not found`,
     });
   }
 
@@ -654,14 +736,21 @@ app.post('/custom/:id/test', async (c) => {
   const sessionId = nanoid();
 
   try {
-    const response = await orchestrator.runEye(eyeData.name, testInput, sessionId);
+    const response = await orchestrator.runEye(
+      eyeData.name,
+      testInput,
+      sessionId,
+    );
     return createSuccessResponse(c, {
       eyeName: eyeData.name,
       testInput,
       response,
     });
   } catch (error) {
-    return createInternalErrorResponse(c, `Test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return createInternalErrorResponse(
+      c,
+      `Test failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 });
 

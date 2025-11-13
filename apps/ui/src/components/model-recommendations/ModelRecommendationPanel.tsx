@@ -7,16 +7,16 @@
  * Per R13: All text from SSOT
  */
 
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 import {
   useModelRecommendation,
   useSuccessRateCategory,
-  useModelOverride
-} from '@/hooks/useModelRecommendations';
-import { MODEL_OVERRIDE_WARNINGS } from '@third-eye/config/eye-model-recommendations';
-import type { ProviderId } from '@third-eye/types';
+  useModelOverride,
+} from "@/hooks/useModelRecommendations";
+import { MODEL_OVERRIDE_WARNINGS } from "@third-eye/config/eye-model-recommendations";
+import type { ProviderId } from "@third-eye/types";
 
 interface ModelRecommendationPanelProps {
   eyeName: string;
@@ -30,14 +30,14 @@ interface ModelRecommendationPanelProps {
 export function ModelRecommendationPanel({
   eyeName,
   provider,
-  onOverride
+  onOverride,
 }: ModelRecommendationPanelProps) {
   const recommendation = useModelRecommendation(eyeName, provider);
   const successCategory = useSuccessRateCategory(recommendation);
   const { getOverride, addOverride, removeOverride } = useModelOverride();
 
   const [showOverride, setShowOverride] = useState(false);
-  const [customModel, setCustomModel] = useState('');
+  const [customModel, setCustomModel] = useState("");
 
   const currentOverride = getOverride(eyeName, provider);
 
@@ -47,7 +47,7 @@ export function ModelRecommendationPanel({
     addOverride({
       eyeName,
       provider,
-      customModel: customModel.trim()
+      customModel: customModel.trim(),
     });
 
     if (onOverride) {
@@ -55,7 +55,7 @@ export function ModelRecommendationPanel({
     }
 
     setShowOverride(false);
-    setCustomModel('');
+    setCustomModel("");
   }, [eyeName, provider, customModel, addOverride, onOverride]);
 
   const handleRemoveOverride = useCallback(() => {
@@ -74,13 +74,17 @@ export function ModelRecommendationPanel({
   }
 
   const categoryColors = {
-    green: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700',
-    blue: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700',
-    yellow: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700',
-    red: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-300 dark:border-red-700'
+    green:
+      "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-300 dark:border-green-700",
+    blue: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700",
+    yellow:
+      "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700",
+    red: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-300 dark:border-red-700",
   };
 
-  const categoryColor = successCategory ? categoryColors[successCategory.color as keyof typeof categoryColors] : categoryColors.blue;
+  const categoryColor = successCategory
+    ? categoryColors[successCategory.color as keyof typeof categoryColors]
+    : categoryColors.blue;
 
   return (
     <div className="space-y-4">
@@ -96,7 +100,9 @@ export function ModelRecommendationPanel({
             </p>
           </div>
           {successCategory && (
-            <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${categoryColor}`}>
+            <span
+              className={`px-3 py-1 text-xs font-semibold rounded-full border ${categoryColor}`}
+            >
               {successCategory.label}
             </span>
           )}
@@ -217,7 +223,7 @@ export function ModelRecommendationPanel({
             <button
               onClick={() => {
                 setShowOverride(false);
-                setCustomModel('');
+                setCustomModel("");
               }}
               className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors"
             >
@@ -230,8 +236,8 @@ export function ModelRecommendationPanel({
       {/* Provider-Specific Info */}
       <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
         <p className="text-xs text-blue-800 dark:text-blue-200">
-          <strong>📊 {provider.toUpperCase()} Provider:</strong>{' '}
-          {provider === 'groq' || provider === 'openrouter'
+          <strong>📊 {provider.toUpperCase()} Provider:</strong>{" "}
+          {provider === "groq" || provider === "openrouter"
             ? MODEL_OVERRIDE_WARNINGS.remote_api
             : MODEL_OVERRIDE_WARNINGS.local_only}
         </p>

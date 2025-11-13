@@ -1,6 +1,7 @@
 # BMAD Agent Playbook — Third Eye MCP
 
 ## 1. Mission Context
+
 - **Product**: Third Eye MCP (inner perception layer for AI agents).
 - **Authoritative Vision**: `THIRD_EYE_VISION.md` (unified vision doc).
 - **Product Requirements**: `docs/prd.md`.
@@ -8,6 +9,7 @@
 - **Engineering Rules**: `AGENTS.md` (non‑negotiable) + `RESTORATION_PLAN.md` for subsystem specs.
 
 ## 2. Preflight Checklist (run before touching code)
+
 1. `cd /Users/hbinseddeq/Documents/tuwaiq-ml-bootcamp/week_09_10_capstone_project/third-eye-mcp`
 2. Ensure `.bmad-core/` exists (already restored); if missing, rerun `npx bmad-method install`.
 3. Verify env: `node -v`, `bun -v` (document in chat if versions differ).
@@ -20,6 +22,7 @@
    - Recovered constants in `packages/constants/` if relevant to the task.
 
 ## 3. Cursor / BMAD Orchestration Sequence
+
 1. Start BMAD Orchestrator chat:
    ```
    *help
@@ -49,6 +52,7 @@
    ```
 
 ## 4. File Hierarchy & Ownership
+
 - **SSOT Core**: `packages/constants/{capability-plan.ts, stage-envelopes.ts, taxonomy.ts, routing-vision.ts, index.ts}`
 - **Persona Logic**: `packages/eyes/src/eyes/*.ts`, `packages/core/persona-guards.ts`, `packages/db/schema.ts`
 - **Monitor & UI**: `apps/ui/src/app/monitor/**/*.tsx`, `apps/ui/src/components/**/*.tsx`
@@ -57,16 +61,18 @@
 - **Documentation**: `docs/`, `THIRD_EYE_VISION.md`, `RESTORATION_PLAN.md`
 
 ## 5. Implementation Do/Don’t
+
 - ✅ Use enums/consts from SSOT modules (no literal status strings, colors, etc.).
 - ✅ Extend TypeScript types when modifying schema or constants.
 - ✅ Update seeds/tests when persona envelopes or capability plans change.
-   - ✅ Record raw test output in chat (`bun test ...`, `npx playwright test`).
-   - ✅ Capture scenario verification via `bun run scripts/run-mcp-scenarios.ts` when relevant.
-   - ❌ Don't edit generated artifacts (`packages/**/dist`, `.next/`).
-   - ❌ Don't invent clarifications or capability codes; align with restored templates.
-   - ❌ Don't bypass lint/build/test even for "docs-only" changes (still run `bun run lint`).
+  - ✅ Record raw test output in chat (`bun test ...`, `npx playwright test`).
+  - ✅ Capture scenario verification via `bun run scripts/run-mcp-scenarios.ts` when relevant.
+  - ❌ Don't edit generated artifacts (`packages/**/dist`, `.next/`).
+  - ❌ Don't invent clarifications or capability codes; align with restored templates.
+  - ❌ Don't bypass lint/build/test even for "docs-only" changes (still run `bun run lint`).
 
 ## 6. Required Commands (per story)
+
 ```
 bun run lint
 bun run build:packages
@@ -74,26 +80,32 @@ bun test --filter core
 npx playwright test --project=ui --reporter=list
 bun run scripts/run-mcp-scenarios.ts  # when story touches routing/persona flow
 ```
+
 Capture outputs and attach failures (with plan to fix) before proceeding.
 
 ## 7. Merge Discipline
+
 1. Stage only relevant files (`git add path/to/file.tsx` …).
 2. `git status` must be clean except for intentional changes.
 3. Provide commit summary referencing epic/story.
 4. Push to protected branch only after review (if CI exists, ensure green).
 
 ## 8. Smoke Validation (before claiming completion)
+
 - `npx third-eye-mcp up` → confirm UI + server launch without errors.
 - Open http://127.0.0.1:3300/monitor?sessionId=<test> to validate UI changes.
 - If persona/capability changes, run at least one MCP scenario and include portal screenshot/log.
 
 ## 9. Fallback Plan
+
 If Cursor gets stuck or tries to modify compiled files:
+
 - Abort patch (`Ctrl+C`), restate guardrails, invoke **Sequential Thinking** tool.
 - Manually edit file via inline patch with explicit instructions referencing SSOT modules.
 - For persistent misbehavior, temporarily switch to terminal editor, then reintroduce Cursor for code review/testing.
 
 ## 10. Reference Bundle Locations
+
 - BMAD teams / commands: `.bmad-core/` (primary) and any `web-bundles/` saved from BMAD install.
 - Additional recovered SSOT sources: `third-eye-mcp-history-restore/` (do **not** edit there; copy into repo as needed).
 

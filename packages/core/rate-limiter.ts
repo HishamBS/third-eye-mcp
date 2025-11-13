@@ -6,18 +6,18 @@
  * R07 (Strict Typing): Fully typed rate limiter with generics
  */
 
-import { nanoid } from 'nanoid';
-import { getDb } from '@third-eye/db';
-import { rateLimitTracking } from '@third-eye/db';
-import { getEyeIdByName } from '@third-eye/db/utils/lookups';
-import { lt } from 'drizzle-orm';
+import { nanoid } from "nanoid";
+import { getDb } from "@third-eye/db";
+import { rateLimitTracking } from "@third-eye/db";
+import { getEyeIdByName } from "@third-eye/db/utils/lookups";
+import { lt } from "drizzle-orm";
 import {
   RATE_LIMIT_CONFIG,
   RATE_LIMIT_EVENT_TYPE,
   RATE_LIMIT_ACTION,
   getProviderRateLimit,
   calculateRefillTokens,
-} from '@third-eye/constants';
+} from "@third-eye/constants";
 
 /**
  * Token Bucket State
@@ -56,7 +56,7 @@ export interface RateLimiterOptions {
  */
 export class RateLimiter {
   private buckets: Map<string, TokenBucket>;
-  private db: ReturnType<typeof getDb>['db'];
+  private db: ReturnType<typeof getDb>["db"];
 
   constructor() {
     this.buckets = new Map();
@@ -100,7 +100,8 @@ export class RateLimiter {
     } else {
       // Not enough tokens - rate limit exceeded
       const tokensNeeded = tokensRequired - bucket.tokens;
-      const retryAfterMs = (tokensNeeded / bucket.refillRate) * RATE_LIMIT_CONFIG.REFILL_RATE_MS;
+      const retryAfterMs =
+        (tokensNeeded / bucket.refillRate) * RATE_LIMIT_CONFIG.REFILL_RATE_MS;
 
       // Log throttled request
       await this.logRateLimitEvent(provider, eye, tokensRequired, false);
@@ -126,7 +127,7 @@ export class RateLimiter {
    */
   async waitForLimit(
     options: RateLimiterOptions,
-    maxWaitMs: number = 30000
+    maxWaitMs: number = 30000,
   ): Promise<RateLimitResult> {
     const startTime = Date.now();
 
@@ -160,9 +161,9 @@ export class RateLimiter {
     const limits = getProviderRateLimit(provider);
 
     return {
-      tokens: limits.burst,         // Start with burst capacity
+      tokens: limits.burst, // Start with burst capacity
       lastRefill: Date.now(),
-      maxTokens: limits.burst,      // Burst capacity is max tokens
+      maxTokens: limits.burst, // Burst capacity is max tokens
       refillRate: calculateRefillTokens(limits.rpm),
     };
   }
@@ -178,7 +179,9 @@ export class RateLimiter {
 
     if (elapsedMs > 0) {
       // Calculate tokens to add
-      const refillIntervals = Math.floor(elapsedMs / RATE_LIMIT_CONFIG.REFILL_RATE_MS);
+      const refillIntervals = Math.floor(
+        elapsedMs / RATE_LIMIT_CONFIG.REFILL_RATE_MS,
+      );
       const tokensToAdd = refillIntervals * bucket.refillRate;
 
       // Add tokens up to max capacity
@@ -212,10 +215,12 @@ export class RateLimiter {
     provider: string,
     eye: string | undefined,
     tokens: number,
-    allowed: boolean
+    allowed: boolean,
   ): Promise<void> {
     const now = new Date();
-    const windowStart = new Date(now.getTime() - (now.getTime() % RATE_LIMIT_CONFIG.WINDOW_SIZE_MS));
+    const windowStart = new Date(
+      now.getTime() - (now.getTime() % RATE_LIMIT_CONFIG.WINDOW_SIZE_MS),
+    );
 
     // Convert eye name to UUID
     let eyeId: string | null = null;
@@ -235,7 +240,7 @@ export class RateLimiter {
       });
     } catch (error) {
       // Log error but don't fail rate limiting
-      console.error('Failed to log rate limit event:', error);
+      console.error("Failed to log rate limit event:", error);
     }
   }
 
@@ -245,7 +250,9 @@ export class RateLimiter {
    * Should be called periodically to prevent database bloat.
    */
   async cleanup(): Promise<void> {
-    const threshold = new Date(Date.now() - RATE_LIMIT_CONFIG.CLEANUP_THRESHOLD_MS);
+    const threshold = new Date(
+      Date.now() - RATE_LIMIT_CONFIG.CLEANUP_THRESHOLD_MS,
+    );
 
     try {
       // Delete tracking older than threshold
@@ -253,9 +260,11 @@ export class RateLimiter {
         .delete(rateLimitTracking)
         .where(lt(rateLimitTracking.createdAt, threshold));
 
-      console.log(`Rate limit tracking cleanup completed (threshold: ${threshold.toISOString()})`);
+      console.log(
+        `Rate limit tracking cleanup completed (threshold: ${threshold.toISOString()})`,
+      );
     } catch (error) {
-      console.error('Rate limit tracking cleanup failed:', error);
+      console.error("Rate limit tracking cleanup failed:", error);
     }
   }
 
@@ -275,7 +284,10 @@ export class RateLimiter {
    * @param eye - Optional eye name
    * @returns Current bucket status
    */
-  getStatus(provider: string, eye?: string): {
+  getStatus(
+    provider: string,
+    eye?: string,
+  ): {
     tokens: number;
     maxTokens: number;
     refillRate: number;
@@ -301,7 +313,7 @@ export class RateLimiter {
    * Sleep utility for async delay
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 

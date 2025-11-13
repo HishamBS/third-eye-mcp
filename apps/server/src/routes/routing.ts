@@ -1,11 +1,11 @@
-import { Hono } from 'hono';
-import { getDb } from '@third-eye/db';
-import { eyesRouting, eyes } from '@third-eye/db';
-import { getEyeIdByName, getEyeNameById } from '@third-eye/db/utils/lookups';
-import { generateId } from '@third-eye/db/utils/uuid';
-import { eq } from 'drizzle-orm';
-import { schemas } from '../middleware/validation';
-import { getDefaultRouting } from '../lib/defaults';
+import { Hono } from "hono";
+import { getDb } from "@third-eye/db";
+import { eyesRouting, eyes } from "@third-eye/db";
+import { getEyeIdByName, getEyeNameById } from "@third-eye/db/utils/lookups";
+import { generateId } from "@third-eye/db/utils/uuid";
+import { eq } from "drizzle-orm";
+import { schemas } from "../middleware/validation";
+import { getDefaultRouting } from "../lib/defaults";
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
@@ -13,8 +13,8 @@ import {
   createNotFoundResponse,
   createInternalErrorResponse,
   requestIdMiddleware,
-  errorHandler
-} from '../middleware/response';
+  errorHandler,
+} from "../middleware/response";
 
 /**
  * Routing Configuration Routes
@@ -25,11 +25,11 @@ import {
 const app = new Hono();
 
 // Apply middleware
-app.use('*', requestIdMiddleware());
-app.use('*', errorHandler());
+app.use("*", requestIdMiddleware());
+app.use("*", errorHandler());
 
 // Get all routing configurations
-app.get('/', async (c) => {
+app.get("/", async (c) => {
   try {
     const { db } = getDb();
     const routings = await db.select().from(eyesRouting).all();
@@ -41,33 +41,38 @@ app.get('/', async (c) => {
       .where(eq(eyes.active, true))
       .all();
 
-    const result = await Promise.all(allEyes.map(async (eye) => {
-      // Find routing by eyeId (UUID)
-      const routing = routings.find(r => r.eyeId === eye.id);
-      if (routing) {
-        return { ...routing, eye: eye.name }; // Return with eye name for frontend
-      }
+    const result = await Promise.all(
+      allEyes.map(async (eye) => {
+        // Find routing by eyeId (UUID)
+        const routing = routings.find((r) => r.eyeId === eye.id);
+        if (routing) {
+          return { ...routing, eye: eye.name }; // Return with eye name for frontend
+        }
 
-      // Return default routing if not configured
-      const defaultRouting = await getDefaultRouting();
-      return {
-        eye: eye.name,
-        eyeId: eye.id,
-        ...defaultRouting,
-      };
-    }));
+        // Return default routing if not configured
+        const defaultRouting = await getDefaultRouting();
+        return {
+          eye: eye.name,
+          eyeId: eye.id,
+          ...defaultRouting,
+        };
+      }),
+    );
 
     return createSuccessResponse(c, { routings: result });
   } catch (error) {
-    console.error('Failed to fetch routing configs:', error);
-    return createInternalErrorResponse(c, 'Failed to fetch routing configurations');
+    console.error("Failed to fetch routing configs:", error);
+    return createInternalErrorResponse(
+      c,
+      "Failed to fetch routing configurations",
+    );
   }
 });
 
 // Get routing for specific Eye
-app.get('/:eye', async (c) => {
+app.get("/:eye", async (c) => {
   try {
-    const eyeName = c.req.param('eye');
+    const eyeName = c.req.param("eye");
     const { db } = getDb();
 
     // Look up eye UUID by name
@@ -94,16 +99,22 @@ app.get('/:eye', async (c) => {
       ...defaultRouting,
     });
   } catch (error) {
-    console.error('Failed to fetch routing:', error);
-    return createInternalErrorResponse(c, 'Failed to fetch routing');
+    console.error("Failed to fetch routing:", error);
+    return createInternalErrorResponse(c, "Failed to fetch routing");
   }
 });
 
 // Create or update routing configuration
-app.post('/', validateBodyWithEnvelope(schemas.routingCreate), async (c) => {
+app.post("/", validateBodyWithEnvelope(schemas.routingCreate), async (c) => {
   try {
     // Eye name is already normalized to lowercase by validation middleware
-    const { eye, primaryProvider, primaryModel, fallbackProvider, fallbackModel } = c.get('validatedBody');
+    const {
+      eye,
+      primaryProvider,
+      primaryModel,
+      fallbackProvider,
+      fallbackModel,
+    } = c.get("validatedBody");
 
     const { db } = getDb();
 
@@ -134,15 +145,18 @@ app.post('/', validateBodyWithEnvelope(schemas.routingCreate), async (c) => {
         .run();
     } else {
       // Insert new
-      await db.insert(eyesRouting).values({
-        id: generateId(),
-        eyeId,
-        primaryProvider,
-        primaryModel,
-        fallbackProvider: fallbackProvider || null,
-        fallbackModel: fallbackModel || null,
-        createdAt: new Date(),
-      }).run();
+      await db
+        .insert(eyesRouting)
+        .values({
+          id: generateId(),
+          eyeId,
+          primaryProvider,
+          primaryModel,
+          fallbackProvider: fallbackProvider || null,
+          fallbackModel: fallbackModel || null,
+          createdAt: new Date(),
+        })
+        .run();
     }
 
     const updated = await db
@@ -153,34 +167,34 @@ app.post('/', validateBodyWithEnvelope(schemas.routingCreate), async (c) => {
 
     // Broadcast routing change via WebSocket
     try {
-      const { wsManager } = await import('../websocket');
+      const { wsManager } = await import("../websocket");
       wsManager.broadcastToAll({
-        type: 'routing_updated',
+        type: "routing_updated",
         eye,
         routing: { ...updated, eye }, // Include eye name for frontend
       });
     } catch (e) {
-      console.debug('WebSocket broadcast skipped:', e);
+      console.debug("WebSocket broadcast skipped:", e);
     }
 
     return createSuccessResponse(c, { ...updated, eye });
   } catch (error) {
-    console.error('Failed to update routing:', error);
+    console.error("Failed to update routing:", error);
     if (error instanceof Error) {
-      console.error('Error details:', {
+      console.error("Error details:", {
         message: error.message,
         stack: error.stack,
-        requestBody: c.req.raw instanceof Request ? 'N/A' : c.req.raw,
+        requestBody: c.req.raw instanceof Request ? "N/A" : c.req.raw,
       });
     }
-    return createInternalErrorResponse(c, 'Failed to update routing');
+    return createInternalErrorResponse(c, "Failed to update routing");
   }
 });
 
 // Delete routing configuration (revert to defaults)
-app.delete('/:eye', async (c) => {
+app.delete("/:eye", async (c) => {
   try {
-    const eyeName = c.req.param('eye');
+    const eyeName = c.req.param("eye");
     const { db } = getDb();
 
     // Look up eye UUID by name
@@ -193,19 +207,21 @@ app.delete('/:eye', async (c) => {
 
     // Broadcast routing change via WebSocket
     try {
-      const { wsManager } = await import('../websocket');
+      const { wsManager } = await import("../websocket");
       wsManager.broadcastToAll({
-        type: 'routing_deleted',
+        type: "routing_deleted",
         eye: eyeName,
       });
     } catch (e) {
-      console.debug('WebSocket broadcast skipped:', e);
+      console.debug("WebSocket broadcast skipped:", e);
     }
 
-    return createSuccessResponse(c, { message: 'Routing configuration deleted (reverted to defaults)' });
+    return createSuccessResponse(c, {
+      message: "Routing configuration deleted (reverted to defaults)",
+    });
   } catch (error) {
-    console.error('Failed to delete routing:', error);
-    return createInternalErrorResponse(c, 'Failed to delete routing');
+    console.error("Failed to delete routing:", error);
+    return createInternalErrorResponse(c, "Failed to delete routing");
   }
 });
 

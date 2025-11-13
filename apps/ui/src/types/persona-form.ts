@@ -33,7 +33,7 @@ export interface EnvelopeFormData {
 export interface LLMConfigFormData {
   readonly temperature: number;
   readonly top_p: number;
-  readonly response_format: 'text' | 'json_object';
+  readonly response_format: "text" | "json_object";
   readonly max_tokens: number;
 }
 
@@ -90,20 +90,32 @@ export interface StepValidation {
 // ============================================================================
 
 export type PersonaFormAction =
-  | { readonly type: 'SET_STEP'; readonly step: number }
-  | { readonly type: 'SET_METADATA'; readonly metadata: MetadataFormData }
-  | { readonly type: 'SET_MISSION'; readonly mission: string }
-  | { readonly type: 'SET_GUIDANCE_PHASE'; readonly guidancePhase: PhaseFormData | null }
-  | { readonly type: 'SET_VALIDATION_PHASE'; readonly validationPhase: PhaseFormData | null }
-  | { readonly type: 'SET_ENVELOPE_CONTRACT'; readonly envelopeContract: EnvelopeFormData }
-  | { readonly type: 'SET_REMINDERS'; readonly reminders: readonly string[] }
-  | { readonly type: 'SET_LLM_CONFIG'; readonly llmConfig: LLMConfigFormData }
-  | { readonly type: 'SET_NOTES'; readonly notes: string }
-  | { readonly type: 'NEXT_STEP' }
-  | { readonly type: 'PREVIOUS_STEP' }
-  | { readonly type: 'RESET' }
-  | { readonly type: 'MARK_CLEAN' }
-  | { readonly type: 'LOAD_IMPORTED_DATA'; readonly data: Partial<PersonaFormState> };
+  | { readonly type: "SET_STEP"; readonly step: number }
+  | { readonly type: "SET_METADATA"; readonly metadata: MetadataFormData }
+  | { readonly type: "SET_MISSION"; readonly mission: string }
+  | {
+      readonly type: "SET_GUIDANCE_PHASE";
+      readonly guidancePhase: PhaseFormData | null;
+    }
+  | {
+      readonly type: "SET_VALIDATION_PHASE";
+      readonly validationPhase: PhaseFormData | null;
+    }
+  | {
+      readonly type: "SET_ENVELOPE_CONTRACT";
+      readonly envelopeContract: EnvelopeFormData;
+    }
+  | { readonly type: "SET_REMINDERS"; readonly reminders: readonly string[] }
+  | { readonly type: "SET_LLM_CONFIG"; readonly llmConfig: LLMConfigFormData }
+  | { readonly type: "SET_NOTES"; readonly notes: string }
+  | { readonly type: "NEXT_STEP" }
+  | { readonly type: "PREVIOUS_STEP" }
+  | { readonly type: "RESET" }
+  | { readonly type: "MARK_CLEAN" }
+  | {
+      readonly type: "LOAD_IMPORTED_DATA";
+      readonly data: Partial<PersonaFormState>;
+    };
 
 // ============================================================================
 // Props

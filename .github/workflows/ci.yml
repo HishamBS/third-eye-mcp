@@ -38,7 +38,7 @@ jobs:
       - name: Setup Node.js for Next.js build
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Build UI
         run: |

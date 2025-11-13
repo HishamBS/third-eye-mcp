@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { OrderGuard } from '../order-guard';
-import type { EyeName } from '@third-eye/eyes';
+import { describe, it, expect, beforeEach } from "vitest";
+import { OrderGuard } from "../order-guard";
+import type { EyeName } from "@third-eye/eyes";
 
 /**
  * Order Guard Validation Tests
@@ -8,237 +8,240 @@ import type { EyeName } from '@third-eye/eyes';
  * Tests pipeline order enforcement according to prompt.md
  * Ensures proper Eye execution sequence and violation detection
  */
-describe('OrderGuard', () => {
+describe("OrderGuard", () => {
   let orderGuard: OrderGuard;
-  const testSessionId = 'test-session-123';
+  const testSessionId = "test-session-123";
 
   beforeEach(() => {
     orderGuard = new OrderGuard();
   });
 
-  describe('Initialization Phase', () => {
-    it('should allow Sharingan as first Eye', () => {
-      const violation = orderGuard.validateOrder(testSessionId, 'sharingan');
+  describe("Initialization Phase", () => {
+    it("should allow Sharingan as first Eye", () => {
+      const violation = orderGuard.validateOrder(testSessionId, "sharingan");
       expect(violation).toBeNull();
     });
 
-    it('should allow Overseer at any time', () => {
-      const violation = orderGuard.validateOrder(testSessionId, 'overseer');
+    it("should allow Overseer at any time", () => {
+      const violation = orderGuard.validateOrder(testSessionId, "overseer");
       expect(violation).toBeNull();
     });
 
-    it('should allow Overseer with capitalized name (case-insensitive)', () => {
+    it("should allow Overseer with capitalized name (case-insensitive)", () => {
       // Database stores "Overseer" (capitalized) but constant is "overseer" (lowercase)
-      const violation = orderGuard.validateOrder(testSessionId, 'Overseer');
+      const violation = orderGuard.validateOrder(testSessionId, "Overseer");
       expect(violation).toBeNull();
     });
 
-    it('should allow Overseer with all caps (case-insensitive)', () => {
-      const violation = orderGuard.validateOrder(testSessionId, 'OVERSEER');
+    it("should allow Overseer with all caps (case-insensitive)", () => {
+      const violation = orderGuard.validateOrder(testSessionId, "OVERSEER");
       expect(violation).toBeNull();
     });
 
-    it('should reject Jogan before Sharingan', () => {
-      const violation = orderGuard.validateOrder(testSessionId, 'jogan');
+    it("should reject Jogan before Sharingan", () => {
+      const violation = orderGuard.validateOrder(testSessionId, "jogan");
 
       expect(violation).not.toBeNull();
-      expect(violation?.code).toBe('E_PIPELINE_ORDER');
-      expect(violation?.violation).toContain('jogan');
-      expect(violation?.violation).toContain('initialization');
-      expect(violation?.expectedNext).toContain('sharingan');
+      expect(violation?.code).toBe("E_PIPELINE_ORDER");
+      expect(violation?.violation).toContain("jogan");
+      expect(violation?.violation).toContain("initialization");
+      expect(violation?.expectedNext).toContain("sharingan");
     });
 
-    it('should reject Rinnegan before Sharingan', () => {
-      const violation = orderGuard.validateOrder(testSessionId, 'rinnegan');
+    it("should reject Rinnegan before Sharingan", () => {
+      const violation = orderGuard.validateOrder(testSessionId, "rinnegan");
 
       expect(violation).not.toBeNull();
-      expect(violation?.code).toBe('E_PIPELINE_ORDER');
-      expect(violation?.expectedNext).toContain('sharingan');
+      expect(violation?.code).toBe("E_PIPELINE_ORDER");
+      expect(violation?.expectedNext).toContain("sharingan");
     });
 
-    it('should reject Mangekyo before Sharingan', () => {
-      const violation = orderGuard.validateOrder(testSessionId, 'mangekyo');
+    it("should reject Mangekyo before Sharingan", () => {
+      const violation = orderGuard.validateOrder(testSessionId, "mangekyo");
 
       expect(violation).not.toBeNull();
-      expect(violation?.code).toBe('E_PIPELINE_ORDER');
-      expect(violation?.expectedNext).toContain('sharingan');
+      expect(violation?.code).toBe("E_PIPELINE_ORDER");
+      expect(violation?.expectedNext).toContain("sharingan");
     });
 
-    it('should reject Tenseigan before Sharingan', () => {
-      const violation = orderGuard.validateOrder(testSessionId, 'tenseigan');
+    it("should reject Tenseigan before Sharingan", () => {
+      const violation = orderGuard.validateOrder(testSessionId, "tenseigan");
 
       expect(violation).not.toBeNull();
-      expect(violation?.code).toBe('E_PIPELINE_ORDER');
-      expect(violation?.expectedNext).toContain('sharingan');
+      expect(violation?.code).toBe("E_PIPELINE_ORDER");
+      expect(violation?.expectedNext).toContain("sharingan");
     });
   });
 
-  describe('Clarification Phase', () => {
+  describe("Clarification Phase", () => {
     beforeEach(() => {
       // Complete Sharingan to enter clarification phase
-      orderGuard.validateOrder(testSessionId, 'sharingan');
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
-        code: 'OK_AMBIGUITY_DETECTED',
+      orderGuard.validateOrder(testSessionId, "sharingan");
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK_AMBIGUITY_DETECTED",
         metadata: { isCodeRelated: true },
       });
     });
 
-    it('should allow Kyuubi after Sharingan', () => {
-      const violation = orderGuard.validateOrder(testSessionId, 'kyuubi');
+    it("should allow Kyuubi after Sharingan", () => {
+      const violation = orderGuard.validateOrder(testSessionId, "kyuubi");
       expect(violation).toBeNull();
     });
 
-    it('should reject Jogan before Kyuubi', () => {
-      const violation = orderGuard.validateOrder(testSessionId, 'jogan');
+    it("should reject Jogan before Kyuubi", () => {
+      const violation = orderGuard.validateOrder(testSessionId, "jogan");
 
       expect(violation).not.toBeNull();
-      expect(violation?.code).toBe('E_PIPELINE_ORDER');
-      expect(violation?.violation).toContain('Jōgan called before Kyuubi');
-      expect(violation?.expectedNext).toContain('kyuubi');
+      expect(violation?.code).toBe("E_PIPELINE_ORDER");
+      expect(violation?.violation).toContain("Jōgan called before Kyuubi");
+      expect(violation?.expectedNext).toContain("kyuubi");
       expect(violation?.fixInstructions).toBeDefined();
       // Example payload is optional in some violations
       if (violation?.examplePayload) {
-        expect(violation.examplePayload.eye).toBe('kyuubi');
+        expect(violation.examplePayload.eye).toBe("kyuubi");
       }
     });
 
-    it('should allow Jogan after Kyuubi', () => {
+    it("should allow Jogan after Kyuubi", () => {
       // Complete Kyuubi
-      orderGuard.validateOrder(testSessionId, 'kyuubi');
-      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
-        code: 'OK_PROMPT_OPTIMIZED',
+      orderGuard.validateOrder(testSessionId, "kyuubi");
+      orderGuard.recordEyeCompletion(testSessionId, "kyuubi", {
+        code: "OK_PROMPT_OPTIMIZED",
       });
 
-      const violation = orderGuard.validateOrder(testSessionId, 'jogan');
+      const violation = orderGuard.validateOrder(testSessionId, "jogan");
       expect(violation).toBeNull();
     });
 
-    it('should reject Mangekyo in clarification phase', () => {
-      const violation = orderGuard.validateOrder(testSessionId, 'mangekyo');
+    it("should reject Mangekyo in clarification phase", () => {
+      const violation = orderGuard.validateOrder(testSessionId, "mangekyo");
 
       expect(violation).not.toBeNull();
-      expect(violation?.code).toBe('E_PIPELINE_ORDER');
-      expect(violation?.violation).toContain('clarification phase');
+      expect(violation?.code).toBe("E_PIPELINE_ORDER");
+      expect(violation?.violation).toContain("clarification phase");
     });
   });
 
-  describe('Correct Sequence - Code Path', () => {
-    it('should allow Sharingan → Kyuubi → Jogan sequence', () => {
+  describe("Correct Sequence - Code Path", () => {
+    it("should allow Sharingan → Kyuubi → Jogan sequence", () => {
       // 1. Sharingan
-      let violation = orderGuard.validateOrder(testSessionId, 'sharingan');
+      let violation = orderGuard.validateOrder(testSessionId, "sharingan");
       expect(violation).toBeNull();
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
-        code: 'OK_AMBIGUITY_DETECTED',
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK_AMBIGUITY_DETECTED",
         metadata: { isCodeRelated: true },
       });
 
       // 2. Kyuubi
-      violation = orderGuard.validateOrder(testSessionId, 'kyuubi');
+      violation = orderGuard.validateOrder(testSessionId, "kyuubi");
       expect(violation).toBeNull();
-      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
-        code: 'OK_PROMPT_OPTIMIZED',
+      orderGuard.recordEyeCompletion(testSessionId, "kyuubi", {
+        code: "OK_PROMPT_OPTIMIZED",
       });
 
       // 3. Jogan
-      violation = orderGuard.validateOrder(testSessionId, 'jogan');
+      violation = orderGuard.validateOrder(testSessionId, "jogan");
       expect(violation).toBeNull();
-      orderGuard.recordEyeCompletion(testSessionId, 'jogan', {
-        code: 'OK_INTENT_CONFIRMED',
+      orderGuard.recordEyeCompletion(testSessionId, "jogan", {
+        code: "OK_INTENT_CONFIRMED",
       });
 
       // Verify state
       const state = orderGuard.getState(testSessionId);
-      expect(state?.currentPhase).toBe('planning');
+      expect(state?.currentPhase).toBe("planning");
       expect(state?.isCodeRelated).toBe(true);
-      expect(state?.completedEyes).toContain('sharingan');
-      expect(state?.completedEyes).toContain('kyuubi');
-      expect(state?.completedEyes).toContain('jogan');
+      expect(state?.completedEyes).toContain("sharingan");
+      expect(state?.completedEyes).toContain("kyuubi");
+      expect(state?.completedEyes).toContain("jogan");
     });
 
-    it('should allow Rinnegan after Jogan for code tasks', () => {
+    it("should allow Rinnegan after Jogan for code tasks", () => {
       // Complete initialization and clarification
-      orderGuard.validateOrder(testSessionId, 'sharingan');
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
-        code: 'OK_AMBIGUITY_DETECTED',
+      orderGuard.validateOrder(testSessionId, "sharingan");
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK_AMBIGUITY_DETECTED",
         metadata: { isCodeRelated: true },
       });
 
-      orderGuard.validateOrder(testSessionId, 'kyuubi');
-      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
-        code: 'OK_PROMPT_OPTIMIZED',
+      orderGuard.validateOrder(testSessionId, "kyuubi");
+      orderGuard.recordEyeCompletion(testSessionId, "kyuubi", {
+        code: "OK_PROMPT_OPTIMIZED",
       });
 
-      orderGuard.validateOrder(testSessionId, 'jogan');
-      orderGuard.recordEyeCompletion(testSessionId, 'jogan', {
-        code: 'OK_INTENT_CONFIRMED',
+      orderGuard.validateOrder(testSessionId, "jogan");
+      orderGuard.recordEyeCompletion(testSessionId, "jogan", {
+        code: "OK_INTENT_CONFIRMED",
       });
 
       // Now Rinnegan should be allowed
-      const violation = orderGuard.validateOrder(testSessionId, 'rinnegan');
+      const violation = orderGuard.validateOrder(testSessionId, "rinnegan");
       expect(violation).toBeNull();
     });
 
-    it('should reject Mangekyo before Rinnegan planning', () => {
+    it("should reject Mangekyo before Rinnegan planning", () => {
       // Complete clarification phase
-      orderGuard.validateOrder(testSessionId, 'sharingan');
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
-        code: 'OK_AMBIGUITY_DETECTED',
+      orderGuard.validateOrder(testSessionId, "sharingan");
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK_AMBIGUITY_DETECTED",
         metadata: { isCodeRelated: true },
       });
 
-      orderGuard.validateOrder(testSessionId, 'kyuubi');
-      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
-        code: 'OK_PROMPT_OPTIMIZED',
+      orderGuard.validateOrder(testSessionId, "kyuubi");
+      orderGuard.recordEyeCompletion(testSessionId, "kyuubi", {
+        code: "OK_PROMPT_OPTIMIZED",
       });
 
-      orderGuard.validateOrder(testSessionId, 'jogan');
-      orderGuard.recordEyeCompletion(testSessionId, 'jogan', {
-        code: 'OK_INTENT_CONFIRMED',
+      orderGuard.validateOrder(testSessionId, "jogan");
+      orderGuard.recordEyeCompletion(testSessionId, "jogan", {
+        code: "OK_INTENT_CONFIRMED",
       });
 
       // Try to call Mangekyo before Rinnegan
-      const violation = orderGuard.validateOrder(testSessionId, 'mangekyo');
+      const violation = orderGuard.validateOrder(testSessionId, "mangekyo");
 
       expect(violation).not.toBeNull();
-      expect(violation?.code).toBe('E_PIPELINE_ORDER');
-      expect(violation?.violation).toContain('Mangekyō called before Rinnegan');
-      expect(violation?.expectedNext).toContain('rinnegan');
-      expect(violation?.fixInstructions).toContain('implementation plan');
+      expect(violation?.code).toBe("E_PIPELINE_ORDER");
+      expect(violation?.violation).toContain("Mangekyō called before Rinnegan");
+      expect(violation?.expectedNext).toContain("rinnegan");
+      expect(violation?.fixInstructions).toContain("implementation plan");
       // Example payload is optional in some violations
       if (violation?.examplePayload) {
-        expect(violation.examplePayload.eye).toBe('rinnegan');
+        expect(violation.examplePayload.eye).toBe("rinnegan");
       }
     });
 
-    it('should allow Rinnegan and Mangekyo in planning/implementation phase', () => {
+    it("should allow Rinnegan and Mangekyo in planning/implementation phase", () => {
       // Complete full sequence up to planning
-      orderGuard.validateOrder(testSessionId, 'sharingan');
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
-        code: 'OK_AMBIGUITY_DETECTED',
+      orderGuard.validateOrder(testSessionId, "sharingan");
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK_AMBIGUITY_DETECTED",
         metadata: { isCodeRelated: true },
       });
 
-      orderGuard.validateOrder(testSessionId, 'kyuubi');
-      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
-        code: 'OK_PROMPT_OPTIMIZED',
+      orderGuard.validateOrder(testSessionId, "kyuubi");
+      orderGuard.recordEyeCompletion(testSessionId, "kyuubi", {
+        code: "OK_PROMPT_OPTIMIZED",
       });
 
-      orderGuard.validateOrder(testSessionId, 'jogan');
-      orderGuard.recordEyeCompletion(testSessionId, 'jogan', {
-        code: 'OK_INTENT_CONFIRMED',
+      orderGuard.validateOrder(testSessionId, "jogan");
+      orderGuard.recordEyeCompletion(testSessionId, "jogan", {
+        code: "OK_INTENT_CONFIRMED",
       });
 
       // Verify we're in planning phase
       let state = orderGuard.getState(testSessionId);
-      expect(state?.currentPhase).toBe('planning');
+      expect(state?.currentPhase).toBe("planning");
 
       // Rinnegan should be allowed in planning phase
-      const rinneganViolation = orderGuard.validateOrder(testSessionId, 'rinnegan');
+      const rinneganViolation = orderGuard.validateOrder(
+        testSessionId,
+        "rinnegan",
+      );
       expect(rinneganViolation).toBeNull();
 
       // Record Rinnegan completion
-      orderGuard.recordEyeCompletion(testSessionId, 'rinnegan', {
-        code: 'OK_PLAN_CREATED',
+      orderGuard.recordEyeCompletion(testSessionId, "rinnegan", {
+        code: "OK_PLAN_CREATED",
       });
 
       // After Rinnegan, we can have implementation phase
@@ -246,161 +249,176 @@ describe('OrderGuard', () => {
       state = orderGuard.getState(testSessionId);
 
       // If we're still in planning/implementation (not completion), Mangekyo is allowed
-      if (state?.currentPhase !== 'completion') {
-        const mangekyoViolation = orderGuard.validateOrder(testSessionId, 'mangekyo');
+      if (state?.currentPhase !== "completion") {
+        const mangekyoViolation = orderGuard.validateOrder(
+          testSessionId,
+          "mangekyo",
+        );
         expect(mangekyoViolation).toBeNull();
       }
     });
   });
 
-  describe('Correct Sequence - Text Path', () => {
-    it('should allow text branch: Sharingan → Kyuubi → Jogan → Tenseigan', () => {
+  describe("Correct Sequence - Text Path", () => {
+    it("should allow text branch: Sharingan → Kyuubi → Jogan → Tenseigan", () => {
       // 1. Sharingan (text task)
-      orderGuard.validateOrder(testSessionId, 'sharingan');
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
-        code: 'OK_AMBIGUITY_DETECTED',
+      orderGuard.validateOrder(testSessionId, "sharingan");
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK_AMBIGUITY_DETECTED",
         metadata: { isCodeRelated: false },
       });
 
       // 2. Kyuubi
-      orderGuard.validateOrder(testSessionId, 'kyuubi');
-      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
-        code: 'OK_PROMPT_OPTIMIZED',
+      orderGuard.validateOrder(testSessionId, "kyuubi");
+      orderGuard.recordEyeCompletion(testSessionId, "kyuubi", {
+        code: "OK_PROMPT_OPTIMIZED",
       });
 
       // 3. Jogan
-      orderGuard.validateOrder(testSessionId, 'jogan');
-      orderGuard.recordEyeCompletion(testSessionId, 'jogan', {
-        code: 'OK_INTENT_CONFIRMED',
+      orderGuard.validateOrder(testSessionId, "jogan");
+      orderGuard.recordEyeCompletion(testSessionId, "jogan", {
+        code: "OK_INTENT_CONFIRMED",
       });
 
       // 4. Tenseigan should be allowed for text
-      const violation = orderGuard.validateOrder(testSessionId, 'tenseigan');
+      const violation = orderGuard.validateOrder(testSessionId, "tenseigan");
       expect(violation).toBeNull();
     });
 
-    it('should reject Mangekyo in text branch', () => {
+    it("should reject Mangekyo in text branch", () => {
       // Complete clarification for text task
-      orderGuard.validateOrder(testSessionId, 'sharingan');
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
-        code: 'OK_AMBIGUITY_DETECTED',
+      orderGuard.validateOrder(testSessionId, "sharingan");
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK_AMBIGUITY_DETECTED",
         metadata: { isCodeRelated: false },
       });
 
-      orderGuard.validateOrder(testSessionId, 'kyuubi');
-      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
-        code: 'OK_PROMPT_OPTIMIZED',
+      orderGuard.validateOrder(testSessionId, "kyuubi");
+      orderGuard.recordEyeCompletion(testSessionId, "kyuubi", {
+        code: "OK_PROMPT_OPTIMIZED",
       });
 
-      orderGuard.validateOrder(testSessionId, 'jogan');
-      orderGuard.recordEyeCompletion(testSessionId, 'jogan', {
-        code: 'OK_INTENT_CONFIRMED',
+      orderGuard.validateOrder(testSessionId, "jogan");
+      orderGuard.recordEyeCompletion(testSessionId, "jogan", {
+        code: "OK_INTENT_CONFIRMED",
       });
 
       // Try Mangekyo in text branch
-      const violation = orderGuard.validateOrder(testSessionId, 'mangekyo');
+      const violation = orderGuard.validateOrder(testSessionId, "mangekyo");
 
       expect(violation).not.toBeNull();
-      expect(violation?.code).toBe('E_PIPELINE_ORDER');
-      expect(violation?.violation).toContain('Mangekyō not allowed in text branch');
-      expect(violation?.expectedNext).toContain('tenseigan');
-      expect(violation?.expectedNext).toContain('byakugan');
+      expect(violation?.code).toBe("E_PIPELINE_ORDER");
+      expect(violation?.violation).toContain(
+        "Mangekyō not allowed in text branch",
+      );
+      expect(violation?.expectedNext).toContain("tenseigan");
+      expect(violation?.expectedNext).toContain("byakugan");
     });
 
-    it('should allow Byakugan in text branch', () => {
+    it("should allow Byakugan in text branch", () => {
       // Complete clarification for text task
-      orderGuard.validateOrder(testSessionId, 'sharingan');
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
-        code: 'OK_AMBIGUITY_DETECTED',
+      orderGuard.validateOrder(testSessionId, "sharingan");
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK_AMBIGUITY_DETECTED",
         metadata: { isCodeRelated: false },
       });
 
-      orderGuard.validateOrder(testSessionId, 'kyuubi');
-      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
-        code: 'OK_PROMPT_OPTIMIZED',
+      orderGuard.validateOrder(testSessionId, "kyuubi");
+      orderGuard.recordEyeCompletion(testSessionId, "kyuubi", {
+        code: "OK_PROMPT_OPTIMIZED",
       });
 
-      orderGuard.validateOrder(testSessionId, 'jogan');
-      orderGuard.recordEyeCompletion(testSessionId, 'jogan', {
-        code: 'OK_INTENT_CONFIRMED',
+      orderGuard.validateOrder(testSessionId, "jogan");
+      orderGuard.recordEyeCompletion(testSessionId, "jogan", {
+        code: "OK_INTENT_CONFIRMED",
       });
 
       // Byakugan should be allowed
-      const violation = orderGuard.validateOrder(testSessionId, 'byakugan');
+      const violation = orderGuard.validateOrder(testSessionId, "byakugan");
       expect(violation).toBeNull();
     });
 
-    it('should reject Tenseigan/Byakugan in code branch', () => {
+    it("should reject Tenseigan/Byakugan in code branch", () => {
       // Complete clarification for code task
-      orderGuard.validateOrder(testSessionId, 'sharingan');
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
-        code: 'OK_AMBIGUITY_DETECTED',
+      orderGuard.validateOrder(testSessionId, "sharingan");
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK_AMBIGUITY_DETECTED",
         metadata: { isCodeRelated: true },
       });
 
-      orderGuard.validateOrder(testSessionId, 'kyuubi');
-      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', {
-        code: 'OK_PROMPT_OPTIMIZED',
+      orderGuard.validateOrder(testSessionId, "kyuubi");
+      orderGuard.recordEyeCompletion(testSessionId, "kyuubi", {
+        code: "OK_PROMPT_OPTIMIZED",
       });
 
-      orderGuard.validateOrder(testSessionId, 'jogan');
-      orderGuard.recordEyeCompletion(testSessionId, 'jogan', {
-        code: 'OK_INTENT_CONFIRMED',
+      orderGuard.validateOrder(testSessionId, "jogan");
+      orderGuard.recordEyeCompletion(testSessionId, "jogan", {
+        code: "OK_INTENT_CONFIRMED",
       });
 
       // Try Tenseigan in code branch
-      const tenseiganViolation = orderGuard.validateOrder(testSessionId, 'tenseigan');
+      const tenseiganViolation = orderGuard.validateOrder(
+        testSessionId,
+        "tenseigan",
+      );
       expect(tenseiganViolation).not.toBeNull();
-      expect(tenseiganViolation?.code).toBe('E_PIPELINE_ORDER');
-      expect(tenseiganViolation?.violation).toContain('not allowed in code branch');
+      expect(tenseiganViolation?.code).toBe("E_PIPELINE_ORDER");
+      expect(tenseiganViolation?.violation).toContain(
+        "not allowed in code branch",
+      );
 
       // Try Byakugan in code branch
-      const byakuganViolation = orderGuard.validateOrder(testSessionId, 'byakugan');
+      const byakuganViolation = orderGuard.validateOrder(
+        testSessionId,
+        "byakugan",
+      );
       expect(byakuganViolation).not.toBeNull();
-      expect(byakuganViolation?.code).toBe('E_PIPELINE_ORDER');
-      expect(byakuganViolation?.violation).toContain('not allowed in code branch');
+      expect(byakuganViolation?.code).toBe("E_PIPELINE_ORDER");
+      expect(byakuganViolation?.violation).toContain(
+        "not allowed in code branch",
+      );
     });
   });
 
-  describe('Session State Persistence', () => {
-    it('should track completed Eyes', () => {
-      orderGuard.validateOrder(testSessionId, 'sharingan');
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
-        code: 'OK',
+  describe("Session State Persistence", () => {
+    it("should track completed Eyes", () => {
+      orderGuard.validateOrder(testSessionId, "sharingan");
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK",
       });
 
       const state = orderGuard.getState(testSessionId);
-      expect(state?.completedEyes).toContain('sharingan');
-      expect(state?.lastEye).toBe('sharingan');
+      expect(state?.completedEyes).toContain("sharingan");
+      expect(state?.lastEye).toBe("sharingan");
     });
 
-    it('should track pipeline phase transitions', () => {
+    it("should track pipeline phase transitions", () => {
       // State is initialized on first validateOrder call
-      orderGuard.validateOrder(testSessionId, 'sharingan');
+      orderGuard.validateOrder(testSessionId, "sharingan");
       let state = orderGuard.getState(testSessionId);
-      expect(state?.currentPhase).toBe('initialization');
+      expect(state?.currentPhase).toBe("initialization");
 
       // Move to clarification
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
-        code: 'OK',
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK",
         metadata: { isCodeRelated: true },
       });
       state = orderGuard.getState(testSessionId);
-      expect(state?.currentPhase).toBe('clarification');
+      expect(state?.currentPhase).toBe("clarification");
 
       // Move to planning
-      orderGuard.validateOrder(testSessionId, 'kyuubi');
-      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', { code: 'OK' });
-      orderGuard.validateOrder(testSessionId, 'jogan');
-      orderGuard.recordEyeCompletion(testSessionId, 'jogan', { code: 'OK' });
+      orderGuard.validateOrder(testSessionId, "kyuubi");
+      orderGuard.recordEyeCompletion(testSessionId, "kyuubi", { code: "OK" });
+      orderGuard.validateOrder(testSessionId, "jogan");
+      orderGuard.recordEyeCompletion(testSessionId, "jogan", { code: "OK" });
       state = orderGuard.getState(testSessionId);
-      expect(state?.currentPhase).toBe('planning');
+      expect(state?.currentPhase).toBe("planning");
     });
 
-    it('should track isCodeRelated flag from Sharingan', () => {
-      orderGuard.validateOrder(testSessionId, 'sharingan');
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
-        code: 'OK',
+    it("should track isCodeRelated flag from Sharingan", () => {
+      orderGuard.validateOrder(testSessionId, "sharingan");
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK",
         metadata: { isCodeRelated: true },
       });
 
@@ -408,21 +426,21 @@ describe('OrderGuard', () => {
       expect(state?.isCodeRelated).toBe(true);
     });
 
-    it('should maintain separate state for different sessions', () => {
-      const session1 = 'session-1';
-      const session2 = 'session-2';
+    it("should maintain separate state for different sessions", () => {
+      const session1 = "session-1";
+      const session2 = "session-2";
 
       // Session 1: code task
-      orderGuard.validateOrder(session1, 'sharingan');
-      orderGuard.recordEyeCompletion(session1, 'sharingan', {
-        code: 'OK',
+      orderGuard.validateOrder(session1, "sharingan");
+      orderGuard.recordEyeCompletion(session1, "sharingan", {
+        code: "OK",
         metadata: { isCodeRelated: true },
       });
 
       // Session 2: text task
-      orderGuard.validateOrder(session2, 'sharingan');
-      orderGuard.recordEyeCompletion(session2, 'sharingan', {
-        code: 'OK',
+      orderGuard.validateOrder(session2, "sharingan");
+      orderGuard.recordEyeCompletion(session2, "sharingan", {
+        code: "OK",
         metadata: { isCodeRelated: false },
       });
 
@@ -434,96 +452,100 @@ describe('OrderGuard', () => {
     });
   });
 
-  describe('Expected Next Eyes', () => {
-    it('should return correct next Eyes in initialization', () => {
+  describe("Expected Next Eyes", () => {
+    it("should return correct next Eyes in initialization", () => {
       const expectedNext = orderGuard.getExpectedNext(testSessionId);
-      expect(expectedNext).toContain('sharingan');
+      expect(expectedNext).toContain("sharingan");
     });
 
-    it('should return correct next Eyes after Sharingan', () => {
-      orderGuard.validateOrder(testSessionId, 'sharingan');
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
-        code: 'OK',
+    it("should return correct next Eyes after Sharingan", () => {
+      orderGuard.validateOrder(testSessionId, "sharingan");
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK",
         metadata: { isCodeRelated: true },
       });
 
       const expectedNext = orderGuard.getExpectedNext(testSessionId);
-      expect(expectedNext).toContain('kyuubi');
+      expect(expectedNext).toContain("kyuubi");
     });
 
-    it('should return correct next Eyes after Kyuubi', () => {
-      orderGuard.validateOrder(testSessionId, 'sharingan');
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
-        code: 'OK',
+    it("should return correct next Eyes after Kyuubi", () => {
+      orderGuard.validateOrder(testSessionId, "sharingan");
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK",
         metadata: { isCodeRelated: true },
       });
 
-      orderGuard.validateOrder(testSessionId, 'kyuubi');
-      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', { code: 'OK' });
+      orderGuard.validateOrder(testSessionId, "kyuubi");
+      orderGuard.recordEyeCompletion(testSessionId, "kyuubi", { code: "OK" });
 
       const expectedNext = orderGuard.getExpectedNext(testSessionId);
-      expect(expectedNext).toContain('jogan');
+      expect(expectedNext).toContain("jogan");
     });
 
-    it('should return correct next Eyes in code implementation phase', () => {
+    it("should return correct next Eyes in code implementation phase", () => {
       // Complete to planning
-      orderGuard.validateOrder(testSessionId, 'sharingan');
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
-        code: 'OK',
+      orderGuard.validateOrder(testSessionId, "sharingan");
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK",
         metadata: { isCodeRelated: true },
       });
 
-      orderGuard.validateOrder(testSessionId, 'kyuubi');
-      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', { code: 'OK' });
+      orderGuard.validateOrder(testSessionId, "kyuubi");
+      orderGuard.recordEyeCompletion(testSessionId, "kyuubi", { code: "OK" });
 
-      orderGuard.validateOrder(testSessionId, 'jogan');
-      orderGuard.recordEyeCompletion(testSessionId, 'jogan', { code: 'OK' });
+      orderGuard.validateOrder(testSessionId, "jogan");
+      orderGuard.recordEyeCompletion(testSessionId, "jogan", { code: "OK" });
 
-      orderGuard.validateOrder(testSessionId, 'rinnegan');
-      orderGuard.recordEyeCompletion(testSessionId, 'rinnegan', { code: 'OK' });
+      orderGuard.validateOrder(testSessionId, "rinnegan");
+      orderGuard.recordEyeCompletion(testSessionId, "rinnegan", { code: "OK" });
 
-      orderGuard.validateOrder(testSessionId, 'mangekyo');
-      orderGuard.recordEyeCompletion(testSessionId, 'mangekyo', { code: 'OK' });
+      orderGuard.validateOrder(testSessionId, "mangekyo");
+      orderGuard.recordEyeCompletion(testSessionId, "mangekyo", { code: "OK" });
 
       const state = orderGuard.getState(testSessionId);
-      expect(state?.currentPhase).toBe('implementation');
+      expect(state?.currentPhase).toBe("implementation");
 
       const expectedNext = orderGuard.getExpectedNext(testSessionId);
-      expect(expectedNext).toContain('mangekyo');
-      expect(expectedNext).toContain('rinnegan');
+      expect(expectedNext).toContain("mangekyo");
+      expect(expectedNext).toContain("rinnegan");
     });
 
-    it('should return correct next Eyes in text implementation phase', () => {
+    it("should return correct next Eyes in text implementation phase", () => {
       // Complete to planning
-      orderGuard.validateOrder(testSessionId, 'sharingan');
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
-        code: 'OK',
+      orderGuard.validateOrder(testSessionId, "sharingan");
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK",
         metadata: { isCodeRelated: false },
       });
 
-      orderGuard.validateOrder(testSessionId, 'kyuubi');
-      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', { code: 'OK' });
+      orderGuard.validateOrder(testSessionId, "kyuubi");
+      orderGuard.recordEyeCompletion(testSessionId, "kyuubi", { code: "OK" });
 
-      orderGuard.validateOrder(testSessionId, 'jogan');
-      orderGuard.recordEyeCompletion(testSessionId, 'jogan', { code: 'OK' });
+      orderGuard.validateOrder(testSessionId, "jogan");
+      orderGuard.recordEyeCompletion(testSessionId, "jogan", { code: "OK" });
 
-      orderGuard.validateOrder(testSessionId, 'tenseigan');
-      orderGuard.recordEyeCompletion(testSessionId, 'tenseigan', { code: 'OK' });
+      orderGuard.validateOrder(testSessionId, "tenseigan");
+      orderGuard.recordEyeCompletion(testSessionId, "tenseigan", {
+        code: "OK",
+      });
 
       const state = orderGuard.getState(testSessionId);
-      expect(state?.currentPhase).toBe('implementation');
+      expect(state?.currentPhase).toBe("implementation");
 
       const expectedNext = orderGuard.getExpectedNext(testSessionId);
-      expect(expectedNext).toContain('tenseigan');
-      expect(expectedNext).toContain('byakugan');
-      expect(expectedNext).toContain('rinnegan');
+      expect(expectedNext).toContain("tenseigan");
+      expect(expectedNext).toContain("byakugan");
+      expect(expectedNext).toContain("rinnegan");
     });
   });
 
-  describe('Session Management', () => {
-    it('should clear session state', () => {
-      orderGuard.validateOrder(testSessionId, 'sharingan');
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', { code: 'OK' });
+  describe("Session Management", () => {
+    it("should clear session state", () => {
+      orderGuard.validateOrder(testSessionId, "sharingan");
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK",
+      });
 
       orderGuard.clearSession(testSessionId);
 
@@ -531,105 +553,105 @@ describe('OrderGuard', () => {
       expect(state).toBeNull();
     });
 
-    it('should list active sessions', () => {
-      const session1 = 'session-1';
-      const session2 = 'session-2';
+    it("should list active sessions", () => {
+      const session1 = "session-1";
+      const session2 = "session-2";
 
-      orderGuard.validateOrder(session1, 'sharingan');
-      orderGuard.validateOrder(session2, 'sharingan');
+      orderGuard.validateOrder(session1, "sharingan");
+      orderGuard.validateOrder(session2, "sharingan");
 
       const activeSessions = orderGuard.getActiveSessions();
       expect(activeSessions.length).toBeGreaterThanOrEqual(2);
-      expect(activeSessions.some(s => s.sessionId === session1)).toBe(true);
-      expect(activeSessions.some(s => s.sessionId === session2)).toBe(true);
+      expect(activeSessions.some((s) => s.sessionId === session1)).toBe(true);
+      expect(activeSessions.some((s) => s.sessionId === session2)).toBe(true);
     });
   });
 
-  describe('Violation Messages - Internal Only', () => {
-    it('should include internal Eye names in violation (for server logging)', () => {
-      const violation = orderGuard.validateOrder(testSessionId, 'jogan');
+  describe("Violation Messages - Internal Only", () => {
+    it("should include internal Eye names in violation (for server logging)", () => {
+      const violation = orderGuard.validateOrder(testSessionId, "jogan");
 
       // Violation object contains internal details for server-side logging
       expect(violation).not.toBeNull();
-      expect(violation?.violation).toContain('jogan');
-      expect(violation?.expectedNext).toContain('sharingan');
+      expect(violation?.violation).toContain("jogan");
+      expect(violation?.expectedNext).toContain("sharingan");
       expect(violation?.fixInstructions).toBeDefined();
     });
 
-    it('should provide example payload for some violations', () => {
+    it("should provide example payload for some violations", () => {
       // Get to clarification phase
-      orderGuard.validateOrder(testSessionId, 'sharingan');
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
-        code: 'OK',
+      orderGuard.validateOrder(testSessionId, "sharingan");
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK",
         metadata: { isCodeRelated: true },
       });
 
       // Try to skip Kyuubi - this violation includes examplePayload
-      const violation = orderGuard.validateOrder(testSessionId, 'jogan');
+      const violation = orderGuard.validateOrder(testSessionId, "jogan");
 
       expect(violation).not.toBeNull();
       // Check if examplePayload exists (it's optional)
       if (violation?.examplePayload) {
-        expect(violation.examplePayload.eye).toBe('kyuubi');
+        expect(violation.examplePayload.eye).toBe("kyuubi");
         expect(violation.examplePayload.input).toBeDefined();
         expect(violation.examplePayload.description).toBeDefined();
       }
     });
   });
 
-  describe('Auto-Router Bypass', () => {
-    it('should bypass validation when session is marked as auto-router controlled', () => {
+  describe("Auto-Router Bypass", () => {
+    it("should bypass validation when session is marked as auto-router controlled", () => {
       // Mark session as auto-router controlled
       orderGuard.markAsAutoRouterSession(testSessionId);
 
       // Should allow ANY Eye in ANY order (auto-router knows the correct sequence)
-      let violation = orderGuard.validateOrder(testSessionId, 'jogan');
+      let violation = orderGuard.validateOrder(testSessionId, "jogan");
       expect(violation).toBeNull();
 
-      violation = orderGuard.validateOrder(testSessionId, 'rinnegan');
+      violation = orderGuard.validateOrder(testSessionId, "rinnegan");
       expect(violation).toBeNull();
 
-      violation = orderGuard.validateOrder(testSessionId, 'mangekyo');
+      violation = orderGuard.validateOrder(testSessionId, "mangekyo");
       expect(violation).toBeNull();
 
       // Unmark session
       orderGuard.unmarkAsAutoRouterSession(testSessionId);
 
       // Now validation should be enforced again
-      violation = orderGuard.validateOrder(testSessionId, 'jogan');
+      violation = orderGuard.validateOrder(testSessionId, "jogan");
       expect(violation).not.toBeNull();
-      expect(violation?.code).toBe('E_PIPELINE_ORDER');
+      expect(violation?.code).toBe("E_PIPELINE_ORDER");
     });
 
-    it('should still validate direct Eye calls after auto-router completes', () => {
+    it("should still validate direct Eye calls after auto-router completes", () => {
       // Mark as auto-router session
       orderGuard.markAsAutoRouterSession(testSessionId);
 
       // Execute full auto-router flow (Sharingan -> Kyuubi -> Jogan)
-      orderGuard.validateOrder(testSessionId, 'sharingan');
-      orderGuard.recordEyeCompletion(testSessionId, 'sharingan', {
-        code: 'OK',
+      orderGuard.validateOrder(testSessionId, "sharingan");
+      orderGuard.recordEyeCompletion(testSessionId, "sharingan", {
+        code: "OK",
         metadata: { isCodeRelated: true },
       });
 
-      orderGuard.validateOrder(testSessionId, 'kyuubi');
-      orderGuard.recordEyeCompletion(testSessionId, 'kyuubi', { code: 'OK' });
+      orderGuard.validateOrder(testSessionId, "kyuubi");
+      orderGuard.recordEyeCompletion(testSessionId, "kyuubi", { code: "OK" });
 
-      orderGuard.validateOrder(testSessionId, 'jogan');
-      orderGuard.recordEyeCompletion(testSessionId, 'jogan', { code: 'OK' });
+      orderGuard.validateOrder(testSessionId, "jogan");
+      orderGuard.recordEyeCompletion(testSessionId, "jogan", { code: "OK" });
 
       // Unmark after auto-router completes
       orderGuard.unmarkAsAutoRouterSession(testSessionId);
 
       // Direct Eye call should now be validated
       // Trying to call Mangekyo before Rinnegan should fail
-      const violation = orderGuard.validateOrder(testSessionId, 'mangekyo');
+      const violation = orderGuard.validateOrder(testSessionId, "mangekyo");
       expect(violation).not.toBeNull();
-      expect(violation?.code).toBe('E_PIPELINE_ORDER');
-      expect(violation?.violation).toContain('Mangekyō called before Rinnegan');
+      expect(violation?.code).toBe("E_PIPELINE_ORDER");
+      expect(violation?.violation).toContain("Mangekyō called before Rinnegan");
     });
 
-    it('should clear auto-router flag when session is cleared', () => {
+    it("should clear auto-router flag when session is cleared", () => {
       orderGuard.markAsAutoRouterSession(testSessionId);
       expect(orderGuard.isAutoRouterSession(testSessionId)).toBe(true);
 
@@ -637,7 +659,7 @@ describe('OrderGuard', () => {
       expect(orderGuard.isAutoRouterSession(testSessionId)).toBe(false);
     });
 
-    it('should check auto-router status', () => {
+    it("should check auto-router status", () => {
       expect(orderGuard.isAutoRouterSession(testSessionId)).toBe(false);
 
       orderGuard.markAsAutoRouterSession(testSessionId);

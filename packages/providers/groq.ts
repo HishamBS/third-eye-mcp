@@ -1,1 +1,1 @@
-export { GroqProvider } from './src/groq';
+export { GroqProvider } from "./src/groq";

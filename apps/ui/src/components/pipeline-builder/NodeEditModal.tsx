@@ -1,11 +1,15 @@
-'use client';
+"use client";
 
-import { memo, useState, useCallback, useEffect } from 'react';
-import { Settings } from 'lucide-react';
-import { NODE_EDIT_TEXT } from './constants';
-import { UI_HELP_TEXT, PHASE_CONFIG_TEXT } from '@third-eye/constants';
-import type { PipelineNode, EyeNodeData } from '@/types/pipeline';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { memo, useState, useCallback, useEffect } from "react";
+import { Settings } from "lucide-react";
+import { NODE_EDIT_TEXT } from "./constants";
+import { UI_HELP_TEXT, PHASE_CONFIG_TEXT } from "@third-eye/constants";
+import type { PipelineNode, EyeNodeData } from "@/types/pipeline";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
 
 /**
  * Node Edit Modal Props
@@ -40,11 +44,11 @@ export const NodeEditModal = memo(function NodeEditModal({
   onConfigurePersona,
 }: NodeEditModalProps) {
   const [formData, setFormData] = useState<Partial<EyeNodeData>>({});
-  const [jsonError, setJsonError] = useState<string>('');
-  const [newCapability, setNewCapability] = useState<string>('');
+  const [jsonError, setJsonError] = useState<string>("");
+  const [newCapability, setNewCapability] = useState<string>("");
   const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
-  const [nodeName, setNodeName] = useState<string>('');
-  const [nodeDescription, setNodeDescription] = useState<string>('');
+  const [nodeName, setNodeName] = useState<string>("");
+  const [nodeDescription, setNodeDescription] = useState<string>("");
   const [nodeEnabled, setNodeEnabled] = useState<boolean>(true);
   // Phase 18: Two-phase operation toggles
   const [enableGuidance, setEnableGuidance] = useState<boolean>(true);
@@ -54,7 +58,9 @@ export const NodeEditModal = memo(function NodeEditModal({
   useEffect(() => {
     if (node) {
       const config = node.data.customConfig || {};
-      const phases = (config as Record<string, unknown>).phases as Record<string, boolean> | undefined;
+      const phases = (config as Record<string, unknown>).phases as
+        | Record<string, boolean>
+        | undefined;
       setFormData({
         eyeId: node.data.eyeId,
         displayName: node.data.displayName,
@@ -63,14 +69,16 @@ export const NodeEditModal = memo(function NodeEditModal({
         iconSvg: node.data.iconSvg,
       });
       // Initialize form fields from customConfig
-      setNodeName((config as Record<string, unknown>).name as string || '');
-      setNodeDescription((config as Record<string, unknown>).description as string || '');
+      setNodeName(((config as Record<string, unknown>).name as string) || "");
+      setNodeDescription(
+        ((config as Record<string, unknown>).description as string) || "",
+      );
       setNodeEnabled((config as Record<string, unknown>).enabled !== false);
       // Phase 18: Initialize phase toggles (default: both enabled)
       setEnableGuidance(phases?.enableGuidance !== false);
       setEnableValidation(phases?.enableValidation !== false);
-      setJsonError('');
-      setNewCapability('');
+      setJsonError("");
+      setNewCapability("");
       setShowAdvanced(false);
     }
   }, [node]);
@@ -80,7 +88,7 @@ export const NodeEditModal = memo(function NodeEditModal({
     try {
       const parsed = value.trim() ? JSON.parse(value) : {};
       setFormData((prev) => ({ ...prev, customConfig: parsed }));
-      setJsonError('');
+      setJsonError("");
     } catch (error) {
       setJsonError(NODE_EDIT_TEXT.VALIDATION_INVALID_JSON);
       // Still update raw value for editing
@@ -96,7 +104,7 @@ export const NodeEditModal = memo(function NodeEditModal({
       ...prev,
       capabilities: [...(prev.capabilities || []), newCapability.trim()],
     }));
-    setNewCapability('');
+    setNewCapability("");
   }, [newCapability]);
 
   // Remove capability
@@ -136,12 +144,23 @@ export const NodeEditModal = memo(function NodeEditModal({
       customConfig: updatedConfig,
     });
     onClose();
-  }, [node, formData, jsonError, nodeName, nodeDescription, nodeEnabled, enableGuidance, enableValidation, onSave, onClose]);
+  }, [
+    node,
+    formData,
+    jsonError,
+    nodeName,
+    nodeDescription,
+    nodeEnabled,
+    enableGuidance,
+    enableValidation,
+    onSave,
+    onClose,
+  ]);
 
   // Handle delete
   const handleDelete = useCallback(() => {
     if (!node) return;
-    if (confirm(`Delete this ${formData.displayName || 'Eye'} node?`)) {
+    if (confirm(`Delete this ${formData.displayName || "Eye"} node?`)) {
       onDelete(node.id);
       onClose();
     }
@@ -150,20 +169,20 @@ export const NodeEditModal = memo(function NodeEditModal({
   // Handle keyboard shortcuts
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onClose();
-      } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
         handleSave();
       }
     },
-    [onClose, handleSave]
+    [onClose, handleSave],
   );
 
   if (!node) return null;
 
   const configJson = formData.customConfig
     ? JSON.stringify(formData.customConfig, null, 2)
-    : '';
+    : "";
 
   return (
     <div
@@ -177,13 +196,25 @@ export const NodeEditModal = memo(function NodeEditModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-brand-outline">
-          <h2 className="text-xl font-semibold text-brand-foreground">{NODE_EDIT_TEXT.TITLE}</h2>
+          <h2 className="text-xl font-semibold text-brand-foreground">
+            {NODE_EDIT_TEXT.TITLE}
+          </h2>
           <button
             onClick={onClose}
             className="p-1 hover:bg-brand-outline/20 rounded-md transition-colors"
           >
-            <svg className="w-5 h-5 text-brand-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-5 h-5 text-brand-foreground"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -203,8 +234,8 @@ export const NodeEditModal = memo(function NodeEditModal({
             <button
               onClick={() => {
                 onConfigurePersona(
-                  formData.eyeId || '',
-                  formData.displayName || formData.eyeId || ''
+                  formData.eyeId || "",
+                  formData.displayName || formData.eyeId || "",
                 );
               }}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-brand-accent/10 px-4 py-2 text-sm font-medium text-brand-accent transition-all hover:bg-brand-accent/20 hover:scale-[1.02] active:scale-95"
@@ -237,15 +268,27 @@ export const NodeEditModal = memo(function NodeEditModal({
                         className="hover:bg-brand-accent/30 rounded-full p-0.5"
                         title={NODE_EDIT_TEXT.REMOVE_CAPABILITY}
                       >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
                         </svg>
                       </button>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-sm text-semantic-muted italic">No capabilities defined</div>
+                <div className="text-sm text-semantic-muted italic">
+                  No capabilities defined
+                </div>
               )}
 
               {/* Add capability input */}
@@ -255,7 +298,7 @@ export const NodeEditModal = memo(function NodeEditModal({
                   value={newCapability}
                   onChange={(e) => setNewCapability(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === "Enter") {
                       e.preventDefault();
                       handleAddCapability();
                     }
@@ -319,12 +362,12 @@ export const NodeEditModal = memo(function NodeEditModal({
               <button
                 onClick={() => setNodeEnabled(!nodeEnabled)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  nodeEnabled ? 'bg-brand-primary' : 'bg-brand-outline/40'
+                  nodeEnabled ? "bg-brand-primary" : "bg-brand-outline/40"
                 }`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    nodeEnabled ? 'translate-x-6' : 'translate-x-1'
+                    nodeEnabled ? "translate-x-6" : "translate-x-1"
                   }`}
                 />
               </button>
@@ -355,12 +398,14 @@ export const NodeEditModal = memo(function NodeEditModal({
               <button
                 onClick={() => setEnableGuidance(!enableGuidance)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  enableGuidance ? STATUS_BG_COLORS_SUBTLE.info : 'bg-brand-outline/40'
+                  enableGuidance
+                    ? STATUS_BG_COLORS_SUBTLE.info
+                    : "bg-brand-outline/40"
                 }`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    enableGuidance ? 'translate-x-6' : 'translate-x-1'
+                    enableGuidance ? "translate-x-6" : "translate-x-1"
                   }`}
                 />
               </button>
@@ -379,12 +424,14 @@ export const NodeEditModal = memo(function NodeEditModal({
               <button
                 onClick={() => setEnableValidation(!enableValidation)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  enableValidation ? STATUS_BG_COLORS_SUBTLE.success : 'bg-brand-outline/40'
+                  enableValidation
+                    ? STATUS_BG_COLORS_SUBTLE.success
+                    : "bg-brand-outline/40"
                 }`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    enableValidation ? 'translate-x-6' : 'translate-x-1'
+                    enableValidation ? "translate-x-6" : "translate-x-1"
                   }`}
                 />
               </button>
@@ -393,8 +440,18 @@ export const NodeEditModal = memo(function NodeEditModal({
             {/* Warning if both disabled */}
             {!enableGuidance && !enableValidation && (
               <div className="flex items-center gap-2 p-3 rounded-lg ${STATUS_BG_COLORS_SUBTLE.error} border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error} text-sm">
-                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <svg
+                  className="w-4 h-4 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
                 </svg>
                 <span>{PHASE_CONFIG_TEXT.BOTH_DISABLED_WARNING}</span>
               </div>
@@ -410,13 +467,18 @@ export const NodeEditModal = memo(function NodeEditModal({
               <div className="flex items-center gap-2">
                 <svg
                   className={`w-4 h-4 text-brand-foreground transition-transform ${
-                    showAdvanced ? 'rotate-90' : ''
+                    showAdvanced ? "rotate-90" : ""
                   }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
                 <span className="text-sm font-semibold text-brand-foreground uppercase tracking-wider">
                   Advanced Configuration
@@ -439,15 +501,18 @@ export const NodeEditModal = memo(function NodeEditModal({
                   rows={8}
                   className={`w-full px-3 py-2 bg-brand-paperElev border rounded-md text-brand-foreground placeholder-brand-ink/50 focus:outline-none focus:ring-2 font-mono text-sm ${
                     jsonError
-                      ? 'border-semantic-error focus:ring-semantic-error'
-                      : 'border-brand-outline focus:ring-brand-primary'
+                      ? "border-semantic-error focus:ring-semantic-error"
+                      : "border-brand-outline focus:ring-brand-primary"
                   }`}
                 />
                 {jsonError && (
-                  <div className="mt-1 text-sm ${STATUS_TEXT_COLORS.error}">{jsonError}</div>
+                  <div className="mt-1 text-sm ${STATUS_TEXT_COLORS.error}">
+                    {jsonError}
+                  </div>
                 )}
                 <div className="mt-2 text-xs text-semantic-muted">
-                  Direct JSON editing. Changes here will override form values above.
+                  Direct JSON editing. Changes here will override form values
+                  above.
                 </div>
               </div>
             )}

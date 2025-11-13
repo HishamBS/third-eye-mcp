@@ -7,16 +7,16 @@
  * Per R13: NO magic string literals - all text from constants
  */
 
-import { freezeTokens, TokenLiteral } from './taxonomy';
+import { freezeTokens, TokenLiteral } from "./taxonomy";
 
 export const MonitorTabId = freezeTokens({
-  TIMELINE: 'timeline',
-  NARRATIVE: 'narrative',
-  ROUTING: 'routing',
-  CLARIFICATIONS: 'clarifications',
-  INTENT: 'intent',
-  EVIDENCE: 'evidence',
-  RAW_JSON: 'raw',
+  TIMELINE: "timeline",
+  NARRATIVE: "narrative",
+  ROUTING: "routing",
+  CLARIFICATIONS: "clarifications",
+  INTENT: "intent",
+  EVIDENCE: "evidence",
+  RAW_JSON: "raw",
 } as const);
 
 export type MonitorTabId = TokenLiteral<typeof MonitorTabId>;
@@ -25,39 +25,40 @@ export type MonitorTabId = TokenLiteral<typeof MonitorTabId>;
  * SSOT for Monitor Tab Labels - Per R13
  */
 const MONITOR_TAB_LABELS = Object.freeze({
-  TIMELINE: 'Timeline',
-  NARRATIVE: 'Narrative',
-  ROUTING: 'Routing Decision',
-  CLARIFICATIONS: 'Clarifications',
-  INTENT: 'Intent Confirmation',
-  EVIDENCE: 'Evidence & Validation',
-  RAW_JSON: 'Raw JSON',
+  TIMELINE: "Timeline",
+  NARRATIVE: "Narrative",
+  ROUTING: "Routing Decision",
+  CLARIFICATIONS: "Clarifications",
+  INTENT: "Intent Confirmation",
+  EVIDENCE: "Evidence & Validation",
+  RAW_JSON: "Raw JSON",
 } as const);
 
 /**
  * SSOT for Monitor Tab Icons (lucide-react icon names) - Per R13
  */
 const MONITOR_TAB_ICONS = Object.freeze({
-  TIMELINE: 'timeline',
-  NARRATIVE: 'message-circle',
-  ROUTING: 'route',
-  CLARIFICATIONS: 'help-circle',
-  INTENT: 'hand',
-  EVIDENCE: 'search',
-  RAW_JSON: 'braces',
+  TIMELINE: "timeline",
+  NARRATIVE: "message-circle",
+  ROUTING: "route",
+  CLARIFICATIONS: "help-circle",
+  INTENT: "hand",
+  EVIDENCE: "search",
+  RAW_JSON: "braces",
 } as const);
 
 /**
  * SSOT for Monitor Tab Descriptions - Per R13
  */
 const MONITOR_TAB_DESCRIPTIONS = Object.freeze({
-  TIMELINE: 'Chat-style conversation log with Eye responses',
-  NARRATIVE: 'Human-readable conversation flow showing the story of pipeline execution',
-  ROUTING: 'Overseer-determined dynamic Eye sequence and rationale',
-  CLARIFICATIONS: 'Outstanding and resolved clarification questions',
-  INTENT: 'Jogan intent analysis and human approval status',
-  EVIDENCE: 'Code review, fact validation, and final approval results',
-  RAW_JSON: 'Complete pipeline event data in JSON format',
+  TIMELINE: "Chat-style conversation log with Eye responses",
+  NARRATIVE:
+    "Human-readable conversation flow showing the story of pipeline execution",
+  ROUTING: "Overseer-determined dynamic Eye sequence and rationale",
+  CLARIFICATIONS: "Outstanding and resolved clarification questions",
+  INTENT: "Jogan intent analysis and human approval status",
+  EVIDENCE: "Code review, fact validation, and final approval results",
+  RAW_JSON: "Complete pipeline event data in JSON format",
 } as const);
 
 export interface MonitorTabConfig {

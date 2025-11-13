@@ -5,6 +5,7 @@
 > "i tried option A before with groq and even that failed with all the issues i told you before"
 
 You reported these failures:
+
 1. ❌ "i have never seen a full pipeline run, always one eye fails"
 2. ❌ "sometimes they generate the content"
 3. ❌ "many times they dont confirm intent from the human"
@@ -17,13 +18,16 @@ You reported these failures:
 ## Critical Insight: Two Separate Problem Categories
 
 ### Category A: Format Compliance Issues
+
 **What structured outputs solve:**
+
 - ✅ Issue #6: "llms didnt stick with json format"
 - ✅ Malformed JSON (syntax errors)
 - ✅ Missing required fields
 - ✅ Wrong data types
 
 **Solutions:**
+
 - JSON Schema structured outputs
 - Function calling
 - Constrained generation
@@ -33,7 +37,9 @@ You reported these failures:
 ---
 
 ### Category B: Architectural & Persona Issues
+
 **What structured outputs DON'T solve:**
+
 - ❌ Issue #1: "one eye fails" → Personas have wrong instructions
 - ❌ Issue #2: "they generate the content" → Personas tell eyes to generate, not ask
 - ❌ Issue #3: "dont confirm intent from human" → No pause/resume mechanism exists
@@ -43,6 +49,7 @@ You reported these failures:
 **These are the REAL blockers preventing your vision from working.**
 
 **Solutions:**
+
 - Rewrite persona instructions (tell eyes to ASK, not GENERATE)
 - Implement pause/resume mechanism for human input
 - Remove eye exposure from MCP responses
@@ -77,13 +84,15 @@ You reported these failures:
 5. **MCP server.ts:415** exposes all eyes:
    ```typescript
    return {
-     content: [{
-       type: "text",
-       text: JSON.stringify({
-         // ...
-         history: result.results, // ❌ Contains all eye envelopes
-       })
-     }]
+     content: [
+       {
+         type: "text",
+         text: JSON.stringify({
+           // ...
+           history: result.results, // ❌ Contains all eye envelopes
+         }),
+       },
+     ],
    };
    ```
 
@@ -103,6 +112,7 @@ Your vision (from FINAL_OVERSEER_VISION.md):
 ```
 
 Current implementation:
+
 ```
 🧿 Overseer: "Here's the routing decision: [sharingan, kyuubi, jogan]"
 🔍 Sharingan: "Here are 4 questions: 1. What type of palms? 2. What climate? ..."
@@ -119,9 +129,11 @@ Current implementation:
 ## What You Need: Two-Phase Fix
 
 ### Phase 1: Format Reliability (Structured Outputs)
+
 **Purpose**: Eliminate format failures (Issue #6)
 
 **Approach**:
+
 - Hybrid: JSON Schema for local (Ollama/LM Studio) → 100%
 - Function calling for remote (Groq/OpenRouter) → 95-98%
 
@@ -132,6 +144,7 @@ Current implementation:
 ---
 
 ### Phase 2: Vision Alignment (Persona & Architecture Fixes)
+
 **Purpose**: Fix Issues #1-5 (the real blockers)
 
 **Required changes**:
@@ -171,6 +184,7 @@ Current implementation:
 ## Analogy
 
 **Your situation is like**:
+
 - You built a car with a perfect steering wheel (JSON format)
 - But the engine instructions tell it to drive backwards (persona instructions)
 - And there's no brake pedal (no pause mechanism)
@@ -183,10 +197,12 @@ Current implementation:
 ## Recommendation
 
 **Short term** (1-2 days):
+
 - Implement structured outputs (Phase 1) → 95% format compliance
 - Fixes Issue #6
 
 **Medium term** (1-2 weeks):
+
 - Implement pause/resume mechanism
 - Rewrite persona instructions
 - Remove eye exposure

@@ -36,16 +36,19 @@ After deep analysis of 11 documentation files (10,615 lines) + our complete conv
 interface DynamicRouter {
   // Capability-based selection
   analyzeRequest(request: string): {
-    requestType: 'new_task' | 'draft_review' | 'factual_question' | 'planning';
-    contentDomain: 'text' | 'code' | 'plan' | 'mixed';
-    complexity: 'simple' | 'moderate' | 'complex';
+    requestType: "new_task" | "draft_review" | "factual_question" | "planning";
+    contentDomain: "text" | "code" | "plan" | "mixed";
+    complexity: "simple" | "moderate" | "complex";
     capabilitiesNeeded: CapabilityTag[];
   };
 
   // Dynamic eye selection
-  selectEyes(analysis: RequestAnalysis, availableEyes: Eye[]): {
+  selectEyes(
+    analysis: RequestAnalysis,
+    availableEyes: Eye[],
+  ): {
     eyes: EyeName[];
-    sequence: 'sequential' | 'parallel';
+    sequence: "sequential" | "parallel";
     reasoning: string;
   };
 
@@ -55,6 +58,7 @@ interface DynamicRouter {
 ```
 
 **Implementation details needed**:
+
 1. Overseer LLM prompt that returns dynamic route based on request
 2. No hardcoded "if X then route to [Y, Z]" logic
 3. Capability tag matching algorithm
@@ -62,6 +66,7 @@ interface DynamicRouter {
 5. Parallel vs sequential execution decisions
 
 **Database changes**:
+
 ```sql
 -- Add capability tags to eyes table
 ALTER TABLE eyes ADD COLUMN capability_tags JSON NOT NULL DEFAULT '[]';
@@ -89,20 +94,20 @@ CREATE TABLE routing_decisions (
 ```typescript
 // Routing Modes
 enum RoutingMode {
-  FULLY_DYNAMIC = 'fully_dynamic',     // Overseer decides everything
-  CONSTRAINED_DYNAMIC = 'constrained', // Overseer + user policies
-  FIXED_TEMPLATE = 'fixed'             // User-defined exact sequence
+  FULLY_DYNAMIC = "fully_dynamic", // Overseer decides everything
+  CONSTRAINED_DYNAMIC = "constrained", // Overseer + user policies
+  FIXED_TEMPLATE = "fixed", // User-defined exact sequence
 }
 
 // Routing Policies (for Constrained mode)
 interface RoutingPolicy {
   id: string;
   name: string;
-  mandatoryEyes: EyeName[];          // Always include these
-  forbiddenEyes?: EyeName[];         // Never use these
-  minValidationEyes?: number;        // Minimum validation steps
-  securityRequired?: boolean;        // Must include security validation
-  alwaysConfirmIntent?: boolean;     // Jōgan always required
+  mandatoryEyes: EyeName[]; // Always include these
+  forbiddenEyes?: EyeName[]; // Never use these
+  minValidationEyes?: number; // Minimum validation steps
+  securityRequired?: boolean; // Must include security validation
+  alwaysConfirmIntent?: boolean; // Jōgan always required
   customConstraints?: Constraint[];
 }
 
@@ -111,19 +116,21 @@ interface PipelineTemplate {
   id: string;
   name: string;
   description: string;
-  eyes: EyeName[];                   // Exact sequence
-  strict: boolean;                   // No deviations allowed
-  autoTriggerPattern?: string;       // Regex for automatic triggering
+  eyes: EyeName[]; // Exact sequence
+  strict: boolean; // No deviations allowed
+  autoTriggerPattern?: string; // Regex for automatic triggering
 }
 ```
 
 **UI components needed**:
+
 1. `/pipelines` page - NOT showing default pipeline, showing capability matrix
 2. Policy builder - Create/edit routing policies
 3. Template builder - Visual pipeline designer for fixed templates
 4. Mode selector - Choose Dynamic/Constrained/Fixed per session or global
 
 **Database schema**:
+
 ```sql
 CREATE TABLE routing_policies (
   id TEXT PRIMARY KEY,
@@ -166,12 +173,12 @@ CREATE TABLE pipeline_templates (
 // Pause/Resume State Management
 interface PipelineState {
   sessionId: string;
-  status: 'running' | 'paused_for_human' | 'paused_for_agent' | 'completed';
+  status: "running" | "paused_for_human" | "paused_for_agent" | "completed";
   currentEye: EyeName;
-  pauseReason: 'clarification' | 'confirmation' | 'validation_failed';
+  pauseReason: "clarification" | "confirmation" | "validation_failed";
   pendingQuestions?: Question[];
   pendingConfirmation?: Confirmation;
-  resumeToken: string;  // For secure resume
+  resumeToken: string; // For secure resume
 }
 
 // Question Queue
@@ -181,14 +188,14 @@ interface PendingQuestion {
   eyeName: EyeName;
   questions: string[];
   context: Record<string, unknown>;
-  status: 'pending' | 'answered' | 'expired';
+  status: "pending" | "answered" | "expired";
   expiresAt: number;
 }
 
 // Resume Handler
 async function resumePipeline(
   sessionId: string,
-  humanResponse: HumanResponse
+  humanResponse: HumanResponse,
 ): Promise<PipelineResult> {
   // 1. Load pipeline state
   const state = await loadPipelineState(sessionId);
@@ -200,13 +207,14 @@ async function resumePipeline(
   const result = await continueFromEye(state.currentEye, humanResponse);
 
   // 4. Update state
-  await updatePipelineState(sessionId, 'running');
+  await updatePipelineState(sessionId, "running");
 
   return result;
 }
 ```
 
 **Database schema**:
+
 ```sql
 CREATE TABLE pipeline_states (
   session_id TEXT PRIMARY KEY,
@@ -293,12 +301,14 @@ class OllamaSchemaProvider {
 ```
 
 **Hybrid Strategy** (from research):
+
 - **Groq**: Function calling with `llama-3-groq-70b-tool-use` (95-98%)
 - **OpenRouter**: Function calling with tool-capable models (85-95%)
 - **Ollama**: JSON Schema with constrained generation (100%)
 - **LM Studio**: JSON Schema with grammar sampling (100%)
 
 **Code changes needed**:
+
 1. `packages/providers/` - Add function calling support to each provider
 2. `packages/core/orchestrator.ts` - Route to function calling vs schema based on provider
 3. `packages/eyes/schemas/` - Convert JSON schemas to function definitions
@@ -314,6 +324,7 @@ class OllamaSchemaProvider {
 **Must rewrite ALL 8 personas**:
 
 **Before (Kyuubi current)**:
+
 ```
 ## GUIDANCE Phase
 Transform clarified requirements into structured brief.
@@ -331,6 +342,7 @@ Response:
 ```
 
 **After (Kyuubi corrected)**:
+
 ```
 ## GUIDANCE Phase
 Your role: Guide the agent to think through structure by asking questions.
@@ -351,6 +363,7 @@ Response:
 ```
 
 **Implementation**:
+
 1. Rewrite all 8 persona files in `packages/db/defaults/personas.ts`
 2. Separate guidance from validation phases (different personas)
 3. Add examples of ASKING not GENERATING
@@ -368,33 +381,38 @@ Response:
 ```typescript
 // MCP Response (Current - WRONG)
 return {
-  content: [{
-    type: "text",
-    text: JSON.stringify({
-      status: "success",
-      verdict: "APPROVED",
-      history: result.results  // ❌ EXPOSES ALL EYES
-    })
-  }]
+  content: [
+    {
+      type: "text",
+      text: JSON.stringify({
+        status: "success",
+        verdict: "APPROVED",
+        history: result.results, // ❌ EXPOSES ALL EYES
+      }),
+    },
+  ],
 };
 
 // MCP Response (Corrected)
 return {
-  content: [{
-    type: "text",
-    text: JSON.stringify({
-      status: "success",
-      verdict: "APPROVED",
-      summary: "Analysis complete",
-      data: result.finalResult,  // Only final output
-      sessionId: result.sessionId,  // For developer monitoring
-      portalUrl: `http://127.0.0.1:3300/monitor/${result.sessionId}`  // Dev only
-    })
-  }]
+  content: [
+    {
+      type: "text",
+      text: JSON.stringify({
+        status: "success",
+        verdict: "APPROVED",
+        summary: "Analysis complete",
+        data: result.finalResult, // Only final output
+        sessionId: result.sessionId, // For developer monitoring
+        portalUrl: `http://127.0.0.1:3300/monitor/${result.sessionId}`, // Dev only
+      }),
+    },
+  ],
 };
 ```
 
 **Changes needed**:
+
 1. Remove `history` from all MCP responses
 2. Only return final result + session ID
 3. Developers use portal URL to see eyes (not agent)
@@ -441,6 +459,7 @@ return {
    - Display: Request type → Capabilities needed → Eyes selected → Reasoning
 
 **UI Components to create**:
+
 ```
 apps/ui/src/components/pipeline-builder/
 ├── CapabilityMatrix.tsx           (NEW)
@@ -465,49 +484,50 @@ apps/ui/src/components/pipeline-builder/
 // Eye-optimized model mapping
 const EYE_MODEL_MAP = {
   groq: {
-    overseer: 'llama-3-groq-70b-tool-use',      // Routing
-    sharingan: 'llama-3-groq-70b-tool-use',     // Ambiguity detection
-    kyuubi: 'llama-3-groq-70b-tool-use',        // Structuring
-    jogan: 'llama-3-groq-70b-tool-use',         // Intent
-    rinnegan: 'llama-3-groq-70b-tool-use',      // Feasibility
-    mangekyo: 'llama-3-groq-70b-tool-use',      // Code review
-    tenseigan: 'llama-3-groq-70b-tool-use',     // Quality
-    byakugan: 'llama-3-groq-70b-tool-use'       // Final review
+    overseer: "llama-3-groq-70b-tool-use", // Routing
+    sharingan: "llama-3-groq-70b-tool-use", // Ambiguity detection
+    kyuubi: "llama-3-groq-70b-tool-use", // Structuring
+    jogan: "llama-3-groq-70b-tool-use", // Intent
+    rinnegan: "llama-3-groq-70b-tool-use", // Feasibility
+    mangekyo: "llama-3-groq-70b-tool-use", // Code review
+    tenseigan: "llama-3-groq-70b-tool-use", // Quality
+    byakugan: "llama-3-groq-70b-tool-use", // Final review
   },
   openrouter: {
-    overseer: 'meta-llama/llama-3.3-70b-instruct',        // Structured
-    sharingan: 'qwen/qwen-2.5-72b-instruct',               // Reasoning
-    kyuubi: 'meta-llama/llama-3.3-70b-instruct',          // Structured
-    jogan: 'qwen/qwen-2.5-72b-instruct',                   // Reasoning
-    rinnegan: 'deepseek/deepseek-r1-distill-llama-70b',   // Reasoning
-    mangekyo: 'qwen/qwen-2.5-72b-instruct',                // Reasoning
-    tenseigan: 'meta-llama/llama-3.3-70b-instruct',       // Structured
-    byakugan: 'qwen/qwen-2.5-72b-instruct'                 // Reasoning
+    overseer: "meta-llama/llama-3.3-70b-instruct", // Structured
+    sharingan: "qwen/qwen-2.5-72b-instruct", // Reasoning
+    kyuubi: "meta-llama/llama-3.3-70b-instruct", // Structured
+    jogan: "qwen/qwen-2.5-72b-instruct", // Reasoning
+    rinnegan: "deepseek/deepseek-r1-distill-llama-70b", // Reasoning
+    mangekyo: "qwen/qwen-2.5-72b-instruct", // Reasoning
+    tenseigan: "meta-llama/llama-3.3-70b-instruct", // Structured
+    byakugan: "qwen/qwen-2.5-72b-instruct", // Reasoning
   },
   ollama: {
-    overseer: 'llama3.2:8b',      // General purpose
-    sharingan: 'qwen2.5:7b',       // Structured
-    kyuubi: 'qwen2.5:7b',          // Structured
-    jogan: 'qwen2.5:7b',           // Structured
-    rinnegan: 'llama3.2:8b',       // General
-    mangekyo: 'qwen2.5:7b',        // Structured
-    tenseigan: 'qwen2.5:7b',       // Structured
-    byakugan: 'qwen2.5:7b'         // Structured
+    overseer: "llama3.2:8b", // General purpose
+    sharingan: "qwen2.5:7b", // Structured
+    kyuubi: "qwen2.5:7b", // Structured
+    jogan: "qwen2.5:7b", // Structured
+    rinnegan: "llama3.2:8b", // General
+    mangekyo: "qwen2.5:7b", // Structured
+    tenseigan: "qwen2.5:7b", // Structured
+    byakugan: "qwen2.5:7b", // Structured
   },
   lmstudio: {
-    overseer: 'Llama-3.2-8B-Instruct-GGUF',
-    sharingan: 'Qwen2.5-7B-Instruct-GGUF',
-    kyuubi: 'Qwen2.5-7B-Instruct-GGUF',
-    jogan: 'Qwen2.5-7B-Instruct-GGUF',
-    rinnegan: 'Llama-3.2-8B-Instruct-GGUF',
-    mangekyo: 'Qwen2.5-7B-Instruct-GGUF',
-    tenseigan: 'Qwen2.5-7B-Instruct-GGUF',
-    byakugan: 'Qwen2.5-7B-Instruct-GGUF'
-  }
+    overseer: "Llama-3.2-8B-Instruct-GGUF",
+    sharingan: "Qwen2.5-7B-Instruct-GGUF",
+    kyuubi: "Qwen2.5-7B-Instruct-GGUF",
+    jogan: "Qwen2.5-7B-Instruct-GGUF",
+    rinnegan: "Llama-3.2-8B-Instruct-GGUF",
+    mangekyo: "Qwen2.5-7B-Instruct-GGUF",
+    tenseigan: "Qwen2.5-7B-Instruct-GGUF",
+    byakugan: "Qwen2.5-7B-Instruct-GGUF",
+  },
 };
 ```
 
 **UI component needed**:
+
 - Model recommendation panel per eye
 - Show reasoning: "Qwen excels at asking clarifying questions"
 - Allow override to custom model (with warning)
@@ -553,6 +573,7 @@ resumePipeline(sessionId, { confirmed: true });
 ```
 
 **Database schema**:
+
 ```sql
 CREATE TABLE intent_confirmations (
   id TEXT PRIMARY KEY,
@@ -581,7 +602,7 @@ CREATE TABLE intent_confirmations (
 // Conversation Events (not just eye events)
 interface ConversationEvent {
   sessionId: string;
-  type: 'overseer' | 'eye' | 'agent' | 'human' | 'system';
+  type: "overseer" | "eye" | "agent" | "human" | "system";
   speaker: string;
   message: string;
   icon: string;
@@ -591,37 +612,38 @@ interface ConversationEvent {
 
 // Emit all participants
 ws.broadcast(sessionId, {
-  type: 'conversation_event',
+  type: "conversation_event",
   data: {
-    speaker: 'sharingan',
-    message: 'Detected ambiguity score 75/100, asking 4 questions',
-    icon: '🔍',
-    color: 'warning'
-  }
+    speaker: "sharingan",
+    message: "Detected ambiguity score 75/100, asking 4 questions",
+    icon: "🔍",
+    color: "warning",
+  },
 });
 
 ws.broadcast(sessionId, {
-  type: 'conversation_event',
+  type: "conversation_event",
   data: {
-    speaker: 'agent',
-    message: 'Asking human for clarifications...',
-    icon: '🤖',
-    color: 'info'
-  }
+    speaker: "agent",
+    message: "Asking human for clarifications...",
+    icon: "🤖",
+    color: "info",
+  },
 });
 
 ws.broadcast(sessionId, {
-  type: 'conversation_event',
+  type: "conversation_event",
   data: {
-    speaker: 'human',
-    message: 'Indoor palms, beginners, 500 words, Saudi Arabia',
-    icon: '👤',
-    color: 'success'
-  }
+    speaker: "human",
+    message: "Indoor palms, beginners, 500 words, Saudi Arabia",
+    icon: "👤",
+    color: "success",
+  },
 });
 ```
 
 **UI component**:
+
 - Conversation timeline view (not just eye pipeline)
 - Show agent/human messages interleaved with eye decisions
 
@@ -632,6 +654,7 @@ ws.broadcast(sessionId, {
 ### ❌ R1. Fixed Pipeline Assumptions
 
 **Remove**:
+
 - Any concept of "default pipeline"
 - Linear flow diagrams showing all eyes in sequence
 - Assumptions that all eyes run for every request
@@ -644,6 +667,7 @@ ws.broadcast(sessionId, {
 ### ❌ R2. JSON-Only Approach
 
 **Remove**:
+
 - JSON Schema as the only structured output approach
 - Current `response_format: { type: "json_object" }` code
 
@@ -654,6 +678,7 @@ ws.broadcast(sessionId, {
 ### ❌ R3. Content Generation Personas
 
 **Remove**:
+
 - All examples showing eyes generating content
 - Instructions telling eyes to "create", "generate", "structure" content
 - Response examples with fully-formed briefs/templates/plans
@@ -665,6 +690,7 @@ ws.broadcast(sessionId, {
 ### ❌ R4. Single-Phase Personas
 
 **Remove**:
+
 - Combined guidance+validation personas
 - Single persona prompt containing both phases
 
@@ -675,6 +701,7 @@ ws.broadcast(sessionId, {
 ### ❌ R5. Eye Exposure in MCP Responses
 
 **Remove**:
+
 - `history` field in MCP responses
 - Any eye names/details visible to agent
 - Tool descriptions mentioning "Overseer", "Sharingan", etc.
@@ -686,6 +713,7 @@ ws.broadcast(sessionId, {
 ### ❌ R6. Static Model Configuration
 
 **Remove**:
+
 - Single model per provider
 - No differentiation between eyes
 
@@ -696,6 +724,7 @@ ws.broadcast(sessionId, {
 ### ❌ R7. Sync-Only Execution
 
 **Remove**:
+
 - Assumption that pipeline always runs synchronously
 - No pause/resume consideration
 
@@ -706,6 +735,7 @@ ws.broadcast(sessionId, {
 ### ❌ R8. Order Guard (Currently Bypassed)
 
 **Remove or Fix**:
+
 - Current order guard that's disabled for auto-router
 - Sequential order enforcement
 
@@ -720,6 +750,7 @@ ws.broadcast(sessionId, {
 #### Day 1-2: Dynamic Routing Core
 
 **Tasks**:
+
 1. Implement dynamic route selection algorithm
 2. Add capability tags to eyes table
 3. Create routing decisions table
@@ -727,6 +758,7 @@ ws.broadcast(sessionId, {
 5. Test: Request → Overseer → Dynamic route selection
 
 **Acceptance criteria**:
+
 - Overseer can analyze request and select eyes dynamically
 - No hardcoded routes
 - Routing decision logged with reasoning
@@ -736,6 +768,7 @@ ws.broadcast(sessionId, {
 #### Day 3-4: Function Calling Implementation
 
 **Tasks**:
+
 1. Add function calling to Groq provider
 2. Add function calling to OpenRouter provider
 3. Keep JSON Schema for Ollama (constrained generation)
@@ -743,6 +776,7 @@ ws.broadcast(sessionId, {
 5. Update response parsing to handle both formats
 
 **Acceptance criteria**:
+
 - 95%+ format success rate on Groq
 - 100% format success rate on Ollama/LM Studio
 - All eyes work with new format
@@ -752,12 +786,14 @@ ws.broadcast(sessionId, {
 #### Day 5-7: Persona Overhaul
 
 **Tasks**:
+
 1. Rewrite all 8 personas to ASK not GENERATE
 2. Separate guidance from validation phases
 3. Update examples to show question-asking behavior
 4. Remove content generation examples
 
 **Acceptance criteria**:
+
 - All personas instruct asking questions
 - No examples of content generation
 - Separate guidance and validation persona files
@@ -769,6 +805,7 @@ ws.broadcast(sessionId, {
 #### Day 8-10: Pause/Resume Mechanism
 
 **Tasks**:
+
 1. Create pipeline states table
 2. Create pending questions table
 3. Create human responses table
@@ -777,6 +814,7 @@ ws.broadcast(sessionId, {
 6. Update orchestrator to handle AWAIT_INPUT status
 
 **Acceptance criteria**:
+
 - Pipeline can pause when eye returns AWAIT_INPUT
 - MCP returns questions to agent
 - Agent can resume with answers
@@ -787,12 +825,14 @@ ws.broadcast(sessionId, {
 #### Day 11-12: Intent Confirmation
 
 **Tasks**:
+
 1. Create intent confirmations table
 2. Implement Jōgan confirmation flow
 3. Update MCP to handle confirmation pause
 4. Track confirmation source (human vs agent)
 
 **Acceptance criteria**:
+
 - Jōgan asks for human confirmation
 - Pipeline pauses until confirmed
 - Confirmation stored with source
@@ -802,12 +842,14 @@ ws.broadcast(sessionId, {
 #### Day 13-14: Eye Invisibility
 
 **Tasks**:
+
 1. Remove `history` from MCP responses
 2. Only return final result + session ID
 3. Update tool descriptions to remove eye mentions
 4. Ensure agent never sees internal structure
 
 **Acceptance criteria**:
+
 - Agent receives generic responses only
 - Developers can still monitor via portal
 - No eye names in agent-visible output
@@ -819,6 +861,7 @@ ws.broadcast(sessionId, {
 #### Day 15-17: Routing Policies (Constrained Dynamic Mode)
 
 **Tasks**:
+
 1. Create routing policies table
 2. Implement policy validation logic
 3. Update Overseer to respect policies
@@ -826,6 +869,7 @@ ws.broadcast(sessionId, {
 5. Add policy testing tool
 
 **Acceptance criteria**:
+
 - User can create policies (mandatory eyes, constraints)
 - Overseer routes within policy bounds
 - Reasoning explains policy compliance
@@ -835,6 +879,7 @@ ws.broadcast(sessionId, {
 #### Day 18-19: Fixed Templates
 
 **Tasks**:
+
 1. Create pipeline templates table
 2. Implement template executor (bypasses Overseer)
 3. Create template designer UI
@@ -842,6 +887,7 @@ ws.broadcast(sessionId, {
 5. Template import/export
 
 **Acceptance criteria**:
+
 - User can create fixed pipeline templates
 - Templates execute exact sequence
 - Auto-trigger works based on regex
@@ -851,12 +897,14 @@ ws.broadcast(sessionId, {
 #### Day 20-21: Mode Selection & UI Integration
 
 **Tasks**:
+
 1. Create mode selector component
 2. Add mode to session settings
 3. Integrate three modes into `/pipelines` page
 4. Add mode analytics
 
 **Acceptance criteria**:
+
 - User can choose Dynamic/Constrained/Fixed per session
 - UI adapts to selected mode
 - Analytics track which mode performs best
@@ -868,12 +916,14 @@ ws.broadcast(sessionId, {
 #### Day 22-24: Capability Matrix & Dynamic Visualizer
 
 **Tasks**:
+
 1. Create CapabilityMatrix component
 2. Create DynamicRouteVisualizer component
 3. Create LiveRoutingPanel component
 4. Update `/pipelines` page to show capabilities (not fixed pipeline)
 
 **Acceptance criteria**:
+
 - Users see capability matrix as primary view
 - Live routing decisions displayed per session
 - No "default pipeline" diagram
@@ -883,12 +933,14 @@ ws.broadcast(sessionId, {
 #### Day 25-26: Policy Builder UI
 
 **Tasks**:
+
 1. Create PolicyBuilder component
 2. Add constraint selectors (checkboxes, sliders, toggles)
 3. Add policy preview ("With these constraints, Overseer might...")
 4. Policy save/load/edit/delete
 
 **Acceptance criteria**:
+
 - Intuitive visual policy creation
 - Real-time preview of policy effects
 - Policy library management
@@ -898,6 +950,7 @@ ws.broadcast(sessionId, {
 #### Day 27-28: Template Library & Designer
 
 **Tasks**:
+
 1. Create TemplateLibrary component
 2. Create TemplateDesigner component (visual pipeline editor)
 3. Add predefined templates (Fast Code Review, Research Article, Security Audit)
@@ -905,6 +958,7 @@ ws.broadcast(sessionId, {
 5. Usage analytics per template
 
 **Acceptance criteria**:
+
 - Users can browse template library
 - Users can create custom templates visually
 - Import/export works
@@ -917,12 +971,14 @@ ws.broadcast(sessionId, {
 #### Day 29-30: Eye-Specific Model Mapping
 
 **Tasks**:
+
 1. Implement `EYE_MODEL_MAP` with researched recommendations
 2. Add model recommendation explanations
 3. Create model override UI with warnings
 4. Add success rate tracking per model per eye
 
 **Acceptance criteria**:
+
 - Each eye uses optimized model
 - Users see reasoning for recommendations
 - Can override with custom models
@@ -933,6 +989,7 @@ ws.broadcast(sessionId, {
 #### Day 31-32: Narrative Monitoring
 
 **Tasks**:
+
 1. Add conversation events (not just eye events)
 2. Track agent messages
 3. Track human messages
@@ -940,6 +997,7 @@ ws.broadcast(sessionId, {
 5. Update WebSocket events
 
 **Acceptance criteria**:
+
 - Monitor shows full conversation (overseer, eyes, agent, human)
 - Cinematic narrative view
 - Timestamps and icons
@@ -949,6 +1007,7 @@ ws.broadcast(sessionId, {
 #### Day 33-35: Testing & Polish
 
 **Tasks**:
+
 1. End-to-end test: Palm care article scenario
 2. End-to-end test: Code review scenario
 3. End-to-end test: Planning scenario
@@ -956,6 +1015,7 @@ ws.broadcast(sessionId, {
 5. Bug fixes and polish
 
 **Acceptance criteria**:
+
 - All three scenarios work end-to-end
 - No pipeline failures
 - 95%+ format success rate
@@ -1207,6 +1267,7 @@ packages/db/
 ## Summary of Changes
 
 ### Critical Additions (10)
+
 1. ✅ Dynamic routing system
 2. ✅ Three routing modes (Dynamic/Constrained/Fixed)
 3. ✅ Pause/resume mechanism
@@ -1219,6 +1280,7 @@ packages/db/
 10. ✅ Narrative monitoring
 
 ### Critical Removals (8)
+
 1. ❌ Fixed pipeline assumptions
 2. ❌ JSON-only approach
 3. ❌ Content generation personas
@@ -1229,16 +1291,19 @@ packages/db/
 8. ❌ Order guard bypass
 
 ### Database Changes
+
 - 8 new tables
 - 3 table modifications
 - Full migration scripts needed
 
 ### File Changes
+
 - 20+ new files
 - 10+ files to modify
 - Persona structure reorganization
 
 ### Timeline
+
 - **Week 1**: Foundation fixes
 - **Week 2**: Pause/resume & confirmation
 - **Week 3**: Three routing modes

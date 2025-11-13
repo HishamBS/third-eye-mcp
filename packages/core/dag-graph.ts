@@ -9,7 +9,7 @@
  * - Dependency resolution
  */
 
-import type { PipelineDagNode, PipelineDagEdge } from '@third-eye/types';
+import type { PipelineDagNode, PipelineDagEdge } from "@third-eye/types";
 
 // ============================================================================
 // Types
@@ -54,7 +54,7 @@ export class DagGraphBuilder {
   static buildGraph(
     nodes: PipelineDagNode[],
     edges: PipelineDagEdge[],
-    entryNodeId: string
+    entryNodeId: string,
   ): DagGraph {
     const nodesMap = new Map<string, PipelineDagNode>();
     const adjacencyList = new Map<string, DagEdgeInfo[]>();
@@ -70,9 +70,8 @@ export class DagGraphBuilder {
     // Build adjacency lists
     for (const edge of edges) {
       // Convert ExpressionRule to string for internal representation
-      const conditionStr = typeof edge.on === 'string'
-        ? edge.on
-        : edge.on?.expression ?? '';
+      const conditionStr =
+        typeof edge.on === "string" ? edge.on : (edge.on?.expression ?? "");
 
       const edgeInfo: DagEdgeInfo = {
         targetNodeId: edge.to,
@@ -212,7 +211,7 @@ export class DagGraphBuilder {
    */
   static identifyParallelBranches(
     graph: DagGraph,
-    startNodeId: string
+    startNodeId: string,
   ): ParallelBranches {
     const outgoingEdges = graph.adjacencyList.get(startNodeId) ?? [];
 
@@ -274,7 +273,7 @@ export class DagGraphBuilder {
   static getAllPaths(
     graph: DagGraph,
     startNodeId: string,
-    endNodeId: string
+    endNodeId: string,
   ): string[][] {
     const paths: string[][] = [];
     const visited = new Set<string>();
@@ -309,7 +308,7 @@ export class DagGraphBuilder {
     const terminalNodes: string[] = [];
 
     for (const [nodeId, edges] of graph.adjacencyList.entries()) {
-      const nonLoopEdges = edges.filter(e => !e.loop);
+      const nonLoopEdges = edges.filter((e) => !e.loop);
       if (nonLoopEdges.length === 0) {
         terminalNodes.push(nodeId);
       }
@@ -349,13 +348,17 @@ export class DagGraphBuilder {
    */
   static pruneToRequiredEyes(
     graph: DagGraph,
-    requiredEyeNames: string[]
+    requiredEyeNames: string[],
   ): DagGraph {
     // Find nodes matching required Eye names
     const requiredNodeIds = new Set<string>();
     for (const [nodeId, node] of graph.nodes.entries()) {
       // Match Eye nodes by eyeId field
-      if (node.type === 'Eye' && node.eyeId && requiredEyeNames.includes(node.eyeId)) {
+      if (
+        node.type === "Eye" &&
+        node.eyeId &&
+        requiredEyeNames.includes(node.eyeId)
+      ) {
         requiredNodeIds.add(nodeId);
       }
     }
@@ -374,7 +377,7 @@ export class DagGraphBuilder {
 
     // BFS from entry to find paths to required nodes
     const queue: Array<{ nodeId: string; path: string[] }> = [
-      { nodeId: graph.entryNodeId, path: [graph.entryNodeId] }
+      { nodeId: graph.entryNodeId, path: [graph.entryNodeId] },
     ];
     const visited = new Set<string>();
 
@@ -397,7 +400,7 @@ export class DagGraphBuilder {
         if (!edge.loop && !visited.has(edge.targetNodeId)) {
           queue.push({
             nodeId: edge.targetNodeId,
-            path: [...path, edge.targetNodeId]
+            path: [...path, edge.targetNodeId],
           });
         }
       }
@@ -430,7 +433,8 @@ export class DagGraphBuilder {
           prunedAdjacencyList.set(fromId, forwardEdges);
 
           // Add to reverse adjacency
-          const reverseEdges = prunedReverseAdjacencyList.get(edge.targetNodeId) ?? [];
+          const reverseEdges =
+            prunedReverseAdjacencyList.get(edge.targetNodeId) ?? [];
           reverseEdges.push({
             targetNodeId: fromId,
             condition: edge.condition,
@@ -464,7 +468,7 @@ export class DagGraphBuilder {
     // Check for cycles
     const cycleResult = this.detectCycles(graph);
     if (cycleResult.hasCycle) {
-      errors.push(`Cycle detected: ${cycleResult.cyclePath?.join(' -> ')}`);
+      errors.push(`Cycle detected: ${cycleResult.cyclePath?.join(" -> ")}`);
     }
 
     // Check for orphan nodes (nodes with no incoming or outgoing edges, except entry)
@@ -473,8 +477,8 @@ export class DagGraphBuilder {
 
       const incoming = graph.reverseAdjacencyList.get(nodeId) ?? [];
       const outgoing = graph.adjacencyList.get(nodeId) ?? [];
-      const nonLoopIncoming = incoming.filter(e => !e.loop);
-      const nonLoopOutgoing = outgoing.filter(e => !e.loop);
+      const nonLoopIncoming = incoming.filter((e) => !e.loop);
+      const nonLoopOutgoing = outgoing.filter((e) => !e.loop);
 
       if (nonLoopIncoming.length === 0 && nonLoopOutgoing.length === 0) {
         errors.push(`Orphan node detected: "${nodeId}"`);
@@ -506,7 +510,9 @@ export class DagGraphBuilder {
     // Check for terminal nodes
     const terminalNodes = this.findTerminalNodes(graph);
     if (terminalNodes.length === 0) {
-      errors.push('No terminal nodes found - pipeline must have at least one terminal node');
+      errors.push(
+        "No terminal nodes found - pipeline must have at least one terminal node",
+      );
     }
 
     return {

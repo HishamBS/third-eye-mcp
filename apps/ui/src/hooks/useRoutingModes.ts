@@ -6,8 +6,8 @@
  * Per R13: Centralized API logic in hooks
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import { useAPI } from './useAPI';
+import { useState, useCallback, useEffect } from "react";
+import { useAPI } from "./useAPI";
 
 // ============================================================================
 // Types
@@ -104,14 +104,18 @@ export function usePolicies(filters?: { active?: boolean }) {
       setError(null);
       const params = new URLSearchParams();
       if (filters?.active !== undefined) {
-        params.set('active', filters.active.toString());
+        params.set("active", filters.active.toString());
       }
       const queryString = params.toString();
-      const url = `/api/policies${queryString ? `?${queryString}` : ''}`;
-      const response = await api.get<{ data: { policies: RoutingPolicy[] } }>(url);
+      const url = `/api/policies${queryString ? `?${queryString}` : ""}`;
+      const response = await api.get<{ data: { policies: RoutingPolicy[] } }>(
+        url,
+      );
       setPolicies(response.data.policies);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch policies'));
+      setError(
+        err instanceof Error ? err : new Error("Failed to fetch policies"),
+      );
     } finally {
       setLoading(false);
     }
@@ -138,10 +142,14 @@ export function usePolicy(policyId: string | null) {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.get<{ data: { policy: RoutingPolicy } }>(`/api/policies/${policyId}`);
+      const response = await api.get<{ data: { policy: RoutingPolicy } }>(
+        `/api/policies/${policyId}`,
+      );
       setPolicy(response.data.policy);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch policy'));
+      setError(
+        err instanceof Error ? err : new Error("Failed to fetch policy"),
+      );
     } finally {
       setLoading(false);
     }
@@ -162,20 +170,27 @@ export function useCreatePolicy() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const createPolicy = useCallback(async (request: CreatePolicyRequest): Promise<RoutingPolicy> => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await api.post<{ data: { policy: RoutingPolicy } }>('/api/policies', request);
-      return response.data.policy;
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to create policy');
-      setError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [api]);
+  const createPolicy = useCallback(
+    async (request: CreatePolicyRequest): Promise<RoutingPolicy> => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await api.post<{ data: { policy: RoutingPolicy } }>(
+          "/api/policies",
+          request,
+        );
+        return response.data.policy;
+      } catch (err) {
+        const error =
+          err instanceof Error ? err : new Error("Failed to create policy");
+        setError(error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [api],
+  );
 
   return { createPolicy, loading, error };
 }
@@ -188,20 +203,30 @@ export function useUpdatePolicy() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const updatePolicy = useCallback(async (policyId: string, request: UpdatePolicyRequest): Promise<RoutingPolicy> => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await api.put<{ data: { policy: RoutingPolicy } }>(`/api/policies/${policyId}`, request);
-      return response.data.policy;
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to update policy');
-      setError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [api]);
+  const updatePolicy = useCallback(
+    async (
+      policyId: string,
+      request: UpdatePolicyRequest,
+    ): Promise<RoutingPolicy> => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await api.put<{ data: { policy: RoutingPolicy } }>(
+          `/api/policies/${policyId}`,
+          request,
+        );
+        return response.data.policy;
+      } catch (err) {
+        const error =
+          err instanceof Error ? err : new Error("Failed to update policy");
+        setError(error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [api],
+  );
 
   return { updatePolicy, loading, error };
 }
@@ -214,19 +239,23 @@ export function useDeletePolicy() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const deletePolicy = useCallback(async (policyId: string): Promise<void> => {
-    try {
-      setLoading(true);
-      setError(null);
-      await api.delete(`/api/policies/${policyId}`);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to delete policy');
-      setError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [api]);
+  const deletePolicy = useCallback(
+    async (policyId: string): Promise<void> => {
+      try {
+        setLoading(true);
+        setError(null);
+        await api.delete(`/api/policies/${policyId}`);
+      } catch (err) {
+        const error =
+          err instanceof Error ? err : new Error("Failed to delete policy");
+        setError(error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [api],
+  );
 
   return { deletePolicy, loading, error };
 }
@@ -239,23 +268,29 @@ export function useTestPolicy() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const testPolicy = useCallback(async (policyId: string, eyeSequence: string[]): Promise<PolicyValidationResult> => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await api.post<{ data: { result: PolicyValidationResult } }>(
-        `/api/policies/${policyId}/test`,
-        { eyeSequence }
-      );
-      return response.data.result;
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to test policy');
-      setError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [api]);
+  const testPolicy = useCallback(
+    async (
+      policyId: string,
+      eyeSequence: string[],
+    ): Promise<PolicyValidationResult> => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await api.post<{
+          data: { result: PolicyValidationResult };
+        }>(`/api/policies/${policyId}/test`, { eyeSequence });
+        return response.data.result;
+      } catch (err) {
+        const error =
+          err instanceof Error ? err : new Error("Failed to test policy");
+        setError(error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [api],
+  );
 
   return { testPolicy, loading, error };
 }
@@ -268,19 +303,23 @@ export function useActivatePolicy() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const activatePolicy = useCallback(async (policyId: string): Promise<void> => {
-    try {
-      setLoading(true);
-      setError(null);
-      await api.post(`/api/policies/${policyId}/activate`);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to activate policy');
-      setError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [api]);
+  const activatePolicy = useCallback(
+    async (policyId: string): Promise<void> => {
+      try {
+        setLoading(true);
+        setError(null);
+        await api.post(`/api/policies/${policyId}/activate`);
+      } catch (err) {
+        const error =
+          err instanceof Error ? err : new Error("Failed to activate policy");
+        setError(error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [api],
+  );
 
   return { activatePolicy, loading, error };
 }
@@ -293,19 +332,23 @@ export function useDeactivatePolicy() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const deactivatePolicy = useCallback(async (policyId: string): Promise<void> => {
-    try {
-      setLoading(true);
-      setError(null);
-      await api.post(`/api/policies/${policyId}/deactivate`);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to deactivate policy');
-      setError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [api]);
+  const deactivatePolicy = useCallback(
+    async (policyId: string): Promise<void> => {
+      try {
+        setLoading(true);
+        setError(null);
+        await api.post(`/api/policies/${policyId}/deactivate`);
+      } catch (err) {
+        const error =
+          err instanceof Error ? err : new Error("Failed to deactivate policy");
+        setError(error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [api],
+  );
 
   return { deactivatePolicy, loading, error };
 }
@@ -317,7 +360,10 @@ export function useDeactivatePolicy() {
 /**
  * List all templates with optional filtering
  */
-export function useTemplates(filters?: { public?: boolean; createdBy?: string }) {
+export function useTemplates(filters?: {
+  public?: boolean;
+  createdBy?: string;
+}) {
   const api = useAPI();
   const [templates, setTemplates] = useState<PipelineTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -329,17 +375,21 @@ export function useTemplates(filters?: { public?: boolean; createdBy?: string })
       setError(null);
       const params = new URLSearchParams();
       if (filters?.public !== undefined) {
-        params.set('public', filters.public.toString());
+        params.set("public", filters.public.toString());
       }
       if (filters?.createdBy) {
-        params.set('createdBy', filters.createdBy);
+        params.set("createdBy", filters.createdBy);
       }
       const queryString = params.toString();
-      const url = `/api/templates${queryString ? `?${queryString}` : ''}`;
-      const response = await api.get<{ data: { templates: PipelineTemplate[] } }>(url);
+      const url = `/api/templates${queryString ? `?${queryString}` : ""}`;
+      const response = await api.get<{
+        data: { templates: PipelineTemplate[] };
+      }>(url);
       setTemplates(response.data.templates);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch templates'));
+      setError(
+        err instanceof Error ? err : new Error("Failed to fetch templates"),
+      );
     } finally {
       setLoading(false);
     }
@@ -366,10 +416,14 @@ export function useTemplate(templateId: string | null) {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.get<{ data: { template: PipelineTemplate } }>(`/api/templates/${templateId}`);
+      const response = await api.get<{ data: { template: PipelineTemplate } }>(
+        `/api/templates/${templateId}`,
+      );
       setTemplate(response.data.template);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch template'));
+      setError(
+        err instanceof Error ? err : new Error("Failed to fetch template"),
+      );
     } finally {
       setLoading(false);
     }
@@ -390,20 +444,26 @@ export function useCreateTemplate() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const createTemplate = useCallback(async (request: CreateTemplateRequest): Promise<PipelineTemplate> => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await api.post<{ data: { template: PipelineTemplate } }>('/api/templates', request);
-      return response.data.template;
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to create template');
-      setError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [api]);
+  const createTemplate = useCallback(
+    async (request: CreateTemplateRequest): Promise<PipelineTemplate> => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await api.post<{
+          data: { template: PipelineTemplate };
+        }>("/api/templates", request);
+        return response.data.template;
+      } catch (err) {
+        const error =
+          err instanceof Error ? err : new Error("Failed to create template");
+        setError(error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [api],
+  );
 
   return { createTemplate, loading, error };
 }
@@ -416,19 +476,23 @@ export function useDeleteTemplate() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const deleteTemplate = useCallback(async (templateId: string): Promise<void> => {
-    try {
-      setLoading(true);
-      setError(null);
-      await api.delete(`/api/templates/${templateId}`);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to delete template');
-      setError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [api]);
+  const deleteTemplate = useCallback(
+    async (templateId: string): Promise<void> => {
+      try {
+        setLoading(true);
+        setError(null);
+        await api.delete(`/api/templates/${templateId}`);
+      } catch (err) {
+        const error =
+          err instanceof Error ? err : new Error("Failed to delete template");
+        setError(error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [api],
+  );
 
   return { deleteTemplate, loading, error };
 }
@@ -441,23 +505,28 @@ export function useMatchTemplate() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const matchTemplate = useCallback(async (request: string): Promise<{ matched: boolean; template: PipelineTemplate | null }> => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await api.post<{ data: { matched: boolean; template: PipelineTemplate | null } }>(
-        '/api/templates/match',
-        { request }
-      );
-      return response.data;
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to match template');
-      setError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [api]);
+  const matchTemplate = useCallback(
+    async (
+      request: string,
+    ): Promise<{ matched: boolean; template: PipelineTemplate | null }> => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await api.post<{
+          data: { matched: boolean; template: PipelineTemplate | null };
+        }>("/api/templates/match", { request });
+        return response.data;
+      } catch (err) {
+        const error =
+          err instanceof Error ? err : new Error("Failed to match template");
+        setError(error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [api],
+  );
 
   return { matchTemplate, loading, error };
 }
@@ -470,22 +539,26 @@ export function useExecuteTemplate() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const executeTemplate = useCallback(async (templateId: string): Promise<TemplateExecutionPlan> => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await api.post<{ data: { executionPlan: TemplateExecutionPlan } }>(
-        `/api/templates/${templateId}/execute`
-      );
-      return response.data.executionPlan;
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to execute template');
-      setError(error);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, [api]);
+  const executeTemplate = useCallback(
+    async (templateId: string): Promise<TemplateExecutionPlan> => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await api.post<{
+          data: { executionPlan: TemplateExecutionPlan };
+        }>(`/api/templates/${templateId}/execute`);
+        return response.data.executionPlan;
+      } catch (err) {
+        const error =
+          err instanceof Error ? err : new Error("Failed to execute template");
+        setError(error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [api],
+  );
 
   return { executeTemplate, loading, error };
 }

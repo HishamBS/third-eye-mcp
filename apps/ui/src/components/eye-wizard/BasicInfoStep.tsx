@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import type { WizardStepProps } from '@/types/eye-wizard';
+import { useState, useCallback } from "react";
+import type { WizardStepProps } from "@/types/eye-wizard";
 import {
   BASIC_INFO_LABELS,
   CHAR_LIMITS,
   VALIDATION_MESSAGES,
-} from './constants';
+} from "./constants";
 
 /**
  * BasicInfoStep - Step 1 of EyeWizard
@@ -30,18 +30,21 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
   }, []);
 
   // Validate description
-  const validateDescription = useCallback((description: string): string | null => {
-    if (!description.trim()) {
-      return VALIDATION_MESSAGES.DESCRIPTION_REQUIRED;
-    }
-    if (description.trim().length < CHAR_LIMITS.DESCRIPTION_MIN) {
-      return VALIDATION_MESSAGES.DESCRIPTION_TOO_SHORT;
-    }
-    if (description.trim().length > CHAR_LIMITS.DESCRIPTION_MAX) {
-      return VALIDATION_MESSAGES.DESCRIPTION_TOO_LONG;
-    }
-    return null;
-  }, []);
+  const validateDescription = useCallback(
+    (description: string): string | null => {
+      if (!description.trim()) {
+        return VALIDATION_MESSAGES.DESCRIPTION_REQUIRED;
+      }
+      if (description.trim().length < CHAR_LIMITS.DESCRIPTION_MIN) {
+        return VALIDATION_MESSAGES.DESCRIPTION_TOO_SHORT;
+      }
+      if (description.trim().length > CHAR_LIMITS.DESCRIPTION_MAX) {
+        return VALIDATION_MESSAGES.DESCRIPTION_TOO_LONG;
+      }
+      return null;
+    },
+    [],
+  );
 
   // Validate icon SVG
   const validateIconSvg = useCallback((iconSvg: string): string | null => {
@@ -59,15 +62,15 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
   const handleNameChange = useCallback(
     (value: string) => {
       dispatch({
-        type: 'UPDATE_BASIC_INFO',
+        type: "UPDATE_BASIC_INFO",
         payload: { name: value },
       });
       // Clear error on change
       if (errors.name) {
-        setErrors((prev) => ({ ...prev, name: '' }));
+        setErrors((prev) => ({ ...prev, name: "" }));
       }
     },
-    [dispatch, errors.name]
+    [dispatch, errors.name],
   );
 
   // Handle name blur
@@ -82,15 +85,15 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
   const handleDescriptionChange = useCallback(
     (value: string) => {
       dispatch({
-        type: 'UPDATE_BASIC_INFO',
+        type: "UPDATE_BASIC_INFO",
         payload: { description: value },
       });
       // Clear error on change
       if (errors.description) {
-        setErrors((prev) => ({ ...prev, description: '' }));
+        setErrors((prev) => ({ ...prev, description: "" }));
       }
     },
-    [dispatch, errors.description]
+    [dispatch, errors.description],
   );
 
   // Handle description blur
@@ -105,15 +108,15 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
   const handleIconSvgChange = useCallback(
     (value: string) => {
       dispatch({
-        type: 'UPDATE_BASIC_INFO',
+        type: "UPDATE_BASIC_INFO",
         payload: { iconSvg: value },
       });
       // Clear error on change
       if (errors.iconSvg) {
-        setErrors((prev) => ({ ...prev, iconSvg: '' }));
+        setErrors((prev) => ({ ...prev, iconSvg: "" }));
       }
     },
-    [dispatch, errors.iconSvg]
+    [dispatch, errors.iconSvg],
   );
 
   // Handle icon SVG blur
@@ -146,10 +149,12 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
       setIsDragging(false);
 
       const files = Array.from(e.dataTransfer.files);
-      const svgFile = files.find((file) => file.type === 'image/svg+xml' || file.name.endsWith('.svg'));
+      const svgFile = files.find(
+        (file) => file.type === "image/svg+xml" || file.name.endsWith(".svg"),
+      );
 
       if (!svgFile) {
-        setErrors((prev) => ({ ...prev, iconSvg: 'Please drop an SVG file' }));
+        setErrors((prev) => ({ ...prev, iconSvg: "Please drop an SVG file" }));
         return;
       }
 
@@ -164,11 +169,11 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
         }
       };
       reader.onerror = () => {
-        setErrors((prev) => ({ ...prev, iconSvg: 'Failed to read SVG file' }));
+        setErrors((prev) => ({ ...prev, iconSvg: "Failed to read SVG file" }));
       };
       reader.readAsText(svgFile);
     },
-    [handleIconSvgChange, validateIconSvg]
+    [handleIconSvgChange, validateIconSvg],
   );
 
   const { name, description, iconSvg } = state.formData;
@@ -188,7 +193,7 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
           onBlur={handleNameBlur}
           placeholder={BASIC_INFO_LABELS.NAME_PLACEHOLDER}
           className={`w-full rounded-xl border ${
-            errors.name ? 'border-status-error' : 'border-brand-outline/50'
+            errors.name ? "border-status-error" : "border-brand-outline/50"
           } bg-brand-paper px-4 py-2 text-brand-foreground transition focus:border-brand-accent focus:outline-none`}
           maxLength={CHAR_LIMITS.NAME_MAX}
         />
@@ -196,7 +201,9 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
           {errors.name ? (
             <p className="text-xs text-status-error">{errors.name}</p>
           ) : (
-            <p className="text-xs text-semantic-muted">{BASIC_INFO_LABELS.NAME_HELP}</p>
+            <p className="text-xs text-semantic-muted">
+              {BASIC_INFO_LABELS.NAME_HELP}
+            </p>
           )}
           <span className="text-xs text-semantic-muted">
             {name.length}/{CHAR_LIMITS.NAME_MAX}
@@ -217,7 +224,9 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
           placeholder={BASIC_INFO_LABELS.DESCRIPTION_PLACEHOLDER}
           rows={4}
           className={`w-full rounded-xl border ${
-            errors.description ? 'border-status-error' : 'border-brand-outline/50'
+            errors.description
+              ? "border-status-error"
+              : "border-brand-outline/50"
           } bg-brand-paper px-4 py-2 text-brand-foreground transition focus:border-brand-accent focus:outline-none`}
           maxLength={CHAR_LIMITS.DESCRIPTION_MAX}
         />
@@ -225,7 +234,9 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
           {errors.description ? (
             <p className="text-xs text-status-error">{errors.description}</p>
           ) : (
-            <p className="text-xs text-semantic-muted">{BASIC_INFO_LABELS.DESCRIPTION_HELP}</p>
+            <p className="text-xs text-semantic-muted">
+              {BASIC_INFO_LABELS.DESCRIPTION_HELP}
+            </p>
           )}
           <span className="text-xs text-semantic-muted">
             {description.length}/{CHAR_LIMITS.DESCRIPTION_MAX}
@@ -244,15 +255,17 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
           onDrop={handleDrop}
           className={`relative rounded-xl border-2 transition-all ${
             isDragging
-              ? 'border-brand-accent bg-brand-accent/10 border-dashed'
+              ? "border-brand-accent bg-brand-accent/10 border-dashed"
               : errors.iconSvg
-              ? 'border-status-error'
-              : 'border-brand-outline/50'
+                ? "border-status-error"
+                : "border-brand-outline/50"
           }`}
         >
           {isDragging && (
             <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-brand-accent/20 backdrop-blur-sm">
-              <p className="text-lg font-semibold text-brand-accent">Drop SVG file here</p>
+              <p className="text-lg font-semibold text-brand-accent">
+                Drop SVG file here
+              </p>
             </div>
           )}
           <textarea
@@ -269,7 +282,9 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
           {errors.iconSvg ? (
             <p className="text-xs text-status-error">{errors.iconSvg}</p>
           ) : (
-            <p className="text-xs text-semantic-muted">{BASIC_INFO_LABELS.ICON_SVG_HELP}</p>
+            <p className="text-xs text-semantic-muted">
+              {BASIC_INFO_LABELS.ICON_SVG_HELP}
+            </p>
           )}
           <span className="text-xs text-semantic-muted">
             {iconSvg.length}/{CHAR_LIMITS.ICON_SVG_MAX}
@@ -279,7 +294,9 @@ export function BasicInfoStep({ state, dispatch }: WizardStepProps) {
         {/* SVG Preview */}
         {iconSvg && !errors.iconSvg && (
           <div className="mt-4 rounded-lg border border-brand-outline/50 bg-brand-paperElev p-4">
-            <p className="mb-2 text-xs font-medium text-semantic-muted">Preview:</p>
+            <p className="mb-2 text-xs font-medium text-semantic-muted">
+              Preview:
+            </p>
             <div
               className="flex items-center justify-center"
               dangerouslySetInnerHTML={{ __html: iconSvg }}

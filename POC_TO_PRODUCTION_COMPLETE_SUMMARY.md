@@ -13,18 +13,19 @@ The Third Eye MCP system has been successfully transformed from proof-of-concept
 
 ### What Was Accomplished
 
-| Phase | Status | Completion | Lines of Code | Key Deliverables |
-|-------|--------|------------|---------------|------------------|
-| **Phase 1**: Foundation Fixes | ✅ Complete | 150% | 1,200+ | Dynamic routing, database schema, migrations |
-| **Phase 2**: Pause/Resume & Confirmation | ✅ Complete | 100% | 800+ | State persistence, intent confirmation, resume flow |
-| **Phase 3**: Three Routing Modes | ✅ Complete | 100% | 1,400+ | Policies, templates, routing modes UI |
-| **Phase 4**: Pipeline Builder | ✅ Complete | 100% | 2,576 | Capability matrix, routing visualizer, mode selector |
-| **Phase 5**: Model Recommendations | 🟡 Partial | 10% | 300 | Model mapping SSOT (started) |
-| **Total** | | **93%** | **6,276+** | Production-ready system |
+| Phase                                    | Status      | Completion | Lines of Code | Key Deliverables                                     |
+| ---------------------------------------- | ----------- | ---------- | ------------- | ---------------------------------------------------- |
+| **Phase 1**: Foundation Fixes            | ✅ Complete | 150%       | 1,200+        | Dynamic routing, database schema, migrations         |
+| **Phase 2**: Pause/Resume & Confirmation | ✅ Complete | 100%       | 800+          | State persistence, intent confirmation, resume flow  |
+| **Phase 3**: Three Routing Modes         | ✅ Complete | 100%       | 1,400+        | Policies, templates, routing modes UI                |
+| **Phase 4**: Pipeline Builder            | ✅ Complete | 100%       | 2,576         | Capability matrix, routing visualizer, mode selector |
+| **Phase 5**: Model Recommendations       | 🟡 Partial  | 10%        | 300           | Model mapping SSOT (started)                         |
+| **Total**                                |             | **93%**    | **6,276+**    | Production-ready system                              |
 
 ### Core Transformation
 
 **FROM (POC)**:
+
 - Fixed linear pipeline
 - No dynamic routing
 - No pause/resume
@@ -32,6 +33,7 @@ The Third Eye MCP system has been successfully transformed from proof-of-concept
 - Fixed pipeline diagram UI
 
 **TO (Production)**:
+
 - ✅ Fully dynamic routing (Overseer decides)
 - ✅ Three routing modes (Dynamic, Constrained, Fixed)
 - ✅ Pause/resume with state persistence
@@ -51,6 +53,7 @@ The Third Eye MCP system has been successfully transformed from proof-of-concept
 ### What Was Built
 
 #### A1: Dynamic Routing System
+
 - **Auto-router** with dynamic eye selection
 - **Routing decisions table** for analytics
 - **Capability tags** on eyes table
@@ -61,11 +64,13 @@ The Third Eye MCP system has been successfully transformed from proof-of-concept
 **Impact**: Overseer now dynamically selects eyes based on request analysis, not fixed sequences.
 
 #### A2: Three Routing Modes
+
 - **Fully Dynamic**: Overseer decides everything
 - **Constrained Dynamic**: Policy-enforced routing
 - **Fixed Template**: Predefined sequences
 
 **Database Tables**:
+
 ```sql
 routing_policies (9 columns)
 pipeline_templates (9 columns)
@@ -73,15 +78,18 @@ routing_decisions (7 columns)
 ```
 
 #### A3: Pause/Resume Mechanism
+
 - **Pipeline state persistence** in database
 - **Pending questions table** for human-in-loop
 - **Resume flow** with state restoration
 
 **Key Files**:
+
 - `packages/core/pause-resume-manager.ts` (254 lines)
 - Database tables: `pipeline_states`, `pending_questions`, `human_responses`
 
 #### A4: Intent Confirmation Flow
+
 - **Jōgan confirmation** before task execution
 - **Confirmation tracking** with status
 - **Resume with approval/rejection**
@@ -90,6 +98,7 @@ routing_decisions (7 columns)
 **Database Table**: `intent_confirmations` (8 columns)
 
 #### A5: Database Migration Strategy
+
 - **Single consolidated migration** for v1 release
 - **All Phase 1-3 tables** in one file
 - **Performance indexes** (6 indexes)
@@ -123,17 +132,20 @@ routing_decisions (7 columns)
 ### What Was Built
 
 #### 2A: Pause/Resume Manager
+
 - **State persistence** with resume tokens
 - **Question queue** management
 - **Human response** validation
 
 **Key Features**:
+
 - Save pipeline state mid-execution
 - Store pending questions with expiration
 - Resume from exact pause point
 - Validate human responses before continuing
 
 #### 2B: Intent Confirmation Resume Flow
+
 - **MCP server integration** for confirmation
 - **Confirmation response handling** (approved/rejected)
 - **Early exit** on rejection
@@ -142,6 +154,7 @@ routing_decisions (7 columns)
 **Key File**: `packages/mcp/server.ts` (updated with confirmation logic)
 
 **Flow**:
+
 ```
 Agent Request → Jōgan Creates Confirmation → Pipeline Pauses
 → Agent Gets confirmationId → Agent Asks Human → Human Responds
@@ -173,18 +186,20 @@ Agent Request → Jōgan Creates Confirmation → Pipeline Pauses
 ### What Was Built
 
 #### 3A: Backend Integration
+
 - **Auto-router** updated with three mode selection
 - **PolicyValidator** for constraint validation
 - **TemplateExecutor** for fixed sequences
 - **PolicyManager** utility class (274 lines)
 
 **Routing Logic**:
+
 ```typescript
-if (mode === 'fixed') {
+if (mode === "fixed") {
   return TemplateExecutor.executeTemplate(templateId);
 }
 
-if (mode === 'constrained') {
+if (mode === "constrained") {
   const route = Overseer.route(input, policyConstraints);
   return PolicyValidator.validate(route, policy);
 }
@@ -194,18 +209,21 @@ return Overseer.route(input);
 ```
 
 #### 3B: API Endpoints
+
 - **Policies API**: 8 endpoints (271 lines)
   - List, get, create, update, delete, test, activate, deactivate
 - **Templates API**: 7 endpoints (215 lines)
   - List, get, create, delete, match, execute, stats
 
 **Key Features**:
+
 - Input validation with Zod
 - WebSocket broadcasting on changes
 - Success/error response envelopes
 - Pagination support
 
 #### 3C: UI Components
+
 - **Routing Modes Page**: `/routing-modes` (658 lines)
 - **Custom Hooks**: `useRoutingModes.ts` (456 lines)
   - 8 policy hooks
@@ -213,6 +231,7 @@ return Overseer.route(input);
   - Full CRUD operations
 
 **UI Features**:
+
 - Policy management (create, edit, delete, activate)
 - Template management (create, delete, execute)
 - Real-time updates (WebSocket-ready)
@@ -245,29 +264,34 @@ return Overseer.route(input);
 ### What Was Built
 
 #### 4A: Eye Capabilities SSOT
+
 **File**: `packages/config/eye-capabilities.ts` (94 lines)
 
 **Capabilities Defined**:
+
 ```typescript
-overseer:   routing, analysis, decision-making
-sharingan:  ambiguity-detection, clarification, questions
-kyuubi:     structuring, guidance, framework
-jogan:      intent-confirmation, approval, scope-validation
-rinnegan:   feasibility, validation, planning
-mangekyo:   code-review, security, best-practices
-tenseigan:  quality-check, completeness, refinement
-byakugan:   final-review, delivery, output-formatting
+overseer: (routing, analysis, decision - making);
+sharingan: (ambiguity - detection, clarification, questions);
+kyuubi: (structuring, guidance, framework);
+jogan: (intent - confirmation, approval, scope - validation);
+rinnegan: (feasibility, validation, planning);
+mangekyo: (code - review, security, best - practices);
+tenseigan: (quality - check, completeness, refinement);
+byakugan: (final - review, delivery, output - formatting);
 ```
 
 #### 4B: Routing Decisions API
+
 **File**: `apps/server/src/routes/routing-decisions.ts` (266 lines)
 
 **Endpoints**:
+
 - `GET /api/routing-decisions` - List with pagination
 - `GET /api/routing-decisions/session/:id` - By session
 - `GET /api/routing-decisions/:id` - By ID
 
 **Response Format**:
+
 ```typescript
 {
   id, sessionId,
@@ -280,6 +304,7 @@ byakugan:   final-review, delivery, output-formatting
 ```
 
 #### 4C: React Hooks
+
 - **useRoutingDecisions** (173 lines)
   - List decisions with pagination
   - Get by session
@@ -292,32 +317,38 @@ byakugan:   final-review, delivery, output-formatting
 #### 4D: UI Components
 
 **CapabilityMatrix** (294 lines)
+
 - Shows what eyes CAN do (not fixed pipeline)
 - Eye cards with icon, name, description, tags
 - Click for detail modal
 - Highlights selected eyes from routing decisions
 
 **DynamicRouteVisualizer** (195 lines)
+
 - Shows Overseer's routing decision for a session
 - Request analysis (type, domain, complexity)
 - Overseer reasoning (why eyes were chosen)
 - Selected eyes flow (visual diagram)
 
 **LiveRoutingPanel** (188 lines)
+
 - Real-time list of recent sessions
 - Session cards with routing info
 - Click to view detailed decision
 - Refresh button (WebSocket-ready)
 
 **PipelineModeSelector** (126 lines)
+
 - Three mode cards: Dynamic, Constrained, Fixed
 - Visual selection indicator
 - Mode descriptions and badges
 
 #### 4E: /pipelines Page Integration
+
 **File**: `apps/ui/src/app/pipelines/page.tsx` (112 lines - complete rewrite)
 
 **Layout**:
+
 ```
 ┌─────────────────────────────────────────────────┐
 │  Pipeline Builder                               │
@@ -345,11 +376,13 @@ byakugan:   final-review, delivery, output-formatting
 ### User Experience Impact
 
 **BEFORE Phase 4**:
+
 - Users saw fixed pipeline diagram
 - Assumed all eyes always run
 - No visibility into routing
 
 **AFTER Phase 4**:
+
 - Users see capability matrix
 - Understand dynamic routing
 - See Overseer's decision reasoning
@@ -374,15 +407,18 @@ byakugan:   final-review, delivery, output-formatting
 ### What Was Built
 
 #### 5A: Eye-Model Mapping SSOT
+
 **File**: `packages/config/eye-model-recommendations.ts` (300 lines)
 
 **Model Mappings**:
+
 - **Groq**: llama-3-groq-70b-tool-use (95-98% success)
 - **OpenRouter**: Mixed (Llama 3.3 70B, Qwen 2.5 72B, DeepSeek R1)
 - **Ollama**: Local models (100% success with JSON Schema)
 - **LM Studio**: GGUF models (100% success with grammar)
 
 **Per-Eye Recommendations**:
+
 - Each eye has optimal model per provider
 - Reasoning for recommendation
 - Strengths list
@@ -391,18 +427,21 @@ byakugan:   final-review, delivery, output-formatting
 ### What Remains (Phase 5 - 90%)
 
 #### 5B: Model Recommendation UI (Not Started)
+
 - [ ] Model recommendation panel per eye
 - [ ] Show reasoning and strengths
 - [ ] Allow model override with warnings
 - [ ] Success rate display
 
 #### 5C: Narrative Monitoring (Not Started)
+
 - [ ] Conversation events (agent/human messages)
 - [ ] Conversation timeline UI
 - [ ] WebSocket integration for real-time
 - [ ] Cinematic narrative view
 
 #### 5D: Testing & Polish (Not Started)
+
 - [ ] End-to-end test scenarios
 - [ ] Performance testing
 - [ ] Bug fixes
@@ -432,22 +471,22 @@ Overall: ████████████████     93% (Production Re
 
 ### Lines of Code Summary
 
-| Category | Lines | Files |
-|----------|-------|-------|
-| Backend (Core, Routing, Managers) | 2,500+ | 12 |
-| API (Routes, Endpoints) | 1,800+ | 8 |
-| Frontend (Hooks, Components) | 2,000+ | 15 |
-| Documentation | 2,500+ | 6 |
-| **Total** | **8,800+** | **41** |
+| Category                          | Lines      | Files  |
+| --------------------------------- | ---------- | ------ |
+| Backend (Core, Routing, Managers) | 2,500+     | 12     |
+| API (Routes, Endpoints)           | 1,800+     | 8      |
+| Frontend (Hooks, Components)      | 2,000+     | 15     |
+| Documentation                     | 2,500+     | 6      |
+| **Total**                         | **8,800+** | **41** |
 
 ### Database Schema
 
-| Entity | Tables | Columns | Indexes |
-|--------|--------|---------|---------|
-| Routing | 3 | 27 | 6 |
-| State Management | 3 | 22 | 4 |
-| Core | 8 | 45 | 8 |
-| **Total** | **14** | **94** | **18** |
+| Entity           | Tables | Columns | Indexes |
+| ---------------- | ------ | ------- | ------- |
+| Routing          | 3      | 27      | 6       |
+| State Management | 3      | 22      | 4       |
+| Core             | 8      | 45      | 8       |
+| **Total**        | **14** | **94**  | **18**  |
 
 ---
 
@@ -456,6 +495,7 @@ Overall: ████████████████     93% (Production Re
 ### ✅ Production Ready Features
 
 **Core Functionality**:
+
 - ✅ Dynamic routing with Overseer decision-making
 - ✅ Three routing modes (Dynamic, Constrained, Fixed)
 - ✅ Pause/resume with state persistence
@@ -464,6 +504,7 @@ Overall: ████████████████     93% (Production Re
 - ✅ Template-based sequences
 
 **User Interface**:
+
 - ✅ Capability matrix (no fixed pipeline assumptions)
 - ✅ Live routing decision visualization
 - ✅ Mode selector with three modes
@@ -472,6 +513,7 @@ Overall: ████████████████     93% (Production Re
 - ✅ Real-time session tracking
 
 **Backend/API**:
+
 - ✅ Routing decisions API (3 endpoints)
 - ✅ Policies API (8 endpoints)
 - ✅ Templates API (7 endpoints)
@@ -480,12 +522,14 @@ Overall: ████████████████     93% (Production Re
 - ✅ State persistence
 
 **Database**:
+
 - ✅ Single consolidated migration
 - ✅ 14 tables with proper relationships
 - ✅ 18 performance indexes
 - ✅ Full CRUD operations
 
 **Code Quality**:
+
 - ✅ 100% TypeScript (zero `any` types)
 - ✅ SSOT for all configurations
 - ✅ Memoized callbacks throughout
@@ -495,16 +539,19 @@ Overall: ████████████████     93% (Production Re
 ### 🟡 Optional Enhancements (Phase 5)
 
 **Model Recommendations**:
+
 - 🟡 UI to show/override model recommendations
 - 🟡 Success rate tracking per model
 - 🟡 Model performance analytics
 
 **Narrative Monitoring**:
+
 - 🟡 Conversation timeline with agent/human messages
 - 🟡 WebSocket real-time updates
 - 🟡 Cinematic narrative view
 
 **Testing & Polish**:
+
 - 🟡 Comprehensive end-to-end tests
 - 🟡 Performance benchmarks
 - 🟡 Load testing
@@ -512,12 +559,14 @@ Overall: ████████████████     93% (Production Re
 ### ❌ Known Limitations
 
 **Current State**:
+
 1. **Empty Routing Decisions**: Table empty until sessions created
 2. **WebSocket Not Integrated**: LiveRoutingPanel uses manual refresh
 3. **Model Recommendations UI**: Not implemented (SSOT exists)
 4. **Narrative Monitoring**: Not implemented
 
 **Workarounds**:
+
 1. **Empty State**: Helpful UI placeholder shown
 2. **Manual Refresh**: Refresh button provided
 3. **Model Selection**: Use existing routing configuration
@@ -573,11 +622,11 @@ async resumePipeline(sessionId, humanResponse) {
 if (confirmationId && confirmationResponse) {
   const confirmation = await IntentConfirmationManager.submitConfirmation(
     confirmationId,
-    { confirmed: true, response: confirmationResponse }
+    { confirmed: true, response: confirmationResponse },
   );
 
-  if (confirmation.status === 'rejected') {
-    return { status: 'rejected', verdict: 'REJECTED' };
+  if (confirmation.status === "rejected") {
+    return { status: "rejected", verdict: "REJECTED" };
   }
 
   // Continue pipeline
@@ -605,6 +654,7 @@ if (confirmationId && confirmationResponse) {
 ### For Users Upgrading from POC
 
 **What Changed**:
+
 1. **Pipeline Builder**: Now shows capability matrix, not fixed pipeline
 2. **Routing**: Overseer decides dynamically (not predetermined)
 3. **Modes**: Three routing modes available
@@ -612,12 +662,14 @@ if (confirmationId && confirmationResponse) {
 5. **Confirmation**: Intent confirmation before task execution
 
 **Backward Compatibility**:
+
 - ✅ Old pipeline editor available in "Fixed" mode
 - ✅ Existing custom pipelines still work
 - ✅ No breaking API changes
 - ✅ Database migration handles upgrade
 
 **User Action Required**:
+
 - None - fully backward compatible
 - Optional: Switch to "Dynamic" mode for intelligent routing
 - Optional: Create policies for constrained routing
@@ -629,32 +681,32 @@ if (confirmationId && confirmationResponse) {
 
 ### Bundle Size
 
-| Component | Size (gzipped) |
-|-----------|----------------|
-| Eye Capabilities Config | 2 KB |
-| Model Recommendations Config | 5 KB |
-| Routing Decisions API | 3 KB |
-| UI Components (Phase 4) | 15 KB |
-| React Hooks | 5 KB |
-| **Total New Code** | **30 KB** |
+| Component                    | Size (gzipped) |
+| ---------------------------- | -------------- |
+| Eye Capabilities Config      | 2 KB           |
+| Model Recommendations Config | 5 KB           |
+| Routing Decisions API        | 3 KB           |
+| UI Components (Phase 4)      | 15 KB          |
+| React Hooks                  | 5 KB           |
+| **Total New Code**           | **30 KB**      |
 
 ### API Performance (Expected)
 
-| Endpoint | Response Time |
-|----------|---------------|
-| GET /api/eyes/all | < 10ms |
-| GET /api/routing-decisions | < 20ms |
-| GET /api/policies | < 15ms |
-| GET /api/templates | < 15ms |
+| Endpoint                   | Response Time |
+| -------------------------- | ------------- |
+| GET /api/eyes/all          | < 10ms        |
+| GET /api/routing-decisions | < 20ms        |
+| GET /api/policies          | < 15ms        |
+| GET /api/templates         | < 15ms        |
 
 ### UI Performance (Expected)
 
-| Component | Load Time |
-|-----------|-----------|
-| CapabilityMatrix | < 100ms |
-| LiveRoutingPanel | < 200ms |
-| Mode Switching | < 50ms |
-| Route Visualizer | < 150ms |
+| Component        | Load Time |
+| ---------------- | --------- |
+| CapabilityMatrix | < 100ms   |
+| LiveRoutingPanel | < 200ms   |
+| Mode Switching   | < 50ms    |
+| Route Visualizer | < 150ms   |
 
 ---
 
@@ -663,6 +715,7 @@ if (confirmationId && confirmationResponse) {
 ### Manual Testing Completed
 
 ✅ **Backend**:
+
 - [x] Dynamic routing works
 - [x] Pause/resume state persistence
 - [x] Intent confirmation flow
@@ -671,12 +724,14 @@ if (confirmationId && confirmationResponse) {
 - [x] Database migrations
 
 ✅ **API**:
+
 - [x] All endpoints return correct format
 - [x] Input validation works
 - [x] Error handling correct
 - [x] Pagination works
 
 ✅ **UI**:
+
 - [x] /pipelines page loads
 - [x] Mode selector switches modes
 - [x] CapabilityMatrix renders eye cards
@@ -686,6 +741,7 @@ if (confirmationId && confirmationResponse) {
 ### Automated Testing Needed
 
 🟡 **Unit Tests** (Not Critical):
+
 - [ ] Auto-router mode selection
 - [ ] Policy validator logic
 - [ ] Template executor logic
@@ -693,6 +749,7 @@ if (confirmationId && confirmationResponse) {
 - [ ] Intent confirmation manager
 
 🟡 **Integration Tests** (Not Critical):
+
 - [ ] End-to-end routing flow
 - [ ] Pause/resume cycle
 - [ ] Intent confirmation cycle
@@ -700,6 +757,7 @@ if (confirmationId && confirmationResponse) {
 - [ ] Template execution
 
 🟡 **E2E Tests** (Phase 5 Goal):
+
 - [ ] Palm care article scenario
 - [ ] Code review scenario
 - [ ] Planning scenario
@@ -737,6 +795,7 @@ None currently identified. All implemented features work as expected.
 ### For Immediate Production Use
 
 **READY**:
+
 1. ✅ Deploy current codebase to production
 2. ✅ All core features functional
 3. ✅ No breaking changes
@@ -744,6 +803,7 @@ None currently identified. All implemented features work as expected.
 5. ✅ Database migration tested
 
 **SUGGESTED**:
+
 1. Monitor routing decisions in production
 2. Gather user feedback on three modes
 3. Track which mode is most popular
@@ -752,12 +812,14 @@ None currently identified. All implemented features work as expected.
 ### For Future Enhancements (Optional)
 
 **Phase 5 Remaining (10% → 100%)**:
+
 1. Model recommendation UI (10% complete)
 2. Narrative monitoring system (0% complete)
 3. End-to-end testing suite (0% complete)
 4. Performance benchmarks (0% complete)
 
 **Estimated Effort**:
+
 - Model Recommendation UI: 1-2 days
 - Narrative Monitoring: 2-3 days
 - Testing & Polish: 2-3 days
@@ -772,6 +834,7 @@ None currently identified. All implemented features work as expected.
 ### What We Accomplished
 
 **Phases Delivered**:
+
 - ✅ Phase 1: Foundation Fixes (150%)
 - ✅ Phase 2: Pause/Resume & Confirmation (100%)
 - ✅ Phase 3: Three Routing Modes (100%)
@@ -783,6 +846,7 @@ None currently identified. All implemented features work as expected.
 **Production Ready**: ✅ YES
 
 **Key Achievements**:
+
 1. Transformed from POC to production-ready system
 2. Implemented dynamic routing (no fixed pipeline)
 3. Three routing modes (Dynamic, Constrained, Fixed)
@@ -797,6 +861,7 @@ None currently identified. All implemented features work as expected.
 ### What's Next (Optional)
 
 **Phase 5 Completion** (Optional Enhancement):
+
 - Model recommendation UI
 - Narrative monitoring
 - Comprehensive testing

@@ -1,14 +1,18 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback } from 'react';
-import { X } from 'lucide-react';
-import { toast } from 'sonner';
-import type { EyeWizardModalProps, EyeFormData, UpdateEyePayload } from '@/types/eye-wizard';
-import { formDataToPayload, eyeToFormData } from '@/types/eye-wizard';
-import type { Eye } from '@/types/api';
-import { EyeWizard } from './EyeWizard';
-import { SUCCESS_MESSAGES } from './constants';
-import { API_BASE_URL } from '@/consts/api';
+import { useEffect, useState, useCallback } from "react";
+import { X } from "lucide-react";
+import { toast } from "sonner";
+import type {
+  EyeWizardModalProps,
+  EyeFormData,
+  UpdateEyePayload,
+} from "@/types/eye-wizard";
+import { formDataToPayload, eyeToFormData } from "@/types/eye-wizard";
+import type { Eye } from "@/types/api";
+import { EyeWizard } from "./EyeWizard";
+import { SUCCESS_MESSAGES } from "./constants";
+import { API_BASE_URL } from "@/consts/api";
 
 /**
  * EyeWizardModal - Wrapper component for EyeWizard
@@ -22,7 +26,9 @@ export function EyeWizardModal({
   onClose,
   onSuccess,
 }: EyeWizardModalProps) {
-  const [initialData, setInitialData] = useState<Partial<EyeFormData> | undefined>(undefined);
+  const [initialData, setInitialData] = useState<
+    Partial<EyeFormData> | undefined
+  >(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -38,35 +44,37 @@ export function EyeWizardModal({
         setIsLoading(true);
         setLoadError(null);
 
-        console.log('[EyeWizardModal] Fetching eye data for ID:', eyeId);
+        console.log("[EyeWizardModal] Fetching eye data for ID:", eyeId);
         const response = await fetch(`${API_BASE_URL}/api/eyes/${eyeId}`);
-        console.log('[EyeWizardModal] Response status:', response.status);
-        
+        console.log("[EyeWizardModal] Response status:", response.status);
+
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('[EyeWizardModal] Error response:', errorText);
+          console.error("[EyeWizardModal] Error response:", errorText);
           throw new Error(`Failed to fetch Eye data: ${response.status}`);
         }
 
         const result = await response.json();
-        console.log('[EyeWizardModal] Response data:', result);
-        
+        console.log("[EyeWizardModal] Response data:", result);
+
         // Handle both {data: eye} and direct eye response formats
         const eye: Eye = result.data || result;
-        
+
         if (!eye || !eye.id) {
-          console.error('[EyeWizardModal] Invalid eye data:', eye);
-          throw new Error('Invalid Eye data received from server');
+          console.error("[EyeWizardModal] Invalid eye data:", eye);
+          throw new Error("Invalid Eye data received from server");
         }
 
-        console.log('[EyeWizardModal] Converting eye to form data:', eye);
+        console.log("[EyeWizardModal] Converting eye to form data:", eye);
         // Convert Eye to form data
         const formData = eyeToFormData(eye);
-        console.log('[EyeWizardModal] Form data:', formData);
+        console.log("[EyeWizardModal] Form data:", formData);
         setInitialData(formData);
       } catch (error) {
-        console.error('[EyeWizardModal] Failed to fetch Eye data:', error);
-        setLoadError(error instanceof Error ? error.message : 'Failed to load Eye data');
+        console.error("[EyeWizardModal] Failed to fetch Eye data:", error);
+        setLoadError(
+          error instanceof Error ? error.message : "Failed to load Eye data",
+        );
       } finally {
         setIsLoading(false);
       }
@@ -83,20 +91,20 @@ export function EyeWizardModal({
         const id = targetEyeId || eyeId;
 
         if (!id) {
-          throw new Error('Eye ID is required');
+          throw new Error("Eye ID is required");
         }
 
         const response = await fetch(`${API_BASE_URL}/api/eyes/${id}`, {
-          method: 'PUT',
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error?.message || 'Failed to update Eye');
+          throw new Error(errorData.error?.message || "Failed to update Eye");
         }
 
         // Success!
@@ -104,12 +112,14 @@ export function EyeWizardModal({
         onSuccess?.();
         onClose();
       } catch (error) {
-        console.error('Failed to save Eye:', error);
-        toast.error(error instanceof Error ? error.message : 'Failed to save Eye');
+        console.error("Failed to save Eye:", error);
+        toast.error(
+          error instanceof Error ? error.message : "Failed to save Eye",
+        );
         throw error; // Re-throw to let wizard handle it
       }
     },
-    [eyeId, onSuccess, onClose]
+    [eyeId, onSuccess, onClose],
   );
 
   // Handle modal backdrop click
@@ -119,7 +129,7 @@ export function EyeWizardModal({
         onClose();
       }
     },
-    [onClose]
+    [onClose],
   );
 
   // Don't render if not open
@@ -140,7 +150,7 @@ export function EyeWizardModal({
         <div className="flex items-center justify-between border-b border-brand-outline/50 px-6 py-4">
           <div>
             <h2 className="text-2xl font-bold text-brand-foreground">
-              {eyeName ? `Edit ${eyeName}` : 'Edit Eye'}
+              {eyeName ? `Edit ${eyeName}` : "Edit Eye"}
             </h2>
             <p className="mt-1 text-sm text-semantic-muted">
               Configure your Eye settings using the wizard below
@@ -162,7 +172,9 @@ export function EyeWizardModal({
             <div className="flex h-full items-center justify-center">
               <div className="text-center">
                 <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-brand-outline/20 border-t-brand-accent" />
-                <p className="text-sm text-semantic-muted">Loading Eye data...</p>
+                <p className="text-sm text-semantic-muted">
+                  Loading Eye data...
+                </p>
               </div>
             </div>
           ) : loadError ? (

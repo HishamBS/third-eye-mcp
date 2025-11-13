@@ -7,10 +7,10 @@
  * Per R07: Strict typing, no 'any'
  */
 
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import type { ConversationEventRecord } from '@/components/conversation/ConversationTimeline';
+import { useState, useEffect, useCallback } from "react";
+import type { ConversationEventRecord } from "@/components/conversation/ConversationTimeline";
 
 /**
  * Hook to fetch conversation timeline for a specific session
@@ -30,21 +30,27 @@ export function useConversationTimeline(sessionId: string | null) {
     setError(null);
 
     try {
-      const response = await fetch(`/api/conversation-events/session/${sessionId}`);
+      const response = await fetch(
+        `/api/conversation-events/session/${sessionId}`,
+      );
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch conversation timeline: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch conversation timeline: ${response.statusText}`,
+        );
       }
 
       const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.message || 'Failed to fetch conversation timeline');
+        throw new Error(
+          data.message || "Failed to fetch conversation timeline",
+        );
       }
 
       setEvents(data.data.events || []);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Unknown error'));
+      setError(err instanceof Error ? err : new Error("Unknown error"));
       setEvents([]);
     } finally {
       setLoading(false);
@@ -76,21 +82,25 @@ export function useRecentConversationEvents(limit: number = 50) {
     setError(null);
 
     try {
-      const response = await fetch(`/api/conversation-events/recent?limit=${limit}`);
+      const response = await fetch(
+        `/api/conversation-events/recent?limit=${limit}`,
+      );
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch recent events: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch recent events: ${response.statusText}`,
+        );
       }
 
       const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.message || 'Failed to fetch recent events');
+        throw new Error(data.message || "Failed to fetch recent events");
       }
 
       setEvents(data.data.events || []);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Unknown error'));
+      setError(err instanceof Error ? err : new Error("Unknown error"));
       setEvents([]);
     } finally {
       setLoading(false);
@@ -114,7 +124,7 @@ export function useRecentConversationEvents(limit: number = 50) {
  */
 export function useConversationEventsByType(
   sessionId: string | null,
-  eventType: string
+  eventType: string,
 ) {
   const [events, setEvents] = useState<ConversationEventRecord[]>([]);
   const [loading, setLoading] = useState(false);
@@ -131,22 +141,24 @@ export function useConversationEventsByType(
 
     try {
       const response = await fetch(
-        `/api/conversation-events/session/${sessionId}/type/${eventType}`
+        `/api/conversation-events/session/${sessionId}/type/${eventType}`,
       );
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch events by type: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch events by type: ${response.statusText}`,
+        );
       }
 
       const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.message || 'Failed to fetch events by type');
+        throw new Error(data.message || "Failed to fetch events by type");
       }
 
       setEvents(data.data.events || []);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Unknown error'));
+      setError(err instanceof Error ? err : new Error("Unknown error"));
       setEvents([]);
     } finally {
       setLoading(false);

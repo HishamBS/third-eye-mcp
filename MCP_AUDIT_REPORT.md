@@ -9,6 +9,7 @@
 ## Executive Summary
 
 ### ✅ What's Working
+
 - MCP server starts successfully
 - JSON-RPC protocol fully functional
 - Tool registration (`third_eye_overseer`) working
@@ -32,11 +33,13 @@
 ## Issue #1: MCP Connection Failures
 
 ### Symptoms
+
 ```
 2025-11-10 01:12:35.646 | [error] MCP: Failed to connect to server: Transport creation error: No such file or directory (os error 2)
 ```
 
 ### Root Cause
+
 Agents (Warp/Zed/Claude Desktop) cannot find the executable because:
 
 1. **Documentation shows:** `bunx third-eye-mcp server`
@@ -45,16 +48,17 @@ Agents (Warp/Zed/Claude Desktop) cannot find the executable because:
 
 ### Why Sequential-Thinking Works But Third-Eye Doesn't
 
-| MCP Server | Published? | Installation | Config Command |
-|------------|-----------|--------------|----------------|
-| sequential-thinking | ✅ Yes | Auto-downloads via bunx | `bunx sequential-thinking` |
-| third-eye-mcp | ❌ No | Local development only | Must use absolute path |
+| MCP Server          | Published? | Installation            | Config Command             |
+| ------------------- | ---------- | ----------------------- | -------------------------- |
+| sequential-thinking | ✅ Yes     | Auto-downloads via bunx | `bunx sequential-thinking` |
+| third-eye-mcp       | ❌ No      | Local development only  | Must use absolute path     |
 
 ### Solution
 
 #### Option 1: Absolute Path (Recommended for Development)
 
 **Warp** (`~/.warp/mcp_servers.json`):
+
 ```json
 {
   "mcpServers": {
@@ -70,6 +74,7 @@ Agents (Warp/Zed/Claude Desktop) cannot find the executable because:
 ```
 
 **Zed** (`~/.config/zed/settings.json`):
+
 ```json
 {
   "context_servers": {
@@ -91,6 +96,7 @@ npm link
 ```
 
 Then use:
+
 ```json
 {
   "command": "third-eye-mcp",
@@ -99,6 +105,7 @@ Then use:
 ```
 
 ### Files Created
+
 - `examples/warp-mcp-config.json`
 - `examples/zed-mcp-config.json`
 - `examples/MCP_TROUBLESHOOTING.md`
@@ -109,6 +116,7 @@ Then use:
 ## Issue #2: Auto-Router Blueprint Lookup Bug
 
 ### Symptoms
+
 ```json
 {
   "status": "success",
@@ -128,11 +136,15 @@ const blueprint = await getPersonaBlueprint(eyeName);
 ```
 
 **Function signature** (`packages/eyes/src/blueprints/index.ts:135`):
+
 ```typescript
-export async function getPersonaBlueprint(eyeId: string): Promise<PersonaBlueprint | null>
+export async function getPersonaBlueprint(
+  eyeId: string,
+): Promise<PersonaBlueprint | null>;
 ```
 
 **Function implementation** (`packages/eyes/src/blueprints/index.ts:19-36`):
+
 ```typescript
 const blueprint = await db
   .select()
@@ -143,9 +155,9 @@ const blueprint = await db
 
 ### Parameter Mismatch
 
-| What Orchestrator Passes | What Function Expects | Database Column |
-|---------------------------|----------------------|-----------------|
-| `eyeName: "Overseer"` (string) | `eyeId` (UUID) | `eyeId` (UUID FK) |
+| What Orchestrator Passes       | What Function Expects | Database Column   |
+| ------------------------------ | --------------------- | ----------------- |
+| `eyeName: "Overseer"` (string) | `eyeId` (UUID)        | `eyeId` (UUID FK) |
 
 **Result:** Database query returns null because `personaBlueprints.eyeId = "Overseer"` finds no match.
 
@@ -154,13 +166,15 @@ const blueprint = await db
 **Fix location:** `packages/core/orchestrator.ts:263`
 
 **Before:**
+
 ```typescript
 const blueprint = await getPersonaBlueprint(eyeName);
 ```
 
 **After (Option 1 - Use lookup utility):**
+
 ```typescript
-import { getPersonaBlueprintByEyeName } from '@third-eye/db/utils/lookups';
+import { getPersonaBlueprintByEyeName } from "@third-eye/db/utils/lookups";
 
 // ...
 
@@ -168,8 +182,9 @@ const blueprint = await getPersonaBlueprintByEyeName(eyeName);
 ```
 
 **After (Option 2 - Convert to ID first):**
+
 ```typescript
-import { getEyeIdByName } from '@third-eye/db/utils/lookups';
+import { getEyeIdByName } from "@third-eye/db/utils/lookups";
 
 // ...
 
@@ -180,7 +195,7 @@ if (!eyeId) {
     `Eye not found: ${eyeName}`,
     runId,
     actualSessionId,
-    startTime
+    startTime,
   );
 }
 const blueprint = await getPersonaBlueprint(eyeId);
@@ -202,6 +217,7 @@ const blueprint = await getPersonaBlueprint(eyeId);
 **Test file:** `scripts/test-mcp-stdio.ts`
 
 **Results:**
+
 ```
 ✅ Initialize request → Success
 ✅ Tools list request → Returns third_eye_overseer
@@ -216,11 +232,13 @@ const blueprint = await getPersonaBlueprint(eyeId);
 ## Impact Assessment
 
 ### Before Fixes
+
 - ❌ Agents cannot connect (wrong config instructions)
 - ❌ Even if connected, all tool calls fail (blueprint bug)
 - ❌ 0% functionality
 
 ### After Fixes
+
 - ✅ Agents connect successfully
 - ✅ Tool calls execute through full pipeline
 - ✅ Auto-router works correctly
@@ -231,6 +249,7 @@ const blueprint = await getPersonaBlueprint(eyeId);
 ## Recommended Actions
 
 ### Immediate (P0)
+
 1. **Fix orchestrator blueprint lookup** (5 min)
    - Use `getPersonaBlueprintByEyeName` from db/utils/lookups
    - Add import statement
@@ -242,6 +261,7 @@ const blueprint = await getPersonaBlueprint(eyeId);
    - Update Warp/Zed/Claude Desktop guides
 
 ### Short-term (P1)
+
 3. **Add integration test** (30 min)
    - Test full MCP flow: initialize → list tools → call tool
    - Assert successful execution (not just connection)
@@ -253,13 +273,14 @@ const blueprint = await getPersonaBlueprint(eyeId);
    - Matches sequential-thinking UX
 
 ### Long-term (P2)
+
 5. **Type safety improvements**
    - Create nominal types for `EyeId` vs `EyeName`
    - Compile-time prevention of this class of bugs
    - Example:
      ```typescript
-     type EyeId = string & { __brand: 'EyeId' };
-     type EyeName = string & { __brand: 'EyeName' };
+     type EyeId = string & { __brand: "EyeId" };
+     type EyeName = string & { __brand: "EyeName" };
      ```
 
 6. **Add MCP integration test to CI**
@@ -271,6 +292,7 @@ const blueprint = await getPersonaBlueprint(eyeId);
 ## Architecture Insights
 
 ### MCP Server Stack (Working)
+
 ```
 Agent (Warp/Zed)
   ↓ stdio
@@ -282,6 +304,7 @@ Server Handlers (packages/mcp/server.ts)
 ```
 
 ### Auto-Router Flow (Was Broken)
+
 ```
 Tool Call (third_eye_overseer)
   ↓ task parameter
@@ -303,15 +326,18 @@ Provider (Groq/OpenRouter)
 ## Files Modified (Pending)
 
 ### Code Changes
+
 - `packages/core/orchestrator.ts` - Fix blueprint lookup
 
 ### Documentation Updates
+
 - `docs/integrations/warp.md` - Update config examples
 - `docs/integrations/claude-desktop.md` - Update config examples
 - `docs/integrations/README.md` - Add troubleshooting link
 - `README.md` - Update quick start with absolute path option
 
 ### New Files
+
 - `examples/warp-mcp-config.json` ✅ Created
 - `examples/zed-mcp-config.json` ✅ Created
 - `examples/MCP_TROUBLESHOOTING.md` ✅ Created
@@ -322,6 +348,7 @@ Provider (Groq/OpenRouter)
 ## Verification Plan
 
 ### Step 1: Fix Code
+
 ```bash
 # Apply orchestrator fix
 # Build packages
@@ -336,18 +363,21 @@ bun run scripts/test-mcp-stdio.ts
 ### Step 2: Test Real Agent Connection
 
 **Warp:**
+
 1. Update `~/.warp/mcp_servers.json` with absolute path
 2. Restart Warp completely
 3. Send: "Use third_eye_overseer to test connection"
 4. Verify: Tool executes, session appears in dashboard
 
 **Zed:**
+
 1. Update `~/.config/zed/settings.json` with absolute path
 2. Restart Zed
 3. Test tool call
 4. Verify execution
 
 ### Step 3: End-to-End Validation
+
 ```bash
 # 1. Start services
 bunx third-eye-mcp up
@@ -392,6 +422,7 @@ open http://127.0.0.1:3300
 **Both issues now have clear solutions and test harness for validation.**
 
 After fixes applied:
+
 - ✅ Agents can connect
 - ✅ Tools execute correctly
 - ✅ Full pipeline functional

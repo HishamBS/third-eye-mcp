@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { memo, useState, useCallback } from 'react';
-import { X, Check, XIcon } from 'lucide-react';
-import { ExpressionBuilder } from './ExpressionBuilder';
-import { ANIMATION_DURATION } from '@/constants/timing';
-import type { IfNodeConfig } from '@third-eye/types';
+import { memo, useState, useCallback } from "react";
+import { X, Check, XIcon } from "lucide-react";
+import { ExpressionBuilder } from "./ExpressionBuilder";
+import { ANIMATION_DURATION } from "@/constants/timing";
+import type { IfNodeConfig } from "@third-eye/types";
 
 /**
  * IF Node Configuration Modal
@@ -24,18 +24,18 @@ import type { IfNodeConfig } from '@third-eye/types';
  * Modal UI Text Constants
  */
 const MODAL_TEXT = {
-  TITLE: 'Configure IF Node',
-  CONDITION_LABEL: 'Condition',
-  CONDITION_HELP: 'Define the condition that determines True/False routing',
-  TRUE_LABEL: 'True Output Label',
-  TRUE_LABEL_PLACEHOLDER: 'Yes',
-  TRUE_HELP: 'Label shown on the True output handle',
-  FALSE_LABEL: 'False Output Label',
-  FALSE_LABEL_PLACEHOLDER: 'No',
-  FALSE_HELP: 'Label shown on the False output handle',
-  PREVIEW_TITLE: 'Output Preview',
-  SAVE_BUTTON: 'Save Configuration',
-  CANCEL_BUTTON: 'Cancel',
+  TITLE: "Configure IF Node",
+  CONDITION_LABEL: "Condition",
+  CONDITION_HELP: "Define the condition that determines True/False routing",
+  TRUE_LABEL: "True Output Label",
+  TRUE_LABEL_PLACEHOLDER: "Yes",
+  TRUE_HELP: "Label shown on the True output handle",
+  FALSE_LABEL: "False Output Label",
+  FALSE_LABEL_PLACEHOLDER: "No",
+  FALSE_HELP: "Label shown on the False output handle",
+  PREVIEW_TITLE: "Output Preview",
+  SAVE_BUTTON: "Save Configuration",
+  CANCEL_BUTTON: "Cancel",
 } as const;
 
 /**
@@ -58,10 +58,14 @@ function IFNodeConfigModalComponent({
   onSave,
 }: IFNodeConfigModalProps) {
   const [condition, setCondition] = useState<unknown>(
-    config?.condition ?? { '==': [{ var: 'verdict' }, 'OK'] }
+    config?.condition ?? { "==": [{ var: "verdict" }, "OK"] },
   );
-  const [trueLabel, setTrueLabel] = useState<string>(config?.trueLabel ?? 'Yes');
-  const [falseLabel, setFalseLabel] = useState<string>(config?.falseLabel ?? 'No');
+  const [trueLabel, setTrueLabel] = useState<string>(
+    config?.trueLabel ?? "Yes",
+  );
+  const [falseLabel, setFalseLabel] = useState<string>(
+    config?.falseLabel ?? "No",
+  );
 
   const handleSave = useCallback(() => {
     const newConfig: IfNodeConfig = {
@@ -88,7 +92,9 @@ function IFNodeConfigModalComponent({
       >
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-brand-paper border-b border-brand-outline">
-          <h2 className="text-xl font-semibold text-brand-foreground">{MODAL_TEXT.TITLE}</h2>
+          <h2 className="text-xl font-semibold text-brand-foreground">
+            {MODAL_TEXT.TITLE}
+          </h2>
           <button
             type="button"
             onClick={onClose}
@@ -106,7 +112,9 @@ function IFNodeConfigModalComponent({
               <label className="block text-sm font-medium text-brand-foreground mb-1">
                 {MODAL_TEXT.CONDITION_LABEL}
               </label>
-              <p className="text-xs text-semantic-muted">{MODAL_TEXT.CONDITION_HELP}</p>
+              <p className="text-xs text-semantic-muted">
+                {MODAL_TEXT.CONDITION_HELP}
+              </p>
             </div>
 
             <ExpressionBuilder
@@ -135,7 +143,9 @@ function IFNodeConfigModalComponent({
                   onChange={(e) => setTrueLabel(e.target.value)}
                 />
               </div>
-              <p className="text-xs text-semantic-muted">{MODAL_TEXT.TRUE_HELP}</p>
+              <p className="text-xs text-semantic-muted">
+                {MODAL_TEXT.TRUE_HELP}
+              </p>
             </div>
 
             {/* False Label */}
@@ -155,7 +165,9 @@ function IFNodeConfigModalComponent({
                   onChange={(e) => setFalseLabel(e.target.value)}
                 />
               </div>
-              <p className="text-xs text-semantic-muted">{MODAL_TEXT.FALSE_HELP}</p>
+              <p className="text-xs text-semantic-muted">
+                {MODAL_TEXT.FALSE_HELP}
+              </p>
             </div>
           </div>
 
@@ -168,13 +180,17 @@ function IFNodeConfigModalComponent({
               {/* True Output Preview */}
               <div className="flex items-center gap-2 p-3 bg-semantic-success/10 border border-semantic-success/30 rounded">
                 <Check className="w-4 h-4 text-semantic-success" />
-                <span className="text-sm font-medium text-semantic-success">{trueLabel}</span>
+                <span className="text-sm font-medium text-semantic-success">
+                  {trueLabel}
+                </span>
               </div>
 
               {/* False Output Preview */}
               <div className="flex items-center gap-2 p-3 bg-semantic-error/10 border border-semantic-error/30 rounded">
                 <XIcon className="w-4 h-4 text-semantic-error" />
-                <span className="text-sm font-medium text-semantic-error">{falseLabel}</span>
+                <span className="text-sm font-medium text-semantic-error">
+                  {falseLabel}
+                </span>
               </div>
             </div>
           </div>
@@ -182,7 +198,9 @@ function IFNodeConfigModalComponent({
           {/* Current Condition Preview */}
           {condition && (
             <div className="p-3 bg-brand-surface border border-brand-outline rounded-md">
-              <div className="text-xs font-medium text-semantic-muted mb-1">Current Condition:</div>
+              <div className="text-xs font-medium text-semantic-muted mb-1">
+                Current Condition:
+              </div>
               <pre className="text-xs font-mono text-brand-foreground overflow-x-auto">
                 {JSON.stringify(condition, null, 2)}
               </pre>
@@ -216,4 +234,4 @@ function IFNodeConfigModalComponent({
  * Memoized IFNodeConfigModal (Performance optimization per R04)
  */
 export const IFNodeConfigModal = memo(IFNodeConfigModalComponent);
-IFNodeConfigModal.displayName = 'IFNodeConfigModal';
+IFNodeConfigModal.displayName = "IFNodeConfigModal";

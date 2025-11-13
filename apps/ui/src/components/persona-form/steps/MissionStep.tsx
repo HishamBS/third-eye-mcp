@@ -1,16 +1,20 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import type { WizardStepProps } from '@/types/persona-form';
+import React, { useState } from "react";
+import type { WizardStepProps } from "@/types/persona-form";
 import {
   FIELD_LABELS,
   PLACEHOLDERS,
   HELP_TEXT,
   CHAR_LIMITS,
   MISSION_TEMPLATES,
-} from '../constants';
-import { FileText } from 'lucide-react';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+} from "../constants";
+import { FileText } from "lucide-react";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
 
 /**
  * MissionStep - Core mission configuration
@@ -23,13 +27,14 @@ export function MissionStep({ state, dispatch }: WizardStepProps) {
   const [showTemplates, setShowTemplates] = useState(false);
 
   const handleTemplateSelect = (template: string) => {
-    dispatch({ type: 'SET_MISSION', mission: template });
+    dispatch({ type: "SET_MISSION", mission: template });
     setShowTemplates(false);
   };
 
   const charCount = state.mission.length;
   const isValid =
-    charCount >= CHAR_LIMITS.MISSION_MIN && charCount <= CHAR_LIMITS.MISSION_MAX;
+    charCount >= CHAR_LIMITS.MISSION_MIN &&
+    charCount <= CHAR_LIMITS.MISSION_MAX;
 
   return (
     <div className="space-y-6">
@@ -43,7 +48,7 @@ export function MissionStep({ state, dispatch }: WizardStepProps) {
             className="flex items-center gap-2 text-xs text-brand-accent hover:text-brand-accent/80"
           >
             <FileText className="w-3 h-3" />
-            {showTemplates ? 'Hide' : 'Show'} Templates
+            {showTemplates ? "Hide" : "Show"} Templates
           </button>
         </div>
 
@@ -69,13 +74,15 @@ export function MissionStep({ state, dispatch }: WizardStepProps) {
 
         <textarea
           value={state.mission}
-          onChange={(e) => dispatch({ type: 'SET_MISSION', mission: e.target.value })}
+          onChange={(e) =>
+            dispatch({ type: "SET_MISSION", mission: e.target.value })
+          }
           placeholder={PLACEHOLDERS.MISSION}
           rows={8}
           className={`w-full px-4 py-2 rounded-lg border bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none ${
             !isValid && charCount > 0
-              ? '${STATUS_BORDER_COLORS_SUBTLE.error}'
-              : 'border-brand-outline'
+              ? "${STATUS_BORDER_COLORS_SUBTLE.error}"
+              : "border-brand-outline"
           }`}
           minLength={CHAR_LIMITS.MISSION_MIN}
           maxLength={CHAR_LIMITS.MISSION_MAX}
@@ -85,16 +92,17 @@ export function MissionStep({ state, dispatch }: WizardStepProps) {
           <p className="text-xs text-semantic-muted">{HELP_TEXT.MISSION}</p>
           <span
             className={`text-xs ${
-              isValid ? 'text-semantic-muted' : '${STATUS_TEXT_COLORS.error}'
+              isValid ? "text-semantic-muted" : "${STATUS_TEXT_COLORS.error}"
             }`}
           >
-            {charCount}/{CHAR_LIMITS.MISSION_MAX} (min: {CHAR_LIMITS.MISSION_MIN})
+            {charCount}/{CHAR_LIMITS.MISSION_MAX} (min:{" "}
+            {CHAR_LIMITS.MISSION_MIN})
           </span>
         </div>
 
         {!isValid && charCount > 0 && (
           <p className="text-xs ${STATUS_TEXT_COLORS.error} mt-1">
-            Mission must be between {CHAR_LIMITS.MISSION_MIN} and{' '}
+            Mission must be between {CHAR_LIMITS.MISSION_MIN} and{" "}
             {CHAR_LIMITS.MISSION_MAX} characters
           </p>
         )}

@@ -1,8 +1,17 @@
-import { useEffect, useState } from 'react';
-import { API_BASE_URL } from '@/consts/api';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { useEffect, useState } from "react";
+import { API_BASE_URL } from "@/consts/api";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
 
-type LeaderboardCategory = 'fastest' | 'cheapest' | 'reliable' | 'popular' | 'quality';
+type LeaderboardCategory =
+  | "fastest"
+  | "cheapest"
+  | "reliable"
+  | "popular"
+  | "quality";
 
 interface LeaderboardEntry {
   rank: number;
@@ -22,11 +31,12 @@ export interface LeaderboardsProps {
 }
 
 export function Leaderboards({
-  defaultCategory = 'fastest',
-  defaultEye = '',
+  defaultCategory = "fastest",
+  defaultEye = "",
   defaultDays = 30,
 }: LeaderboardsProps) {
-  const [category, setCategory] = useState<LeaderboardCategory>(defaultCategory);
+  const [category, setCategory] =
+    useState<LeaderboardCategory>(defaultCategory);
   const [eye, setEye] = useState(defaultEye);
   const [days, setDays] = useState(defaultDays);
   const [rankings, setRankings] = useState<LeaderboardEntry[]>([]);
@@ -42,43 +52,60 @@ export function Leaderboards({
     setError(null);
     try {
       const params = new URLSearchParams();
-      if (eye) params.set('eye', eye);
-      params.set('days', days.toString());
+      if (eye) params.set("eye", eye);
+      params.set("days", days.toString());
 
-      const res = await fetch(`${API_BASE_URL}/api/leaderboards/${category}?${params}`);
+      const res = await fetch(
+        `${API_BASE_URL}/api/leaderboards/${category}?${params}`,
+      );
       const data = await res.json();
       setRankings(data.rankings || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load');
+      setError(err instanceof Error ? err.message : "Failed to load");
     } finally {
       setLoading(false);
     }
   }
 
-  const categories: LeaderboardCategory[] = ['fastest', 'cheapest', 'reliable', 'popular', 'quality'];
+  const categories: LeaderboardCategory[] = [
+    "fastest",
+    "cheapest",
+    "reliable",
+    "popular",
+    "quality",
+  ];
 
   const getRankEmoji = (rank: number) => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
+    if (rank === 1) return "🥇";
+    if (rank === 2) return "🥈";
+    if (rank === 3) return "🥉";
     return rank;
   };
 
   const formatScore = (entry: LeaderboardEntry) => {
     switch (category) {
-      case 'fastest': return `${(entry.avgLatency || 0).toFixed(2)}s`;
-      case 'cheapest': return `$${(entry.avgCost || 0).toFixed(4)}`;
-      case 'reliable': return `${entry.score.toFixed(1)}%`;
-      case 'popular': return `${entry.totalRuns} runs`;
-      case 'quality': return `${entry.score.toFixed(1)}/100`;
+      case "fastest":
+        return `${(entry.avgLatency || 0).toFixed(2)}s`;
+      case "cheapest":
+        return `$${(entry.avgCost || 0).toFixed(4)}`;
+      case "reliable":
+        return `${entry.score.toFixed(1)}%`;
+      case "popular":
+        return `${entry.totalRuns} runs`;
+      case "quality":
+        return `${entry.score.toFixed(1)}/100`;
     }
   };
 
   return (
     <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-6 text-sm">
       <header className="mb-4">
-        <h3 className="text-xl font-bold text-brand-foreground">🏆 Leaderboards</h3>
-        <p className="text-xs text-semantic-muted mt-1">Model performance rankings</p>
+        <h3 className="text-xl font-bold text-brand-foreground">
+          🏆 Leaderboards
+        </h3>
+        <p className="text-xs text-semantic-muted mt-1">
+          Model performance rankings
+        </p>
       </header>
 
       {/* Category Tabs */}
@@ -89,16 +116,16 @@ export function Leaderboards({
             onClick={() => setCategory(cat)}
             className={`px-3 py-1.5 text-xs font-medium rounded transition ${
               category === cat
-                ? 'bg-brand-accent text-brand-foreground'
-                : 'text-semantic-muted hover:text-brand-foreground hover:bg-brand-paper'
+                ? "bg-brand-accent text-brand-foreground"
+                : "text-semantic-muted hover:text-brand-foreground hover:bg-brand-paper"
             }`}
           >
-            {cat === 'fastest' && '⚡'}
-            {cat === 'cheapest' && '💰'}
-            {cat === 'reliable' && '🛡️'}
-            {cat === 'popular' && '🔥'}
-            {cat === 'quality' && '⭐'}
-            {' '}{cat.charAt(0).toUpperCase() + cat.slice(1)}
+            {cat === "fastest" && "⚡"}
+            {cat === "cheapest" && "💰"}
+            {cat === "reliable" && "🛡️"}
+            {cat === "popular" && "🔥"}
+            {cat === "quality" && "⭐"}{" "}
+            {cat.charAt(0).toUpperCase() + cat.slice(1)}
           </button>
         ))}
       </div>
@@ -138,26 +165,38 @@ export function Leaderboards({
       ) : error ? (
         <div className={`text-xs ${STATUS_TEXT_COLORS.error}`}>{error}</div>
       ) : rankings.length === 0 ? (
-        <div className="text-semantic-muted text-xs text-center py-8">No data available</div>
+        <div className="text-semantic-muted text-xs text-center py-8">
+          No data available
+        </div>
       ) : (
         <div className="space-y-2">
           {rankings.map((entry) => (
             <div
               key={`${entry.provider}-${entry.model}`}
               className={`flex items-center justify-between p-2 rounded ${
-                entry.rank <= 3 ? `${STATUS_BG_COLORS_SUBTLE.warning} border ${STATUS_BORDER_COLORS_SUBTLE.warning}` : 'bg-brand-paper/50'
+                entry.rank <= 3
+                  ? `${STATUS_BG_COLORS_SUBTLE.warning} border ${STATUS_BORDER_COLORS_SUBTLE.warning}`
+                  : "bg-brand-paper/50"
               }`}
             >
               <div className="flex items-center gap-3 flex-1">
                 <span className="text-lg">{getRankEmoji(entry.rank)}</span>
                 <div>
-                  <div className="text-brand-foreground font-medium text-xs">{entry.model}</div>
-                  <div className="text-semantic-muted text-[10px]">{entry.provider}</div>
+                  <div className="text-brand-foreground font-medium text-xs">
+                    {entry.model}
+                  </div>
+                  <div className="text-semantic-muted text-[10px]">
+                    {entry.provider}
+                  </div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-brand-accent font-bold text-sm">{formatScore(entry)}</div>
-                <div className="text-semantic-muted text-[10px]">{entry.totalRuns} runs</div>
+                <div className="text-brand-accent font-bold text-sm">
+                  {formatScore(entry)}
+                </div>
+                <div className="text-semantic-muted text-[10px]">
+                  {entry.totalRuns} runs
+                </div>
               </div>
             </div>
           ))}

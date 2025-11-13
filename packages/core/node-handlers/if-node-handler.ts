@@ -8,17 +8,27 @@
  * Per R07: Strict typing throughout
  */
 
-import type { PipelineDagNode } from '@third-eye/types';
-import type { NodeHandler, ExecutionContext, NodeExecutionResult } from './base-handler';
-import { evaluateExpression, type ExpressionContext } from '../expression-evaluator';
+import type { PipelineDagNode } from "@third-eye/types";
+import type {
+  NodeHandler,
+  ExecutionContext,
+  NodeExecutionResult,
+} from "./base-handler";
+import {
+  evaluateExpression,
+  type ExpressionContext,
+} from "../expression-evaluator";
 
 export class IFNodeHandler implements NodeHandler {
   canHandle(node: PipelineDagNode): boolean {
-    return node.type === 'if';
+    return node.type === "if";
   }
 
-  async execute(node: PipelineDagNode, context: ExecutionContext): Promise<NodeExecutionResult> {
-    if (node.type !== 'if') {
+  async execute(
+    node: PipelineDagNode,
+    context: ExecutionContext,
+  ): Promise<NodeExecutionResult> {
+    if (node.type !== "if") {
       throw new Error(`IFNodeHandler cannot handle node type: ${node.type}`);
     }
 
@@ -28,21 +38,24 @@ export class IFNodeHandler implements NodeHandler {
       // Validate IF configuration
       const ifConfig = node.ifConfig;
       if (!ifConfig) {
-        throw new Error('IF node must have ifConfig property');
+        throw new Error("IF node must have ifConfig property");
       }
 
       if (!ifConfig.condition) {
-        throw new Error('IF node must have condition in ifConfig');
+        throw new Error("IF node must have condition in ifConfig");
       }
 
       // Build expression context from execution context
       const expressionContext = this.buildExpressionContext(context);
 
       // Evaluate condition using centralized expression evaluator
-      const evalResult = evaluateExpression(ifConfig.condition, expressionContext);
+      const evalResult = evaluateExpression(
+        ifConfig.condition,
+        expressionContext,
+      );
 
       if (!evalResult.success) {
-        throw new Error(evalResult.error ?? 'Condition evaluation failed');
+        throw new Error(evalResult.error ?? "Condition evaluation failed");
       }
 
       // Condition result must be boolean
@@ -53,16 +66,16 @@ export class IFNodeHandler implements NodeHandler {
       // Return result with conditionMet in metadata for routing
       return {
         nodeId: node.id,
-        status: 'success',
-        verdict: conditionMet ? 'TRUE' : 'FALSE',
+        status: "success",
+        verdict: conditionMet ? "TRUE" : "FALSE",
         output: {
-          type: 'if',
+          type: "if",
           condition: ifConfig.condition,
           conditionMet,
         },
         latencyMs,
         metadata: {
-          conditionMet,  // Used by determineNextNodes() at line 359
+          conditionMet, // Used by determineNextNodes() at line 359
           trueLabel: ifConfig.trueLabel,
           falseLabel: ifConfig.falseLabel,
         },
@@ -71,7 +84,7 @@ export class IFNodeHandler implements NodeHandler {
       const latencyMs = Date.now() - startTime;
       return {
         nodeId: node.id,
-        status: 'error',
+        status: "error",
         error: `IF node evaluation failed: ${error instanceof Error ? error.message : String(error)}`,
         latencyMs,
       };
@@ -96,9 +109,10 @@ export class IFNodeHandler implements NodeHandler {
     }
 
     // Extract output data
-    const output = lastResult.output && typeof lastResult.output === 'object'
-      ? lastResult.output as Record<string, unknown>
-      : undefined;
+    const output =
+      lastResult.output && typeof lastResult.output === "object"
+        ? (lastResult.output as Record<string, unknown>)
+        : undefined;
 
     // Build expression context
     return {

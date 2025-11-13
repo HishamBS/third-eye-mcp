@@ -5,6 +5,7 @@
 ### Example 1: Simple Request (No Ambiguity, No Confirmation Needed)
 
 **Human Initial Prompt:**
+
 > "Write a function in Python that calculates the Fibonacci sequence up to n terms"
 
 **Eye Flow:**
@@ -47,6 +48,7 @@
 ```
 
 **Live Monitor Display:**
+
 - Timeline shows 4 eye events (Overseer → Sharingan → Kyuubi → Byakugan)
 - Clarifications tab: "No pending clarifications" (green)
 - Intent tab: "No intent confirmation required"
@@ -58,6 +60,7 @@
 ### Example 2: Ambiguous Request (Sharingan Asks Questions)
 
 **Human Initial Prompt:**
+
 > "Help me write an article about palm care for beginners"
 
 **Eye Flow:**
@@ -158,6 +161,7 @@
 ```
 
 **Live Monitor Display:**
+
 - Timeline shows:
   - Overseer analysis
   - Sharingan PAUSED (yellow badge "WAITING FOR HUMAN")
@@ -184,6 +188,7 @@
 ### Example 3: Rejected Intent (Loop Back to Kyuubi)
 
 **Human Initial Prompt:**
+
 > "Create API documentation for our payment processing system"
 
 **Eye Flow:**
@@ -271,6 +276,7 @@
 ```
 
 **Live Monitor Display:**
+
 - Timeline shows:
   - Sharingan pause → human clarification
   - Kyuubi first draft
@@ -295,6 +301,7 @@
 ### Example 4: Critical Constraint (Rinnegan Asks Human)
 
 **Human Initial Prompt:**
+
 > "Build a real-time analytics dashboard with 10ms latency for 1M concurrent users"
 
 **Eye Flow:**
@@ -368,6 +375,7 @@
 ```
 
 **Live Monitor Display:**
+
 - Timeline shows:
   - Normal flow through Jōgan
   - Rinnegan PAUSED (orange badge "CRITICAL CONSTRAINT")
@@ -393,6 +401,7 @@
 ### Example 5: Validation Gap (Mangekyō Identifies Issues)
 
 **Human Initial Prompt:**
+
 > "Write user authentication module with password reset"
 
 **Eye Flow:**
@@ -460,6 +469,7 @@
 ```
 
 **Live Monitor Display:**
+
 - Timeline shows:
   - Normal flow through Jōgan (first pass)
   - Mangekyō VALIDATION_GAP (orange badge "GAPS DETECTED")
@@ -492,36 +502,43 @@
 ### What EXISTS Currently
 
 ✅ **Timeline Tab**:
+
 - Chronological event display
 - Speaker identification (Agent, Human, Eyes)
 - Stage badges (guidance/validation)
 - Export functionality (MD, PDF, JSON)
 
 ✅ **Routing Tab**:
+
 - Shows routing decisions
 - Eye sequence display
 
 ✅ **Clarifications Tab**:
+
 - Outstanding vs Resolved sections
 - Question/Answer pairs
 - Timestamps
 
 ✅ **Intent Tab**:
+
 - Intent analysis
 - Confirmation prompt
 - Approval status
 - User identity
 
 ✅ **Evidence Tab**:
+
 - Mangekyō code review
 - Tenseigan validation
 - Byakugan approval
 
 ✅ **Raw JSON Tab**:
+
 - Complete event data
 - Copy functionality
 
 ✅ **Pipeline Visualization Component**:
+
 - Eye nodes with status
 - Connection lines
 - Confidence indicators
@@ -534,16 +551,19 @@
 ❌ **1. Human Interaction Flow NOT Visualized**
 
 **Problem**: Monitor doesn't clearly show:
+
 - When pipeline is PAUSED waiting for human
 - Which eye is asking the question
 - The flow: Eye → Agent → Human → Agent → Eye
 
 **Current behavior**:
+
 - Timeline just shows events chronologically
 - No visual "PAUSED" state
 - No clear indication of human interaction in progress
 
 **Needed**:
+
 - **Pause State Badge**: Large, prominent badge "⏸️ PAUSED - WAITING FOR HUMAN"
 - **Active Question Panel**: Floating panel showing current questions awaiting response
 - **Interaction Flow Diagram**: Visual showing Eye → Agent → Human → Agent flow
@@ -554,16 +574,19 @@
 ❌ **2. Loop-Back Flows NOT Shown**
 
 **Problem**: When Jōgan rejects or Rinnegan finds constraints, monitor doesn't show:
+
 - Loop-back arrow from current eye to previous eye
 - "Revision" or "Re-work" badge
 - Diff of what changed between first and second pass
 
 **Current behavior**:
+
 - Timeline just shows events in order
 - No visual loop indication
 - Can't see what triggered the loop-back
 
 **Needed**:
+
 - **Loop Arrows**: Visual arrows in pipeline visualization showing "Eye A rejected → Loop back to Eye B"
 - **Revision Badges**: "🔄 REVISION" badge on eyes that are re-executed
 - **Diff Highlights**: Show what changed in brief between passes
@@ -576,10 +599,12 @@
 **Problem**: If Kyuubi runs twice (first draft → rejected → second draft), monitor shows two separate Kyuubi events but doesn't connect them
 
 **Current behavior**:
+
 - Looks like two different eyes
 - Can't tell which is first draft vs revision
 
 **Needed**:
+
 - **Pass Numbers**: "Kyuubi (Pass 1)", "Kyuubi (Pass 2)"
 - **Visual Grouping**: Connect multiple runs of same eye with grouping box
 - **Comparison View**: Side-by-side view of Pass 1 vs Pass 2 output
@@ -589,14 +614,17 @@
 ❌ **4. Agent as Intermediary NOT Represented**
 
 **Problem**: Monitor doesn't show agent's role in relaying:
+
 - Eye questions → Agent → Human
 - Human responses → Agent → Eye
 
 **Current behavior**:
+
 - Timeline shows human events but not agent relay events
 - Looks like human directly talks to eyes (which isn't true)
 
 **Needed**:
+
 - **Agent Relay Events**: Show "🤖 Agent relaying question to Human" and "🤖 Agent submitting human response"
 - **Message Flow Visualization**: Visual chat-like interface showing full flow
 - **Agent Context**: What the agent actually sees vs what human sees
@@ -606,16 +634,19 @@
 ❌ **5. Real-Time Status Updates During Pauses**
 
 **Problem**: When pipeline is paused, monitor doesn't show:
+
 - How long it's been waiting
 - Timeout countdown
 - Option to resume or cancel
 
 **Current behavior**:
+
 - Static display
 - No time elapsed
 - No timeout indicator
 
 **Needed**:
+
 - **Wait Timer**: "Waiting for human... 2m 34s elapsed"
 - **Timeout Warning**: "Auto-timeout in 28 minutes" (if 30-min timeout)
 - **Resume Status**: When agent submits response, show "Processing response..." → "Resuming pipeline..."
@@ -628,6 +659,7 @@
 **Problem**: Monitor shows THAT an eye ran, but not WHAT it produced in a beautiful way
 
 **Current behavior**:
+
 - Raw JSON shows full data
 - Timeline shows markdown summary
 - But no beautiful rendering of:
@@ -637,6 +669,7 @@
   - Constraint analysis
 
 **Needed**:
+
 - **Brief Viewer**: Beautiful card showing structured brief with expandable sections
 - **Quality Dashboard**: Charts/graphs for confidence scores, quality metrics
 - **Constraint Matrix**: Table comparing options (10ms vs 100ms latency example)
@@ -650,11 +683,13 @@
 **Problem**: Monitor shows human approved/rejected but not full conversation history
 
 **Current behavior**:
+
 - Intent tab shows final approval
 - Clarifications tab shows Q&A pairs
 - But doesn't show full dialogue: Question → Human asks for clarification → Agent clarifies → Human answers
 
 **Needed**:
+
 - **Conversation Thread View**: Full threaded conversation for each pause
 - **Human Identity**: Who responded (important for multi-user systems)
 - **Response Metadata**: How long human took to respond, device used, etc.
@@ -667,10 +702,12 @@
 **Problem**: User sees Sharingan asked questions but doesn't see WHY (what ambiguity triggered it)
 
 **Current behavior**:
+
 - Shows questions were asked
 - Doesn't explain trigger
 
 **Needed**:
+
 - **Reasoning Panel**: "Sharingan asked questions because: ambiguity score 75/100, detected 4 missing context items"
 - **Trigger Events**: What in the input triggered this eye to act
 - **Decision Rationale**: Why Overseer routed this way, why Rinnegan flagged constraint
@@ -682,10 +719,12 @@
 **Problem**: User can't see patterns like "Sharingan ALWAYS asks questions for this type of request"
 
 **Current behavior**:
+
 - Shows one session at a time
 - No pattern analysis
 
 **Needed**:
+
 - **Pattern Insights**: "In similar requests, Sharingan asked questions 80% of the time"
 - **Common Questions**: "Most common clarification: target word count"
 - **Typical Flow**: "Standard flow for this request type: Overseer → Sharingan → Kyuubi → Jōgan → Byakugan"
@@ -697,6 +736,7 @@
 **Problem**: PDF/Markdown export shows timeline but not the beautiful story of human interaction
 
 **Current behavior**:
+
 - Export shows event log
 - Doesn't show:
   - Pause states
@@ -704,6 +744,7 @@
   - Human decision rationale
 
 **Needed**:
+
 - **Narrative Export**: Beautiful story-style export:
   > "Sharingan detected ambiguities and paused the pipeline to ask the human for clarification. The human responded after 45 seconds, providing details about target audience and word count. Kyuubi then refined the brief based on these responses..."
 - **Visual Flow Export**: Export the pipeline visualization as image
@@ -714,6 +755,7 @@
 ## Summary: Key Missing Features for Live Monitor
 
 ### Tier 1 (CRITICAL - Must Have):
+
 1. **Pause State Visualization** - Show when pipeline is waiting for human
 2. **Loop-Back Arrows** - Show rejection → revision flows
 3. **Human Interaction Flow** - Show Eye → Agent → Human → Agent
@@ -721,6 +763,7 @@
 5. **Beautiful Output Rendering** - Show briefs, scores, constraints in beautiful cards
 
 ### Tier 2 (HIGH - Should Have):
+
 6. **Wait Timers & Timeouts** - Show how long waiting, when timeout
 7. **Agent Relay Events** - Show agent's intermediary role
 8. **Conversation Thread View** - Full dialogue for each pause
@@ -728,6 +771,7 @@
 10. **Revision Diffs** - Before/after comparison
 
 ### Tier 3 (MEDIUM - Nice to Have):
+
 11. **Pattern Insights** - Common flows for similar requests
 12. **Narrative Export** - Story-style export for compliance
 13. **Real-time Collaboration** - Multiple users seeing same session
@@ -739,9 +783,11 @@
 ## What Makes the Live Monitor the "Crown Jewel"
 
 The user said:
+
 > "the Live Monitor page, which is our real time theater for all what happens behind the scenes, it is the page that our users can truly see visually in real time what is our mcp server providing them and why our mcp server is really powerful and useful"
 
 **The Live Monitor should be like watching a play:**
+
 - **Act 1 (Setup)**: Overseer analyzes and routes
 - **Act 2 (Clarification)**: Sharingan detects ambiguity → PAUSES → Agent asks → Human responds → RESUMES
 - **Act 3 (Structuring)**: Kyuubi refines brief based on human input
@@ -752,10 +798,10 @@ The user said:
 **Current Live Monitor** is like reading a script.
 
 **Vision for Live Monitor** is like watching the play LIVE with:
+
 - Actors on stage (eyes executing)
 - Stage directions (pause, resume, loop back)
 - Audience participation (human interaction)
 - Multiple acts (pipeline stages)
 - Dramatic tension (will human approve or reject?)
 - Resolution (final approval)
-

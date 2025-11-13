@@ -1,0 +1,16 @@
+#!/bin/sh
+# Third Eye MCP pre-commit hook
+# Auto-generated during postinstall
+
+# Ensure bun is in PATH
+export PATH="$HOME/.bun/bin:$PATH"
+
+# Run formatter check only (type checking handled by CI)
+# Skipping type check because stale dist artifacts cause false failures
+echo "🎨 Checking code format..."
+bun run format:check || {
+  echo "❌ Format check failed (run: bun run format)"
+  exit 1
+}
+
+echo "✅ Pre-commit checks passed"

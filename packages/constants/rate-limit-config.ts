@@ -32,9 +32,9 @@ export const RATE_LIMIT_CONFIG = Object.freeze({
 export const PROVIDER_RATE_LIMITS = Object.freeze({
   // Groq - Free tier has lower limits
   groq: {
-    rpm: 30,        // Requests per minute
-    burst: 5,       // Burst capacity
-    tpm: 14400,     // Tokens per minute
+    rpm: 30, // Requests per minute
+    burst: 5, // Burst capacity
+    tpm: 14400, // Tokens per minute
   },
 
   // OpenRouter - Generous free tier
@@ -60,13 +60,13 @@ export const PROVIDER_RATE_LIMITS = Object.freeze({
 
   // Local providers - No rate limits
   ollama: {
-    rpm: 1000,      // Effectively unlimited
+    rpm: 1000, // Effectively unlimited
     burst: 100,
     tpm: 1000000,
   },
 
   lmstudio: {
-    rpm: 1000,      // Effectively unlimited
+    rpm: 1000, // Effectively unlimited
     burst: 100,
     tpm: 1000000,
   },
@@ -76,22 +76,22 @@ export const PROVIDER_RATE_LIMITS = Object.freeze({
  * Rate Limit Event Types for logging and metrics
  */
 export const RATE_LIMIT_EVENT_TYPE = Object.freeze({
-  REQUEST_ALLOWED: 'rate_limit_request_allowed',
-  REQUEST_THROTTLED: 'rate_limit_request_throttled',
-  LIMIT_EXCEEDED: 'rate_limit_exceeded',
-  TOKENS_REFILLED: 'rate_limit_tokens_refilled',
-  QUOTA_WARNING: 'rate_limit_quota_warning',
-  QUOTA_EXCEEDED: 'rate_limit_quota_exceeded',
+  REQUEST_ALLOWED: "rate_limit_request_allowed",
+  REQUEST_THROTTLED: "rate_limit_request_throttled",
+  LIMIT_EXCEEDED: "rate_limit_exceeded",
+  TOKENS_REFILLED: "rate_limit_tokens_refilled",
+  QUOTA_WARNING: "rate_limit_quota_warning",
+  QUOTA_EXCEEDED: "rate_limit_quota_exceeded",
 });
 
 /**
  * Rate Limit Action Types
  */
 export const RATE_LIMIT_ACTION = Object.freeze({
-  ALLOW: 'allow',           // Request allowed
-  THROTTLE: 'throttle',     // Request delayed
-  REJECT: 'reject',         // Request rejected
-  QUEUE: 'queue',           // Request queued for later
+  ALLOW: "allow", // Request allowed
+  THROTTLE: "throttle", // Request delayed
+  REJECT: "reject", // Request rejected
+  QUEUE: "queue", // Request queued for later
 });
 
 /**
@@ -105,7 +105,8 @@ export function getProviderRateLimit(provider: string): {
   burst: number;
   tpm: number;
 } {
-  const limits = PROVIDER_RATE_LIMITS[provider as keyof typeof PROVIDER_RATE_LIMITS];
+  const limits =
+    PROVIDER_RATE_LIMITS[provider as keyof typeof PROVIDER_RATE_LIMITS];
 
   if (limits) {
     return limits;

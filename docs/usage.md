@@ -165,16 +165,16 @@ All responses conform to the Envelope schema documented in [MCP API](./MCP_API.m
 
 Third Eye MCP ships with eight built-in lenses, each with its own persona and routing defaults:
 
-| Eye | Purpose | Default Primary Model |
-| --- | ------- | --------------------- |
-| Overseer | Entry point, orchestrator | `groq/llama-3.1-8b-instant` |
-| Sharingan | Ambiguity detection | `groq/llama-3.1-8b-instant` |
-| Jogan | Intent analysis | `openrouter/meta-llama/llama-3.3-70b` |
-| Prompt Helper | Prompt refinement | `openrouter/meta-llama/llama-3.3-70b` |
-| Rinnegan | Plan validation | `openrouter/meta-llama/llama-3.3-70b` |
-| Mangekyo | Code & quality review | `openrouter/meta-llama/llama-3.3-70b` |
-| Tenseigan | Evidence validation | `openrouter/meta-llama/llama-3.3-70b` |
-| Byakugan | Consistency enforcement | `openrouter/meta-llama/llama-3.3-70b` |
+| Eye           | Purpose                   | Default Primary Model                 |
+| ------------- | ------------------------- | ------------------------------------- |
+| Overseer      | Entry point, orchestrator | `groq/llama-3.1-8b-instant`           |
+| Sharingan     | Ambiguity detection       | `groq/llama-3.1-8b-instant`           |
+| Jogan         | Intent analysis           | `openrouter/meta-llama/llama-3.3-70b` |
+| Prompt Helper | Prompt refinement         | `openrouter/meta-llama/llama-3.3-70b` |
+| Rinnegan      | Plan validation           | `openrouter/meta-llama/llama-3.3-70b` |
+| Mangekyo      | Code & quality review     | `openrouter/meta-llama/llama-3.3-70b` |
+| Tenseigan     | Evidence validation       | `openrouter/meta-llama/llama-3.3-70b` |
+| Byakugan      | Consistency enforcement   | `openrouter/meta-llama/llama-3.3-70b` |
 
 - Routing and fallback chains are editable in the dashboard under **Models & Routing**.
 - Personas are versioned and stored in SQLite; edit from **Personas** tab or via `bun run scripts/seed-defaults.ts`.
@@ -197,12 +197,12 @@ Programmatic monitoring endpoints are documented in [API Reference](./API_REFERE
 
 ## Workflows and Examples
 
-| Scenario | Eye Sequence | Notes |
-| -------- | ------------ | ----- |
-| Clarify ambiguous request | Sharingan → Prompt Helper → Jogan | Ensures the agent gathers missing requirements before execution. |
-| Code review with safety checks | Mangekyo → Tenseigan → Byakugan | Combines static analysis, evidence validation, and consistency enforcement. |
-| Incident response | Overseer → Rinnegan → Sharingan | Validates runbooks, plans follow-up questions, and confirms clarity. |
-| Documentation generation | Prompt Helper → Mangekyo → Overseer | Produces draft docs, then Overseer compiles final response. |
+| Scenario                       | Eye Sequence                        | Notes                                                                       |
+| ------------------------------ | ----------------------------------- | --------------------------------------------------------------------------- |
+| Clarify ambiguous request      | Sharingan → Prompt Helper → Jogan   | Ensures the agent gathers missing requirements before execution.            |
+| Code review with safety checks | Mangekyo → Tenseigan → Byakugan     | Combines static analysis, evidence validation, and consistency enforcement. |
+| Incident response              | Overseer → Rinnegan → Sharingan     | Validates runbooks, plans follow-up questions, and confirms clarity.        |
+| Documentation generation       | Prompt Helper → Mangekyo → Overseer | Produces draft docs, then Overseer compiles final response.                 |
 
 More workflow templates are available in [docs/workflows](./workflows) (coming soon) and via the dashboard presets.
 

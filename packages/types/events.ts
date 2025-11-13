@@ -10,7 +10,21 @@
  */
 export interface EventUI {
   icon: string;
-  color: 'success' | 'warning' | 'error' | 'info' | 'slate' | 'red' | 'orange' | 'cyan' | 'purple' | 'indigo' | 'pink' | 'blue' | 'green' | 'emerald';
+  color:
+    | "success"
+    | "warning"
+    | "error"
+    | "info"
+    | "slate"
+    | "red"
+    | "orange"
+    | "cyan"
+    | "purple"
+    | "indigo"
+    | "pink"
+    | "blue"
+    | "green"
+    | "emerald";
   title?: string;
   summary?: string;
   details?: string;
@@ -32,9 +46,9 @@ export interface BaseEvent {
  * Phase 18: Added optional stage field for two-phase operation
  */
 export interface EyeStartedEvent extends BaseEvent {
-  type: 'eye_started';
+  type: "eye_started";
   eye: string;
-  stage?: 'guidance' | 'validation';
+  stage?: "guidance" | "validation";
   ui: EventUI;
 }
 
@@ -42,7 +56,7 @@ export interface EyeStartedEvent extends BaseEvent {
  * Eye Analyzing Event - Optional progress update during Eye execution
  */
 export interface EyeAnalyzingEvent extends BaseEvent {
-  type: 'eye_analyzing';
+  type: "eye_analyzing";
   eye: string;
   progress?: number;
   message?: string;
@@ -53,9 +67,9 @@ export interface EyeAnalyzingEvent extends BaseEvent {
  * Phase 18: Added optional stage field for two-phase operation
  */
 export interface EyeCompleteEvent extends BaseEvent {
-  type: 'eye_complete';
+  type: "eye_complete";
   eye: string;
-  stage?: 'guidance' | 'validation';
+  stage?: "guidance" | "validation";
   result: {
     tag: string;
     ok: boolean;
@@ -86,9 +100,9 @@ export interface EyeCompleteEvent extends BaseEvent {
  * Phase 18: Added optional stage field for two-phase operation
  */
 export interface EyeErrorEvent extends BaseEvent {
-  type: 'eye_error';
+  type: "eye_error";
   eye: string;
-  stage?: 'guidance' | 'validation';
+  stage?: "guidance" | "validation";
   error: string;
   ui?: EventUI;
 }
@@ -97,9 +111,9 @@ export interface EyeErrorEvent extends BaseEvent {
  * Agent Message Event - Communication between agent and human/system
  */
 export interface AgentMessageEvent extends BaseEvent {
-  type: 'agent_message';
-  direction: 'to_human' | 'from_human' | 'to_thirdeye' | 'from_thirdeye';
-  speaker: 'agent' | 'human' | string; // Can be eye names too
+  type: "agent_message";
+  direction: "to_human" | "from_human" | "to_thirdeye" | "from_thirdeye";
+  speaker: "agent" | "human" | string; // Can be eye names too
   message: string;
   ui: EventUI;
 }
@@ -108,8 +122,13 @@ export interface AgentMessageEvent extends BaseEvent {
  * Session Status Event - Overall session progress updates
  */
 export interface SessionStatusEvent extends BaseEvent {
-  type: 'session_status';
-  status: 'active' | 'awaiting_input' | 'awaiting_revision' | 'complete' | 'error';
+  type: "session_status";
+  status:
+    | "active"
+    | "awaiting_input"
+    | "awaiting_revision"
+    | "complete"
+    | "error";
   currentEye: string | null;
   progress?: {
     completed: number;
@@ -122,7 +141,7 @@ export interface SessionStatusEvent extends BaseEvent {
  * Session Created Event - New session initialized
  */
 export interface SessionCreatedEvent extends BaseEvent {
-  type: 'session_created';
+  type: "session_created";
   portalUrl: string;
   config?: Record<string, unknown>;
 }
@@ -131,10 +150,10 @@ export interface SessionCreatedEvent extends BaseEvent {
  * Overseer Route Event - Overseer decided pipeline route
  */
 export interface OverseerRouteEvent extends BaseEvent {
-  type: 'overseer_route';
-  requestType: 'new_task' | 'review_content';
-  contentDomain: 'code' | 'text' | 'plan' | 'mixed';
-  complexity: 'simple' | 'moderate' | 'comprehensive';
+  type: "overseer_route";
+  requestType: "new_task" | "review_content";
+  contentDomain: "code" | "text" | "plan" | "mixed";
+  complexity: "simple" | "moderate" | "comprehensive";
   pipelineRoute: string[];
   routingReasoning: string;
   skipReasons?: Record<string, string>;
@@ -146,7 +165,7 @@ export interface OverseerRouteEvent extends BaseEvent {
  * Used when specific event type not applicable
  */
 export interface PipelineEvent extends BaseEvent {
-  type: 'pipeline_event';
+  type: "pipeline_event";
   eye?: string;
   status?: string;
   code?: string;
@@ -173,98 +192,101 @@ export type WebSocketEvent =
  * Eye Icons Mapping
  */
 export const EYE_ICONS: Record<string, string> = {
-  overseer: '🧿',
-  sharingan: '🔍',
-  'kyuubi': '✨',
-  jogan: '👁️',
-  rinnegan: '🔮',
-  rinnegan_plan: '🔮',
-  rinnegan_review: '🔮',
-  rinnegan_final: '🔮',
-  mangekyo: '💎',
-  mangekyo_scaffold: '💎',
-  mangekyo_impl: '💎',
-  mangekyo_tests: '💎',
-  mangekyo_docs: '💎',
-  tenseigan: '🔬',
-  byakugan: '👁️‍🗨️',
+  overseer: "🧿",
+  sharingan: "🔍",
+  kyuubi: "✨",
+  jogan: "👁️",
+  rinnegan: "🔮",
+  rinnegan_plan: "🔮",
+  rinnegan_review: "🔮",
+  rinnegan_final: "🔮",
+  mangekyo: "💎",
+  mangekyo_scaffold: "💎",
+  mangekyo_impl: "💎",
+  mangekyo_tests: "💎",
+  mangekyo_docs: "💎",
+  tenseigan: "🔬",
+  byakugan: "👁️‍🗨️",
 };
 
 /**
  * Eye Colors Mapping
  */
-export const EYE_COLORS: Record<string, EventUI['color']> = {
-  overseer: 'purple',
-  sharingan: 'red',
-  'kyuubi': 'orange',
-  jogan: 'cyan',
-  rinnegan: 'indigo',
-  rinnegan_plan: 'indigo',
-  rinnegan_review: 'indigo',
-  rinnegan_final: 'indigo',
-  mangekyo: 'pink',
-  mangekyo_scaffold: 'pink',
-  mangekyo_impl: 'pink',
-  mangekyo_tests: 'pink',
-  mangekyo_docs: 'pink',
-  tenseigan: 'blue',
-  byakugan: 'green',
+export const EYE_COLORS: Record<string, EventUI["color"]> = {
+  overseer: "purple",
+  sharingan: "red",
+  kyuubi: "orange",
+  jogan: "cyan",
+  rinnegan: "indigo",
+  rinnegan_plan: "indigo",
+  rinnegan_review: "indigo",
+  rinnegan_final: "indigo",
+  mangekyo: "pink",
+  mangekyo_scaffold: "pink",
+  mangekyo_impl: "pink",
+  mangekyo_tests: "pink",
+  mangekyo_docs: "pink",
+  tenseigan: "blue",
+  byakugan: "green",
 };
 
 /**
  * Speaker Icons Mapping
  */
 export const SPEAKER_ICONS: Record<string, string> = {
-  agent: '🤖',
-  human: '👤',
-  system: '⚙️',
+  agent: "🤖",
+  human: "👤",
+  system: "⚙️",
   ...EYE_ICONS,
 };
 
 /**
  * Speaker Colors Mapping
  */
-export const SPEAKER_COLORS: Record<string, EventUI['color']> = {
-  agent: 'slate',
-  human: 'emerald',
-  system: 'info',
+export const SPEAKER_COLORS: Record<string, EventUI["color"]> = {
+  agent: "slate",
+  human: "emerald",
+  system: "info",
   ...EYE_COLORS,
 };
 
 /**
  * Helper to create Eye UI metadata
  */
-export function createEyeUI(eye: string, status: 'started' | 'analyzing' | 'complete' | 'error'): EventUI {
+export function createEyeUI(
+  eye: string,
+  status: "started" | "analyzing" | "complete" | "error",
+): EventUI {
   const baseUI: EventUI = {
-    icon: EYE_ICONS[eye] || '👁️',
-    color: EYE_COLORS[eye] || 'info',
+    icon: EYE_ICONS[eye] || "👁️",
+    color: EYE_COLORS[eye] || "info",
     status,
   };
 
   switch (status) {
-    case 'started':
+    case "started":
       return {
         ...baseUI,
         title: `${eye} Started`,
         summary: `${eye} is analyzing...`,
       };
-    case 'analyzing':
+    case "analyzing":
       return {
         ...baseUI,
-        color: 'info',
+        color: "info",
         title: `${eye} Analyzing`,
         summary: `Processing...`,
       };
-    case 'complete':
+    case "complete":
       return {
         ...baseUI,
-        color: 'success',
+        color: "success",
         title: `${eye} Complete`,
       };
-    case 'error':
+    case "error":
       return {
         ...baseUI,
-        color: 'error',
+        color: "error",
         title: `${eye} Error`,
       };
     default:
@@ -277,8 +299,8 @@ export function createEyeUI(eye: string, status: 'started' | 'analyzing' | 'comp
  */
 export function createSpeakerUI(speaker: string): EventUI {
   return {
-    icon: SPEAKER_ICONS[speaker] || '💬',
-    color: SPEAKER_COLORS[speaker] || 'slate',
+    icon: SPEAKER_ICONS[speaker] || "💬",
+    color: SPEAKER_COLORS[speaker] || "slate",
     speakerName: speaker.charAt(0).toUpperCase() + speaker.slice(1),
   };
 }

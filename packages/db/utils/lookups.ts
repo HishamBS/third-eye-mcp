@@ -1,10 +1,10 @@
-import { getDb } from '../index';
-import { eyes, personas, pipelines, personaBlueprints } from '../schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { getDb } from "../index";
+import { eyes, personas, pipelines, personaBlueprints } from "../schema";
+import { eq, and, sql } from "drizzle-orm";
 
 /**
  * Entity Lookup Utilities - SSOT for name to UUID conversion
- * 
+ *
  * V1 Standard: All entity references MUST use UUIDs
  * These utilities provide name → UUID lookups with caching for performance
  */
@@ -14,7 +14,7 @@ const CACHE_TTL_MS = 60000; // 1 minute
 const cache = new Map<string, { value: any; expires: number }>();
 
 function getCacheKey(prefix: string, ...args: string[]): string {
-  return `${prefix}:${args.join(':')}`;
+  return `${prefix}:${args.join(":")}`;
 }
 
 function getCached<T>(key: string): T | null {
@@ -46,7 +46,7 @@ export function clearLookupCache(): void {
  */
 
 export async function getEyeIdByName(name: string): Promise<string | null> {
-  const cacheKey = getCacheKey('eye:id', name.toLowerCase());
+  const cacheKey = getCacheKey("eye:id", name.toLowerCase());
   const cached = getCached<string>(cacheKey);
   if (cached) return cached;
 
@@ -64,8 +64,10 @@ export async function getEyeIdByName(name: string): Promise<string | null> {
   return id;
 }
 
-export async function getEyeByName(name: string): Promise<typeof eyes.$inferSelect | null> {
-  const cacheKey = getCacheKey('eye:full', name.toLowerCase());
+export async function getEyeByName(
+  name: string,
+): Promise<typeof eyes.$inferSelect | null> {
+  const cacheKey = getCacheKey("eye:full", name.toLowerCase());
   const cached = getCached<typeof eyes.$inferSelect>(cacheKey);
   if (cached) return cached;
 
@@ -82,8 +84,10 @@ export async function getEyeByName(name: string): Promise<typeof eyes.$inferSele
   return eye || null;
 }
 
-export async function getEyeById(id: string): Promise<typeof eyes.$inferSelect | null> {
-  const cacheKey = getCacheKey('eye:by-id', id);
+export async function getEyeById(
+  id: string,
+): Promise<typeof eyes.$inferSelect | null> {
+  const cacheKey = getCacheKey("eye:by-id", id);
   const cached = getCached<typeof eyes.$inferSelect>(cacheKey);
   if (cached) return cached;
 
@@ -100,7 +104,7 @@ export async function getEyeById(id: string): Promise<typeof eyes.$inferSelect |
 }
 
 export async function getEyeNameById(id: string): Promise<string | null> {
-  const cacheKey = getCacheKey('eye:name', id);
+  const cacheKey = getCacheKey("eye:name", id);
   const cached = getCached<string>(cacheKey);
   if (cached) return cached;
 
@@ -120,8 +124,10 @@ export async function getEyeNameById(id: string): Promise<string | null> {
 /**
  * Get all active eyes with their IDs
  */
-export async function getAllActiveEyes(): Promise<Array<{ id: string; name: string }>> {
-  const cacheKey = getCacheKey('eyes', 'all-active');
+export async function getAllActiveEyes(): Promise<
+  Array<{ id: string; name: string }>
+> {
+  const cacheKey = getCacheKey("eyes", "all-active");
   const cached = getCached<Array<{ id: string; name: string }>>(cacheKey);
   if (cached) return cached;
 
@@ -140,8 +146,11 @@ export async function getAllActiveEyes(): Promise<Array<{ id: string; name: stri
  * Persona Lookups
  */
 
-export async function getPersonaIdByName(name: string, eyeId: string): Promise<string | null> {
-  const cacheKey = getCacheKey('persona:id', eyeId, name);
+export async function getPersonaIdByName(
+  name: string,
+  eyeId: string,
+): Promise<string | null> {
+  const cacheKey = getCacheKey("persona:id", eyeId, name);
   const cached = getCached<string>(cacheKey);
   if (cached) return cached;
 
@@ -158,9 +167,11 @@ export async function getPersonaIdByName(name: string, eyeId: string): Promise<s
   return id;
 }
 
-export async function getPersonasByEyeId(eyeId: string): Promise<typeof personas.$inferSelect[]> {
-  const cacheKey = getCacheKey('persona:by-eye', eyeId);
-  const cached = getCached<typeof personas.$inferSelect[]>(cacheKey);
+export async function getPersonasByEyeId(
+  eyeId: string,
+): Promise<(typeof personas.$inferSelect)[]> {
+  const cacheKey = getCacheKey("persona:by-eye", eyeId);
+  const cached = getCached<(typeof personas.$inferSelect)[]>(cacheKey);
   if (cached) return cached;
 
   const { db } = getDb();
@@ -178,8 +189,10 @@ export async function getPersonasByEyeId(eyeId: string): Promise<typeof personas
  * Pipeline Lookups
  */
 
-export async function getPipelineIdByName(name: string): Promise<string | null> {
-  const cacheKey = getCacheKey('pipeline:id', name.toLowerCase());
+export async function getPipelineIdByName(
+  name: string,
+): Promise<string | null> {
+  const cacheKey = getCacheKey("pipeline:id", name.toLowerCase());
   const cached = getCached<string>(cacheKey);
   if (cached) return cached;
 
@@ -196,8 +209,10 @@ export async function getPipelineIdByName(name: string): Promise<string | null> 
   return id;
 }
 
-export async function getPipelineByName(name: string): Promise<typeof pipelines.$inferSelect | null> {
-  const cacheKey = getCacheKey('pipeline:full', name.toLowerCase());
+export async function getPipelineByName(
+  name: string,
+): Promise<typeof pipelines.$inferSelect | null> {
+  const cacheKey = getCacheKey("pipeline:full", name.toLowerCase());
   const cached = getCached<typeof pipelines.$inferSelect>(cacheKey);
   if (cached) return cached;
 
@@ -213,8 +228,10 @@ export async function getPipelineByName(name: string): Promise<typeof pipelines.
   return pipeline || null;
 }
 
-export async function getPipelineById(id: string): Promise<typeof pipelines.$inferSelect | null> {
-  const cacheKey = getCacheKey('pipeline:by-id', id);
+export async function getPipelineById(
+  id: string,
+): Promise<typeof pipelines.$inferSelect | null> {
+  const cacheKey = getCacheKey("pipeline:by-id", id);
   const cached = getCached<typeof pipelines.$inferSelect>(cacheKey);
   if (cached) return cached;
 
@@ -234,8 +251,10 @@ export async function getPipelineById(id: string): Promise<typeof pipelines.$inf
  * PersonaBlueprint Lookups
  */
 
-export async function getPersonaBlueprintByEyeId(eyeId: string): Promise<typeof personaBlueprints.$inferSelect | null> {
-  const cacheKey = getCacheKey('blueprint:by-eye-id', eyeId);
+export async function getPersonaBlueprintByEyeId(
+  eyeId: string,
+): Promise<typeof personaBlueprints.$inferSelect | null> {
+  const cacheKey = getCacheKey("blueprint:by-eye-id", eyeId);
   const cached = getCached<typeof personaBlueprints.$inferSelect>(cacheKey);
   if (cached) return cached;
 
@@ -251,7 +270,9 @@ export async function getPersonaBlueprintByEyeId(eyeId: string): Promise<typeof 
   return blueprint || null;
 }
 
-export async function getPersonaBlueprintByEyeName(eyeName: string): Promise<typeof personaBlueprints.$inferSelect | null> {
+export async function getPersonaBlueprintByEyeName(
+  eyeName: string,
+): Promise<typeof personaBlueprints.$inferSelect | null> {
   // First get eye ID by name
   const eyeId = await getEyeIdByName(eyeName);
   if (!eyeId) return null;
@@ -263,14 +284,16 @@ export async function getPersonaBlueprintByEyeName(eyeName: string): Promise<typ
  * Batch Lookups for Performance
  */
 
-export async function getEyeIdsByNames(names: string[]): Promise<Map<string, string>> {
+export async function getEyeIdsByNames(
+  names: string[],
+): Promise<Map<string, string>> {
   const result = new Map<string, string>();
   const { db } = getDb();
 
   // Check cache first
   const uncachedNames: string[] = [];
   for (const name of names) {
-    const cacheKey = getCacheKey('eye:id', name.toLowerCase());
+    const cacheKey = getCacheKey("eye:id", name.toLowerCase());
     const cached = getCached<string>(cacheKey);
     if (cached) {
       result.set(name, cached);
@@ -289,7 +312,7 @@ export async function getEyeIdsByNames(names: string[]): Promise<Map<string, str
     for (const eye of eyeResults) {
       if (names.includes(eye.name)) {
         result.set(eye.name, eye.id);
-        const cacheKey = getCacheKey('eye:id', eye.name.toLowerCase());
+        const cacheKey = getCacheKey("eye:id", eye.name.toLowerCase());
         setCache(cacheKey, eye.id);
       }
     }
@@ -302,7 +325,9 @@ export async function getEyeIdsByNames(names: string[]): Promise<Map<string, str
  * Normalize eye identifier to UUID
  * Accepts either eye name or eye ID and returns the UUID
  */
-export async function normalizeEyeIdentifier(identifier: string): Promise<string | null> {
+export async function normalizeEyeIdentifier(
+  identifier: string,
+): Promise<string | null> {
   // Check if it's already a UUID (nanoid format: 21 characters)
   if (identifier.length === 21) {
     // Verify it exists
@@ -313,4 +338,3 @@ export async function normalizeEyeIdentifier(identifier: string): Promise<string
   // Treat as name and lookup UUID
   return getEyeIdByName(identifier);
 }
-

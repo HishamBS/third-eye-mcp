@@ -5,8 +5,8 @@
  * Makes Third Eye MCP a "must-use" server by guiding agents through optimal Eye workflows
  */
 
-import type { EyeResponse } from '@third-eye/eyes';
-import { EyeId } from '@third-eye/constants';
+import type { EyeResponse } from "@third-eye/eyes";
+import { EyeId } from "@third-eye/constants";
 
 interface GuidanceRequest {
   taskDescription: string;
@@ -28,26 +28,27 @@ interface GuidanceResponse {
  * Workflow state machine - tracks current phase of work
  */
 enum WorkflowStage {
-  INITIAL = 'initial_classification',
-  CLARIFICATION = 'clarification',
-  INTENT_VALIDATION = 'intent_validation',
-  REQUIREMENTS = 'requirements',
-  PLANNING = 'planning',
-  SCAFFOLD = 'scaffold_review',
-  IMPLEMENTATION = 'implementation_review',
-  TESTING = 'testing_review',
-  DOCUMENTATION = 'documentation_review',
-  VALIDATION = 'validation',
-  APPROVAL = 'final_approval',
-  COMPLETE = 'complete',
+  INITIAL = "initial_classification",
+  CLARIFICATION = "clarification",
+  INTENT_VALIDATION = "intent_validation",
+  REQUIREMENTS = "requirements",
+  PLANNING = "planning",
+  SCAFFOLD = "scaffold_review",
+  IMPLEMENTATION = "implementation_review",
+  TESTING = "testing_review",
+  DOCUMENTATION = "documentation_review",
+  VALIDATION = "validation",
+  APPROVAL = "final_approval",
+  COMPLETE = "complete",
 }
 
 /**
  * Helper to construct MCP tool names from EyeId constants (SSOT)
  */
-const toolName = (eyeId: string, action: string): string => `third_eye_${eyeId}_${action}`;
-const navigatorTool = 'third_eye_navigator'; // Overseer navigation tool
-const helperTool = 'third_eye_helper_rewrite_prompt'; // Kyuubi prompt helper tool
+const toolName = (eyeId: string, action: string): string =>
+  `third_eye_${eyeId}_${action}`;
+const navigatorTool = "third_eye_navigator"; // Overseer navigation tool
+const helperTool = "third_eye_helper_rewrite_prompt"; // Kyuubi prompt helper tool
 
 /**
  * Eye delegation rules - defines optimal workflow paths
@@ -57,55 +58,57 @@ const WORKFLOW_PATHS = {
   // Fast path for unambiguous code tasks
   code_fast: [
     navigatorTool,
-    toolName(EyeId.SHARINGAN, 'clarify'),
-    toolName(EyeId.JOGAN, 'confirm_intent'),
-    toolName(EyeId.RINNEGAN, 'plan_requirements'),
-    toolName(EyeId.RINNEGAN, 'plan_review'),
-    toolName(EyeId.MANGEKYO, 'review_scaffold'),
-    toolName(EyeId.MANGEKYO, 'review_impl'),
-    toolName(EyeId.MANGEKYO, 'review_tests'),
-    toolName(EyeId.MANGEKYO, 'review_docs'),
-    toolName(EyeId.TENSEIGAN, 'validate_claims'),
-    toolName(EyeId.BYAKUGAN, 'consistency_check'),
-    toolName(EyeId.RINNEGAN, 'final_approval'),
+    toolName(EyeId.SHARINGAN, "clarify"),
+    toolName(EyeId.JOGAN, "confirm_intent"),
+    toolName(EyeId.RINNEGAN, "plan_requirements"),
+    toolName(EyeId.RINNEGAN, "plan_review"),
+    toolName(EyeId.MANGEKYO, "review_scaffold"),
+    toolName(EyeId.MANGEKYO, "review_impl"),
+    toolName(EyeId.MANGEKYO, "review_tests"),
+    toolName(EyeId.MANGEKYO, "review_docs"),
+    toolName(EyeId.TENSEIGAN, "validate_claims"),
+    toolName(EyeId.BYAKUGAN, "consistency_check"),
+    toolName(EyeId.RINNEGAN, "final_approval"),
   ],
 
   // Full path for ambiguous code tasks
   code_full: [
     navigatorTool,
-    toolName(EyeId.SHARINGAN, 'clarify'),
+    toolName(EyeId.SHARINGAN, "clarify"),
     helperTool,
-    toolName(EyeId.JOGAN, 'confirm_intent'),
-    toolName(EyeId.RINNEGAN, 'plan_requirements'),
-    toolName(EyeId.RINNEGAN, 'plan_review'),
-    toolName(EyeId.MANGEKYO, 'review_scaffold'),
-    toolName(EyeId.MANGEKYO, 'review_impl'),
-    toolName(EyeId.MANGEKYO, 'review_tests'),
-    toolName(EyeId.MANGEKYO, 'review_docs'),
-    toolName(EyeId.TENSEIGAN, 'validate_claims'),
-    toolName(EyeId.BYAKUGAN, 'consistency_check'),
-    toolName(EyeId.RINNEGAN, 'final_approval'),
+    toolName(EyeId.JOGAN, "confirm_intent"),
+    toolName(EyeId.RINNEGAN, "plan_requirements"),
+    toolName(EyeId.RINNEGAN, "plan_review"),
+    toolName(EyeId.MANGEKYO, "review_scaffold"),
+    toolName(EyeId.MANGEKYO, "review_impl"),
+    toolName(EyeId.MANGEKYO, "review_tests"),
+    toolName(EyeId.MANGEKYO, "review_docs"),
+    toolName(EyeId.TENSEIGAN, "validate_claims"),
+    toolName(EyeId.BYAKUGAN, "consistency_check"),
+    toolName(EyeId.RINNEGAN, "final_approval"),
   ],
 
   // Path for documentation/validation tasks
   validation_only: [
     navigatorTool,
-    toolName(EyeId.TENSEIGAN, 'validate_claims'),
-    toolName(EyeId.BYAKUGAN, 'consistency_check'),
+    toolName(EyeId.TENSEIGAN, "validate_claims"),
+    toolName(EyeId.BYAKUGAN, "consistency_check"),
   ],
 
   // Path for quick clarifications
   clarification: [
-    toolName(EyeId.SHARINGAN, 'clarify'),
+    toolName(EyeId.SHARINGAN, "clarify"),
     helperTool,
-    toolName(EyeId.JOGAN, 'confirm_intent'),
+    toolName(EyeId.JOGAN, "confirm_intent"),
   ],
 };
 
 /**
  * Analyze task description and last response to recommend next Eye
  */
-export function getWorkflowGuidance(request: GuidanceRequest): GuidanceResponse {
+export function getWorkflowGuidance(
+  request: GuidanceRequest,
+): GuidanceResponse {
   const { taskDescription, currentState, lastEyeResponse, sessionId } = request;
 
   // Detect task type from description
@@ -121,13 +124,17 @@ export function getWorkflowGuidance(request: GuidanceRequest): GuidanceResponse 
   if (isValidationOnly) {
     workflowPath = WORKFLOW_PATHS.validation_only;
   } else if (isCodeRelated) {
-    workflowPath = isAmbiguous ? WORKFLOW_PATHS.code_full : WORKFLOW_PATHS.code_fast;
+    workflowPath = isAmbiguous
+      ? WORKFLOW_PATHS.code_full
+      : WORKFLOW_PATHS.code_fast;
   } else {
     workflowPath = WORKFLOW_PATHS.clarification;
   }
 
   // Find current position in workflow using tag property
-  const currentTag = lastEyeResponse?.tag ? `third_eye_${lastEyeResponse.tag}` : null;
+  const currentTag = lastEyeResponse?.tag
+    ? `third_eye_${lastEyeResponse.tag}`
+    : null;
   const currentIndex = currentTag ? workflowPath.indexOf(currentTag) : -1;
 
   // Recommend next tool
@@ -143,17 +150,19 @@ export function getWorkflowGuidance(request: GuidanceRequest): GuidanceResponse 
     isAmbiguous,
     isValidationOnly,
     stage,
-    recommendedTool
+    recommendedTool,
   );
 
   // Suggest alternatives
-  const alternatives = suggestAlternatives(recommendedTool, isCodeRelated, stage);
+  const alternatives = suggestAlternatives(
+    recommendedTool,
+    isCodeRelated,
+    stage,
+  );
 
   // Build delegation chain (remaining steps)
   const delegationChain =
-    currentIndex >= 0
-      ? workflowPath.slice(currentIndex + 1)
-      : workflowPath;
+    currentIndex >= 0 ? workflowPath.slice(currentIndex + 1) : workflowPath;
 
   // Generate next steps guidance
   const nextSteps = generateNextSteps(recommendedTool, stage, lastEyeResponse);
@@ -173,24 +182,24 @@ export function getWorkflowGuidance(request: GuidanceRequest): GuidanceResponse 
  */
 function detectCodeTask(description: string): boolean {
   const codeKeywords = [
-    'code',
-    'implement',
-    'function',
-    'class',
-    'api',
-    'endpoint',
-    'test',
-    'debug',
-    'fix',
-    'refactor',
-    'component',
-    'module',
-    'file',
-    'diff',
-    'commit',
-    'merge',
-    'deploy',
-    'build',
+    "code",
+    "implement",
+    "function",
+    "class",
+    "api",
+    "endpoint",
+    "test",
+    "debug",
+    "fix",
+    "refactor",
+    "component",
+    "module",
+    "file",
+    "diff",
+    "commit",
+    "merge",
+    "deploy",
+    "build",
   ];
 
   const lowerDesc = description.toLowerCase();
@@ -200,7 +209,10 @@ function detectCodeTask(description: string): boolean {
 /**
  * Detect if task has ambiguity
  */
-function detectAmbiguity(description: string, lastResponse?: EyeResponse): boolean {
+function detectAmbiguity(
+  description: string,
+  lastResponse?: EyeResponse,
+): boolean {
   // Check Sharingan response for ambiguity flag
   if (lastResponse?.data?.ambiguous === true) {
     return true;
@@ -214,14 +226,14 @@ function detectAmbiguity(description: string, lastResponse?: EyeResponse): boole
 
   // Check for ambiguous language
   const ambiguousKeywords = [
-    'maybe',
-    'somehow',
-    'something',
-    'or something',
-    'i think',
-    'not sure',
-    'might',
-    'could be',
+    "maybe",
+    "somehow",
+    "something",
+    "or something",
+    "i think",
+    "not sure",
+    "might",
+    "could be",
   ];
 
   const lowerDesc = description.toLowerCase();
@@ -233,14 +245,14 @@ function detectAmbiguity(description: string, lastResponse?: EyeResponse): boole
  */
 function detectValidationTask(description: string): boolean {
   const validationKeywords = [
-    'validate',
-    'verify',
-    'check',
-    'review',
-    'audit',
-    'consistency',
-    'evidence',
-    'citation',
+    "validate",
+    "verify",
+    "check",
+    "review",
+    "audit",
+    "consistency",
+    "evidence",
+    "citation",
   ];
 
   const lowerDesc = description.toLowerCase();
@@ -250,32 +262,40 @@ function detectValidationTask(description: string): boolean {
 /**
  * Determine current workflow stage
  */
-function determineWorkflowStage(currentState?: string, lastResponse?: EyeResponse): string {
+function determineWorkflowStage(
+  currentState?: string,
+  lastResponse?: EyeResponse,
+): string {
   // Check for approval status using proper enum comparison
   if (lastResponse?.ok === true || lastResponse?.data?.approved === true) {
     return WorkflowStage.APPROVAL;
   }
 
   // Use tag property instead of non-existent tool property
-  const tag = lastResponse?.tag?.toLowerCase() || '';
-  const nextAction = typeof lastResponse?.next === 'string' ? lastResponse.next.toLowerCase() : Array.isArray(lastResponse?.next) ? lastResponse.next.join(' ').toLowerCase() : '';
+  const tag = lastResponse?.tag?.toLowerCase() || "";
+  const nextAction =
+    typeof lastResponse?.next === "string"
+      ? lastResponse.next.toLowerCase()
+      : Array.isArray(lastResponse?.next)
+        ? lastResponse.next.join(" ").toLowerCase()
+        : "";
 
   // Check tag for eye type (using EyeId constants from SSOT)
-  if (tag === EyeId.BYAKUGAN && nextAction.includes('final')) {
+  if (tag === EyeId.BYAKUGAN && nextAction.includes("final")) {
     return WorkflowStage.COMPLETE;
   }
 
   if (tag === EyeId.MANGEKYO) {
-    if (nextAction.includes('docs') || nextAction.includes('documentation')) {
+    if (nextAction.includes("docs") || nextAction.includes("documentation")) {
       return WorkflowStage.DOCUMENTATION;
     }
-    if (nextAction.includes('test') || nextAction.includes('testing')) {
+    if (nextAction.includes("test") || nextAction.includes("testing")) {
       return WorkflowStage.TESTING;
     }
-    if (nextAction.includes('impl') || nextAction.includes('implementation')) {
+    if (nextAction.includes("impl") || nextAction.includes("implementation")) {
       return WorkflowStage.IMPLEMENTATION;
     }
-    if (nextAction.includes('scaffold')) {
+    if (nextAction.includes("scaffold")) {
       return WorkflowStage.SCAFFOLD;
     }
   }
@@ -288,7 +308,7 @@ function determineWorkflowStage(currentState?: string, lastResponse?: EyeRespons
     return WorkflowStage.INTENT_VALIDATION;
   }
 
-  if (tag === EyeId.KYUUBI || tag === 'prompt-helper') {
+  if (tag === EyeId.KYUUBI || tag === "prompt-helper") {
     return WorkflowStage.CLARIFICATION;
   }
 
@@ -304,46 +324,50 @@ function buildReasoning(
   isAmbiguous: boolean,
   isValidation: boolean,
   stage: string,
-  tool: string
+  tool: string,
 ): string {
   const reasons: string[] = [];
 
   if (isValidation) {
-    reasons.push('Task appears to be validation-focused');
+    reasons.push("Task appears to be validation-focused");
   } else if (isCode) {
-    reasons.push('Task involves code development');
+    reasons.push("Task involves code development");
   }
 
   if (isAmbiguous) {
-    reasons.push('Task description has ambiguities that need clarification');
+    reasons.push("Task description has ambiguities that need clarification");
   }
 
   reasons.push(`Current workflow stage: ${stage}`);
   reasons.push(`Recommended next step: ${tool}`);
 
-  return reasons.join('. ');
+  return reasons.join(". ");
 }
 
 /**
  * Suggest alternative tools based on context
  */
-function suggestAlternatives(tool: string, isCode: boolean, stage: string): string[] {
+function suggestAlternatives(
+  tool: string,
+  isCode: boolean,
+  stage: string,
+): string[] {
   const alternatives: string[] = [];
 
   // If recommending Sharingan, alternatives could include direct navigation
-  if (tool === toolName(EyeId.SHARINGAN, 'clarify')) {
+  if (tool === toolName(EyeId.SHARINGAN, "clarify")) {
     alternatives.push(navigatorTool);
   }
 
   // If recommending code review, alternatives include validation tools
   if (tool.includes(EyeId.MANGEKYO)) {
-    alternatives.push(toolName(EyeId.TENSEIGAN, 'validate_claims'));
-    alternatives.push(toolName(EyeId.BYAKUGAN, 'consistency_check'));
+    alternatives.push(toolName(EyeId.TENSEIGAN, "validate_claims"));
+    alternatives.push(toolName(EyeId.BYAKUGAN, "consistency_check"));
   }
 
   // If recommending planning, could skip to scaffold if already have plan
   if (tool.includes(`${EyeId.RINNEGAN}_plan`)) {
-    alternatives.push(toolName(EyeId.MANGEKYO, 'review_scaffold'));
+    alternatives.push(toolName(EyeId.MANGEKYO, "review_scaffold"));
   }
 
   return alternatives;
@@ -352,46 +376,55 @@ function suggestAlternatives(tool: string, isCode: boolean, stage: string): stri
 /**
  * Generate actionable next steps
  */
-function generateNextSteps(tool: string, stage: string, lastResponse?: EyeResponse): string[] {
+function generateNextSteps(
+  tool: string,
+  stage: string,
+  lastResponse?: EyeResponse,
+): string[] {
   const steps: string[] = [];
 
-  if (tool === toolName(EyeId.SHARINGAN, 'clarify')) {
-    steps.push('Submit your task description to Sharingan for classification');
-    steps.push('Answer any clarifying questions that emerge');
+  if (tool === toolName(EyeId.SHARINGAN, "clarify")) {
+    steps.push("Submit your task description to Sharingan for classification");
+    steps.push("Answer any clarifying questions that emerge");
     // Type guard for questions array
-    if (lastResponse?.data?.questions && Array.isArray(lastResponse.data.questions)) {
-      steps.push(`Prepare answers for ${lastResponse.data.questions.length} questions`);
+    if (
+      lastResponse?.data?.questions &&
+      Array.isArray(lastResponse.data.questions)
+    ) {
+      steps.push(
+        `Prepare answers for ${lastResponse.data.questions.length} questions`,
+      );
     }
   }
 
   if (tool === helperTool) {
-    steps.push('Provide your ambiguous prompt for restructuring');
-    steps.push('Include any clarifications you have');
+    steps.push("Provide your ambiguous prompt for restructuring");
+    steps.push("Include any clarifications you have");
   }
 
-  if (tool === toolName(EyeId.JOGAN, 'confirm_intent')) {
-    steps.push('Submit restructured prompt for validation');
-    steps.push('Ensure all required sections are present');
+  if (tool === toolName(EyeId.JOGAN, "confirm_intent")) {
+    steps.push("Submit restructured prompt for validation");
+    steps.push("Ensure all required sections are present");
   }
 
   if (tool.includes(`${EyeId.RINNEGAN}_plan`)) {
-    steps.push('Prepare or review your implementation plan');
-    steps.push('Include file impact table and testing strategy');
+    steps.push("Prepare or review your implementation plan");
+    steps.push("Include file impact table and testing strategy");
   }
 
   if (tool.includes(EyeId.MANGEKYO)) {
-    steps.push('Submit your code changes for review');
-    steps.push('Include diffs, reasoning, and test results');
+    steps.push("Submit your code changes for review");
+    steps.push("Include diffs, reasoning, and test results");
   }
 
   if (tool.includes(EyeId.TENSEIGAN)) {
-    steps.push('Provide content with factual claims');
-    steps.push('Include evidence sources for verification');
+    steps.push("Provide content with factual claims");
+    steps.push("Include evidence sources for verification");
   }
 
   if (tool.includes(EyeId.BYAKUGAN)) {
-    steps.push('Submit content for consistency check');
-    steps.push('Previous session context will be automatically included');
+    steps.push("Submit content for consistency check");
+    steps.push("Previous session context will be automatically included");
   }
 
   return steps;
@@ -400,17 +433,22 @@ function generateNextSteps(tool: string, stage: string, lastResponse?: EyeRespon
 /**
  * Auto-delegation: Given an Eye response, determine if delegation is needed
  */
-export function shouldDelegate(eyeResponse: EyeResponse): { delegate: boolean; toEye?: string } {
+export function shouldDelegate(eyeResponse: EyeResponse): {
+  delegate: boolean;
+  toEye?: string;
+} {
   // Check if response has "next" field suggesting delegation
   // Handle both string and string[] types for next property
-  const nextValue = Array.isArray(eyeResponse.next) ? eyeResponse.next[0] : eyeResponse.next;
-  if (nextValue && typeof nextValue === 'string' && nextValue !== 'COMPLETE') {
+  const nextValue = Array.isArray(eyeResponse.next)
+    ? eyeResponse.next[0]
+    : eyeResponse.next;
+  if (nextValue && typeof nextValue === "string" && nextValue !== "COMPLETE") {
     return { delegate: true, toEye: nextValue };
   }
 
   // Check ambiguity flag from Sharingan
   if (eyeResponse.data?.ambiguous === true) {
-    return { delegate: true, toEye: 'third_eye_helper_rewrite_prompt' };
+    return { delegate: true, toEye: "third_eye_helper_rewrite_prompt" };
   }
 
   // Check approval flag from any review Eye
@@ -420,7 +458,7 @@ export function shouldDelegate(eyeResponse: EyeResponse): { delegate: boolean; t
   }
 
   // Check for completion codes
-  if (['APPROVED', 'OK', 'VALID'].includes(eyeResponse.code)) {
+  if (["APPROVED", "OK", "VALID"].includes(eyeResponse.code)) {
     // Continue workflow
     return { delegate: false };
   }

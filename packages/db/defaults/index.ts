@@ -1,5 +1,5 @@
-import { getDb } from '../index';
-import type { Database } from 'bun:sqlite';
+import { getDb } from "../index";
+import type { Database } from "bun:sqlite";
 import {
   personas,
   eyes,
@@ -18,21 +18,18 @@ import {
   type NewStrictnessProfile,
   type NewAppSetting,
   type NewMcpIntegration,
-} from '../schema';
-import { eq, inArray } from 'drizzle-orm';
-import { DEFAULT_PERSONAS, DEFAULT_PERSONA_MAP } from './personas';
-import { DEFAULT_INTEGRATIONS } from './integrations';
-import { DEFAULT_PIPELINES } from './pipelines';
-import { PREDEFINED_TEMPLATES } from './templates';
-import {
-  STRICTNESS_PRESETS,
-  type StrictnessPresetId,
-} from '@third-eye/types';
-import { DEFAULT_BLUEPRINTS } from '@third-eye/constants/blueprints-data';
-import { generateId } from '../utils/uuid';
-import { SeedSubset } from '../constants';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+} from "../schema";
+import { eq, inArray } from "drizzle-orm";
+import { DEFAULT_PERSONAS, DEFAULT_PERSONA_MAP } from "./personas";
+import { DEFAULT_INTEGRATIONS } from "./integrations";
+import { DEFAULT_PIPELINES } from "./pipelines";
+import { PREDEFINED_TEMPLATES } from "./templates";
+import { STRICTNESS_PRESETS, type StrictnessPresetId } from "@third-eye/types";
+import { DEFAULT_BLUEPRINTS } from "@third-eye/constants/blueprints-data";
+import { generateId } from "../utils/uuid";
+import { SeedSubset } from "../constants";
+import { readFileSync } from "fs";
+import { join } from "path";
 
 // Minimal type for workflow validation (avoids circular dependency with @third-eye/core)
 interface WorkflowNode {
@@ -49,11 +46,13 @@ interface WorkflowJson {
 // This will be populated by seedEyes and used by other seed functions
 const EYE_NAME_TO_UUID_MAP = new Map<string, string>();
 
-const DEFAULT_STRICTNESS: Array<Omit<NewStrictnessProfile, 'createdAt'>> = (
-  Object.entries(STRICTNESS_PRESETS) as Array<[
-    StrictnessPresetId,
-    typeof STRICTNESS_PRESETS[keyof typeof STRICTNESS_PRESETS]
-  ]>
+const DEFAULT_STRICTNESS: Array<Omit<NewStrictnessProfile, "createdAt">> = (
+  Object.entries(STRICTNESS_PRESETS) as Array<
+    [
+      StrictnessPresetId,
+      (typeof STRICTNESS_PRESETS)[keyof typeof STRICTNESS_PRESETS],
+    ]
+  >
 ).map(([_, preset]) => ({
   id: generateId(), // UUID
   name: preset.name,
@@ -93,22 +92,26 @@ function generatePersonaId(eyeName: string, version: number) {
  * V1: Uses UUID for all eye IDs
  */
 async function seedEyes(
-  db: ReturnType<typeof getDb>['db'],
+  db: ReturnType<typeof getDb>["db"],
   sqlite: Database,
   log: (message: string) => void,
-  force: boolean
+  force: boolean,
 ): Promise<boolean> {
   const existing = await db.select({ id: eyes.id }).from(eyes).limit(1);
   const shouldSeed = force || existing.length === 0;
 
   if (!shouldSeed) {
     // Eyes already exist - populate map from database instead
-    const allEyes = await db.select({ id: eyes.id, name: eyes.name }).from(eyes).all();
+    const allEyes = await db
+      .select({ id: eyes.id, name: eyes.name })
+      .from(eyes)
+      .all();
 
     // Build reverse lookup: display name -> EyeId constant
     for (const eye of allEyes) {
       const matchingEyeId = Object.entries(DEFAULT_BLUEPRINTS as any).find(
-        ([eyeId, blueprint]: [string, any]) => blueprint.metadata.name === eye.name
+        ([eyeId, blueprint]: [string, any]) =>
+          blueprint.metadata.name === eye.name,
       );
 
       if (matchingEyeId) {
@@ -130,26 +133,30 @@ async function seedEyes(
   try {
     const now = new Date();
     // Construct path to SVG files (relative to workspace root)
-    const svgBasePath = join(process.cwd(), 'apps', 'ui', 'public', 'eyes');
+    const svgBasePath = join(process.cwd(), "apps", "ui", "public", "eyes");
 
     // Validate DEFAULT_BLUEPRINTS exists and has entries
-    if (!DEFAULT_BLUEPRINTS || typeof DEFAULT_BLUEPRINTS !== 'object') {
-      throw new Error('DEFAULT_BLUEPRINTS is not an object');
+    if (!DEFAULT_BLUEPRINTS || typeof DEFAULT_BLUEPRINTS !== "object") {
+      throw new Error("DEFAULT_BLUEPRINTS is not an object");
     }
 
     const blueprintKeys = Object.keys(DEFAULT_BLUEPRINTS);
     if (blueprintKeys.length === 0) {
-      throw new Error('DEFAULT_BLUEPRINTS is empty - no blueprints to seed');
+      throw new Error("DEFAULT_BLUEPRINTS is empty - no blueprints to seed");
     }
 
-    log(`  📋 Found ${blueprintKeys.length} blueprints: ${blueprintKeys.join(', ')}`);
+    log(
+      `  📋 Found ${blueprintKeys.length} blueprints: ${blueprintKeys.join(", ")}`,
+    );
 
     eyeEntries = Object.entries(DEFAULT_BLUEPRINTS as any)
       .map(([eyeId, blueprint]: [string, any]) => {
         // Validate eyeId is not null/undefined
-        if (!eyeId || typeof eyeId !== 'string' || eyeId.trim() === '') {
+        if (!eyeId || typeof eyeId !== "string" || eyeId.trim() === "") {
           log(`  ✗ Invalid eyeId: ${eyeId} (type: ${typeof eyeId})`);
-          throw new Error(`Invalid eyeId found in DEFAULT_BLUEPRINTS: ${eyeId}`);
+          throw new Error(
+            `Invalid eyeId found in DEFAULT_BLUEPRINTS: ${eyeId}`,
+          );
         }
 
         // Validate blueprint structure
@@ -160,22 +167,22 @@ async function seedEyes(
 
         const eyeUuid = generateId(); // Generate UUID
         EYE_NAME_TO_UUID_MAP.set(eyeId, eyeUuid);
-        
+
         // Read SVG file content from public/eyes directory
-        let iconSvg = '';
+        let iconSvg = "";
         try {
           const svgPath = join(svgBasePath, `${eyeId}.svg`);
-          iconSvg = readFileSync(svgPath, 'utf-8');
+          iconSvg = readFileSync(svgPath, "utf-8");
         } catch (error) {
           log(`  ⚠ Warning: Could not read SVG file for ${eyeId}: ${error}`);
           // Continue with empty SVG - will be handled by EyeIcon component placeholder
         }
-        
+
         const entry: NewEye = {
           id: eyeUuid, // UUID instead of name
           name: blueprint.metadata.name, // Display name (e.g., 'Overseer', 'Jōgan')
           version: 1,
-          description: blueprint.metadata.description || '',
+          description: blueprint.metadata.description || "",
           iconSvg: iconSvg || null, // Store full SVG content from file - database is SSOT
           inputSchemaJson: {},
           outputSchemaJson: {},
@@ -183,10 +190,12 @@ async function seedEyes(
           active: true,
           createdAt: now,
         };
-        
+
         return entry;
       })
-      .filter((entry): entry is NewEye => entry !== null && entry !== undefined);
+      .filter(
+        (entry): entry is NewEye => entry !== null && entry !== undefined,
+      );
 
     // Log entries before insertion
     log(`  📝 Prepared ${eyeEntries.length} eye entries for insertion`);
@@ -198,13 +207,16 @@ async function seedEyes(
     // Insert entries one by one to identify which one fails
     for (let i = 0; i < eyeEntries.length; i++) {
       const entry = eyeEntries[i];
-      
+
       try {
         await db.insert(eyes).values([entry]).run();
         log(`  ✓ Inserted eye ${i + 1}/${eyeEntries.length}: ${entry.name}`);
       } catch (insertErr) {
-        const errMsg = insertErr instanceof Error ? insertErr.message : String(insertErr);
-        log(`  ✗ Failed to insert eye ${i + 1}/${eyeEntries.length}: ${entry.name}`);
+        const errMsg =
+          insertErr instanceof Error ? insertErr.message : String(insertErr);
+        log(
+          `  ✗ Failed to insert eye ${i + 1}/${eyeEntries.length}: ${entry.name}`,
+        );
         log(`    Error: ${errMsg}`);
         log(`    Entry data: id=${entry.id}, name="${entry.name}"`);
         throw new Error(`Failed to insert eye ${entry.name}: ${errMsg}`);
@@ -213,15 +225,26 @@ async function seedEyes(
     log(`  • Eyes seeded (${eyeEntries.length} eyes with UUIDs)`);
 
     // Verify map has all 8 entries before returning
-    const expectedKeys = ['overseer', 'sharingan', 'kyuubi', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan'];
-    const missingKeys = expectedKeys.filter(id => !EYE_NAME_TO_UUID_MAP.has(id));
+    const expectedKeys = [
+      "overseer",
+      "sharingan",
+      "kyuubi",
+      "jogan",
+      "rinnegan",
+      "mangekyo",
+      "tenseigan",
+      "byakugan",
+    ];
+    const missingKeys = expectedKeys.filter(
+      (id) => !EYE_NAME_TO_UUID_MAP.has(id),
+    );
     if (missingKeys.length > 0) {
       const mapKeys = Array.from(EYE_NAME_TO_UUID_MAP.keys());
-      const errorMsg = `EYE_NAME_TO_UUID_MAP is incomplete: missing ${missingKeys.join(', ')}. Map has ${mapKeys.length} entries: ${mapKeys.join(', ')}`;
+      const errorMsg = `EYE_NAME_TO_UUID_MAP is incomplete: missing ${missingKeys.join(", ")}. Map has ${mapKeys.length} entries: ${mapKeys.join(", ")}`;
       console.error(`[CRITICAL ERROR] ${errorMsg}`);
       throw new Error(errorMsg);
     }
-    
+
     return true;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -232,7 +255,10 @@ async function seedEyes(
     }
     // Also log entry details if available
     if (eyeEntries && eyeEntries.length > 0) {
-      console.error(`[ERROR] First entry details:`, JSON.stringify(eyeEntries[0], null, 2));
+      console.error(
+        `[ERROR] First entry details:`,
+        JSON.stringify(eyeEntries[0], null, 2),
+      );
     }
     log(`  ✗ Failed to seed eyes: ${errorMessage}`);
     return false;
@@ -245,11 +271,14 @@ async function seedEyes(
  * V1: Uses UUID for blueprint IDs and references eye UUIDs
  */
 async function seedBlueprints(
-  db: ReturnType<typeof getDb>['db'],
+  db: ReturnType<typeof getDb>["db"],
   log: (message: string) => void,
-  force: boolean
+  force: boolean,
 ): Promise<boolean> {
-  const existing = await db.select({ id: personaBlueprints.id }).from(personaBlueprints).limit(1);
+  const existing = await db
+    .select({ id: personaBlueprints.id })
+    .from(personaBlueprints)
+    .limit(1);
   const shouldSeed = force || existing.length === 0;
   if (!shouldSeed) {
     return false;
@@ -292,7 +321,9 @@ async function seedBlueprints(
       .filter((entry): entry is NewPersonaBlueprint => entry !== null);
 
     await db.insert(personaBlueprints).values(blueprintEntries).run();
-    log(`  • Blueprints seeded (${blueprintEntries.length} blueprints with UUIDs)`);
+    log(
+      `  • Blueprints seeded (${blueprintEntries.length} blueprints with UUIDs)`,
+    );
     return true;
   } catch (error) {
     log(`  ✗ Failed to seed blueprints: ${error}`);
@@ -306,10 +337,10 @@ async function seedBlueprints(
  * V1: Uses UUID for persona IDs and references eye UUIDs
  */
 async function seedPersonas(
-  db: ReturnType<typeof getDb>['db'],
+  db: ReturnType<typeof getDb>["db"],
   sqlite: Database,
   log: (message: string) => void,
-  force: boolean
+  force: boolean,
 ): Promise<boolean> {
   const existing = await db.select({ id: personas.id }).from(personas).limit(1);
   const shouldSeed = force || existing.length === 0;
@@ -325,66 +356,84 @@ async function seedPersonas(
     const now = new Date();
 
     const resolvedEntries = DEFAULT_PERSONAS.map((persona) => {
-        const eyeName = persona.eye;
-        let eyeUuid = EYE_NAME_TO_UUID_MAP.get(eyeName);
+      const eyeName = persona.eye;
+      let eyeUuid = EYE_NAME_TO_UUID_MAP.get(eyeName);
 
-        if (!eyeUuid) {
-          const availableKeys = Array.from(EYE_NAME_TO_UUID_MAP.keys());
-          log(`  ⚠ Skipping persona for ${eyeName} - eye UUID not found in map`);
-          return null;
-        }
+      if (!eyeUuid) {
+        const availableKeys = Array.from(EYE_NAME_TO_UUID_MAP.keys());
+        log(`  ⚠ Skipping persona for ${eyeName} - eye UUID not found in map`);
+        return null;
+      }
 
-        const blueprint = (DEFAULT_BLUEPRINTS as any)[persona.eye];
-        
-        return {
-          id: generateId(),
+      const blueprint = (DEFAULT_BLUEPRINTS as any)[persona.eye];
+
+      return {
+        id: generateId(),
+        eyeId: eyeUuid,
+        name: persona.name,
+        version: persona.version,
+
+        metadataJson: JSON.stringify({
           eyeId: eyeUuid,
           name: persona.name,
-          version: persona.version,
+          description: persona.description,
+          version: String(persona.version),
+          capabilities: blueprint?.metadata.capabilities || [],
+        }),
 
-          metadataJson: JSON.stringify({
-            eyeId: eyeUuid,
-            name: persona.name,
-            description: persona.description,
-            version: String(persona.version),
-            capabilities: blueprint?.metadata.capabilities || [],
-          }),
+        mission: persona.mission,
+        guidanceJson: blueprint?.phases.guidance
+          ? JSON.stringify(blueprint.phases.guidance)
+          : null,
+        validationJson: blueprint?.phases.validation
+          ? JSON.stringify(blueprint.phases.validation)
+          : null,
 
-          mission: persona.mission,
-          guidanceJson: blueprint?.phases.guidance ? JSON.stringify(blueprint.phases.guidance) : null,
-          validationJson: blueprint?.phases.validation ? JSON.stringify(blueprint.phases.validation) : null,
-
-          envelopeJson: JSON.stringify(blueprint?.envelopeContract || {
-            requiredKeys: ['tag', 'ok', 'code', 'data', 'ui', 'next'],
+        envelopeJson: JSON.stringify(
+          blueprint?.envelopeContract || {
+            requiredKeys: ["tag", "ok", "code", "data", "ui", "next"],
             requiredDataKeys: [],
-            requiredUiKeys: ['title', 'summary', 'details', 'icon', 'color'],
-          }),
+            requiredUiKeys: ["title", "summary", "details", "icon", "color"],
+          },
+        ),
 
-          remindersJson: JSON.stringify(blueprint?.reminders || []),
-          notes: blueprint?.notes || null,
+        remindersJson: JSON.stringify(blueprint?.reminders || []),
+        notes: blueprint?.notes || null,
 
-          llmConfigJson: JSON.stringify({
-            temperature: 0.7,
-            top_p: 0.9,
-            response_format: 'json_object',
-            max_tokens: 4096,
-          }),
+        llmConfigJson: JSON.stringify({
+          temperature: 0.7,
+          top_p: 0.9,
+          response_format: "json_object",
+          max_tokens: 4096,
+        }),
 
-          active: true,
-          createdAt: now,
-        } as NewPersona;
-      });
-    
-    const entries = resolvedEntries.filter((entry): entry is NewPersona => entry !== null);
-    
-    log(`  ✓ Created ${entries.length} personas (expected ${DEFAULT_PERSONAS.length})`);
+        active: true,
+        createdAt: now,
+      } as NewPersona;
+    });
+
+    const entries = resolvedEntries.filter(
+      (entry): entry is NewPersona => entry !== null,
+    );
+
+    log(
+      `  ✓ Created ${entries.length} personas (expected ${DEFAULT_PERSONAS.length})`,
+    );
 
     await db.insert(personas).values(entries).run();
 
     // Set active personas (by eyeId)
     for (const entry of entries) {
-      await db.update(personas).set({ active: false }).where(eq(personas.eyeId, entry.eyeId)).run();
-      await db.update(personas).set({ active: true }).where(eq(personas.id, entry.id)).run();
+      await db
+        .update(personas)
+        .set({ active: false })
+        .where(eq(personas.eyeId, entry.eyeId))
+        .run();
+      await db
+        .update(personas)
+        .set({ active: true })
+        .where(eq(personas.id, entry.id))
+        .run();
     }
 
     log(`  • Personas seeded (${entries.length} personas with UUIDs)`);
@@ -400,11 +449,14 @@ async function seedPersonas(
  * V1: Uses UUID for routing IDs and references eye UUIDs
  */
 async function seedRouting(
-  db: ReturnType<typeof getDb>['db'],
+  db: ReturnType<typeof getDb>["db"],
   log: (message: string) => void,
-  force: boolean
+  force: boolean,
 ): Promise<boolean> {
-  const existing = await db.select({ id: eyesRouting.id }).from(eyesRouting).limit(1);
+  const existing = await db
+    .select({ id: eyesRouting.id })
+    .from(eyesRouting)
+    .limit(1);
   const shouldSeed = force || existing.length === 0;
   if (!shouldSeed) {
     return false;
@@ -415,30 +467,28 @@ async function seedRouting(
   }
 
   const now = new Date();
-  const routingEntries = DEFAULT_PERSONAS
-    .map((persona) => {
-      // persona.eye is already an EyeId constant (e.g., 'jogan', 'mangekyo') - use directly
-      const eyeName = persona.eye;
-      const eyeUuid = EYE_NAME_TO_UUID_MAP.get(eyeName);
-      
-      if (!eyeUuid) {
-        log(`  ⚠ Skipping routing for ${eyeName} - eye UUID not found`);
-        return null;
-      }
+  const routingEntries = DEFAULT_PERSONAS.map((persona) => {
+    // persona.eye is already an EyeId constant (e.g., 'jogan', 'mangekyo') - use directly
+    const eyeName = persona.eye;
+    const eyeUuid = EYE_NAME_TO_UUID_MAP.get(eyeName);
 
-      // System defaults for seeding (can be overridden by app_settings)
-      // These are minimal defaults - actual runtime uses getDefaultRouting() helper
-      return {
-        id: generateId(),
-        eyeId: eyeUuid,
-        primaryProvider: 'groq',
-        primaryModel: 'llama-3.3-70b-versatile',
-        fallbackProvider: 'openrouter',
-        fallbackModel: 'anthropic/claude-3.5-sonnet',
-        createdAt: now,
-      } as NewEyeRouting;
-    })
-    .filter((entry): entry is NewEyeRouting => entry !== null);
+    if (!eyeUuid) {
+      log(`  ⚠ Skipping routing for ${eyeName} - eye UUID not found`);
+      return null;
+    }
+
+    // System defaults for seeding (can be overridden by app_settings)
+    // These are minimal defaults - actual runtime uses getDefaultRouting() helper
+    return {
+      id: generateId(),
+      eyeId: eyeUuid,
+      primaryProvider: "groq",
+      primaryModel: "llama-3.3-70b-versatile",
+      fallbackProvider: "openrouter",
+      fallbackModel: "anthropic/claude-3.5-sonnet",
+      createdAt: now,
+    } as NewEyeRouting;
+  }).filter((entry): entry is NewEyeRouting => entry !== null);
 
   await db.insert(eyesRouting).values(routingEntries).run();
 
@@ -447,11 +497,14 @@ async function seedRouting(
 }
 
 async function seedStrictness(
-  db: ReturnType<typeof getDb>['db'],
+  db: ReturnType<typeof getDb>["db"],
   log: (message: string) => void,
-  force: boolean
+  force: boolean,
 ): Promise<boolean> {
-  const existing = await db.select({ id: strictnessProfiles.id }).from(strictnessProfiles).limit(1);
+  const existing = await db
+    .select({ id: strictnessProfiles.id })
+    .from(strictnessProfiles)
+    .limit(1);
   const shouldSeed = force || existing.length === 0;
   if (!shouldSeed) {
     return false;
@@ -460,7 +513,12 @@ async function seedStrictness(
   if (force) {
     await db
       .delete(strictnessProfiles)
-      .where(inArray(strictnessProfiles.id, DEFAULT_STRICTNESS.map((profile) => profile.id)))
+      .where(
+        inArray(
+          strictnessProfiles.id,
+          DEFAULT_STRICTNESS.map((profile) => profile.id),
+        ),
+      )
       .run();
   }
 
@@ -468,10 +526,12 @@ async function seedStrictness(
 
   await db
     .insert(strictnessProfiles)
-    .values(DEFAULT_STRICTNESS.map((profile) => ({ ...profile, createdAt: now })))
+    .values(
+      DEFAULT_STRICTNESS.map((profile) => ({ ...profile, createdAt: now })),
+    )
     .run();
 
-  log('  • Strictness profiles seeded');
+  log("  • Strictness profiles seeded");
   return true;
 }
 
@@ -480,39 +540,69 @@ async function seedStrictness(
  * V1: Uses UUID for setting IDs
  */
 async function seedAppSettings(
-  db: ReturnType<typeof getDb>['db'],
+  db: ReturnType<typeof getDb>["db"],
   log: (message: string) => void,
-  force: boolean
+  force: boolean,
 ): Promise<boolean> {
-  const existing = await db.select({ key: appSettings.key }).from(appSettings).limit(1);
+  const existing = await db
+    .select({ key: appSettings.key })
+    .from(appSettings)
+    .limit(1);
   const shouldSeed = force || existing.length === 0;
   if (!shouldSeed) {
     return false;
   }
 
   if (force) {
-    await db.delete(appSettings).where(inArray(appSettings.key, ['theme', 'auto_open_new_session', 'telemetry_enabled'])).run();
+    await db
+      .delete(appSettings)
+      .where(
+        inArray(appSettings.key, [
+          "theme",
+          "auto_open_new_session",
+          "telemetry_enabled",
+        ]),
+      )
+      .run();
   }
 
   const now = new Date();
   const settingsWithUuid: NewAppSetting[] = [
-    { id: generateId(), key: 'theme', value: JSON.stringify({ name: 'overseer', darkMode: true }), createdAt: now },
-    { id: generateId(), key: 'auto_open_new_session', value: JSON.stringify(true), createdAt: now },
-    { id: generateId(), key: 'telemetry_enabled', value: JSON.stringify(false), createdAt: now },
+    {
+      id: generateId(),
+      key: "theme",
+      value: JSON.stringify({ name: "overseer", darkMode: true }),
+      createdAt: now,
+    },
+    {
+      id: generateId(),
+      key: "auto_open_new_session",
+      value: JSON.stringify(true),
+      createdAt: now,
+    },
+    {
+      id: generateId(),
+      key: "telemetry_enabled",
+      value: JSON.stringify(false),
+      createdAt: now,
+    },
   ];
 
   await db.insert(appSettings).values(settingsWithUuid).run();
 
-  log('  • App settings seeded with UUIDs');
+  log("  • App settings seeded with UUIDs");
   return true;
 }
 
 async function seedIntegrations(
-  db: ReturnType<typeof getDb>['db'],
+  db: ReturnType<typeof getDb>["db"],
   log: (message: string) => void,
-  force: boolean
+  force: boolean,
 ): Promise<boolean> {
-  const existing = await db.select({ id: mcpIntegrations.id }).from(mcpIntegrations).limit(1);
+  const existing = await db
+    .select({ id: mcpIntegrations.id })
+    .from(mcpIntegrations)
+    .limit(1);
   const shouldSeed = force || existing.length === 0;
   if (!shouldSeed) {
     return false;
@@ -521,7 +611,12 @@ async function seedIntegrations(
   if (force) {
     await db
       .delete(mcpIntegrations)
-      .where(inArray(mcpIntegrations.slug, DEFAULT_INTEGRATIONS.map((integration) => integration.slug)))
+      .where(
+        inArray(
+          mcpIntegrations.slug,
+          DEFAULT_INTEGRATIONS.map((integration) => integration.slug),
+        ),
+      )
       .run();
   }
 
@@ -579,7 +674,7 @@ async function seedIntegrations(
     await db.insert(mcpIntegrations).values(newRecord).run();
   }
 
-  log('  • Integrations seeded');
+  log("  • Integrations seeded");
   return true;
 }
 
@@ -589,11 +684,14 @@ async function seedIntegrations(
  * V1: Pipelines already use UUIDs from DEFAULT_PIPELINES
  */
 async function seedPipelines(
-  db: ReturnType<typeof getDb>['db'],
+  db: ReturnType<typeof getDb>["db"],
   log: (message: string) => void,
-  force: boolean
+  force: boolean,
 ): Promise<boolean> {
-  const existing = await db.select({ id: pipelines.id }).from(pipelines).limit(1);
+  const existing = await db
+    .select({ id: pipelines.id })
+    .from(pipelines)
+    .limit(1);
   const shouldSeed = force || existing.length === 0;
   if (!shouldSeed) {
     return false;
@@ -613,11 +711,19 @@ async function seedPipelines(
     const workflow = pipeline.workflowJson as WorkflowJson;
     if (workflow?.nodes) {
       for (const node of workflow.nodes) {
-        if (!node.position || typeof node.position.x !== 'number' || typeof node.position.y !== 'number') {
-          throw new Error(`Invalid node position in pipeline ${pipeline.id}: node ${node.id} missing or invalid position`);
+        if (
+          !node.position ||
+          typeof node.position.x !== "number" ||
+          typeof node.position.y !== "number"
+        ) {
+          throw new Error(
+            `Invalid node position in pipeline ${pipeline.id}: node ${node.id} missing or invalid position`,
+          );
         }
-        if (node.type !== 'eyeNode') {
-          throw new Error(`Invalid node type in pipeline ${pipeline.id}: node ${node.id} has type ${node.type}, expected 'eyeNode'`);
+        if (node.type !== "eyeNode") {
+          throw new Error(
+            `Invalid node type in pipeline ${pipeline.id}: node ${node.id} has type ${node.type}, expected 'eyeNode'`,
+          );
         }
       }
     }
@@ -641,11 +747,14 @@ async function seedPipelines(
  * 5 built-in templates for common use cases
  */
 async function seedTemplates(
-  db: ReturnType<typeof getDb>['db'],
+  db: ReturnType<typeof getDb>["db"],
   log: (message: string) => void,
-  force: boolean
+  force: boolean,
 ): Promise<boolean> {
-  const existing = await db.select({ id: pipelineTemplates.id }).from(pipelineTemplates).limit(1);
+  const existing = await db
+    .select({ id: pipelineTemplates.id })
+    .from(pipelineTemplates)
+    .limit(1);
   const shouldSeed = force || existing.length === 0;
   if (!shouldSeed) {
     return false;
@@ -656,13 +765,15 @@ async function seedTemplates(
   }
 
   await db.insert(pipelineTemplates).values(PREDEFINED_TEMPLATES).run();
-  log(`  • Templates seeded (${PREDEFINED_TEMPLATES.length} predefined templates)`);
+  log(
+    `  • Templates seeded (${PREDEFINED_TEMPLATES.length} predefined templates)`,
+  );
   return true;
 }
 
 /**
  * Seed all defaults - complete data-driven initialization
- * 
+ *
  * ORDER MATTERS:
  * 1. Eyes first (other entities reference eyes)
  * 2. Blueprints (persona details)
@@ -670,12 +781,13 @@ async function seedTemplates(
  * 4. Pipelines (workflow configurations)
  * 5. Routing, strictness, settings, integrations
  */
-export async function seedDefaults(options: SeedDefaultsOptions = {}): Promise<SeedReport> {
+export async function seedDefaults(
+  options: SeedDefaultsOptions = {},
+): Promise<SeedReport> {
   const { db, sqlite } = getDb();
   const log = options.log ?? ((message: string) => console.log(message));
   const force = options.force ?? false;
-  
-  
+
   const subsets = {
     [SeedSubset.EYES]: true,
     [SeedSubset.PERSONAS]: true,

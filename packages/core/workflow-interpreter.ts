@@ -6,15 +6,18 @@
  * Supports conditional branching, loops, and complex routing logic.
  */
 
-import { nanoid } from 'nanoid';
-import { EyeOrchestrator } from './orchestrator';
-import { evaluateExpression, type ExpressionContext } from './expression-evaluator';
-import type { EyeResponse } from '@third-eye/eyes';
-import { WORKFLOW_NODE_TYPES, STATUS_CODES } from '@third-eye/constants';
+import { nanoid } from "nanoid";
+import { EyeOrchestrator } from "./orchestrator";
+import {
+  evaluateExpression,
+  type ExpressionContext,
+} from "./expression-evaluator";
+import type { EyeResponse } from "@third-eye/eyes";
+import { WORKFLOW_NODE_TYPES, STATUS_CODES } from "@third-eye/constants";
 
 export interface WorkflowNode {
   id: string;
-  type?: 'eye' | 'condition' | 'switch' | 'loop' | 'user_input' | 'terminal';
+  type?: "eye" | "condition" | "switch" | "loop" | "user_input" | "terminal";
   eye?: string;
   next?: string;
   condition?: string;
@@ -22,7 +25,7 @@ export interface WorkflowNode {
   false?: string;
   prompt?: string;
   switchConfig?: {
-    mode: 'rules' | 'expression';
+    mode: "rules" | "expression";
     rules?: Array<{
       expression: string;
       label: string;
@@ -91,7 +94,7 @@ export class WorkflowInterpreter {
    */
   async execute(
     workflow: WorkflowDefinition,
-    options: WorkflowExecutionOptions
+    options: WorkflowExecutionOptions,
   ): Promise<WorkflowExecutionResult> {
     const startTime = Date.now();
     const maxSteps = options.maxSteps || 1000;
@@ -107,14 +110,16 @@ export class WorkflowInterpreter {
       stepCount: 0,
     };
 
-    const steps: Array<WorkflowExecutionResult['steps'][0] & { nextNodeId?: string }> = [];
+    const steps: Array<
+      WorkflowExecutionResult["steps"][0] & { nextNodeId?: string }
+    > = [];
     let sessionId = options.sessionId;
 
     // Create session if not provided
     if (!sessionId) {
       const session = await this.orchestrator.createSession({
-        agentName: 'Workflow Interpreter',
-        displayName: 'Workflow Execution',
+        agentName: "Workflow Interpreter",
+        displayName: "Workflow Execution",
       });
       sessionId = session.sessionId;
     }
@@ -123,20 +128,25 @@ export class WorkflowInterpreter {
       // Find start node
       const startNode = this.findStartNode(workflow);
       if (!startNode) {
-        throw new Error('Workflow has no start node');
+        throw new Error("Workflow has no start node");
       }
 
       // Execute workflow from start node
       let currentNodeId: string | undefined = startNode.id;
 
       while (currentNodeId && state.stepCount < maxSteps) {
-        const node = workflow.nodes.find(n => n.id === currentNodeId);
+        const node = workflow.nodes.find((n) => n.id === currentNodeId);
         if (!node) {
           throw new Error(`Node not found: ${currentNodeId}`);
         }
 
         // Execute node
-        const stepResult = await this.executeNode(node, state, sessionId, workflow);
+        const stepResult = await this.executeNode(
+          node,
+          state,
+          sessionId,
+          workflow,
+        );
         steps.push(stepResult);
         state.stepCount++;
 
@@ -175,11 +185,11 @@ export class WorkflowInterpreter {
 
       return {
         success: false,
-        sessionId: sessionId || 'unknown',
+        sessionId: sessionId || "unknown",
         steps: steps.map(({ nextNodeId, ...rest }) => rest),
         output: state.context.$json as Record<string, unknown>,
         totalLatency,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -191,8 +201,8 @@ export class WorkflowInterpreter {
     node: WorkflowNode,
     state: ExecutionState,
     sessionId: string,
-    workflow: WorkflowDefinition
-  ): Promise<WorkflowExecutionResult['steps'][0] & { nextNodeId?: string }> {
+    workflow: WorkflowDefinition,
+  ): Promise<WorkflowExecutionResult["steps"][0] & { nextNodeId?: string }> {
     const startTime = Date.now();
 
     // Mark node as visited
@@ -212,7 +222,13 @@ export class WorkflowInterpreter {
           return this.executeSwitchNode(node, state, startTime);
 
         case WORKFLOW_NODE_TYPES.LOOP:
-          return await this.executeLoopNode(node, state, sessionId, workflow, startTime);
+          return await this.executeLoopNode(
+            node,
+            state,
+            sessionId,
+            workflow,
+            startTime,
+          );
 
         case WORKFLOW_NODE_TYPES.USER_INPUT:
           return this.executeUserInputNode(node, state, startTime);
@@ -228,7 +244,7 @@ export class WorkflowInterpreter {
       return {
         nodeId: node.id,
         type: nodeType,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
         latencyMs,
         nextNodeId: undefined,
       };
@@ -242,10 +258,10 @@ export class WorkflowInterpreter {
     node: WorkflowNode,
     state: ExecutionState,
     sessionId: string,
-    startTime: number
-  ): Promise<WorkflowExecutionResult['steps'][0] & { nextNodeId?: string }> {
+    startTime: number,
+  ): Promise<WorkflowExecutionResult["steps"][0] & { nextNodeId?: string }> {
     if (!node.eye) {
-      throw new Error('Eye node missing eye name');
+      throw new Error("Eye node missing eye name");
     }
 
     // Prepare input from context
@@ -272,10 +288,10 @@ export class WorkflowInterpreter {
   private executeConditionNode(
     node: WorkflowNode,
     state: ExecutionState,
-    startTime: number
-  ): WorkflowExecutionResult['steps'][0] & { nextNodeId?: string } {
+    startTime: number,
+  ): WorkflowExecutionResult["steps"][0] & { nextNodeId?: string } {
     if (!node.condition) {
-      throw new Error('Condition node missing condition expression');
+      throw new Error("Condition node missing condition expression");
     }
 
     // Evaluate condition
@@ -293,8 +309,8 @@ export class WorkflowInterpreter {
         ok: true,
         code: STATUS_CODES.OK,
         md: `Condition evaluated to ${conditionResult}`,
-        data: { conditionResult, branch: conditionResult ? 'true' : 'false' },
-        next: nextNodeId || '',
+        data: { conditionResult, branch: conditionResult ? "true" : "false" },
+        next: nextNodeId || "",
       },
       latencyMs,
       nextNodeId,
@@ -307,17 +323,18 @@ export class WorkflowInterpreter {
   private executeSwitchNode(
     node: WorkflowNode,
     state: ExecutionState,
-    startTime: number
-  ): WorkflowExecutionResult['steps'][0] & { nextNodeId?: string } {
+    startTime: number,
+  ): WorkflowExecutionResult["steps"][0] & { nextNodeId?: string } {
     if (!node.switchConfig) {
-      throw new Error('Switch node missing switchConfig');
+      throw new Error("Switch node missing switchConfig");
     }
 
-    const { mode, rules, expression, fallbackIndex, sendToAll, outputs } = node.switchConfig;
+    const { mode, rules, expression, fallbackIndex, sendToAll, outputs } =
+      node.switchConfig;
 
     let matchedIndex = -1;
 
-    if (mode === 'rules' && rules) {
+    if (mode === "rules" && rules) {
       // Evaluate rules in order
       for (const rule of rules) {
         const evalResult = evaluateExpression(rule.expression, state.context);
@@ -326,10 +343,10 @@ export class WorkflowInterpreter {
           break;
         }
       }
-    } else if (mode === 'expression' && expression) {
+    } else if (mode === "expression" && expression) {
       // Evaluate single expression - result should be a number
       const evalResult = evaluateExpression(expression, state.context);
-      if (evalResult.success && typeof evalResult.value === 'number') {
+      if (evalResult.success && typeof evalResult.value === "number") {
         matchedIndex = evalResult.value;
       }
     }
@@ -356,7 +373,7 @@ export class WorkflowInterpreter {
         code: STATUS_CODES.OK,
         md: `Switch routed to output ${matchedIndex}`,
         data: { matchedIndex, outputCount: outputs?.length || 0 },
-        next: nextNodeId || '',
+        next: nextNodeId || "",
       },
       latencyMs,
       nextNodeId,
@@ -371,10 +388,10 @@ export class WorkflowInterpreter {
     state: ExecutionState,
     sessionId: string,
     workflow: WorkflowDefinition,
-    startTime: number
-  ): Promise<WorkflowExecutionResult['steps'][0] & { nextNodeId?: string }> {
+    startTime: number,
+  ): Promise<WorkflowExecutionResult["steps"][0] & { nextNodeId?: string }> {
     if (!node.loopConfig) {
-      throw new Error('Loop node missing loopConfig');
+      throw new Error("Loop node missing loopConfig");
     }
 
     const { maxIterations = 10, batchSize, body } = node.loopConfig;
@@ -396,7 +413,7 @@ export class WorkflowInterpreter {
           code: STATUS_CODES.OK,
           md: `Loop completed after ${currentIterations} iterations`,
           data: { iterations: currentIterations, maxIterations },
-          next: node.next || '',
+          next: node.next || "",
         },
         latencyMs,
         nextNodeId: node.next,
@@ -421,7 +438,7 @@ export class WorkflowInterpreter {
           maxIterations,
           batchSize,
         },
-        next: body || node.next || '',
+        next: body || node.next || "",
       },
       latencyMs,
       nextNodeId: body || node.next,
@@ -434,8 +451,8 @@ export class WorkflowInterpreter {
   private executeUserInputNode(
     node: WorkflowNode,
     state: ExecutionState,
-    startTime: number
-  ): WorkflowExecutionResult['steps'][0] & { nextNodeId?: string } {
+    startTime: number,
+  ): WorkflowExecutionResult["steps"][0] & { nextNodeId?: string } {
     const latencyMs = Date.now() - startTime;
 
     return {
@@ -445,9 +462,9 @@ export class WorkflowInterpreter {
         tag: WORKFLOW_NODE_TYPES.USER_INPUT,
         ok: false,
         code: STATUS_CODES.NEED_CLARIFICATION,
-        md: node.prompt || 'Waiting for user input',
+        md: node.prompt || "Waiting for user input",
         data: { prompt: node.prompt },
-        next: '',
+        next: "",
       },
       latencyMs,
       nextNodeId: undefined,
@@ -459,8 +476,8 @@ export class WorkflowInterpreter {
    */
   private executeTerminalNode(
     node: WorkflowNode,
-    startTime: number
-  ): WorkflowExecutionResult['steps'][0] & { nextNodeId?: string } {
+    startTime: number,
+  ): WorkflowExecutionResult["steps"][0] & { nextNodeId?: string } {
     const latencyMs = Date.now() - startTime;
 
     return {
@@ -470,9 +487,9 @@ export class WorkflowInterpreter {
         tag: WORKFLOW_NODE_TYPES.TERMINAL,
         ok: true,
         code: STATUS_CODES.OK,
-        md: 'Workflow completed',
+        md: "Workflow completed",
         data: {},
-        next: '',
+        next: "",
       },
       latencyMs,
       nextNodeId: undefined,
@@ -482,10 +499,12 @@ export class WorkflowInterpreter {
   /**
    * Find the start node in workflow
    */
-  private findStartNode(workflow: WorkflowDefinition): WorkflowNode | undefined {
+  private findStartNode(
+    workflow: WorkflowDefinition,
+  ): WorkflowNode | undefined {
     // Use explicit start node if specified
     if (workflow.startNodeId) {
-      return workflow.nodes.find(n => n.id === workflow.startNodeId);
+      return workflow.nodes.find((n) => n.id === workflow.startNodeId);
     }
 
     // Find node that is not referenced by any other node
@@ -506,7 +525,7 @@ export class WorkflowInterpreter {
     }
 
     // Start node is the one not referenced by others
-    return workflow.nodes.find(n => !referencedNodeIds.has(n.id));
+    return workflow.nodes.find((n) => !referencedNodeIds.has(n.id));
   }
 
   /**
@@ -516,7 +535,7 @@ export class WorkflowInterpreter {
     return {
       ok: result.ok,
       code: result.code,
-      verdict: result.ok ? 'APPROVED' : 'REJECTED',
+      verdict: result.ok ? "APPROVED" : "REJECTED",
       ...result.data,
     };
   }
@@ -524,48 +543,55 @@ export class WorkflowInterpreter {
   /**
    * Validate workflow structure
    */
-  static validate(workflow: WorkflowDefinition): { valid: boolean; errors: string[] } {
+  static validate(workflow: WorkflowDefinition): {
+    valid: boolean;
+    errors: string[];
+  } {
     const errors: string[] = [];
 
     if (!workflow.nodes || workflow.nodes.length === 0) {
-      errors.push('Workflow must have at least one node');
+      errors.push("Workflow must have at least one node");
       return { valid: false, errors };
     }
 
-    const nodeIds = new Set(workflow.nodes.map(n => n.id));
+    const nodeIds = new Set(workflow.nodes.map((n) => n.id));
 
     // Validate each node
     for (const node of workflow.nodes) {
       if (!node.id) {
-        errors.push('All nodes must have an id');
+        errors.push("All nodes must have an id");
         continue;
       }
 
-      const nodeType = node.type || 'eye';
+      const nodeType = node.type || "eye";
 
       switch (nodeType) {
-        case 'eye':
+        case "eye":
           if (!node.eye) {
             errors.push(`Eye node ${node.id} missing eye name`);
           }
           break;
 
-        case 'condition':
+        case "condition":
           if (!node.condition) {
-            errors.push(`Condition node ${node.id} missing condition expression`);
+            errors.push(
+              `Condition node ${node.id} missing condition expression`,
+            );
           }
           if (!node.true && !node.false) {
-            errors.push(`Condition node ${node.id} must have at least one branch`);
+            errors.push(
+              `Condition node ${node.id} must have at least one branch`,
+            );
           }
           break;
 
-        case 'switch':
+        case "switch":
           if (!node.switchConfig) {
             errors.push(`Switch node ${node.id} missing switchConfig`);
           }
           break;
 
-        case 'loop':
+        case "loop":
           if (!node.loopConfig) {
             errors.push(`Loop node ${node.id} missing loopConfig`);
           }
@@ -574,13 +600,19 @@ export class WorkflowInterpreter {
 
       // Validate node references
       if (node.next && !nodeIds.has(node.next)) {
-        errors.push(`Node ${node.id} references non-existent node: ${node.next}`);
+        errors.push(
+          `Node ${node.id} references non-existent node: ${node.next}`,
+        );
       }
       if (node.true && !nodeIds.has(node.true)) {
-        errors.push(`Node ${node.id} references non-existent node: ${node.true}`);
+        errors.push(
+          `Node ${node.id} references non-existent node: ${node.true}`,
+        );
       }
       if (node.false && !nodeIds.has(node.false)) {
-        errors.push(`Node ${node.id} references non-existent node: ${node.false}`);
+        errors.push(
+          `Node ${node.id} references non-existent node: ${node.false}`,
+        );
       }
     }
 

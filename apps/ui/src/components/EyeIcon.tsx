@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { SHARED_EYE_COLORS } from '@third-eye/theme';
-import { API_BASE_URL } from '@/consts/api';
-import { METRIC_COLORS } from '@/constants/design-tokens';
+import { useEffect, useState } from "react";
+import { SHARED_EYE_COLORS } from "@third-eye/theme";
+import { API_BASE_URL } from "@/consts/api";
+import { METRIC_COLORS } from "@/constants/design-tokens";
 
 interface EyeIconProps {
   eye: string;
@@ -19,22 +19,29 @@ interface EyeIconProps {
  * 2. Database SVG (fetched via API from eyes.iconSvg)
  * 3. Placeholder if not available
  */
-export function EyeIcon({ eye, size = 24, className = '', iconSvg }: EyeIconProps) {
+export function EyeIcon({
+  eye,
+  size = 24,
+  className = "",
+  iconSvg,
+}: EyeIconProps) {
   // Early return if eye name is invalid
-  if (!eye || typeof eye !== 'string') {
+  if (!eye || typeof eye !== "string") {
     return (
       <div
         className={`inline-flex items-center justify-center bg-brand-paper rounded-full ${className}`}
         style={{ width: size, height: size }}
         title="Invalid eye name"
       >
-        <span className="text-xs text-semantic-muted dark:text-semantic-muted">?</span>
+        <span className="text-xs text-semantic-muted dark:text-semantic-muted">
+          ?
+        </span>
       </div>
     );
   }
 
   const eyeLower = eye.toLowerCase().trim();
-  
+
   // Early return if eye name is empty after trimming
   if (!eyeLower) {
     return (
@@ -43,7 +50,9 @@ export function EyeIcon({ eye, size = 24, className = '', iconSvg }: EyeIconProp
         style={{ width: size, height: size }}
         title="Empty eye name"
       >
-        <span className="text-xs text-semantic-muted dark:text-semantic-muted">?</span>
+        <span className="text-xs text-semantic-muted dark:text-semantic-muted">
+          ?
+        </span>
       </div>
     );
   }
@@ -61,7 +70,9 @@ export function EyeIcon({ eye, size = 24, className = '', iconSvg }: EyeIconProp
     const fetchSvg = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${API_BASE_URL}/api/eyes/${eyeLower}/icon`);
+        const response = await fetch(
+          `${API_BASE_URL}/api/eyes/${eyeLower}/icon`,
+        );
         if (response.ok) {
           const data = await response.json();
           if (data.data?.iconSvg) {
@@ -69,11 +80,16 @@ export function EyeIcon({ eye, size = 24, className = '', iconSvg }: EyeIconProp
           }
         } else if (response.status !== 404) {
           // Only log non-404 errors (network errors, 500s, etc.)
-          console.warn(`[EyeIcon] Failed to fetch icon for ${eye}: ${response.status}`);
+          console.warn(
+            `[EyeIcon] Failed to fetch icon for ${eye}: ${response.status}`,
+          );
         }
       } catch (error) {
         // Only log actual network errors
-        console.debug(`[EyeIcon] Network error fetching icon for ${eye}:`, error);
+        console.debug(
+          `[EyeIcon] Network error fetching icon for ${eye}:`,
+          error,
+        );
       } finally {
         setLoading(false);
       }
@@ -112,7 +128,9 @@ export function EyeIcon({ eye, size = 24, className = '', iconSvg }: EyeIconProp
       style={{ width: size, height: size }}
       title={`Missing icon: ${eye}`}
     >
-      <span className="text-xs text-semantic-muted dark:text-semantic-muted">?</span>
+      <span className="text-xs text-semantic-muted dark:text-semantic-muted">
+        ?
+      </span>
     </div>
   );
 }

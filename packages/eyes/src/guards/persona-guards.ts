@@ -1,13 +1,13 @@
 /**
  * Persona Guards
- * 
+ *
  * Ensures envelopes meet SSOT requirements and validates behavior.
  * Integrates with orchestrator retry loop without heuristics.
  */
 
-import type { PersonaBlueprint } from '@third-eye/constants/blueprints-data';
-import { EyeStatusCode } from '@third-eye/constants';
-import { EnvelopeField, ErrorMessage } from '@third-eye/constants';
+import type { PersonaBlueprint } from "@third-eye/constants/blueprints-data";
+import { EyeStatusCode } from "@third-eye/constants";
+import { EnvelopeField, ErrorMessage } from "@third-eye/constants";
 
 export interface GuardViolation {
   /** Field that violated requirements */
@@ -35,11 +35,11 @@ export function ensureEyeBehavior(
   const violations: GuardViolation[] = [];
 
   // Check envelope is an object
-  if (!envelope || typeof envelope !== 'object') {
+  if (!envelope || typeof envelope !== "object") {
     violations.push({
-      field: 'envelope',
+      field: "envelope",
       message: ErrorMessage.NOT_OBJECT,
-      reminder: 'Your response must be a valid JSON object',
+      reminder: "Your response must be a valid JSON object",
     });
     return { valid: false, violations };
   }
@@ -71,7 +71,7 @@ export function ensureEyeBehavior(
   // Validate ok field
   if (EnvelopeField.OK in env) {
     const okValue = env[EnvelopeField.OK];
-    if (typeof okValue !== 'boolean') {
+    if (typeof okValue !== "boolean") {
       violations.push({
         field: EnvelopeField.OK,
         message: `${EnvelopeField.OK} must be a boolean`,
@@ -83,7 +83,7 @@ export function ensureEyeBehavior(
   // Validate code field
   if (EnvelopeField.CODE in env) {
     const codeValue = env[EnvelopeField.CODE];
-    if (typeof codeValue !== 'string') {
+    if (typeof codeValue !== "string") {
       violations.push({
         field: EnvelopeField.CODE,
         message: `${EnvelopeField.CODE} must be a string (status code)`,
@@ -95,7 +95,7 @@ export function ensureEyeBehavior(
   // Validate data field
   if (EnvelopeField.DATA in env) {
     const dataValue = env[EnvelopeField.DATA];
-    if (typeof dataValue !== 'object' || dataValue === null) {
+    if (typeof dataValue !== "object" || dataValue === null) {
       violations.push({
         field: EnvelopeField.DATA,
         message: `${EnvelopeField.DATA} must be an object`,
@@ -104,7 +104,8 @@ export function ensureEyeBehavior(
     } else {
       // Check required data keys
       const data = dataValue as Record<string, unknown>;
-      for (const requiredDataKey of blueprint.envelopeContract.requiredDataKeys) {
+      for (const requiredDataKey of blueprint.envelopeContract
+        .requiredDataKeys) {
         if (!(requiredDataKey in data)) {
           violations.push({
             field: `${EnvelopeField.DATA}.${requiredDataKey}`,
@@ -119,7 +120,7 @@ export function ensureEyeBehavior(
   // Validate ui field
   if (EnvelopeField.UI in env) {
     const uiValue = env[EnvelopeField.UI];
-    if (typeof uiValue !== 'object' || uiValue === null) {
+    if (typeof uiValue !== "object" || uiValue === null) {
       violations.push({
         field: EnvelopeField.UI,
         message: `${EnvelopeField.UI} must be an object`,
@@ -143,7 +144,7 @@ export function ensureEyeBehavior(
   // Validate next field
   if (EnvelopeField.NEXT in env) {
     const nextValue = env[EnvelopeField.NEXT];
-    if (typeof nextValue !== 'string' && typeof nextValue !== 'undefined') {
+    if (typeof nextValue !== "string" && typeof nextValue !== "undefined") {
       violations.push({
         field: EnvelopeField.NEXT,
         message: `${EnvelopeField.NEXT} must be a string or undefined`,
@@ -163,7 +164,7 @@ export function ensureEyeBehavior(
  */
 export function buildReminderMessage(violations: GuardViolation[]): string {
   if (violations.length === 0) {
-    return 'No violations detected.';
+    return "No violations detected.";
   }
 
   const lines = [`Detected ${violations.length} violation(s):`];
@@ -171,7 +172,7 @@ export function buildReminderMessage(violations: GuardViolation[]): string {
     lines.push(`- ${violation.field}: ${violation.reminder}`);
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**
@@ -181,10 +182,9 @@ export function validateStatusCode(
   code: unknown,
   allowedCodes: readonly string[],
 ): boolean {
-  if (typeof code !== 'string') {
+  if (typeof code !== "string") {
     return false;
   }
 
   return allowedCodes.includes(code);
 }
-

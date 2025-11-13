@@ -4,9 +4,9 @@ import type {
   CompletionRequest,
   CompletionResponse,
   HealthResponse,
-} from '@third-eye/types';
-import { ProviderFactory, type ProviderType } from './src/factory';
-import type { ProviderConfig } from './src/base';
+} from "@third-eye/types";
+import { ProviderFactory, type ProviderType } from "./src/factory";
+import type { ProviderConfig } from "./src/base";
 
 interface ProviderInstance {
   client: ProviderClient;
@@ -30,14 +30,20 @@ const HEALTH_CHECK_INTERVAL_MS = 300_000;
 export class EnhancedProviderFactory {
   private static readonly instances = new Map<string, ProviderInstance>();
 
-  static async getProvider(providerId: ProviderType, config: ProviderConfig = {}): Promise<ProviderClient> {
+  static async getProvider(
+    providerId: ProviderType,
+    config: ProviderConfig = {},
+  ): Promise<ProviderClient> {
     const cacheKey = EnhancedProviderFactory.buildCacheKey(providerId, config);
     const now = Date.now();
 
     let instance = EnhancedProviderFactory.instances.get(cacheKey);
 
     if (!instance) {
-      const client = await EnhancedProviderFactory.createClient(providerId, config);
+      const client = await EnhancedProviderFactory.createClient(
+        providerId,
+        config,
+      );
       instance = {
         client,
         lastRequestAt: 0,
@@ -48,7 +54,12 @@ export class EnhancedProviderFactory {
       EnhancedProviderFactory.instances.set(cacheKey, instance);
     }
 
-    await EnhancedProviderFactory.refreshHealthIfStale(instance, providerId, config, now);
+    await EnhancedProviderFactory.refreshHealthIfStale(
+      instance,
+      providerId,
+      config,
+      now,
+    );
     EnhancedProviderFactory.guardRateLimit(instance, now);
 
     instance.lastRequestAt = now;
@@ -61,7 +72,9 @@ export class EnhancedProviderFactory {
     EnhancedProviderFactory.instances.clear();
   }
 
-  static async getProviderStats(): Promise<Record<ProviderType, ProviderStats>> {
+  static async getProviderStats(): Promise<
+    Record<ProviderType, ProviderStats>
+  > {
     const stats: Record<ProviderType, ProviderStats> = {
       groq: EnhancedProviderFactory.emptyStats(),
       openrouter: EnhancedProviderFactory.emptyStats(),
@@ -69,7 +82,10 @@ export class EnhancedProviderFactory {
       lmstudio: EnhancedProviderFactory.emptyStats(),
     };
 
-    for (const [cacheKey, instance] of EnhancedProviderFactory.instances.entries()) {
+    for (const [
+      cacheKey,
+      instance,
+    ] of EnhancedProviderFactory.instances.entries()) {
       const providerId = EnhancedProviderFactory.parseCacheKey(cacheKey);
       const providerStats = stats[providerId];
 
@@ -78,13 +94,19 @@ export class EnhancedProviderFactory {
       if (instance.healthy) {
         providerStats.healthyInstances += 1;
       }
-      providerStats.lastHealthCheckAt = Math.max(providerStats.lastHealthCheckAt, instance.lastHealthCheckAt);
+      providerStats.lastHealthCheckAt = Math.max(
+        providerStats.lastHealthCheckAt,
+        instance.lastHealthCheckAt,
+      );
     }
 
     return stats;
   }
 
-  private static createClient(providerId: ProviderType, config: ProviderConfig): ProviderClient {
+  private static createClient(
+    providerId: ProviderType,
+    config: ProviderConfig,
+  ): ProviderClient {
     const baseProvider = ProviderFactory.createProvider(providerId, config);
     // Adapt BaseProvider to ProviderClient interface
     return {
@@ -92,12 +114,21 @@ export class EnhancedProviderFactory {
       complete: (request: CompletionRequest) => baseProvider.complete(request),
       health: async () => {
         const healthStatus = await baseProvider.health();
-        return { ok: healthStatus.healthy, details: { latency_ms: healthStatus.latency_ms, error: healthStatus.error } };
+        return {
+          ok: healthStatus.healthy,
+          details: {
+            latency_ms: healthStatus.latency_ms,
+            error: healthStatus.error,
+          },
+        };
       },
     };
   }
 
-  private static buildCacheKey(providerId: ProviderType, config: ProviderConfig): string {
+  private static buildCacheKey(
+    providerId: ProviderType,
+    config: ProviderConfig,
+  ): string {
     const keyParts: string[] = [providerId];
     if (config.apiKey) {
       keyParts.push(config.apiKey);
@@ -105,12 +136,17 @@ export class EnhancedProviderFactory {
     if (config.baseUrl) {
       keyParts.push(config.baseUrl);
     }
-    return keyParts.join(':');
+    return keyParts.join(":");
   }
 
   private static parseCacheKey(cacheKey: string): ProviderType {
-    const providerId = cacheKey.split(':')[0] as ProviderType;
-    if (providerId === 'groq' || providerId === 'openrouter' || providerId === 'ollama' || providerId === 'lmstudio') {
+    const providerId = cacheKey.split(":")[0] as ProviderType;
+    if (
+      providerId === "groq" ||
+      providerId === "openrouter" ||
+      providerId === "ollama" ||
+      providerId === "lmstudio"
+    ) {
       return providerId;
     }
     throw new Error(`Unknown provider cache key: ${cacheKey}`);
@@ -123,7 +159,9 @@ export class EnhancedProviderFactory {
     }
 
     if (instance.requestCount >= MAX_REQUESTS_PER_WINDOW) {
-      const secondsRemaining = Math.ceil((RATE_LIMIT_WINDOW_MS - (now - instance.lastRequestAt)) / 1000);
+      const secondsRemaining = Math.ceil(
+        (RATE_LIMIT_WINDOW_MS - (now - instance.lastRequestAt)) / 1000,
+      );
       throw new Error(`Rate limit exceeded. Try again in ${secondsRemaining}s`);
     }
   }
@@ -145,9 +183,12 @@ export class EnhancedProviderFactory {
   }
 
   private static wrapClient(client: ProviderClient): ProviderClient {
-    const wrapListModels = async (): Promise<ModelInfo[]> => client.listModels();
+    const wrapListModels = async (): Promise<ModelInfo[]> =>
+      client.listModels();
 
-    const wrapComplete = async (request: CompletionRequest): Promise<CompletionResponse> => client.complete(request);
+    const wrapComplete = async (
+      request: CompletionRequest,
+    ): Promise<CompletionResponse> => client.complete(request);
 
     const wrapHealth = async (): Promise<HealthResponse> => client.health();
 

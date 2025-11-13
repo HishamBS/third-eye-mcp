@@ -18,10 +18,10 @@
  * All overlays use theme colors with appropriate opacity
  */
 export const OVERLAY = {
-  modal: 'rgb(var(--color-ink) / 0.6)',
-  dropdown: 'rgb(var(--color-ink) / 0.4)',
-  tooltip: 'rgb(var(--color-ink) / 0.9)',
-  sidebar: 'rgb(var(--color-ink) / 0.5)',
+  modal: "rgb(var(--color-ink) / 0.6)",
+  dropdown: "rgb(var(--color-ink) / 0.4)",
+  tooltip: "rgb(var(--color-ink) / 0.9)",
+  sidebar: "rgb(var(--color-ink) / 0.5)",
 } as const;
 
 /**
@@ -29,16 +29,16 @@ export const OVERLAY = {
  * Uses --color-ink for theme-consistent shadows
  */
 export const SHADOW = {
-  sm: '0 1px 2px rgb(var(--color-ink) / 0.05)',
-  md: '0 4px 6px rgb(var(--color-ink) / 0.1)',
-  lg: '0 10px 15px rgb(var(--color-ink) / 0.15)',
-  xl: '0 20px 25px rgb(var(--color-ink) / 0.2)',
-  glass: '0 10px 30px rgb(var(--color-ink) / 0.35)',
-  'glass-light': '0 10px 30px rgb(var(--color-ink) / 0.15)',
-  glow: '0 20px 45px rgb(var(--color-primary) / 0.35)',
-  success: '0 10px 20px rgb(var(--color-success) / 0.2)',
-  error: '0 10px 20px rgb(var(--color-error) / 0.2)',
-  info: '0 10px 20px rgb(var(--color-info) / 0.2)',
+  sm: "0 1px 2px rgb(var(--color-ink) / 0.05)",
+  md: "0 4px 6px rgb(var(--color-ink) / 0.1)",
+  lg: "0 10px 15px rgb(var(--color-ink) / 0.15)",
+  xl: "0 20px 25px rgb(var(--color-ink) / 0.2)",
+  glass: "0 10px 30px rgb(var(--color-ink) / 0.35)",
+  "glass-light": "0 10px 30px rgb(var(--color-ink) / 0.15)",
+  glow: "0 20px 45px rgb(var(--color-primary) / 0.35)",
+  success: "0 10px 20px rgb(var(--color-success) / 0.2)",
+  error: "0 10px 20px rgb(var(--color-error) / 0.2)",
+  info: "0 10px 20px rgb(var(--color-info) / 0.2)",
 } as const;
 
 /**
@@ -46,16 +46,16 @@ export const SHADOW = {
  * Uses theme color classes (brand-*, semantic-*)
  */
 export const GRADIENT = {
-  brandPrimary: 'from-brand-primary via-brand-accent to-brand-primary',
-  brandSubtle: 'from-brand-primary/20 via-brand-accent/10 to-transparent',
-  hero: 'from-brand-accent via-brand-primary to-brand-info',
-  heroBackground: 'from-brand-accent/20 via-brand-primary/10 to-transparent',
-  avatar: 'from-brand-info to-brand-primary',
-  success: 'from-semantic-success/10 to-semantic-success/5',
-  error: 'from-semantic-error/10 to-semantic-error/5',
-  info: 'from-semantic-info/10 to-semantic-info/5',
-  warning: 'from-semantic-warning/10 to-semantic-warning/5',
-  paperToInk: 'from-brand-paper via-brand-paper to-brand-ink',
+  brandPrimary: "from-brand-primary via-brand-accent to-brand-primary",
+  brandSubtle: "from-brand-primary/20 via-brand-accent/10 to-transparent",
+  hero: "from-brand-accent via-brand-primary to-brand-info",
+  heroBackground: "from-brand-accent/20 via-brand-primary/10 to-transparent",
+  avatar: "from-brand-info to-brand-primary",
+  success: "from-semantic-success/10 to-semantic-success/5",
+  error: "from-semantic-error/10 to-semantic-error/5",
+  info: "from-semantic-info/10 to-semantic-info/5",
+  warning: "from-semantic-warning/10 to-semantic-warning/5",
+  paperToInk: "from-brand-paper via-brand-paper to-brand-ink",
 } as const;
 
 /**
@@ -71,9 +71,9 @@ export const ANIMATION = {
     slower: 1000,
   },
   spring: {
-    default: { type: 'spring' as const, stiffness: 200, damping: 25 },
-    soft: { type: 'spring' as const, stiffness: 100, damping: 20 },
-    bouncy: { type: 'spring' as const, stiffness: 300, damping: 15 },
+    default: { type: "spring" as const, stiffness: 200, damping: 25 },
+    soft: { type: "spring" as const, stiffness: 100, damping: 20 },
+    bouncy: { type: "spring" as const, stiffness: 300, damping: 15 },
   },
 } as const;
 
@@ -97,11 +97,11 @@ export const Z_INDEX = {
  * For glassmorphism effects
  */
 export const BACKDROP_BLUR = {
-  none: 'blur(0px)',
-  sm: 'blur(4px)',
-  md: 'blur(12px)',
-  lg: 'blur(16px)',
-  xl: 'blur(24px)',
+  none: "blur(0px)",
+  sm: "blur(4px)",
+  md: "blur(12px)",
+  lg: "blur(16px)",
+  xl: "blur(24px)",
 } as const;
 
 /**
@@ -109,23 +109,23 @@ export const BACKDROP_BLUR = {
  * Uses theme CSS variables for consistent theming
  */
 export const TOAST_STYLE = {
-  background: 'rgb(var(--color-paper-elev) / 0.95)',
-  border: '1px solid rgb(var(--color-outline) / 0.2)',
+  background: "rgb(var(--color-paper-elev) / 0.95)",
+  border: "1px solid rgb(var(--color-outline) / 0.2)",
   backdropFilter: BACKDROP_BLUR.md,
-  color: 'rgb(var(--color-ink))',
+  color: "rgb(var(--color-ink))",
 } as const;
 
 /**
  * Modal overlay class
  * Theme-aware overlay for modals, drawers, and dialogs
  */
-export const MODAL_OVERLAY_CLASS = 'bg-brand-ink/70' as const;
+export const MODAL_OVERLAY_CLASS = "bg-brand-ink/70" as const;
 
 /**
  * Toggle switch knob class
  * Theme-aware knob color for toggle switches
  */
-export const TOGGLE_KNOB_CLASS = 'bg-brand-foreground' as const;
+export const TOGGLE_KNOB_CLASS = "bg-brand-foreground" as const;
 
 /**
  * Evidence type colors (for EvidenceTrail component)
@@ -133,23 +133,23 @@ export const TOGGLE_KNOB_CLASS = 'bg-brand-foreground' as const;
  */
 export const EVIDENCE_COLORS = {
   citation: {
-    verified: 'rgb(var(--color-info))',
-    unverified: 'rgb(var(--color-muted))',
+    verified: "rgb(var(--color-info))",
+    unverified: "rgb(var(--color-muted))",
   },
   analysis: {
-    verified: 'rgb(var(--color-primary))',
-    unverified: 'rgb(var(--color-muted))',
+    verified: "rgb(var(--color-primary))",
+    unverified: "rgb(var(--color-muted))",
   },
   validation: {
-    verified: 'rgb(var(--color-success))',
-    unverified: 'rgb(var(--color-error))',
+    verified: "rgb(var(--color-success))",
+    unverified: "rgb(var(--color-error))",
   },
-  contradiction: 'rgb(var(--color-warning))',
+  contradiction: "rgb(var(--color-warning))",
   fact: {
-    verified: 'rgb(var(--color-success))',
-    unverified: 'rgb(var(--color-error))',
+    verified: "rgb(var(--color-success))",
+    unverified: "rgb(var(--color-error))",
   },
-  default: 'rgb(var(--color-muted))',
+  default: "rgb(var(--color-muted))",
 } as const;
 
 /**
@@ -157,13 +157,13 @@ export const EVIDENCE_COLORS = {
  * For performance metrics with success/warning/error states
  */
 export const METRIC_COLORS = {
-  success: 'rgb(var(--color-success))',
-  warning: 'rgb(var(--color-warning))',
-  error: 'rgb(var(--color-error))',
-  info: 'rgb(var(--color-info))',
-  primary: 'rgb(var(--color-primary))',
-  accent: 'rgb(var(--color-accent))',
-  muted: 'rgb(var(--color-muted))',
+  success: "rgb(var(--color-success))",
+  warning: "rgb(var(--color-warning))",
+  error: "rgb(var(--color-error))",
+  info: "rgb(var(--color-info))",
+  primary: "rgb(var(--color-primary))",
+  accent: "rgb(var(--color-accent))",
+  muted: "rgb(var(--color-muted))",
 } as const;
 
 /**
@@ -171,9 +171,9 @@ export const METRIC_COLORS = {
  * Theme-aware backgrounds for overlays, labels, and tooltips
  */
 export const LABEL_BG_CLASS = {
-  tooltip: 'bg-brand-ink/90',
-  label: 'bg-brand-ink/80',
-  badge: 'bg-brand-foreground',
+  tooltip: "bg-brand-ink/90",
+  label: "bg-brand-ink/80",
+  badge: "bg-brand-foreground",
 } as const;
 
 /**
@@ -181,6 +181,6 @@ export const LABEL_BG_CLASS = {
  * Theme-aware grid lines using CSS variables
  */
 export const GRID_PATTERN = {
-  color: 'rgb(var(--color-info) / 0.1)',
+  color: "rgb(var(--color-info) / 0.1)",
   size: 20,
 } as const;

@@ -1,9 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
-import { FIELD_LABELS, BUTTON_LABELS, PLACEHOLDERS } from './constants';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { useState, useCallback } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import { FIELD_LABELS, BUTTON_LABELS, PLACEHOLDERS } from "./constants";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
 
 /**
  * SchemaBuilder Component - Phase 19.3 (PROPER)
@@ -17,7 +21,7 @@ import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTL
 
 export interface SchemaProperty {
   readonly name: string;
-  readonly type: 'string' | 'number' | 'boolean' | 'object' | 'array';
+  readonly type: "string" | "number" | "boolean" | "object" | "array";
   readonly description: string;
   readonly required: boolean;
 }
@@ -28,24 +32,28 @@ interface SchemaBuilderProps {
   readonly onChange: (properties: readonly SchemaProperty[]) => void;
 }
 
-const TYPE_LABELS: Record<SchemaProperty['type'], string> = {
-  string: 'Text',
-  number: 'Number',
-  boolean: 'True/False',
-  object: 'Object',
-  array: 'List',
+const TYPE_LABELS: Record<SchemaProperty["type"], string> = {
+  string: "Text",
+  number: "Number",
+  boolean: "True/False",
+  object: "Object",
+  array: "List",
 } as const;
 
-export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProps) {
+export function SchemaBuilder({
+  title,
+  properties,
+  onChange,
+}: SchemaBuilderProps) {
   const [localProperties, setLocalProperties] = useState<SchemaProperty[]>(
-    properties.length > 0 ? [...properties] : []
+    properties.length > 0 ? [...properties] : [],
   );
 
   const handleAddProperty = useCallback(() => {
     const newProperty: SchemaProperty = {
-      name: '',
-      type: 'string',
-      description: '',
+      name: "",
+      type: "string",
+      description: "",
       required: false,
     };
     const updated = [...localProperties, newProperty];
@@ -59,18 +67,18 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
       setLocalProperties(updated);
       onChange(updated);
     },
-    [localProperties, onChange]
+    [localProperties, onChange],
   );
 
   const handleUpdateProperty = useCallback(
     (index: number, field: keyof SchemaProperty, value: string | boolean) => {
       const updated = localProperties.map((prop, i) =>
-        i === index ? { ...prop, [field]: value } : prop
+        i === index ? { ...prop, [field]: value } : prop,
       );
       setLocalProperties(updated);
       onChange(updated);
     },
-    [localProperties, onChange]
+    [localProperties, onChange],
   );
 
   return (
@@ -88,7 +96,10 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
 
       {localProperties.length === 0 ? (
         <div className="rounded-lg border-2 border-dashed border-brand-outline/40 bg-brand-paper/50 p-8 text-center">
-          <p className="text-semantic-muted">No properties defined yet. Click &quot;Add Property&quot; to get started.</p>
+          <p className="text-semantic-muted">
+            No properties defined yet. Click &quot;Add Property&quot; to get
+            started.
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -106,7 +117,9 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
                   <input
                     type="text"
                     value={property.name}
-                    onChange={(e) => handleUpdateProperty(index, 'name', e.target.value)}
+                    onChange={(e) =>
+                      handleUpdateProperty(index, "name", e.target.value)
+                    }
                     placeholder={PLACEHOLDERS.NAME}
                     className="w-full rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                   />
@@ -120,7 +133,11 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
                   <select
                     value={property.type}
                     onChange={(e) =>
-                      handleUpdateProperty(index, 'type', e.target.value as SchemaProperty['type'])
+                      handleUpdateProperty(
+                        index,
+                        "type",
+                        e.target.value as SchemaProperty["type"],
+                      )
                     }
                     className="w-full rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                   >
@@ -140,7 +157,9 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
                   <input
                     type="text"
                     value={property.description}
-                    onChange={(e) => handleUpdateProperty(index, 'description', e.target.value)}
+                    onChange={(e) =>
+                      handleUpdateProperty(index, "description", e.target.value)
+                    }
                     placeholder="What is this property for?"
                     className="w-full rounded-lg border border-brand-outline/50 bg-brand-paper px-3 py-2 text-sm text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                   />
@@ -152,10 +171,18 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
                     <input
                       type="checkbox"
                       checked={property.required}
-                      onChange={(e) => handleUpdateProperty(index, 'required', e.target.checked)}
+                      onChange={(e) =>
+                        handleUpdateProperty(
+                          index,
+                          "required",
+                          e.target.checked,
+                        )
+                      }
                       className="h-4 w-4 rounded border-brand-outline/50 bg-brand-paper text-brand-accent focus:ring-2 focus:ring-brand-accent/40 focus:ring-offset-0"
                     />
-                    <span className="text-xs font-medium text-semantic-muted">Required</span>
+                    <span className="text-xs font-medium text-semantic-muted">
+                      Required
+                    </span>
                   </label>
                   <button
                     onClick={() => handleRemoveProperty(index)}
@@ -180,20 +207,24 @@ export function SchemaBuilder({ title, properties, onChange }: SchemaBuilderProp
           <pre className="mt-3 overflow-x-auto rounded-lg bg-brand-ink p-3 text-xs ${STATUS_TEXT_COLORS.success}">
             {JSON.stringify(
               {
-                type: 'object',
+                type: "object",
                 properties: Object.fromEntries(
                   localProperties.map((prop) => [
                     prop.name,
                     {
                       type: prop.type,
-                      ...(prop.description && { description: prop.description }),
+                      ...(prop.description && {
+                        description: prop.description,
+                      }),
                     },
-                  ])
+                  ]),
                 ),
-                required: localProperties.filter((p) => p.required).map((p) => p.name),
+                required: localProperties
+                  .filter((p) => p.required)
+                  .map((p) => p.name),
               },
               null,
-              2
+              2,
             )}
           </pre>
         </details>

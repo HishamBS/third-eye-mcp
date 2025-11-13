@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState } from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -14,16 +14,17 @@ import ReactFlow, {
   type NodeTypes,
   MarkerType,
   BackgroundVariant,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
-import { getEyeColor } from '@/components/EyeIcon';
-import { EyeNode, type EyeNodeData } from './EyeNode';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+} from "reactflow";
+import "reactflow/dist/style.css";
+import { getEyeColor } from "@/components/EyeIcon";
+import { EyeNode, type EyeNodeData } from "./EyeNode";
 import {
-  CANVAS_SETTINGS,
-  PIPELINE_UI_TEXT,
-} from './constants';
-import { EyeId } from '@third-eye/constants';
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
+import { CANVAS_SETTINGS, PIPELINE_UI_TEXT } from "./constants";
+import { EyeId } from "@third-eye/constants";
 
 // Register custom node types
 const nodeTypes: NodeTypes = {
@@ -35,30 +36,30 @@ const nodeTypes: NodeTypes = {
  */
 const initialNodes: Node<EyeNodeData>[] = [
   {
-    id: '1',
-    type: 'eyeNode',
+    id: "1",
+    type: "eyeNode",
     position: { x: 50, y: 200 },
     data: {
       eyeId: EyeId.OVERSEER,
-      capabilities: ['auto_routing', 'orchestration'],
+      capabilities: ["auto_routing", "orchestration"],
     },
   },
   {
-    id: '2',
-    type: 'eyeNode',
+    id: "2",
+    type: "eyeNode",
     position: { x: 300, y: 100 },
     data: {
       eyeId: EyeId.SHARINGAN,
-      capabilities: ['clarification', 'ambiguity_detection'],
+      capabilities: ["clarification", "ambiguity_detection"],
     },
   },
   {
-    id: '3',
-    type: 'eyeNode',
+    id: "3",
+    type: "eyeNode",
     position: { x: 300, y: 300 },
     data: {
       eyeId: EyeId.KYUUBI,
-      capabilities: ['briefing', 'guidance'],
+      capabilities: ["briefing", "guidance"],
     },
   },
 ];
@@ -68,18 +69,18 @@ const initialNodes: Node<EyeNodeData>[] = [
  */
 const initialEdges: Edge[] = [
   {
-    id: 'e1-2',
-    source: '1',
-    target: '2',
-    type: 'smoothstep',
+    id: "e1-2",
+    source: "1",
+    target: "2",
+    type: "smoothstep",
     animated: true,
     markerEnd: { type: MarkerType.ArrowClosed },
   },
   {
-    id: 'e1-3',
-    source: '1',
-    target: '3',
-    type: 'smoothstep',
+    id: "e1-3",
+    source: "1",
+    target: "3",
+    type: "smoothstep",
     animated: true,
     markerEnd: { type: MarkerType.ArrowClosed },
   },
@@ -110,26 +111,23 @@ export function PipelineCanvas() {
         addEdge(
           {
             ...params,
-            type: 'smoothstep',
+            type: "smoothstep",
             animated: true,
             markerEnd: {
               type: MarkerType.ArrowClosed,
             },
           },
-          eds
-        )
+          eds,
+        ),
       );
     },
-    [setEdges]
+    [setEdges],
   );
 
   // Get node color for minimap
-  const getNodeColor = useCallback(
-    (node: Node<EyeNodeData>): string => {
-      return getEyeColor(node.data.eyeId);
-    },
-    []
-  );
+  const getNodeColor = useCallback((node: Node<EyeNodeData>): string => {
+    return getEyeColor(node.data.eyeId);
+  }, []);
 
   return (
     <div className="w-full h-[calc(100vh-120px)] relative">
@@ -173,19 +171,19 @@ export function PipelineCanvas() {
       <div className="absolute bottom-4 left-4 flex gap-2 p-2 bg-brand-paperElev border border-brand-outline rounded-lg shadow-lg">
         <button
           className="px-4 py-2 bg-semantic-success text-brand-foreground rounded-md font-semibold text-sm cursor-pointer hover:bg-semantic-success transition-colors"
-          onClick={() => console.log('Run pipeline')}
+          onClick={() => console.log("Run pipeline")}
         >
           {PIPELINE_UI_TEXT.TOOLBAR_RUN}
         </button>
         <button
           className="px-4 py-2 bg-brand-primary text-brand-foreground rounded-md font-semibold text-sm cursor-pointer hover:bg-brand-primary/90 transition-colors"
-          onClick={() => console.log('Auto-layout')}
+          onClick={() => console.log("Auto-layout")}
         >
           {PIPELINE_UI_TEXT.TOOLBAR_AUTO_LAYOUT}
         </button>
         <button
           className="px-4 py-2 bg-brand-accent text-brand-foreground rounded-md font-semibold text-sm cursor-pointer hover:bg-brand-accent/90 transition-colors"
-          onClick={() => console.log('Save pipeline')}
+          onClick={() => console.log("Save pipeline")}
         >
           {PIPELINE_UI_TEXT.TOOLBAR_SAVE}
         </button>

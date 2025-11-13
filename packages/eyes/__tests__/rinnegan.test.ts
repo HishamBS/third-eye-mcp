@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 
-describe('Rinnegan Eye', () => {
-  describe('Plan Generation', () => {
-    it('should generate structured implementation plan', () => {
-      const requirements = 'Create a user authentication system';
+describe("Rinnegan Eye", () => {
+  describe("Plan Generation", () => {
+    it("should generate structured implementation plan", () => {
+      const requirements = "Create a user authentication system";
       // Should generate plan with:
       // - Database schema changes
       // - API endpoints
@@ -12,8 +12,8 @@ describe('Rinnegan Eye', () => {
       expect(true).toBe(true); // Placeholder
     });
 
-    it('should include file impacts in plan', () => {
-      const requirements = 'Add dark mode support';
+    it("should include file impacts in plan", () => {
+      const requirements = "Add dark mode support";
       // Plan should list:
       // - Files to create
       // - Files to modify
@@ -21,8 +21,8 @@ describe('Rinnegan Eye', () => {
       expect(true).toBe(true); // Placeholder
     });
 
-    it('should organize plan into phases', () => {
-      const requirements = 'Build a blog system';
+    it("should organize plan into phases", () => {
+      const requirements = "Build a blog system";
       // Plan should have phases:
       // - Scaffold (create base files)
       // - Implementation (core logic)
@@ -32,11 +32,11 @@ describe('Rinnegan Eye', () => {
     });
   });
 
-  describe('Plan Review', () => {
-    it('should validate plan completeness', () => {
+  describe("Plan Review", () => {
+    it("should validate plan completeness", () => {
       const plan = {
-        phases: ['scaffold', 'impl'],
-        files: ['src/auth.ts', 'src/user.ts'],
+        phases: ["scaffold", "impl"],
+        files: ["src/auth.ts", "src/user.ts"],
       };
       // Should check:
       // - All phases covered
@@ -45,10 +45,10 @@ describe('Rinnegan Eye', () => {
       expect(true).toBe(true); // Placeholder
     });
 
-    it('should flag missing critical components', () => {
+    it("should flag missing critical components", () => {
       const incompletePlan = {
-        phases: ['impl'],
-        files: ['src/feature.ts'],
+        phases: ["impl"],
+        files: ["src/feature.ts"],
       };
       // Should flag missing:
       // - Scaffold phase
@@ -58,8 +58,8 @@ describe('Rinnegan Eye', () => {
     });
   });
 
-  describe('Final Approval', () => {
-    it('should aggregate approval from all Eyes', () => {
+  describe("Final Approval", () => {
+    it("should aggregate approval from all Eyes", () => {
       const eyeResults = {
         sharingan: { ok: true, score: 20 },
         tenseigan: { ok: true, confidence: 0.9 },
@@ -70,7 +70,7 @@ describe('Rinnegan Eye', () => {
       expect(true).toBe(true); // Placeholder
     });
 
-    it('should reject if any Eye fails', () => {
+    it("should reject if any Eye fails", () => {
       const eyeResults = {
         sharingan: { ok: true, score: 20 },
         tenseigan: { ok: false, confidence: 0.3 },
@@ -81,9 +81,9 @@ describe('Rinnegan Eye', () => {
       expect(true).toBe(true); // Placeholder
     });
 
-    it('should provide actionable feedback on rejection', () => {
+    it("should provide actionable feedback on rejection", () => {
       const eyeResults = {
-        tenseigan: { ok: false, missing_citations: ['claim1', 'claim2'] },
+        tenseigan: { ok: false, missing_citations: ["claim1", "claim2"] },
       };
       // Should return:
       // - List of issues

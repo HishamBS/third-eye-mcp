@@ -6,8 +6,8 @@
  * Per R13: Centralized API logic in hooks
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import { useAPI } from './useAPI';
+import { useState, useCallback, useEffect } from "react";
+import { useAPI } from "./useAPI";
 
 // ============================================================================
 // Types
@@ -24,7 +24,7 @@ export interface RoutingDecision {
   };
   readonly selectedEyes: readonly string[];
   readonly reasoning: string;
-  readonly executionMode: 'sequential' | 'parallel';
+  readonly executionMode: "sequential" | "parallel";
   readonly createdAt: number;
 }
 
@@ -42,10 +42,15 @@ export interface RoutingDecisionsPagination {
 /**
  * List routing decisions with pagination
  */
-export function useRoutingDecisions(filters?: { limit?: number; offset?: number; sort?: 'asc' | 'desc' }) {
+export function useRoutingDecisions(filters?: {
+  limit?: number;
+  offset?: number;
+  sort?: "asc" | "desc";
+}) {
   const api = useAPI();
   const [decisions, setDecisions] = useState<RoutingDecision[]>([]);
-  const [pagination, setPagination] = useState<RoutingDecisionsPagination | null>(null);
+  const [pagination, setPagination] =
+    useState<RoutingDecisionsPagination | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -55,12 +60,12 @@ export function useRoutingDecisions(filters?: { limit?: number; offset?: number;
       setError(null);
 
       const params = new URLSearchParams();
-      if (filters?.limit) params.set('limit', filters.limit.toString());
-      if (filters?.offset) params.set('offset', filters.offset.toString());
-      if (filters?.sort) params.set('sort', filters.sort);
+      if (filters?.limit) params.set("limit", filters.limit.toString());
+      if (filters?.offset) params.set("offset", filters.offset.toString());
+      if (filters?.sort) params.set("sort", filters.sort);
 
       const queryString = params.toString();
-      const url = `/api/routing-decisions${queryString ? `?${queryString}` : ''}`;
+      const url = `/api/routing-decisions${queryString ? `?${queryString}` : ""}`;
 
       const response = await api.get<{
         success: boolean;
@@ -74,10 +79,14 @@ export function useRoutingDecisions(filters?: { limit?: number; offset?: number;
         setDecisions(response.data.decisions);
         setPagination(response.data.pagination);
       } else {
-        throw new Error('Failed to fetch routing decisions');
+        throw new Error("Failed to fetch routing decisions");
       }
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch routing decisions'));
+      setError(
+        err instanceof Error
+          ? err
+          : new Error("Failed to fetch routing decisions"),
+      );
     } finally {
       setLoading(false);
     }
@@ -122,7 +131,11 @@ export function useRoutingDecisionBySession(sessionId: string | null) {
         throw new Error(`No routing decision found for session ${sessionId}`);
       }
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch routing decision'));
+      setError(
+        err instanceof Error
+          ? err
+          : new Error("Failed to fetch routing decision"),
+      );
       setDecision(null);
     } finally {
       setLoading(false);
@@ -168,7 +181,11 @@ export function useRoutingDecision(decisionId: string | null) {
         throw new Error(`Routing decision ${decisionId} not found`);
       }
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch routing decision'));
+      setError(
+        err instanceof Error
+          ? err
+          : new Error("Failed to fetch routing decision"),
+      );
       setDecision(null);
     } finally {
       setLoading(false);

@@ -8,10 +8,10 @@
  * Per R13: Centralized policy management SSOT
  */
 
-import { randomUUID } from 'node:crypto';
-import type { Database } from 'bun:sqlite';
-import type { RoutingPolicy, Constraint } from './routing-modes';
-import { PolicyValidator } from './policy-validator';
+import { randomUUID } from "node:crypto";
+import type { Database } from "bun:sqlite";
+import type { RoutingPolicy, Constraint } from "./routing-modes";
+import { PolicyValidator } from "./policy-validator";
 
 /**
  * Policy Manager for CRUD and validation
@@ -56,13 +56,15 @@ export class PolicyManager {
     // Validate policy configuration before saving
     const validationResult = this.validator.validatePolicy(policy);
     if (!validationResult.valid) {
-      throw new Error(`Invalid policy configuration: ${validationResult.errors.join(', ')}`);
+      throw new Error(
+        `Invalid policy configuration: ${validationResult.errors.join(", ")}`,
+      );
     }
 
     this.db
       .prepare(
         `INSERT INTO routing_policies (id, name, description, mandatory_eyes, forbidden_eyes, min_validation_eyes, security_required, always_confirm_intent, custom_constraints, is_active, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         policy.id,
@@ -73,9 +75,11 @@ export class PolicyManager {
         policy.minValidationEyes ?? null,
         policy.securityRequired ? 1 : 0,
         policy.alwaysConfirmIntent ? 1 : 0,
-        policy.customConstraints ? JSON.stringify(policy.customConstraints) : null,
+        policy.customConstraints
+          ? JSON.stringify(policy.customConstraints)
+          : null,
         policy.isActive ? 1 : 0,
-        policy.createdAt
+        policy.createdAt,
       );
 
     return policy;
@@ -89,7 +93,7 @@ export class PolicyManager {
       .prepare(
         `SELECT id, name, description, mandatory_eyes, forbidden_eyes, min_validation_eyes, security_required, always_confirm_intent, custom_constraints, is_active, created_at
          FROM routing_policies
-         WHERE id = ?`
+         WHERE id = ?`,
       )
       .get(policyId) as
       | {
@@ -116,7 +120,9 @@ export class PolicyManager {
       name: row.name,
       description: row.description ?? undefined,
       mandatoryEyes: JSON.parse(row.mandatory_eyes) as string[],
-      forbiddenEyes: row.forbidden_eyes ? (JSON.parse(row.forbidden_eyes) as string[]) : undefined,
+      forbiddenEyes: row.forbidden_eyes
+        ? (JSON.parse(row.forbidden_eyes) as string[])
+        : undefined,
       minValidationEyes: row.min_validation_eyes ?? undefined,
       securityRequired: row.security_required === 1,
       alwaysConfirmIntent: row.always_confirm_intent === 1,
@@ -157,12 +163,14 @@ export class PolicyManager {
       created_at: number;
     }>;
 
-    return rows.map(row => ({
+    return rows.map((row) => ({
       id: row.id,
       name: row.name,
       description: row.description ?? undefined,
       mandatoryEyes: JSON.parse(row.mandatory_eyes) as string[],
-      forbiddenEyes: row.forbidden_eyes ? (JSON.parse(row.forbidden_eyes) as string[]) : undefined,
+      forbiddenEyes: row.forbidden_eyes
+        ? (JSON.parse(row.forbidden_eyes) as string[])
+        : undefined,
       minValidationEyes: row.min_validation_eyes ?? undefined,
       securityRequired: row.security_required === 1,
       alwaysConfirmIntent: row.always_confirm_intent === 1,
@@ -189,7 +197,7 @@ export class PolicyManager {
       alwaysConfirmIntent: boolean;
       customConstraints: readonly Constraint[];
       isActive: boolean;
-    }>
+    }>,
   ): Promise<RoutingPolicy> {
     const existing = this.getPolicy(policyId);
     if (!existing) {
@@ -204,14 +212,16 @@ export class PolicyManager {
     // Validate updated policy
     const validationResult = this.validator.validatePolicy(updated);
     if (!validationResult.valid) {
-      throw new Error(`Invalid policy update: ${validationResult.errors.join(', ')}`);
+      throw new Error(
+        `Invalid policy update: ${validationResult.errors.join(", ")}`,
+      );
     }
 
     this.db
       .prepare(
         `UPDATE routing_policies
          SET name = ?, description = ?, mandatory_eyes = ?, forbidden_eyes = ?, min_validation_eyes = ?, security_required = ?, always_confirm_intent = ?, custom_constraints = ?, is_active = ?
-         WHERE id = ?`
+         WHERE id = ?`,
       )
       .run(
         updated.name,
@@ -221,9 +231,11 @@ export class PolicyManager {
         updated.minValidationEyes ?? null,
         updated.securityRequired ? 1 : 0,
         updated.alwaysConfirmIntent ? 1 : 0,
-        updated.customConstraints ? JSON.stringify(updated.customConstraints) : null,
+        updated.customConstraints
+          ? JSON.stringify(updated.customConstraints)
+          : null,
         updated.isActive ? 1 : 0,
-        policyId
+        policyId,
       );
 
     return updated;
@@ -233,7 +245,9 @@ export class PolicyManager {
    * Delete policy
    */
   deletePolicy(policyId: string): boolean {
-    const result = this.db.prepare(`DELETE FROM routing_policies WHERE id = ?`).run(policyId);
+    const result = this.db
+      .prepare(`DELETE FROM routing_policies WHERE id = ?`)
+      .run(policyId);
 
     return result.changes > 0;
   }
@@ -242,7 +256,10 @@ export class PolicyManager {
    * Test policy against eye sequence
    * Useful for UI testing before saving
    */
-  testPolicy(policy: RoutingPolicy, eyeSequence: readonly string[]): {
+  testPolicy(
+    policy: RoutingPolicy,
+    eyeSequence: readonly string[],
+  ): {
     readonly valid: boolean;
     readonly errors: readonly string[];
     readonly warnings: readonly string[];

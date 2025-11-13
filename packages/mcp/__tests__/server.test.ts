@@ -1,68 +1,66 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 
-describe('MCP Server', () => {
-  describe('Server initialization', () => {
-    it('should have required server info', () => {
+describe("MCP Server", () => {
+  describe("Server initialization", () => {
+    it("should have required server info", () => {
       const serverInfo = {
-        name: 'third-eye-mcp',
-        version: '1.0.0'
+        name: "third-eye-mcp",
+        version: "1.0.0",
       };
 
-      expect(serverInfo.name).toBe('third-eye-mcp');
+      expect(serverInfo.name).toBe("third-eye-mcp");
       expect(serverInfo.version).toBeDefined();
     });
 
-    it('should expose third_eye_overseer tool only', () => {
-      const tools = [
-        { name: 'third_eye_overseer' }
-      ];
+    it("should expose third_eye_overseer tool only", () => {
+      const tools = [{ name: "third_eye_overseer" }];
 
       expect(tools).toHaveLength(1);
-      expect(tools[0].name).toBe('third_eye_overseer');
+      expect(tools[0].name).toBe("third_eye_overseer");
     });
 
-    it('should not expose navigator tool', () => {
-      const tools = [{ name: 'third_eye_overseer' }];
-      const hasNavigator = tools.some(t => t.name === 'navigator');
+    it("should not expose navigator tool", () => {
+      const tools = [{ name: "third_eye_overseer" }];
+      const hasNavigator = tools.some((t) => t.name === "navigator");
 
       expect(hasNavigator).toBe(false);
     });
   });
 
-  describe('Overseer tool schema', () => {
-    it('should have correct input schema', () => {
+  describe("Overseer tool schema", () => {
+    it("should have correct input schema", () => {
       const schema = {
-        type: 'object',
+        type: "object",
         properties: {
-          task: { type: 'string' },
-          sessionId: { type: 'string' },
-          strictness: { type: 'object' },
-          context: { type: 'object' }
+          task: { type: "string" },
+          sessionId: { type: "string" },
+          strictness: { type: "object" },
+          context: { type: "object" },
         },
-        required: ['task'],
+        required: ["task"],
         additionalProperties: true,
       };
 
-      expect(schema.type).toBe('object');
-      expect(schema.required).toContain('task');
-      expect(schema.properties.task.type).toBe('string');
+      expect(schema.type).toBe("object");
+      expect(schema.required).toContain("task");
+      expect(schema.properties.task.type).toBe("string");
     });
 
-    it('should have optional sessionId', () => {
-      const request1 = { task: 'test' };
+    it("should have optional sessionId", () => {
+      const request1 = { task: "test" };
       const request2 = {
-        task: 'test',
-        sessionId: 'session-123'
+        task: "test",
+        sessionId: "session-123",
       };
 
-      expect(request1).not.toHaveProperty('sessionId');
-      expect(request2).toHaveProperty('sessionId');
+      expect(request1).not.toHaveProperty("sessionId");
+      expect(request2).toHaveProperty("sessionId");
     });
 
-    it('should accept strictness object', () => {
+    it("should accept strictness object", () => {
       const request = {
-        task: 'test',
-        strictness: { ambiguityThreshold: 40, citationCutoff: 70 }
+        task: "test",
+        strictness: { ambiguityThreshold: 40, citationCutoff: 70 },
       };
 
       expect(request.strictness).toBeDefined();
@@ -70,20 +68,20 @@ describe('MCP Server', () => {
     });
   });
 
-  describe('Tool execution', () => {
-    it('should process valid requests', () => {
+  describe("Tool execution", () => {
+    it("should process valid requests", () => {
       const request = {
-        task: 'Please analyze this code',
-        sessionId: crypto.randomUUID()
+        task: "Please analyze this code",
+        sessionId: crypto.randomUUID(),
       };
 
       expect(request.task).toBeTruthy();
       expect(request.sessionId).toMatch(/^[0-9a-f-]{36}$/);
     });
 
-    it('should create session if not provided', () => {
+    it("should create session if not provided", () => {
       const request: { task: string; sessionId?: string } = {
-        task: 'test'
+        task: "test",
       };
 
       // Server should auto-generate sessionId
@@ -93,117 +91,124 @@ describe('MCP Server', () => {
       expect(sessionId.length).toBeGreaterThan(0);
     });
 
-    it('should route to appropriate eye', () => {
+    it("should route to appropriate eye", () => {
       const routing = {
-        task: 'code review',
-        selectedEye: 'sharingan',
-        reasoning: 'Code quality analysis task'
+        task: "code review",
+        selectedEye: "sharingan",
+        reasoning: "Code quality analysis task",
       };
 
-      expect(routing.selectedEye).toBe('sharingan');
+      expect(routing.selectedEye).toBe("sharingan");
     });
   });
 
-  describe('Error handling', () => {
-    it('should reject empty task', () => {
-      const request = { task: '' };
-      const isValid = typeof request.task === 'string' && request.task.length > 0;
+  describe("Error handling", () => {
+    it("should reject empty task", () => {
+      const request = { task: "" };
+      const isValid =
+        typeof request.task === "string" && request.task.length > 0;
       expect(isValid).toBe(false);
     });
 
-    it('should handle server errors gracefully', () => {
+    it("should handle server errors gracefully", () => {
       const error = {
-        type: 'server_error',
-        message: 'Internal server error',
-        code: 500
+        type: "server_error",
+        message: "Internal server error",
+        code: 500,
       };
 
-      expect(error.type).toBe('server_error');
+      expect(error.type).toBe("server_error");
       expect(error.code).toBe(500);
     });
   });
 
-  describe('Response format', () => {
-    it('should return structured response', () => {
+  describe("Response format", () => {
+    it("should return structured response", () => {
       const response = {
         content: [
           {
-            type: 'text',
-            text: 'Analysis result'
-          }
+            type: "text",
+            text: "Analysis result",
+          },
         ],
-        isError: false
+        isError: false,
       };
 
       expect(response.content).toBeInstanceOf(Array);
       expect(response.isError).toBe(false);
     });
 
-    it('should include metadata in response', () => {
+    it("should include metadata in response", () => {
       const response = {
-        content: [{ type: 'text', text: 'result' }],
+        content: [{ type: "text", text: "result" }],
         metadata: {
-          sessionId: 'session-123',
-          eyeUsed: 'sharingan',
-          processingTime: 1234
-        }
+          sessionId: "session-123",
+          eyeUsed: "sharingan",
+          processingTime: 1234,
+        },
       };
 
       expect(response.metadata).toBeDefined();
-      expect(response.metadata.eyeUsed).toBe('sharingan');
+      expect(response.metadata.eyeUsed).toBe("sharingan");
     });
 
-    it('should handle error responses', () => {
+    it("should handle error responses", () => {
       const errorResponse = {
         content: [
           {
-            type: 'text',
-            text: 'Error: Invalid request'
-          }
+            type: "text",
+            text: "Error: Invalid request",
+          },
         ],
-        isError: true
+        isError: true,
       };
 
       expect(errorResponse.isError).toBe(true);
     });
   });
 
-  describe('Session management', () => {
-    it('should maintain session across calls', () => {
+  describe("Session management", () => {
+    it("should maintain session across calls", () => {
       const sessionId = crypto.randomUUID();
 
-      const call1 = { messages: [{ role: 'user', content: 'First message' }], sessionId };
-      const call2 = { messages: [{ role: 'user', content: 'Follow up' }], sessionId };
+      const call1 = {
+        messages: [{ role: "user", content: "First message" }],
+        sessionId,
+      };
+      const call2 = {
+        messages: [{ role: "user", content: "Follow up" }],
+        sessionId,
+      };
 
       expect(call1.sessionId).toBe(call2.sessionId);
     });
 
-    it('should track conversation history', () => {
+    it("should track conversation history", () => {
       const session = {
-        id: 'session-123',
+        id: "session-123",
         messages: [
-          { role: 'user', content: 'Hi' },
-          { role: 'assistant', content: 'Hello' },
-          { role: 'user', content: 'How are you?' }
-        ]
+          { role: "user", content: "Hi" },
+          { role: "assistant", content: "Hello" },
+          { role: "user", content: "How are you?" },
+        ],
       };
 
       expect(session.messages.length).toBe(3);
     });
   });
 
-  describe('Strictness levels', () => {
-    it('should apply strictness to validation', () => {
+  describe("Strictness levels", () => {
+    it("should apply strictness to validation", () => {
       const levels = [
-        { level: 0, name: 'permissive', checks: ['basic'] },
-        { level: 5, name: 'balanced', checks: ['basic', 'style'] },
-        { level: 10, name: 'strict', checks: ['basic', 'style', 'advanced'] }
+        { level: 0, name: "permissive", checks: ["basic"] },
+        { level: 5, name: "balanced", checks: ["basic", "style"] },
+        { level: 10, name: "strict", checks: ["basic", "style", "advanced"] },
       ];
 
       expect(levels[0].checks.length).toBeLessThan(levels[2].checks.length);
     });
 
-    it('should default to balanced strictness', () => {
+    it("should default to balanced strictness", () => {
       const defaultLevel = 5;
 
       expect(defaultLevel).toBe(5);
@@ -212,77 +217,78 @@ describe('MCP Server', () => {
     });
   });
 
-  describe('Tool capabilities', () => {
-    it('should list supported operations', () => {
+  describe("Tool capabilities", () => {
+    it("should list supported operations", () => {
       const capabilities = [
-        'code_review',
-        'requirements_analysis',
-        'quality_check',
-        'translation',
-        'creative_solutions',
-        'validation',
-        'documentation'
+        "code_review",
+        "requirements_analysis",
+        "quality_check",
+        "translation",
+        "creative_solutions",
+        "validation",
+        "documentation",
       ];
 
       expect(capabilities.length).toBeGreaterThan(5);
     });
 
-    it('should support all eye types', () => {
+    it("should support all eye types", () => {
       const eyes = [
-        'sharingan',
-        'rinnegan',
-        'byakugan',
-        'jogan',
-        'tenseigan',
-        'mangekyo',
-        'overseer'
+        "sharingan",
+        "rinnegan",
+        "byakugan",
+        "jogan",
+        "tenseigan",
+        "mangekyo",
+        "overseer",
       ];
 
-      expect(eyes).toContain('sharingan');
-      expect(eyes).toContain('overseer');
+      expect(eyes).toContain("sharingan");
+      expect(eyes).toContain("overseer");
       expect(eyes.length).toBe(7);
     });
   });
 
-  describe('Configuration', () => {
-    it('should read server config', () => {
+  describe("Configuration", () => {
+    it("should read server config", () => {
       const config = {
         port: 7070,
-        host: '127.0.0.1',
-        logLevel: 'info'
+        host: "127.0.0.1",
+        logLevel: "info",
       };
 
       expect(config.port).toBe(7070);
-      expect(config.host).toBe('127.0.0.1');
+      expect(config.host).toBe("127.0.0.1");
     });
 
-    it('should support custom config paths', () => {
-      const configPath = process.env.MCP_CONFIG || '~/.third-eye-mcp/config.json';
+    it("should support custom config paths", () => {
+      const configPath =
+        process.env.MCP_CONFIG || "~/.third-eye-mcp/config.json";
 
       expect(configPath).toBeDefined();
     });
   });
 
-  describe('Transport protocol', () => {
-    it('should support stdio transport', () => {
-      const transport = 'stdio';
+  describe("Transport protocol", () => {
+    it("should support stdio transport", () => {
+      const transport = "stdio";
 
-      expect(transport).toBe('stdio');
+      expect(transport).toBe("stdio");
     });
 
-    it('should handle JSON-RPC messages', () => {
+    it("should handle JSON-RPC messages", () => {
       const rpcMessage = {
-        jsonrpc: '2.0',
-        method: 'tools/call',
+        jsonrpc: "2.0",
+        method: "tools/call",
         params: {
-          name: 'overseer',
-          arguments: { messages: [] }
+          name: "overseer",
+          arguments: { messages: [] },
         },
-        id: 1
+        id: 1,
       };
 
-      expect(rpcMessage.jsonrpc).toBe('2.0');
-      expect(rpcMessage.method).toBe('tools/call');
+      expect(rpcMessage.jsonrpc).toBe("2.0");
+      expect(rpcMessage.method).toBe("tools/call");
     });
   });
 });

@@ -3,32 +3,32 @@
  * All magic numbers and strings as typed constants
  */
 
-import { REPLAY_SPEEDS, THEMES, PROVIDERS } from '@third-eye/types';
-import { EyeId } from '@third-eye/constants';
+import { REPLAY_SPEEDS, THEMES, PROVIDERS } from "@third-eye/types";
+import { EyeId } from "@third-eye/constants";
 
 /**
  * API Configuration
  */
-export const DEFAULT_API_URL = 'http://127.0.0.1:7070' as const;
-export const DEFAULT_UI_URL = 'http://127.0.0.1:3300' as const;
+export const DEFAULT_API_URL = "http://127.0.0.1:7070" as const;
+export const DEFAULT_UI_URL = "http://127.0.0.1:3300" as const;
 export const DEFAULT_SERVER_PORT = 7070 as const;
 export const DEFAULT_UI_PORT = 3300 as const;
-export const DEFAULT_HOST = '127.0.0.1' as const;
+export const DEFAULT_HOST = "127.0.0.1" as const;
 
 /**
  * Database Configuration
  */
-export const DEFAULT_DB_PATH = '~/.third-eye-mcp/mcp.db' as const;
-export const DEFAULT_CONFIG_DIR = '~/.third-eye-mcp' as const;
+export const DEFAULT_DB_PATH = "~/.third-eye-mcp/mcp.db" as const;
+export const DEFAULT_CONFIG_DIR = "~/.third-eye-mcp" as const;
 
 /**
  * Provider Base URLs
  */
 export const PROVIDER_BASE_URLS: Record<string, string> = {
-  groq: 'https://api.groq.com/openai/v1',
-  openrouter: 'https://openrouter.ai/api/v1',
-  ollama: 'http://127.0.0.1:11434',
-  lmstudio: 'http://127.0.0.1:1234',
+  groq: "https://api.groq.com/openai/v1",
+  openrouter: "https://openrouter.ai/api/v1",
+  ollama: "http://127.0.0.1:11434",
+  lmstudio: "http://127.0.0.1:1234",
 } as const;
 
 /**
@@ -114,97 +114,98 @@ export const CACHE_CONFIG = {
  * Error Messages
  */
 export const ERROR_MESSAGES = {
-  NETWORK_ERROR: 'Failed to connect to server. Please check if the server is running.',
-  VALIDATION_ERROR: 'Please check the form for errors.',
-  PERMISSION_DENIED: 'You do not have permission to perform this action.',
-  NOT_FOUND: 'The requested resource was not found.',
-  TIMEOUT: 'Request timed out. Please try again.',
-  RATE_LIMIT: 'Too many requests. Please wait and try again.',
-  INTERNAL_ERROR: 'An unexpected error occurred. Please try again.',
+  NETWORK_ERROR:
+    "Failed to connect to server. Please check if the server is running.",
+  VALIDATION_ERROR: "Please check the form for errors.",
+  PERMISSION_DENIED: "You do not have permission to perform this action.",
+  NOT_FOUND: "The requested resource was not found.",
+  TIMEOUT: "Request timed out. Please try again.",
+  RATE_LIMIT: "Too many requests. Please wait and try again.",
+  INTERNAL_ERROR: "An unexpected error occurred. Please try again.",
 } as const;
 
 /**
  * Success Messages
  */
 export const SUCCESS_MESSAGES = {
-  SAVED: 'Changes saved successfully',
-  CREATED: 'Created successfully',
-  UPDATED: 'Updated successfully',
-  DELETED: 'Deleted successfully',
-  EXPORTED: 'Export completed successfully',
-  COPIED: 'Copied to clipboard',
+  SAVED: "Changes saved successfully",
+  CREATED: "Created successfully",
+  UPDATED: "Updated successfully",
+  DELETED: "Deleted successfully",
+  EXPORTED: "Export completed successfully",
+  COPIED: "Copied to clipboard",
 } as const;
 
 /**
  * API Endpoints
  */
 export const API_ENDPOINTS = {
-  HEALTH: '/health',
-  OVERSEER: '/overseer/run',
-  SESSION: '/api/session',
-  MODELS: '/api/models',
-  ROUTING: '/api/routing',
-  PERSONAS: '/api/personas',
-  EYES: '/api/eyes',
-  PIPELINES: '/api/pipelines',
-  PROMPTS: '/api/prompts',
-  STRICTNESS: '/api/strictness',
-  PROVIDER_KEYS: '/api/provider-keys',
-  APP_SETTINGS: '/api/app-settings',
-  DATABASE: '/api/database',
-  AUDIT: '/api/audit',
-  METRICS: '/api/metrics',
-  EXPORT: '/api/export',
+  HEALTH: "/health",
+  OVERSEER: "/overseer/run",
+  SESSION: "/api/session",
+  MODELS: "/api/models",
+  ROUTING: "/api/routing",
+  PERSONAS: "/api/personas",
+  EYES: "/api/eyes",
+  PIPELINES: "/api/pipelines",
+  PROMPTS: "/api/prompts",
+  STRICTNESS: "/api/strictness",
+  PROVIDER_KEYS: "/api/provider-keys",
+  APP_SETTINGS: "/api/app-settings",
+  DATABASE: "/api/database",
+  AUDIT: "/api/audit",
+  METRICS: "/api/metrics",
+  EXPORT: "/api/export",
 } as const;
 
 /**
  * Query Keys for React Query
  */
 export const QUERY_KEYS = {
-  HEALTH: ['health'],
-  SESSIONS: ['sessions'],
-  SESSION: (id: string) => ['session', id],
-  MODELS: (provider: string) => ['models', provider],
-  ROUTING: ['routing'],
-  PERSONAS: ['personas'],
-  PERSONA: (eye: string) => ['persona', eye],
-  EYES: ['eyes'],
-  EYE: (name: string) => ['eye', name],
-  PIPELINES: ['pipelines'],
-  PIPELINE: (id: string) => ['pipeline', id],
-  PROMPTS: ['prompts'],
-  PROMPT: (id: string) => ['prompt', id],
-  STRICTNESS: ['strictness'],
-  PROVIDER_KEYS: ['provider-keys'],
-  APP_SETTINGS: ['app-settings'],
-  METRICS: ['metrics'],
-  AUDIT: ['audit'],
+  HEALTH: ["health"],
+  SESSIONS: ["sessions"],
+  SESSION: (id: string) => ["session", id],
+  MODELS: (provider: string) => ["models", provider],
+  ROUTING: ["routing"],
+  PERSONAS: ["personas"],
+  PERSONA: (eye: string) => ["persona", eye],
+  EYES: ["eyes"],
+  EYE: (name: string) => ["eye", name],
+  PIPELINES: ["pipelines"],
+  PIPELINE: (id: string) => ["pipeline", id],
+  PROMPTS: ["prompts"],
+  PROMPT: (id: string) => ["prompt", id],
+  STRICTNESS: ["strictness"],
+  PROVIDER_KEYS: ["provider-keys"],
+  APP_SETTINGS: ["app-settings"],
+  METRICS: ["metrics"],
+  AUDIT: ["audit"],
 } as const;
 
 /**
  * Local Storage Keys
  */
 export const STORAGE_KEYS = {
-  THEME: 'third-eye:theme',
-  DARK_MODE: 'third-eye:dark-mode',
-  AUTO_OPEN: 'third-eye:auto-open',
-  SELECTED_PROVIDER: 'third-eye:selected-provider',
-  SIDEBAR_COLLAPSED: 'third-eye:sidebar-collapsed',
-  LAST_SESSION: 'third-eye:last-session',
+  THEME: "third-eye:theme",
+  DARK_MODE: "third-eye:dark-mode",
+  AUTO_OPEN: "third-eye:auto-open",
+  SELECTED_PROVIDER: "third-eye:selected-provider",
+  SIDEBAR_COLLAPSED: "third-eye:sidebar-collapsed",
+  LAST_SESSION: "third-eye:last-session",
 } as const;
 
 /**
  * Built-in Strictness Profile IDs
  */
 export const BUILT_IN_PROFILES = {
-  CASUAL: 'casual',
-  ENTERPRISE: 'enterprise',
-  SECURITY: 'security',
+  CASUAL: "casual",
+  ENTERPRISE: "enterprise",
+  SECURITY: "security",
 } as const;
 
 /**
  * Eye Display Names - REMOVED (SSOT Violation)
- * 
+ *
  * Eye names should come from database via /api/eyes/all endpoint.
  * This constant violated database-as-SSOT principle.
  */
@@ -214,17 +215,17 @@ export const BUILT_IN_PROFILES = {
  * Uses EyeId constants from SSOT
  */
 export const EYE_COLORS: Record<string, string> = {
-  [EyeId.SHARINGAN]: '#ef4444', // red
-  [EyeId.KYUUBI]: '#8b5cf6', // purple
-  [EyeId.JOGAN]: '#06b6d4', // cyan
-  [`${EyeId.RINNEGAN}_plan`]: '#a855f7', // purple
-  [`${EyeId.RINNEGAN}_review`]: '#9333ea', // purple
-  [`${EyeId.RINNEGAN}_final`]: '#7c3aed', // violet
-  [`${EyeId.MANGEKYO}_scaffold`]: '#ec4899', // pink
-  [`${EyeId.MANGEKYO}_impl`]: '#f43f5e', // rose
-  [`${EyeId.MANGEKYO}_tests`]: '#fb7185', // rose
-  [`${EyeId.MANGEKYO}_docs`]: '#fda4af', // rose
-  [EyeId.TENSEIGAN]: '#10b981', // green
-  [EyeId.BYAKUGAN]: '#f59e0b', // amber
-  [EyeId.OVERSEER]: '#6366f1', // indigo
+  [EyeId.SHARINGAN]: "#ef4444", // red
+  [EyeId.KYUUBI]: "#8b5cf6", // purple
+  [EyeId.JOGAN]: "#06b6d4", // cyan
+  [`${EyeId.RINNEGAN}_plan`]: "#a855f7", // purple
+  [`${EyeId.RINNEGAN}_review`]: "#9333ea", // purple
+  [`${EyeId.RINNEGAN}_final`]: "#7c3aed", // violet
+  [`${EyeId.MANGEKYO}_scaffold`]: "#ec4899", // pink
+  [`${EyeId.MANGEKYO}_impl`]: "#f43f5e", // rose
+  [`${EyeId.MANGEKYO}_tests`]: "#fb7185", // rose
+  [`${EyeId.MANGEKYO}_docs`]: "#fda4af", // rose
+  [EyeId.TENSEIGAN]: "#10b981", // green
+  [EyeId.BYAKUGAN]: "#f59e0b", // amber
+  [EyeId.OVERSEER]: "#6366f1", // indigo
 } as const;

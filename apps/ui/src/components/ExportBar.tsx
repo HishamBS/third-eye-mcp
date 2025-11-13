@@ -1,23 +1,26 @@
-'use client';
+"use client";
 
-import clsx from 'clsx';
-import { useDialog } from '@/hooks/useDialog';
-import { getApiUrl } from '@/consts/api';
+import clsx from "clsx";
+import { useDialog } from "@/hooks/useDialog";
+import { getApiUrl } from "@/consts/api";
 
-type ExportFormat = 'pdf' | 'html' | 'json' | 'md';
+type ExportFormat = "pdf" | "html" | "json" | "md";
 
 async function requestExport(sessionId: string, format: ExportFormat) {
-  const response = await fetch(`${getApiUrl()}/api/export/${sessionId}?format=${format}`, {
-    method: 'GET',
-    headers: {
-      'X-Request-ID': crypto.randomUUID(),
+  const response = await fetch(
+    `${getApiUrl()}/api/export/${sessionId}?format=${format}`,
+    {
+      method: "GET",
+      headers: {
+        "X-Request-ID": crypto.randomUUID(),
+      },
     },
-  });
+  );
   if (!response.ok) {
     const error = await response.text();
     throw new Error(error || `Export failed (${response.status})`);
   }
-  if (format === 'json') {
+  if (format === "json") {
     return response.blob();
   }
   return response.blob();
@@ -35,7 +38,7 @@ export function ExportBar({ sessionId }: ExportBarProps) {
     try {
       const blob = await requestExport(sessionId, format);
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = `third-eye-session-${sessionId}.${format}`;
       document.body.appendChild(link);
@@ -43,7 +46,10 @@ export function ExportBar({ sessionId }: ExportBarProps) {
       link.remove();
       URL.revokeObjectURL(url);
     } catch (error) {
-      await dialog.alert('Export Failed', error instanceof Error ? error.message : 'Export failed');
+      await dialog.alert(
+        "Export Failed",
+        error instanceof Error ? error.message : "Export failed",
+      );
     }
   };
 
@@ -51,45 +57,73 @@ export function ExportBar({ sessionId }: ExportBarProps) {
     <section className="rounded-2xl border border-brand-outline/40 bg-brand-paperElev/70 p-4 text-sm text-semantic-muted">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">Session Export</p>
-          <h3 className="text-lg font-semibold text-brand-foreground">Download session data</h3>
+          <p className="text-xs uppercase tracking-[0.3em] text-brand-accent">
+            Session Export
+          </p>
+          <h3 className="text-lg font-semibold text-brand-foreground">
+            Download session data
+          </h3>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            className={clsx('rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50', disabled ? 'cursor-not-allowed bg-brand-outline/40 text-semantic-muted' : 'bg-brand-accent text-brand-foreground hover:bg-brand-primary')}
+            className={clsx(
+              "rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50",
+              disabled
+                ? "cursor-not-allowed bg-brand-outline/40 text-semantic-muted"
+                : "bg-brand-accent text-brand-foreground hover:bg-brand-primary",
+            )}
             disabled={disabled}
-            onClick={() => triggerDownload('pdf')}
+            onClick={() => triggerDownload("pdf")}
           >
             PDF
           </button>
           <button
             type="button"
-            className={clsx('rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50', disabled ? 'cursor-not-allowed bg-brand-outline/40 text-semantic-muted' : 'border border-brand-outline/60 text-semantic-muted hover:border-brand-accent hover:text-brand-accent')}
+            className={clsx(
+              "rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50",
+              disabled
+                ? "cursor-not-allowed bg-brand-outline/40 text-semantic-muted"
+                : "border border-brand-outline/60 text-semantic-muted hover:border-brand-accent hover:text-brand-accent",
+            )}
             disabled={disabled}
-            onClick={() => triggerDownload('html')}
+            onClick={() => triggerDownload("html")}
           >
             HTML
           </button>
           <button
             type="button"
-            className={clsx('rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50', disabled ? 'cursor-not-allowed bg-brand-outline/40 text-semantic-muted' : 'border border-brand-outline/60 text-semantic-muted hover:border-brand-accent hover:text-brand-accent')}
+            className={clsx(
+              "rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50",
+              disabled
+                ? "cursor-not-allowed bg-brand-outline/40 text-semantic-muted"
+                : "border border-brand-outline/60 text-semantic-muted hover:border-brand-accent hover:text-brand-accent",
+            )}
             disabled={disabled}
-            onClick={() => triggerDownload('json')}
+            onClick={() => triggerDownload("json")}
           >
             JSON
           </button>
           <button
             type="button"
-            className={clsx('rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50', disabled ? 'cursor-not-allowed bg-brand-outline/40 text-semantic-muted' : 'border border-brand-outline/60 text-semantic-muted hover:border-brand-accent hover:text-brand-accent')}
+            className={clsx(
+              "rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50",
+              disabled
+                ? "cursor-not-allowed bg-brand-outline/40 text-semantic-muted"
+                : "border border-brand-outline/60 text-semantic-muted hover:border-brand-accent hover:text-brand-accent",
+            )}
             disabled={disabled}
-            onClick={() => triggerDownload('md')}
+            onClick={() => triggerDownload("md")}
           >
             Markdown
           </button>
         </div>
       </div>
-      {disabled && <p className="mt-2 text-xs text-semantic-muted">Select a session to enable exports.</p>}
+      {disabled && (
+        <p className="mt-2 text-xs text-semantic-muted">
+          Select a session to enable exports.
+        </p>
+      )}
     </section>
   );
 }

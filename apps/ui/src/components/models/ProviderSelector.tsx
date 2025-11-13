@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { CheckCircle2, XCircle, Search, X } from 'lucide-react';
-import { STATUS_TEXT_COLORS } from '@/constants/color-mappings';
-import { PROVIDERS, type ProviderDefinition } from '@/constants/models';
+import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
+import { CheckCircle2, XCircle, Search, X } from "lucide-react";
+import { STATUS_TEXT_COLORS } from "@/constants/color-mappings";
+import { PROVIDERS, type ProviderDefinition } from "@/constants/models";
 
 interface ProviderSelectorProps {
   providers: readonly ProviderDefinition[];
@@ -23,14 +23,14 @@ export function ProviderSelector({
   isOpen,
   health,
 }: ProviderSelectorProps) {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const filteredProviders = useMemo(() => {
     return providers.filter(
       (provider) =>
         !searchTerm ||
         provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        provider.id.toLowerCase().includes(searchTerm.toLowerCase())
+        provider.id.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }, [providers, searchTerm]);
 
@@ -49,7 +49,9 @@ export function ProviderSelector({
         className="w-full max-w-md rounded-xl border border-brand-outline/60 bg-brand-paper p-6 shadow-xl"
       >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-brand-foreground">Select Provider</h2>
+          <h2 className="text-xl font-semibold text-brand-foreground">
+            Select Provider
+          </h2>
           <button
             onClick={onClose}
             className="rounded-lg p-1 text-semantic-muted transition-colors hover:bg-brand-paperElev hover:text-brand-foreground"
@@ -86,8 +88,8 @@ export function ProviderSelector({
                 }}
                 className={`w-full rounded-lg border p-3 text-left transition-colors ${
                   isSelected
-                    ? 'border-brand-accent bg-brand-accent/10'
-                    : 'border-brand-outline/40 bg-brand-paper/70 hover:border-brand-accent/60 hover:bg-brand-paper'
+                    ? "border-brand-accent bg-brand-accent/10"
+                    : "border-brand-outline/40 bg-brand-paper/70 hover:border-brand-accent/60 hover:bg-brand-paper"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -95,9 +97,11 @@ export function ProviderSelector({
                     {isHealthy !== undefined && (
                       <span
                         className={`flex items-center ${
-                          isHealthy ? STATUS_TEXT_COLORS.success : STATUS_TEXT_COLORS.error
+                          isHealthy
+                            ? STATUS_TEXT_COLORS.success
+                            : STATUS_TEXT_COLORS.error
                         }`}
-                        title={isHealthy ? 'Online' : 'Offline'}
+                        title={isHealthy ? "Online" : "Offline"}
                       >
                         {isHealthy ? (
                           <CheckCircle2 className="h-5 w-5" />
@@ -111,7 +115,9 @@ export function ProviderSelector({
                         {provider.name}
                       </div>
                       {provider.requiresKey && (
-                        <div className="text-xs text-semantic-muted">Requires API key</div>
+                        <div className="text-xs text-semantic-muted">
+                          Requires API key
+                        </div>
                       )}
                     </div>
                   </div>
@@ -125,4 +131,3 @@ export function ProviderSelector({
     </div>
   );
 }
-

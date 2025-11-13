@@ -90,6 +90,7 @@ Use the third_eye_overseer tool to check if this is working.
 ```
 
 You should see:
+
 - Tool call to `third_eye_overseer`
 - Response from Third Eye pipeline
 - Session visible in dashboard (http://127.0.0.1:3300)
@@ -103,6 +104,7 @@ Use the `third_eye_overseer` tool to review the code in the current file for pot
 ```
 
 Third Eye will:
+
 - Route to Sharingan (ambiguity detection)
 - Route to Mangekyo (code review gates)
 - Return structured analysis
@@ -168,11 +170,13 @@ Use the `third_eye_overseer` tool to review the architecture of this project and
 ### Tool Not Available
 
 1. **Check config file exists**:
+
    ```bash
    ls -la ~/.cursor/mcp_settings.json
    ```
 
 2. **Verify JSON syntax**:
+
    ```bash
    cat ~/.cursor/mcp_settings.json | jq .
    ```
@@ -184,11 +188,13 @@ Use the `third_eye_overseer` tool to review the architecture of this project and
 ### Third Eye Not Starting
 
 1. **Start manually**:
+
    ```bash
    bunx third-eye-mcp up --verbose
    ```
 
 2. **Check port availability**:
+
    ```bash
    lsof -i :7070  # MCP server
    lsof -i :3300  # Dashboard
@@ -206,6 +212,7 @@ Use the `third_eye_overseer` tool to review the architecture of this project and
    - Set Overseer to `llama-3.1-8b-instant`
 
 2. **Enable local inference**:
+
    ```bash
    # Install Ollama
    curl https://ollama.ai/install.sh | sh
@@ -226,6 +233,7 @@ Use the `third_eye_overseer` tool to review the architecture of this project and
 If Groq/OpenRouter fails:
 
 1. **Check API keys**:
+
    ```bash
    # Test Groq
    curl https://api.groq.com/openai/v1/models \

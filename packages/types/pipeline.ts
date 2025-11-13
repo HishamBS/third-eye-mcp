@@ -5,7 +5,7 @@
  * as DAGs (Directed Acyclic Graphs) for execution orchestration.
  */
 
-import type { EyeName } from './enums';
+import type { EyeName } from "./enums";
 
 /**
  * Pipeline DAG Node - Represents a single node in the pipeline graph
@@ -15,7 +15,14 @@ export interface PipelineDagNode {
   id: string;
 
   /** Type of node: 'Eye', 'condition', 'user_input', 'terminal', 'switch', 'if', 'loop_over_items' */
-  type: 'Eye' | 'condition' | 'user_input' | 'terminal' | 'switch' | 'if' | 'loop_over_items';
+  type:
+    | "Eye"
+    | "condition"
+    | "user_input"
+    | "terminal"
+    | "switch"
+    | "if"
+    | "loop_over_items";
 
   /** Eye identifier (required for Eye type nodes) */
   eyeId?: EyeName | string;
@@ -66,7 +73,7 @@ export interface PipelineDagNode {
  */
 export interface SwitchNodeConfig {
   /** Mode: rules-based or single expression */
-  mode: 'rules' | 'expression';
+  mode: "rules" | "expression";
 
   /** Rules for multi-way routing (rules mode) */
   rules?: SwitchRule[];
@@ -152,7 +159,7 @@ export interface PipelineDagEdge {
  */
 export interface ExpressionRule {
   /** Type of expression */
-  type: 'expression' | 'simple';
+  type: "expression" | "simple";
 
   /** JSONLogic expression (for type='expression') */
   expression?: string;
@@ -161,7 +168,7 @@ export interface ExpressionRule {
   field?: string;
 
   /** Comparison operator (for type='simple') */
-  operator?: '==' | '!=' | '>' | '>=' | '<' | '<=' | 'in' | 'contains';
+  operator?: "==" | "!=" | ">" | ">=" | "<" | "<=" | "in" | "contains";
 
   /** Comparison value (for type='simple') */
   value?: unknown;
@@ -190,13 +197,14 @@ export interface PipelineDag {
 /**
  * Pipeline Routing Mode - How pipeline execution is controlled
  */
-export type PipelineRoutingMode = 'overseer' | 'manual' | 'guided';
+export type PipelineRoutingMode = "overseer" | "manual" | "guided";
 
 /**
  * Routing Mode Descriptions (for UI)
  */
 export const ROUTING_MODE_DESCRIPTIONS: Record<PipelineRoutingMode, string> = {
-  overseer: 'Overseer analyzes request and recommends optimal eye sequence (default)',
-  manual: 'Fully manual routing with Switch/IF nodes controlling flow',
-  guided: 'Overseer provides verdicts, Switch nodes evaluate them'
+  overseer:
+    "Overseer analyzes request and recommends optimal eye sequence (default)",
+  manual: "Fully manual routing with Switch/IF nodes controlling flow",
+  guided: "Overseer provides verdicts, Switch nodes evaluate them",
 } as const;

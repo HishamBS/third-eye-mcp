@@ -16,17 +16,17 @@ bunx third-eye-mcp --help
 
 ## Core Commands
 
-| Command | Description |
-| ------- | ----------- |
-| `up` | Start MCP server and dashboard. Runs detached by default. |
-| `stop` | Stop all background services tracked via `~/.third-eye-mcp/pids`. |
-| `restart` | Restart services (equivalent to `stop` + `up`). |
-| `status` | Display running status, ports, and health summary. |
-| `logs` | Print aggregated logs. Use `--tail` for live streaming. |
-| `server` | Run the MCP server in stdio mode for use inside clients. |
-| `db open` | Launch the SQLite inspector bundled with the CLI. |
-| `reset` | Wipe database, logs, and background processes (requires confirmation). |
-| `release` | Interactive release assistant for maintainers. |
+| Command        | Description                                                                                                            |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `up`           | Start MCP server and dashboard. Runs detached by default.                                                              |
+| `stop`         | Stop all background services tracked via `~/.third-eye-mcp/pids`.                                                      |
+| `restart`      | Restart services (equivalent to `stop` + `up`).                                                                        |
+| `status`       | Display running status, ports, and health summary.                                                                     |
+| `logs`         | Print aggregated logs. Use `--tail` for live streaming.                                                                |
+| `server`       | Run the MCP server in stdio mode for use inside clients.                                                               |
+| `db open`      | Launch the SQLite inspector bundled with the CLI.                                                                      |
+| `reset`        | Wipe database, logs, and background processes (requires confirmation).                                                 |
+| `release`      | Interactive release assistant for maintainers.                                                                         |
 | `release:ship` | Automated pipeline: requires a clean git tree, then bumps version, runs gates, publishes, tags, and optionally pushes. |
 
 Run `third-eye-mcp <command> --help` for command-specific usage.

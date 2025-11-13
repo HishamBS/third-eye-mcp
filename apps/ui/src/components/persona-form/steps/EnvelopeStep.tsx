@@ -1,10 +1,19 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback } from 'react';
-import type { WizardStepProps } from '@/types/persona-form';
-import { FIELD_LABELS, PLACEHOLDERS, HELP_TEXT, ARRAY_ACTIONS } from '../constants';
-import { X, Plus } from 'lucide-react';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import React, { useState, useCallback } from "react";
+import type { WizardStepProps } from "@/types/persona-form";
+import {
+  FIELD_LABELS,
+  PLACEHOLDERS,
+  HELP_TEXT,
+  ARRAY_ACTIONS,
+} from "../constants";
+import { X, Plus } from "lucide-react";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
 
 /**
  * EnvelopeStep - Envelope contract configuration
@@ -14,12 +23,15 @@ import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTL
  */
 
 export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
-  const [requiredKeyInput, setRequiredKeyInput] = useState('');
-  const [dataKeyInput, setDataKeyInput] = useState('');
-  const [uiKeyInput, setUiKeyInput] = useState('');
+  const [requiredKeyInput, setRequiredKeyInput] = useState("");
+  const [dataKeyInput, setDataKeyInput] = useState("");
+  const [uiKeyInput, setUiKeyInput] = useState("");
 
   const handleAddKey = useCallback(
-    (type: 'requiredKeys' | 'requiredDataKeys' | 'requiredUiKeys', value: string) => {
+    (
+      type: "requiredKeys" | "requiredDataKeys" | "requiredUiKeys",
+      value: string,
+    ) => {
       const trimmed = value.trim();
       if (!trimmed) return;
 
@@ -27,7 +39,7 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
       if (currentKeys.includes(trimmed)) return; // Duplicate
 
       dispatch({
-        type: 'SET_ENVELOPE_CONTRACT',
+        type: "SET_ENVELOPE_CONTRACT",
         envelopeContract: {
           ...state.envelopeContract,
           [type]: [...currentKeys, trimmed],
@@ -35,24 +47,27 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
       });
 
       // Clear input
-      if (type === 'requiredKeys') setRequiredKeyInput('');
-      else if (type === 'requiredDataKeys') setDataKeyInput('');
-      else setUiKeyInput('');
+      if (type === "requiredKeys") setRequiredKeyInput("");
+      else if (type === "requiredDataKeys") setDataKeyInput("");
+      else setUiKeyInput("");
     },
-    [state.envelopeContract, dispatch]
+    [state.envelopeContract, dispatch],
   );
 
   const handleRemoveKey = useCallback(
-    (type: 'requiredKeys' | 'requiredDataKeys' | 'requiredUiKeys', index: number) => {
+    (
+      type: "requiredKeys" | "requiredDataKeys" | "requiredUiKeys",
+      index: number,
+    ) => {
       dispatch({
-        type: 'SET_ENVELOPE_CONTRACT',
+        type: "SET_ENVELOPE_CONTRACT",
         envelopeContract: {
           ...state.envelopeContract,
           [type]: state.envelopeContract[type].filter((_, i) => i !== index),
         },
       });
     },
-    [state.envelopeContract, dispatch]
+    [state.envelopeContract, dispatch],
   );
 
   return (
@@ -68,13 +83,14 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
             value={requiredKeyInput}
             onChange={(e) => setRequiredKeyInput(e.target.value)}
             onKeyPress={(e) =>
-              e.key === 'Enter' && handleAddKey('requiredKeys', requiredKeyInput)
+              e.key === "Enter" &&
+              handleAddKey("requiredKeys", requiredKeyInput)
             }
             placeholder={PLACEHOLDERS.KEY}
             className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
           />
           <button
-            onClick={() => handleAddKey('requiredKeys', requiredKeyInput)}
+            onClick={() => handleAddKey("requiredKeys", requiredKeyInput)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-accent text-brand-foreground hover:bg-brand-accent/90 transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -89,7 +105,7 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
             >
               <span className="text-sm font-mono">{key}</span>
               <button
-                onClick={() => handleRemoveKey('requiredKeys', index)}
+                onClick={() => handleRemoveKey("requiredKeys", index)}
                 className="hover:bg-brand-accent/30 rounded-full p-0.5 transition-colors"
               >
                 <X className="w-3 h-3" />
@@ -111,13 +127,14 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
             value={dataKeyInput}
             onChange={(e) => setDataKeyInput(e.target.value)}
             onKeyPress={(e) =>
-              e.key === 'Enter' && handleAddKey('requiredDataKeys', dataKeyInput)
+              e.key === "Enter" &&
+              handleAddKey("requiredDataKeys", dataKeyInput)
             }
             placeholder={PLACEHOLDERS.KEY}
             className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
           />
           <button
-            onClick={() => handleAddKey('requiredDataKeys', dataKeyInput)}
+            onClick={() => handleAddKey("requiredDataKeys", dataKeyInput)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-accent text-brand-foreground hover:bg-brand-accent/90 transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -132,7 +149,7 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
             >
               <span className="text-sm font-mono">{key}</span>
               <button
-                onClick={() => handleRemoveKey('requiredDataKeys', index)}
+                onClick={() => handleRemoveKey("requiredDataKeys", index)}
                 className="hover:${STATUS_BG_COLORS_SUBTLE.info} rounded-full p-0.5 transition-colors"
               >
                 <X className="w-3 h-3" />
@@ -140,7 +157,9 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
             </div>
           ))}
         </div>
-        <p className="text-xs text-semantic-muted">{HELP_TEXT.REQUIRED_DATA_KEYS}</p>
+        <p className="text-xs text-semantic-muted">
+          {HELP_TEXT.REQUIRED_DATA_KEYS}
+        </p>
       </div>
 
       {/* Required UI Keys */}
@@ -154,13 +173,13 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
             value={uiKeyInput}
             onChange={(e) => setUiKeyInput(e.target.value)}
             onKeyPress={(e) =>
-              e.key === 'Enter' && handleAddKey('requiredUiKeys', uiKeyInput)
+              e.key === "Enter" && handleAddKey("requiredUiKeys", uiKeyInput)
             }
             placeholder={PLACEHOLDERS.KEY}
             className="flex-1 px-4 py-2 rounded-lg border border-brand-outline bg-brand-paper text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
           />
           <button
-            onClick={() => handleAddKey('requiredUiKeys', uiKeyInput)}
+            onClick={() => handleAddKey("requiredUiKeys", uiKeyInput)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-accent text-brand-foreground hover:bg-brand-accent/90 transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -175,7 +194,7 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
             >
               <span className="text-sm font-mono">{key}</span>
               <button
-                onClick={() => handleRemoveKey('requiredUiKeys', index)}
+                onClick={() => handleRemoveKey("requiredUiKeys", index)}
                 className="hover:${STATUS_BG_COLORS_SUBTLE.info} rounded-full p-0.5 transition-colors"
               >
                 <X className="w-3 h-3" />
@@ -183,7 +202,9 @@ export function EnvelopeStep({ state, dispatch }: WizardStepProps) {
             </div>
           ))}
         </div>
-        <p className="text-xs text-semantic-muted">{HELP_TEXT.REQUIRED_UI_KEYS}</p>
+        <p className="text-xs text-semantic-muted">
+          {HELP_TEXT.REQUIRED_UI_KEYS}
+        </p>
       </div>
     </div>
   );

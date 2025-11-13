@@ -1,11 +1,11 @@
-import { defineConfig } from 'drizzle-kit';
+import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
-  schema: './packages/db/schema.ts',
-  out: './packages/db/migrations',
-  dialect: 'sqlite',
+  schema: "./packages/db/schema.ts",
+  out: "./packages/db/migrations",
+  dialect: "sqlite",
   dbCredentials: {
-    url: './packages/db/overseer.db',
+    url: "./packages/db/overseer.db",
   },
-  casing: 'snake_case', // Map camelCase schema fields to snake_case database columns
+  casing: "snake_case", // Map camelCase schema fields to snake_case database columns
 });

@@ -22,7 +22,7 @@ jobs:
       - name: Set up Bun
         uses: oven-sh/setup-bun@v1
         with:
-          bun-version: 'latest'
+          bun-version: "latest"
 
       - name: Enable pnpm
         run: corepack enable

@@ -1,23 +1,23 @@
-import { Hono } from 'hono';
-import { nanoid } from 'nanoid';
-import { getDb } from '@third-eye/db';
-import { pipelines, pipelineRuns } from '@third-eye/db';
-import { eq, desc } from 'drizzle-orm';
+import { Hono } from "hono";
+import { nanoid } from "nanoid";
+import { getDb } from "@third-eye/db";
+import { pipelines, pipelineRuns } from "@third-eye/db";
+import { eq, desc } from "drizzle-orm";
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
   createErrorResponse,
   createInternalErrorResponse,
   requestIdMiddleware,
-  errorHandler
-} from '../middleware/response';
-import { z } from 'zod';
-import { WorkflowInterpreter, type WorkflowDefinition } from '@third-eye/core';
+  errorHandler,
+} from "../middleware/response";
+import { z } from "zod";
+import { WorkflowInterpreter, type WorkflowDefinition } from "@third-eye/core";
 
 const app = new Hono();
 
-app.use('*', requestIdMiddleware());
-app.use('*', errorHandler());
+app.use("*", requestIdMiddleware());
+app.use("*", errorHandler());
 
 // Zod schemas for validation
 const createPipelineSchema = z.object({
@@ -46,30 +46,36 @@ const executePipelineV2Schema = z.object({
 /**
  * GET /api/pipelines - Get all pipelines
  */
-app.get('/', async (c) => {
+app.get("/", async (c) => {
   try {
     const { db } = getDb();
-    const category = c.req.query('category');
+    const category = c.req.query("category");
 
     let query = db.select().from(pipelines).where(eq(pipelines.active, true));
     const allPipelines = await query.orderBy(desc(pipelines.createdAt)).all();
 
     if (category) {
-      return createSuccessResponse(c, allPipelines.filter((p) => p.category === category));
+      return createSuccessResponse(
+        c,
+        allPipelines.filter((p) => p.category === category),
+      );
     }
 
     return createSuccessResponse(c, allPipelines);
   } catch (error) {
-    return createInternalErrorResponse(c, `Failed to fetch pipelines: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return createInternalErrorResponse(
+      c,
+      `Failed to fetch pipelines: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 });
 
 /**
  * GET /api/pipelines/:id - Get specific pipeline
  */
-app.get('/:id', async (c) => {
+app.get("/:id", async (c) => {
   try {
-    const id = c.req.param('id');
+    const id = c.req.param("id");
     const { db } = getDb();
 
     const pipeline = await db
@@ -80,21 +86,28 @@ app.get('/:id', async (c) => {
       .all();
 
     if (pipeline.length === 0) {
-      return createErrorResponse(c, { title: 'Pipeline Not Found', status: 404, detail: 'The requested pipeline could not be found' });
+      return createErrorResponse(c, {
+        title: "Pipeline Not Found",
+        status: 404,
+        detail: "The requested pipeline could not be found",
+      });
     }
 
     return createSuccessResponse(c, pipeline[0]);
   } catch (error) {
-    return createInternalErrorResponse(c, `Failed to fetch pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return createInternalErrorResponse(
+      c,
+      `Failed to fetch pipeline: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 });
 
 /**
  * GET /api/pipelines/name/:name/versions - Get all versions
  */
-app.get('/name/:name/versions', async (c) => {
+app.get("/name/:name/versions", async (c) => {
   try {
-    const name = c.req.param('name');
+    const name = c.req.param("name");
     const { db } = getDb();
 
     const versions = await db
@@ -106,16 +119,19 @@ app.get('/name/:name/versions', async (c) => {
 
     return createSuccessResponse(c, versions);
   } catch (error) {
-    return createInternalErrorResponse(c, `Failed to fetch pipeline versions: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return createInternalErrorResponse(
+      c,
+      `Failed to fetch pipeline versions: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 });
 
 /**
  * POST /api/pipelines - Create new pipeline
  */
-app.post('/', validateBodyWithEnvelope(createPipelineSchema), async (c) => {
+app.post("/", validateBodyWithEnvelope(createPipelineSchema), async (c) => {
   try {
-    const { name, description, workflow, category } = c.get('validatedBody');
+    const { name, description, workflow, category } = c.get("validatedBody");
 
     const { db } = getDb();
 
@@ -151,25 +167,32 @@ app.post('/', validateBodyWithEnvelope(createPipelineSchema), async (c) => {
         version: nextVersion,
         description,
         workflowJson: workflow,
-        category: category || 'custom',
+        category: category || "custom",
         active: true,
         createdAt: now,
       })
       .run();
 
-    return createSuccessResponse(c, { id, version: nextVersion, message: 'Pipeline created successfully' }, { status: 201 });
+    return createSuccessResponse(
+      c,
+      { id, version: nextVersion, message: "Pipeline created successfully" },
+      { status: 201 },
+    );
   } catch (error) {
-    return createInternalErrorResponse(c, `Failed to create pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return createInternalErrorResponse(
+      c,
+      `Failed to create pipeline: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 });
 
 /**
  * PUT /api/pipelines/:id - Update pipeline (creates new version)
  */
-app.put('/:id', validateBodyWithEnvelope(updatePipelineSchema), async (c) => {
+app.put("/:id", validateBodyWithEnvelope(updatePipelineSchema), async (c) => {
   try {
-    const id = c.req.param('id');
-    const body = c.get('validatedBody');
+    const id = c.req.param("id");
+    const body = c.get("validatedBody");
 
     const { db } = getDb();
 
@@ -181,7 +204,11 @@ app.put('/:id', validateBodyWithEnvelope(updatePipelineSchema), async (c) => {
       .all();
 
     if (existing.length === 0) {
-      return createErrorResponse(c, { title: 'Pipeline Not Found', status: 404, detail: 'The requested pipeline could not be found' });
+      return createErrorResponse(c, {
+        title: "Pipeline Not Found",
+        status: 404,
+        detail: "The requested pipeline could not be found",
+      });
     }
 
     const currentPipeline = existing[0];
@@ -214,19 +241,22 @@ app.put('/:id', validateBodyWithEnvelope(updatePipelineSchema), async (c) => {
     return createSuccessResponse(c, {
       id: newId,
       version: nextVersion,
-      message: 'Pipeline updated (new version created)',
+      message: "Pipeline updated (new version created)",
     });
   } catch (error) {
-    return createInternalErrorResponse(c, `Failed to update pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return createInternalErrorResponse(
+      c,
+      `Failed to update pipeline: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 });
 
 /**
  * POST /api/pipelines/:id/activate - Activate specific version
  */
-app.post('/:id/activate', async (c) => {
+app.post("/:id/activate", async (c) => {
   try {
-    const id = c.req.param('id');
+    const id = c.req.param("id");
     const { db } = getDb();
 
     const pipeline = await db
@@ -237,7 +267,11 @@ app.post('/:id/activate', async (c) => {
       .all();
 
     if (pipeline.length === 0) {
-      return createErrorResponse(c, { title: 'Pipeline Not Found', status: 404, detail: 'The requested pipeline could not be found' });
+      return createErrorResponse(c, {
+        title: "Pipeline Not Found",
+        status: 404,
+        detail: "The requested pipeline could not be found",
+      });
     }
 
     const targetPipeline = pipeline[0];
@@ -256,18 +290,23 @@ app.post('/:id/activate', async (c) => {
       .where(eq(pipelines.id, id))
       .run();
 
-    return createSuccessResponse(c, { message: `Pipeline version ${targetPipeline.version} activated` });
+    return createSuccessResponse(c, {
+      message: `Pipeline version ${targetPipeline.version} activated`,
+    });
   } catch (error) {
-    return createInternalErrorResponse(c, `Failed to activate pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return createInternalErrorResponse(
+      c,
+      `Failed to activate pipeline: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 });
 
 /**
  * DELETE /api/pipelines/:id - Soft delete pipeline
  */
-app.delete('/:id', async (c) => {
+app.delete("/:id", async (c) => {
   try {
-    const id = c.req.param('id');
+    const id = c.req.param("id");
     const { db } = getDb();
 
     await db
@@ -276,9 +315,12 @@ app.delete('/:id', async (c) => {
       .where(eq(pipelines.id, id))
       .run();
 
-    return createSuccessResponse(c, { message: 'Pipeline deactivated' });
+    return createSuccessResponse(c, { message: "Pipeline deactivated" });
   } catch (error) {
-    return createInternalErrorResponse(c, `Failed to delete pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return createInternalErrorResponse(
+      c,
+      `Failed to delete pipeline: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 });
 
@@ -289,107 +331,122 @@ app.delete('/:id', async (c) => {
  * Handles all node types: eye, condition, switch, loop, user_input, terminal.
  * Supports conditional branching, loops, and complex routing logic.
  */
-app.post('/:id/execute', validateBodyWithEnvelope(executePipelineSchema), async (c) => {
-  try {
-    const id = c.req.param('id');
-    const { session_id, input } = c.get('validatedBody');
+app.post(
+  "/:id/execute",
+  validateBodyWithEnvelope(executePipelineSchema),
+  async (c) => {
+    try {
+      const id = c.req.param("id");
+      const { session_id, input } = c.get("validatedBody");
 
-    const { db } = getDb();
+      const { db } = getDb();
 
-    // Get pipeline
-    const pipeline = await db
-      .select()
-      .from(pipelines)
-      .where(eq(pipelines.id, id))
-      .limit(1)
-      .all();
+      // Get pipeline
+      const pipeline = await db
+        .select()
+        .from(pipelines)
+        .where(eq(pipelines.id, id))
+        .limit(1)
+        .all();
 
-    if (pipeline.length === 0) {
-      return createErrorResponse(c, { title: 'Pipeline Not Found', status: 404, detail: 'The requested pipeline could not be found' });
-    }
+      if (pipeline.length === 0) {
+        return createErrorResponse(c, {
+          title: "Pipeline Not Found",
+          status: 404,
+          detail: "The requested pipeline could not be found",
+        });
+      }
 
-    // Create pipeline run record for tracking
-    const runId = nanoid();
-    await db
-      .insert(pipelineRuns)
-      .values({
-        id: runId,
-        pipelineId: id,
+      // Create pipeline run record for tracking
+      const runId = nanoid();
+      await db
+        .insert(pipelineRuns)
+        .values({
+          id: runId,
+          pipelineId: id,
+          sessionId: session_id,
+          status: "running",
+          currentStep: 0,
+          stateJson: {
+            input,
+            startTime: new Date().toISOString(),
+            workflow: pipeline[0].workflowJson,
+          },
+          createdAt: new Date(),
+        })
+        .run();
+
+      // Execute workflow using WorkflowInterpreter
+      const interpreter = new WorkflowInterpreter();
+      const workflow = pipeline[0].workflowJson as WorkflowDefinition;
+
+      // Validate workflow before execution
+      const validation = WorkflowInterpreter.validate(workflow);
+      if (!validation.valid) {
+        await db
+          .update(pipelineRuns)
+          .set({
+            status: "failed",
+            errorMessage: `Workflow validation failed: ${validation.errors.join(", ")}`,
+            completedAt: new Date(),
+          })
+          .where(eq(pipelineRuns.id, runId))
+          .run();
+
+        return createErrorResponse(c, {
+          title: "Invalid Workflow",
+          status: 400,
+          detail: `Workflow validation failed: ${validation.errors.join(", ")}`,
+        });
+      }
+
+      // Execute workflow
+      const result = await interpreter.execute(workflow, {
         sessionId: session_id,
-        status: 'running',
-        currentStep: 0,
-        stateJson: { input, startTime: new Date().toISOString(), workflow: pipeline[0].workflowJson },
-        createdAt: new Date(),
-      })
-      .run();
+        input: input || {},
+      });
 
-    // Execute workflow using WorkflowInterpreter
-    const interpreter = new WorkflowInterpreter();
-    const workflow = pipeline[0].workflowJson as WorkflowDefinition;
-
-    // Validate workflow before execution
-    const validation = WorkflowInterpreter.validate(workflow);
-    if (!validation.valid) {
+      // Update pipeline run with results
       await db
         .update(pipelineRuns)
         .set({
-          status: 'failed',
-          errorMessage: `Workflow validation failed: ${validation.errors.join(', ')}`,
+          status: result.success ? "completed" : "failed",
+          currentStep: result.steps.length,
+          stateJson: {
+            input,
+            startTime: new Date().toISOString(),
+            workflow: pipeline[0].workflowJson,
+            result,
+          },
+          errorMessage: result.error,
           completedAt: new Date(),
         })
         .where(eq(pipelineRuns.id, runId))
         .run();
 
-      return createErrorResponse(c, {
-        title: 'Invalid Workflow',
-        status: 400,
-        detail: `Workflow validation failed: ${validation.errors.join(', ')}`,
+      return createSuccessResponse(c, {
+        runId,
+        success: result.success,
+        steps: result.steps,
+        output: result.output,
+        totalLatency: result.totalLatency,
+        error: result.error,
       });
+    } catch (error) {
+      return createInternalErrorResponse(
+        c,
+        `Failed to execute pipeline: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
-
-    // Execute workflow
-    const result = await interpreter.execute(workflow, {
-      sessionId: session_id,
-      input: input || {},
-    });
-
-    // Update pipeline run with results
-    await db
-      .update(pipelineRuns)
-      .set({
-        status: result.success ? 'completed' : 'failed',
-        currentStep: result.steps.length,
-        stateJson: {
-          input,
-          startTime: new Date().toISOString(),
-          workflow: pipeline[0].workflowJson,
-          result,
-        },
-        errorMessage: result.error,
-        completedAt: new Date(),
-      })
-      .where(eq(pipelineRuns.id, runId))
-      .run();
-
-    return createSuccessResponse(c, {
-      runId,
-      success: result.success,
-      steps: result.steps,
-      output: result.output,
-      totalLatency: result.totalLatency,
-      error: result.error,
-    });
-  } catch (error) {
-    return createInternalErrorResponse(c, `Failed to execute pipeline: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-});
+  },
+);
 
 /**
  * GET /api/pipelines/:id/runs - Get execution history
  */
-app.get('/:id/runs', async (c) => {
+app.get("/:id/runs", async (c) => {
   try {
-    const id = c.req.param('id');
+    const id = c.req.param("id");
     const { db } = getDb();
 
     const runs = await db
@@ -401,7 +458,10 @@ app.get('/:id/runs', async (c) => {
 
     return createSuccessResponse(c, runs);
   } catch (error) {
-    return createInternalErrorResponse(c, `Failed to fetch pipeline runs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return createInternalErrorResponse(
+      c,
+      `Failed to fetch pipeline runs: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 });
 

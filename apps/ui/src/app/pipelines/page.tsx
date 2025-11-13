@@ -9,19 +9,19 @@
  * Per R13: All text from SSOT
  */
 
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { ReactFlowProvider } from 'reactflow';
-import { PipelineModeSelector } from '@/components/pipeline-builder/PipelineModeSelector';
-import { CapabilityMatrix } from '@/components/pipeline-builder/CapabilityMatrix';
-import { DynamicRouteVisualizer } from '@/components/pipeline-builder/DynamicRouteVisualizer';
-import { LiveRoutingPanel } from '@/components/pipeline-builder/LiveRoutingPanel';
-import { PipelineCanvasEnhanced } from '@/components/pipeline-builder/PipelineCanvasEnhanced';
-import type { RoutingModeName } from '@third-eye/config/eye-capabilities';
+import { useState, useCallback } from "react";
+import { ReactFlowProvider } from "reactflow";
+import { PipelineModeSelector } from "@/components/pipeline-builder/PipelineModeSelector";
+import { CapabilityMatrix } from "@/components/pipeline-builder/CapabilityMatrix";
+import { DynamicRouteVisualizer } from "@/components/pipeline-builder/DynamicRouteVisualizer";
+import { LiveRoutingPanel } from "@/components/pipeline-builder/LiveRoutingPanel";
+import { PipelineCanvasEnhanced } from "@/components/pipeline-builder/PipelineCanvasEnhanced";
+import type { RoutingModeName } from "@third-eye/config/eye-capabilities";
 
 export default function PipelinesPage() {
-  const [mode, setMode] = useState<RoutingModeName>('fully_dynamic');
+  const [mode, setMode] = useState<RoutingModeName>("fully_dynamic");
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
 
   const handleModeChange = useCallback((newMode: RoutingModeName) => {
@@ -42,14 +42,17 @@ export default function PipelinesPage() {
       {/* Header */}
       <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-6 py-4">
         <h1 className="text-2xl font-bold mb-4">Pipeline Builder</h1>
-        <PipelineModeSelector currentMode={mode} onModeChange={handleModeChange} />
+        <PipelineModeSelector
+          currentMode={mode}
+          onModeChange={handleModeChange}
+        />
       </div>
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Primary view (changes based on mode) */}
         <div className="flex-1 overflow-y-auto p-6">
-          {mode === 'fully_dynamic' && (
+          {mode === "fully_dynamic" && (
             <div className="space-y-6">
               <CapabilityMatrix mode="dynamic" />
               {selectedSession && (
@@ -61,7 +64,7 @@ export default function PipelinesPage() {
             </div>
           )}
 
-          {mode === 'constrained' && (
+          {mode === "constrained" && (
             <div className="space-y-6">
               <CapabilityMatrix mode="constrained" />
               {selectedSession && (
@@ -76,8 +79,12 @@ export default function PipelinesPage() {
                   Policy Builder
                 </h3>
                 <p className="text-sm text-purple-800 dark:text-purple-200">
-                  Policy builder coming in Phase 4B. You can create policies from the{' '}
-                  <a href="/routing-modes" className="underline hover:text-purple-600">
+                  Policy builder coming in Phase 4B. You can create policies
+                  from the{" "}
+                  <a
+                    href="/routing-modes"
+                    className="underline hover:text-purple-600"
+                  >
                     Routing Modes page
                   </a>
                   .
@@ -86,7 +93,7 @@ export default function PipelinesPage() {
             </div>
           )}
 
-          {mode === 'fixed' && (
+          {mode === "fixed" && (
             <ReactFlowProvider>
               <div className="h-full">
                 <PipelineCanvasEnhanced />
@@ -96,7 +103,7 @@ export default function PipelinesPage() {
         </div>
 
         {/* Right: Live routing panel (only for dynamic/constrained modes) */}
-        {(mode === 'fully_dynamic' || mode === 'constrained') && (
+        {(mode === "fully_dynamic" || mode === "constrained") && (
           <div className="w-96 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 overflow-hidden">
             <LiveRoutingPanel
               maxSessions={10}

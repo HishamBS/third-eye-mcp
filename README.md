@@ -39,6 +39,7 @@ bunx third-eye-mcp up
 ```
 
 What happens on first run:
+
 - Seeds SQLite database at `~/.third-eye-mcp/mcp.db`
 - Activates all eight Eyes with default personas
 - Starts Next.js dashboard with live pipeline telemetry
@@ -68,6 +69,7 @@ third-eye-mcp up
   ```
 
 Hardware & accounts:
+
 - Groq and/or OpenRouter API keys (or local Ollama / LM Studio)
 - Claude Desktop, Cursor, Cline, Continue.dev, or Warp for MCP client integration
 
@@ -88,20 +90,20 @@ For end-to-end usage scenarios, see [docs/usage.md](docs/usage.md).
 
 ## Documentation Hub
 
-| Topic | Docs |
-| ----- | ---- |
-| Getting started | [docs/getting-started.md](docs/getting-started.md) – prerequisites, installation, first run checklist |
-| Daily operations | [docs/usage.md](docs/usage.md) – connecting agents, workflows, troubleshooting |
-| CLI reference | [docs/cli.md](docs/cli.md) – commands, options, background process model |
-| Configuration | [docs/configuration.md](docs/configuration.md) – env vars, strictness profiles, security |
-| Providers | [docs/PROVIDERS.md](docs/PROVIDERS.md) – Groq/OpenRouter/Ollama/LM Studio setup |
-| API surface | [docs/API_REFERENCE.md](docs/API_REFERENCE.md) & [docs/MCP_API.md](docs/MCP_API.md) |
-| Architecture | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) – system design & components |
-| Database | [docs/DATABASE.md](docs/DATABASE.md) – schema diagrams, migrations, backups |
-| Integrations | [docs/integrations/README.md](docs/integrations/README.md) – Claude, Cursor, Cline, Warp, Continue.dev |
-| Workflows | [docs/workflows/README.md](docs/workflows/README.md) – reusable pipeline templates |
-| Publishing | [docs/publishing.md](docs/publishing.md) – release workflow & npm publishing checklist |
-| Troubleshooting | [docs/FAQ.md](docs/FAQ.md) – common fixes & FAQs |
+| Topic            | Docs                                                                                                   |
+| ---------------- | ------------------------------------------------------------------------------------------------------ |
+| Getting started  | [docs/getting-started.md](docs/getting-started.md) – prerequisites, installation, first run checklist  |
+| Daily operations | [docs/usage.md](docs/usage.md) – connecting agents, workflows, troubleshooting                         |
+| CLI reference    | [docs/cli.md](docs/cli.md) – commands, options, background process model                               |
+| Configuration    | [docs/configuration.md](docs/configuration.md) – env vars, strictness profiles, security               |
+| Providers        | [docs/PROVIDERS.md](docs/PROVIDERS.md) – Groq/OpenRouter/Ollama/LM Studio setup                        |
+| API surface      | [docs/API_REFERENCE.md](docs/API_REFERENCE.md) & [docs/MCP_API.md](docs/MCP_API.md)                    |
+| Architecture     | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) – system design & components                              |
+| Database         | [docs/DATABASE.md](docs/DATABASE.md) – schema diagrams, migrations, backups                            |
+| Integrations     | [docs/integrations/README.md](docs/integrations/README.md) – Claude, Cursor, Cline, Warp, Continue.dev |
+| Workflows        | [docs/workflows/README.md](docs/workflows/README.md) – reusable pipeline templates                     |
+| Publishing       | [docs/publishing.md](docs/publishing.md) – release workflow & npm publishing checklist                 |
+| Troubleshooting  | [docs/FAQ.md](docs/FAQ.md) – common fixes & FAQs                                                       |
 
 ---
 
@@ -135,6 +137,7 @@ third-eye-mcp logs --tail  # follow combined logs
 ```
 
 Key scripts:
+
 - `bun run health:full` – comprehensive diagnostics
 - `bun run ws:check` – WebSocket reconnect simulation
 - `bun run scripts/seed-defaults.ts` – reseed personas, routing, strictness, app defaults, integrations
@@ -158,6 +161,7 @@ npm publish --access public
 ```
 
 Before publishing:
+
 - Ensure `dist/cli.js` and `dist/mcp-server.js` are rebuilt with `bun run build:cli`
 - Update version and changelog via `bunx third-eye-mcp release` or manual edits
 - Verify archive artefact (`third-eye-mcp-<version>.tgz`) and generated docs

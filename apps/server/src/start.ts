@@ -6,12 +6,12 @@
  * Starts the HTTP + WebSocket server
  */
 
-import { serve } from 'bun';
-import app from './index';
-import { createWebSocketHandler } from './websocket';
-import { getConfig } from '@third-eye/config';
-import { loadProviderKeysIntoConfig } from '@third-eye/core/load-provider-keys';
-import { TOOL_NAME, DATA_DIRECTORY, PROVIDERS } from '@third-eye/types';
+import { serve } from "bun";
+import app from "./index";
+import { createWebSocketHandler } from "./websocket";
+import { getConfig } from "@third-eye/config";
+import { loadProviderKeysIntoConfig } from "@third-eye/core/load-provider-keys";
+import { TOOL_NAME, DATA_DIRECTORY, PROVIDERS } from "@third-eye/types";
 
 const config = getConfig();
 const PORT = config.server.port;
@@ -20,10 +20,14 @@ const warnOnUnsafeBind = (host: string) => {
   if (!config.security.bindWarning) {
     return;
   }
-  if (host === '0.0.0.0' || host === '::') {
-    console.warn('\n⚠️  WARNING: Third Eye MCP is binding to a public interface.');
-    console.warn('   This exposes the server to your local network.');
-    console.warn('   Set MCP_HOST=127.0.0.1 to keep the instance local-first.\n');
+  if (host === "0.0.0.0" || host === "::") {
+    console.warn(
+      "\n⚠️  WARNING: Third Eye MCP is binding to a public interface.",
+    );
+    console.warn("   This exposes the server to your local network.");
+    console.warn(
+      "   Set MCP_HOST=127.0.0.1 to keep the instance local-first.\n",
+    );
   }
 };
 
@@ -49,7 +53,7 @@ const server = serve({
 
     // Try WebSocket upgrade first
     const url = new URL(req.url);
-    if (url.pathname.startsWith('/ws/')) {
+    if (url.pathname.startsWith("/ws/")) {
       const wsResponse = wsHandler.fetch(req, server);
       if (wsResponse) {
         console.log(`[WebSocket] Upgraded connection for ${url.pathname}`);
@@ -69,7 +73,7 @@ console.log(`
 • Server: http://${HOST}:${PORT}
 • UI:     http://${HOST}:${config.ui.port}
 • DB:     ~/${DATA_DIRECTORY}/mcp.db
-• Providers: ${PROVIDERS.join(', ')}  (health: green)
+• Providers: ${PROVIDERS.join(", ")}  (health: green)
 • Agent Primer: http://${HOST}:${PORT}/mcp/quickstart
 `);
 console.log(`📡 WebSocket: ws://${HOST}:${PORT}/ws/monitor?sessionId=<id>`);

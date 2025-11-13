@@ -1,17 +1,27 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, Send, User, Lightbulb, CheckCircle } from 'lucide-react';
-import { API_BASE_URL } from '@/consts/api';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  MessageCircle,
+  Send,
+  User,
+  Lightbulb,
+  CheckCircle,
+} from "lucide-react";
+import { API_BASE_URL } from "@/consts/api";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
 
 interface ContributionPrompt {
   id: string;
   eye: string;
   question: string;
   context?: string;
-  type: 'missing_context' | 'clarification' | 'evidence' | 'approval';
+  type: "missing_context" | "clarification" | "evidence" | "approval";
   createdAt: Date;
 }
 
@@ -33,7 +43,9 @@ export function UserContributionMode({
   pollInterval = 3000,
 }: UserContributionModeProps) {
   const [prompts, setPrompts] = useState<ContributionPrompt[]>([]);
-  const [contributions, setContributions] = useState<Map<string, string>>(new Map());
+  const [contributions, setContributions] = useState<Map<string, string>>(
+    new Map(),
+  );
   const [submitting, setSubmitting] = useState<Set<string>>(new Set());
   const [submitted, setSubmitted] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -44,14 +56,16 @@ export function UserContributionMode({
 
     const fetchPrompts = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/session/${sessionId}/contribution-prompts`);
+        const response = await fetch(
+          `${API_BASE_URL}/api/session/${sessionId}/contribution-prompts`,
+        );
 
         if (response.ok) {
           const data = await response.json();
           setPrompts(data.prompts || []);
         }
       } catch (error) {
-        console.error('Failed to fetch contribution prompts:', error);
+        console.error("Failed to fetch contribution prompts:", error);
       } finally {
         setLoading(false);
       }
@@ -74,17 +88,20 @@ export function UserContributionMode({
     setSubmitting(new Set(submitting.add(prompt.id)));
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/session/${sessionId}/contributions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          promptId: prompt.id,
-          answer: answer.trim(),
-        }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/session/${sessionId}/contributions`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            promptId: prompt.id,
+            answer: answer.trim(),
+          }),
+        },
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to submit contribution');
+        throw new Error("Failed to submit contribution");
       }
 
       const contribution: UserContribution = {
@@ -101,8 +118,8 @@ export function UserContributionMode({
       newContributions.delete(prompt.id);
       setContributions(newContributions);
     } catch (error) {
-      console.error('Failed to submit contribution:', error);
-      alert('Failed to submit contribution. Please try again.');
+      console.error("Failed to submit contribution:", error);
+      alert("Failed to submit contribution. Please try again.");
     } finally {
       const newSubmitting = new Set(submitting);
       newSubmitting.delete(prompt.id);
@@ -110,28 +127,34 @@ export function UserContributionMode({
     }
   };
 
-  const getPromptIcon = (type: ContributionPrompt['type']) => {
+  const getPromptIcon = (type: ContributionPrompt["type"]) => {
     switch (type) {
-      case 'missing_context':
-        return <Lightbulb className={`h-5 w-5 ${STATUS_TEXT_COLORS.warning}`} />;
-      case 'clarification':
-        return <MessageCircle className={`h-5 w-5 ${STATUS_TEXT_COLORS.info}`} />;
-      case 'evidence':
-        return <CheckCircle className={`h-5 w-5 ${STATUS_TEXT_COLORS.success}`} />;
-      case 'approval':
+      case "missing_context":
+        return (
+          <Lightbulb className={`h-5 w-5 ${STATUS_TEXT_COLORS.warning}`} />
+        );
+      case "clarification":
+        return (
+          <MessageCircle className={`h-5 w-5 ${STATUS_TEXT_COLORS.info}`} />
+        );
+      case "evidence":
+        return (
+          <CheckCircle className={`h-5 w-5 ${STATUS_TEXT_COLORS.success}`} />
+        );
+      case "approval":
         return <User className={`h-5 w-5 ${STATUS_TEXT_COLORS.info}`} />;
     }
   };
 
-  const getPromptColor = (type: ContributionPrompt['type']) => {
+  const getPromptColor = (type: ContributionPrompt["type"]) => {
     switch (type) {
-      case 'missing_context':
+      case "missing_context":
         return `${STATUS_BORDER_COLORS_SUBTLE.warning} ${STATUS_BG_COLORS_SUBTLE.warning}`;
-      case 'clarification':
+      case "clarification":
         return `${STATUS_BORDER_COLORS_SUBTLE.info} ${STATUS_BG_COLORS_SUBTLE.info}`;
-      case 'evidence':
+      case "evidence":
         return `${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success}`;
-      case 'approval':
+      case "approval":
         return `${STATUS_BORDER_COLORS_SUBTLE.info} ${STATUS_BG_COLORS_SUBTLE.info}`;
     }
   };
@@ -147,8 +170,12 @@ export function UserContributionMode({
               <User className="h-6 w-6 text-semantic-muted" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-brand-foreground">User Contribution Mode</h3>
-              <p className="text-sm text-semantic-muted">Answer prompts inline to assist Eyes</p>
+              <h3 className="text-lg font-semibold text-brand-foreground">
+                User Contribution Mode
+              </h3>
+              <p className="text-sm text-semantic-muted">
+                Answer prompts inline to assist Eyes
+              </p>
             </div>
           </div>
           <button
@@ -167,7 +194,9 @@ export function UserContributionMode({
       <div className="rounded-2xl border border-brand-outline/40 bg-brand-paper/60 p-6">
         <div className="flex items-center gap-3">
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-brand-accent border-t-transparent" />
-          <p className="text-sm text-semantic-muted">Loading contribution prompts...</p>
+          <p className="text-sm text-semantic-muted">
+            Loading contribution prompts...
+          </p>
         </div>
       </div>
     );
@@ -182,9 +211,12 @@ export function UserContributionMode({
             <User className="h-5 w-5 text-brand-accent" />
           </div>
           <div>
-            <h3 className="font-semibold text-brand-foreground">User Contribution Mode</h3>
+            <h3 className="font-semibold text-brand-foreground">
+              User Contribution Mode
+            </h3>
             <p className="text-xs text-semantic-muted">
-              {activePrompts.length} {activePrompts.length === 1 ? 'prompt' : 'prompts'} waiting
+              {activePrompts.length}{" "}
+              {activePrompts.length === 1 ? "prompt" : "prompts"} waiting
             </p>
           </div>
         </div>
@@ -205,13 +237,17 @@ export function UserContributionMode({
             exit={{ opacity: 0, y: -10 }}
             className="rounded-2xl border border-brand-outline/40 bg-brand-paper/60 p-12 text-center"
           >
-            <CheckCircle className={`mx-auto h-12 w-12 ${STATUS_TEXT_COLORS.success}`} />
+            <CheckCircle
+              className={`mx-auto h-12 w-12 ${STATUS_TEXT_COLORS.success}`}
+            />
             <p className="mt-3 text-sm text-semantic-muted">All caught up!</p>
-            <p className="mt-1 text-xs text-semantic-muted">No pending contribution prompts.</p>
+            <p className="mt-1 text-xs text-semantic-muted">
+              No pending contribution prompts.
+            </p>
           </motion.div>
         ) : (
           activePrompts.map((prompt, index) => {
-            const answer = contributions.get(prompt.id) || '';
+            const answer = contributions.get(prompt.id) || "";
             const isSubmitting = submitting.has(prompt.id);
             const isSubmitted = submitted.has(prompt.id);
 
@@ -231,14 +267,20 @@ export function UserContributionMode({
                     <div>
                       <div className="mb-1 flex items-center gap-2">
                         <span className="text-xs font-semibold uppercase tracking-wider text-semantic-muted">
-                          {prompt.type.replace('_', ' ')}
+                          {prompt.type.replace("_", " ")}
                         </span>
                         <span className="text-xs text-semantic-muted">•</span>
-                        <span className="text-xs capitalize text-semantic-muted">{prompt.eye}</span>
+                        <span className="text-xs capitalize text-semantic-muted">
+                          {prompt.eye}
+                        </span>
                       </div>
-                      <p className="text-base font-medium text-brand-foreground">{prompt.question}</p>
+                      <p className="text-base font-medium text-brand-foreground">
+                        {prompt.question}
+                      </p>
                       {prompt.context && (
-                        <p className="mt-2 text-sm text-semantic-muted">{prompt.context}</p>
+                        <p className="mt-2 text-sm text-semantic-muted">
+                          {prompt.context}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -252,7 +294,9 @@ export function UserContributionMode({
                   <div className="space-y-3">
                     <textarea
                       value={answer}
-                      onChange={(e) => handleAnswerChange(prompt.id, e.target.value)}
+                      onChange={(e) =>
+                        handleAnswerChange(prompt.id, e.target.value)
+                      }
                       placeholder="Type your answer here..."
                       disabled={isSubmitting}
                       className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground placeholder-brand-outline focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40 disabled:opacity-50"
@@ -282,9 +326,15 @@ export function UserContributionMode({
                 )}
 
                 {isSubmitted && (
-                  <div className={`flex items-center gap-2 rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success} p-3`}>
-                    <CheckCircle className={`h-4 w-4 ${STATUS_TEXT_COLORS.success}`} />
-                    <p className={`text-sm ${STATUS_TEXT_COLORS.success}`}>Contribution submitted successfully!</p>
+                  <div
+                    className={`flex items-center gap-2 rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success} p-3`}
+                  >
+                    <CheckCircle
+                      className={`h-4 w-4 ${STATUS_TEXT_COLORS.success}`}
+                    />
+                    <p className={`text-sm ${STATUS_TEXT_COLORS.success}`}>
+                      Contribution submitted successfully!
+                    </p>
                   </div>
                 )}
               </motion.div>

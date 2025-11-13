@@ -9,10 +9,10 @@
  * Per R13: All text from SSOT
  */
 
-'use client';
+"use client";
 
-import { useRoutingDecisionBySession } from '@/hooks/useRoutingDecisions';
-import { EYE_CAPABILITIES } from '@third-eye/config/eye-capabilities';
+import { useRoutingDecisionBySession } from "@/hooks/useRoutingDecisions";
+import { EYE_CAPABILITIES } from "@third-eye/config/eye-capabilities";
 
 interface DynamicRouteVisualizerProps {
   sessionId: string;
@@ -22,7 +22,10 @@ interface DynamicRouteVisualizerProps {
 /**
  * Dynamic Route Visualizer - Main Component
  */
-export function DynamicRouteVisualizer({ sessionId, onClose }: DynamicRouteVisualizerProps) {
+export function DynamicRouteVisualizer({
+  sessionId,
+  onClose,
+}: DynamicRouteVisualizerProps) {
   const { decision, loading, error } = useRoutingDecisionBySession(sessionId);
 
   if (loading) {
@@ -30,7 +33,9 @@ export function DynamicRouteVisualizer({ sessionId, onClose }: DynamicRouteVisua
       <div className="mt-6 p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
         <div className="flex items-center gap-3">
           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500" />
-          <span className="text-gray-600 dark:text-gray-400">Loading routing decision...</span>
+          <span className="text-gray-600 dark:text-gray-400">
+            Loading routing decision...
+          </span>
         </div>
       </div>
     );
@@ -75,8 +80,11 @@ export function DynamicRouteVisualizer({ sessionId, onClose }: DynamicRouteVisua
 
       {/* Session info */}
       <div className="text-sm text-gray-500 dark:text-gray-400">
-        Session: <code className="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">{sessionId}</code>
-        {' • '}
+        Session:{" "}
+        <code className="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
+          {sessionId}
+        </code>
+        {" • "}
         {new Date(decision.createdAt).toLocaleString()}
       </div>
 
@@ -87,7 +95,9 @@ export function DynamicRouteVisualizer({ sessionId, onClose }: DynamicRouteVisua
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
-            <span className="text-xs text-blue-700 dark:text-blue-300 uppercase font-semibold">Type</span>
+            <span className="text-xs text-blue-700 dark:text-blue-300 uppercase font-semibold">
+              Type
+            </span>
             <div className="mt-1">
               <span className="inline-block px-2 py-1 text-sm bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 rounded">
                 {requestAnalysis.requestType}
@@ -95,7 +105,9 @@ export function DynamicRouteVisualizer({ sessionId, onClose }: DynamicRouteVisua
             </div>
           </div>
           <div>
-            <span className="text-xs text-blue-700 dark:text-blue-300 uppercase font-semibold">Domain</span>
+            <span className="text-xs text-blue-700 dark:text-blue-300 uppercase font-semibold">
+              Domain
+            </span>
             <div className="mt-1">
               <span className="inline-block px-2 py-1 text-sm bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 rounded">
                 {requestAnalysis.contentDomain}
@@ -103,7 +115,9 @@ export function DynamicRouteVisualizer({ sessionId, onClose }: DynamicRouteVisua
             </div>
           </div>
           <div>
-            <span className="text-xs text-blue-700 dark:text-blue-300 uppercase font-semibold">Complexity</span>
+            <span className="text-xs text-blue-700 dark:text-blue-300 uppercase font-semibold">
+              Complexity
+            </span>
             <div className="mt-1">
               <span className="inline-block px-2 py-1 text-sm bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 rounded">
                 {requestAnalysis.complexity}
@@ -113,7 +127,9 @@ export function DynamicRouteVisualizer({ sessionId, onClose }: DynamicRouteVisua
         </div>
         {requestAnalysis.capabilitiesNeeded.length > 0 && (
           <div className="mt-3">
-            <span className="text-xs text-blue-700 dark:text-blue-300 uppercase font-semibold">Required Capabilities</span>
+            <span className="text-xs text-blue-700 dark:text-blue-300 uppercase font-semibold">
+              Required Capabilities
+            </span>
             <div className="mt-1 flex flex-wrap gap-1">
               {requestAnalysis.capabilitiesNeeded.map((cap) => (
                 <span
@@ -154,20 +170,28 @@ export function DynamicRouteVisualizer({ sessionId, onClose }: DynamicRouteVisua
         <div className="flex items-center gap-2 overflow-x-auto pb-2">
           {selectedEyes.map((eyeName, idx) => {
             const normalizedName = eyeName.toLowerCase();
-            const eyeInfo = EYE_CAPABILITIES[normalizedName as keyof typeof EYE_CAPABILITIES];
-            const icon = eyeInfo?.icon || '👁️';
+            const eyeInfo =
+              EYE_CAPABILITIES[normalizedName as keyof typeof EYE_CAPABILITIES];
+            const icon = eyeInfo?.icon || "👁️";
 
             return (
-              <div key={`${eyeName}-${idx}`} className="flex items-center gap-2">
+              <div
+                key={`${eyeName}-${idx}`}
+                className="flex items-center gap-2"
+              >
                 {/* Eye chip */}
                 <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 border-2 border-green-300 dark:border-green-700 rounded-lg shadow-sm">
                   <span className="text-xl">{icon}</span>
-                  <span className="font-medium text-sm whitespace-nowrap">{eyeName}</span>
+                  <span className="font-medium text-sm whitespace-nowrap">
+                    {eyeName}
+                  </span>
                 </div>
 
                 {/* Arrow (not after last eye) */}
                 {idx < selectedEyes.length - 1 && (
-                  <span className="text-green-500 dark:text-green-400 text-xl">→</span>
+                  <span className="text-green-500 dark:text-green-400 text-xl">
+                    →
+                  </span>
                 )}
               </div>
             );
@@ -175,12 +199,13 @@ export function DynamicRouteVisualizer({ sessionId, onClose }: DynamicRouteVisua
         </div>
 
         {/* Execution mode note */}
-        {executionMode === 'parallel' && (
+        {executionMode === "parallel" && (
           <div className="mt-3 text-xs text-green-700 dark:text-green-300">
-            ⚡ Parallel execution: Some eyes may run concurrently for faster results
+            ⚡ Parallel execution: Some eyes may run concurrently for faster
+            results
           </div>
         )}
-        {executionMode === 'sequential' && (
+        {executionMode === "sequential" && (
           <div className="mt-3 text-xs text-green-700 dark:text-green-300">
             🔗 Sequential execution: Eyes run one after another in order
           </div>

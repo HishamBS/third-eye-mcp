@@ -1,1 +1,1 @@
-export { OllamaProvider } from './src/ollama';
+export { OllamaProvider } from "./src/ollama";

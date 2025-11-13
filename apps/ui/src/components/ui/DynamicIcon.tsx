@@ -21,7 +21,7 @@ import {
   AlertTriangle,
   BadgeCheck,
   type LucideIcon,
-} from 'lucide-react';
+} from "lucide-react";
 
 const ICON_MAP: Record<string, LucideIcon> = {
   eye: Eye,
@@ -29,15 +29,15 @@ const ICON_MAP: Record<string, LucideIcon> = {
   user: User,
   settings: Settings,
   timeline: MessageSquare,
-  'help-circle': HelpCircle,
+  "help-circle": HelpCircle,
   hand: Hand,
   search: Search,
   braces: Braces,
-  'check-circle': CheckCircle,
-  'x-circle': XCircle,
+  "check-circle": CheckCircle,
+  "x-circle": XCircle,
   clock: Clock,
-  'alert-triangle': AlertTriangle,
-  'badge-check': BadgeCheck,
+  "alert-triangle": AlertTriangle,
+  "badge-check": BadgeCheck,
 };
 
 export interface DynamicIconProps {

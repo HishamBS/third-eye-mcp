@@ -1,12 +1,19 @@
 /**
  * Clarification Storage & Resolution
- * 
+ *
  * Manages clarification questions, answers, and resolved facts for sessions.
  */
 
-import { clarifications, intentConfirmations, type Clarification, type NewClarification, type IntentConfirmation, type NewIntentConfirmation } from '@third-eye/db/schema';
-import { getDb } from '@third-eye/db';
-import { eq, and } from 'drizzle-orm';
+import {
+  clarifications,
+  intentConfirmations,
+  type Clarification,
+  type NewClarification,
+  type IntentConfirmation,
+  type NewIntentConfirmation,
+} from "@third-eye/db/schema";
+import { getDb } from "@third-eye/db";
+import { eq, and } from "drizzle-orm";
 
 export interface ClarificationRequest {
   field: string;
@@ -19,7 +26,7 @@ export interface ClarificationAnswer {
 }
 
 export interface ClarificationResolution {
-  status: 'answered' | 'pending';
+  status: "answered" | "pending";
   resolvedFacts: Record<string, string>;
 }
 
@@ -33,13 +40,13 @@ export async function addClarificationRequest(
   const { db } = getDb();
   const now = new Date();
 
-  const newClarifications: NewClarification[] = requests.map(req => ({
+  const newClarifications: NewClarification[] = requests.map((req) => ({
     id: `clar_${sessionId}_${req.field}`,
     sessionId,
     field: req.field,
     question: req.question,
     answer: null,
-    status: 'pending',
+    status: "pending",
     createdAt: now,
     answeredAt: null,
   }));
@@ -61,7 +68,7 @@ export async function resolveClarification(
     .update(clarifications)
     .set({
       answer: answer.answer,
-      status: 'answered',
+      status: "answered",
       answeredAt: now,
     })
     .where(
@@ -75,7 +82,9 @@ export async function resolveClarification(
 /**
  * Get all pending clarifications for a session
  */
-export async function getPendingClarifications(sessionId: string): Promise<Clarification[]> {
+export async function getPendingClarifications(
+  sessionId: string,
+): Promise<Clarification[]> {
   const { db } = getDb();
 
   const results = await db
@@ -84,7 +93,7 @@ export async function getPendingClarifications(sessionId: string): Promise<Clari
     .where(
       and(
         eq(clarifications.sessionId, sessionId),
-        eq(clarifications.status, 'pending'),
+        eq(clarifications.status, "pending"),
       ),
     );
 
@@ -94,7 +103,9 @@ export async function getPendingClarifications(sessionId: string): Promise<Clari
 /**
  * Get resolved facts for a session (to append to guidance input)
  */
-export async function getResolvedFacts(sessionId: string): Promise<Record<string, string>> {
+export async function getResolvedFacts(
+  sessionId: string,
+): Promise<Record<string, string>> {
   const { db } = getDb();
 
   const results = await db
@@ -103,7 +114,7 @@ export async function getResolvedFacts(sessionId: string): Promise<Record<string
     .where(
       and(
         eq(clarifications.sessionId, sessionId),
-        eq(clarifications.status, 'answered'),
+        eq(clarifications.status, "answered"),
       ),
     );
 
@@ -150,7 +161,7 @@ export async function storeIntentConfirmation(
  */
 export async function recordIntentConfirmationResponse(
   confirmationId: string,
-  response: 'approved' | 'rejected' | 'modified',
+  response: "approved" | "rejected" | "modified",
   userIdentity?: string,
 ): Promise<void> {
   const { db } = getDb();
@@ -162,7 +173,7 @@ export async function recordIntentConfirmationResponse(
       response,
       userIdentity,
       respondedAt: now,
-      status: 'answered',
+      status: "answered",
     })
     .where(eq(intentConfirmations.id, confirmationId));
 }
@@ -170,7 +181,9 @@ export async function recordIntentConfirmationResponse(
 /**
  * Get intent confirmation status
  */
-export async function getIntentConfirmationStatus(sessionId: string): Promise<IntentConfirmation | null> {
+export async function getIntentConfirmationStatus(
+  sessionId: string,
+): Promise<IntentConfirmation | null> {
   const { db } = getDb();
 
   const results = await db
@@ -181,4 +194,3 @@ export async function getIntentConfirmationStatus(sessionId: string): Promise<In
 
   return results[0] || null;
 }
-

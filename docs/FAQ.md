@@ -95,20 +95,21 @@ export THIRD_EYE_SECURITY_ENCRYPTION_KEY="$(openssl rand -hex 32)"
 
 ### What does each Eye do?
 
-| Eye | Focus | Default Model |
-| --- | ----- | ------------- |
-| Overseer | Entry point, orchestration | `groq/llama-3.1-8b-instant` |
-| Sharingan | Ambiguity detection | `groq/llama-3.1-8b-instant` |
-| Prompt Helper | Prompt refinement | `openrouter/meta-llama/llama-3.3-70b` |
-| Jogan | Intent analysis | `openrouter/meta-llama/llama-3.3-70b` |
-| Rinnegan | Plan validation | `openrouter/meta-llama/llama-3.3-70b` |
-| Mangekyo | Code review & quality gates | `openrouter/meta-llama/llama-3.3-70b` |
-| Tenseigan | Evidence verification | `openrouter/meta-llama/llama-3.3-70b` |
-| Byakugan | Consistency enforcement | `openrouter/meta-llama/llama-3.3-70b` |
+| Eye           | Focus                       | Default Model                         |
+| ------------- | --------------------------- | ------------------------------------- |
+| Overseer      | Entry point, orchestration  | `groq/llama-3.1-8b-instant`           |
+| Sharingan     | Ambiguity detection         | `groq/llama-3.1-8b-instant`           |
+| Prompt Helper | Prompt refinement           | `openrouter/meta-llama/llama-3.3-70b` |
+| Jogan         | Intent analysis             | `openrouter/meta-llama/llama-3.3-70b` |
+| Rinnegan      | Plan validation             | `openrouter/meta-llama/llama-3.3-70b` |
+| Mangekyo      | Code review & quality gates | `openrouter/meta-llama/llama-3.3-70b` |
+| Tenseigan     | Evidence verification       | `openrouter/meta-llama/llama-3.3-70b` |
+| Byakugan      | Consistency enforcement     | `openrouter/meta-llama/llama-3.3-70b` |
 
 ### How do I customize personas?
 
 Dashboard → **Personas**:
+
 1. Select an Eye
 2. Edit the Markdown persona template
 3. Click **Save Draft** to create a new version
@@ -151,6 +152,7 @@ third-eye-mcp reset
 ### Where is data stored?
 
 Default directory: `~/.third-eye-mcp`
+
 - `mcp.db` — SQLite database
 - `logs/` — Rotating service logs
 - `pids/` — Background process IDs

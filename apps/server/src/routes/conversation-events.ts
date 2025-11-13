@@ -12,11 +12,11 @@
  * Per R07: Strict typing, no 'any'
  */
 
-import { Hono } from 'hono';
-import { zValidator } from '@hono/zod-validator';
-import { z } from 'zod';
-import { getDb } from '@third-eye/db';
-import { ConversationTracker } from '@third-eye/core/conversation-tracker';
+import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
+import { z } from "zod";
+import { getDb } from "@third-eye/db";
+import { ConversationTracker } from "@third-eye/core/conversation-tracker";
 
 const app = new Hono();
 
@@ -24,7 +24,7 @@ const app = new Hono();
  * Query parameter schema for recent events
  */
 const RecentEventsQuerySchema = z.object({
-  limit: z.string().optional().default('50').transform(Number),
+  limit: z.string().optional().default("50").transform(Number),
 });
 
 /**
@@ -32,15 +32,18 @@ const RecentEventsQuerySchema = z.object({
  *
  * Get conversation timeline for a specific session
  */
-app.get('/session/:sessionId', async (c) => {
+app.get("/session/:sessionId", async (c) => {
   try {
-    const sessionId = c.req.param('sessionId');
+    const sessionId = c.req.param("sessionId");
 
     if (!sessionId) {
-      return c.json({
-        success: false,
-        message: 'Session ID is required',
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          message: "Session ID is required",
+        },
+        400,
+      );
     }
 
     const tracker = new ConversationTracker(getDb());
@@ -55,11 +58,17 @@ app.get('/session/:sessionId', async (c) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching conversation timeline:', error);
-    return c.json({
-      success: false,
-      message: error instanceof Error ? error.message : 'Failed to fetch conversation timeline',
-    }, 500);
+    console.error("Error fetching conversation timeline:", error);
+    return c.json(
+      {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch conversation timeline",
+      },
+      500,
+    );
   }
 });
 
@@ -68,73 +77,84 @@ app.get('/session/:sessionId', async (c) => {
  *
  * Get recent conversation events across all sessions
  */
-app.get(
-  '/recent',
-  zValidator('query', RecentEventsQuerySchema),
-  async (c) => {
-    try {
-      const { limit } = c.req.valid('query');
+app.get("/recent", zValidator("query", RecentEventsQuerySchema), async (c) => {
+  try {
+    const { limit } = c.req.valid("query");
 
-      const tracker = new ConversationTracker(getDb());
-      const events = tracker.getRecentEvents(limit);
+    const tracker = new ConversationTracker(getDb());
+    const events = tracker.getRecentEvents(limit);
 
-      return c.json({
-        success: true,
-        data: {
-          events,
-          count: events.length,
-          limit,
-        },
-      });
-    } catch (error) {
-      console.error('Error fetching recent conversation events:', error);
-      return c.json({
+    return c.json({
+      success: true,
+      data: {
+        events,
+        count: events.length,
+        limit,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching recent conversation events:", error);
+    return c.json(
+      {
         success: false,
-        message: error instanceof Error ? error.message : 'Failed to fetch recent events',
-      }, 500);
-    }
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch recent events",
+      },
+      500,
+    );
   }
-);
+});
 
 /**
  * GET /conversation-events/session/:sessionId/type/:eventType
  *
  * Get conversation events of a specific type for a session
  */
-app.get('/session/:sessionId/type/:eventType', async (c) => {
+app.get("/session/:sessionId/type/:eventType", async (c) => {
   try {
-    const sessionId = c.req.param('sessionId');
-    const eventType = c.req.param('eventType');
+    const sessionId = c.req.param("sessionId");
+    const eventType = c.req.param("eventType");
 
     if (!sessionId) {
-      return c.json({
-        success: false,
-        message: 'Session ID is required',
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          message: "Session ID is required",
+        },
+        400,
+      );
     }
 
     if (!eventType) {
-      return c.json({
-        success: false,
-        message: 'Event type is required',
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          message: "Event type is required",
+        },
+        400,
+      );
     }
 
     // Validate event type
     const validEventTypes = [
-      'agent_message',
-      'human_message',
-      'routing_decision',
-      'pause',
-      'resume',
-      'error',
+      "agent_message",
+      "human_message",
+      "routing_decision",
+      "pause",
+      "resume",
+      "error",
     ];
 
     if (!validEventTypes.includes(eventType)) {
-      return c.json({
-        success: false,
-        message: `Invalid event type. Must be one of: ${validEventTypes.join(', ')}`,
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          message: `Invalid event type. Must be one of: ${validEventTypes.join(", ")}`,
+        },
+        400,
+      );
     }
 
     const tracker = new ConversationTracker(getDb());
@@ -150,11 +170,17 @@ app.get('/session/:sessionId/type/:eventType', async (c) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching conversation events by type:', error);
-    return c.json({
-      success: false,
-      message: error instanceof Error ? error.message : 'Failed to fetch events by type',
-    }, 500);
+    console.error("Error fetching conversation events by type:", error);
+    return c.json(
+      {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch events by type",
+      },
+      500,
+    );
   }
 });
 

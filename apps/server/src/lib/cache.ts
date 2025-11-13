@@ -1,5 +1,5 @@
-import { createHash } from 'crypto';
-import type { MiddlewareHandler } from 'hono';
+import { createHash } from "crypto";
+import type { MiddlewareHandler } from "hono";
 
 /**
  * Response Caching System
@@ -22,12 +22,12 @@ class ResponseCache {
    * Eyes that should skip caching (session-dependent)
    */
   private readonly skipCacheEyes = new Set([
-    'byakugan',
-    'rinnegan',
-    'rinnegan:requirements',
-    'rinnegan:review',
-    'rinnegan:approval',
-    'overseer',
+    "byakugan",
+    "rinnegan",
+    "rinnegan:requirements",
+    "rinnegan:review",
+    "rinnegan:approval",
+    "overseer",
   ]);
 
   /**
@@ -35,7 +35,7 @@ class ResponseCache {
    */
   private generateKey(eye: string, input: unknown): string {
     const content = JSON.stringify({ eye, input });
-    return createHash('sha256').update(content).digest('hex');
+    return createHash("sha256").update(content).digest("hex");
   }
 
   /**
@@ -113,7 +113,7 @@ class ResponseCache {
     return {
       size: this.cache.size,
       entries: Array.from(this.cache.entries()).map(([key, entry]) => ({
-        key: key.substring(0, 16) + '...',
+        key: key.substring(0, 16) + "...",
         createdAt: entry.createdAt,
         expiresAt: entry.expiresAt,
         ttl: entry.expiresAt - Date.now(),
@@ -151,7 +151,7 @@ export function cacheMiddleware(): MiddlewareHandler {
     const method = c.req.method;
 
     // Only cache GET requests
-    if (method !== 'GET') {
+    if (method !== "GET") {
       await next();
       return;
     }
@@ -160,19 +160,19 @@ export function cacheMiddleware(): MiddlewareHandler {
     const query = c.req.query();
 
     // Generate cache key from path + query
-    const cacheKey = createHash('sha256')
+    const cacheKey = createHash("sha256")
       .update(JSON.stringify({ path, query }))
-      .digest('hex');
+      .digest("hex");
 
     const cached = responseCache.get<unknown>(path, query);
 
     if (cached) {
-      c.header('X-Cache', 'HIT');
+      c.header("X-Cache", "HIT");
       return c.json(cached);
     }
 
     // Cache miss
-    c.header('X-Cache', 'MISS');
+    c.header("X-Cache", "MISS");
 
     await next();
 
@@ -190,7 +190,7 @@ export function cacheMiddleware(): MiddlewareHandler {
 export async function withCache<T>(
   eye: string,
   input: unknown,
-  executor: () => Promise<T>
+  executor: () => Promise<T>,
 ): Promise<T> {
   // Check cache
   const cached = responseCache.get<T>(eye, input);

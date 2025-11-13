@@ -59,7 +59,11 @@ If you already have other MCP servers configured, add Third Eye MCP to the exist
   "mcpServers": {
     "filesystem": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/files"]
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/path/to/files"
+      ]
     },
     "third-eye-mcp": {
       "command": "bunx",
@@ -148,6 +152,7 @@ Use the third_eye_overseer tool to analyze this text: "Hello world"
 ```
 
 Expected response:
+
 - Claude will call the `third_eye_overseer` tool
 - Third Eye will process through its Eye pipeline
 - You'll receive structured analysis
@@ -196,6 +201,7 @@ Third Eye will route to Byakugan (clarity and translation).
 ### Tool Not Appearing
 
 1. **Check config file syntax**:
+
    ```bash
    # macOS/Linux
    cat ~/Library/Application\ Support/Claude/claude_desktop_config.json | jq .
@@ -204,11 +210,13 @@ Third Eye will route to Byakugan (clarity and translation).
    ```
 
 2. **Verify Third Eye MCP is installed**:
+
    ```bash
    third-eye-mcp --version
    ```
 
 3. **Check Claude Desktop logs**:
+
    ```bash
    # macOS
    tail -f ~/Library/Logs/Claude/mcp*.log
@@ -220,6 +228,7 @@ Third Eye will route to Byakugan (clarity and translation).
 ### Connection Errors
 
 1. **Start Third Eye MCP separately**:
+
    ```bash
    # Terminal 1: Start Third Eye services
    bunx third-eye-mcp up --verbose

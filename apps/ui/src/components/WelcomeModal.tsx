@@ -1,13 +1,25 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { X, ArrowRight, ArrowLeft, Eye, GitBranch, Activity, Sparkles } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useFocusTrap } from '@/hooks/useFocusTrap';
-import { ARIA_LABELS, ARIA_DESCRIPTIONS } from '@/constants/accessibility';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
-import { TIMING } from '@/constants/timing';
-import { MODAL_OVERLAY_CLASS } from '@/constants/design-tokens';
+import { useState, useEffect } from "react";
+import {
+  X,
+  ArrowRight,
+  ArrowLeft,
+  Eye,
+  GitBranch,
+  Activity,
+  Sparkles,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { ARIA_LABELS, ARIA_DESCRIPTIONS } from "@/constants/accessibility";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
+import { TIMING } from "@/constants/timing";
+import { MODAL_OVERLAY_CLASS } from "@/constants/design-tokens";
 
 interface WelcomeStep {
   title: string;
@@ -18,28 +30,32 @@ interface WelcomeStep {
 
 const WELCOME_STEPS: WelcomeStep[] = [
   {
-    title: 'Welcome to Third Eye MCP',
-    description: 'An intelligent oversight system that watches over your AI conversations. Think of it as having multiple expert Eyes reviewing every interaction to ensure quality, safety, and accuracy.',
+    title: "Welcome to Third Eye MCP",
+    description:
+      "An intelligent oversight system that watches over your AI conversations. Think of it as having multiple expert Eyes reviewing every interaction to ensure quality, safety, and accuracy.",
     icon: <Sparkles className="h-12 w-12 text-brand-accent" />,
   },
   {
-    title: 'Meet the Eyes',
-    description: 'Eyes are specialized AI agents - each with unique capabilities like fact-checking, tone analysis, or security scanning. You can create custom Eyes or use our built-in collection. Find them in the Eyes page!',
+    title: "Meet the Eyes",
+    description:
+      "Eyes are specialized AI agents - each with unique capabilities like fact-checking, tone analysis, or security scanning. You can create custom Eyes or use our built-in collection. Find them in the Eyes page!",
     icon: <Eye className="h-12 w-12 ${STATUS_TEXT_COLORS.info}" />,
   },
   {
-    title: 'Build Pipelines',
-    description: 'Combine multiple Eyes into workflows called Pipelines. Drag and drop Eyes to create visual flows - like a quality control assembly line for your AI conversations. Check out the Pipelines page to get started!',
+    title: "Build Pipelines",
+    description:
+      "Combine multiple Eyes into workflows called Pipelines. Drag and drop Eyes to create visual flows - like a quality control assembly line for your AI conversations. Check out the Pipelines page to get started!",
     icon: <GitBranch className="h-12 w-12 ${STATUS_TEXT_COLORS.info}" />,
   },
   {
-    title: 'Monitor Everything',
-    description: 'Watch your Eyes work in real-time on the Monitor page. See sessions in the Sessions page, and replay past conversations in the Replay page. All your oversight activity in one place!',
+    title: "Monitor Everything",
+    description:
+      "Watch your Eyes work in real-time on the Monitor page. See sessions in the Sessions page, and replay past conversations in the Replay page. All your oversight activity in one place!",
     icon: <Activity className="h-12 w-12 ${STATUS_TEXT_COLORS.success}" />,
   },
 ];
 
-const STORAGE_KEY = 'third-eye-welcome-seen';
+const STORAGE_KEY = "third-eye-welcome-seen";
 
 export function WelcomeModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -64,7 +80,7 @@ export function WelcomeModal() {
   const handleClose = () => {
     setIsOpen(false);
     if (neverShow) {
-      localStorage.setItem(STORAGE_KEY, 'true');
+      localStorage.setItem(STORAGE_KEY, "true");
     }
   };
 
@@ -110,7 +126,7 @@ export function WelcomeModal() {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="relative w-full max-w-2xl mx-4 rounded-2xl border-2 border-brand-outline/50 bg-brand-paper shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
@@ -131,7 +147,7 @@ export function WelcomeModal() {
                   key={currentStep}
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
-                  transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
                   className="rounded-full bg-gradient-to-br from-brand-accent/20 to-brand-primary/10 p-6"
                 >
                   {currentStepData.icon}
@@ -166,7 +182,7 @@ export function WelcomeModal() {
                 role="navigation"
                 aria-label={ARIA_DESCRIPTIONS.WIZARD_PROGRESS(
                   currentStep + 1,
-                  WELCOME_STEPS.length
+                  WELCOME_STEPS.length,
                 )}
               >
                 {WELCOME_STEPS.map((_, index) => (
@@ -175,11 +191,11 @@ export function WelcomeModal() {
                     onClick={() => setCurrentStep(index)}
                     className={`h-2 rounded-full transition-all ${
                       index === currentStep
-                        ? 'w-8 bg-brand-accent'
-                        : 'w-2 bg-brand-outline hover:bg-brand-outline/80'
+                        ? "w-8 bg-brand-accent"
+                        : "w-2 bg-brand-outline hover:bg-brand-outline/80"
                     }`}
                     aria-label={ARIA_LABELS.GO_TO_STEP(index + 1)}
-                    aria-current={index === currentStep ? 'step' : undefined}
+                    aria-current={index === currentStep ? "step" : undefined}
                   />
                 ))}
               </div>
@@ -211,11 +227,15 @@ export function WelcomeModal() {
                     aria-label={
                       currentStep < WELCOME_STEPS.length - 1
                         ? ARIA_LABELS.NEXT_STEP
-                        : 'Get started with Third Eye'
+                        : "Get started with Third Eye"
                     }
                   >
-                    {currentStep < WELCOME_STEPS.length - 1 ? 'Next' : 'Get Started'}
-                    {currentStep < WELCOME_STEPS.length - 1 && <ArrowRight className="h-4 w-4" />}
+                    {currentStep < WELCOME_STEPS.length - 1
+                      ? "Next"
+                      : "Get Started"}
+                    {currentStep < WELCOME_STEPS.length - 1 && (
+                      <ArrowRight className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -234,7 +254,10 @@ export function WelcomeModal() {
                     onChange={(e) => setNeverShow(e.target.checked)}
                     className="h-4 w-4 rounded border-brand-outline/50 bg-brand-ink text-brand-accent focus:ring-brand-accent focus:ring-offset-brand-ink"
                   />
-                  <label htmlFor="never-show" className="text-sm text-semantic-muted cursor-pointer">
+                  <label
+                    htmlFor="never-show"
+                    className="text-sm text-semantic-muted cursor-pointer"
+                  >
                     Don&apos;t show this again
                   </label>
                 </motion.div>

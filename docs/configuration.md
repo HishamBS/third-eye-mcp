@@ -6,21 +6,21 @@ Centralized reference for runtime configuration of Third Eye MCP.
 
 ## Environment Variables
 
-| Variable | Description | Default |
-| -------- | ----------- | ------- |
-| `MCP_DB` | Absolute path to SQLite database | `~/.third-eye-mcp/mcp.db` |
-| `MCP_HOST` | Host/interface for MCP server | `127.0.0.1` |
-| `MCP_PORT` | MCP server port | `7070` |
-| `MCP_UI_PORT` | Dashboard port | `3300` |
-| `MCP_ALLOWED_ORIGINS` | Comma-separated list of allowed origins for CORS | `http://localhost:3300` |
-| `GROQ_API_KEY` | API key for Groq provider | _unset_ |
-| `OPENROUTER_API_KEY` | API key for OpenRouter provider | _unset_ |
-| `OLLAMA_BASE_URL` | Override Ollama host/port | `http://127.0.0.1:11434` |
-| `LMSTUDIO_BASE_URL` | Override LM Studio host/port | `http://127.0.0.1:1234/v1` |
+| Variable                            | Description                                         | Default                            |
+| ----------------------------------- | --------------------------------------------------- | ---------------------------------- |
+| `MCP_DB`                            | Absolute path to SQLite database                    | `~/.third-eye-mcp/mcp.db`          |
+| `MCP_HOST`                          | Host/interface for MCP server                       | `127.0.0.1`                        |
+| `MCP_PORT`                          | MCP server port                                     | `7070`                             |
+| `MCP_UI_PORT`                       | Dashboard port                                      | `3300`                             |
+| `MCP_ALLOWED_ORIGINS`               | Comma-separated list of allowed origins for CORS    | `http://localhost:3300`            |
+| `GROQ_API_KEY`                      | API key for Groq provider                           | _unset_                            |
+| `OPENROUTER_API_KEY`                | API key for OpenRouter provider                     | _unset_                            |
+| `OLLAMA_BASE_URL`                   | Override Ollama host/port                           | `http://127.0.0.1:11434`           |
+| `LMSTUDIO_BASE_URL`                 | Override LM Studio host/port                        | `http://127.0.0.1:1234/v1`         |
 | `THIRD_EYE_SECURITY_ENCRYPTION_KEY` | 64-char AES-256-GCM key for provider-key encryption | Auto-generated (insecure for prod) |
-| `TELEMETRY_ENABLED` | Enable opt-in telemetry and metrics | `false` |
-| `REQUIRE_API_KEY` | Require API key auth for REST API | `false` |
-| `THIRD_EYE_STRICTNESS_PROFILE` | Default strictness (`standard`, `enterprise`, etc.) | `standard` |
+| `TELEMETRY_ENABLED`                 | Enable opt-in telemetry and metrics                 | `false`                            |
+| `REQUIRE_API_KEY`                   | Require API key auth for REST API                   | `false`                            |
+| `THIRD_EYE_STRICTNESS_PROFILE`      | Default strictness (`standard`, `enterprise`, etc.) | `standard`                         |
 
 Set variables via shell exports, `.env`, or service managers.
 
@@ -71,12 +71,12 @@ Values in the config file override defaults but can be superseded by environment
 
 Strictness settings control validation thresholds across the Eyes. Profiles are stored in the `strictness_profiles` table and can be managed via the dashboard.
 
-| Profile | Use Case | Notes |
-| ------- | -------- | ----- |
-| `casual` | Exploratory sessions | Minimal validation, faster responses |
-| `standard` | Daily workflows | Balanced precision vs. latency |
-| `enterprise` | Compliance-focused reviews | Tighter thresholds, more fallbacks |
-| `security` | Sensitive code or policy reviews | Requires evidence and confirmations |
+| Profile      | Use Case                         | Notes                                |
+| ------------ | -------------------------------- | ------------------------------------ |
+| `casual`     | Exploratory sessions             | Minimal validation, faster responses |
+| `standard`   | Daily workflows                  | Balanced precision vs. latency       |
+| `enterprise` | Compliance-focused reviews       | Tighter thresholds, more fallbacks   |
+| `security`   | Sensitive code or policy reviews | Requires evidence and confirmations  |
 
 Create custom profiles via the dashboard or seed scripts. For schema details see [Database Reference](./DATABASE.md).
 

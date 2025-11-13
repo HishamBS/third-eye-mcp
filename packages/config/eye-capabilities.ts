@@ -21,61 +21,110 @@ export interface EyeCapability {
  */
 export const EYE_CAPABILITIES = {
   overseer: {
-    tags: ['routing', 'analysis', 'decision-making', 'orchestration'],
-    description: 'Analyzes requests and dynamically routes to appropriate eyes',
-    scenarios: ['All requests - determines optimal eye sequence', 'Capability matching', 'Dynamic routing decisions'],
-    icon: '🧿',
-    color: 'purple'
+    tags: ["routing", "analysis", "decision-making", "orchestration"],
+    description: "Analyzes requests and dynamically routes to appropriate eyes",
+    scenarios: [
+      "All requests - determines optimal eye sequence",
+      "Capability matching",
+      "Dynamic routing decisions",
+    ],
+    icon: "🧿",
+    color: "purple",
   },
   sharingan: {
-    tags: ['ambiguity-detection', 'clarification', 'questions', 'disambiguation'],
-    description: 'Detects ambiguities and asks clarifying questions',
-    scenarios: ['Vague requests', 'Missing context', 'Unclear requirements', 'Scope disambiguation'],
-    icon: '🔍',
-    color: 'red'
+    tags: [
+      "ambiguity-detection",
+      "clarification",
+      "questions",
+      "disambiguation",
+    ],
+    description: "Detects ambiguities and asks clarifying questions",
+    scenarios: [
+      "Vague requests",
+      "Missing context",
+      "Unclear requirements",
+      "Scope disambiguation",
+    ],
+    icon: "🔍",
+    color: "red",
   },
   kyuubi: {
-    tags: ['structuring', 'guidance', 'framework', 'content-planning'],
-    description: 'Provides structural guidance and content frameworks',
-    scenarios: ['Content creation', 'Document structuring', 'Planning templates', 'Framework design'],
-    icon: '🦊',
-    color: 'orange'
+    tags: ["structuring", "guidance", "framework", "content-planning"],
+    description: "Provides structural guidance and content frameworks",
+    scenarios: [
+      "Content creation",
+      "Document structuring",
+      "Planning templates",
+      "Framework design",
+    ],
+    icon: "🦊",
+    color: "orange",
   },
   jogan: {
-    tags: ['intent-confirmation', 'approval', 'scope-validation', 'human-in-loop'],
-    description: 'Confirms user intent before proceeding with tasks',
-    scenarios: ['High-impact actions', 'Scope confirmation', 'User approval needed', 'Intent validation'],
-    icon: '👁️',
-    color: 'blue'
+    tags: [
+      "intent-confirmation",
+      "approval",
+      "scope-validation",
+      "human-in-loop",
+    ],
+    description: "Confirms user intent before proceeding with tasks",
+    scenarios: [
+      "High-impact actions",
+      "Scope confirmation",
+      "User approval needed",
+      "Intent validation",
+    ],
+    icon: "👁️",
+    color: "blue",
   },
   rinnegan: {
-    tags: ['feasibility', 'validation', 'planning', 'resource-estimation'],
-    description: 'Validates feasibility and provides planning guidance',
-    scenarios: ['Complex tasks', 'Multi-step planning', 'Resource validation', 'Feasibility analysis'],
-    icon: '⚫',
-    color: 'indigo'
+    tags: ["feasibility", "validation", "planning", "resource-estimation"],
+    description: "Validates feasibility and provides planning guidance",
+    scenarios: [
+      "Complex tasks",
+      "Multi-step planning",
+      "Resource validation",
+      "Feasibility analysis",
+    ],
+    icon: "⚫",
+    color: "indigo",
   },
   mangekyo: {
-    tags: ['code-review', 'security', 'best-practices', 'quality-assurance'],
-    description: 'Reviews code for quality, security, and best practices',
-    scenarios: ['Code review', 'Security audit', 'Technical validation', 'Best practices check'],
-    icon: '🔥',
-    color: 'pink'
+    tags: ["code-review", "security", "best-practices", "quality-assurance"],
+    description: "Reviews code for quality, security, and best practices",
+    scenarios: [
+      "Code review",
+      "Security audit",
+      "Technical validation",
+      "Best practices check",
+    ],
+    icon: "🔥",
+    color: "pink",
   },
   tenseigan: {
-    tags: ['quality-check', 'completeness', 'refinement', 'polish'],
-    description: 'Validates quality and completeness of outputs',
-    scenarios: ['Output validation', 'Completeness check', 'Quality assurance', 'Refinement'],
-    icon: '🌙',
-    color: 'cyan'
+    tags: ["quality-check", "completeness", "refinement", "polish"],
+    description: "Validates quality and completeness of outputs",
+    scenarios: [
+      "Output validation",
+      "Completeness check",
+      "Quality assurance",
+      "Refinement",
+    ],
+    icon: "🌙",
+    color: "cyan",
   },
   byakugan: {
-    tags: ['final-review', 'delivery', 'output-formatting', 'presentation'],
-    description: 'Final review and output preparation for delivery',
-    scenarios: ['Final validation', 'Output formatting', 'Delivery preparation', 'Presentation polish'],
-    icon: '👀',
-    color: 'green'
-  }
+    tags: ["final-review", "delivery", "output-formatting", "presentation"],
+    description: "Final review and output preparation for delivery",
+    scenarios: [
+      "Final validation",
+      "Output formatting",
+      "Delivery preparation",
+      "Presentation polish",
+    ],
+    icon: "👀",
+    color: "green",
+  },
 } as const satisfies Record<string, EyeCapability>;
 
 export type EyeCapabilityName = keyof typeof EYE_CAPABILITIES;
@@ -83,7 +132,9 @@ export type EyeCapabilityName = keyof typeof EYE_CAPABILITIES;
 /**
  * Get capability tags for a specific eye
  */
-export function getEyeCapabilityTags(eyeName: EyeCapabilityName): readonly string[] {
+export function getEyeCapabilityTags(
+  eyeName: EyeCapabilityName,
+): readonly string[] {
   return EYE_CAPABILITIES[eyeName].tags;
 }
 
@@ -103,7 +154,9 @@ export function getAllCapabilityTags(): readonly string[] {
 /**
  * Find eyes that have a specific capability tag
  */
-export function getEyesByCapability(capabilityTag: string): readonly EyeCapabilityName[] {
+export function getEyesByCapability(
+  capabilityTag: string,
+): readonly EyeCapabilityName[] {
   const eyeNames: EyeCapabilityName[] = [];
   for (const [eyeName, capabilities] of Object.entries(EYE_CAPABILITIES)) {
     if ((capabilities.tags as readonly string[]).includes(capabilityTag)) {
@@ -118,26 +171,26 @@ export function getEyesByCapability(capabilityTag: string): readonly EyeCapabili
  */
 export const ROUTING_MODE_INFO = {
   fully_dynamic: {
-    label: 'Fully Dynamic',
-    icon: '🧠',
-    description: 'Overseer analyzes and routes automatically',
-    badge: 'Recommended',
-    badgeColor: 'green'
+    label: "Fully Dynamic",
+    icon: "🧠",
+    description: "Overseer analyzes and routes automatically",
+    badge: "Recommended",
+    badgeColor: "green",
   },
   constrained: {
-    label: 'Constrained',
-    icon: '🛡️',
-    description: 'Overseer routes within policy constraints',
-    badge: 'With Policies',
-    badgeColor: 'blue'
+    label: "Constrained",
+    icon: "🛡️",
+    description: "Overseer routes within policy constraints",
+    badge: "With Policies",
+    badgeColor: "blue",
   },
   fixed: {
-    label: 'Fixed Template',
-    icon: '📋',
-    description: 'Use predefined eye sequence',
-    badge: 'Consistent',
-    badgeColor: 'purple'
-  }
+    label: "Fixed Template",
+    icon: "📋",
+    description: "Use predefined eye sequence",
+    badge: "Consistent",
+    badgeColor: "purple",
+  },
 } as const;
 
 export type RoutingModeName = keyof typeof ROUTING_MODE_INFO;

@@ -9,22 +9,23 @@
  * Per R13: Event types from constants
  */
 
-import type { Database } from 'bun:sqlite';
-import { nanoid } from 'nanoid';
+import type { Database } from "bun:sqlite";
+import { nanoid } from "nanoid";
 
 /**
  * Event type constants (SSOT)
  */
 export const CONVERSATION_EVENT_TYPES = {
-  AGENT_MESSAGE: 'agent_message',
-  HUMAN_MESSAGE: 'human_message',
-  ROUTING_DECISION: 'routing_decision',
-  PAUSE: 'pause',
-  RESUME: 'resume',
-  ERROR: 'error',
+  AGENT_MESSAGE: "agent_message",
+  HUMAN_MESSAGE: "human_message",
+  ROUTING_DECISION: "routing_decision",
+  PAUSE: "pause",
+  RESUME: "resume",
+  ERROR: "error",
 } as const;
 
-export type ConversationEventType = typeof CONVERSATION_EVENT_TYPES[keyof typeof CONVERSATION_EVENT_TYPES];
+export type ConversationEventType =
+  (typeof CONVERSATION_EVENT_TYPES)[keyof typeof CONVERSATION_EVENT_TYPES];
 
 /**
  * Conversation event data interface
@@ -62,7 +63,7 @@ export class ConversationTracker {
       event.speaker,
       event.message,
       event.metadata ? JSON.stringify(event.metadata) : null,
-      createdAt
+      createdAt,
     );
 
     return id;
@@ -71,7 +72,12 @@ export class ConversationTracker {
   /**
    * Log agent message (from an eye)
    */
-  logAgentMessage(sessionId: string, eyeName: string, message: string, metadata?: Record<string, unknown>): string {
+  logAgentMessage(
+    sessionId: string,
+    eyeName: string,
+    message: string,
+    metadata?: Record<string, unknown>,
+  ): string {
     return this.logEvent({
       sessionId,
       eventType: CONVERSATION_EVENT_TYPES.AGENT_MESSAGE,
@@ -84,11 +90,15 @@ export class ConversationTracker {
   /**
    * Log human message
    */
-  logHumanMessage(sessionId: string, message: string, metadata?: Record<string, unknown>): string {
+  logHumanMessage(
+    sessionId: string,
+    message: string,
+    metadata?: Record<string, unknown>,
+  ): string {
     return this.logEvent({
       sessionId,
       eventType: CONVERSATION_EVENT_TYPES.HUMAN_MESSAGE,
-      speaker: 'human',
+      speaker: "human",
       message,
       metadata,
     });
@@ -101,13 +111,13 @@ export class ConversationTracker {
     sessionId: string,
     selectedEyes: string[],
     reasoning: string,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ): string {
-    const message = `Routing to: ${selectedEyes.join(' → ')}`;
+    const message = `Routing to: ${selectedEyes.join(" → ")}`;
     return this.logEvent({
       sessionId,
       eventType: CONVERSATION_EVENT_TYPES.ROUTING_DECISION,
-      speaker: 'overseer',
+      speaker: "overseer",
       message,
       metadata: {
         ...metadata,
@@ -120,7 +130,12 @@ export class ConversationTracker {
   /**
    * Log pipeline pause
    */
-  logPause(sessionId: string, eyeName: string, reason: string, metadata?: Record<string, unknown>): string {
+  logPause(
+    sessionId: string,
+    eyeName: string,
+    reason: string,
+    metadata?: Record<string, unknown>,
+  ): string {
     return this.logEvent({
       sessionId,
       eventType: CONVERSATION_EVENT_TYPES.PAUSE,
@@ -136,11 +151,15 @@ export class ConversationTracker {
   /**
    * Log pipeline resume
    */
-  logResume(sessionId: string, message: string, metadata?: Record<string, unknown>): string {
+  logResume(
+    sessionId: string,
+    message: string,
+    metadata?: Record<string, unknown>,
+  ): string {
     return this.logEvent({
       sessionId,
       eventType: CONVERSATION_EVENT_TYPES.RESUME,
-      speaker: 'system',
+      speaker: "system",
       message,
       metadata,
     });
@@ -149,7 +168,12 @@ export class ConversationTracker {
   /**
    * Log error
    */
-  logError(sessionId: string, eyeName: string, error: string, metadata?: Record<string, unknown>): string {
+  logError(
+    sessionId: string,
+    eyeName: string,
+    error: string,
+    metadata?: Record<string, unknown>,
+  ): string {
     return this.logEvent({
       sessionId,
       eventType: CONVERSATION_EVENT_TYPES.ERROR,
@@ -162,7 +186,9 @@ export class ConversationTracker {
   /**
    * Get conversation timeline for a session
    */
-  getConversationTimeline(sessionId: string): readonly ConversationEventRecord[] {
+  getConversationTimeline(
+    sessionId: string,
+  ): readonly ConversationEventRecord[] {
     const stmt = this.db.prepare(`
       SELECT id, session_id, event_type, speaker, message, metadata, created_at
       FROM conversation_events
@@ -171,7 +197,7 @@ export class ConversationTracker {
     `);
 
     const rows = stmt.all(sessionId) as ConversationEventRow[];
-    return rows.map(row => ({
+    return rows.map((row) => ({
       id: row.id,
       sessionId: row.session_id,
       eventType: row.event_type as ConversationEventType,
@@ -194,7 +220,7 @@ export class ConversationTracker {
     `);
 
     const rows = stmt.all(limit) as ConversationEventRow[];
-    return rows.map(row => ({
+    return rows.map((row) => ({
       id: row.id,
       sessionId: row.session_id,
       eventType: row.event_type as ConversationEventType,
@@ -208,7 +234,10 @@ export class ConversationTracker {
   /**
    * Get conversation events by type
    */
-  getEventsByType(sessionId: string, eventType: ConversationEventType): readonly ConversationEventRecord[] {
+  getEventsByType(
+    sessionId: string,
+    eventType: ConversationEventType,
+  ): readonly ConversationEventRecord[] {
     const stmt = this.db.prepare(`
       SELECT id, session_id, event_type, speaker, message, metadata, created_at
       FROM conversation_events
@@ -217,7 +246,7 @@ export class ConversationTracker {
     `);
 
     const rows = stmt.all(sessionId, eventType) as ConversationEventRow[];
-    return rows.map(row => ({
+    return rows.map((row) => ({
       id: row.id,
       sessionId: row.session_id,
       eventType: row.event_type as ConversationEventType,
@@ -232,7 +261,7 @@ export class ConversationTracker {
    * Delete old conversation events (cleanup)
    */
   deleteOldEvents(daysOld: number): number {
-    const cutoffTime = Date.now() - (daysOld * 24 * 60 * 60 * 1000);
+    const cutoffTime = Date.now() - daysOld * 24 * 60 * 60 * 1000;
     const stmt = this.db.prepare(`
       DELETE FROM conversation_events
       WHERE created_at < ?

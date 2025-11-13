@@ -3,6 +3,7 @@
 ## Overview
 
 This document shows the **exact API request/response formats** for all 4 providers, comparing:
+
 - Current approach (JSON mode / prompt-only)
 - JSON Schema structured outputs
 - Function calling / tool use
@@ -14,6 +15,7 @@ This document shows the **exact API request/response formats** for all 4 provide
 **Base URL**: `https://api.groq.com/openai/v1`
 
 ### Current Approach (JSON Mode)
+
 ```json
 POST /chat/completions
 {
@@ -45,6 +47,7 @@ RESPONSE:
 ---
 
 ### Option A: JSON Schema Structured Outputs
+
 ```json
 POST /chat/completions
 {
@@ -102,6 +105,7 @@ RESPONSE: (Same format as JSON mode)
 ---
 
 ### Option B: Function Calling / Tool Use
+
 ```json
 POST /chat/completions
 {
@@ -205,7 +209,8 @@ RESPONSE:
 **Base URL**: `https://openrouter.ai/api/v1`
 
 ### Current Approach (Prompt-only, BROKEN)
-```json
+
+````json
 POST /chat/completions
 {
   "model": "meta-llama/llama-3.1-70b-instruct",
@@ -227,13 +232,14 @@ RESPONSE:
     }
   }]
 }
-```
+````
 
 **Success rate**: 30-70% (no format enforcement at all)
 
 ---
 
 ### Option A: JSON Schema Structured Outputs
+
 ```json
 POST /chat/completions
 {
@@ -259,6 +265,7 @@ RESPONSE: (Same as Groq)
 ---
 
 ### Option B: Function Calling / Tool Use
+
 ```json
 POST /chat/completions
 {
@@ -308,6 +315,7 @@ RESPONSE: (Same format as Groq)
 **Base URL**: `http://localhost:11434` (user's machine)
 
 ### Current Approach (Prompt-only, BROKEN)
+
 ```json
 POST /api/chat
 {
@@ -339,6 +347,7 @@ RESPONSE:
 ---
 
 ### Option A: JSON Schema Structured Outputs (RECOMMENDED for Ollama)
+
 ```json
 POST /api/chat
 {
@@ -389,6 +398,7 @@ RESPONSE:
 ---
 
 ### Option B: Function Calling / Tool Use
+
 ```json
 POST /api/chat
 {
@@ -441,6 +451,7 @@ RESPONSE:
 **Base URL**: `http://localhost:1234` (user's machine)
 
 ### Current Approach (Prompt-only, ACTIVELY BROKEN)
+
 ```json
 POST /v1/chat/completions
 {
@@ -471,6 +482,7 @@ RESPONSE:
 ---
 
 ### Option A: JSON Schema Structured Outputs
+
 ```json
 POST /v1/chat/completions
 {
@@ -505,6 +517,7 @@ RESPONSE:
 ---
 
 ### Option B: Function Calling / Tool Use
+
 ```json
 POST /v1/chat/completions
 {
@@ -549,25 +562,27 @@ RESPONSE: (OpenAI-compatible)
 
 ## Summary Comparison
 
-| Provider | Current | JSON Schema | Function Calling |
-|----------|---------|-------------|------------------|
-| **Groq** | 70-85% (json_object) | 70-85% | **95-98%** (tool-use models) |
-| **OpenRouter** | 30-70% (broken) | 70-85% | **85-95%** (model-dependent) |
-| **Ollama** | 30-70% (broken) | **~100%** (GBNF) | 90-95% |
-| **LM Studio** | 30-70% (broken) | **~100%** (grammar) | 90-95% |
-| **Weighted Avg** | ~52% | ~87-90% | ~93-96% |
+| Provider         | Current              | JSON Schema         | Function Calling             |
+| ---------------- | -------------------- | ------------------- | ---------------------------- |
+| **Groq**         | 70-85% (json_object) | 70-85%              | **95-98%** (tool-use models) |
+| **OpenRouter**   | 30-70% (broken)      | 70-85%              | **85-95%** (model-dependent) |
+| **Ollama**       | 30-70% (broken)      | **~100%** (GBNF)    | 90-95%                       |
+| **LM Studio**    | 30-70% (broken)      | **~100%** (grammar) | 90-95%                       |
+| **Weighted Avg** | ~52%                 | ~87-90%             | ~93-96%                      |
 
 ---
 
 ## Key Technical Differences
 
 ### JSON Schema (Option A)
+
 - **Request**: Add `response_format` with JSON schema
 - **Response**: Parse from `message.content` (string)
 - **Local advantage**: Ollama + LM Studio use constrained generation → 100%
 - **Remote limitation**: Groq + OpenRouter no constrained generation → 70-85%
 
 ### Function Calling (Option B)
+
 - **Request**: Add `tools` array and `tool_choice` object
 - **Response**: Parse from `tool_calls[0].function.arguments` (string, except Ollama)
 - **All providers**: 90-98% success (model-dependent)
@@ -578,12 +593,14 @@ RESPONSE: (OpenAI-compatible)
 ## Response Parsing Code Implications
 
 ### Current (JSON mode)
+
 ```typescript
 const content = response.choices[0].message.content;
 const parsed = JSON.parse(content);
 ```
 
 ### JSON Schema (Option A)
+
 ```typescript
 // Same as current - no change
 const content = response.choices[0].message.content;
@@ -591,6 +608,7 @@ const parsed = JSON.parse(content);
 ```
 
 ### Function Calling (Option B)
+
 ```typescript
 const toolCall = response.choices[0].message.tool_calls[0];
 // Groq/OpenRouter/LM Studio: arguments is string
@@ -606,6 +624,7 @@ const parsed = toolCall.function.arguments;
 Based on your requirement of **95% success across all providers**:
 
 **Hybrid approach**:
+
 1. **Ollama + LM Studio**: Use JSON Schema (100% via constrained generation)
 2. **Groq**: Use function calling with `llama-3-groq-70b-tool-use` (95-98%)
 3. **OpenRouter**: Use function calling with tool-capable models (85-95%)

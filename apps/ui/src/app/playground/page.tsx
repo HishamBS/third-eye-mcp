@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { EyeIcon } from '@/components/EyeIcon';
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { EyeIcon } from "@/components/EyeIcon";
 
 export default function PlaygroundIndexPage() {
   const router = useRouter();
@@ -21,7 +21,9 @@ export default function PlaygroundIndexPage() {
         <div className="mb-4 flex justify-center">
           <EyeIcon eye="overseer" size={64} />
         </div>
-        <h1 className="text-2xl font-semibold text-brand-foreground mb-2">Creating Playground Session...</h1>
+        <h1 className="text-2xl font-semibold text-brand-foreground mb-2">
+          Creating Playground Session...
+        </h1>
         <p className="text-semantic-muted">Redirecting you to the playground</p>
       </div>
     </div>

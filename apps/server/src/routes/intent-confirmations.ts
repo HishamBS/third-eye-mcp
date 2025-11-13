@@ -1,14 +1,14 @@
-import { Hono } from 'hono';
-import { getDb } from '@third-eye/db';
-import { IntentConfirmationManager } from '@third-eye/core';
+import { Hono } from "hono";
+import { getDb } from "@third-eye/db";
+import { IntentConfirmationManager } from "@third-eye/core";
 import {
   createSuccessResponse,
   createErrorResponse,
   createNotFoundResponse,
   createInternalErrorResponse,
   requestIdMiddleware,
-  errorHandler
-} from '../middleware/response';
+  errorHandler,
+} from "../middleware/response";
 
 /**
  * REPAIR_PLAN A9: Intent Confirmations API Routes
@@ -20,35 +20,41 @@ import {
 const app = new Hono();
 
 // Apply middleware
-app.use('*', requestIdMiddleware());
-app.use('*', errorHandler());
+app.use("*", requestIdMiddleware());
+app.use("*", errorHandler());
 
 // GET /api/intent-confirmations/:id
 // Get specific intent confirmation
-app.get('/:id', async (c) => {
+app.get("/:id", async (c) => {
   try {
-    const confirmationId = c.req.param('id');
+    const confirmationId = c.req.param("id");
     const { db } = getDb();
     const manager = new IntentConfirmationManager(db);
 
     const confirmation = await manager.getConfirmation(confirmationId);
 
     if (!confirmation) {
-      return createNotFoundResponse(c, `Intent confirmation ${confirmationId} not found`);
+      return createNotFoundResponse(
+        c,
+        `Intent confirmation ${confirmationId} not found`,
+      );
     }
 
     return createSuccessResponse(c, { confirmation });
   } catch (error) {
-    console.error('Failed to fetch intent confirmation:', error);
-    return createInternalErrorResponse(c, 'Failed to fetch intent confirmation');
+    console.error("Failed to fetch intent confirmation:", error);
+    return createInternalErrorResponse(
+      c,
+      "Failed to fetch intent confirmation",
+    );
   }
 });
 
 // GET /api/intent-confirmations/session/:sessionId
 // Get all intent confirmations for a session
-app.get('/session/:sessionId', async (c) => {
+app.get("/session/:sessionId", async (c) => {
   try {
-    const sessionId = c.req.param('sessionId');
+    const sessionId = c.req.param("sessionId");
     const { db } = getDb();
 
     const query = `
@@ -71,34 +77,39 @@ app.get('/session/:sessionId', async (c) => {
       responded_at: number | null;
     }>;
 
-    const confirmations = rows.map(row => ({
+    const confirmations = rows.map((row) => ({
       id: row.id,
       sessionId: row.session_id,
-      intentAnalysis: row.intent_analysis ? JSON.parse(row.intent_analysis) : null,
+      intentAnalysis: row.intent_analysis
+        ? JSON.parse(row.intent_analysis)
+        : null,
       confirmationPrompt: row.confirmation_prompt,
       response: row.response,
       userIdentity: row.user_identity,
       status: row.status,
       createdAt: row.created_at,
-      respondedAt: row.responded_at
+      respondedAt: row.responded_at,
     }));
 
     return createSuccessResponse(c, { confirmations });
   } catch (error) {
-    console.error('Failed to fetch session intent confirmations:', error);
-    return createInternalErrorResponse(c, 'Failed to fetch session intent confirmations');
+    console.error("Failed to fetch session intent confirmations:", error);
+    return createInternalErrorResponse(
+      c,
+      "Failed to fetch session intent confirmations",
+    );
   }
 });
 
 // POST /api/intent-confirmations/:id/submit
 // Submit human response to intent confirmation
-app.post('/:id/submit', async (c) => {
+app.post("/:id/submit", async (c) => {
   try {
-    const confirmationId = c.req.param('id');
+    const confirmationId = c.req.param("id");
     const body = await c.req.json();
 
-    if (!body.response || typeof body.response !== 'string') {
-      return createErrorResponse(c, 'response (string) is required', 400);
+    if (!body.response || typeof body.response !== "string") {
+      return createErrorResponse(c, "response (string) is required", 400);
     }
 
     const { db } = getDb();
@@ -107,25 +118,28 @@ app.post('/:id/submit', async (c) => {
     await manager.submitConfirmation(
       confirmationId,
       body.response,
-      body.userIdentity || 'human-via-ui'
+      body.userIdentity || "human-via-ui",
     );
 
     return createSuccessResponse(c, {
-      message: 'Intent confirmation submitted successfully',
-      confirmationId
+      message: "Intent confirmation submitted successfully",
+      confirmationId,
     });
   } catch (error) {
-    console.error('Failed to submit intent confirmation:', error);
-    if (error instanceof Error && error.message.includes('not found')) {
+    console.error("Failed to submit intent confirmation:", error);
+    if (error instanceof Error && error.message.includes("not found")) {
       return createNotFoundResponse(c, error.message);
     }
-    return createInternalErrorResponse(c, 'Failed to submit intent confirmation');
+    return createInternalErrorResponse(
+      c,
+      "Failed to submit intent confirmation",
+    );
   }
 });
 
 // GET /api/intent-confirmations/pending
 // Get all pending intent confirmations
-app.get('/pending', async (c) => {
+app.get("/pending", async (c) => {
   try {
     const { db } = getDb();
 
@@ -144,18 +158,21 @@ app.get('/pending', async (c) => {
       created_at: number;
     }>;
 
-    const confirmations = rows.map(row => ({
+    const confirmations = rows.map((row) => ({
       id: row.id,
       sessionId: row.session_id,
       confirmationPrompt: row.confirmation_prompt,
       status: row.status,
-      createdAt: row.created_at
+      createdAt: row.created_at,
     }));
 
     return createSuccessResponse(c, { confirmations });
   } catch (error) {
-    console.error('Failed to fetch pending intent confirmations:', error);
-    return createInternalErrorResponse(c, 'Failed to fetch pending intent confirmations');
+    console.error("Failed to fetch pending intent confirmations:", error);
+    return createInternalErrorResponse(
+      c,
+      "Failed to fetch pending intent confirmations",
+    );
   }
 });
 

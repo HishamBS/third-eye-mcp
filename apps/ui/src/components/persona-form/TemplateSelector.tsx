@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useMemo } from 'react';
-import { X, Search } from 'lucide-react';
+import { useState, useCallback, useMemo } from "react";
+import { X, Search } from "lucide-react";
 import {
   PERSONA_TEMPLATES,
   CATEGORY_LABELS,
   TEMPLATE_CATEGORIES,
   type PersonaTemplate,
-} from '@/lib/persona-templates';
-import { TEMPLATE_SELECTOR_TEXT } from './constants';
+} from "@/lib/persona-templates";
+import { TEMPLATE_SELECTOR_TEXT } from "./constants";
 
 /**
  * TemplateSelector Component - Phase 19.2
@@ -25,7 +25,7 @@ interface TemplateSelectorProps {
 }
 
 export function TemplateSelector({ onSelect, onClose }: TemplateSelectorProps) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Filter templates based on search and category
@@ -44,7 +44,7 @@ export function TemplateSelector({ onSelect, onClose }: TemplateSelectorProps) {
         (t) =>
           t.name.toLowerCase().includes(query) ||
           t.description.toLowerCase().includes(query) ||
-          t.category.toLowerCase().includes(query)
+          t.category.toLowerCase().includes(query),
       );
     }
 
@@ -56,7 +56,7 @@ export function TemplateSelector({ onSelect, onClose }: TemplateSelectorProps) {
       onSelect(template);
       onClose();
     },
-    [onSelect, onClose]
+    [onSelect, onClose],
   );
 
   return (
@@ -69,7 +69,9 @@ export function TemplateSelector({ onSelect, onClose }: TemplateSelectorProps) {
               <h2 className="text-2xl font-bold text-brand-foreground">
                 {TEMPLATE_SELECTOR_TEXT.TITLE}
               </h2>
-              <p className="text-semantic-muted mt-1">{TEMPLATE_SELECTOR_TEXT.SUBTITLE}</p>
+              <p className="text-semantic-muted mt-1">
+                {TEMPLATE_SELECTOR_TEXT.SUBTITLE}
+              </p>
             </div>
             <button
               onClick={onClose}
@@ -93,7 +95,7 @@ export function TemplateSelector({ onSelect, onClose }: TemplateSelectorProps) {
             </div>
 
             <select
-              value={selectedCategory || ''}
+              value={selectedCategory || ""}
               onChange={(e) => setSelectedCategory(e.target.value || null)}
               className="px-4 py-2 rounded-lg border border-brand-outline bg-brand-paperElev text-brand-foreground focus:outline-none focus:ring-2 focus:ring-brand-accent"
             >

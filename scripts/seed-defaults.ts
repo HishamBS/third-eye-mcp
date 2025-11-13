@@ -1,25 +1,29 @@
 #!/usr/bin/env bun
 
-import { seedDefaults, type SeedDefaultsOptions } from '../packages/db/defaults';
+import {
+  seedDefaults,
+  type SeedDefaultsOptions,
+} from "../packages/db/defaults";
 
 function parseArgs(): SeedDefaultsOptions {
   const args = Bun.argv.slice(2);
   const options: SeedDefaultsOptions = {};
-  let onlySubsets: SeedDefaultsOptions['subsets'] | undefined;
+  let onlySubsets: SeedDefaultsOptions["subsets"] | undefined;
 
   for (const arg of args) {
-    if (arg === '--force') {
+    if (arg === "--force") {
       options.force = true;
-    } else if (arg.startsWith('--only=')) {
-      const list = arg.split('=')[1];
+    } else if (arg.startsWith("--only=")) {
+      const list = arg.split("=")[1];
       if (list) {
-        const items = list.split(',').map((item) => item.trim().toLowerCase());
+        const items = list.split(",").map((item) => item.trim().toLowerCase());
         onlySubsets = {
-          personas: items.includes('personas'),
-          routing: items.includes('routing'),
-          strictness: items.includes('strictness'),
-          appSettings: items.includes('appsettings') || items.includes('app-settings'),
-          integrations: items.includes('integrations'),
+          personas: items.includes("personas"),
+          routing: items.includes("routing"),
+          strictness: items.includes("strictness"),
+          appSettings:
+            items.includes("appsettings") || items.includes("app-settings"),
+          integrations: items.includes("integrations"),
         };
       }
     }
@@ -35,13 +39,13 @@ function parseArgs(): SeedDefaultsOptions {
 async function main() {
   const options = parseArgs();
 
-  console.log('🌱 Seeding defaults...');
+  console.log("🌱 Seeding defaults...");
   const report = await seedDefaults({
     ...options,
     log: (message: string) => console.log(message),
   });
 
-  console.log('\n✅ Seeding complete. Summary:');
+  console.log("\n✅ Seeding complete. Summary:");
   console.log(`   Personas seeded:     ${report.personas}`);
   console.log(`   Routing seeded:      ${report.routing}`);
   console.log(`   Strictness seeded:   ${report.strictness}`);
@@ -50,6 +54,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error('❌ Failed to seed defaults:', error);
+  console.error("❌ Failed to seed defaults:", error);
   process.exit(1);
 });

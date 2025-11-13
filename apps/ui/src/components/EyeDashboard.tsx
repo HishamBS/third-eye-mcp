@@ -1,15 +1,28 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Eye, Shield, Search, GitBranch, Code2, Sparkles, Crown, Activity } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
-import { API_BASE_URL } from '@/consts/api';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Eye,
+  Shield,
+  Search,
+  GitBranch,
+  Code2,
+  Sparkles,
+  Crown,
+  Activity,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { API_BASE_URL } from "@/consts/api";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
 
 interface EyeStatus {
   eye: string;
-  status: 'idle' | 'running' | 'success' | 'error' | 'needs_input';
+  status: "idle" | "running" | "success" | "error" | "needs_input";
   lastRun?: Date;
   totalRuns: number;
   successRate: number;
@@ -22,77 +35,104 @@ interface EyeDashboardProps {
   pollInterval?: number;
 }
 
-const EYE_CONFIG: Record<string, { icon: LucideIcon; color: string; description: string }> = {
+const EYE_CONFIG: Record<
+  string,
+  { icon: LucideIcon; color: string; description: string }
+> = {
   sharingan: {
     icon: Eye,
-    color: 'red',
-    description: 'Ambiguity detection & clarification',
+    color: "red",
+    description: "Ambiguity detection & clarification",
   },
   rinnegan: {
     icon: Shield,
-    color: 'purple',
-    description: 'Requirements & approval gating',
+    color: "purple",
+    description: "Requirements & approval gating",
   },
   byakugan: {
     icon: Search,
-    color: 'blue',
-    description: 'Consistency & memory checks',
+    color: "blue",
+    description: "Consistency & memory checks",
   },
   tenseigan: {
     icon: Sparkles,
-    color: 'cyan',
-    description: 'Evidence & citation validation',
+    color: "cyan",
+    description: "Evidence & citation validation",
   },
   mangekyo: {
     icon: Code2,
-    color: 'amber',
-    description: 'Code review across 4 phases',
+    color: "amber",
+    description: "Code review across 4 phases",
   },
   jogan: {
     icon: GitBranch,
-    color: 'pink',
-    description: 'Auto-routing & orchestration',
+    color: "pink",
+    description: "Auto-routing & orchestration",
   },
   overseer: {
     icon: Crown,
-    color: 'gold',
-    description: 'Master coordinator',
+    color: "gold",
+    description: "Master coordinator",
   },
 };
 
-function getStatusChip(status: EyeStatus['status']) {
+function getStatusChip(status: EyeStatus["status"]) {
   switch (status) {
-    case 'running':
+    case "running":
       return (
-        <div className={`flex items-center gap-2 rounded-full ${STATUS_BG_COLORS_SUBTLE.running} border ${STATUS_BORDER_COLORS_SUBTLE.running} px-3 py-1`}>
-          <div className={`h-2 w-2 animate-pulse rounded-full ${STATUS_TEXT_COLORS.running}`} />
-          <span className={`text-xs font-medium ${STATUS_TEXT_COLORS.running}`}>Running</span>
+        <div
+          className={`flex items-center gap-2 rounded-full ${STATUS_BG_COLORS_SUBTLE.running} border ${STATUS_BORDER_COLORS_SUBTLE.running} px-3 py-1`}
+        >
+          <div
+            className={`h-2 w-2 animate-pulse rounded-full ${STATUS_TEXT_COLORS.running}`}
+          />
+          <span className={`text-xs font-medium ${STATUS_TEXT_COLORS.running}`}>
+            Running
+          </span>
         </div>
       );
-    case 'success':
+    case "success":
       return (
-        <div className={`flex items-center gap-2 rounded-full ${STATUS_BG_COLORS_SUBTLE.success} border ${STATUS_BORDER_COLORS_SUBTLE.success} px-3 py-1`}>
-          <div className={`h-2 w-2 rounded-full ${STATUS_TEXT_COLORS.success}`} />
-          <span className={`text-xs font-medium ${STATUS_TEXT_COLORS.success}`}>Ready</span>
+        <div
+          className={`flex items-center gap-2 rounded-full ${STATUS_BG_COLORS_SUBTLE.success} border ${STATUS_BORDER_COLORS_SUBTLE.success} px-3 py-1`}
+        >
+          <div
+            className={`h-2 w-2 rounded-full ${STATUS_TEXT_COLORS.success}`}
+          />
+          <span className={`text-xs font-medium ${STATUS_TEXT_COLORS.success}`}>
+            Ready
+          </span>
         </div>
       );
-    case 'error':
+    case "error":
       return (
-        <div className={`flex items-center gap-2 rounded-full ${STATUS_BG_COLORS_SUBTLE.error} border ${STATUS_BORDER_COLORS_SUBTLE.error} px-3 py-1`}>
+        <div
+          className={`flex items-center gap-2 rounded-full ${STATUS_BG_COLORS_SUBTLE.error} border ${STATUS_BORDER_COLORS_SUBTLE.error} px-3 py-1`}
+        >
           <div className={`h-2 w-2 rounded-full ${STATUS_TEXT_COLORS.error}`} />
-          <span className={`text-xs font-medium ${STATUS_TEXT_COLORS.error}`}>Error</span>
+          <span className={`text-xs font-medium ${STATUS_TEXT_COLORS.error}`}>
+            Error
+          </span>
         </div>
       );
-    case 'needs_input':
+    case "needs_input":
       return (
-        <div className={`flex items-center gap-2 rounded-full ${STATUS_BG_COLORS_SUBTLE.warning} border ${STATUS_BORDER_COLORS_SUBTLE.warning} px-3 py-1`}>
-          <div className={`h-2 w-2 animate-pulse rounded-full ${STATUS_TEXT_COLORS.warning}`} />
-          <span className={`text-xs font-medium ${STATUS_TEXT_COLORS.warning}`}>Needs Input</span>
+        <div
+          className={`flex items-center gap-2 rounded-full ${STATUS_BG_COLORS_SUBTLE.warning} border ${STATUS_BORDER_COLORS_SUBTLE.warning} px-3 py-1`}
+        >
+          <div
+            className={`h-2 w-2 animate-pulse rounded-full ${STATUS_TEXT_COLORS.warning}`}
+          />
+          <span className={`text-xs font-medium ${STATUS_TEXT_COLORS.warning}`}>
+            Needs Input
+          </span>
         </div>
       );
     default:
       return (
-        <div className={`flex items-center gap-2 rounded-full ${STATUS_BG_COLORS_SUBTLE.idle} border ${STATUS_BORDER_COLORS_SUBTLE.idle} px-3 py-1`}>
+        <div
+          className={`flex items-center gap-2 rounded-full ${STATUS_BG_COLORS_SUBTLE.idle} border ${STATUS_BORDER_COLORS_SUBTLE.idle} px-3 py-1`}
+        >
           <div className={`h-2 w-2 rounded-full ${STATUS_TEXT_COLORS.idle}`} />
           <span className="text-xs font-medium text-semantic-muted">Idle</span>
         </div>
@@ -100,7 +140,10 @@ function getStatusChip(status: EyeStatus['status']) {
   }
 }
 
-export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardProps) {
+export function EyeDashboard({
+  sessionId,
+  pollInterval = 5000,
+}: EyeDashboardProps) {
   const [eyeStatuses, setEyeStatuses] = useState<EyeStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -108,21 +151,25 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
   useEffect(() => {
     const fetchEyeStatuses = async () => {
       try {
-                const endpoint = sessionId
+        const endpoint = sessionId
           ? `${API_BASE_URL}/api/eyes/status?sessionId=${sessionId}`
           : `${API_BASE_URL}/api/eyes/status`;
 
         const response = await fetch(endpoint);
         if (!response.ok) {
-          throw new Error(`Failed to fetch eye statuses: ${response.statusText}`);
+          throw new Error(
+            `Failed to fetch eye statuses: ${response.statusText}`,
+          );
         }
 
         const data = await response.json();
         setEyeStatuses(data.eyes || []);
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch eye statuses:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch eye statuses');
+        console.error("Failed to fetch eye statuses:", err);
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch eye statuses",
+        );
       } finally {
         setLoading(false);
       }
@@ -149,9 +196,13 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
 
   if (error) {
     return (
-      <div className={`rounded-2xl border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} p-6 text-center`}>
+      <div
+        className={`rounded-2xl border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} p-6 text-center`}
+      >
         <p className={`text-sm ${STATUS_TEXT_COLORS.error}`}>Error: {error}</p>
-        <p className={`mt-2 text-xs ${STATUS_TEXT_COLORS.error}`}>Unable to load Eye statuses</p>
+        <p className={`mt-2 text-xs ${STATUS_TEXT_COLORS.error}`}>
+          Unable to load Eye statuses
+        </p>
       </div>
     );
   }
@@ -161,15 +212,18 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
       {/* Dashboard Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-brand-foreground">Eye Dashboard</h2>
+          <h2 className="text-2xl font-bold text-brand-foreground">
+            Eye Dashboard
+          </h2>
           <p className="mt-1 text-sm text-semantic-muted">
-            Real-time status of all 7 Eyes {sessionId && `for session ${sessionId}`}
+            Real-time status of all 7 Eyes{" "}
+            {sessionId && `for session ${sessionId}`}
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-full border border-brand-outline/40 bg-brand-paper/60 px-4 py-2">
           <Activity className="h-4 w-4 text-brand-accent" />
           <span className="text-sm text-semantic-muted">
-            {eyeStatuses.filter((e) => e.status === 'running').length} active
+            {eyeStatuses.filter((e) => e.status === "running").length} active
           </span>
         </div>
       </div>
@@ -179,14 +233,16 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
         {Object.entries(EYE_CONFIG).map(([eyeName, config], index) => {
           const eyeStatus = eyeStatuses.find((s) => s.eye === eyeName) || {
             eye: eyeName,
-            status: 'idle' as const,
+            status: "idle" as const,
             totalRuns: 0,
             successRate: 0,
             avgLatency: 0,
           };
 
           const Icon = config.icon;
-          const isActive = eyeStatus.status === 'running' || eyeStatus.status === 'needs_input';
+          const isActive =
+            eyeStatus.status === "running" ||
+            eyeStatus.status === "needs_input";
 
           return (
             <motion.div
@@ -197,7 +253,7 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
               className={`group relative overflow-hidden rounded-2xl border p-6 transition-all hover:scale-105 hover:shadow-xl ${
                 isActive
                   ? `border-${config.color}-500/50 bg-gradient-to-br from-${config.color}-500/10 to-${config.color}-600/5 shadow-lg shadow-${config.color}-500/20`
-                  : 'border-brand-outline/40 bg-brand-paper/60 hover:border-brand-accent/50'
+                  : "border-brand-outline/40 bg-brand-paper/60 hover:border-brand-accent/50"
               }`}
             >
               {/* Background Glow Effect */}
@@ -215,12 +271,14 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
                     className={`flex h-12 w-12 items-center justify-center rounded-xl border ${
                       isActive
                         ? `border-${config.color}-500/40 bg-${config.color}-500/20`
-                        : 'border-brand-outline/40 bg-brand-ink/60'
+                        : "border-brand-outline/40 bg-brand-ink/60"
                     } transition-all group-hover:scale-110`}
                   >
                     <Icon
                       className={`h-6 w-6 ${
-                        isActive ? `text-${config.color}-400` : 'text-semantic-muted'
+                        isActive
+                          ? `text-${config.color}-400`
+                          : "text-semantic-muted"
                       }`}
                     />
                   </div>
@@ -229,8 +287,12 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
 
                 {/* Eye Name & Description */}
                 <div className="mb-4">
-                  <h3 className="text-lg font-bold capitalize text-brand-foreground">{eyeName}</h3>
-                  <p className="mt-1 text-xs text-semantic-muted">{config.description}</p>
+                  <h3 className="text-lg font-bold capitalize text-brand-foreground">
+                    {eyeName}
+                  </h3>
+                  <p className="mt-1 text-xs text-semantic-muted">
+                    {config.description}
+                  </p>
                 </div>
 
                 {/* Current Task */}
@@ -239,7 +301,9 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-semantic-muted">
                       Current Task
                     </p>
-                    <p className="mt-1 text-xs text-semantic-muted line-clamp-2">{eyeStatus.currentTask}</p>
+                    <p className="mt-1 text-xs text-semantic-muted line-clamp-2">
+                      {eyeStatus.currentTask}
+                    </p>
                   </div>
                 )}
 
@@ -247,17 +311,25 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div className="rounded-lg bg-brand-ink/40 p-2">
                     <p className="text-semantic-muted">Runs</p>
-                    <p className="mt-1 font-semibold text-brand-foreground">{eyeStatus.totalRuns}</p>
+                    <p className="mt-1 font-semibold text-brand-foreground">
+                      {eyeStatus.totalRuns}
+                    </p>
                   </div>
                   <div className="rounded-lg bg-brand-ink/40 p-2">
                     <p className="text-semantic-muted">Success</p>
-                    <p className={`mt-1 font-semibold ${STATUS_TEXT_COLORS.success}`}>
+                    <p
+                      className={`mt-1 font-semibold ${STATUS_TEXT_COLORS.success}`}
+                    >
                       {eyeStatus.successRate.toFixed(1)}%
                     </p>
                   </div>
                   <div className="col-span-2 rounded-lg bg-brand-ink/40 p-2">
                     <p className="text-semantic-muted">Avg Latency</p>
-                    <p className={`mt-1 font-semibold ${STATUS_TEXT_COLORS.info}`}>{eyeStatus.avgLatency.toFixed(0)}ms</p>
+                    <p
+                      className={`mt-1 font-semibold ${STATUS_TEXT_COLORS.info}`}
+                    >
+                      {eyeStatus.avgLatency.toFixed(0)}ms
+                    </p>
                   </div>
                 </div>
 
@@ -265,7 +337,8 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
                 {eyeStatus.lastRun && (
                   <div className="mt-3 border-t border-brand-outline/30 pt-3 text-center">
                     <p className="text-[10px] text-semantic-muted">
-                      Last run: {new Date(eyeStatus.lastRun).toLocaleTimeString()}
+                      Last run:{" "}
+                      {new Date(eyeStatus.lastRun).toLocaleTimeString()}
                     </p>
                   </div>
                 )}
@@ -278,34 +351,47 @@ export function EyeDashboard({ sessionId, pollInterval = 5000 }: EyeDashboardPro
       {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/60 p-4">
-          <p className="text-xs uppercase tracking-wider text-semantic-muted">Total Runs</p>
+          <p className="text-xs uppercase tracking-wider text-semantic-muted">
+            Total Runs
+          </p>
           <p className="mt-2 text-2xl font-bold text-brand-foreground">
             {eyeStatuses.reduce((sum, eye) => sum + eye.totalRuns, 0)}
           </p>
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/60 p-4">
-          <p className="text-xs uppercase tracking-wider text-semantic-muted">Avg Success Rate</p>
-          <p className={`mt-2 text-2xl font-bold ${STATUS_TEXT_COLORS.success}`}>
+          <p className="text-xs uppercase tracking-wider text-semantic-muted">
+            Avg Success Rate
+          </p>
+          <p
+            className={`mt-2 text-2xl font-bold ${STATUS_TEXT_COLORS.success}`}
+          >
             {eyeStatuses.length > 0
               ? (
-                  eyeStatuses.reduce((sum, eye) => sum + eye.successRate, 0) / eyeStatuses.length
+                  eyeStatuses.reduce((sum, eye) => sum + eye.successRate, 0) /
+                  eyeStatuses.length
                 ).toFixed(1)
               : 0}
             %
           </p>
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/60 p-4">
-          <p className="text-xs uppercase tracking-wider text-semantic-muted">Active Eyes</p>
+          <p className="text-xs uppercase tracking-wider text-semantic-muted">
+            Active Eyes
+          </p>
           <p className={`mt-2 text-2xl font-bold ${STATUS_TEXT_COLORS.info}`}>
-            {eyeStatuses.filter((e) => e.status === 'running').length} / {eyeStatuses.length}
+            {eyeStatuses.filter((e) => e.status === "running").length} /{" "}
+            {eyeStatuses.length}
           </p>
         </div>
         <div className="rounded-xl border border-brand-outline/40 bg-brand-paper/60 p-4">
-          <p className="text-xs uppercase tracking-wider text-semantic-muted">Avg Latency</p>
+          <p className="text-xs uppercase tracking-wider text-semantic-muted">
+            Avg Latency
+          </p>
           <p className="mt-2 text-2xl font-bold text-semantic-muted">
             {eyeStatuses.length > 0
               ? (
-                  eyeStatuses.reduce((sum, eye) => sum + eye.avgLatency, 0) / eyeStatuses.length
+                  eyeStatuses.reduce((sum, eye) => sum + eye.avgLatency, 0) /
+                  eyeStatuses.length
                 ).toFixed(0)
               : 0}
             ms

@@ -1,10 +1,10 @@
-export type Heading = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+export type Heading = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 
 export type MarkdownHeading =
   | Heading
-  | `${'#' | '##' | '###' | '####' | '#####' | '######'} ${string}`;
-export type MarkdownListSymbol = '-' | '*' | '+';
-export type MarkdownAlignment = 'left' | 'center' | 'right';
+  | `${"#" | "##" | "###" | "####" | "#####" | "######"} ${string}`;
+export type MarkdownListSymbol = "-" | "*" | "+";
+export type MarkdownAlignment = "left" | "center" | "right";
 
 export interface MarkdownTableOptions {
   align?: MarkdownAlignment[];
@@ -16,12 +16,12 @@ function splitLines(value: string): string[] {
 
 function alignmentToSeparator(alignment: MarkdownAlignment): string {
   switch (alignment) {
-    case 'center':
-      return ':---:';
-    case 'right':
-      return '---:';
+    case "center":
+      return ":---:";
+    case "right":
+      return "---:";
     default:
-      return ':---';
+      return ":---";
   }
 }
 
@@ -41,25 +41,25 @@ export class MarkdownBuilder {
 
   text(value: string): this {
     this.resetOrderedCounter();
-    splitLines(value).forEach(line => this.lines.push(line));
+    splitLines(value).forEach((line) => this.lines.push(line));
     return this;
   }
 
   raw(value: string): this {
     this.resetOrderedCounter();
-    splitLines(value).forEach(line => this.lines.push(line));
+    splitLines(value).forEach((line) => this.lines.push(line));
     return this;
   }
 
   blank(count = 1): this {
     this.resetOrderedCounter();
     for (let i = 0; i < count; i += 1) {
-      this.lines.push('');
+      this.lines.push("");
     }
     return this;
   }
 
-  bullet(value: string, symbol: MarkdownListSymbol = '-'): this {
+  bullet(value: string, symbol: MarkdownListSymbol = "-"): this {
     this.resetOrderedCounter();
     const segments = splitLines(value);
     segments.forEach((segment, index) => {
@@ -72,7 +72,7 @@ export class MarkdownBuilder {
     return this;
   }
 
-  bullets(values: Iterable<string>, symbol: MarkdownListSymbol = '-'): this {
+  bullets(values: Iterable<string>, symbol: MarkdownListSymbol = "-"): this {
     for (const value of values) {
       this.bullet(value, symbol);
     }
@@ -81,13 +81,13 @@ export class MarkdownBuilder {
 
   checklist(label: string, checked = false): this {
     this.resetOrderedCounter();
-    const mark = checked ? 'x' : ' ';
+    const mark = checked ? "x" : " ";
     this.lines.push(`- [${mark}] ${label}`);
     return this;
   }
 
   numbered(value: string, index?: number): this {
-    if (typeof index === 'number') {
+    if (typeof index === "number") {
       this.orderedCounter = index;
     } else {
       this.orderedCounter = (this.orderedCounter ?? 0) + 1;
@@ -108,22 +108,26 @@ export class MarkdownBuilder {
 
   blockquote(value: string): this {
     this.resetOrderedCounter();
-    splitLines(value).forEach(line => {
+    splitLines(value).forEach((line) => {
       this.lines.push(`> ${line}`);
     });
     return this;
   }
 
-  codeBlock(code: string, language = ''): this {
+  codeBlock(code: string, language = ""): this {
     this.resetOrderedCounter();
-    const fence = language ? `\`\`\`${language}` : '```';
+    const fence = language ? `\`\`\`${language}` : "```";
     this.lines.push(fence);
-    splitLines(code).forEach(line => this.lines.push(line));
-    this.lines.push('```');
+    splitLines(code).forEach((line) => this.lines.push(line));
+    this.lines.push("```");
     return this;
   }
 
-  table(headers: string[], rows: string[][], options?: MarkdownTableOptions): this {
+  table(
+    headers: string[],
+    rows: string[][],
+    options?: MarkdownTableOptions,
+  ): this {
     this.resetOrderedCounter();
     if (headers.length === 0) {
       return this;
@@ -131,11 +135,11 @@ export class MarkdownBuilder {
 
     const alignment = options?.align ?? [];
 
-    const normalizedHeader = headers.map(header => header ?? '');
-    const normalizedRows = rows.map(row => {
+    const normalizedHeader = headers.map((header) => header ?? "");
+    const normalizedRows = rows.map((row) => {
       const copy = [...row];
       while (copy.length < normalizedHeader.length) {
-        copy.push('');
+        copy.push("");
       }
       if (copy.length > normalizedHeader.length) {
         copy.length = normalizedHeader.length;
@@ -143,15 +147,15 @@ export class MarkdownBuilder {
       return copy;
     });
 
-    this.lines.push(`| ${normalizedHeader.join(' | ')} |`);
+    this.lines.push(`| ${normalizedHeader.join(" | ")} |`);
 
     const separator = normalizedHeader
-      .map((_, index) => alignment[index] ?? 'left')
+      .map((_, index) => alignment[index] ?? "left")
       .map(alignmentToSeparator);
-    this.lines.push(`| ${separator.join(' | ')} |`);
+    this.lines.push(`| ${separator.join(" | ")} |`);
 
-    normalizedRows.forEach(row => {
-      this.lines.push(`| ${row.map(cell => cell ?? '').join(' | ')} |`);
+    normalizedRows.forEach((row) => {
+      this.lines.push(`| ${row.map((cell) => cell ?? "").join(" | ")} |`);
     });
 
     return this;
@@ -159,12 +163,12 @@ export class MarkdownBuilder {
 
   append(builder: MarkdownBuilder): this {
     this.resetOrderedCounter();
-    splitLines(builder.build()).forEach(line => this.lines.push(line));
+    splitLines(builder.build()).forEach((line) => this.lines.push(line));
     return this;
   }
 
   build(): string {
-    return this.lines.join('\n');
+    return this.lines.join("\n");
   }
 
   toString(): string {
@@ -172,7 +176,9 @@ export class MarkdownBuilder {
   }
 
   isEmpty(): boolean {
-    return this.lines.length === 0 || this.lines.every(line => line.length === 0);
+    return (
+      this.lines.length === 0 || this.lines.every((line) => line.length === 0)
+    );
   }
 
   private resetOrderedCounter(): void {

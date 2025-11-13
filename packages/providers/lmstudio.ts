@@ -1,1 +1,1 @@
-export { LMStudioProvider } from './src/lmstudio';
+export { LMStudioProvider } from "./src/lmstudio";

@@ -8,7 +8,12 @@
     "declarationMap": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*.ts", "utils/**/*.ts", "index.ts", "blueprint-client.ts"],
+  "include": [
+    "src/**/*.ts",
+    "utils/**/*.ts",
+    "index.ts",
+    "blueprint-client.ts"
+  ],
   "exclude": [
     "dist",
     "node_modules",

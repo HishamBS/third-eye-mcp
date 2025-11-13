@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { WS_BASE_URL } from '@/consts/api';
+import { useEffect, useRef, useState, useCallback } from "react";
+import { WS_BASE_URL } from "@/consts/api";
 
 export interface WSMessage {
   type: string;
@@ -31,7 +31,9 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<WSMessage | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'reconnecting'>('disconnected');
+  const [connectionStatus, setConnectionStatus] = useState<
+    "connected" | "disconnected" | "reconnecting"
+  >("disconnected");
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef(0);
@@ -51,17 +53,19 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     }
 
     // Build WebSocket URL - ensure we always have /ws/monitor path for session monitoring
-    const url = sessionId ? `${WS_BASE_URL}/ws/monitor?sessionId=${sessionId}` : `${WS_BASE_URL}/ws/monitor`;
+    const url = sessionId
+      ? `${WS_BASE_URL}/ws/monitor?sessionId=${sessionId}`
+      : `${WS_BASE_URL}/ws/monitor`;
 
     try {
-      setConnectionStatus('reconnecting');
+      setConnectionStatus("reconnecting");
       console.log(`[WebSocket] Connecting to ${url}...`);
       const ws = new WebSocket(url);
 
       ws.onopen = () => {
         console.log(`[WebSocket] Connected to ${url}`);
         setIsConnected(true);
-        setConnectionStatus('connected');
+        setConnectionStatus("connected");
         reconnectAttemptsRef.current = 0;
         onOpen?.();
 
@@ -73,7 +77,9 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
         // Replay missed events
         if (missedEventsRef.current.length > 0) {
-          console.log(`[WebSocket] Replaying ${missedEventsRef.current.length} missed events`);
+          console.log(
+            `[WebSocket] Replaying ${missedEventsRef.current.length} missed events`,
+          );
           missedEventsRef.current.forEach((msg) => onMessage?.(msg));
           missedEventsRef.current = [];
         }
@@ -81,11 +87,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         // Start ping/pong heartbeat
         const heartbeatInterval = setInterval(() => {
           if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
+            ws.send(JSON.stringify({ type: "ping", timestamp: Date.now() }));
           }
         }, 30000);
 
-        ws.addEventListener('close', () => {
+        ws.addEventListener("close", () => {
           clearInterval(heartbeatInterval);
         });
       };
@@ -95,15 +101,15 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
           const message: WSMessage = JSON.parse(event.data);
 
           // Handle server ping - respond with pong immediately
-          if (message.type === 'ping') {
+          if (message.type === "ping") {
             if (ws.readyState === WebSocket.OPEN) {
-              ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
+              ws.send(JSON.stringify({ type: "pong", timestamp: Date.now() }));
             }
             return;
           }
 
           // Handle pong messages (responses to our client-initiated pings)
-          if (message.type === 'pong') {
+          if (message.type === "pong") {
             // Connection is alive
             return;
           }
@@ -116,11 +122,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
             try {
               callback(message);
             } catch (error) {
-              console.error('[WebSocket] Subscriber callback error:', error);
+              console.error("[WebSocket] Subscriber callback error:", error);
             }
           });
         } catch (error) {
-          console.error('[WebSocket] Failed to parse message:', error);
+          console.error("[WebSocket] Failed to parse message:", error);
         }
       };
 
@@ -130,11 +136,13 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         if (sessionId) {
           // WebSocket errors don't contain useful error messages in the Event object
           // Log connection details instead
-          console.error('[WebSocket] Connection error:', {
+          console.error("[WebSocket] Connection error:", {
             url,
             readyState: ws.readyState,
-            readyStateText: ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][ws.readyState] || 'UNKNOWN',
-            timestamp: new Date().toISOString()
+            readyStateText:
+              ["CONNECTING", "OPEN", "CLOSING", "CLOSED"][ws.readyState] ||
+              "UNKNOWN",
+            timestamp: new Date().toISOString(),
           });
 
           onError?.(error);
@@ -142,13 +150,13 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       };
 
       ws.onclose = (event) => {
-        console.log('[WebSocket] Disconnected', {
+        console.log("[WebSocket] Disconnected", {
           code: event.code,
-          reason: event.reason || 'No reason provided',
-          wasClean: event.wasClean
+          reason: event.reason || "No reason provided",
+          wasClean: event.wasClean,
         });
         setIsConnected(false);
-        setConnectionStatus('disconnected');
+        setConnectionStatus("disconnected");
         onClose?.();
 
         // Auto-reconnect with exponential backoff
@@ -156,7 +164,9 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
           const delay = getReconnectDelay();
           reconnectAttemptsRef.current++;
 
-          console.log(`[WebSocket] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current})`);
+          console.log(
+            `[WebSocket] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current})`,
+          );
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();
           }, delay);
@@ -165,11 +175,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
       wsRef.current = ws;
     } catch (error) {
-      console.error('[WebSocket] Failed to create connection:', {
+      console.error("[WebSocket] Failed to create connection:", {
         error: error instanceof Error ? error.message : String(error),
-        url
+        url,
       });
-      setConnectionStatus('disconnected');
+      setConnectionStatus("disconnected");
     }
   };
 
@@ -184,7 +194,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       wsRef.current = null;
     }
 
-    setConnectionStatus('disconnected');
+    setConnectionStatus("disconnected");
     reconnectAttemptsRef.current = 0;
   };
 
@@ -192,9 +202,11 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(message));
     } else {
-      console.warn('[WebSocket] Cannot send message - not connected, storing as missed event');
+      console.warn(
+        "[WebSocket] Cannot send message - not connected, storing as missed event",
+      );
       // Store as missed event to replay later (if it's a non-ping message)
-      if (message.type !== 'ping' && message.type !== 'pong') {
+      if (message.type !== "ping" && message.type !== "pong") {
         missedEventsRef.current.push(message);
       }
     }
@@ -205,7 +217,9 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
     // Return unsubscribe function
     return () => {
-      subscribersRef.current = subscribersRef.current.filter(cb => cb !== callback);
+      subscribersRef.current = subscribersRef.current.filter(
+        (cb) => cb !== callback,
+      );
     };
   }, []);
 

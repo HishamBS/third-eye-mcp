@@ -1,12 +1,12 @@
 /**
  * Persona Blueprint Interface
- * 
+ *
  * Defines the structure for persona blueprints stored in the database and used by the runtime renderer.
  * Each blueprint contains metadata, mission statements, phase specifications, envelope contracts,
  * reminders, and canonical examples.
  */
 
-import type { EyeId, EyeStageToken, EyeCapability } from '@third-eye/constants';
+import type { EyeId, EyeStageToken, EyeCapability } from "@third-eye/constants";
 
 export interface PersonaMetadata {
   /** Unique eye identifier */

@@ -1,5 +1,12 @@
-import { z } from 'zod';
-import { BaseProvider, type CompletionRequest, type CompletionResponse, type HealthStatus, type ModelInfo, type ProviderConfig } from './base';
+import { z } from "zod";
+import {
+  BaseProvider,
+  type CompletionRequest,
+  type CompletionResponse,
+  type HealthStatus,
+  type ModelInfo,
+  type ProviderConfig,
+} from "./base";
 
 const OpenRouterModelSchema = z.object({
   id: z.string(),
@@ -18,7 +25,7 @@ const OpenRouterModelsResponseSchema = z.object({
 // Phase 1-A4: Tool call schema for function calling
 const OpenRouterToolCallSchema = z.object({
   id: z.string(),
-  type: z.literal('function'),
+  type: z.literal("function"),
   function: z.object({
     name: z.string(),
     arguments: z.string(), // JSON string
@@ -33,11 +40,13 @@ const OpenRouterChoiceSchema = z.object({
   finish_reason: z.string().optional().nullable(),
 });
 
-const OpenRouterUsageSchema = z.object({
-  prompt_tokens: z.number().optional(),
-  completion_tokens: z.number().optional(),
-  total_tokens: z.number().optional(),
-}).optional();
+const OpenRouterUsageSchema = z
+  .object({
+    prompt_tokens: z.number().optional(),
+    completion_tokens: z.number().optional(),
+    total_tokens: z.number().optional(),
+  })
+  .optional();
 
 const OpenRouterCompletionResponseSchema = z.object({
   id: z.string(),
@@ -47,17 +56,17 @@ const OpenRouterCompletionResponseSchema = z.object({
 });
 
 export class OpenRouterProvider extends BaseProvider {
-  private readonly baseUrl = 'https://openrouter.ai/api/v1';
+  private readonly baseUrl = "https://openrouter.ai/api/v1";
 
   constructor(config: ProviderConfig) {
     super({
       ...config,
-      baseUrl: config.baseUrl || 'https://openrouter.ai/api/v1',
+      baseUrl: config.baseUrl || "https://openrouter.ai/api/v1",
     });
   }
 
   get name(): string {
-    return 'openrouter';
+    return "openrouter";
   }
 
   get requiresApiKey(): boolean {
@@ -66,14 +75,14 @@ export class OpenRouterProvider extends BaseProvider {
 
   async listModels(): Promise<ModelInfo[]> {
     if (!this.config.apiKey) {
-      throw new Error('OpenRouter API key required');
+      throw new Error("OpenRouter API key required");
     }
 
     try {
       const response = await this.fetchWithRetry(`${this.baseUrl}/models`, {
         headers: {
-          'Authorization': `Bearer ${this.config.apiKey}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.config.apiKey}`,
+          "Content-Type": "application/json",
         },
       });
 
@@ -81,9 +90,11 @@ export class OpenRouterProvider extends BaseProvider {
         throw new Error(`OpenRouter API error: ${response.status}`);
       }
 
-      const payload = OpenRouterModelsResponseSchema.parse(await response.json());
+      const payload = OpenRouterModelsResponseSchema.parse(
+        await response.json(),
+      );
 
-      return payload.data.map(model => ({
+      return payload.data.map((model) => ({
         id: model.id,
         name: model.name,
         context_window: model.context_length ?? 8192,
@@ -93,55 +104,62 @@ export class OpenRouterProvider extends BaseProvider {
         },
       }));
     } catch (error) {
-      throw new Error(`Failed to list OpenRouter models: ${this.normalizeError(error)}`);
+      throw new Error(
+        `Failed to list OpenRouter models: ${this.normalizeError(error)}`,
+      );
     }
   }
 
   async complete(request: CompletionRequest): Promise<CompletionResponse> {
     if (!this.config.apiKey) {
-      throw new Error('OpenRouter API key required');
+      throw new Error("OpenRouter API key required");
     }
 
     try {
-      const response = await this.fetchWithRetry(`${this.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.config.apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://third-eye-mcp.local',
-          'X-Title': 'Third Eye MCP',
+      const response = await this.fetchWithRetry(
+        `${this.baseUrl}/chat/completions`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${this.config.apiKey}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://third-eye-mcp.local",
+            "X-Title": "Third Eye MCP",
+          },
+          body: JSON.stringify({
+            model: request.model,
+            messages: request.messages,
+            temperature: request.temperature ?? 0.7,
+            max_tokens: request.max_tokens,
+            top_p: request.top_p,
+            stop: request.stop,
+            tools: request.tools, // Phase 1-A4: Function calling
+            tool_choice: request.tool_choice, // Phase 1-A4
+          }),
         },
-        body: JSON.stringify({
-          model: request.model,
-          messages: request.messages,
-          temperature: request.temperature ?? 0.7,
-          max_tokens: request.max_tokens,
-          top_p: request.top_p,
-          stop: request.stop,
-          tools: request.tools, // Phase 1-A4: Function calling
-          tool_choice: request.tool_choice, // Phase 1-A4
-        }),
-      });
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`OpenRouter completion failed: ${errorText}`);
       }
 
-      const payload = OpenRouterCompletionResponseSchema.parse(await response.json());
+      const payload = OpenRouterCompletionResponseSchema.parse(
+        await response.json(),
+      );
       const usage = payload.usage ?? {};
       const choice = payload.choices[0];
 
       // Phase 1-A4: Handle function calling responses
-      const toolCalls = choice.message.tool_calls?.map(tc => ({
+      const toolCalls = choice.message.tool_calls?.map((tc) => ({
         id: tc.id,
-        type: tc.type as 'function',
+        type: tc.type as "function",
         function: {
           name: tc.function.name,
-          arguments: tc.function.arguments
-        }
+          arguments: tc.function.arguments,
+        },
       }));
-      const content = choice.message.content ?? '';
+      const content = choice.message.content ?? "";
 
       return {
         id: payload.id,
@@ -156,7 +174,9 @@ export class OpenRouterProvider extends BaseProvider {
         tool_calls: toolCalls, // Phase 1-A4: Include tool calls if present
       };
     } catch (error) {
-      throw new Error(`OpenRouter completion error: ${this.normalizeError(error)}`);
+      throw new Error(
+        `OpenRouter completion error: ${this.normalizeError(error)}`,
+      );
     }
   }
 
@@ -164,7 +184,7 @@ export class OpenRouterProvider extends BaseProvider {
     if (!this.config.apiKey) {
       return {
         healthy: false,
-        error: 'API key not configured',
+        error: "API key not configured",
       };
     }
 
@@ -173,8 +193,8 @@ export class OpenRouterProvider extends BaseProvider {
     try {
       const response = await this.fetchWithRetry(`${this.baseUrl}/models`, {
         headers: {
-          'Authorization': `Bearer ${this.config.apiKey}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.config.apiKey}`,
+          "Content-Type": "application/json",
         },
       });
 

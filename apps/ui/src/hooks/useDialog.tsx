@@ -2,16 +2,16 @@
  * useDialog Hook - Modal dialogs to replace alert() and confirm()
  */
 
-'use client';
+"use client";
 
-import * as React from 'react';
-import { create } from 'zustand';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MODAL_OVERLAY_CLASS } from '@/constants/design-tokens';
+import * as React from "react";
+import { create } from "zustand";
+import { motion, AnimatePresence } from "framer-motion";
+import { MODAL_OVERLAY_CLASS } from "@/constants/design-tokens";
 
 interface DialogState {
   isOpen: boolean;
-  type: 'alert' | 'confirm' | 'prompt';
+  type: "alert" | "confirm" | "prompt";
   title: string;
   message: string;
   defaultValue?: string;
@@ -22,15 +22,15 @@ interface DialogState {
 }
 
 interface DialogStore extends DialogState {
-  open: (config: Omit<DialogState, 'isOpen'>) => void;
+  open: (config: Omit<DialogState, "isOpen">) => void;
   close: () => void;
 }
 
 const useDialogStore = create<DialogStore>((set) => ({
   isOpen: false,
-  type: 'alert',
-  title: '',
-  message: '',
+  type: "alert",
+  title: "",
+  message: "",
   open: (config) => set({ ...config, isOpen: true }),
   close: () => set({ isOpen: false }),
 }));
@@ -41,10 +41,10 @@ export function useDialog() {
   const alert = (title: string, message: string) => {
     return new Promise<void>((resolve) => {
       store.open({
-        type: 'alert',
+        type: "alert",
         title,
         message,
-        confirmText: 'OK',
+        confirmText: "OK",
         onConfirm: () => {
           store.close();
           resolve();
@@ -53,10 +53,15 @@ export function useDialog() {
     });
   };
 
-  const confirm = (title: string, message: string, confirmText = 'Confirm', cancelText = 'Cancel') => {
+  const confirm = (
+    title: string,
+    message: string,
+    confirmText = "Confirm",
+    cancelText = "Cancel",
+  ) => {
     return new Promise<boolean>((resolve) => {
       store.open({
-        type: 'confirm',
+        type: "confirm",
         title,
         message,
         confirmText,
@@ -73,10 +78,16 @@ export function useDialog() {
     });
   };
 
-  const prompt = (title: string, message: string, defaultValue = '', confirmText = 'OK', cancelText = 'Cancel') => {
+  const prompt = (
+    title: string,
+    message: string,
+    defaultValue = "",
+    confirmText = "OK",
+    cancelText = "Cancel",
+  ) => {
     return new Promise<string | null>((resolve) => {
       store.open({
-        type: 'prompt',
+        type: "prompt",
         title,
         message,
         defaultValue,
@@ -101,15 +112,26 @@ export function useDialog() {
  * DialogProvider Component - Must be added to layout
  */
 export function DialogProvider() {
-  const { isOpen, type, title, message, defaultValue, onConfirm, onCancel, confirmText, cancelText, close } = useDialogStore();
-  const [inputValue, setInputValue] = React.useState(defaultValue || '');
+  const {
+    isOpen,
+    type,
+    title,
+    message,
+    defaultValue,
+    onConfirm,
+    onCancel,
+    confirmText,
+    cancelText,
+    close,
+  } = useDialogStore();
+  const [inputValue, setInputValue] = React.useState(defaultValue || "");
 
   React.useEffect(() => {
-    setInputValue(defaultValue || '');
+    setInputValue(defaultValue || "");
   }, [defaultValue]);
 
   const handleConfirm = () => {
-    if (type === 'prompt') {
+    if (type === "prompt") {
       onConfirm?.(inputValue);
     } else {
       onConfirm?.();
@@ -125,10 +147,10 @@ export function DialogProvider() {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       handleConfirm();
-    } else if (e.key === 'Escape') {
+    } else if (e.key === "Escape") {
       handleCancel();
     }
   };
@@ -163,12 +185,10 @@ export function DialogProvider() {
               )}
 
               {/* Message */}
-              <p className="mb-6 text-semantic-muted">
-                {message}
-              </p>
+              <p className="mb-6 text-semantic-muted">{message}</p>
 
               {/* Prompt Input */}
-              {type === 'prompt' && (
+              {type === "prompt" && (
                 <input
                   type="text"
                   value={inputValue}
@@ -181,20 +201,20 @@ export function DialogProvider() {
 
               {/* Buttons */}
               <div className="flex gap-3 justify-end">
-                {type !== 'alert' && (
+                {type !== "alert" && (
                   <button
                     onClick={handleCancel}
                     className="rounded-full border border-brand-outline/50 px-5 py-2 text-sm font-semibold text-semantic-muted transition hover:border-brand-accent hover:text-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
                   >
-                    {cancelText || 'Cancel'}
+                    {cancelText || "Cancel"}
                   </button>
                 )}
                 <button
                   onClick={handleConfirm}
-                  autoFocus={type !== 'prompt'}
+                  autoFocus={type !== "prompt"}
                   className="rounded-full bg-brand-accent px-5 py-2 text-sm font-semibold text-brand-foreground transition hover:bg-brand-accent/90 focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
                 >
-                  {confirmText || 'OK'}
+                  {confirmText || "OK"}
                 </button>
               </div>
             </motion.div>
@@ -204,4 +224,3 @@ export function DialogProvider() {
     </AnimatePresence>
   );
 }
-

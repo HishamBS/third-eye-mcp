@@ -14,14 +14,14 @@
  * Run once on startup, marks as complete in app_settings.
  */
 
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import Database from 'better-sqlite3';
-import { sql } from 'drizzle-orm';
-import path from 'path';
-import { homedir } from 'os';
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import Database from "better-sqlite3";
+import { sql } from "drizzle-orm";
+import path from "path";
+import { homedir } from "os";
 
-const MIGRATION_KEY = 'migration_phase12_personas_completed';
-const DB_PATH = path.join(homedir(), '.third-eye-mcp', 'data.db');
+const MIGRATION_KEY = "migration_phase12_personas_completed";
+const DB_PATH = path.join(homedir(), ".third-eye-mcp", "data.db");
 
 interface OldPersonaRow {
   id: string;
@@ -89,43 +89,53 @@ interface NewPersonaRow {
 }
 
 async function main() {
-  console.log('[Migrate Phase 12] Starting persona migration...');
+  console.log("[Migrate Phase 12] Starting persona migration...");
 
   const sqlite = new Database(DB_PATH);
   const db = drizzle(sqlite);
 
   // Check if migration already completed
-  const migrationCheck = sqlite.prepare(
-    `SELECT value FROM app_settings WHERE key = ?`
-  ).get(MIGRATION_KEY) as { value: string } | undefined;
+  const migrationCheck = sqlite
+    .prepare(`SELECT value FROM app_settings WHERE key = ?`)
+    .get(MIGRATION_KEY) as { value: string } | undefined;
 
-  if (migrationCheck?.value === 'true') {
-    console.log('[Migrate Phase 12] Migration already completed. Skipping.');
+  if (migrationCheck?.value === "true") {
+    console.log("[Migrate Phase 12] Migration already completed. Skipping.");
     sqlite.close();
     return;
   }
 
   // Check if content column exists (if not, migration already happened)
-  const tableInfo = sqlite.prepare(`PRAGMA table_info(personas)`).all() as Array<{
+  const tableInfo = sqlite
+    .prepare(`PRAGMA table_info(personas)`)
+    .all() as Array<{
     name: string;
   }>;
-  const hasContentColumn = tableInfo.some((col) => col.name === 'content');
+  const hasContentColumn = tableInfo.some((col) => col.name === "content");
 
   if (!hasContentColumn) {
-    console.log('[Migrate Phase 12] Schema already migrated (no content column). Marking as complete.');
-    sqlite.prepare(
-      `INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)`
-    ).run(MIGRATION_KEY, 'true');
+    console.log(
+      "[Migrate Phase 12] Schema already migrated (no content column). Marking as complete.",
+    );
+    sqlite
+      .prepare(`INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)`)
+      .run(MIGRATION_KEY, "true");
     sqlite.close();
     return;
   }
 
-  console.log('[Migrate Phase 12] Found content column. Starting transformation...');
+  console.log(
+    "[Migrate Phase 12] Found content column. Starting transformation...",
+  );
 
   // Read all old personas
-  const oldPersonas = sqlite.prepare(`SELECT * FROM personas`).all() as OldPersonaRow[];
+  const oldPersonas = sqlite
+    .prepare(`SELECT * FROM personas`)
+    .all() as OldPersonaRow[];
 
-  console.log(`[Migrate Phase 12] Found ${oldPersonas.length} personas to migrate`);
+  console.log(
+    `[Migrate Phase 12] Found ${oldPersonas.length} personas to migrate`,
+  );
 
   let successCount = 0;
   let errorCount = 0;
@@ -133,7 +143,9 @@ async function main() {
   // Transform each persona
   for (const old of oldPersonas) {
     try {
-      console.log(`[Migrate Phase 12] Transforming ${old.eye} v${old.version}...`);
+      console.log(
+        `[Migrate Phase 12] Transforming ${old.eye} v${old.version}...`,
+      );
 
       // Parse TEXT blob as PersonaBlueprint
       const blueprint: PersonaBlueprint = JSON.parse(old.content);
@@ -142,7 +154,7 @@ async function main() {
       const llmConfig = blueprint.llmConfig || {
         temperature: 0,
         top_p: 1,
-        response_format: 'json_object',
+        response_format: "json_object",
         max_tokens: 2000,
       };
 
@@ -154,8 +166,12 @@ async function main() {
         version: old.version,
         metadata_json: JSON.stringify(blueprint.metadata),
         mission: blueprint.mission,
-        guidance_json: blueprint.phases.guidance ? JSON.stringify(blueprint.phases.guidance) : null,
-        validation_json: blueprint.phases.validation ? JSON.stringify(blueprint.phases.validation) : null,
+        guidance_json: blueprint.phases.guidance
+          ? JSON.stringify(blueprint.phases.guidance)
+          : null,
+        validation_json: blueprint.phases.validation
+          ? JSON.stringify(blueprint.phases.validation)
+          : null,
         envelope_json: JSON.stringify(blueprint.envelopeContract),
         reminders_json: JSON.stringify(blueprint.reminders),
         notes: blueprint.notes || null,
@@ -165,15 +181,21 @@ async function main() {
       };
 
       // Check if new columns exist
-      const newColumnsExist = tableInfo.some((col) => col.name === 'metadata_json');
+      const newColumnsExist = tableInfo.some(
+        (col) => col.name === "metadata_json",
+      );
 
       if (!newColumnsExist) {
-        console.error('[Migrate Phase 12] ERROR: New columns do not exist yet. Run Drizzle migration first.');
+        console.error(
+          "[Migrate Phase 12] ERROR: New columns do not exist yet. Run Drizzle migration first.",
+        );
         process.exit(1);
       }
 
       // Update row with new structured data
-      sqlite.prepare(`
+      sqlite
+        .prepare(
+          `
         UPDATE personas
         SET
           metadata_json = ?,
@@ -185,36 +207,47 @@ async function main() {
           notes = ?,
           llm_config_json = ?
         WHERE id = ?
-      `).run(
-        newRow.metadata_json,
-        newRow.mission,
-        newRow.guidance_json,
-        newRow.validation_json,
-        newRow.envelope_json,
-        newRow.reminders_json,
-        newRow.notes,
-        newRow.llm_config_json,
-        newRow.id
-      );
+      `,
+        )
+        .run(
+          newRow.metadata_json,
+          newRow.mission,
+          newRow.guidance_json,
+          newRow.validation_json,
+          newRow.envelope_json,
+          newRow.reminders_json,
+          newRow.notes,
+          newRow.llm_config_json,
+          newRow.id,
+        );
 
-      console.log(`[Migrate Phase 12] ✓ Transformed ${old.eye} v${old.version}`);
+      console.log(
+        `[Migrate Phase 12] ✓ Transformed ${old.eye} v${old.version}`,
+      );
       successCount++;
     } catch (error) {
-      console.error(`[Migrate Phase 12] ✗ Failed to transform ${old.eye} v${old.version}:`, error);
+      console.error(
+        `[Migrate Phase 12] ✗ Failed to transform ${old.eye} v${old.version}:`,
+        error,
+      );
       errorCount++;
     }
   }
 
-  console.log(`[Migrate Phase 12] Transformation complete: ${successCount} success, ${errorCount} errors`);
+  console.log(
+    `[Migrate Phase 12] Transformation complete: ${successCount} success, ${errorCount} errors`,
+  );
 
   if (errorCount > 0) {
-    console.error('[Migrate Phase 12] Migration had errors. NOT dropping content column.');
+    console.error(
+      "[Migrate Phase 12] Migration had errors. NOT dropping content column.",
+    );
     sqlite.close();
     process.exit(1);
   }
 
   // Drop content column (R10: no backward compatibility)
-  console.log('[Migrate Phase 12] Dropping content column per R10...');
+  console.log("[Migrate Phase 12] Dropping content column per R10...");
   try {
     // SQLite doesn't support DROP COLUMN directly, need to recreate table
     sqlite.exec(`
@@ -255,23 +288,23 @@ async function main() {
       DROP TABLE personas_backup;
     `);
 
-    console.log('[Migrate Phase 12] ✓ Content column dropped successfully');
+    console.log("[Migrate Phase 12] ✓ Content column dropped successfully");
   } catch (error) {
-    console.error('[Migrate Phase 12] ✗ Failed to drop content column:', error);
+    console.error("[Migrate Phase 12] ✗ Failed to drop content column:", error);
     sqlite.close();
     process.exit(1);
   }
 
   // Mark migration as complete
-  sqlite.prepare(
-    `INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)`
-  ).run(MIGRATION_KEY, 'true');
+  sqlite
+    .prepare(`INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?)`)
+    .run(MIGRATION_KEY, "true");
 
-  console.log('[Migrate Phase 12] ✓ Migration complete and marked as done');
+  console.log("[Migrate Phase 12] ✓ Migration complete and marked as done");
   sqlite.close();
 }
 
 main().catch((err) => {
-  console.error('[Migrate Phase 12] Fatal error:', err);
+  console.error("[Migrate Phase 12] Fatal error:", err);
   process.exit(1);
 });

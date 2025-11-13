@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import type { WizardStepProps } from '@/types/custom-eye-form';
-import { SchemaBuilder, type SchemaProperty } from '../SchemaBuilder';
-import { SchemaTemplateSelector } from '../SchemaTemplateSelector';
-import { SCHEMA_TEMPLATES } from '../constants';
+import { useState, useEffect } from "react";
+import type { WizardStepProps } from "@/types/custom-eye-form";
+import { SchemaBuilder, type SchemaProperty } from "../SchemaBuilder";
+import { SchemaTemplateSelector } from "../SchemaTemplateSelector";
+import { SCHEMA_TEMPLATES } from "../constants";
 
 /**
  * SchemaStep - Step 2 of CustomEyeWizard
@@ -21,12 +21,14 @@ function schemaToProperties(schemaStr: string): SchemaProperty[] {
     if (!schema.properties) return [];
 
     const required = schema.required || [];
-    return Object.entries(schema.properties).map(([name, prop]: [string, any]) => ({
-      name,
-      type: prop.type || 'string',
-      description: prop.description || '',
-      required: required.includes(name),
-    }));
+    return Object.entries(schema.properties).map(
+      ([name, prop]: [string, any]) => ({
+        name,
+        type: prop.type || "string",
+        description: prop.description || "",
+        required: required.includes(name),
+      }),
+    );
   } catch {
     return [];
   }
@@ -35,7 +37,7 @@ function schemaToProperties(schemaStr: string): SchemaProperty[] {
 // Convert properties array to JSON schema string
 function propertiesToSchema(properties: readonly SchemaProperty[]): string {
   const schema = {
-    type: 'object',
+    type: "object",
     properties: Object.fromEntries(
       properties.map((prop) => [
         prop.name,
@@ -43,7 +45,7 @@ function propertiesToSchema(properties: readonly SchemaProperty[]): string {
           type: prop.type,
           ...(prop.description && { description: prop.description }),
         },
-      ])
+      ]),
     ),
     required: properties.filter((p) => p.required).map((p) => p.name),
   };
@@ -52,19 +54,25 @@ function propertiesToSchema(properties: readonly SchemaProperty[]): string {
 
 export function SchemaStep({ state, dispatch }: WizardStepProps) {
   const [inputProps, setInputProps] = useState<SchemaProperty[]>(() =>
-    schemaToProperties(state.formData.inputSchema)
+    schemaToProperties(state.formData.inputSchema),
   );
   const [outputProps, setOutputProps] = useState<SchemaProperty[]>(() =>
-    schemaToProperties(state.formData.outputSchema)
+    schemaToProperties(state.formData.outputSchema),
   );
 
   // Sync with form state
   useEffect(() => {
-    dispatch({ type: 'SET_INPUT_SCHEMA', inputSchema: propertiesToSchema(inputProps) });
+    dispatch({
+      type: "SET_INPUT_SCHEMA",
+      inputSchema: propertiesToSchema(inputProps),
+    });
   }, [inputProps, dispatch]);
 
   useEffect(() => {
-    dispatch({ type: 'SET_OUTPUT_SCHEMA', outputSchema: propertiesToSchema(outputProps) });
+    dispatch({
+      type: "SET_OUTPUT_SCHEMA",
+      outputSchema: propertiesToSchema(outputProps),
+    });
   }, [outputProps, dispatch]);
 
   return (

@@ -9,12 +9,12 @@
  * Per R13: All text from SSOT
  */
 
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { useRoutingDecisions } from '@/hooks/useRoutingDecisions';
-import type { RoutingDecision } from '@/hooks/useRoutingDecisions';
-import { EYE_CAPABILITIES } from '@third-eye/config/eye-capabilities';
+import { useState, useCallback } from "react";
+import { useRoutingDecisions } from "@/hooks/useRoutingDecisions";
+import type { RoutingDecision } from "@/hooks/useRoutingDecisions";
+import { EYE_CAPABILITIES } from "@third-eye/config/eye-capabilities";
 
 interface LiveRoutingPanelProps {
   maxSessions?: number; // Default 10
@@ -37,7 +37,7 @@ function formatRelativeTime(timestamp: number): string {
   if (hours > 0) return `${hours}h ago`;
   if (minutes > 0) return `${minutes}m ago`;
   if (seconds > 0) return `${seconds}s ago`;
-  return 'just now';
+  return "just now";
 }
 
 /**
@@ -45,7 +45,7 @@ function formatRelativeTime(timestamp: number): string {
  */
 function SessionCard({
   decision,
-  onClick
+  onClick,
 }: {
   decision: RoutingDecision;
   onClick: () => void;
@@ -60,7 +60,10 @@ function SessionCard({
       {/* Header: session ID + time */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 bg-green-500 rounded-full" title="Completed" />
+          <span
+            className="w-2 h-2 bg-green-500 rounded-full"
+            title="Completed"
+          />
           <span className="text-xs font-mono text-gray-500 dark:text-gray-400">
             {decision.sessionId.slice(0, 8)}...
           </span>
@@ -84,8 +87,9 @@ function SessionCard({
       <div className="flex items-center gap-1">
         {decision.selectedEyes.map((eyeName, idx) => {
           const normalizedName = eyeName.toLowerCase();
-          const eyeInfo = EYE_CAPABILITIES[normalizedName as keyof typeof EYE_CAPABILITIES];
-          const icon = eyeInfo?.icon || '👁️';
+          const eyeInfo =
+            EYE_CAPABILITIES[normalizedName as keyof typeof EYE_CAPABILITIES];
+          const icon = eyeInfo?.icon || "👁️";
 
           return (
             <div key={`${eyeName}-${idx}`} className="flex items-center">
@@ -109,20 +113,25 @@ function SessionCard({
 export function LiveRoutingPanel({
   maxSessions = 10,
   autoRefresh = true,
-  onSessionClick
+  onSessionClick,
 }: LiveRoutingPanelProps) {
   const { decisions, loading, error, refetch } = useRoutingDecisions({
     limit: maxSessions,
-    sort: 'desc'
+    sort: "desc",
   });
 
-  const [filterMode, setFilterMode] = useState<'all' | 'dynamic' | 'constrained' | 'fixed'>('all');
+  const [filterMode, setFilterMode] = useState<
+    "all" | "dynamic" | "constrained" | "fixed"
+  >("all");
 
-  const handleSessionClick = useCallback((sessionId: string) => {
-    if (onSessionClick) {
-      onSessionClick(sessionId);
-    }
-  }, [onSessionClick]);
+  const handleSessionClick = useCallback(
+    (sessionId: string) => {
+      if (onSessionClick) {
+        onSessionClick(sessionId);
+      }
+    },
+    [onSessionClick],
+  );
 
   // Filter decisions by mode (if needed in future)
   const filteredDecisions = decisions; // Currently showing all, can add filtering later
@@ -137,8 +146,18 @@ export function LiveRoutingPanel({
           className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
           title="Refresh"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
           </svg>
         </button>
       </div>
@@ -147,7 +166,9 @@ export function LiveRoutingPanel({
       {loading && (
         <div className="flex items-center gap-2 p-4">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500" />
-          <span className="text-sm text-gray-600 dark:text-gray-400">Loading sessions...</span>
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            Loading sessions...
+          </span>
         </div>
       )}
 
@@ -192,7 +213,8 @@ export function LiveRoutingPanel({
       {!loading && !error && filteredDecisions.length > 0 && (
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-            Showing {filteredDecisions.length} most recent session{filteredDecisions.length !== 1 ? 's' : ''}
+            Showing {filteredDecisions.length} most recent session
+            {filteredDecisions.length !== 1 ? "s" : ""}
           </p>
         </div>
       )}

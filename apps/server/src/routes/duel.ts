@@ -1,22 +1,22 @@
-import { Hono } from 'hono';
-import { nanoid } from 'nanoid';
-import { getDb } from '@third-eye/db';
-import { sessions, runs, pipelineEvents, duels } from '@third-eye/db';
-import { EyeOrchestrator } from '@third-eye/core';
-import { eq } from 'drizzle-orm';
-import type { ProviderType } from '@third-eye/providers';
-import { PROVIDERS, type ProviderId } from '@third-eye/types';
-import { validateBody, schemas, rateLimit } from '../middleware/validation';
+import { Hono } from "hono";
+import { nanoid } from "nanoid";
+import { getDb } from "@third-eye/db";
+import { sessions, runs, pipelineEvents, duels } from "@third-eye/db";
+import { EyeOrchestrator } from "@third-eye/core";
+import { eq } from "drizzle-orm";
+import type { ProviderType } from "@third-eye/providers";
+import { PROVIDERS, type ProviderId } from "@third-eye/types";
+import { validateBody, schemas, rateLimit } from "../middleware/validation";
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
   createErrorResponse,
   createInternalErrorResponse,
   requestIdMiddleware,
-  errorHandler
-} from '../middleware/response';
-import { z } from 'zod';
-import type { BaseEnvelope } from '@third-eye/eyes';
+  errorHandler,
+} from "../middleware/response";
+import { z } from "zod";
+import type { BaseEnvelope } from "@third-eye/eyes";
 
 /**
  * Duel Mode API
@@ -28,39 +28,50 @@ import type { BaseEnvelope } from '@third-eye/eyes';
 const app = new Hono();
 
 const SUPPORTED_PROVIDERS = new Set<string>(PROVIDERS as readonly string[]);
-const DEFAULT_DUEL_PROVIDER = 'groq' as ProviderType;
-const DEFAULT_DUEL_MODEL = 'llama-3.3-70b-versatile';
+const DEFAULT_DUEL_PROVIDER = "groq" as ProviderType;
+const DEFAULT_DUEL_MODEL = "llama-3.3-70b-versatile";
 
 // Helper to safely extract numeric values from BaseEnvelope
 function getNumericValue(result: BaseEnvelope, key: string): number {
-  if (typeof result.data === 'object' && result.data !== null && key in result.data) {
+  if (
+    typeof result.data === "object" &&
+    result.data !== null &&
+    key in result.data
+  ) {
     const value = (result.data as Record<string, unknown>)[key];
-    return typeof value === 'number' ? value : 0;
+    return typeof value === "number" ? value : 0;
   }
   return 0;
 }
 
 function getStringValue(result: BaseEnvelope, key: string): string | undefined {
-  if (typeof result.data === 'object' && result.data !== null && key in result.data) {
+  if (
+    typeof result.data === "object" &&
+    result.data !== null &&
+    key in result.data
+  ) {
     const value = (result.data as Record<string, unknown>)[key];
-    return typeof value === 'string' ? value : undefined;
+    return typeof value === "string" ? value : undefined;
   }
   return undefined;
 }
 
-function parseModelIdentifier(identifier: string): { provider: ProviderType; model: string } {
-  if (!identifier || typeof identifier !== 'string') {
-    return { provider: DEFAULT_DUEL_PROVIDER, model: '' };
+function parseModelIdentifier(identifier: string): {
+  provider: ProviderType;
+  model: string;
+} {
+  if (!identifier || typeof identifier !== "string") {
+    return { provider: DEFAULT_DUEL_PROVIDER, model: "" };
   }
 
-  const separators = [':', '/', '|'];
+  const separators = [":", "/", "|"];
   for (const separator of separators) {
     if (identifier.includes(separator)) {
       const [providerPart, modelPart] = identifier.split(separator, 2);
       const provider = SUPPORTED_PROVIDERS.has(providerPart)
         ? (providerPart as ProviderType)
         : DEFAULT_DUEL_PROVIDER;
-      return { provider, model: (modelPart || identifier) || DEFAULT_DUEL_MODEL };
+      return { provider, model: modelPart || identifier || DEFAULT_DUEL_MODEL };
     }
   }
 
@@ -68,15 +79,17 @@ function parseModelIdentifier(identifier: string): { provider: ProviderType; mod
     provider: SUPPORTED_PROVIDERS.has(identifier)
       ? (identifier as ProviderType)
       : DEFAULT_DUEL_PROVIDER,
-    model: SUPPORTED_PROVIDERS.has(identifier) ? DEFAULT_DUEL_MODEL : identifier,
+    model: SUPPORTED_PROVIDERS.has(identifier)
+      ? DEFAULT_DUEL_MODEL
+      : identifier,
   };
 }
 
-app.use('*', requestIdMiddleware());
-app.use('*', errorHandler());
+app.use("*", requestIdMiddleware());
+app.use("*", errorHandler());
 
 // Apply rate limiting
-app.use('*', rateLimit({ maxRequests: 50 })); // Lower limit for expensive duels
+app.use("*", rateLimit({ maxRequests: 50 })); // Lower limit for expensive duels
 
 /**
  * Calculate score for duel result
@@ -86,16 +99,20 @@ function calculateScore(result: BaseEnvelope, latencyMs: number): number {
   let score = 0;
 
   // Verdict score (0-50 points)
-  if (result.code === 'APPROVED') {
+  if (result.code === "APPROVED") {
     score += 50;
-  } else if (result.code === 'NEEDS_INPUT') {
+  } else if (result.code === "NEEDS_INPUT") {
     score += 25;
   }
 
   // Confidence score (0-25 points)
-  const confidence = typeof result.data === 'object' && result.data !== null && 'confidence' in result.data && typeof result.data.confidence === 'number'
-    ? result.data.confidence
-    : undefined;
+  const confidence =
+    typeof result.data === "object" &&
+    result.data !== null &&
+    "confidence" in result.data &&
+    typeof result.data.confidence === "number"
+      ? result.data.confidence
+      : undefined;
   if (confidence) {
     score += (confidence / 100) * 25;
   } else {
@@ -146,7 +163,7 @@ interface DuelFrontendResult {
     input: number;
     output: number;
   };
-  verdict: 'APPROVED' | 'REJECTED' | 'NEEDS_INPUT';
+  verdict: "APPROVED" | "REJECTED" | "NEEDS_INPUT";
   confidence?: number;
   score: number;
 }
@@ -154,32 +171,32 @@ interface DuelFrontendResult {
 /**
  * POST /api/duel - Launch a duel between multiple provider/model combos
  */
-app.post('/', async (c) => {
+app.post("/", async (c) => {
   try {
     const body = await c.req.json();
     const { sessionId, prompt, configs, eye } = body as {
       sessionId?: string;
       prompt: string;
-      configs: DuelConfig['providers'];
+      configs: DuelConfig["providers"];
       eye?: string;
     };
 
     // Use eye from body or default to 'overseer'
-    const eyeName = eye || 'overseer';
+    const eyeName = eye || "overseer";
 
     if (!prompt || !configs || configs.length < 2) {
       return createErrorResponse(c, {
-        title: 'Validation Error',
+        title: "Validation Error",
         status: 400,
-        detail: 'Missing required fields: prompt, configs (minimum 2)'
+        detail: "Missing required fields: prompt, configs (minimum 2)",
       });
     }
 
     if (configs.length > 4) {
       return createErrorResponse(c, {
-        title: 'Validation Error',
+        title: "Validation Error",
         status: 400,
-        detail: 'Maximum 4 provider/model combinations allowed'
+        detail: "Maximum 4 provider/model combinations allowed",
       });
     }
 
@@ -193,9 +210,9 @@ app.post('/', async (c) => {
       .values({
         id: finalSessionId,
         createdAt: Date.now(),
-        status: 'running',
+        status: "running",
         configJson: {
-          type: 'duel',
+          type: "duel",
           duelId,
           eye: eyeName,
           prompt,
@@ -211,17 +228,17 @@ app.post('/', async (c) => {
         id: nanoid(),
         sessionId: finalSessionId,
         eye: eyeName,
-        type: 'duel_start',
-        code: 'DUEL_STARTED',
+        type: "duel_start",
+        code: "DUEL_STARTED",
         md: `Duel started with ${configs.length} competitors`,
         dataJson: { duelId, configs },
-        nextAction: 'running',
+        nextAction: "running",
         createdAt: Date.now(),
       })
       .run();
 
     const orchestrator = new EyeOrchestrator();
-    const runResults: DuelResult['runs'] = [];
+    const runResults: DuelResult["runs"] = [];
     const duelResultsForFrontend: DuelFrontendResult[] = [];
 
     // Run each configuration in parallel
@@ -232,13 +249,18 @@ app.post('/', async (c) => {
       try {
         const startTime = Date.now();
 
-        const result = await orchestrator.runEye(eyeName, prompt, finalSessionId, {
-          providerOverride: {
-            provider: config.provider as ProviderType,
-            model: config.model,
-            label,
+        const result = await orchestrator.runEye(
+          eyeName,
+          prompt,
+          finalSessionId,
+          {
+            providerOverride: {
+              provider: config.provider as ProviderType,
+              model: config.model,
+              label,
+            },
           },
-        });
+        );
 
         const latencyMs = Date.now() - startTime;
 
@@ -253,8 +275,8 @@ app.post('/', async (c) => {
             model: config.model,
             inputMd: prompt,
             outputJson: result,
-            tokensIn: getNumericValue(result, 'tokensIn') || null,
-            tokensOut: getNumericValue(result, 'tokensOut') || null,
+            tokensIn: getNumericValue(result, "tokensIn") || null,
+            tokensOut: getNumericValue(result, "tokensOut") || null,
             latencyMs,
             createdAt: Date.now(),
           })
@@ -267,8 +289,8 @@ app.post('/', async (c) => {
             id: nanoid(),
             sessionId: finalSessionId,
             eye: eyeName,
-            type: 'eye_call',
-            code: result.code || 'OK',
+            type: "eye_call",
+            code: result.code || "OK",
             md: result.md || `${label} completed`,
             dataJson: {
               duelId,
@@ -278,10 +300,10 @@ app.post('/', async (c) => {
               label,
               agent: label,
               latencyMs,
-              tokensIn: getNumericValue(result, 'tokensIn'),
-              tokensOut: getNumericValue(result, 'tokensOut'),
+              tokensIn: getNumericValue(result, "tokensIn"),
+              tokensOut: getNumericValue(result, "tokensOut"),
             },
-            nextAction: 'completed',
+            nextAction: "completed",
             createdAt: Date.now(),
           })
           .run();
@@ -294,24 +316,26 @@ app.post('/', async (c) => {
         });
 
         // Build frontend result format
-        const verdict: 'APPROVED' | 'REJECTED' | 'NEEDS_INPUT' =
-          result.code === 'APPROVED' ? 'APPROVED' :
-          result.code === 'REJECTED' ? 'REJECTED' :
-          'NEEDS_INPUT';
+        const verdict: "APPROVED" | "REJECTED" | "NEEDS_INPUT" =
+          result.code === "APPROVED"
+            ? "APPROVED"
+            : result.code === "REJECTED"
+              ? "REJECTED"
+              : "NEEDS_INPUT";
         const score = calculateScore(result, latencyMs);
 
         duelResultsForFrontend.push({
           provider: config.provider,
           providerLabel: label,
           model: config.model,
-          output: result.md || getStringValue(result, 'message') || 'No output',
+          output: result.md || getStringValue(result, "message") || "No output",
           latency: latencyMs,
           tokens: {
-            input: getNumericValue(result, 'tokensIn'),
-            output: getNumericValue(result, 'tokensOut'),
+            input: getNumericValue(result, "tokensIn"),
+            output: getNumericValue(result, "tokensOut"),
           },
           verdict,
-          confidence: getNumericValue(result, 'confidence') || undefined,
+          confidence: getNumericValue(result, "confidence") || undefined,
           score,
         });
       } catch (error) {
@@ -328,7 +352,7 @@ app.post('/', async (c) => {
             model: config.model,
             inputMd: prompt,
             outputJson: {
-              error: error instanceof Error ? error.message : 'Unknown error',
+              error: error instanceof Error ? error.message : "Unknown error",
             },
             tokensIn: null,
             tokensOut: null,
@@ -344,9 +368,9 @@ app.post('/', async (c) => {
             id: nanoid(),
             sessionId: finalSessionId,
             eye: eyeName,
-            type: 'eye_call',
-            code: 'ERROR',
-            md: `${label} failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            type: "eye_call",
+            code: "ERROR",
+            md: `${label} failed: ${error instanceof Error ? error.message : "Unknown error"}`,
             dataJson: {
               duelId,
               runId,
@@ -354,9 +378,9 @@ app.post('/', async (c) => {
               model: config.model,
               label,
               agent: label,
-              error: error instanceof Error ? error.message : 'Unknown error',
+              error: error instanceof Error ? error.message : "Unknown error",
             },
-            nextAction: 'failed',
+            nextAction: "failed",
             createdAt: Date.now(),
           })
           .run();
@@ -366,10 +390,10 @@ app.post('/', async (c) => {
           provider: config.provider,
           providerLabel: label,
           model: config.model,
-          output: error instanceof Error ? error.message : 'Unknown error',
+          output: error instanceof Error ? error.message : "Unknown error",
           latency: 0,
           tokens: { input: 0, output: 0 },
-          verdict: 'REJECTED',
+          verdict: "REJECTED",
           score: 0,
         });
       }
@@ -380,7 +404,7 @@ app.post('/', async (c) => {
     // Update session status
     await db
       .update(sessions)
-      .set({ status: 'completed' })
+      .set({ status: "completed" })
       .where(eq(sessions.id, finalSessionId))
       .run();
 
@@ -391,27 +415,27 @@ app.post('/', async (c) => {
         id: nanoid(),
         sessionId: finalSessionId,
         eye: eyeName,
-        type: 'duel_complete',
-        code: 'DUEL_COMPLETED',
+        type: "duel_complete",
+        code: "DUEL_COMPLETED",
         md: `Duel completed with ${runResults.length} successful runs`,
         dataJson: { duelId, runs: runResults },
-        nextAction: 'completed',
+        nextAction: "completed",
         createdAt: Date.now(),
       })
       .run();
 
     // Broadcast via WebSocket
     try {
-      const { wsManager } = await import('../websocket');
+      const { wsManager } = await import("../websocket");
       wsManager.broadcast({
-        type: 'duel_complete',
+        type: "duel_complete",
         sessionId: finalSessionId,
         duelId,
         runs: runResults,
         results: duelResultsForFrontend,
       });
     } catch (e) {
-      console.debug('WebSocket broadcast skipped:', e);
+      console.debug("WebSocket broadcast skipped:", e);
     }
 
     return createSuccessResponse(c, {
@@ -422,12 +446,12 @@ app.post('/', async (c) => {
       results: duelResultsForFrontend.sort((a, b) => b.score - a.score),
     });
   } catch (error) {
-    console.error('Duel failed:', error);
+    console.error("Duel failed:", error);
     return c.json(
       {
-        error: `Failed to launch duel: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error: `Failed to launch duel: ${error instanceof Error ? error.message : "Unknown error"}`,
       },
-      500
+      500,
     );
   }
 });
@@ -435,9 +459,9 @@ app.post('/', async (c) => {
 /**
  * GET /api/duel/:duelId - Get duel results
  */
-app.get('/:duelId', async (c) => {
+app.get("/:duelId", async (c) => {
   try {
-    const duelId = c.req.param('duelId');
+    const duelId = c.req.param("duelId");
     const sessionId = `duel-${duelId}`;
 
     const { db } = getDb();
@@ -452,9 +476,9 @@ app.get('/:duelId', async (c) => {
 
     if (session.length === 0) {
       return createErrorResponse(c, {
-        title: 'Duel Not Found',
+        title: "Duel Not Found",
         status: 404,
-        detail: 'Duel not found'
+        detail: "Duel not found",
       });
     }
 
@@ -480,12 +504,12 @@ app.get('/:duelId', async (c) => {
       events,
     });
   } catch (error) {
-    console.error('Failed to get duel results:', error);
+    console.error("Failed to get duel results:", error);
     return c.json(
       {
-        error: `Failed to get duel results: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error: `Failed to get duel results: ${error instanceof Error ? error.message : "Unknown error"}`,
       },
-      500
+      500,
     );
   }
 });
@@ -493,20 +517,20 @@ app.get('/:duelId', async (c) => {
 /**
  * GET /api/duel - List all duels
  */
-app.get('/', async (c) => {
+app.get("/", async (c) => {
   try {
     const { db } = getDb();
 
     const allSessions = await db
       .select()
       .from(sessions)
-      .where(eq(sessions.id, 'duel-%'))
+      .where(eq(sessions.id, "duel-%"))
       .all();
 
     const duels = allSessions
-      .filter((s) => s.id.startsWith('duel-'))
+      .filter((s) => s.id.startsWith("duel-"))
       .map((s) => ({
-        duelId: s.id.replace('duel-', ''),
+        duelId: s.id.replace("duel-", ""),
         sessionId: s.id,
         status: s.status,
         createdAt: s.createdAt,
@@ -515,12 +539,12 @@ app.get('/', async (c) => {
 
     return createSuccessResponse(c, { duels });
   } catch (error) {
-    console.error('Failed to list duels:', error);
+    console.error("Failed to list duels:", error);
     return c.json(
       {
-        error: `Failed to list duels: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error: `Failed to list duels: ${error instanceof Error ? error.message : "Unknown error"}`,
       },
-      500
+      500,
     );
   }
 });
@@ -529,16 +553,16 @@ app.get('/', async (c) => {
  * POST /api/duel/v2 - Start a new model comparison duel
  * Matches PRODUCTION_IMPLEMENTATION_CHECKLIST spec
  */
-app.post('/v2', validateBody(schemas.duelCreate), async (c) => {
+app.post("/v2", validateBody(schemas.duelCreate), async (c) => {
   try {
     const body = await c.req.json();
     const { eyeName, modelA, modelB, input, iterations = 5 } = body;
 
     if (!eyeName || !modelA || !modelB || !input) {
       return createErrorResponse(c, {
-        title: 'Validation Error',
+        title: "Validation Error",
         status: 400,
-        detail: 'Missing required fields: eyeName, modelA, modelB, input'
+        detail: "Missing required fields: eyeName, modelA, modelB, input",
       });
     }
 
@@ -555,33 +579,38 @@ app.post('/v2', validateBody(schemas.duelCreate), async (c) => {
         modelB,
         input,
         iterations,
-        status: 'pending',
+        status: "pending",
         createdAt: new Date(),
       })
       .run();
 
     // Start duel execution in background
-    executeDuel(duelId, eyeName, modelA, modelB, input, iterations).catch((error) => {
-      console.error(`Duel ${duelId} failed:`, error);
-    });
+    executeDuel(duelId, eyeName, modelA, modelB, input, iterations).catch(
+      (error) => {
+        console.error(`Duel ${duelId} failed:`, error);
+      },
+    );
 
     return createSuccessResponse(c, {
       duelId,
-      status: 'pending',
-      message: 'Duel started',
+      status: "pending",
+      message: "Duel started",
     });
   } catch (error) {
-    console.error('Failed to start duel:', error);
-    return createInternalErrorResponse(c, `Failed to start duel: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error("Failed to start duel:", error);
+    return createInternalErrorResponse(
+      c,
+      `Failed to start duel: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 });
 
 /**
  * GET /api/duel/:id/status - Get duel progress and status
  */
-app.get('/:id/status', async (c) => {
+app.get("/:id/status", async (c) => {
   try {
-    const duelId = c.req.param('id');
+    const duelId = c.req.param("id");
     const { db } = getDb();
 
     const duel = await db
@@ -592,9 +621,9 @@ app.get('/:id/status', async (c) => {
 
     if (!duel) {
       return createErrorResponse(c, {
-        title: 'Duel Not Found',
+        title: "Duel Not Found",
         status: 404,
-        detail: 'Duel not found'
+        detail: "Duel not found",
       });
     }
 
@@ -611,17 +640,20 @@ app.get('/:id/status', async (c) => {
       results: duel.results,
     });
   } catch (error) {
-    console.error('Failed to get duel status:', error);
-    return createInternalErrorResponse(c, `Failed to get duel status: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error("Failed to get duel status:", error);
+    return createInternalErrorResponse(
+      c,
+      `Failed to get duel status: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 });
 
 /**
  * GET /api/duel/:id/results - Get final comparison matrix
  */
-app.get('/:id/results', async (c) => {
+app.get("/:id/results", async (c) => {
   try {
-    const duelId = c.req.param('id');
+    const duelId = c.req.param("id");
     const { db } = getDb();
 
     const duel = await db
@@ -632,17 +664,17 @@ app.get('/:id/results', async (c) => {
 
     if (!duel) {
       return createErrorResponse(c, {
-        title: 'Duel Not Found',
+        title: "Duel Not Found",
         status: 404,
-        detail: 'Duel not found'
+        detail: "Duel not found",
       });
     }
 
-    if (duel.status !== 'completed') {
+    if (duel.status !== "completed") {
       return createErrorResponse(c, {
-        title: 'Invalid Operation',
+        title: "Invalid Operation",
         status: 400,
-        detail: `Duel not yet completed, current status: ${duel.status}`
+        detail: `Duel not yet completed, current status: ${duel.status}`,
       });
     }
 
@@ -658,8 +690,11 @@ app.get('/:id/results', async (c) => {
       completedAt: duel.completedAt,
     });
   } catch (error) {
-    console.error('Failed to get duel results:', error);
-    return createInternalErrorResponse(c, `Failed to get duel results: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error("Failed to get duel results:", error);
+    return createInternalErrorResponse(
+      c,
+      `Failed to get duel results: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 });
 
@@ -672,7 +707,7 @@ async function executeDuel(
   modelA: string,
   modelB: string,
   input: string,
-  iterations: number
+  iterations: number,
 ) {
   const { db } = getDb();
   const modelAConfig = parseModelIdentifier(modelA);
@@ -682,7 +717,7 @@ async function executeDuel(
     // Update status to running
     await db
       .update(duels)
-      .set({ status: 'running' })
+      .set({ status: "running" })
       .where(eq(duels.id, duelId))
       .run();
 
@@ -698,34 +733,44 @@ async function executeDuel(
         const resultA = await orchestrator.runEye(eyeName, input, undefined, {
           providerOverride: modelAConfig,
         });
-        resultsA.push({ verdict: resultA.verdict, latencyMs: Date.now() - startedA });
+        resultsA.push({
+          verdict: resultA.verdict,
+          latencyMs: Date.now() - startedA,
+        });
 
         // Run model B
         const startedB = Date.now();
         const resultB = await orchestrator.runEye(eyeName, input, undefined, {
           providerOverride: modelBConfig,
         });
-        resultsB.push({ verdict: resultB.verdict, latencyMs: Date.now() - startedB });
+        resultsB.push({
+          verdict: resultB.verdict,
+          latencyMs: Date.now() - startedB,
+        });
       } catch (error) {
         console.error(`Duel iteration ${i + 1} failed:`, error);
       }
     }
 
     // Calculate winner based on approval rates
-    const approvalsA = resultsA.filter((r) => r.verdict === 'APPROVED').length;
-    const approvalsB = resultsB.filter((r) => r.verdict === 'APPROVED').length;
+    const approvalsA = resultsA.filter((r) => r.verdict === "APPROVED").length;
+    const approvalsB = resultsB.filter((r) => r.verdict === "APPROVED").length;
 
-    const avgLatencyA = resultsA.reduce((sum, r) => sum + (r.latencyMs || 0), 0) / resultsA.length;
-    const avgLatencyB = resultsB.reduce((sum, r) => sum + (r.latencyMs || 0), 0) / resultsB.length;
+    const avgLatencyA =
+      resultsA.reduce((sum, r) => sum + (r.latencyMs || 0), 0) /
+      resultsA.length;
+    const avgLatencyB =
+      resultsB.reduce((sum, r) => sum + (r.latencyMs || 0), 0) /
+      resultsB.length;
 
-    let winner: 'modelA' | 'modelB' | 'tie';
+    let winner: "modelA" | "modelB" | "tie";
     if (approvalsA > approvalsB) {
-      winner = 'modelA';
+      winner = "modelA";
     } else if (approvalsB > approvalsA) {
-      winner = 'modelB';
+      winner = "modelB";
     } else {
       // Tie on approvals, use latency as tiebreaker
-      winner = avgLatencyA < avgLatencyB ? 'modelA' : 'modelB';
+      winner = avgLatencyA < avgLatencyB ? "modelA" : "modelB";
     }
 
     const comparisonMatrix = {
@@ -745,7 +790,7 @@ async function executeDuel(
     await db
       .update(duels)
       .set({
-        status: 'completed',
+        status: "completed",
         results: comparisonMatrix,
         winner,
         completedAt: new Date(),
@@ -759,7 +804,7 @@ async function executeDuel(
 
     await db
       .update(duels)
-      .set({ status: 'failed' })
+      .set({ status: "failed" })
       .where(eq(duels.id, duelId))
       .run();
   }

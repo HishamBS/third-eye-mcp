@@ -8,9 +8,16 @@
  * Per R07: Strict typing throughout
  */
 
-import type { PipelineDagNode } from '@third-eye/types';
-import type { NodeHandler, ExecutionContext, NodeExecutionResult } from './base-handler';
-import { evaluateExpression, type ExpressionContext } from '../expression-evaluator';
+import type { PipelineDagNode } from "@third-eye/types";
+import type {
+  NodeHandler,
+  ExecutionContext,
+  NodeExecutionResult,
+} from "./base-handler";
+import {
+  evaluateExpression,
+  type ExpressionContext,
+} from "../expression-evaluator";
 
 /**
  * Result of switch evaluation
@@ -26,12 +33,17 @@ interface SwitchEvaluationResult {
 
 export class SwitchNodeHandler implements NodeHandler {
   canHandle(node: PipelineDagNode): boolean {
-    return node.type === 'switch';
+    return node.type === "switch";
   }
 
-  async execute(node: PipelineDagNode, context: ExecutionContext): Promise<NodeExecutionResult> {
-    if (node.type !== 'switch') {
-      throw new Error(`SwitchNodeHandler cannot handle node type: ${node.type}`);
+  async execute(
+    node: PipelineDagNode,
+    context: ExecutionContext,
+  ): Promise<NodeExecutionResult> {
+    if (node.type !== "switch") {
+      throw new Error(
+        `SwitchNodeHandler cannot handle node type: ${node.type}`,
+      );
     }
 
     const startTime = Date.now();
@@ -40,21 +52,22 @@ export class SwitchNodeHandler implements NodeHandler {
       // Validate switch configuration
       const switchConfig = node.switchConfig;
       if (!switchConfig) {
-        throw new Error('Switch node must have switchConfig property');
+        throw new Error("Switch node must have switchConfig property");
       }
 
       // Build expression context from execution context
       const expressionContext = this.buildExpressionContext(context);
 
       // Evaluate switch rules/expression
-      const result = switchConfig.mode === 'rules'
-        ? this.evaluateRulesMode(switchConfig, expressionContext)
-        : this.evaluateExpressionMode(switchConfig, expressionContext);
+      const result =
+        switchConfig.mode === "rules"
+          ? this.evaluateRulesMode(switchConfig, expressionContext)
+          : this.evaluateExpressionMode(switchConfig, expressionContext);
 
       // Handle no matches
       if (!result.hasMatch && switchConfig.fallbackOutput !== undefined) {
         result.matchedOutputs = [switchConfig.fallbackOutput];
-        result.matchedRules = ['<fallback>'];
+        result.matchedRules = ["<fallback>"];
         result.hasMatch = true;
       }
 
@@ -63,10 +76,10 @@ export class SwitchNodeHandler implements NodeHandler {
       // Return result with matched output indices
       return {
         nodeId: node.id,
-        status: 'success',
-        verdict: result.hasMatch ? 'MATCHED' : 'NO_MATCH',
+        status: "success",
+        verdict: result.hasMatch ? "MATCHED" : "NO_MATCH",
         output: {
-          type: 'switch',
+          type: "switch",
           mode: switchConfig.mode,
           matchedOutputs: result.matchedOutputs,
           matchedRules: result.matchedRules,
@@ -83,7 +96,7 @@ export class SwitchNodeHandler implements NodeHandler {
     } catch (error) {
       return {
         nodeId: node.id,
-        status: 'error',
+        status: "error",
         error: `Switch evaluation failed: ${error instanceof Error ? error.message : String(error)}`,
         latencyMs: Date.now() - startTime,
       };
@@ -95,8 +108,8 @@ export class SwitchNodeHandler implements NodeHandler {
    * Each rule is tested; returns first match or all matches based on sendToAll
    */
   private evaluateRulesMode(
-    config: NonNullable<PipelineDagNode['switchConfig']>,
-    context: ExpressionContext
+    config: NonNullable<PipelineDagNode["switchConfig"]>,
+    context: ExpressionContext,
   ): SwitchEvaluationResult {
     const rules = config.rules ?? [];
     if (rules.length === 0) {
@@ -110,9 +123,10 @@ export class SwitchNodeHandler implements NodeHandler {
     for (const rule of rules) {
       try {
         // Parse expression (support both JSON string and object)
-        const expression = typeof rule.expression === 'string'
-          ? rule.expression
-          : rule.expression;
+        const expression =
+          typeof rule.expression === "string"
+            ? rule.expression
+            : rule.expression;
 
         // Evaluate using expression evaluator
         const evalResult = evaluateExpression(expression, context);
@@ -145,12 +159,12 @@ export class SwitchNodeHandler implements NodeHandler {
    * Single expression returns output index directly
    */
   private evaluateExpressionMode(
-    config: NonNullable<PipelineDagNode['switchConfig']>,
-    context: ExpressionContext
+    config: NonNullable<PipelineDagNode["switchConfig"]>,
+    context: ExpressionContext,
   ): SwitchEvaluationResult {
     const expression = config.expression;
     if (!expression) {
-      throw new Error('Switch expression mode requires expression property');
+      throw new Error("Switch expression mode requires expression property");
     }
 
     try {
@@ -158,13 +172,15 @@ export class SwitchNodeHandler implements NodeHandler {
       const evalResult = evaluateExpression(expression, context);
 
       if (!evalResult.success) {
-        throw new Error(evalResult.error ?? 'Expression evaluation failed');
+        throw new Error(evalResult.error ?? "Expression evaluation failed");
       }
 
       // Expression should return a number (output index)
       const outputIndex = evalResult.value;
-      if (typeof outputIndex !== 'number') {
-        throw new Error(`Switch expression must return number, got ${typeof outputIndex}`);
+      if (typeof outputIndex !== "number") {
+        throw new Error(
+          `Switch expression must return number, got ${typeof outputIndex}`,
+        );
       }
 
       // Validate output index
@@ -174,11 +190,13 @@ export class SwitchNodeHandler implements NodeHandler {
 
       return {
         matchedOutputs: [outputIndex],
-        matchedRules: ['<expression>'],
+        matchedRules: ["<expression>"],
         hasMatch: true,
       };
     } catch (error) {
-      throw new Error(`Expression mode evaluation failed: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Expression mode evaluation failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -200,9 +218,10 @@ export class SwitchNodeHandler implements NodeHandler {
     }
 
     // Extract output data
-    const output = lastResult.output && typeof lastResult.output === 'object'
-      ? lastResult.output as Record<string, unknown>
-      : undefined;
+    const output =
+      lastResult.output && typeof lastResult.output === "object"
+        ? (lastResult.output as Record<string, unknown>)
+        : undefined;
 
     // Build expression context
     return {

@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
-import KillSwitchBar from '../../KillSwitchBar';
-import DuelLauncher from '../../DuelLauncher';
-import DuelResults from '../../DuelResults';
-import type { PipelineEvent } from '../../../types/pipeline';
+import { useMemo } from "react";
+import KillSwitchBar from "../../KillSwitchBar";
+import DuelLauncher from "../../DuelLauncher";
+import DuelResults from "../../DuelResults";
+import type { PipelineEvent } from "../../../types/pipeline";
 
 export interface OperationsTabProps {
   sessionId: string | null;
@@ -27,15 +27,24 @@ export function OperationsTab({
     const roster = new Set<string>();
     events.forEach((event) => {
       const data = (event.data ?? {}) as Record<string, unknown>;
-      const primary = typeof data.agent === 'string' ? data.agent : typeof data.agent_name === 'string' ? data.agent_name : null;
+      const primary =
+        typeof data.agent === "string"
+          ? data.agent
+          : typeof data.agent_name === "string"
+            ? data.agent_name
+            : null;
       if (primary) {
         roster.add(primary);
       }
       const agents = Array.isArray(data.agents) ? data.agents : [];
       agents.forEach((entry) => {
-        if (typeof entry === 'string') {
+        if (typeof entry === "string") {
           roster.add(entry);
-        } else if (entry && typeof entry === 'object' && typeof (entry as Record<string, unknown>).agent === 'string') {
+        } else if (
+          entry &&
+          typeof entry === "object" &&
+          typeof (entry as Record<string, unknown>).agent === "string"
+        ) {
           roster.add((entry as Record<string, unknown>).agent as string);
         }
       });
@@ -48,7 +57,12 @@ export function OperationsTab({
       {loading ? (
         <div className="h-36 animate-pulse rounded-2xl border border-brand-outline/40 bg-brand-paper/60" />
       ) : (
-        <KillSwitchBar sessionId={sessionId ?? ''} apiKey={apiKey ?? ''} latestDraft={latestDraft} latestEvent={latestEvent ?? events.at(-1) ?? undefined} />
+        <KillSwitchBar
+          sessionId={sessionId ?? ""}
+          apiKey={apiKey ?? ""}
+          latestDraft={latestDraft}
+          latestEvent={latestEvent ?? events.at(-1) ?? undefined}
+        />
       )}
       <div className="grid gap-4 lg:grid-cols-[1.3fr,1fr]">
         {loading ? (
@@ -62,7 +76,11 @@ export function OperationsTab({
           <DuelResults events={events} />
         )}
       </div>
-      {resubmitMessage && <p className="rounded-xl border border-brand-outline/40 bg-brand-paper/80 p-3 text-xs text-semantic-muted">{resubmitMessage}</p>}
+      {resubmitMessage && (
+        <p className="rounded-xl border border-brand-outline/40 bg-brand-paper/80 p-3 text-xs text-semantic-muted">
+          {resubmitMessage}
+        </p>
+      )}
     </div>
   );
 }

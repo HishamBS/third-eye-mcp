@@ -11,8 +11,8 @@
  * Per R13: Interfaces exported for SSOT
  */
 
-import { randomUUID } from 'node:crypto';
-import type { Database } from 'bun:sqlite';
+import { randomUUID } from "node:crypto";
+import type { Database } from "bun:sqlite";
 
 /**
  * Intent confirmation request
@@ -24,7 +24,7 @@ export interface IntentConfirmation {
   readonly confirmationPrompt: string;
   readonly response?: string;
   readonly userIdentity?: string;
-  readonly status: 'pending' | 'confirmed' | 'rejected' | 'expired';
+  readonly status: "pending" | "confirmed" | "rejected" | "expired";
   readonly createdAt: number;
   readonly respondedAt?: number;
 }
@@ -35,7 +35,7 @@ export interface IntentConfirmation {
 export interface ConfirmationResponse {
   readonly confirmed: boolean;
   readonly response: string;
-  readonly source: 'human' | 'agent';
+  readonly source: "human" | "agent";
   readonly userIdentity?: string;
 }
 
@@ -62,14 +62,14 @@ export class IntentConfirmationManager {
       sessionId: params.sessionId,
       intentAnalysis: params.intentAnalysis,
       confirmationPrompt: params.confirmationPrompt,
-      status: 'pending',
+      status: "pending",
       createdAt,
     };
 
     this.db
       .prepare(
         `INSERT INTO intent_confirmations (id, session_id, intent_analysis, confirmation_prompt, status, created_at)
-         VALUES (?, ?, ?, ?, ?, ?)`
+         VALUES (?, ?, ?, ?, ?, ?)`,
       )
       .run(
         confirmation.id,
@@ -77,7 +77,7 @@ export class IntentConfirmationManager {
         JSON.stringify(confirmation.intentAnalysis),
         confirmation.confirmationPrompt,
         confirmation.status,
-        confirmation.createdAt
+        confirmation.createdAt,
       );
 
     return confirmation;
@@ -88,23 +88,23 @@ export class IntentConfirmationManager {
    */
   async submitConfirmation(
     confirmationId: string,
-    response: ConfirmationResponse
+    response: ConfirmationResponse,
   ): Promise<IntentConfirmation> {
     const respondedAt = Date.now();
-    const status = response.confirmed ? 'confirmed' : 'rejected';
+    const status = response.confirmed ? "confirmed" : "rejected";
 
     this.db
       .prepare(
         `UPDATE intent_confirmations
          SET response = ?, user_identity = ?, status = ?, responded_at = ?
-         WHERE id = ?`
+         WHERE id = ?`,
       )
       .run(
         response.response,
         response.userIdentity ?? response.source,
         status,
         respondedAt,
-        confirmationId
+        confirmationId,
       );
 
     return this.getConfirmation(confirmationId)!;
@@ -118,7 +118,7 @@ export class IntentConfirmationManager {
       .prepare(
         `SELECT id, session_id, intent_analysis, confirmation_prompt, response, user_identity, status, created_at, responded_at
          FROM intent_confirmations
-         WHERE id = ?`
+         WHERE id = ?`,
       )
       .get(confirmationId) as
       | {
@@ -141,11 +141,13 @@ export class IntentConfirmationManager {
     return {
       id: row.id,
       sessionId: row.session_id,
-      intentAnalysis: row.intent_analysis ? (JSON.parse(row.intent_analysis) as Record<string, unknown>) : {},
+      intentAnalysis: row.intent_analysis
+        ? (JSON.parse(row.intent_analysis) as Record<string, unknown>)
+        : {},
       confirmationPrompt: row.confirmation_prompt,
       response: row.response ?? undefined,
       userIdentity: row.user_identity ?? undefined,
-      status: row.status as 'pending' | 'confirmed' | 'rejected' | 'expired',
+      status: row.status as "pending" | "confirmed" | "rejected" | "expired",
       createdAt: row.created_at,
       respondedAt: row.responded_at ?? undefined,
     };
@@ -160,7 +162,7 @@ export class IntentConfirmationManager {
         `SELECT id, session_id, intent_analysis, confirmation_prompt, response, user_identity, status, created_at, responded_at
          FROM intent_confirmations
          WHERE session_id = ? AND status = 'pending'
-         ORDER BY created_at DESC`
+         ORDER BY created_at DESC`,
       )
       .all(sessionId) as Array<{
       id: string;
@@ -174,14 +176,16 @@ export class IntentConfirmationManager {
       responded_at: number | null;
     }>;
 
-    return rows.map(row => ({
+    return rows.map((row) => ({
       id: row.id,
       sessionId: row.session_id,
-      intentAnalysis: row.intent_analysis ? (JSON.parse(row.intent_analysis) as Record<string, unknown>) : {},
+      intentAnalysis: row.intent_analysis
+        ? (JSON.parse(row.intent_analysis) as Record<string, unknown>)
+        : {},
       confirmationPrompt: row.confirmation_prompt,
       response: row.response ?? undefined,
       userIdentity: row.user_identity ?? undefined,
-      status: row.status as 'pending' | 'confirmed' | 'rejected' | 'expired',
+      status: row.status as "pending" | "confirmed" | "rejected" | "expired",
       createdAt: row.created_at,
       respondedAt: row.responded_at ?? undefined,
     }));
@@ -196,7 +200,7 @@ export class IntentConfirmationManager {
         `SELECT id, session_id, intent_analysis, confirmation_prompt, response, user_identity, status, created_at, responded_at
          FROM intent_confirmations
          WHERE session_id = ?
-         ORDER BY created_at DESC`
+         ORDER BY created_at DESC`,
       )
       .all(sessionId) as Array<{
       id: string;
@@ -210,14 +214,16 @@ export class IntentConfirmationManager {
       responded_at: number | null;
     }>;
 
-    return rows.map(row => ({
+    return rows.map((row) => ({
       id: row.id,
       sessionId: row.session_id,
-      intentAnalysis: row.intent_analysis ? (JSON.parse(row.intent_analysis) as Record<string, unknown>) : {},
+      intentAnalysis: row.intent_analysis
+        ? (JSON.parse(row.intent_analysis) as Record<string, unknown>)
+        : {},
       confirmationPrompt: row.confirmation_prompt,
       response: row.response ?? undefined,
       userIdentity: row.user_identity ?? undefined,
-      status: row.status as 'pending' | 'confirmed' | 'rejected' | 'expired',
+      status: row.status as "pending" | "confirmed" | "rejected" | "expired",
       createdAt: row.created_at,
       respondedAt: row.responded_at ?? undefined,
     }));
@@ -232,7 +238,7 @@ export class IntentConfirmationManager {
       .prepare(
         `UPDATE intent_confirmations
          SET status = 'expired'
-         WHERE status = 'pending' AND created_at < ?`
+         WHERE status = 'pending' AND created_at < ?`,
       )
       .run(cutoff);
 

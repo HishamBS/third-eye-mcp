@@ -7,7 +7,9 @@ This error means the MCP client cannot find the executable specified in your con
 ## Root Causes
 
 ### 1. Relative Path Instead of Absolute Path
+
 **Wrong:**
+
 ```json
 {
   "command": "bin/mcp-server.ts"
@@ -15,6 +17,7 @@ This error means the MCP client cannot find the executable specified in your con
 ```
 
 **Correct:**
+
 ```json
 {
   "command": "bun",
@@ -23,11 +26,14 @@ This error means the MCP client cannot find the executable specified in your con
 ```
 
 ### 2. Package Not Installed Globally
+
 If using `bunx third-eye-mcp server`, the package must be:
+
 - Published to npm registry, OR
 - Installed globally via `npm link` or `npm install -g .`
 
 ### 3. Wrong Command for Agent
+
 Different agents use different config formats.
 
 ## Solutions by Agent
@@ -35,10 +41,12 @@ Different agents use different config formats.
 ### Warp Terminal
 
 **Config file location:**
+
 - macOS: `~/.warp/mcp_servers.json`
 - Linux: `~/.config/warp-terminal/mcp_servers.json`
 
 **Option 1: Direct Path (Recommended)**
+
 ```json
 {
   "mcpServers": {
@@ -55,12 +63,14 @@ Different agents use different config formats.
 ```
 
 **Option 2: After Global Install**
+
 ```bash
 cd /path/to/third-eye-mcp
 npm link
 ```
 
 Then:
+
 ```json
 {
   "mcpServers": {
@@ -78,9 +88,11 @@ Then:
 ### Zed Editor
 
 **Config file location:**
+
 - `~/.config/zed/settings.json`
 
 **Configuration:**
+
 ```json
 {
   "context_servers": {
@@ -101,10 +113,12 @@ Then:
 ### Claude Desktop
 
 **Config file location:**
+
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Linux: `~/.config/Claude/claude_desktop_config.json`
 
 **Configuration:**
+
 ```json
 {
   "mcpServers": {
@@ -123,6 +137,7 @@ Then:
 ## Verification Steps
 
 ### 1. Find Absolute Path
+
 ```bash
 cd /path/to/third-eye-mcp
 pwd
@@ -130,12 +145,14 @@ pwd
 ```
 
 ### 2. Test Server Manually
+
 ```bash
 cd /path/to/third-eye-mcp
 bun run bin/mcp-server.ts
 ```
 
 **Expected output:**
+
 ```
 🔧 Proactively removed empty/corrupted WAL file
 ✅ Database initialized with 25 tables
@@ -146,6 +163,7 @@ bun run bin/mcp-server.ts
 ```
 
 ### 3. Check Config Syntax
+
 ```bash
 # For Warp
 cat ~/.warp/mcp_servers.json | jq .
@@ -158,6 +176,7 @@ cat ~/Library/Application\ Support/Claude/claude_desktop_config.json | jq .
 ```
 
 ### 4. Restart Agent Completely
+
 - **Warp**: Quit completely (Cmd+Q / Ctrl+Q), then reopen
 - **Zed**: Quit and reopen
 - **Claude Desktop**: Quit and reopen
@@ -165,6 +184,7 @@ cat ~/Library/Application\ Support/Claude/claude_desktop_config.json | jq .
 ## Common Mistakes
 
 ### ❌ Using `~` in path
+
 ```json
 {
   "command": "bun",
@@ -175,6 +195,7 @@ cat ~/Library/Application\ Support/Claude/claude_desktop_config.json | jq .
 **Fix:** Use absolute path `/home/username/` instead of `~`
 
 ### ❌ Using relative path
+
 ```json
 {
   "command": "./bin/mcp-server.ts"
@@ -184,6 +205,7 @@ cat ~/Library/Application\ Support/Claude/claude_desktop_config.json | jq .
 **Fix:** Use absolute path
 
 ### ❌ Missing bun command
+
 ```json
 {
   "command": "/path/to/bin/mcp-server.ts"
@@ -193,6 +215,7 @@ cat ~/Library/Application\ Support/Claude/claude_desktop_config.json | jq .
 **Fix:** TypeScript files need `bun run` prefix
 
 ### ❌ Wrong config file format
+
 Different agents use different JSON structures. Check examples above.
 
 ## Debugging
@@ -200,18 +223,21 @@ Different agents use different JSON structures. Check examples above.
 ### View Agent Logs
 
 **Warp:**
+
 ```bash
 # Check Warp logs for MCP errors
 # Settings → Advanced → Open Logs
 ```
 
 **Zed:**
+
 ```bash
 # Check Zed logs
 tail -f ~/.local/share/zed/logs/*.log
 ```
 
 **Claude Desktop:**
+
 ```bash
 # macOS
 tail -f ~/Library/Logs/Claude/mcp*.log
@@ -229,6 +255,7 @@ Use the third_eye_overseer tool to test connection
 ```
 
 Expected response:
+
 - Agent calls `third_eye_overseer`
 - Returns structured JSON with status
 - Check dashboard at http://127.0.0.1:3300 for session
@@ -236,11 +263,13 @@ Expected response:
 ## Why Sequential-Thinking Works But Third-Eye Doesn't
 
 **Sequential-thinking MCP** likely:
+
 1. Is published to npm registry
 2. Uses `npx` or `bunx` to auto-download
 3. Installed globally on your system
 
 **Third-Eye MCP** (development version):
+
 1. Not published to npm (local development)
 2. Requires absolute path configuration
 3. OR requires global install via `npm link`
@@ -264,6 +293,7 @@ third-eye-mcp --version
 ```
 
 Then update config to:
+
 ```json
 {
   "mcpServers": {
@@ -278,22 +308,26 @@ Then update config to:
 ## Still Not Working?
 
 1. **Check bun is installed:**
+
    ```bash
    which bun
    bun --version
    ```
 
 2. **Check file exists:**
+
    ```bash
    ls -la /path/to/third-eye-mcp/bin/mcp-server.ts
    ```
 
 3. **Check file permissions:**
+
    ```bash
    chmod +x /path/to/third-eye-mcp/bin/mcp-server.ts
    ```
 
 4. **Try built version:**
+
    ```json
    {
      "command": "bun",
@@ -325,6 +359,7 @@ Then update config to:
 ## Next Steps
 
 After connection is established:
+
 1. Send test request to verify tool works
 2. Check dashboard for session visibility
 3. Review pipeline execution in Monitor tab

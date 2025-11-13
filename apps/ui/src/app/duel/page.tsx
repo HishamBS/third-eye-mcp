@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { DuelMode } from '@/components/DuelMode';
-import { nanoid } from 'nanoid';
+import { useState } from "react";
+import { DuelMode } from "@/components/DuelMode";
+import { nanoid } from "nanoid";
 
 export default function DuelPage() {
   const [sessionId] = useState(() => `duel-${nanoid()}`);
-  const [prompt, setPrompt] = useState('');
+  const [prompt, setPrompt] = useState("");
   const [showDuel, setShowDuel] = useState(false);
 
   const handleStartDuel = () => {
     if (!prompt.trim()) {
-      alert('Please enter a prompt');
+      alert("Please enter a prompt");
       return;
     }
     setShowDuel(true);
   };
 
   const handleReset = () => {
-    setPrompt('');
+    setPrompt("");
     setShowDuel(false);
   };
 
@@ -26,7 +26,9 @@ export default function DuelPage() {
     <div className="min-h-screen bg-gradient-to-br from-brand-paper via-brand-ink to-brand-paper p-6">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-brand-foreground">Duel Mode</h1>
+          <h1 className="text-4xl font-bold text-brand-foreground">
+            Duel Mode
+          </h1>
           <p className="mt-2 text-lg text-semantic-muted">
             Compare multiple AI models side-by-side with the same prompt
           </p>
@@ -35,7 +37,10 @@ export default function DuelPage() {
         {!showDuel ? (
           <div className="rounded-2xl border border-brand-outline/40 bg-brand-paper/50 p-8">
             <div className="mb-6">
-              <label htmlFor="prompt" className="mb-2 block text-sm font-semibold text-semantic-muted">
+              <label
+                htmlFor="prompt"
+                className="mb-2 block text-sm font-semibold text-semantic-muted"
+              >
                 Enter Your Prompt
               </label>
               <textarea
@@ -63,8 +68,8 @@ export default function DuelPage() {
                 disabled={!prompt.trim()}
                 className={`rounded-lg px-6 py-3 font-semibold transition ${
                   prompt.trim()
-                    ? 'bg-brand-accent text-brand-foreground hover:bg-brand-accent/90'
-                    : 'cursor-not-allowed bg-brand-paper text-semantic-muted'
+                    ? "bg-brand-accent text-brand-foreground hover:bg-brand-accent/90"
+                    : "cursor-not-allowed bg-brand-paper text-semantic-muted"
                 }`}
               >
                 Configure Duel
@@ -75,7 +80,9 @@ export default function DuelPage() {
           <div>
             <div className="mb-4 flex items-center justify-between">
               <div className="rounded-lg border border-brand-outline/40 bg-brand-paper/50 p-4 flex-1 mr-4">
-                <p className="text-xs font-semibold uppercase text-semantic-muted">Prompt</p>
+                <p className="text-xs font-semibold uppercase text-semantic-muted">
+                  Prompt
+                </p>
                 <p className="mt-1 text-sm text-semantic-muted">{prompt}</p>
               </div>
               <button
@@ -90,7 +97,7 @@ export default function DuelPage() {
               sessionId={sessionId}
               prompt={prompt}
               onComplete={(results) => {
-                console.log('Duel completed:', results);
+                console.log("Duel completed:", results);
               }}
             />
           </div>

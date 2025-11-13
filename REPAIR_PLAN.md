@@ -1,4 +1,5 @@
 # COMPREHENSIVE REPAIR PLAN
+
 **Date**: 2025-11-12
 **Status**: ALL GAPS IDENTIFIED - READY FOR SYSTEMATIC REPAIR
 **No Bullshit, No Estimates, Just What Needs to Be Done**
@@ -18,13 +19,17 @@
 **File**: `packages/providers/groq/client.ts`
 
 **Current Code (WRONG)**:
+
 ```typescript
-response_format: { type: "json_object" }
+response_format: {
+  type: "json_object";
+}
 ```
 
 **Required Changes**:
 
 1. Define tool schema for eye responses:
+
 ```typescript
 const EYE_RESPONSE_TOOL = {
   type: "function",
@@ -35,21 +40,25 @@ const EYE_RESPONSE_TOOL = {
       type: "object",
       properties: {
         ok: { type: "boolean", description: "Whether the analysis succeeded" },
-        code: { type: "string", description: "Status code (E_OK, E_NEEDS_CLARIFICATION, etc.)" },
+        code: {
+          type: "string",
+          description: "Status code (E_OK, E_NEEDS_CLARIFICATION, etc.)",
+        },
         md: { type: "string", description: "Markdown-formatted analysis" },
         data: {
           type: "object",
           description: "Structured data specific to this eye",
-          additionalProperties: true
-        }
+          additionalProperties: true,
+        },
       },
-      required: ["ok", "code", "md"]
-    }
-  }
+      required: ["ok", "code", "md"],
+    },
+  },
 };
 ```
 
 2. Update API call:
+
 ```typescript
 // REMOVE:
 response_format: { type: "json_object" }
@@ -60,19 +69,21 @@ tool_choice: { type: "function", function: { name: "submit_eye_analysis" } }
 ```
 
 3. Update response parsing:
+
 ```typescript
 // REMOVE:
 const parsed = JSON.parse(completion.choices[0].message.content);
 
 // ADD:
 const toolCall = completion.choices[0].message.tool_calls?.[0];
-if (!toolCall || toolCall.type !== 'function') {
-  throw new Error('Expected function call response from Groq');
+if (!toolCall || toolCall.type !== "function") {
+  throw new Error("Expected function call response from Groq");
 }
 const parsed = JSON.parse(toolCall.function.arguments);
 ```
 
 **Verification**:
+
 - Test with all 8 eye personas
 - Confirm 95%+ success rate
 - Check that malformed JSON no longer occurs
@@ -84,11 +95,13 @@ const parsed = JSON.parse(toolCall.function.arguments);
 **File**: `packages/providers/openrouter/client.ts`
 
 **Apply identical changes as Groq**:
+
 1. Add EYE_RESPONSE_TOOL schema
 2. Replace `response_format` with `tools` + `tool_choice`
 3. Parse from `tool_calls[0].function.arguments` instead of `message.content`
 
 **Verification**:
+
 - Test with all 8 eye personas
 - Confirm 85%+ success rate
 - No more format errors
@@ -108,10 +121,11 @@ const parsed = JSON.parse(toolCall.function.arguments);
 **Location**: After Line 428 (after eye execution, before continuing loop)
 
 **Add This Code**:
+
 ```typescript
 // Check for pause codes - Line ~429
-if (result.code === 'E_NEEDS_CLARIFICATION') {
-  const { PauseResumeManager } = await import('./pause-resume-manager');
+if (result.code === "E_NEEDS_CLARIFICATION") {
+  const { PauseResumeManager } = await import("./pause-resume-manager");
   const pauseManager = new PauseResumeManager(db);
 
   await pauseManager.pausePipeline({
@@ -119,24 +133,24 @@ if (result.code === 'E_NEEDS_CLARIFICATION') {
     currentEye: eyeName,
     currentEyeIndex: i,
     remainingEyes: decision.recommendedFlow.slice(i + 1),
-    reason: 'clarification',
+    reason: "clarification",
     pendingData: result.data,
-    expiresAt: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+    expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
   });
 
   conversationTracker.logPause(
     decision.sessionId,
-    'clarification',
-    `Eye ${eyeName} requested clarification`
+    "clarification",
+    `Eye ${eyeName} requested clarification`,
   );
 
   // Emit pause event via WebSocket
   if (ws) {
     ws.broadcastToSession(decision.sessionId, {
-      type: 'pipeline_paused',
-      reason: 'clarification',
+      type: "pipeline_paused",
+      reason: "clarification",
       eye: eyeName,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -145,12 +159,12 @@ if (result.code === 'E_NEEDS_CLARIFICATION') {
     results,
     completed: false,
     paused: true,
-    pauseReason: 'clarification'
+    pauseReason: "clarification",
   };
 }
 
-if (result.code === 'E_INTENT_UNCONFIRMED') {
-  const { PauseResumeManager } = await import('./pause-resume-manager');
+if (result.code === "E_INTENT_UNCONFIRMED") {
+  const { PauseResumeManager } = await import("./pause-resume-manager");
   const pauseManager = new PauseResumeManager(db);
 
   await pauseManager.pausePipeline({
@@ -158,23 +172,23 @@ if (result.code === 'E_INTENT_UNCONFIRMED') {
     currentEye: eyeName,
     currentEyeIndex: i,
     remainingEyes: decision.recommendedFlow.slice(i + 1),
-    reason: 'intent_confirmation',
+    reason: "intent_confirmation",
     pendingData: result.data,
-    expiresAt: Date.now() + 24 * 60 * 60 * 1000
+    expiresAt: Date.now() + 24 * 60 * 60 * 1000,
   });
 
   conversationTracker.logPause(
     decision.sessionId,
-    'intent_confirmation',
-    `Eye ${eyeName} requested intent confirmation`
+    "intent_confirmation",
+    `Eye ${eyeName} requested intent confirmation`,
   );
 
   if (ws) {
     ws.broadcastToSession(decision.sessionId, {
-      type: 'pipeline_paused',
-      reason: 'intent_confirmation',
+      type: "pipeline_paused",
+      reason: "intent_confirmation",
       eye: eyeName,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -183,7 +197,7 @@ if (result.code === 'E_INTENT_UNCONFIRMED') {
     results,
     completed: false,
     paused: true,
-    pauseReason: 'intent_confirmation'
+    pauseReason: "intent_confirmation",
   };
 }
 
@@ -194,19 +208,21 @@ if (isRejected(result)) {
 ```
 
 **Update Return Type**:
+
 ```typescript
 // In AutoRoutingResult interface (Line ~96)
 export interface AutoRoutingResult {
   sessionId: string;
   results: BaseEnvelope[];
   completed: boolean;
-  paused?: boolean;        // ADD THIS
-  pauseReason?: string;    // ADD THIS
+  paused?: boolean; // ADD THIS
+  pauseReason?: string; // ADD THIS
   error?: string;
 }
 ```
 
 **Verification**:
+
 1. Create test eye that returns `E_NEEDS_CLARIFICATION`
 2. Run pipeline, confirm it pauses
 3. Check `pipeline_states` table populated
@@ -228,11 +244,13 @@ export interface AutoRoutingResult {
 **File**: `packages/mcp/server.ts`
 
 **Check These Locations**:
+
 1. `/invoke` endpoint response (Line ~200-250)
 2. `/resume` endpoint response (Line ~359-422)
 3. `/confirmIntent` endpoint response (if exists)
 
 **Required Response Format**:
+
 ```typescript
 // CORRECT (agent sees this):
 {
@@ -261,12 +279,14 @@ export interface AutoRoutingResult {
 
 **Specific Fix**:
 Find response construction in `/invoke` and `/resume` handlers, ensure ONLY these fields returned:
+
 - `summary` (string)
 - `content` (string or markdown)
 - `sessionId` (string)
 - `portalUrl` (optional, for human monitoring)
 
 **Remove if present**:
+
 - `history`
 - `routing`
 - `eyeResults`
@@ -274,6 +294,7 @@ Find response construction in `/invoke` and `/resume` handlers, ensure ONLY thes
 - Any eye names or internal structure
 
 **Verification**:
+
 1. Call MCP `/invoke` endpoint
 2. Inspect actual JSON response
 3. Confirm NO eye names appear anywhere
@@ -293,11 +314,13 @@ Find response construction in `/invoke` and `/resume` handlers, ensure ONLY thes
 **File**: `packages/db/defaults/personas.ts`
 
 **Current Instruction (WRONG)**:
+
 ```typescript
-persona: "Create a structured brief..."
+persona: "Create a structured brief...";
 ```
 
 **Required Instruction**:
+
 ```typescript
 persona: `You are Kyuubi, the demon fox eye that asks POWERFUL QUESTIONS about scope and context.
 
@@ -332,10 +355,11 @@ If the request is clear and complete, return:
   "code": "E_OK",
   "md": "Request is clear. Scope is well-defined. Proceed.",
   "data": { "scopeClarity": "high" }
-}`
+}`;
 ```
 
 **Verification**:
+
 1. Test Kyuubi with ambiguous request
 2. Confirm it returns QUESTIONS not briefs
 3. Check data.questions array populated
@@ -347,11 +371,13 @@ If the request is clear and complete, return:
 **File**: `packages/db/defaults/personas.ts`
 
 **Current Instruction (WRONG)**:
+
 ```typescript
-persona: "Create a feasibility analysis..."
+persona: "Create a feasibility analysis...";
 ```
 
 **Required Instruction**:
+
 ```typescript
 persona: `You are Rinnegan, the god eye that asks DEEP QUESTIONS about feasibility and risks.
 
@@ -386,10 +412,11 @@ If no feasibility concerns, return:
   "code": "E_OK",
   "md": "Feasibility confirmed. No blockers detected. Proceed.",
   "data": { "feasibility": "high", "risks": [] }
-}`
+}`;
 ```
 
 **Verification**:
+
 1. Test Rinnegan with complex technical request
 2. Confirm it returns QUESTIONS not analysis
 3. Check it identifies risk areas
@@ -407,51 +434,58 @@ If no feasibility concerns, return:
 **File**: `apps/server/src/routes/intent-confirmations.ts` (NEW FILE)
 
 **Create Complete API**:
+
 ```typescript
-import { Hono } from 'hono';
-import { getDb } from '@third-eye/db';
-import { IntentConfirmationManager } from '@third-eye/core';
+import { Hono } from "hono";
+import { getDb } from "@third-eye/db";
+import { IntentConfirmationManager } from "@third-eye/core";
 import {
   createSuccessResponse,
   createErrorResponse,
   createNotFoundResponse,
   createInternalErrorResponse,
   requestIdMiddleware,
-  errorHandler
-} from '../middleware/response';
+  errorHandler,
+} from "../middleware/response";
 
 const app = new Hono();
 
 // Apply middleware
-app.use('*', requestIdMiddleware());
-app.use('*', errorHandler());
+app.use("*", requestIdMiddleware());
+app.use("*", errorHandler());
 
 // GET /api/intent-confirmations/:id
 // Get specific intent confirmation
-app.get('/:id', async (c) => {
+app.get("/:id", async (c) => {
   try {
-    const confirmationId = c.req.param('id');
+    const confirmationId = c.req.param("id");
     const { db } = getDb();
     const manager = new IntentConfirmationManager(db);
 
     const confirmation = await manager.getConfirmation(confirmationId);
 
     if (!confirmation) {
-      return createNotFoundResponse(c, `Intent confirmation ${confirmationId} not found`);
+      return createNotFoundResponse(
+        c,
+        `Intent confirmation ${confirmationId} not found`,
+      );
     }
 
     return createSuccessResponse(c, { confirmation });
   } catch (error) {
-    console.error('Failed to fetch intent confirmation:', error);
-    return createInternalErrorResponse(c, 'Failed to fetch intent confirmation');
+    console.error("Failed to fetch intent confirmation:", error);
+    return createInternalErrorResponse(
+      c,
+      "Failed to fetch intent confirmation",
+    );
   }
 });
 
 // GET /api/intent-confirmations/session/:sessionId
 // Get all intent confirmations for a session
-app.get('/session/:sessionId', async (c) => {
+app.get("/session/:sessionId", async (c) => {
   try {
-    const sessionId = c.req.param('sessionId');
+    const sessionId = c.req.param("sessionId");
     const { db } = getDb();
 
     const query = `
@@ -474,34 +508,39 @@ app.get('/session/:sessionId', async (c) => {
       responded_at: number | null;
     }>;
 
-    const confirmations = rows.map(row => ({
+    const confirmations = rows.map((row) => ({
       id: row.id,
       sessionId: row.session_id,
-      intentAnalysis: row.intent_analysis ? JSON.parse(row.intent_analysis) : null,
+      intentAnalysis: row.intent_analysis
+        ? JSON.parse(row.intent_analysis)
+        : null,
       confirmationPrompt: row.confirmation_prompt,
       response: row.response,
       userIdentity: row.user_identity,
       status: row.status,
       createdAt: row.created_at,
-      respondedAt: row.responded_at
+      respondedAt: row.responded_at,
     }));
 
     return createSuccessResponse(c, { confirmations });
   } catch (error) {
-    console.error('Failed to fetch session intent confirmations:', error);
-    return createInternalErrorResponse(c, 'Failed to fetch session intent confirmations');
+    console.error("Failed to fetch session intent confirmations:", error);
+    return createInternalErrorResponse(
+      c,
+      "Failed to fetch session intent confirmations",
+    );
   }
 });
 
 // POST /api/intent-confirmations/:id/submit
 // Submit human response to intent confirmation
-app.post('/:id/submit', async (c) => {
+app.post("/:id/submit", async (c) => {
   try {
-    const confirmationId = c.req.param('id');
+    const confirmationId = c.req.param("id");
     const body = await c.req.json();
 
-    if (!body.response || typeof body.response !== 'string') {
-      return createErrorResponse(c, 'response (string) is required', 400);
+    if (!body.response || typeof body.response !== "string") {
+      return createErrorResponse(c, "response (string) is required", 400);
     }
 
     const { db } = getDb();
@@ -510,25 +549,28 @@ app.post('/:id/submit', async (c) => {
     await manager.submitConfirmation(
       confirmationId,
       body.response,
-      body.userIdentity || 'human-via-ui'
+      body.userIdentity || "human-via-ui",
     );
 
     return createSuccessResponse(c, {
-      message: 'Intent confirmation submitted successfully',
-      confirmationId
+      message: "Intent confirmation submitted successfully",
+      confirmationId,
     });
   } catch (error) {
-    console.error('Failed to submit intent confirmation:', error);
-    if (error instanceof Error && error.message.includes('not found')) {
+    console.error("Failed to submit intent confirmation:", error);
+    if (error instanceof Error && error.message.includes("not found")) {
       return createNotFoundResponse(c, error.message);
     }
-    return createInternalErrorResponse(c, 'Failed to submit intent confirmation');
+    return createInternalErrorResponse(
+      c,
+      "Failed to submit intent confirmation",
+    );
   }
 });
 
 // GET /api/intent-confirmations/pending
 // Get all pending intent confirmations
-app.get('/pending', async (c) => {
+app.get("/pending", async (c) => {
   try {
     const { db } = getDb();
 
@@ -547,18 +589,21 @@ app.get('/pending', async (c) => {
       created_at: number;
     }>;
 
-    const confirmations = rows.map(row => ({
+    const confirmations = rows.map((row) => ({
       id: row.id,
       sessionId: row.session_id,
       confirmationPrompt: row.confirmation_prompt,
       status: row.status,
-      createdAt: row.created_at
+      createdAt: row.created_at,
     }));
 
     return createSuccessResponse(c, { confirmations });
   } catch (error) {
-    console.error('Failed to fetch pending intent confirmations:', error);
-    return createInternalErrorResponse(c, 'Failed to fetch pending intent confirmations');
+    console.error("Failed to fetch pending intent confirmations:", error);
+    return createInternalErrorResponse(
+      c,
+      "Failed to fetch pending intent confirmations",
+    );
   }
 });
 
@@ -569,12 +614,14 @@ export default app;
 **File**: `apps/server/src/index.ts`
 
 Add:
+
 ```typescript
-import intentConfirmationsRoutes from './routes/intent-confirmations';
-app.route('/api/intent-confirmations', intentConfirmationsRoutes);
+import intentConfirmationsRoutes from "./routes/intent-confirmations";
+app.route("/api/intent-confirmations", intentConfirmationsRoutes);
 ```
 
 **Verification**:
+
 1. Start server
 2. Call `POST /api/intent-confirmations` - confirm 201 response
 3. Call `GET /api/intent-confirmations/:id` - confirm data returned
@@ -588,6 +635,7 @@ app.route('/api/intent-confirmations', intentConfirmationsRoutes);
 ### GAP 6: A7 - Advanced Pipeline Builder Features
 
 **Missing Features**:
+
 1. Visual policy builder with constraint selectors
 2. Predefined template library
 3. Template import/export
@@ -598,6 +646,7 @@ app.route('/api/intent-confirmations', intentConfirmationsRoutes);
 **File**: `apps/ui/src/components/pipeline-builder/VisualPolicyBuilder.tsx` (NEW FILE)
 
 **Create Interactive Policy Editor**:
+
 - Checkboxes for mandatory eyes (multi-select)
 - Checkboxes for forbidden eyes (multi-select)
 - Slider for min validation eyes
@@ -615,38 +664,46 @@ Add to `/routing-modes` page as alternative to raw JSON form
 **File**: `packages/db/defaults/templates.ts` (NEW FILE)
 
 **Create 5 Built-in Templates**:
+
 ```typescript
 export const PREDEFINED_TEMPLATES = [
   {
     name: "Fast Code Review",
     description: "Quick review for small changes",
     eyes: ["sharingan", "mangekyo"],
-    strict: false
+    strict: false,
   },
   {
     name: "Security Audit",
     description: "Comprehensive security analysis",
     eyes: ["sharingan", "rinnegan", "tenseigan", "byakugan"],
-    strict: true
+    strict: true,
   },
   {
     name: "Research Article",
     description: "Deep research with fact-checking",
     eyes: ["kyuubi", "tenseigan", "byakugan"],
-    strict: true
+    strict: true,
   },
   {
     name: "Quick Question",
     description: "Simple clarification",
     eyes: ["sharingan"],
-    strict: false
+    strict: false,
   },
   {
     name: "Complete Pipeline",
     description: "All eyes, maximum thoroughness",
-    eyes: ["sharingan", "kyuubi", "rinnegan", "mangekyo", "tenseigan", "byakugan"],
-    strict: true
-  }
+    eyes: [
+      "sharingan",
+      "kyuubi",
+      "rinnegan",
+      "mangekyo",
+      "tenseigan",
+      "byakugan",
+    ],
+    strict: true,
+  },
 ];
 ```
 
@@ -660,10 +717,12 @@ Add to database initialization
 **File**: `apps/ui/src/components/pipeline-builder/TemplateImportExport.tsx` (NEW FILE)
 
 **Export**:
+
 - Serialize template to JSON
 - Download as `.json` file
 
 **Import**:
+
 - Upload `.json` file
 - Validate schema
 - Insert into database
@@ -675,6 +734,7 @@ Add to database initialization
 **File**: `apps/ui/src/components/pipeline-builder/PolicyPreview.tsx` (NEW FILE)
 
 **Show Preview**:
+
 - "With these constraints, Overseer might route like this..."
 - Sample routing for 3 example requests
 - Show how mandatory/forbidden eyes affect routing
@@ -686,6 +746,7 @@ Add to database initialization
 After implementing ALL fixes, run these end-to-end tests:
 
 ### Test 1: Function Calling
+
 - [ ] Submit request via MCP
 - [ ] Check Groq provider logs - confirm `tools` API used
 - [ ] Check OpenRouter provider logs - confirm `tools` API used
@@ -693,6 +754,7 @@ After implementing ALL fixes, run these end-to-end tests:
 - [ ] Confirm 95%+ success rate
 
 ### Test 2: Pause/Resume
+
 - [ ] Submit request that needs clarification
 - [ ] Confirm pipeline pauses automatically
 - [ ] Check `pipeline_states` table has paused state
@@ -701,6 +763,7 @@ After implementing ALL fixes, run these end-to-end tests:
 - [ ] Confirm pipeline continues from correct eye
 
 ### Test 3: Eye Invisibility
+
 - [ ] Submit request via MCP
 - [ ] Inspect actual JSON response
 - [ ] Confirm NO eye names present
@@ -708,12 +771,14 @@ After implementing ALL fixes, run these end-to-end tests:
 - [ ] Agent only sees synthesized final result
 
 ### Test 4: Personas Ask Questions
+
 - [ ] Test Kyuubi with vague request
 - [ ] Confirm response contains questions, NOT brief
 - [ ] Test Rinnegan with complex request
 - [ ] Confirm response contains questions, NOT analysis
 
 ### Test 5: Intent Confirmations API
+
 - [ ] Create intent confirmation via backend
 - [ ] Call GET `/api/intent-confirmations/:id`
 - [ ] Confirm data returned
@@ -742,6 +807,7 @@ After implementing ALL fixes, run these end-to-end tests:
 ## ACCEPTANCE CRITERIA FOR COMPLETION
 
 **DO NOT CLAIM COMPLETION UNTIL**:
+
 - [ ] All Priority 1 fixes implemented AND verified
 - [ ] All Priority 2 fixes implemented AND verified
 - [ ] All verification tests pass

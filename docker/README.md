@@ -18,16 +18,19 @@ docker compose down
 ## Services
 
 ### Server (Port 7070)
+
 - **Bun-based REST + WebSocket API**
 - Handles Eye orchestration, routing, personas
 - Persistent SQLite database in Docker volume
 
 ### UI (Port 3300)
+
 - **Next.js 15 portal**
 - Models configuration, personas editor, session monitor
 - Access at: http://localhost:3300
 
 ### Ollama (Port 11434) - Optional
+
 - **Local LLM runtime**
 - Pre-configured for llama3.1:8b
 - No API key required
@@ -85,6 +88,7 @@ docker compose up -d --scale server=2
 ### Networking
 
 Services communicate via `third-eye-network`:
+
 - Server: `http://server:7070`
 - UI: `http://ui:3300`
 - Ollama: `http://ollama:11434`

@@ -1,18 +1,32 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import { Settings, BarChart3, Loader2, Rocket, Eye as LucideEye } from 'lucide-react';
-import { useUI } from '@/contexts/UIContext';
-import { SessionMemoryPanel } from '@/components/SessionMemoryPanel';
-import { ViewModeToggle, ViewModeDescription } from '@/components/ViewModeToggle';
-import { StrictnessControls } from '@/components/StrictnessControls';
-import type { PipelineEvent } from '@/types/pipeline';
-import type { Envelope } from '@third-eye/types';
-import { TOOL_NAME } from '@third-eye/types';
-import { getApiUrl, WS_BASE_URL, API_BASE_URL } from '@/consts/api';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE, STATUS_BG_COLORS } from '@/constants/color-mappings';
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import {
+  Settings,
+  BarChart3,
+  Loader2,
+  Rocket,
+  Eye as LucideEye,
+} from "lucide-react";
+import { useUI } from "@/contexts/UIContext";
+import { SessionMemoryPanel } from "@/components/SessionMemoryPanel";
+import {
+  ViewModeToggle,
+  ViewModeDescription,
+} from "@/components/ViewModeToggle";
+import { StrictnessControls } from "@/components/StrictnessControls";
+import type { PipelineEvent } from "@/types/pipeline";
+import type { Envelope } from "@third-eye/types";
+import { TOOL_NAME } from "@third-eye/types";
+import { getApiUrl, WS_BASE_URL, API_BASE_URL } from "@/consts/api";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+  STATUS_BG_COLORS,
+} from "@/constants/color-mappings";
 
 interface Run {
   id: string;
@@ -38,7 +52,7 @@ interface EyeDefinition {
   id: string;
   name: string;
   description: string;
-  source: 'built-in' | 'custom';
+  source: "built-in" | "custom";
 }
 
 export default function PlaygroundPage() {
@@ -52,11 +66,11 @@ export default function PlaygroundPage() {
   const [byakuganEvents, setByakuganEvents] = useState<PipelineEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
-  const [taskInput, setTaskInput] = useState('');
+  const [taskInput, setTaskInput] = useState("");
   const [showStrictness, setShowStrictness] = useState(false);
   const [eyes, setEyes] = useState<EyeDefinition[]>([]);
-  const [selectedEye, setSelectedEye] = useState<string>('');
-  const [eyeInput, setEyeInput] = useState('');
+  const [selectedEye, setSelectedEye] = useState<string>("");
+  const [eyeInput, setEyeInput] = useState("");
   const [eyeLoading, setEyeLoading] = useState(false);
   const [eyeError, setEyeError] = useState<string | null>(null);
   const [eyeResult, setEyeResult] = useState<Envelope | null>(null);
@@ -86,7 +100,7 @@ export default function PlaygroundPage() {
           setSelectedEye(list[0].id);
         }
       } catch (error) {
-        console.error('Failed to fetch eyes:', error);
+        console.error("Failed to fetch eyes:", error);
       }
     };
 
@@ -113,13 +127,13 @@ export default function PlaygroundPage() {
         setSession(data.data);
       }
     } catch (error) {
-      console.error('Failed to fetch session:', error);
+      console.error("Failed to fetch session:", error);
     }
   };
 
   // WebSocket connection for real-time updates with ping/pong
   useEffect(() => {
-    const wsUrl = `${WS_BASE_URL.replace(/\/$/, '')}/ws/monitor?sessionId=${sessionId}`;
+    const wsUrl = `${WS_BASE_URL.replace(/\/$/, "")}/ws/monitor?sessionId=${sessionId}`;
     const ws = new WebSocket(wsUrl);
     let pingInterval: NodeJS.Timeout;
 
@@ -130,7 +144,7 @@ export default function PlaygroundPage() {
       // Send ping every 15 seconds to keep connection alive
       pingInterval = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: 'ping' }));
+          ws.send(JSON.stringify({ type: "ping" }));
         }
       }, 15000);
     };
@@ -140,32 +154,35 @@ export default function PlaygroundPage() {
         const message = JSON.parse(event.data);
 
         // Respond to server pings with pong
-        if (message.type === 'ping') {
-          ws.send(JSON.stringify({ type: 'pong', timestamp: Date.now() }));
+        if (message.type === "ping") {
+          ws.send(JSON.stringify({ type: "pong", timestamp: Date.now() }));
           return;
         }
 
         // Ignore pong responses
-        if (message.type === 'pong') return;
+        if (message.type === "pong") return;
 
-        console.log('📨 WebSocket message:', message);
+        console.log("📨 WebSocket message:", message);
 
-        if (message.type === 'run_completed' || message.type === 'pipeline_event') {
+        if (
+          message.type === "run_completed" ||
+          message.type === "pipeline_event"
+        ) {
           fetchRuns();
           fetchSessionEvents();
         }
       } catch (error) {
-        console.error('Failed to parse WebSocket message:', error);
+        console.error("Failed to parse WebSocket message:", error);
       }
     };
 
     ws.onerror = (error) => {
-      console.error('❌ WebSocket error:', error);
+      console.error("❌ WebSocket error:", error);
       setWsConnected(false);
     };
 
     ws.onclose = () => {
-      console.log('📡 WebSocket disconnected');
+      console.log("📡 WebSocket disconnected");
       setWsConnected(false);
       if (pingInterval) clearInterval(pingInterval);
     };
@@ -179,20 +196,24 @@ export default function PlaygroundPage() {
   const fetchRuns = async () => {
     if (!sessionId) return;
     try {
-      const response = await fetch(`${API_BASE_URL}/api/session/${sessionId}/runs`);
+      const response = await fetch(
+        `${API_BASE_URL}/api/session/${sessionId}/runs`,
+      );
       if (response.ok) {
         const runsData = await response.json();
         setRuns(runsData);
       }
     } catch (error) {
-      console.error('Failed to fetch runs:', error);
+      console.error("Failed to fetch runs:", error);
     }
   };
 
   const fetchSessionEvents = async () => {
     if (!sessionId) return;
     try {
-      const response = await fetch(`${API_BASE_URL}/api/session/${sessionId}/events`);
+      const response = await fetch(
+        `${API_BASE_URL}/api/session/${sessionId}/events`,
+      );
       if (!response.ok) {
         return;
       }
@@ -205,11 +226,11 @@ export default function PlaygroundPage() {
           : [];
 
       const byakuganOnly = events.filter((event) =>
-        (event.eye ?? '').toLowerCase().includes('byakugan')
+        (event.eye ?? "").toLowerCase().includes("byakugan"),
       );
       setByakuganEvents(byakuganOnly);
     } catch (error) {
-      console.error('Failed to fetch session events:', error);
+      console.error("Failed to fetch session events:", error);
     }
   };
 
@@ -222,9 +243,9 @@ export default function PlaygroundPage() {
     try {
       // Submit task to MCP - Overseer will auto-route through pipeline
       const response = await fetch(`${API_BASE_URL}/api/mcp/run`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           task: taskInput.trim(),
@@ -235,14 +256,14 @@ export default function PlaygroundPage() {
 
       if (response.ok) {
         const result = await response.json();
-        console.log('✅ Task submitted:', result);
-        setTaskInput(''); // Clear input after submission
+        console.log("✅ Task submitted:", result);
+        setTaskInput(""); // Clear input after submission
         fetchRuns(); // Refresh runs
       } else {
-        console.error('❌ Task submission failed:', await response.text());
+        console.error("❌ Task submission failed:", await response.text());
       }
     } catch (error) {
-      console.error('Failed to submit task:', error);
+      console.error("Failed to submit task:", error);
     } finally {
       setLoading(false);
     }
@@ -251,7 +272,7 @@ export default function PlaygroundPage() {
   const runEyeTest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEye || !eyeInput.trim()) {
-      setEyeError('Select an eye and provide input to test.');
+      setEyeError("Select an eye and provide input to test.");
       return;
     }
 
@@ -259,18 +280,21 @@ export default function PlaygroundPage() {
     setEyeError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/eyes/${selectedEye}/test`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          input: eyeInput.trim(),
-        }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/eyes/${selectedEye}/test`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId,
+            input: eyeInput.trim(),
+          }),
+        },
+      );
 
       if (!response.ok) {
         const text = await response.text();
-        setEyeError(text || 'Eye execution failed');
+        setEyeError(text || "Eye execution failed");
         return;
       }
 
@@ -281,7 +305,7 @@ export default function PlaygroundPage() {
         (payload?.data && !payload.data.result ? payload.data : null);
 
       setEyeResult(resultEnvelope);
-      setEyeInput('');
+      setEyeInput("");
 
       if (payload?.sessionId && payload.sessionId !== sessionId) {
         setSelectedSession(payload.sessionId);
@@ -290,8 +314,10 @@ export default function PlaygroundPage() {
       await fetchRuns();
       await fetchSessionEvents();
     } catch (error) {
-      console.error('Failed to test eye:', error);
-      setEyeError(error instanceof Error ? error.message : 'Failed to execute eye');
+      console.error("Failed to test eye:", error);
+      setEyeError(
+        error instanceof Error ? error.message : "Failed to execute eye",
+      );
     } finally {
       setEyeLoading(false);
     }
@@ -313,12 +339,14 @@ export default function PlaygroundPage() {
               <h1 className="text-2xl font-bold text-brand-foreground dark:text-gray-100">
                 Session: {session?.agentName || sessionId.slice(0, 8)}
               </h1>
-              <span className={`px-2 py-1 rounded text-xs ${
-                wsConnected
-                  ? `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success}`
-                  : `${STATUS_BG_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error}`
-              }`}>
-                {wsConnected ? '● Connected' : '○ Disconnected'}
+              <span
+                className={`px-2 py-1 rounded text-xs ${
+                  wsConnected
+                    ? `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success}`
+                    : `${STATUS_BG_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error}`
+                }`}
+              >
+                {wsConnected ? "● Connected" : "○ Disconnected"}
               </span>
             </div>
 
@@ -362,8 +390,10 @@ export default function PlaygroundPage() {
                 Run Overseer Pipeline
               </h2>
               <p className="text-sm text-semantic-muted dark:text-semantic-muted mb-4">
-                Send a full task through <code className="font-mono text-xs">{TOOL_NAME}</code>. Overseer analyzes the request,
-                selects the Eye sequence, and records every step in this playground session.
+                Send a full task through{" "}
+                <code className="font-mono text-xs">{TOOL_NAME}</code>. Overseer
+                analyzes the request, selects the Eye sequence, and records
+                every step in this playground session.
               </p>
 
               <form onSubmit={submitTask} className="space-y-4">
@@ -401,8 +431,9 @@ export default function PlaygroundPage() {
                 Test Individual Eye
               </h2>
               <p className="text-sm text-semantic-muted dark:text-semantic-muted mb-4">
-                Run a single Eye directly to validate personas and prompts before wiring them into a pipeline.
-                Results are logged to this session so you can inspect them in the monitor.
+                Run a single Eye directly to validate personas and prompts
+                before wiring them into a pipeline. Results are logged to this
+                session so you can inspect them in the monitor.
               </p>
 
               <form onSubmit={runEyeTest} className="space-y-4">
@@ -442,7 +473,9 @@ export default function PlaygroundPage() {
                 </div>
 
                 {eyeError && (
-                  <div className={`rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} px-3 py-2 text-sm ${STATUS_TEXT_COLORS.error}`}>
+                  <div
+                    className={`rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} px-3 py-2 text-sm ${STATUS_TEXT_COLORS.error}`}
+                  >
                     {eyeError}
                   </div>
                 )}
@@ -482,9 +515,9 @@ export default function PlaygroundPage() {
                     {eyeResult.verdict && (
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          eyeResult.verdict === 'APPROVED'
+                          eyeResult.verdict === "APPROVED"
                             ? `${STATUS_BG_COLORS_SUBTLE.success} ${STATUS_TEXT_COLORS.success}`
-                            : eyeResult.verdict === 'NEEDS_INPUT'
+                            : eyeResult.verdict === "NEEDS_INPUT"
                               ? `${STATUS_BG_COLORS_SUBTLE.warning} ${STATUS_TEXT_COLORS.warning}`
                               : `${STATUS_BG_COLORS_SUBTLE.error} ${STATUS_TEXT_COLORS.error}`
                         }`}
@@ -500,7 +533,7 @@ export default function PlaygroundPage() {
                     </p>
                   )}
 
-                  {viewMode === 'expert' && (
+                  {viewMode === "expert" && (
                     <pre className="mt-4 max-h-64 overflow-x-auto overflow-y-auto rounded bg-brand-paperElev p-3 text-xs text-brand-foreground">
                       {JSON.stringify(eyeResult, null, 2)}
                     </pre>
@@ -521,51 +554,58 @@ export default function PlaygroundPage() {
                 </p>
               ) : (
                 <div className="space-y-4">
-                  {runs.slice().reverse().map((run) => (
-                    <div
-                      key={run.id}
-                      className="border border-brand-outline/40 rounded-lg p-4"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <span className={`px-2 py-1 ${STATUS_BG_COLORS_SUBTLE.info} ${STATUS_TEXT_COLORS.info} rounded text-xs font-mono`}>
-                            {run.eye}
-                          </span>
-                          <span className="text-xs text-semantic-muted dark:text-semantic-muted">
-                            {new Date(run.createdAt).toLocaleString()}
-                          </span>
-                        </div>
-                        {viewMode === 'expert' && (
-                          <div className="text-xs text-semantic-muted dark:text-semantic-muted">
-                            {run.tokensIn && run.tokensOut && (
-                              <span>{run.tokensIn}→{run.tokensOut} tokens • </span>
-                            )}
-                            {run.latencyMs && <span>{run.latencyMs}ms</span>}
+                  {runs
+                    .slice()
+                    .reverse()
+                    .map((run) => (
+                      <div
+                        key={run.id}
+                        className="border border-brand-outline/40 rounded-lg p-4"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <span
+                              className={`px-2 py-1 ${STATUS_BG_COLORS_SUBTLE.info} ${STATUS_TEXT_COLORS.info} rounded text-xs font-mono`}
+                            >
+                              {run.eye}
+                            </span>
+                            <span className="text-xs text-semantic-muted dark:text-semantic-muted">
+                              {new Date(run.createdAt).toLocaleString()}
+                            </span>
                           </div>
-                        )}
-                      </div>
+                          {viewMode === "expert" && (
+                            <div className="text-xs text-semantic-muted dark:text-semantic-muted">
+                              {run.tokensIn && run.tokensOut && (
+                                <span>
+                                  {run.tokensIn}→{run.tokensOut} tokens •{" "}
+                                </span>
+                              )}
+                              {run.latencyMs && <span>{run.latencyMs}ms</span>}
+                            </div>
+                          )}
+                        </div>
 
-                      <div className="text-sm">
-                        <details className="cursor-pointer">
-                          <summary className="font-semibold text-brand-foreground dark:text-semantic-muted hover:text-brand-foreground dark:hover:text-gray-100">
-                            Input
-                          </summary>
-                          <pre className="mt-2 p-2 bg-brand-paper dark:bg-brand-ink rounded text-xs overflow-x-auto">
-                            {run.inputMd}
-                          </pre>
-                        </details>
+                        <div className="text-sm">
+                          <details className="cursor-pointer">
+                            <summary className="font-semibold text-brand-foreground dark:text-semantic-muted hover:text-brand-foreground dark:hover:text-gray-100">
+                              Input
+                            </summary>
+                            <pre className="mt-2 p-2 bg-brand-paper dark:bg-brand-ink rounded text-xs overflow-x-auto">
+                              {run.inputMd}
+                            </pre>
+                          </details>
 
-                        <details className="mt-2 cursor-pointer">
-                          <summary className="font-semibold text-brand-foreground dark:text-semantic-muted hover:text-brand-foreground dark:hover:text-gray-100">
-                            Output
-                          </summary>
-                          <pre className="mt-2 p-2 bg-brand-paper dark:bg-brand-ink rounded text-xs overflow-x-auto">
-                            {JSON.stringify(run.outputJson, null, 2)}
-                          </pre>
-                        </details>
+                          <details className="mt-2 cursor-pointer">
+                            <summary className="font-semibold text-brand-foreground dark:text-semantic-muted hover:text-brand-foreground dark:hover:text-gray-100">
+                              Output
+                            </summary>
+                            <pre className="mt-2 p-2 bg-brand-paper dark:bg-brand-ink rounded text-xs overflow-x-auto">
+                              {JSON.stringify(run.outputJson, null, 2)}
+                            </pre>
+                          </details>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               )}
             </div>

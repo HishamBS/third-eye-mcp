@@ -1,13 +1,13 @@
 /**
  * Centralized Blueprint Data - SSOT for All Eyes
- * 
+ *
  * This file consolidates all 8 individual blueprint files into a single source of truth.
  * Replaces: overseer.blueprint.ts, sharingan.blueprint.ts, kyuubi.blueprint.ts, jogan.blueprint.ts,
  *           rinnegan.blueprint.ts, mangekyo.blueprint.ts, tenseigan.blueprint.ts, byakugan.blueprint.ts
- * 
+ *
  * All blueprint data is seeded into the database on startup.
  * This is the ONLY place blueprint definitions exist in code.
- * 
+ *
  * Moved to constants package to break circular dependency: db → eyes → db
  * Now: db → constants ← eyes (constants has no dependencies)
  */
@@ -24,15 +24,15 @@ import {
   RequestType,
   ContentDomain,
   EyeCapability,
-} from '@third-eye/constants';
+} from "@third-eye/constants";
 
 /**
  * Persona Blueprint Interface
- * 
+ *
  * Defines the structure for persona blueprints stored in the database and used by the runtime renderer.
  * Each blueprint contains metadata, mission statements, phase specifications, envelope contracts,
  * reminders, and canonical examples.
- * 
+ *
  * Defined in constants package to avoid circular dependencies.
  */
 export interface PersonaMetadata {
@@ -90,10 +90,15 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
   [EyeId.OVERSEER]: {
     metadata: {
       eyeId: EyeId.OVERSEER,
-      name: 'Overseer',
-      description: 'Navigator that analyzes requests and selects the optimal eye sequence',
-      version: '1.0.0',
-      capabilities: [EyeCapability.ORCHESTRATION, EyeCapability.ROUTING, EyeCapability.OUTCOME_SYNTHESIS] as const,
+      name: "Overseer",
+      description:
+        "Navigator that analyzes requests and selects the optimal eye sequence",
+      version: "1.0.0",
+      capabilities: [
+        EyeCapability.ORCHESTRATION,
+        EyeCapability.ROUTING,
+        EyeCapability.OUTCOME_SYNTHESIS,
+      ] as const,
     },
     mission: `You are the BRAIN of Third Eye MCP. For every request, you decide the pipeline route based on request type, content domain, and complexity assessment.`,
     phases: {
@@ -109,31 +114,49 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
           `Select Eyes based on capabilities needed`,
           `Respond with JSON only, no Markdown`,
         ],
-        example: JSON.stringify({
-          [EnvelopeField.TAG]: EyeTag.OVERSEER,
-          [EnvelopeField.OK]: false,
-          [EnvelopeField.CODE]: EyeStatusCode.NEED_CLARIFICATION,
-          [EnvelopeField.DATA]: {
-            requestType: RequestType.NEW_TASK,
-            contentDomain: ContentDomain.MIXED,
-            complexity: 'moderate',
-            questions: [
-              { id: 'audience', text: 'Who is the target audience for this work?' },
-              { id: 'deliverable', text: 'What specific deliverable or output is expected?' },
-              { id: 'scope', text: 'What are the boundaries and constraints of this work?' },
-              { id: 'successCriteria', text: 'How will we measure success?' },
-              { id: 'references', text: 'Are there any specific references, sources, or examples to use?' },
-            ],
+        example: JSON.stringify(
+          {
+            [EnvelopeField.TAG]: EyeTag.OVERSEER,
+            [EnvelopeField.OK]: false,
+            [EnvelopeField.CODE]: EyeStatusCode.NEED_CLARIFICATION,
+            [EnvelopeField.DATA]: {
+              requestType: RequestType.NEW_TASK,
+              contentDomain: ContentDomain.MIXED,
+              complexity: "moderate",
+              questions: [
+                {
+                  id: "audience",
+                  text: "Who is the target audience for this work?",
+                },
+                {
+                  id: "deliverable",
+                  text: "What specific deliverable or output is expected?",
+                },
+                {
+                  id: "scope",
+                  text: "What are the boundaries and constraints of this work?",
+                },
+                { id: "successCriteria", text: "How will we measure success?" },
+                {
+                  id: "references",
+                  text: "Are there any specific references, sources, or examples to use?",
+                },
+              ],
+            },
+            [EnvelopeField.UI]: {
+              [EnvelopeField.TITLE]: "Clarification Needed",
+              [EnvelopeField.SUMMARY]:
+                "Request needs more details before routing",
+              [EnvelopeField.DETAILS]:
+                "Determined this is a new_task for mixed content domain with moderate complexity. Need clarification on audience, deliverable, scope, success criteria, and references.",
+              [EnvelopeField.ICON]: EmojiIcon.EYE,
+              [EnvelopeField.COLOR]: SemanticColor.WARNING,
+            },
+            [EnvelopeField.NEXT]: NextAction.AWAIT_INPUT,
           },
-          [EnvelopeField.UI]: {
-            [EnvelopeField.TITLE]: 'Clarification Needed',
-            [EnvelopeField.SUMMARY]: 'Request needs more details before routing',
-            [EnvelopeField.DETAILS]: 'Determined this is a new_task for mixed content domain with moderate complexity. Need clarification on audience, deliverable, scope, success criteria, and references.',
-            [EnvelopeField.ICON]: EmojiIcon.EYE,
-            [EnvelopeField.COLOR]: SemanticColor.WARNING,
-          },
-          [EnvelopeField.NEXT]: NextAction.AWAIT_INPUT,
-        }, null, 2),
+          null,
+          2,
+        ),
       },
       validation: {
         stage: EyeStageToken.VALIDATION,
@@ -144,32 +167,57 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
           `Confirm no failures in pipeline`,
           `Mark session as complete if all validations passed`,
         ],
-        example: JSON.stringify({
-          [EnvelopeField.TAG]: EyeTag.OVERSEER,
-          [EnvelopeField.OK]: true,
-          [EnvelopeField.CODE]: EyeStatusCode.OK_ALL_APPROVED,
-          [EnvelopeField.DATA]: {
-            requestType: RequestType.NEW_TASK,
-            contentDomain: ContentDomain.TEXT,
-            complexity: 'moderate',
-            pipelineRoute: [EyeTag.SHARINGAN, EyeTag.KYUUBI, EyeTag.JOGAN, EyeTag.TENSEIGAN, EyeTag.BYAKUGAN],
-            routingReasoning: 'NEW_TASK for TEXT domain with MODERATE complexity. Route: Sharingan (clarification) → Kyuubi (structured brief) → Jogan (intent confirmation) → Tenseigan (evidence validation) → Byakugan (final review).',
+        example: JSON.stringify(
+          {
+            [EnvelopeField.TAG]: EyeTag.OVERSEER,
+            [EnvelopeField.OK]: true,
+            [EnvelopeField.CODE]: EyeStatusCode.OK_ALL_APPROVED,
+            [EnvelopeField.DATA]: {
+              requestType: RequestType.NEW_TASK,
+              contentDomain: ContentDomain.TEXT,
+              complexity: "moderate",
+              pipelineRoute: [
+                EyeTag.SHARINGAN,
+                EyeTag.KYUUBI,
+                EyeTag.JOGAN,
+                EyeTag.TENSEIGAN,
+                EyeTag.BYAKUGAN,
+              ],
+              routingReasoning:
+                "NEW_TASK for TEXT domain with MODERATE complexity. Route: Sharingan (clarification) → Kyuubi (structured brief) → Jogan (intent confirmation) → Tenseigan (evidence validation) → Byakugan (final review).",
+            },
+            [EnvelopeField.UI]: {
+              [EnvelopeField.TITLE]: "Pipeline Complete",
+              [EnvelopeField.SUMMARY]: "All Eyes executed successfully",
+              [EnvelopeField.DETAILS]:
+                "Pipeline for new_task (text domain, moderate complexity) completed successfully through all 5 Eyes: Sharingan → Kyuubi → Jogan → Tenseigan → Byakugan.",
+              [EnvelopeField.ICON]: EmojiIcon.SUCCESS,
+              [EnvelopeField.COLOR]: SemanticColor.SUCCESS,
+            },
+            [EnvelopeField.NEXT]: NextAction.AWAIT_DRAFT,
           },
-          [EnvelopeField.UI]: {
-            [EnvelopeField.TITLE]: 'Pipeline Complete',
-            [EnvelopeField.SUMMARY]: 'All Eyes executed successfully',
-            [EnvelopeField.DETAILS]: 'Pipeline for new_task (text domain, moderate complexity) completed successfully through all 5 Eyes: Sharingan → Kyuubi → Jogan → Tenseigan → Byakugan.',
-            [EnvelopeField.ICON]: EmojiIcon.SUCCESS,
-            [EnvelopeField.COLOR]: SemanticColor.SUCCESS,
-          },
-          [EnvelopeField.NEXT]: NextAction.AWAIT_DRAFT,
-        }, null, 2),
+          null,
+          2,
+        ),
       },
     },
     envelopeContract: {
-      requiredKeys: [EnvelopeField.TAG, EnvelopeField.OK, EnvelopeField.CODE, EnvelopeField.DATA, EnvelopeField.UI, EnvelopeField.NEXT],
-      requiredDataKeys: ['requestType', 'contentDomain'],
-      requiredUiKeys: [EnvelopeField.TITLE, EnvelopeField.SUMMARY, EnvelopeField.DETAILS, EnvelopeField.ICON, EnvelopeField.COLOR],
+      requiredKeys: [
+        EnvelopeField.TAG,
+        EnvelopeField.OK,
+        EnvelopeField.CODE,
+        EnvelopeField.DATA,
+        EnvelopeField.UI,
+        EnvelopeField.NEXT,
+      ],
+      requiredDataKeys: ["requestType", "contentDomain"],
+      requiredUiKeys: [
+        EnvelopeField.TITLE,
+        EnvelopeField.SUMMARY,
+        EnvelopeField.DETAILS,
+        EnvelopeField.ICON,
+        EnvelopeField.COLOR,
+      ],
     },
     reminders: [
       `Overseer is the required entry point; no other eye responds until it runs`,
@@ -184,10 +232,10 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
   [EyeId.SHARINGAN]: {
     metadata: {
       eyeId: EyeId.SHARINGAN,
-      name: 'Sharingan',
-      description: 'Ambiguity radar that highlights unclear requirements',
-      version: '1.0.0',
-      capabilities: ['ambiguity_detection', 'clarification'] as const,
+      name: "Sharingan",
+      description: "Ambiguity radar that highlights unclear requirements",
+      version: "1.0.0",
+      capabilities: ["ambiguity_detection", "clarification"] as const,
     },
     mission: `You are Sharingan - the Eye that sees through vagueness. Detect ambiguous terms, concepts, and underspecified requirements in requests.`,
     phases: {
@@ -203,31 +251,49 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
           `Respond with JSON only, no Markdown`,
           `Use canonical clarification questions exactly as provided`,
         ],
-        example: JSON.stringify({
-          [EnvelopeField.TAG]: EyeTag.SHARINGAN,
-          [EnvelopeField.OK]: false,
-          [EnvelopeField.CODE]: EyeStatusCode.NEED_CLARIFICATION,
-          [EnvelopeField.DATA]: {
-            summary: 'Request contains ambiguous terms requiring clarification',
-            ambiguityScore: 75,
-            confidence: 20,
-            questions: [
-              { id: 'audience', text: 'Who is the target audience for this work?' },
-              { id: 'deliverable', text: 'What specific deliverable or output is expected?' },
-              { id: 'scope', text: 'What are the boundaries and constraints of this work?' },
-              { id: 'successCriteria', text: 'How will we measure success?' },
-              { id: 'references', text: 'Are there any specific references, sources, or examples to use?' },
-            ],
+        example: JSON.stringify(
+          {
+            [EnvelopeField.TAG]: EyeTag.SHARINGAN,
+            [EnvelopeField.OK]: false,
+            [EnvelopeField.CODE]: EyeStatusCode.NEED_CLARIFICATION,
+            [EnvelopeField.DATA]: {
+              summary:
+                "Request contains ambiguous terms requiring clarification",
+              ambiguityScore: 75,
+              confidence: 20,
+              questions: [
+                {
+                  id: "audience",
+                  text: "Who is the target audience for this work?",
+                },
+                {
+                  id: "deliverable",
+                  text: "What specific deliverable or output is expected?",
+                },
+                {
+                  id: "scope",
+                  text: "What are the boundaries and constraints of this work?",
+                },
+                { id: "successCriteria", text: "How will we measure success?" },
+                {
+                  id: "references",
+                  text: "Are there any specific references, sources, or examples to use?",
+                },
+              ],
+            },
+            [EnvelopeField.UI]: {
+              [EnvelopeField.TITLE]: "Clarification Needed",
+              [EnvelopeField.SUMMARY]: "Request too vague - asking 5 questions",
+              [EnvelopeField.DETAILS]:
+                'Ambiguity score: 75/100. Terms like "report", "palms", and "care" are underspecified. Need clarity on palm type, audience, format, scope boundaries, and references.',
+              [EnvelopeField.ICON]: EmojiIcon.SEARCH,
+              [EnvelopeField.COLOR]: SemanticColor.WARNING,
+            },
+            [EnvelopeField.NEXT]: NextAction.AWAIT_INPUT,
           },
-          [EnvelopeField.UI]: {
-            [EnvelopeField.TITLE]: 'Clarification Needed',
-            [EnvelopeField.SUMMARY]: 'Request too vague - asking 5 questions',
-            [EnvelopeField.DETAILS]: 'Ambiguity score: 75/100. Terms like "report", "palms", and "care" are underspecified. Need clarity on palm type, audience, format, scope boundaries, and references.',
-            [EnvelopeField.ICON]: EmojiIcon.SEARCH,
-            [EnvelopeField.COLOR]: SemanticColor.WARNING,
-          },
-          [EnvelopeField.NEXT]: NextAction.AWAIT_INPUT,
-        }, null, 2),
+          null,
+          2,
+        ),
       },
       validation: {
         stage: EyeStageToken.VALIDATION,
@@ -239,37 +305,59 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
           `Ensure no ambiguous comparisons ("better", "faster" - than what?)`,
           `Confirm specific measurements and quantities`,
         ],
-        example: JSON.stringify({
-          [EnvelopeField.TAG]: EyeTag.SHARINGAN,
-          [EnvelopeField.OK]: true,
-          [EnvelopeField.CODE]: EyeStatusCode.OK_NO_CLARIFICATION_NEEDED,
-          [EnvelopeField.DATA]: {
-            summary: 'No ambiguous language detected in content',
-            ambiguityScore: 12,
-            confidence: 92,
-            resolved: {
-              audience: 'Engineering leadership & product managers evaluating Flutter Web decisions',
-              deliverable: 'Comparative analysis brief with recommendation',
-              scope: 'Assess Flutter Web vs Tauri vs Next.js/React Native for a vision AI platform',
-              successCriteria: 'Actionable recommendation with trade-offs and bundle/performance notes',
-              references: 'Internal load testing, Google Classroom case study, Qualcomm docs',
+        example: JSON.stringify(
+          {
+            [EnvelopeField.TAG]: EyeTag.SHARINGAN,
+            [EnvelopeField.OK]: true,
+            [EnvelopeField.CODE]: EyeStatusCode.OK_NO_CLARIFICATION_NEEDED,
+            [EnvelopeField.DATA]: {
+              summary: "No ambiguous language detected in content",
+              ambiguityScore: 12,
+              confidence: 92,
+              resolved: {
+                audience:
+                  "Engineering leadership & product managers evaluating Flutter Web decisions",
+                deliverable: "Comparative analysis brief with recommendation",
+                scope:
+                  "Assess Flutter Web vs Tauri vs Next.js/React Native for a vision AI platform",
+                successCriteria:
+                  "Actionable recommendation with trade-offs and bundle/performance notes",
+                references:
+                  "Internal load testing, Google Classroom case study, Qualcomm docs",
+              },
             },
+            [EnvelopeField.UI]: {
+              [EnvelopeField.TITLE]: "Clarity Verified",
+              [EnvelopeField.SUMMARY]: "No ambiguous language detected",
+              [EnvelopeField.DETAILS]:
+                "Ambiguity score: 12/100. All terms are well-defined, pronouns have clear referents, no vague comparisons. Content is reader-friendly.",
+              [EnvelopeField.ICON]: EmojiIcon.CHECK,
+              [EnvelopeField.COLOR]: SemanticColor.SUCCESS,
+            },
+            [EnvelopeField.NEXT]: EyeTag.KYUUBI,
           },
-          [EnvelopeField.UI]: {
-            [EnvelopeField.TITLE]: 'Clarity Verified',
-            [EnvelopeField.SUMMARY]: 'No ambiguous language detected',
-            [EnvelopeField.DETAILS]: 'Ambiguity score: 12/100. All terms are well-defined, pronouns have clear referents, no vague comparisons. Content is reader-friendly.',
-            [EnvelopeField.ICON]: EmojiIcon.CHECK,
-            [EnvelopeField.COLOR]: SemanticColor.SUCCESS,
-          },
-          [EnvelopeField.NEXT]: EyeTag.KYUUBI,
-        }, null, 2),
+          null,
+          2,
+        ),
       },
     },
     envelopeContract: {
-      requiredKeys: [EnvelopeField.TAG, EnvelopeField.OK, EnvelopeField.CODE, EnvelopeField.DATA, EnvelopeField.UI, EnvelopeField.NEXT],
-      requiredDataKeys: ['summary', 'ambiguityScore', 'confidence'],
-      requiredUiKeys: [EnvelopeField.TITLE, EnvelopeField.SUMMARY, EnvelopeField.DETAILS, EnvelopeField.ICON, EnvelopeField.COLOR],
+      requiredKeys: [
+        EnvelopeField.TAG,
+        EnvelopeField.OK,
+        EnvelopeField.CODE,
+        EnvelopeField.DATA,
+        EnvelopeField.UI,
+        EnvelopeField.NEXT,
+      ],
+      requiredDataKeys: ["summary", "ambiguityScore", "confidence"],
+      requiredUiKeys: [
+        EnvelopeField.TITLE,
+        EnvelopeField.SUMMARY,
+        EnvelopeField.DETAILS,
+        EnvelopeField.ICON,
+        EnvelopeField.COLOR,
+      ],
     },
     reminders: [
       `Ambiguity score > 30/100 requires clarification pause`,
@@ -282,10 +370,11 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
   [EyeId.KYUUBI]: {
     metadata: {
       eyeId: EyeId.KYUUBI,
-      name: 'Kyuubi',
-      description: 'Asks powerful questions about scope and context to guide agent thinking',
-      version: '1.0.0',
-      capabilities: ['prompt_structuring', 'requirements_synthesis'] as const,
+      name: "Kyuubi",
+      description:
+        "Asks powerful questions about scope and context to guide agent thinking",
+      version: "1.0.0",
+      capabilities: ["prompt_structuring", "requirements_synthesis"] as const,
     },
     mission: `You are Kyuubi - the Eye that asks POWERFUL QUESTIONS about scope and context. Your job is NOT to create briefs. Your job is to ASK QUESTIONS that force the agent to think deeply about: 1) What exactly is the scope of this task? 2) What context is missing? 3) What assumptions are being made? 4) What edge cases need consideration? ALWAYS return questions, NEVER return analysis or briefs.`,
     phases: {
@@ -298,29 +387,36 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
           `If request is clear and complete, confirm scope clarity is high`,
           `Return questions in data.questions array`,
         ],
-        example: JSON.stringify({
-          [EnvelopeField.TAG]: EyeTag.KYUUBI,
-          [EnvelopeField.OK]: true,
-          [EnvelopeField.CODE]: EyeStatusCode.OK,
-          [EnvelopeField.DATA]: {
-            questions: [
-              'What specific metrics are you targeting? (performance, memory, readability)',
-              'Are there benchmarks or thresholds you need to hit?',
-              'What trade-offs are acceptable between optimization and maintainability?',
-              'Which parts of the codebase are in scope vs out of scope?',
-            ],
-            reasoning: 'Request mentions "optimize" but lacks clarity on optimization target, success criteria, scope boundaries, and acceptable trade-offs',
-            scopeClarity: 'medium',
+        example: JSON.stringify(
+          {
+            [EnvelopeField.TAG]: EyeTag.KYUUBI,
+            [EnvelopeField.OK]: true,
+            [EnvelopeField.CODE]: EyeStatusCode.OK,
+            [EnvelopeField.DATA]: {
+              questions: [
+                "What specific metrics are you targeting? (performance, memory, readability)",
+                "Are there benchmarks or thresholds you need to hit?",
+                "What trade-offs are acceptable between optimization and maintainability?",
+                "Which parts of the codebase are in scope vs out of scope?",
+              ],
+              reasoning:
+                'Request mentions "optimize" but lacks clarity on optimization target, success criteria, scope boundaries, and acceptable trade-offs',
+              scopeClarity: "medium",
+            },
+            [EnvelopeField.UI]: {
+              [EnvelopeField.TITLE]: "Scope Questions",
+              [EnvelopeField.SUMMARY]:
+                "4 questions to clarify scope and context",
+              [EnvelopeField.DETAILS]:
+                "Before proceeding, I need you to clarify: 1) What metrics are you targeting? 2) What benchmarks must be hit? 3) What trade-offs are acceptable? 4) What is in/out of scope?",
+              [EnvelopeField.ICON]: EmojiIcon.PROMPT,
+              [EnvelopeField.COLOR]: SemanticColor.INFO,
+            },
+            [EnvelopeField.NEXT]: EyeTag.JOGAN,
           },
-          [EnvelopeField.UI]: {
-            [EnvelopeField.TITLE]: 'Scope Questions',
-            [EnvelopeField.SUMMARY]: '4 questions to clarify scope and context',
-            [EnvelopeField.DETAILS]: 'Before proceeding, I need you to clarify: 1) What metrics are you targeting? 2) What benchmarks must be hit? 3) What trade-offs are acceptable? 4) What is in/out of scope?',
-            [EnvelopeField.ICON]: EmojiIcon.PROMPT,
-            [EnvelopeField.COLOR]: SemanticColor.INFO,
-          },
-          [EnvelopeField.NEXT]: EyeTag.JOGAN,
-        }, null, 2),
+          null,
+          2,
+        ),
       },
       validation: {
         stage: EyeStageToken.VALIDATION,
@@ -331,36 +427,55 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
           `Check alignment score`,
           `Provide specific feedback`,
         ],
-        example: JSON.stringify({
-          [EnvelopeField.TAG]: EyeTag.KYUUBI,
-          [EnvelopeField.OK]: true,
-          [EnvelopeField.CODE]: EyeStatusCode.OK,
-          [EnvelopeField.DATA]: {
-            briefAlignment: {
-              objective: '✓ Met',
-              audience: '✓ Appropriate language',
-              format: '✓ How-to structure',
-              keyElements: '✓ All 4 present',
-              constraints: '✓ Simple language, metric units',
-              qualityCriteria: '✓ All satisfied',
+        example: JSON.stringify(
+          {
+            [EnvelopeField.TAG]: EyeTag.KYUUBI,
+            [EnvelopeField.OK]: true,
+            [EnvelopeField.CODE]: EyeStatusCode.OK,
+            [EnvelopeField.DATA]: {
+              briefAlignment: {
+                objective: "✓ Met",
+                audience: "✓ Appropriate language",
+                format: "✓ How-to structure",
+                keyElements: "✓ All 4 present",
+                constraints: "✓ Simple language, metric units",
+                qualityCriteria: "✓ All satisfied",
+              },
+              alignmentScore: 98,
             },
-            alignmentScore: 98,
+            [EnvelopeField.UI]: {
+              [EnvelopeField.TITLE]: "Brief Alignment Verified",
+              [EnvelopeField.SUMMARY]:
+                "Content matches structured brief perfectly",
+              [EnvelopeField.DETAILS]:
+                "All requirements met: objective achieved, audience-appropriate, correct format, 4/4 key elements present, constraints followed. Alignment score: 98/100.",
+              [EnvelopeField.ICON]: EmojiIcon.CHECK,
+              [EnvelopeField.COLOR]: SemanticColor.SUCCESS,
+            },
+            [EnvelopeField.NEXT]: EyeTag.TENSEIGAN,
           },
-          [EnvelopeField.UI]: {
-            [EnvelopeField.TITLE]: 'Brief Alignment Verified',
-            [EnvelopeField.SUMMARY]: 'Content matches structured brief perfectly',
-            [EnvelopeField.DETAILS]: 'All requirements met: objective achieved, audience-appropriate, correct format, 4/4 key elements present, constraints followed. Alignment score: 98/100.',
-            [EnvelopeField.ICON]: EmojiIcon.CHECK,
-            [EnvelopeField.COLOR]: SemanticColor.SUCCESS,
-          },
-          [EnvelopeField.NEXT]: EyeTag.TENSEIGAN,
-        }, null, 2),
+          null,
+          2,
+        ),
       },
     },
     envelopeContract: {
-      requiredKeys: [EnvelopeField.TAG, EnvelopeField.OK, EnvelopeField.CODE, EnvelopeField.DATA, EnvelopeField.UI, EnvelopeField.NEXT],
-      requiredDataKeys: ['structuredBrief'],
-      requiredUiKeys: [EnvelopeField.TITLE, EnvelopeField.SUMMARY, EnvelopeField.DETAILS, EnvelopeField.ICON, EnvelopeField.COLOR],
+      requiredKeys: [
+        EnvelopeField.TAG,
+        EnvelopeField.OK,
+        EnvelopeField.CODE,
+        EnvelopeField.DATA,
+        EnvelopeField.UI,
+        EnvelopeField.NEXT,
+      ],
+      requiredDataKeys: ["structuredBrief"],
+      requiredUiKeys: [
+        EnvelopeField.TITLE,
+        EnvelopeField.SUMMARY,
+        EnvelopeField.DETAILS,
+        EnvelopeField.ICON,
+        EnvelopeField.COLOR,
+      ],
     },
     reminders: [
       `Kyuubi transforms vague ideas into actionable briefs`,
@@ -373,10 +488,11 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
   [EyeId.JOGAN]: {
     metadata: {
       eyeId: EyeId.JOGAN,
-      name: 'Jōgan',
-      description: 'Confirms scope and effort with the human before work proceeds',
-      version: '1.0.0',
-      capabilities: ['intent_validation'] as const,
+      name: "Jōgan",
+      description:
+        "Confirms scope and effort with the human before work proceeds",
+      version: "1.0.0",
+      capabilities: ["intent_validation"] as const,
     },
     mission: `You are Jogan - the Eye that sees true intent. Analyze intent and confirm scope with human before work begins.`,
     phases: {
@@ -390,33 +506,39 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
           `Always request confirmation before proceeding`,
           `Respond with JSON only, no Markdown`,
         ],
-        example: JSON.stringify({
-          [EnvelopeField.TAG]: EyeTag.JOGAN,
-          [EnvelopeField.OK]: false,
-          [EnvelopeField.CODE]: EyeStatusCode.AWAIT_CONFIRMATION,
-          [EnvelopeField.DATA]: {
-            intentAnalysis: {
-              primary: 'CREATE + EDUCATE',
-              secondary: 'INFORM',
-              scope: 'small',
-              estimatedEffort: '30-45 minutes',
-              deliverables: [
-                '500-word how-to article',
-                '4-6 citations',
-                'Practical examples',
-              ],
+        example: JSON.stringify(
+          {
+            [EnvelopeField.TAG]: EyeTag.JOGAN,
+            [EnvelopeField.OK]: false,
+            [EnvelopeField.CODE]: EyeStatusCode.AWAIT_CONFIRMATION,
+            [EnvelopeField.DATA]: {
+              intentAnalysis: {
+                primary: "CREATE + EDUCATE",
+                secondary: "INFORM",
+                scope: "small",
+                estimatedEffort: "30-45 minutes",
+                deliverables: [
+                  "500-word how-to article",
+                  "4-6 citations",
+                  "Practical examples",
+                ],
+              },
+              confirmationPrompt:
+                "Agent will create a 500-word beginner-friendly guide about indoor palm care in Saudi Arabia, covering common species, watering, light needs, and problems. Estimated time: 30-45 min. Is this what you want?",
             },
-            confirmationPrompt: 'Agent will create a 500-word beginner-friendly guide about indoor palm care in Saudi Arabia, covering common species, watering, light needs, and problems. Estimated time: 30-45 min. Is this what you want?',
+            [EnvelopeField.UI]: {
+              [EnvelopeField.TITLE]: "Intent Confirmation Required",
+              [EnvelopeField.SUMMARY]: "Seeking approval for CREATE task",
+              [EnvelopeField.DETAILS]:
+                "Intent: CREATE educational content. Scope: Small (500 words, 30-45 min). Deliverable: Beginner guide with 4 key topics. Agent should confirm with human before proceeding.",
+              [EnvelopeField.ICON]: EmojiIcon.CROWN,
+              [EnvelopeField.COLOR]: SemanticColor.WARNING,
+            },
+            [EnvelopeField.NEXT]: NextAction.AWAIT_INPUT,
           },
-          [EnvelopeField.UI]: {
-            [EnvelopeField.TITLE]: 'Intent Confirmation Required',
-            [EnvelopeField.SUMMARY]: 'Seeking approval for CREATE task',
-            [EnvelopeField.DETAILS]: 'Intent: CREATE educational content. Scope: Small (500 words, 30-45 min). Deliverable: Beginner guide with 4 key topics. Agent should confirm with human before proceeding.',
-            [EnvelopeField.ICON]: EmojiIcon.CROWN,
-            [EnvelopeField.COLOR]: SemanticColor.WARNING,
-          },
-          [EnvelopeField.NEXT]: NextAction.AWAIT_INPUT,
-        }, null, 2),
+          null,
+          2,
+        ),
       },
       validation: {
         stage: EyeStageToken.VALIDATION,
@@ -427,34 +549,54 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
           `Check scope respected: Not overdelivered or underdelivered?`,
           `Confirm deliverables complete`,
         ],
-        example: JSON.stringify({
-          [EnvelopeField.TAG]: EyeTag.JOGAN,
-          [EnvelopeField.OK]: true,
-          [EnvelopeField.CODE]: EyeStatusCode.OK,
-          [EnvelopeField.DATA]: {
-            intentFulfillment: {
-              primary: '✓ Created educational content',
-              secondary: '✓ Informative and actionable',
-              scope: '✓ Matched (510 words, appropriate depth)',
-              deliverables: '✓ All present (article + 5 citations + examples)',
+        example: JSON.stringify(
+          {
+            [EnvelopeField.TAG]: EyeTag.JOGAN,
+            [EnvelopeField.OK]: true,
+            [EnvelopeField.CODE]: EyeStatusCode.OK,
+            [EnvelopeField.DATA]: {
+              intentFulfillment: {
+                primary: "✓ Created educational content",
+                secondary: "✓ Informative and actionable",
+                scope: "✓ Matched (510 words, appropriate depth)",
+                deliverables:
+                  "✓ All present (article + 5 citations + examples)",
+              },
+              fulfillmentScore: 96,
             },
-            fulfillmentScore: 96,
+            [EnvelopeField.UI]: {
+              [EnvelopeField.TITLE]: "Intent Fulfilled",
+              [EnvelopeField.SUMMARY]:
+                "Content matches confirmed intent and scope",
+              [EnvelopeField.DETAILS]:
+                "Primary intent (CREATE + EDUCATE) achieved. Scope matched (510 words vs 500 target). All deliverables present. Fulfillment score: 96/100.",
+              [EnvelopeField.ICON]: EmojiIcon.CHECK,
+              [EnvelopeField.COLOR]: SemanticColor.SUCCESS,
+            },
+            [EnvelopeField.NEXT]: EyeTag.RINNEGAN,
           },
-          [EnvelopeField.UI]: {
-            [EnvelopeField.TITLE]: 'Intent Fulfilled',
-            [EnvelopeField.SUMMARY]: 'Content matches confirmed intent and scope',
-            [EnvelopeField.DETAILS]: 'Primary intent (CREATE + EDUCATE) achieved. Scope matched (510 words vs 500 target). All deliverables present. Fulfillment score: 96/100.',
-            [EnvelopeField.ICON]: EmojiIcon.CHECK,
-            [EnvelopeField.COLOR]: SemanticColor.SUCCESS,
-          },
-          [EnvelopeField.NEXT]: EyeTag.RINNEGAN,
-        }, null, 2),
+          null,
+          2,
+        ),
       },
     },
     envelopeContract: {
-      requiredKeys: [EnvelopeField.TAG, EnvelopeField.OK, EnvelopeField.CODE, EnvelopeField.DATA, EnvelopeField.UI, EnvelopeField.NEXT],
-      requiredDataKeys: ['intentAnalysis', 'confirmationPrompt'],
-      requiredUiKeys: [EnvelopeField.TITLE, EnvelopeField.SUMMARY, EnvelopeField.DETAILS, EnvelopeField.ICON, EnvelopeField.COLOR],
+      requiredKeys: [
+        EnvelopeField.TAG,
+        EnvelopeField.OK,
+        EnvelopeField.CODE,
+        EnvelopeField.DATA,
+        EnvelopeField.UI,
+        EnvelopeField.NEXT,
+      ],
+      requiredDataKeys: ["intentAnalysis", "confirmationPrompt"],
+      requiredUiKeys: [
+        EnvelopeField.TITLE,
+        EnvelopeField.SUMMARY,
+        EnvelopeField.DETAILS,
+        EnvelopeField.ICON,
+        EnvelopeField.COLOR,
+      ],
     },
     reminders: [
       `Always require human confirmation before work proceeds`,
@@ -468,10 +610,11 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
   [EyeId.RINNEGAN]: {
     metadata: {
       eyeId: EyeId.RINNEGAN,
-      name: 'Rinnegan',
-      description: 'Asks deep questions about feasibility, risks, and technical constraints',
-      version: '1.0.0',
-      capabilities: ['strategic_planning', 'architecture_validation'] as const,
+      name: "Rinnegan",
+      description:
+        "Asks deep questions about feasibility, risks, and technical constraints",
+      version: "1.0.0",
+      capabilities: ["strategic_planning", "architecture_validation"] as const,
     },
     mission: `You are Rinnegan - the Eye that asks DEEP QUESTIONS about feasibility and risks. Your job is NOT to create feasibility reports. Your job is to ASK QUESTIONS that force the agent to think about: 1) What could go wrong? 2) What's the technical complexity? 3) What are the constraints? 4) What resources are needed? ALWAYS return questions, NEVER return analysis.`,
     phases: {
@@ -484,29 +627,40 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
           `If no feasibility concerns, confirm feasibility is high with no blockers`,
           `Return questions in data.questions array and risks in data.riskAreas array`,
         ],
-        example: JSON.stringify({
-          [EnvelopeField.TAG]: EyeTag.RINNEGAN,
-          [EnvelopeField.OK]: true,
-          [EnvelopeField.CODE]: EyeStatusCode.OK,
-          [EnvelopeField.DATA]: {
-            questions: [
-              'Have you verified this library supports your Node version?',
-              'What happens if the API rate limit is hit mid-operation?',
-              'Do you have rollback capability if this fails in production?',
-              'What are the performance implications of this approach at scale?',
-            ],
-            riskAreas: ['version compatibility', 'rate limiting', 'rollback strategy', 'scalability'],
-            feasibility: 'medium',
+        example: JSON.stringify(
+          {
+            [EnvelopeField.TAG]: EyeTag.RINNEGAN,
+            [EnvelopeField.OK]: true,
+            [EnvelopeField.CODE]: EyeStatusCode.OK,
+            [EnvelopeField.DATA]: {
+              questions: [
+                "Have you verified this library supports your Node version?",
+                "What happens if the API rate limit is hit mid-operation?",
+                "Do you have rollback capability if this fails in production?",
+                "What are the performance implications of this approach at scale?",
+              ],
+              riskAreas: [
+                "version compatibility",
+                "rate limiting",
+                "rollback strategy",
+                "scalability",
+              ],
+              feasibility: "medium",
+            },
+            [EnvelopeField.UI]: {
+              [EnvelopeField.TITLE]: "Feasibility Questions",
+              [EnvelopeField.SUMMARY]:
+                "4 critical questions about risks and constraints",
+              [EnvelopeField.DETAILS]:
+                "Before declaring this feasible, answer these questions: 1) Library/Node compatibility? 2) Rate limit handling? 3) Rollback plan? 4) Performance at scale?",
+              [EnvelopeField.ICON]: EmojiIcon.PLAN,
+              [EnvelopeField.COLOR]: SemanticColor.INFO,
+            },
+            [EnvelopeField.NEXT]: NextAction.AWAIT_INPUT,
           },
-          [EnvelopeField.UI]: {
-            [EnvelopeField.TITLE]: 'Feasibility Questions',
-            [EnvelopeField.SUMMARY]: '4 critical questions about risks and constraints',
-            [EnvelopeField.DETAILS]: 'Before declaring this feasible, answer these questions: 1) Library/Node compatibility? 2) Rate limit handling? 3) Rollback plan? 4) Performance at scale?',
-            [EnvelopeField.ICON]: EmojiIcon.PLAN,
-            [EnvelopeField.COLOR]: SemanticColor.INFO,
-          },
-          [EnvelopeField.NEXT]: NextAction.AWAIT_INPUT,
-        }, null, 2),
+          null,
+          2,
+        ),
       },
       validation: {
         stage: EyeStageToken.VALIDATION,
@@ -519,36 +673,54 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
           `Ensure risks have mitigations`,
           `Success criteria must be measurable`,
         ],
-        example: JSON.stringify({
-          [EnvelopeField.TAG]: EyeTag.RINNEGAN,
-          [EnvelopeField.OK]: true,
-          [EnvelopeField.CODE]: EyeStatusCode.OK_PLAN_APPROVED,
-          [EnvelopeField.DATA]: {
-            planReview: {
-              completeness: '✓ All 7 sections present',
-              feasibility: '✓ Approach is realistic',
-              dependencies: '✓ All identified (3 internal, 2 external)',
-              risks: '✓ 5 risks with mitigations',
-              successCriteria: '✓ Measurable and specific',
+        example: JSON.stringify(
+          {
+            [EnvelopeField.TAG]: EyeTag.RINNEGAN,
+            [EnvelopeField.OK]: true,
+            [EnvelopeField.CODE]: EyeStatusCode.OK_PLAN_APPROVED,
+            [EnvelopeField.DATA]: {
+              planReview: {
+                completeness: "✓ All 7 sections present",
+                feasibility: "✓ Approach is realistic",
+                dependencies: "✓ All identified (3 internal, 2 external)",
+                risks: "✓ 5 risks with mitigations",
+                successCriteria: "✓ Measurable and specific",
+              },
+              planQualityScore: 94,
+              recommendations: [],
             },
-            planQualityScore: 94,
-            recommendations: [],
+            [EnvelopeField.UI]: {
+              [EnvelopeField.TITLE]: "Plan Approved",
+              [EnvelopeField.SUMMARY]: "Plan is complete and feasible",
+              [EnvelopeField.DETAILS]:
+                "All sections present and well-structured. Approach is realistic. Dependencies and risks properly identified. Success criteria are measurable. Quality score: 94/100.",
+              [EnvelopeField.ICON]: EmojiIcon.CHECK,
+              [EnvelopeField.COLOR]: SemanticColor.SUCCESS,
+            },
+            [EnvelopeField.NEXT]: EyeTag.MANGEKYO,
           },
-          [EnvelopeField.UI]: {
-            [EnvelopeField.TITLE]: 'Plan Approved',
-            [EnvelopeField.SUMMARY]: 'Plan is complete and feasible',
-            [EnvelopeField.DETAILS]: 'All sections present and well-structured. Approach is realistic. Dependencies and risks properly identified. Success criteria are measurable. Quality score: 94/100.',
-            [EnvelopeField.ICON]: EmojiIcon.CHECK,
-            [EnvelopeField.COLOR]: SemanticColor.SUCCESS,
-          },
-          [EnvelopeField.NEXT]: EyeTag.MANGEKYO,
-        }, null, 2),
+          null,
+          2,
+        ),
       },
     },
     envelopeContract: {
-      requiredKeys: [EnvelopeField.TAG, EnvelopeField.OK, EnvelopeField.CODE, EnvelopeField.DATA, EnvelopeField.UI, EnvelopeField.NEXT],
-      requiredDataKeys: ['planTemplate'],
-      requiredUiKeys: [EnvelopeField.TITLE, EnvelopeField.SUMMARY, EnvelopeField.DETAILS, EnvelopeField.ICON, EnvelopeField.COLOR],
+      requiredKeys: [
+        EnvelopeField.TAG,
+        EnvelopeField.OK,
+        EnvelopeField.CODE,
+        EnvelopeField.DATA,
+        EnvelopeField.UI,
+        EnvelopeField.NEXT,
+      ],
+      requiredDataKeys: ["planTemplate"],
+      requiredUiKeys: [
+        EnvelopeField.TITLE,
+        EnvelopeField.SUMMARY,
+        EnvelopeField.DETAILS,
+        EnvelopeField.ICON,
+        EnvelopeField.COLOR,
+      ],
     },
     reminders: [
       `Rinnegan plans are strategic, not implementation details`,
@@ -561,10 +733,10 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
   [EyeId.MANGEKYO]: {
     metadata: {
       eyeId: EyeId.MANGEKYO,
-      name: 'Mangekyō',
-      description: 'Code quality gate covering structure, safety, and tests',
-      version: '1.0.0',
-      capabilities: ['code_review', 'quality_assurance'] as const,
+      name: "Mangekyō",
+      description: "Code quality gate covering structure, safety, and tests",
+      version: "1.0.0",
+      capabilities: ["code_review", "quality_assurance"] as const,
     },
     mission: `You are Mangekyo - the Eye that sees code patterns and anti-patterns. Review code for quality, safety, and best practices.`,
     phases: {
@@ -578,30 +750,44 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
           `Response-format JSON required`,
           `Respond with JSON only, no Markdown`,
         ],
-        example: JSON.stringify({
-          [EnvelopeField.TAG]: EyeTag.MANGEKYO,
-          [EnvelopeField.OK]: true,
-          [EnvelopeField.CODE]: EyeStatusCode.OK,
-          [EnvelopeField.DATA]: {
-            codeChecklist: {
-              structure: ['Single responsibility', 'Proper separation of concerns'],
-              naming: ['Descriptive names', 'Consistent conventions'],
-              errorHandling: ['Try-catch blocks', 'Meaningful error messages'],
-              typeSafety: ['Proper TypeScript types', "No 'any' usage"],
-              performance: ['Efficient algorithms', 'No unnecessary re-renders'],
-              security: ['Input validation', 'No hardcoded secrets'],
-              testing: ['Unit tests', 'Edge cases covered'],
+        example: JSON.stringify(
+          {
+            [EnvelopeField.TAG]: EyeTag.MANGEKYO,
+            [EnvelopeField.OK]: true,
+            [EnvelopeField.CODE]: EyeStatusCode.OK,
+            [EnvelopeField.DATA]: {
+              codeChecklist: {
+                structure: [
+                  "Single responsibility",
+                  "Proper separation of concerns",
+                ],
+                naming: ["Descriptive names", "Consistent conventions"],
+                errorHandling: [
+                  "Try-catch blocks",
+                  "Meaningful error messages",
+                ],
+                typeSafety: ["Proper TypeScript types", "No 'any' usage"],
+                performance: [
+                  "Efficient algorithms",
+                  "No unnecessary re-renders",
+                ],
+                security: ["Input validation", "No hardcoded secrets"],
+                testing: ["Unit tests", "Edge cases covered"],
+              },
             },
+            [EnvelopeField.UI]: {
+              [EnvelopeField.TITLE]: "Code Quality Checklist",
+              [EnvelopeField.SUMMARY]: "Provided 7-category quality checklist",
+              [EnvelopeField.DETAILS]:
+                "Agent should ensure code follows best practices: proper structure, naming, error handling, type safety, performance, security, and testing. All categories will be validated.",
+              [EnvelopeField.ICON]: EmojiIcon.CODE,
+              [EnvelopeField.COLOR]: SemanticColor.INFO,
+            },
+            [EnvelopeField.NEXT]: NextAction.AWAIT_INPUT,
           },
-          [EnvelopeField.UI]: {
-            [EnvelopeField.TITLE]: 'Code Quality Checklist',
-            [EnvelopeField.SUMMARY]: 'Provided 7-category quality checklist',
-            [EnvelopeField.DETAILS]: 'Agent should ensure code follows best practices: proper structure, naming, error handling, type safety, performance, security, and testing. All categories will be validated.',
-            [EnvelopeField.ICON]: EmojiIcon.CODE,
-            [EnvelopeField.COLOR]: SemanticColor.INFO,
-          },
-          [EnvelopeField.NEXT]: NextAction.AWAIT_INPUT,
-        }, null, 2),
+          null,
+          2,
+        ),
       },
       validation: {
         stage: EyeStageToken.VALIDATION,
@@ -613,42 +799,60 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
           `Provide specific issues with locations`,
           `Calculate overall quality score`,
         ],
-        example: JSON.stringify({
-          [EnvelopeField.TAG]: EyeTag.MANGEKYO,
-          [EnvelopeField.OK]: true,
-          [EnvelopeField.CODE]: EyeStatusCode.OK_CODE_APPROVED,
-          [EnvelopeField.DATA]: {
-            codeReview: {
-              structure: '✓',
-              naming: '✓',
-              errorHandling: '✓',
-              typeSafety: '✓',
-              performance: '✓',
-              security: '✓',
-              testing: '✓',
+        example: JSON.stringify(
+          {
+            [EnvelopeField.TAG]: EyeTag.MANGEKYO,
+            [EnvelopeField.OK]: true,
+            [EnvelopeField.CODE]: EyeStatusCode.OK_CODE_APPROVED,
+            [EnvelopeField.DATA]: {
+              codeReview: {
+                structure: "✓",
+                naming: "✓",
+                errorHandling: "✓",
+                typeSafety: "✓",
+                performance: "✓",
+                security: "✓",
+                testing: "✓",
+              },
+              codeQualityScore: 96,
+              strengths: [
+                "Excellent error handling with descriptive messages",
+                "Strong type safety with no 'any' usage",
+                "Comprehensive test coverage including edge cases",
+              ],
             },
-            codeQualityScore: 96,
-            strengths: [
-              'Excellent error handling with descriptive messages',
-              "Strong type safety with no 'any' usage",
-              'Comprehensive test coverage including edge cases',
-            ],
+            [EnvelopeField.UI]: {
+              [EnvelopeField.TITLE]: "Code Review: Approved",
+              [EnvelopeField.SUMMARY]: "All quality checks passed",
+              [EnvelopeField.DETAILS]:
+                "Quality score: 96/100. Code exhibits excellent practices: proper structure, clear naming, robust error handling, strong type safety, good performance, secure implementation, and comprehensive tests.",
+              [EnvelopeField.ICON]: EmojiIcon.CHECK,
+              [EnvelopeField.COLOR]: SemanticColor.SUCCESS,
+            },
+            [EnvelopeField.NEXT]: EyeTag.TENSEIGAN,
           },
-          [EnvelopeField.UI]: {
-            [EnvelopeField.TITLE]: 'Code Review: Approved',
-            [EnvelopeField.SUMMARY]: 'All quality checks passed',
-            [EnvelopeField.DETAILS]: 'Quality score: 96/100. Code exhibits excellent practices: proper structure, clear naming, robust error handling, strong type safety, good performance, secure implementation, and comprehensive tests.',
-            [EnvelopeField.ICON]: EmojiIcon.CHECK,
-            [EnvelopeField.COLOR]: SemanticColor.SUCCESS,
-          },
-          [EnvelopeField.NEXT]: EyeTag.TENSEIGAN,
-        }, null, 2),
+          null,
+          2,
+        ),
       },
     },
     envelopeContract: {
-      requiredKeys: [EnvelopeField.TAG, EnvelopeField.OK, EnvelopeField.CODE, EnvelopeField.DATA, EnvelopeField.UI, EnvelopeField.NEXT],
-      requiredDataKeys: ['codeChecklist'],
-      requiredUiKeys: [EnvelopeField.TITLE, EnvelopeField.SUMMARY, EnvelopeField.DETAILS, EnvelopeField.ICON, EnvelopeField.COLOR],
+      requiredKeys: [
+        EnvelopeField.TAG,
+        EnvelopeField.OK,
+        EnvelopeField.CODE,
+        EnvelopeField.DATA,
+        EnvelopeField.UI,
+        EnvelopeField.NEXT,
+      ],
+      requiredDataKeys: ["codeChecklist"],
+      requiredUiKeys: [
+        EnvelopeField.TITLE,
+        EnvelopeField.SUMMARY,
+        EnvelopeField.DETAILS,
+        EnvelopeField.ICON,
+        EnvelopeField.COLOR,
+      ],
     },
     reminders: [
       `Mangekyo validates code quality across 7 dimensions`,
@@ -661,10 +865,10 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
   [EyeId.TENSEIGAN]: {
     metadata: {
       eyeId: EyeId.TENSEIGAN,
-      name: 'Tenseigan',
-      description: 'Evidence and citation auditor for factual claims',
-      version: '1.0.0',
-      capabilities: ['fact_validation', 'evidence_grounding'] as const,
+      name: "Tenseigan",
+      description: "Evidence and citation auditor for factual claims",
+      version: "1.0.0",
+      capabilities: ["fact_validation", "evidence_grounding"] as const,
     },
     mission: `You are Tenseigan - the Eye that sees truth and evidence. Validate that all factual claims have citations and evidence.`,
     phases: {
@@ -678,27 +882,36 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
           `Set minimum citation count`,
           `Primary sources preferred`,
         ],
-        example: JSON.stringify({
-          [EnvelopeField.TAG]: EyeTag.TENSEIGAN,
-          [EnvelopeField.OK]: true,
-          [EnvelopeField.CODE]: EyeStatusCode.OK,
-          [EnvelopeField.DATA]: {
-            evidenceRequirements: {
-              claimTypes: ['Statistics', 'Scientific facts', 'Best practices'],
-              citationFormat: 'APA or inline links',
-              minimumCitations: 3,
-              primarySourcesPreferred: true,
+        example: JSON.stringify(
+          {
+            [EnvelopeField.TAG]: EyeTag.TENSEIGAN,
+            [EnvelopeField.OK]: true,
+            [EnvelopeField.CODE]: EyeStatusCode.OK,
+            [EnvelopeField.DATA]: {
+              evidenceRequirements: {
+                claimTypes: [
+                  "Statistics",
+                  "Scientific facts",
+                  "Best practices",
+                ],
+                citationFormat: "APA or inline links",
+                minimumCitations: 3,
+                primarySourcesPreferred: true,
+              },
             },
+            [EnvelopeField.UI]: {
+              [EnvelopeField.TITLE]: "Evidence Requirements Set",
+              [EnvelopeField.SUMMARY]: "All factual claims must be cited",
+              [EnvelopeField.DETAILS]:
+                "Content must include citations for: statistics, scientific facts, and best practices. Minimum 3 citations required. Primary sources preferred. Agent should gather evidence while creating content.",
+              [EnvelopeField.ICON]: EmojiIcon.EVIDENCE,
+              [EnvelopeField.COLOR]: SemanticColor.INFO,
+            },
+            [EnvelopeField.NEXT]: NextAction.AWAIT_INPUT,
           },
-          [EnvelopeField.UI]: {
-            [EnvelopeField.TITLE]: 'Evidence Requirements Set',
-            [EnvelopeField.SUMMARY]: 'All factual claims must be cited',
-            [EnvelopeField.DETAILS]: 'Content must include citations for: statistics, scientific facts, and best practices. Minimum 3 citations required. Primary sources preferred. Agent should gather evidence while creating content.',
-            [EnvelopeField.ICON]: EmojiIcon.EVIDENCE,
-            [EnvelopeField.COLOR]: SemanticColor.INFO,
-          },
-          [EnvelopeField.NEXT]: NextAction.AWAIT_INPUT,
-        }, null, 2),
+          null,
+          2,
+        ),
       },
       validation: {
         stage: EyeStageToken.VALIDATION,
@@ -710,39 +923,57 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
           `Check citation accessibility`,
           `Look for misinformation`,
         ],
-        example: JSON.stringify({
-          [EnvelopeField.TAG]: EyeTag.TENSEIGAN,
-          [EnvelopeField.OK]: true,
-          [EnvelopeField.CODE]: EyeStatusCode.OK_TEXT_VALIDATED,
-          [EnvelopeField.DATA]: {
-            evidenceReview: {
-              totalClaims: 8,
-              citedClaims: 8,
-              uncitedClaims: 0,
+        example: JSON.stringify(
+          {
+            [EnvelopeField.TAG]: EyeTag.TENSEIGAN,
+            [EnvelopeField.OK]: true,
+            [EnvelopeField.CODE]: EyeStatusCode.OK_TEXT_VALIDATED,
+            [EnvelopeField.DATA]: {
+              evidenceReview: {
+                totalClaims: 8,
+                citedClaims: 8,
+                uncitedClaims: 0,
+              },
+              citationQuality: {
+                primarySources: 6,
+                secondarySources: 2,
+                allAccessible: true,
+                allCredible: true,
+              },
+              evidenceScore: 98,
             },
-            citationQuality: {
-              primarySources: 6,
-              secondarySources: 2,
-              allAccessible: true,
-              allCredible: true,
+            [EnvelopeField.UI]: {
+              [EnvelopeField.TITLE]: "Evidence Validated",
+              [EnvelopeField.SUMMARY]: "All 8 factual claims properly cited",
+              [EnvelopeField.DETAILS]:
+                "Evidence score: 98/100. All claims have citations (6 primary sources, 2 secondary). All sources are accessible and credible. No misinformation detected.",
+              [EnvelopeField.ICON]: EmojiIcon.CHECK,
+              [EnvelopeField.COLOR]: SemanticColor.SUCCESS,
             },
-            evidenceScore: 98,
+            [EnvelopeField.NEXT]: EyeTag.BYAKUGAN,
           },
-          [EnvelopeField.UI]: {
-            [EnvelopeField.TITLE]: 'Evidence Validated',
-            [EnvelopeField.SUMMARY]: 'All 8 factual claims properly cited',
-            [EnvelopeField.DETAILS]: 'Evidence score: 98/100. All claims have citations (6 primary sources, 2 secondary). All sources are accessible and credible. No misinformation detected.',
-            [EnvelopeField.ICON]: EmojiIcon.CHECK,
-            [EnvelopeField.COLOR]: SemanticColor.SUCCESS,
-          },
-          [EnvelopeField.NEXT]: EyeTag.BYAKUGAN,
-        }, null, 2),
+          null,
+          2,
+        ),
       },
     },
     envelopeContract: {
-      requiredKeys: [EnvelopeField.TAG, EnvelopeField.OK, EnvelopeField.CODE, EnvelopeField.DATA, EnvelopeField.UI, EnvelopeField.NEXT],
-      requiredDataKeys: ['evidenceRequirements'],
-      requiredUiKeys: [EnvelopeField.TITLE, EnvelopeField.SUMMARY, EnvelopeField.DETAILS, EnvelopeField.ICON, EnvelopeField.COLOR],
+      requiredKeys: [
+        EnvelopeField.TAG,
+        EnvelopeField.OK,
+        EnvelopeField.CODE,
+        EnvelopeField.DATA,
+        EnvelopeField.UI,
+        EnvelopeField.NEXT,
+      ],
+      requiredDataKeys: ["evidenceRequirements"],
+      requiredUiKeys: [
+        EnvelopeField.TITLE,
+        EnvelopeField.SUMMARY,
+        EnvelopeField.DETAILS,
+        EnvelopeField.ICON,
+        EnvelopeField.COLOR,
+      ],
     },
     reminders: [
       `Tenseigan ensures all factual claims are grounded in evidence`,
@@ -755,10 +986,11 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
   [EyeId.BYAKUGAN]: {
     metadata: {
       eyeId: EyeId.BYAKUGAN,
-      name: 'Byakugan',
-      description: 'Final readiness check ensuring clarity, completeness, and quality',
-      version: '1.0.0',
-      capabilities: ['final_approval', 'outcome_synthesis'] as const,
+      name: "Byakugan",
+      description:
+        "Final readiness check ensuring clarity, completeness, and quality",
+      version: "1.0.0",
+      capabilities: ["final_approval", "outcome_synthesis"] as const,
     },
     mission: `You are Byakugan - the Eye that sees everything, the final guardian. Perform comprehensive final review across all dimensions.`,
     phases: {
@@ -773,41 +1005,59 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
           `Check quality: Meets standards?`,
           `Check readiness: Ready for human delivery?`,
         ],
-        example: JSON.stringify({
-          [EnvelopeField.TAG]: EyeTag.BYAKUGAN,
-          [EnvelopeField.OK]: true,
-          [EnvelopeField.CODE]: EyeStatusCode.OK_ALL_APPROVED,
-          [EnvelopeField.DATA]: {
-            finalReview: {
-              clarity: '✓ Excellent',
-              completeness: '✓ All elements present',
-              correctness: '✓ No errors detected',
-              quality: '✓ High standard',
-              readiness: '✓ Ready for delivery',
+        example: JSON.stringify(
+          {
+            [EnvelopeField.TAG]: EyeTag.BYAKUGAN,
+            [EnvelopeField.OK]: true,
+            [EnvelopeField.CODE]: EyeStatusCode.OK_ALL_APPROVED,
+            [EnvelopeField.DATA]: {
+              finalReview: {
+                clarity: "✓ Excellent",
+                completeness: "✓ All elements present",
+                correctness: "✓ No errors detected",
+                quality: "✓ High standard",
+                readiness: "✓ Ready for delivery",
+              },
+              overallScore: 96,
+              strengths: [
+                "Clear and accessible writing for target audience",
+                "Comprehensive coverage of all key topics",
+                "Well-cited with credible sources",
+                "Actionable practical advice",
+              ],
             },
-            overallScore: 96,
-            strengths: [
-              'Clear and accessible writing for target audience',
-              'Comprehensive coverage of all key topics',
-              'Well-cited with credible sources',
-              'Actionable practical advice',
-            ],
+            [EnvelopeField.UI]: {
+              [EnvelopeField.TITLE]: "APPROVED FOR DELIVERY",
+              [EnvelopeField.SUMMARY]: "All checks passed - ready for human",
+              [EnvelopeField.DETAILS]:
+                "Overall score: 96/100. Content is clear, complete, correct, high-quality, and ready. Strengths: excellent writing, comprehensive coverage, well-cited, practical. Agent can confidently deliver to human.",
+              [EnvelopeField.ICON]: EmojiIcon.SUCCESS,
+              [EnvelopeField.COLOR]: SemanticColor.SUCCESS,
+            },
+            [EnvelopeField.NEXT]: NextAction.COMPLETE,
           },
-          [EnvelopeField.UI]: {
-            [EnvelopeField.TITLE]: 'APPROVED FOR DELIVERY',
-            [EnvelopeField.SUMMARY]: 'All checks passed - ready for human',
-            [EnvelopeField.DETAILS]: 'Overall score: 96/100. Content is clear, complete, correct, high-quality, and ready. Strengths: excellent writing, comprehensive coverage, well-cited, practical. Agent can confidently deliver to human.',
-            [EnvelopeField.ICON]: EmojiIcon.SUCCESS,
-            [EnvelopeField.COLOR]: SemanticColor.SUCCESS,
-          },
-          [EnvelopeField.NEXT]: NextAction.COMPLETE,
-        }, null, 2),
+          null,
+          2,
+        ),
       },
     },
     envelopeContract: {
-      requiredKeys: [EnvelopeField.TAG, EnvelopeField.OK, EnvelopeField.CODE, EnvelopeField.DATA, EnvelopeField.UI, EnvelopeField.NEXT],
-      requiredDataKeys: ['finalReview'],
-      requiredUiKeys: [EnvelopeField.TITLE, EnvelopeField.SUMMARY, EnvelopeField.DETAILS, EnvelopeField.ICON, EnvelopeField.COLOR],
+      requiredKeys: [
+        EnvelopeField.TAG,
+        EnvelopeField.OK,
+        EnvelopeField.CODE,
+        EnvelopeField.DATA,
+        EnvelopeField.UI,
+        EnvelopeField.NEXT,
+      ],
+      requiredDataKeys: ["finalReview"],
+      requiredUiKeys: [
+        EnvelopeField.TITLE,
+        EnvelopeField.SUMMARY,
+        EnvelopeField.DETAILS,
+        EnvelopeField.ICON,
+        EnvelopeField.COLOR,
+      ],
     },
     reminders: [
       `Byakugan is the final gate before human delivery`,
@@ -825,4 +1075,3 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
 export function getPersonaBlueprint(eyeId: string): PersonaBlueprint | null {
   return DEFAULT_BLUEPRINTS[eyeId] || null;
 }
-

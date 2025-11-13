@@ -5,18 +5,17 @@
  */
 
 export const ROUTES = {
-  HOME: '/',
-  MONITOR: '/monitor',
+  HOME: "/",
+  MONITOR: "/monitor",
   PLAYGROUND: (id: string) => `/playground/${id}`,
-  SETTINGS: '/settings',
-  EYES: '/eyes',
-  PERSONAS: '/personas',
-  MODELS: '/models',
-  PIPELINES: '/pipelines',
-  CONNECTIONS: '/connections',
-  DATABASE: '/database',
-  METRICS: '/metrics',
-  AUDIT: '/audit',
-  STRICTNESS: '/strictness',
+  SETTINGS: "/settings",
+  EYES: "/eyes",
+  PERSONAS: "/personas",
+  MODELS: "/models",
+  PIPELINES: "/pipelines",
+  CONNECTIONS: "/connections",
+  DATABASE: "/database",
+  METRICS: "/metrics",
+  AUDIT: "/audit",
+  STRICTNESS: "/strictness",
 } as const;
-

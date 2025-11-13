@@ -1,5 +1,12 @@
-import { z } from 'zod';
-import { BaseProvider, type CompletionRequest, type CompletionResponse, type HealthStatus, type ModelInfo, type ProviderConfig } from './base';
+import { z } from "zod";
+import {
+  BaseProvider,
+  type CompletionRequest,
+  type CompletionResponse,
+  type HealthStatus,
+  type ModelInfo,
+  type ProviderConfig,
+} from "./base";
 
 const GroqModelSchema = z.object({
   id: z.string(),
@@ -14,7 +21,7 @@ const GroqModelsResponseSchema = z.object({
 // Phase 1-A4: Tool call schema for function calling
 const GroqToolCallSchema = z.object({
   id: z.string(),
-  type: z.literal('function'),
+  type: z.literal("function"),
   function: z.object({
     name: z.string(),
     arguments: z.string(), // JSON string
@@ -29,11 +36,13 @@ const GroqChoiceSchema = z.object({
   finish_reason: z.string().optional().nullable(),
 });
 
-const GroqUsageSchema = z.object({
-  prompt_tokens: z.number().optional(),
-  completion_tokens: z.number().optional(),
-  total_tokens: z.number().optional(),
-}).optional();
+const GroqUsageSchema = z
+  .object({
+    prompt_tokens: z.number().optional(),
+    completion_tokens: z.number().optional(),
+    total_tokens: z.number().optional(),
+  })
+  .optional();
 
 const GroqCompletionResponseSchema = z.object({
   id: z.string(),
@@ -43,17 +52,17 @@ const GroqCompletionResponseSchema = z.object({
 });
 
 export class GroqProvider extends BaseProvider {
-  private readonly baseUrl = 'https://api.groq.com/openai/v1';
+  private readonly baseUrl = "https://api.groq.com/openai/v1";
 
   constructor(config: ProviderConfig) {
     super({
       ...config,
-      baseUrl: config.baseUrl || 'https://api.groq.com/openai/v1'
+      baseUrl: config.baseUrl || "https://api.groq.com/openai/v1",
     });
   }
 
   get name(): string {
-    return 'groq';
+    return "groq";
   }
 
   get requiresApiKey(): boolean {
@@ -62,19 +71,16 @@ export class GroqProvider extends BaseProvider {
 
   async listModels(): Promise<ModelInfo[]> {
     if (!this.config.apiKey) {
-      throw new Error('Groq API key required');
+      throw new Error("Groq API key required");
     }
 
     try {
-      const response = await this.fetchWithRetry(
-        `${this.baseUrl}/models`,
-        {
-          headers: {
-            'Authorization': `Bearer ${this.config.apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await this.fetchWithRetry(`${this.baseUrl}/models`, {
+        headers: {
+          Authorization: `Bearer ${this.config.apiKey}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (!response.ok) {
         throw new Error(`Groq API error: ${response.status}`);
@@ -83,31 +89,33 @@ export class GroqProvider extends BaseProvider {
       const data = GroqModelsResponseSchema.parse(await response.json());
 
       return data.data
-        .filter(model => model.active !== false)
-        .map(model => ({
+        .filter((model) => model.active !== false)
+        .map((model) => ({
           id: model.id,
           name: model.id,
           context_window: model.context_window ?? 32768,
-          pricing: this.getPricing(model.id)
+          pricing: this.getPricing(model.id),
         }));
     } catch (error) {
-      throw new Error(`Failed to list Groq models: ${this.normalizeError(error)}`);
+      throw new Error(
+        `Failed to list Groq models: ${this.normalizeError(error)}`,
+      );
     }
   }
 
   async complete(request: CompletionRequest): Promise<CompletionResponse> {
     if (!this.config.apiKey) {
-      throw new Error('Groq API key required');
+      throw new Error("Groq API key required");
     }
 
     try {
       const response = await this.fetchWithRetry(
         `${this.baseUrl}/chat/completions`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': `Bearer ${this.config.apiKey}`,
-            'Content-Type': 'application/json'
+            Authorization: `Bearer ${this.config.apiKey}`,
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             model: request.model,
@@ -119,8 +127,8 @@ export class GroqProvider extends BaseProvider {
             response_format: request.response_format,
             tools: request.tools, // Phase 1-A4: Function calling
             tool_choice: request.tool_choice, // Phase 1-A4
-          })
-        }
+          }),
+        },
       );
 
       if (!response.ok) {
@@ -133,15 +141,15 @@ export class GroqProvider extends BaseProvider {
       const primaryChoice = data.choices[0];
 
       // Phase 1-A4: Handle function calling responses
-      const toolCalls = primaryChoice.message.tool_calls?.map(tc => ({
+      const toolCalls = primaryChoice.message.tool_calls?.map((tc) => ({
         id: tc.id,
-        type: tc.type as 'function',
+        type: tc.type as "function",
         function: {
           name: tc.function.name,
-          arguments: tc.function.arguments
-        }
+          arguments: tc.function.arguments,
+        },
       }));
-      const content = primaryChoice.message.content ?? '';
+      const content = primaryChoice.message.content ?? "";
 
       return {
         id: data.id,
@@ -164,45 +172,44 @@ export class GroqProvider extends BaseProvider {
     if (!this.config.apiKey) {
       return {
         healthy: false,
-        error: 'API key not configured'
+        error: "API key not configured",
       };
     }
 
     const start = Date.now();
 
     try {
-      const response = await this.fetchWithRetry(
-        `${this.baseUrl}/models`,
-        {
-          headers: {
-            'Authorization': `Bearer ${this.config.apiKey}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await this.fetchWithRetry(`${this.baseUrl}/models`, {
+        headers: {
+          Authorization: `Bearer ${this.config.apiKey}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       return {
         healthy: response.ok,
         latency_ms: Date.now() - start,
-        error: response.ok ? undefined : `HTTP ${response.status}`
+        error: response.ok ? undefined : `HTTP ${response.status}`,
       };
     } catch (error) {
       return {
         healthy: false,
         latency_ms: Date.now() - start,
-        error: this.normalizeError(error)
+        error: this.normalizeError(error),
       };
     }
   }
 
-  private getPricing(modelId: string): { prompt: number; completion: number } | undefined {
+  private getPricing(
+    modelId: string,
+  ): { prompt: number; completion: number } | undefined {
     const pricing: Record<string, { prompt: number; completion: number }> = {
-      'llama-3.3-70b-versatile': { prompt: 0.59, completion: 0.79 },
-      'llama-3.1-70b-versatile': { prompt: 0.59, completion: 0.79 },
-      'llama-3.1-8b-instant': { prompt: 0.05, completion: 0.08 },
-      'mixtral-8x7b-32768': { prompt: 0.24, completion: 0.24 },
-      'gemma2-9b-it': { prompt: 0.20, completion: 0.20 },
-      'llama-3-groq-70b-tool-use': { prompt: 0.89, completion: 0.89 }, // Phase 1-A4: Tool use model
+      "llama-3.3-70b-versatile": { prompt: 0.59, completion: 0.79 },
+      "llama-3.1-70b-versatile": { prompt: 0.59, completion: 0.79 },
+      "llama-3.1-8b-instant": { prompt: 0.05, completion: 0.08 },
+      "mixtral-8x7b-32768": { prompt: 0.24, completion: 0.24 },
+      "gemma2-9b-it": { prompt: 0.2, completion: 0.2 },
+      "llama-3-groq-70b-tool-use": { prompt: 0.89, completion: 0.89 }, // Phase 1-A4: Tool use model
     };
 
     return pricing[modelId];

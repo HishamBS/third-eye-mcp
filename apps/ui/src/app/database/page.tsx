@@ -1,11 +1,23 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { Settings, Key, Bot, Eye, Users, FileText, Play, BarChart3 } from 'lucide-react';
-import type { ReactNode } from 'react';
-import { API_BASE_URL } from '@/consts/api';
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE } from '@/constants/color-mappings';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import {
+  Settings,
+  Key,
+  Bot,
+  Eye,
+  Users,
+  FileText,
+  Play,
+  BarChart3,
+} from "lucide-react";
+import type { ReactNode } from "react";
+import { API_BASE_URL } from "@/consts/api";
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
 
 // Table icon mapping (SSOT) - Returns icon components instead of emojis
 const TABLE_ICONS: Record<string, ReactNode> = Object.freeze({
@@ -43,9 +55,9 @@ interface DatabaseData {
 
 export default function DatabasePage() {
   const [data, setData] = useState<DatabaseData | null>(null);
-  const [selectedTable, setSelectedTable] = useState<string>('');
+  const [selectedTable, setSelectedTable] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [filter, setFilter] = useState('');
+  const [filter, setFilter] = useState("");
   const [editingRow, setEditingRow] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<RowData>({});
   const [page, setPage] = useState(1);
@@ -68,7 +80,7 @@ export default function DatabasePage() {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch database data:', error);
+      console.error("Failed to fetch database data:", error);
     } finally {
       setLoading(false);
     }
@@ -84,17 +96,18 @@ export default function DatabasePage() {
 
     try {
       const table = data.tables[tableName];
-      const primaryKey = table.schema.find(s => s.primary);
+      const primaryKey = table.schema.find((s) => s.primary);
 
       if (!primaryKey) return;
 
-      const endpoint = tableName === 'app_settings'
-        ? `/api/database/app-settings/${editValues[primaryKey.name]}`
-        : `/api/database/eyes-routing/${editValues[primaryKey.name]}`;
+      const endpoint =
+        tableName === "app_settings"
+          ? `/api/database/app-settings/${editValues[primaryKey.name]}`
+          : `/api/database/eyes-routing/${editValues[primaryKey.name]}`;
 
       const response = await fetch(endpoint, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editValues),
       });
 
@@ -104,30 +117,35 @@ export default function DatabasePage() {
         setEditValues({});
       }
     } catch (error) {
-      console.error('Failed to save row:', error);
+      console.error("Failed to save row:", error);
     }
   };
 
-  const handleDelete = async (tableName: string, rowKey: string, row: RowData) => {
+  const handleDelete = async (
+    tableName: string,
+    rowKey: string,
+    row: RowData,
+  ) => {
     if (!data) return;
 
     try {
       const table = data.tables[tableName];
-      const primaryKey = table.schema.find(s => s.primary);
+      const primaryKey = table.schema.find((s) => s.primary);
 
       if (!primaryKey) return;
 
-      const endpoint = tableName === 'app_settings'
-        ? `/api/database/app-settings/${row[primaryKey.name]}`
-        : `/api/database/eyes-routing/${row[primaryKey.name]}`;
+      const endpoint =
+        tableName === "app_settings"
+          ? `/api/database/app-settings/${row[primaryKey.name]}`
+          : `/api/database/eyes-routing/${row[primaryKey.name]}`;
 
-      const response = await fetch(endpoint, { method: 'DELETE' });
+      const response = await fetch(endpoint, { method: "DELETE" });
 
       if (response.ok) {
         await fetchData();
       }
     } catch (error) {
-      console.error('Failed to delete row:', error);
+      console.error("Failed to delete row:", error);
     }
   };
 
@@ -137,18 +155,22 @@ export default function DatabasePage() {
   };
 
   const formatValue = (value: unknown, type: string): string => {
-    if (value === null || value === undefined) return 'null';
+    if (value === null || value === undefined) return "null";
 
     switch (type) {
-      case 'timestamp':
-        if (typeof value === 'string' || typeof value === 'number' || value instanceof Date) {
+      case "timestamp":
+        if (
+          typeof value === "string" ||
+          typeof value === "number" ||
+          value instanceof Date
+        ) {
           return new Date(value).toLocaleString();
         }
-        return 'Invalid date';
-      case 'json':
+        return "Invalid date";
+      case "json":
         return JSON.stringify(value, null, 2);
-      case 'boolean':
-        return value ? 'true' : 'false';
+      case "boolean":
+        return value ? "true" : "false";
       default:
         return String(value);
     }
@@ -159,17 +181,17 @@ export default function DatabasePage() {
   };
 
   const getRowKey = (row: RowData, schema: TableSchema[]): string => {
-    const primaryKey = schema.find(s => s.primary);
+    const primaryKey = schema.find((s) => s.primary);
     return primaryKey ? String(row[primaryKey.name]) : JSON.stringify(row);
   };
 
   const filteredData = (table: TableInfo) => {
     if (!table?.data) return [];
     if (!filter) return table.data;
-    return table.data.filter(row =>
-      Object.values(row).some(value =>
-        String(value).toLowerCase().includes(filter.toLowerCase())
-      )
+    return table.data.filter((row) =>
+      Object.values(row).some((value) =>
+        String(value).toLowerCase().includes(filter.toLowerCase()),
+      ),
     );
   };
 
@@ -200,7 +222,9 @@ export default function DatabasePage() {
   if (!data) {
     return (
       <div className="min-h-screen bg-gradient-to-br brand-ink flex items-center justify-center">
-        <div className="text-brand-foreground text-xl">Failed to load database</div>
+        <div className="text-brand-foreground text-xl">
+          Failed to load database
+        </div>
       </div>
     );
   }
@@ -214,19 +238,33 @@ export default function DatabasePage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-4">
-              <Link href="/" className="text-semantic-muted hover:text-brand-foreground transition-colors">
+              <Link
+                href="/"
+                className="text-semantic-muted hover:text-brand-foreground transition-colors"
+              >
                 ← Back to Home
               </Link>
-              <h1 className="text-2xl font-bold text-brand-foreground">Database Browser</h1>
+              <h1 className="text-2xl font-bold text-brand-foreground">
+                Database Browser
+              </h1>
             </div>
             <div className="flex space-x-4">
-              <Link href="/personas" className="text-semantic-muted hover:text-brand-foreground transition-colors">
+              <Link
+                href="/personas"
+                className="text-semantic-muted hover:text-brand-foreground transition-colors"
+              >
                 Personas
               </Link>
-              <Link href="/models" className="text-semantic-muted hover:text-brand-foreground transition-colors">
+              <Link
+                href="/models"
+                className="text-semantic-muted hover:text-brand-foreground transition-colors"
+              >
                 Models
               </Link>
-              <Link href="/settings" className="text-semantic-muted hover:text-brand-foreground transition-colors">
+              <Link
+                href="/settings"
+                className="text-semantic-muted hover:text-brand-foreground transition-colors"
+              >
                 Settings
               </Link>
               <button
@@ -244,7 +282,9 @@ export default function DatabasePage() {
         <div className="grid lg:grid-cols-4 gap-8">
           {/* Tables List */}
           <div className="lg:col-span-1">
-            <h2 className="text-xl font-bold text-brand-foreground mb-6">Tables</h2>
+            <h2 className="text-xl font-bold text-brand-foreground mb-6">
+              Tables
+            </h2>
             <div className="space-y-2">
               {Object.entries(data.tables).map(([tableName, table]) => (
                 <button
@@ -252,17 +292,19 @@ export default function DatabasePage() {
                   onClick={() => setSelectedTable(tableName)}
                   className={`w-full text-left p-3 rounded-lg transition-colors ${
                     selectedTable === tableName
-                      ? 'bg-brand-accent text-brand-foreground'
-                      : 'bg-brand-paper text-semantic-muted hover:bg-brand-paper-elev'
+                      ? "bg-brand-accent text-brand-foreground"
+                      : "bg-brand-paper text-semantic-muted hover:bg-brand-paper-elev"
                   }`}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="flex items-center">{getTableIcon(tableName)}</div>
+                    <div className="flex items-center">
+                      {getTableIcon(tableName)}
+                    </div>
                     <div>
                       <div className="font-medium">{table.name}</div>
                       <div className="text-sm opacity-80">
                         {table.data?.length || 0} rows
-                        {!table.editable && ' (read-only)'}
+                        {!table.editable && " (read-only)"}
                       </div>
                     </div>
                   </div>
@@ -283,12 +325,15 @@ export default function DatabasePage() {
                     </h2>
                     <div className="flex items-center space-x-4">
                       {!currentTable.editable && (
-                        <span className={`px-2 py-1 ${STATUS_BG_COLORS_SUBTLE.warning} ${STATUS_TEXT_COLORS.warning} text-xs rounded`}>
+                        <span
+                          className={`px-2 py-1 ${STATUS_BG_COLORS_SUBTLE.warning} ${STATUS_TEXT_COLORS.warning} text-xs rounded`}
+                        >
                           Read Only
                         </span>
                       )}
                       <span className="text-semantic-muted text-sm">
-                        {filteredData(currentTable).length} of {currentTable.data.length} rows
+                        {filteredData(currentTable).length} of{" "}
+                        {currentTable.data.length} rows
                       </span>
                     </div>
                   </div>
@@ -320,15 +365,26 @@ export default function DatabasePage() {
                     <thead className="bg-brand-paper/50">
                       <tr>
                         {currentTable.schema
-                          .filter(col => !col.hidden)
-                          .map(col => (
-                            <th key={col.name} className="px-4 py-3 text-left text-brand-foreground font-medium">
+                          .filter((col) => !col.hidden)
+                          .map((col) => (
+                            <th
+                              key={col.name}
+                              className="px-4 py-3 text-left text-brand-foreground font-medium"
+                            >
                               {col.name}
-                              {col.primary && <span className={`ml-1 ${STATUS_TEXT_COLORS.warning}`}>*</span>}
+                              {col.primary && (
+                                <span
+                                  className={`ml-1 ${STATUS_TEXT_COLORS.warning}`}
+                                >
+                                  *
+                                </span>
+                              )}
                             </th>
                           ))}
                         {currentTable.editable && (
-                          <th className="px-4 py-3 text-right text-brand-foreground font-medium">Actions</th>
+                          <th className="px-4 py-3 text-right text-brand-foreground font-medium">
+                            Actions
+                          </th>
                         )}
                       </tr>
                     </thead>
@@ -338,19 +394,34 @@ export default function DatabasePage() {
                         const isEditing = editingRow === rowKey;
 
                         return (
-                          <tr key={rowKey} className="border-t border-brand-outline">
+                          <tr
+                            key={rowKey}
+                            className="border-t border-brand-outline"
+                          >
                             {currentTable.schema
-                              .filter(col => !col.hidden)
-                              .map(col => (
-                                <td key={col.name} className="px-4 py-3 text-semantic-muted">
+                              .filter((col) => !col.hidden)
+                              .map((col) => (
+                                <td
+                                  key={col.name}
+                                  className="px-4 py-3 text-semantic-muted"
+                                >
                                   {isEditing ? (
-                                    col.type === 'json' ? (
+                                    col.type === "json" ? (
                                       <textarea
-                                        value={JSON.stringify(editValues[col.name] || null, null, 2)}
+                                        value={JSON.stringify(
+                                          editValues[col.name] || null,
+                                          null,
+                                          2,
+                                        )}
                                         onChange={(e) => {
                                           try {
-                                            const parsed = JSON.parse(e.target.value);
-                                            setEditValues(prev => ({ ...prev, [col.name]: parsed }));
+                                            const parsed = JSON.parse(
+                                              e.target.value,
+                                            );
+                                            setEditValues((prev) => ({
+                                              ...prev,
+                                              [col.name]: parsed,
+                                            }));
                                           } catch {
                                             // Invalid JSON, keep as string for now
                                           }
@@ -361,13 +432,31 @@ export default function DatabasePage() {
                                     ) : (
                                       <input
                                         type="text"
-                                        value={typeof editValues[col.name] === 'string' || typeof editValues[col.name] === 'number' ? String(editValues[col.name]) : ''}
-                                        onChange={(e) => setEditValues(prev => ({ ...prev, [col.name]: e.target.value }))}
+                                        value={
+                                          typeof editValues[col.name] ===
+                                            "string" ||
+                                          typeof editValues[col.name] ===
+                                            "number"
+                                            ? String(editValues[col.name])
+                                            : ""
+                                        }
+                                        onChange={(e) =>
+                                          setEditValues((prev) => ({
+                                            ...prev,
+                                            [col.name]: e.target.value,
+                                          }))
+                                        }
                                         className="w-full px-2 py-1 bg-brand-paper-elev border border-brand-outline rounded text-brand-foreground text-sm"
                                       />
                                     )
                                   ) : (
-                                    <div className={col.type === 'json' ? 'font-mono text-xs' : ''}>
+                                    <div
+                                      className={
+                                        col.type === "json"
+                                          ? "font-mono text-xs"
+                                          : ""
+                                      }
+                                    >
                                       {formatValue(row[col.name], col.type)}
                                     </div>
                                   )}
@@ -399,7 +488,9 @@ export default function DatabasePage() {
                                       Edit
                                     </button>
                                     <button
-                                      onClick={() => handleDelete(selectedTable, rowKey, row)}
+                                      onClick={() =>
+                                        handleDelete(selectedTable, rowKey, row)
+                                      }
                                       className="bg-semantic-error hover:bg-semantic-error/80 text-brand-foreground px-2 py-1 rounded text-xs transition-colors"
                                     >
                                       Delete
@@ -417,7 +508,7 @@ export default function DatabasePage() {
 
                 {filteredData(currentTable).length === 0 && (
                   <div className="p-12 text-center text-semantic-muted">
-                    {filter ? 'No rows match the filter' : 'No data available'}
+                    {filter ? "No rows match the filter" : "No data available"}
                   </div>
                 )}
 
@@ -425,9 +516,17 @@ export default function DatabasePage() {
                 {filteredData(currentTable).length > rowsPerPage && (
                   <div className="flex items-center justify-between border-t border-brand-outline p-4">
                     <div className="text-sm text-semantic-muted">
-                      Showing {Math.min((page - 1) * rowsPerPage + 1, filteredData(currentTable).length)} to{' '}
-                      {Math.min(page * rowsPerPage, filteredData(currentTable).length)} of{' '}
-                      {filteredData(currentTable).length} rows
+                      Showing{" "}
+                      {Math.min(
+                        (page - 1) * rowsPerPage + 1,
+                        filteredData(currentTable).length,
+                      )}{" "}
+                      to{" "}
+                      {Math.min(
+                        page * rowsPerPage,
+                        filteredData(currentTable).length,
+                      )}{" "}
+                      of {filteredData(currentTable).length} rows
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -438,8 +537,11 @@ export default function DatabasePage() {
                         Previous
                       </button>
                       <div className="flex items-center gap-1">
-                        {Array.from({ length: totalPages(currentTable) }, (_, i) => i + 1)
-                          .filter(p => {
+                        {Array.from(
+                          { length: totalPages(currentTable) },
+                          (_, i) => i + 1,
+                        )
+                          .filter((p) => {
                             // Show first page, last page, current page, and pages around current
                             return (
                               p === 1 ||
@@ -450,14 +552,16 @@ export default function DatabasePage() {
                           .map((p, idx, arr) => (
                             <div key={p} className="flex items-center">
                               {idx > 0 && arr[idx - 1] !== p - 1 && (
-                                <span className="px-2 text-semantic-muted">...</span>
+                                <span className="px-2 text-semantic-muted">
+                                  ...
+                                </span>
                               )}
                               <button
                                 onClick={() => setPage(p)}
                                 className={`px-3 py-1 rounded ${
                                   page === p
-                                    ? 'bg-brand-accent text-brand-foreground'
-                                    : 'bg-brand-paper text-brand-foreground hover:bg-brand-paper-elev'
+                                    ? "bg-brand-accent text-brand-foreground"
+                                    : "bg-brand-paper text-brand-foreground hover:bg-brand-paper-elev"
                                 }`}
                               >
                                 {p}
@@ -466,7 +570,9 @@ export default function DatabasePage() {
                           ))}
                       </div>
                       <button
-                        onClick={() => setPage(Math.min(totalPages(currentTable), page + 1))}
+                        onClick={() =>
+                          setPage(Math.min(totalPages(currentTable), page + 1))
+                        }
                         disabled={page === totalPages(currentTable)}
                         className="px-3 py-1 bg-brand-paper text-brand-foreground rounded hover:bg-brand-paper-elev disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -478,7 +584,9 @@ export default function DatabasePage() {
               </div>
             ) : (
               <div className="bg-brand-paper/50 border border-brand-outline rounded-lg p-12 text-center">
-                <h2 className="text-2xl font-bold text-brand-foreground mb-4">Database Browser</h2>
+                <h2 className="text-2xl font-bold text-brand-foreground mb-4">
+                  Database Browser
+                </h2>
                 <p className="text-semantic-muted text-lg">
                   Select a table from the left to view its contents
                 </p>

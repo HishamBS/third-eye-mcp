@@ -1,7 +1,7 @@
 /**
  * Pipeline Builder Constants - SSOT for UI strings only
  * Per R13: No magic strings or literal values
- * 
+ *
  * NOTE: Eye metadata (names, descriptions, stages, capabilities) is now loaded from database
  * via /api/eyes/all endpoint. No hardcoded eye data here.
  */
@@ -10,56 +10,56 @@
  * Eye Stages - GUIDANCE or VALIDATION phase
  * Type definition only - actual stage data comes from database blueprint phases
  */
-export type EyeStage = 'GUIDANCE' | 'VALIDATION' | 'BOTH' | 'ROUTER';
+export type EyeStage = "GUIDANCE" | "VALIDATION" | "BOTH" | "ROUTER";
 
 /**
  * Pipeline Builder UI Text Constants
  */
 export const PIPELINE_UI_TEXT = {
-  PAGE_TITLE: 'Pipeline Builder',
-  PAGE_SUBTITLE: 'Design custom validation workflows with drag-and-drop Eyes',
+  PAGE_TITLE: "Pipeline Builder",
+  PAGE_SUBTITLE: "Design custom validation workflows with drag-and-drop Eyes",
 
   // Toolbar
-  TOOLBAR_RUN: 'Run Pipeline',
-  TOOLBAR_AUTO_LAYOUT: 'Auto Layout',
-  TOOLBAR_SAVE: 'Save Pipeline',
-  TOOLBAR_LOAD: 'Load Template',
-  TOOLBAR_EXPORT: 'Export',
-  TOOLBAR_IMPORT: 'Import',
+  TOOLBAR_RUN: "Run Pipeline",
+  TOOLBAR_AUTO_LAYOUT: "Auto Layout",
+  TOOLBAR_SAVE: "Save Pipeline",
+  TOOLBAR_LOAD: "Load Template",
+  TOOLBAR_EXPORT: "Export",
+  TOOLBAR_IMPORT: "Import",
 
   // Context Menu
-  MENU_EDIT: 'Edit Configuration',
-  MENU_DUPLICATE: 'Duplicate',
-  MENU_COPY: 'Copy',
-  MENU_DELETE: 'Delete',
-  MENU_VIEW_PERSONA: 'View Persona',
-  MENU_TEST_EYE: 'Test Eye',
-  MENU_ADD_EYE: 'Add Eye',
-  MENU_PASTE: 'Paste',
-  MENU_ZOOM_FIT: 'Zoom to Fit',
-  MENU_RESET_ZOOM: 'Reset Zoom',
-  MENU_DELETE_CONNECTION: 'Delete Connection',
-  MENU_EDIT_STYLE: 'Edit Style',
+  MENU_EDIT: "Edit Configuration",
+  MENU_DUPLICATE: "Duplicate",
+  MENU_COPY: "Copy",
+  MENU_DELETE: "Delete",
+  MENU_VIEW_PERSONA: "View Persona",
+  MENU_TEST_EYE: "Test Eye",
+  MENU_ADD_EYE: "Add Eye",
+  MENU_PASTE: "Paste",
+  MENU_ZOOM_FIT: "Zoom to Fit",
+  MENU_RESET_ZOOM: "Reset Zoom",
+  MENU_DELETE_CONNECTION: "Delete Connection",
+  MENU_EDIT_STYLE: "Edit Style",
 
   // Validation Messages
-  VALIDATION_NO_ORPHANS: 'All Eyes must be connected',
-  VALIDATION_GUIDANCE_FIRST: 'Guidance Eyes must come before Validation Eyes',
-  VALIDATION_NEEDS_OVERSEER: 'Pipeline must start with Overseer',
-  VALIDATION_NEEDS_APPROVAL: 'Pipeline must end with final approval Eye (e.g., Byakugan)',
-  VALIDATION_NO_CYCLES: 'Pipeline cannot have circular dependencies',
-  VALIDATION_NO_SELF_CONNECTION: 'Cannot connect Eye to itself',
-  VALIDATION_CONNECTION_EXISTS: 'Connection already exists',
+  VALIDATION_NO_ORPHANS: "All Eyes must be connected",
+  VALIDATION_GUIDANCE_FIRST: "Guidance Eyes must come before Validation Eyes",
+  VALIDATION_NEEDS_OVERSEER: "Pipeline must start with Overseer",
+  VALIDATION_NEEDS_APPROVAL:
+    "Pipeline must end with final approval Eye (e.g., Byakugan)",
+  VALIDATION_NO_CYCLES: "Pipeline cannot have circular dependencies",
+  VALIDATION_NO_SELF_CONNECTION: "Cannot connect Eye to itself",
+  VALIDATION_CONNECTION_EXISTS: "Connection already exists",
 
   // Status Messages
-  STATUS_PIPELINE_SAVED: 'Pipeline saved successfully',
-  STATUS_PIPELINE_LOADED: 'Pipeline loaded successfully',
-  STATUS_PIPELINE_DELETED: 'Pipeline deleted successfully',
-  STATUS_PIPELINE_EXPORTED: 'Pipeline exported successfully',
+  STATUS_PIPELINE_SAVED: "Pipeline saved successfully",
+  STATUS_PIPELINE_LOADED: "Pipeline loaded successfully",
+  STATUS_PIPELINE_DELETED: "Pipeline deleted successfully",
+  STATUS_PIPELINE_EXPORTED: "Pipeline exported successfully",
 
   // Empty States
-  EMPTY_STATE_NO_NODES: 'Drag Eyes from the palette to build your pipeline',
-  EMPTY_STATE_NO_PIPELINES: 'No saved pipelines yet',
-
+  EMPTY_STATE_NO_NODES: "Drag Eyes from the palette to build your pipeline",
+  EMPTY_STATE_NO_PIPELINES: "No saved pipelines yet",
 } as const;
 
 /**
@@ -89,21 +89,21 @@ export const CANVAS_SETTINGS = {
  * Keyboard Shortcuts
  */
 export const KEYBOARD_SHORTCUTS = {
-  DELETE: 'Delete',
-  COPY: 'Ctrl+C / ⌘+C',
-  PASTE: 'Ctrl+V / ⌘+V',
-  DUPLICATE: 'Ctrl+D / ⌘+D',
-  UNDO: 'Ctrl+Z / ⌘+Z',
-  REDO: 'Ctrl+Shift+Z / ⌘+Shift+Z',
-  SELECT_ALL: 'Ctrl+A / ⌘+A',
-  DESELECT: 'Escape',
-  RESET_ZOOM: 'Ctrl+0 / ⌘+0',
-  ZOOM_FIT: 'Ctrl+1 / ⌘+1',
-  RUN: 'R',
-  AUTO_LAYOUT: 'L',
-  TOGGLE_MINIMAP: 'M',
-  TOGGLE_GRID: 'G',
-  FIND: 'Ctrl+F / ⌘+F',
+  DELETE: "Delete",
+  COPY: "Ctrl+C / ⌘+C",
+  PASTE: "Ctrl+V / ⌘+V",
+  DUPLICATE: "Ctrl+D / ⌘+D",
+  UNDO: "Ctrl+Z / ⌘+Z",
+  REDO: "Ctrl+Shift+Z / ⌘+Shift+Z",
+  SELECT_ALL: "Ctrl+A / ⌘+A",
+  DESELECT: "Escape",
+  RESET_ZOOM: "Ctrl+0 / ⌘+0",
+  ZOOM_FIT: "Ctrl+1 / ⌘+1",
+  RUN: "R",
+  AUTO_LAYOUT: "L",
+  TOGGLE_MINIMAP: "M",
+  TOGGLE_GRID: "G",
+  FIND: "Ctrl+F / ⌘+F",
 } as const;
 
 /**
@@ -129,26 +129,26 @@ export const LAYOUT = {
  * Per R13: No literal strings
  */
 export const TOOLBAR_TEXT = {
-  SAVE: 'Save Pipeline',
-  ACTIVATE: 'Activate',
-  NEW: 'New Pipeline',
-  EXPORT: 'Export',
-  IMPORT: 'Import',
-  VALIDATE: 'Validate',
-  MORE_ACTIONS: 'More Actions',
-  TOGGLE_MINIMAP: 'Toggle Minimap',
-  TOGGLE_GRID: 'Toggle Grid',
-  AUTO_LAYOUT: 'Auto Layout',
-  ZOOM_FIT: 'Fit View',
-  UNDO: 'Undo',
-  REDO: 'Redo',
-  COPY: 'Copy',
-  PASTE: 'Paste',
-  DELETE: 'Delete',
-  SELECT_PIPELINE: 'Select Pipeline',
-  SYSTEM_DEFAULT: 'System Default',
-  SAVE_AS_TEMPLATE: 'Save as Template',
-  LOAD_TEMPLATE: 'Load Template',
+  SAVE: "Save Pipeline",
+  ACTIVATE: "Activate",
+  NEW: "New Pipeline",
+  EXPORT: "Export",
+  IMPORT: "Import",
+  VALIDATE: "Validate",
+  MORE_ACTIONS: "More Actions",
+  TOGGLE_MINIMAP: "Toggle Minimap",
+  TOGGLE_GRID: "Toggle Grid",
+  AUTO_LAYOUT: "Auto Layout",
+  ZOOM_FIT: "Fit View",
+  UNDO: "Undo",
+  REDO: "Redo",
+  COPY: "Copy",
+  PASTE: "Paste",
+  DELETE: "Delete",
+  SELECT_PIPELINE: "Select Pipeline",
+  SYSTEM_DEFAULT: "System Default",
+  SAVE_AS_TEMPLATE: "Save as Template",
+  LOAD_TEMPLATE: "Load Template",
 } as const;
 
 /**
@@ -156,13 +156,13 @@ export const TOOLBAR_TEXT = {
  * Per R13: No literal strings
  */
 export const PALETTE_TEXT = {
-  TITLE: 'Eyes',
-  SEARCH_PLACEHOLDER: 'Search eyes...',
-  NO_RESULTS: 'No eyes found',
-  COLLAPSE: 'Collapse',
-  EXPAND: 'Expand',
-  DRAG_HINT: 'Drag to canvas',
-  CREATE_EYE: 'Create Eye',
+  TITLE: "Eyes",
+  SEARCH_PLACEHOLDER: "Search eyes...",
+  NO_RESULTS: "No eyes found",
+  COLLAPSE: "Collapse",
+  EXPAND: "Expand",
+  DRAG_HINT: "Drag to canvas",
+  CREATE_EYE: "Create Eye",
 } as const;
 
 /**
@@ -170,18 +170,18 @@ export const PALETTE_TEXT = {
  * Per R13: No literal strings
  */
 export const NODE_EDIT_TEXT = {
-  TITLE: 'Edit Eye Node',
-  EYE_LABEL: 'Eye',
-  CAPABILITIES_LABEL: 'Capabilities',
-  CONFIG_LABEL: 'Custom Configuration',
-  SAVE: 'Save Changes',
-  CANCEL: 'Cancel',
-  DELETE: 'Delete Node',
-  ADD_CAPABILITY: 'Add Capability',
-  REMOVE_CAPABILITY: 'Remove',
-  CONFIG_JSON_HINT: 'Enter custom JSON configuration',
-  VALIDATION_INVALID_JSON: 'Invalid JSON format',
-  VALIDATION_REQUIRED: 'This field is required',
+  TITLE: "Edit Eye Node",
+  EYE_LABEL: "Eye",
+  CAPABILITIES_LABEL: "Capabilities",
+  CONFIG_LABEL: "Custom Configuration",
+  SAVE: "Save Changes",
+  CANCEL: "Cancel",
+  DELETE: "Delete Node",
+  ADD_CAPABILITY: "Add Capability",
+  REMOVE_CAPABILITY: "Remove",
+  CONFIG_JSON_HINT: "Enter custom JSON configuration",
+  VALIDATION_INVALID_JSON: "Invalid JSON format",
+  VALIDATION_REQUIRED: "This field is required",
 } as const;
 
 /**
@@ -189,18 +189,18 @@ export const NODE_EDIT_TEXT = {
  * Per R13: No literal strings
  */
 export const EDGE_TEXT = {
-  TITLE: 'Configure Edge',
-  CONDITION_LABEL: 'Condition Type',
-  THRESHOLD_LABEL: 'Threshold Value',
-  MAX_ITERATIONS_LABEL: 'Max Iterations',
-  DELETE: 'Delete Edge',
-  CANCEL: 'Cancel',
-  SAVE: 'Save Changes',
-  DESCRIPTION_LABEL: 'Description',
-  ENABLED_LABEL: 'Enabled',
-  CONDITION_HINT: 'Select when this edge should be traversed',
-  THRESHOLD_HINT: 'Minimum score required (0-100)',
-  MAX_ITERATIONS_HINT: 'Maximum number of loop iterations',
+  TITLE: "Configure Edge",
+  CONDITION_LABEL: "Condition Type",
+  THRESHOLD_LABEL: "Threshold Value",
+  MAX_ITERATIONS_LABEL: "Max Iterations",
+  DELETE: "Delete Edge",
+  CANCEL: "Cancel",
+  SAVE: "Save Changes",
+  DESCRIPTION_LABEL: "Description",
+  ENABLED_LABEL: "Enabled",
+  CONDITION_HINT: "Select when this edge should be traversed",
+  THRESHOLD_HINT: "Minimum score required (0-100)",
+  MAX_ITERATIONS_HINT: "Maximum number of loop iterations",
 } as const;
 
 /**
@@ -208,25 +208,26 @@ export const EDGE_TEXT = {
  * Per R01: Single source of truth
  */
 export const EDGE_CONDITION_TYPES = {
-  SCORE_THRESHOLD: 'score_threshold',
-  APPROVAL_REQUIRED: 'approval_required',
-  MAX_ITERATIONS: 'max_iterations',
-  ALWAYS: 'always',
-  NEVER: 'never',
+  SCORE_THRESHOLD: "score_threshold",
+  APPROVAL_REQUIRED: "approval_required",
+  MAX_ITERATIONS: "max_iterations",
+  ALWAYS: "always",
+  NEVER: "never",
 } as const;
 
-export type EdgeConditionType = typeof EDGE_CONDITION_TYPES[keyof typeof EDGE_CONDITION_TYPES];
+export type EdgeConditionType =
+  (typeof EDGE_CONDITION_TYPES)[keyof typeof EDGE_CONDITION_TYPES];
 
 /**
  * Edge Condition Labels - Phase 10
  * Human-readable labels for condition types
  */
 export const EDGE_CONDITION_LABELS: Record<EdgeConditionType, string> = {
-  [EDGE_CONDITION_TYPES.SCORE_THRESHOLD]: 'Score Threshold',
-  [EDGE_CONDITION_TYPES.APPROVAL_REQUIRED]: 'Approval Required',
-  [EDGE_CONDITION_TYPES.MAX_ITERATIONS]: 'Max Iterations',
-  [EDGE_CONDITION_TYPES.ALWAYS]: 'Always',
-  [EDGE_CONDITION_TYPES.NEVER]: 'Never',
+  [EDGE_CONDITION_TYPES.SCORE_THRESHOLD]: "Score Threshold",
+  [EDGE_CONDITION_TYPES.APPROVAL_REQUIRED]: "Approval Required",
+  [EDGE_CONDITION_TYPES.MAX_ITERATIONS]: "Max Iterations",
+  [EDGE_CONDITION_TYPES.ALWAYS]: "Always",
+  [EDGE_CONDITION_TYPES.NEVER]: "Never",
 } as const;
 
 /**
@@ -234,11 +235,14 @@ export const EDGE_CONDITION_LABELS: Record<EdgeConditionType, string> = {
  * Per R13: Centralized descriptions
  */
 export const EDGE_CONDITION_DESCRIPTIONS: Record<EdgeConditionType, string> = {
-  [EDGE_CONDITION_TYPES.SCORE_THRESHOLD]: 'Traverse only if output score meets threshold',
-  [EDGE_CONDITION_TYPES.APPROVAL_REQUIRED]: 'Traverse only after manual approval',
-  [EDGE_CONDITION_TYPES.MAX_ITERATIONS]: 'Loop back until max iterations reached',
-  [EDGE_CONDITION_TYPES.ALWAYS]: 'Always traverse this edge',
-  [EDGE_CONDITION_TYPES.NEVER]: 'Never traverse (disabled)',
+  [EDGE_CONDITION_TYPES.SCORE_THRESHOLD]:
+    "Traverse only if output score meets threshold",
+  [EDGE_CONDITION_TYPES.APPROVAL_REQUIRED]:
+    "Traverse only after manual approval",
+  [EDGE_CONDITION_TYPES.MAX_ITERATIONS]:
+    "Loop back until max iterations reached",
+  [EDGE_CONDITION_TYPES.ALWAYS]: "Always traverse this edge",
+  [EDGE_CONDITION_TYPES.NEVER]: "Never traverse (disabled)",
 } as const;
 
 /**
@@ -256,10 +260,10 @@ export const PIPELINE_DEFAULTS = {
 
 /**
  * System Default Pipeline - REMOVED (SSOT Violation)
- * 
+ *
  * This constant used hardcoded eye metadata which violates database-as-SSOT principle.
  * Pipeline templates should be loaded from database instead.
- * 
+ *
  * For default pipelines, use the seeded pipelines from database (loaded via /api/pipelines).
  */
 
@@ -268,27 +272,27 @@ export const PIPELINE_DEFAULTS = {
  * Per R13: No literal strings
  */
 export const TEMPLATE_TEXT = {
-  SELECTOR_TITLE: 'Pipeline Templates',
-  SELECTOR_SUBTITLE: 'Choose a pre-built pipeline to get started',
-  LOAD_BUTTON: 'Load Template',
-  CANCEL_BUTTON: 'Cancel',
-  SAVE_TITLE: 'Save as Template',
-  SAVE_SUBTITLE: 'Save current pipeline as a reusable template',
-  TEMPLATE_NAME_LABEL: 'Template Name',
-  TEMPLATE_NAME_PLACEHOLDER: 'My Pipeline Template',
-  TEMPLATE_DESC_LABEL: 'Description',
-  TEMPLATE_DESC_PLACEHOLDER: 'Describe what this pipeline does...',
-  SAVE_BUTTON: 'Save Template',
-  TEMPLATE_SAVED: 'Template saved successfully',
-  TEMPLATE_LOADED: 'Template loaded successfully',
+  SELECTOR_TITLE: "Pipeline Templates",
+  SELECTOR_SUBTITLE: "Choose a pre-built pipeline to get started",
+  LOAD_BUTTON: "Load Template",
+  CANCEL_BUTTON: "Cancel",
+  SAVE_TITLE: "Save as Template",
+  SAVE_SUBTITLE: "Save current pipeline as a reusable template",
+  TEMPLATE_NAME_LABEL: "Template Name",
+  TEMPLATE_NAME_PLACEHOLDER: "My Pipeline Template",
+  TEMPLATE_DESC_LABEL: "Description",
+  TEMPLATE_DESC_PLACEHOLDER: "Describe what this pipeline does...",
+  SAVE_BUTTON: "Save Template",
+  TEMPLATE_SAVED: "Template saved successfully",
+  TEMPLATE_LOADED: "Template loaded successfully",
 } as const;
 
 /**
  * Pre-built Pipeline Templates - REMOVED (SSOT Violation)
- * 
+ *
  * These templates used hardcoded eye metadata which violates database-as-SSOT principle.
  * Pipeline templates should be loaded from database instead.
- * 
+ *
  * Use seeded pipelines from database (loaded via /api/pipelines) or create pipelines
  * dynamically from eye data fetched from /api/eyes/all.
  */

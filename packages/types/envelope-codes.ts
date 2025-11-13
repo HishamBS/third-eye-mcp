@@ -18,14 +18,14 @@ export const SUCCESS_CODES = {
    * Eye approved the request without any issues
    * Next action: Continue pipeline
    */
-  OK: 'OK',
+  OK: "OK",
 
   /**
    * OK_WITH_NOTES - 201 equivalent
    * Eye approved but has minor suggestions or notes
    * Next action: Continue pipeline with notes logged
    */
-  OK_WITH_NOTES: 'OK_WITH_NOTES',
+  OK_WITH_NOTES: "OK_WITH_NOTES",
 } as const;
 
 /**
@@ -38,21 +38,21 @@ export const NEEDS_INPUT_CODES = {
    * Eye needs user input to proceed (used by Sharingan, Byakugan)
    * Next action: Pause pipeline, await user response
    */
-  NEED_CLARIFICATION: 'NEED_CLARIFICATION',
+  NEED_CLARIFICATION: "NEED_CLARIFICATION",
 
   /**
    * NEED_MORE_CONTEXT - 301 equivalent
    * Eye needs additional context or information (used by Jōgan, Rinnegan, Mangekyō, Tenseigan)
    * Next action: Request more details
    */
-  NEED_MORE_CONTEXT: 'NEED_MORE_CONTEXT',
+  NEED_MORE_CONTEXT: "NEED_MORE_CONTEXT",
 
   /**
    * SUGGEST_ALTERNATIVE - 302 equivalent
    * Eye suggests a different approach (used by Kyuubi)
    * Next action: Present alternative, await decision
    */
-  SUGGEST_ALTERNATIVE: 'SUGGEST_ALTERNATIVE',
+  SUGGEST_ALTERNATIVE: "SUGGEST_ALTERNATIVE",
 } as const;
 
 /**
@@ -65,49 +65,49 @@ export const REJECTION_CODES = {
    * Request is too ambiguous to process safely (Sharingan)
    * Next action: Fail pipeline with explanation
    */
-  REJECT_AMBIGUOUS: 'REJECT_AMBIGUOUS',
+  REJECT_AMBIGUOUS: "REJECT_AMBIGUOUS",
 
   /**
    * REJECT_UNSAFE - 401 equivalent
    * Request contains unsafe or prohibited content (Sharingan)
    * Next action: Fail pipeline immediately
    */
-  REJECT_UNSAFE: 'REJECT_UNSAFE',
+  REJECT_UNSAFE: "REJECT_UNSAFE",
 
   /**
    * REJECT_INCOMPLETE - 402 equivalent
    * Missing required information to proceed
    * Next action: Fail pipeline with missing fields list
    */
-  REJECT_INCOMPLETE: 'REJECT_INCOMPLETE',
+  REJECT_INCOMPLETE: "REJECT_INCOMPLETE",
 
   /**
    * REJECT_INCONSISTENT - 403 equivalent
    * Logically inconsistent request or plan (Byakugan)
    * Next action: Fail pipeline with consistency issues
    */
-  REJECT_INCONSISTENT: 'REJECT_INCONSISTENT',
+  REJECT_INCONSISTENT: "REJECT_INCONSISTENT",
 
   /**
    * REJECT_NO_EVIDENCE - 404 equivalent
    * Claims lack sufficient supporting evidence (Tenseigan)
    * Next action: Fail pipeline with evidence requirements
    */
-  REJECT_NO_EVIDENCE: 'REJECT_NO_EVIDENCE',
+  REJECT_NO_EVIDENCE: "REJECT_NO_EVIDENCE",
 
   /**
    * REJECT_BAD_PLAN - 405 equivalent
    * Plan is fundamentally flawed (Rinnegan)
    * Next action: Fail pipeline with plan critique
    */
-  REJECT_BAD_PLAN: 'REJECT_BAD_PLAN',
+  REJECT_BAD_PLAN: "REJECT_BAD_PLAN",
 
   /**
    * REJECT_CODE_ISSUES - 406 equivalent
    * Code has critical issues that must be addressed (Mangekyō)
    * Next action: Fail pipeline with issue list
    */
-  REJECT_CODE_ISSUES: 'REJECT_CODE_ISSUES',
+  REJECT_CODE_ISSUES: "REJECT_CODE_ISSUES",
 } as const;
 
 /**
@@ -120,21 +120,21 @@ export const ERROR_CODES = {
    * Internal error during Eye execution
    * Next action: Log error, attempt recovery or fail gracefully
    */
-  EYE_ERROR: 'EYE_ERROR',
+  EYE_ERROR: "EYE_ERROR",
 
   /**
    * EYE_TIMEOUT - 504 equivalent
    * Eye processing exceeded timeout threshold
    * Next action: Log timeout, attempt retry or fail
    */
-  EYE_TIMEOUT: 'EYE_TIMEOUT',
+  EYE_TIMEOUT: "EYE_TIMEOUT",
 
   /**
    * INVALID_ENVELOPE - 400 equivalent
    * Malformed response envelope (validation failed)
    * Next action: Log validation error, fail pipeline
    */
-  INVALID_ENVELOPE: 'INVALID_ENVELOPE',
+  INVALID_ENVELOPE: "INVALID_ENVELOPE",
 } as const;
 
 /**
@@ -147,7 +147,7 @@ export const PIPELINE_CODES = {
    * Eyes called out of order (Order Guard violation)
    * Next action: Fail with order violation details
    */
-  E_PIPELINE_ORDER: 'E_PIPELINE_ORDER',
+  E_PIPELINE_ORDER: "E_PIPELINE_ORDER",
 } as const;
 
 /**
@@ -164,7 +164,8 @@ export const ALL_ENVELOPE_CODES = {
 /**
  * Type-safe envelope code union
  */
-export type EnvelopeCode = typeof ALL_ENVELOPE_CODES[keyof typeof ALL_ENVELOPE_CODES];
+export type EnvelopeCode =
+  (typeof ALL_ENVELOPE_CODES)[keyof typeof ALL_ENVELOPE_CODES];
 
 /**
  * HTTP-style status code mapping for problem+json responses
@@ -201,7 +202,11 @@ export const ENVELOPE_CODE_TO_HTTP_STATUS: Record<string, number> = {
  * Eye-specific code subsets
  */
 export const EYE_CODES = {
-  overseer: [SUCCESS_CODES.OK, SUCCESS_CODES.OK_WITH_NOTES, ERROR_CODES.EYE_ERROR],
+  overseer: [
+    SUCCESS_CODES.OK,
+    SUCCESS_CODES.OK_WITH_NOTES,
+    ERROR_CODES.EYE_ERROR,
+  ],
 
   sharingan: [
     SUCCESS_CODES.OK,
@@ -245,7 +250,7 @@ export const EYE_CODES = {
     NEEDS_INPUT_CODES.NEED_MORE_CONTEXT,
   ],
 
-  'kyuubi': [
+  kyuubi: [
     SUCCESS_CODES.OK,
     SUCCESS_CODES.OK_WITH_NOTES,
     NEEDS_INPUT_CODES.SUGGEST_ALTERNATIVE,
@@ -267,21 +272,23 @@ export function isSuccessCode(code: string): boolean {
  * Check if code indicates rejection
  */
 export function isRejectionCode(code: string): boolean {
-  return code.startsWith('REJECT_');
+  return code.startsWith("REJECT_");
 }
 
 /**
  * Check if code indicates needs input
  */
 export function isNeedsInputCode(code: string): boolean {
-  return code.startsWith('NEED_') || code === NEEDS_INPUT_CODES.SUGGEST_ALTERNATIVE;
+  return (
+    code.startsWith("NEED_") || code === NEEDS_INPUT_CODES.SUGGEST_ALTERNATIVE
+  );
 }
 
 /**
  * Check if code indicates error
  */
 export function isErrorCode(code: string): boolean {
-  return code.startsWith('EYE_') || code === ERROR_CODES.INVALID_ENVELOPE;
+  return code.startsWith("EYE_") || code === ERROR_CODES.INVALID_ENVELOPE;
 }
 
 /**
@@ -296,23 +303,23 @@ export function getHttpStatus(code: string): number {
  */
 export function getCodeDescription(code: string): string {
   const descriptions: Record<string, string> = {
-    OK: 'Approved without issues',
-    OK_WITH_NOTES: 'Approved with minor suggestions',
-    REJECT_AMBIGUOUS: 'Request is too ambiguous',
-    REJECT_UNSAFE: 'Request contains unsafe content',
-    REJECT_INCOMPLETE: 'Missing required information',
-    REJECT_INCONSISTENT: 'Logically inconsistent',
-    REJECT_NO_EVIDENCE: 'Claims lack evidence',
-    REJECT_BAD_PLAN: 'Plan is flawed',
-    REJECT_CODE_ISSUES: 'Code has critical issues',
-    NEED_CLARIFICATION: 'Need user input',
-    NEED_MORE_CONTEXT: 'Need additional context',
-    SUGGEST_ALTERNATIVE: 'Suggest different approach',
-    EYE_ERROR: 'Internal eye error',
-    EYE_TIMEOUT: 'Processing timeout',
-    INVALID_ENVELOPE: 'Malformed response envelope',
-    E_PIPELINE_ORDER: 'Eyes called out of order',
+    OK: "Approved without issues",
+    OK_WITH_NOTES: "Approved with minor suggestions",
+    REJECT_AMBIGUOUS: "Request is too ambiguous",
+    REJECT_UNSAFE: "Request contains unsafe content",
+    REJECT_INCOMPLETE: "Missing required information",
+    REJECT_INCONSISTENT: "Logically inconsistent",
+    REJECT_NO_EVIDENCE: "Claims lack evidence",
+    REJECT_BAD_PLAN: "Plan is flawed",
+    REJECT_CODE_ISSUES: "Code has critical issues",
+    NEED_CLARIFICATION: "Need user input",
+    NEED_MORE_CONTEXT: "Need additional context",
+    SUGGEST_ALTERNATIVE: "Suggest different approach",
+    EYE_ERROR: "Internal eye error",
+    EYE_TIMEOUT: "Processing timeout",
+    INVALID_ENVELOPE: "Malformed response envelope",
+    E_PIPELINE_ORDER: "Eyes called out of order",
   };
 
-  return descriptions[code] || 'Unknown code';
+  return descriptions[code] || "Unknown code";
 }

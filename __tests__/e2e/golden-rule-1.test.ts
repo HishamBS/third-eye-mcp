@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
-import { getConfig } from '@third-eye/config';
+import { describe, it, expect, beforeAll, afterAll } from "bun:test";
+import { getConfig } from "@third-eye/config";
 
 /**
  * E2E Test: Golden Rule #1 - Only Overseer is Public
@@ -11,17 +11,17 @@ import { getConfig } from '@third-eye/config';
 const config = getConfig();
 const API_URL = `http://${config.server.host}:${config.server.port}`;
 
-describe('Golden Rule #1 Enforcement', () => {
-  it('should reject direct Eye execution via /mcp/run', async () => {
+describe("Golden Rule #1 Enforcement", () => {
+  it("should reject direct Eye execution via /mcp/run", async () => {
     // Attempt to call an Eye directly (OLD backdoor behavior)
     const response = await fetch(`${API_URL}/mcp/run`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        eye: 'sharingan', // ← Attempting direct Eye call
-        input: 'test input',
+        eye: "sharingan", // ← Attempting direct Eye call
+        input: "test input",
       }),
     });
 
@@ -32,18 +32,18 @@ describe('Golden Rule #1 Enforcement', () => {
 
     // Verify error indicates field is not allowed
     expect(data.error).toBeTruthy();
-    expect(JSON.stringify(data).toLowerCase()).toContain('task');
+    expect(JSON.stringify(data).toLowerCase()).toContain("task");
   });
 
-  it('should require task parameter for /mcp/run', async () => {
+  it("should require task parameter for /mcp/run", async () => {
     // Attempt request without task parameter
     const response = await fetch(`${API_URL}/mcp/run`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        sessionId: 'test-session',
+        sessionId: "test-session",
       }),
     });
 
@@ -54,14 +54,14 @@ describe('Golden Rule #1 Enforcement', () => {
     expect(data.error).toBeTruthy();
   });
 
-  it('should accept task-based routing (CORRECT usage)', async () => {
+  it("should accept task-based routing (CORRECT usage)", async () => {
     const response = await fetch(`${API_URL}/mcp/run`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        task: 'Analyze this request for ambiguity',
+        task: "Analyze this request for ambiguity",
       }),
     });
 
@@ -76,15 +76,15 @@ describe('Golden Rule #1 Enforcement', () => {
     expect(data.data.code).toBeTruthy();
   });
 
-  it('should enforce order guard even without sessionId', async () => {
+  it("should enforce order guard even without sessionId", async () => {
     // First call should work (Sharingan is first in pipeline)
     const response1 = await fetch(`${API_URL}/mcp/run`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        task: 'Test order guard enforcement',
+        task: "Test order guard enforcement",
       }),
     });
 
@@ -95,11 +95,11 @@ describe('Golden Rule #1 Enforcement', () => {
     expect(data1.data).toBeTruthy();
   });
 
-  it('should only expose third_eye_overseer tool via MCP /tools endpoint', async () => {
+  it("should only expose third_eye_overseer tool via MCP /tools endpoint", async () => {
     const response = await fetch(`${API_URL}/mcp/tools`, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -111,12 +111,19 @@ describe('Golden Rule #1 Enforcement', () => {
     // Should only have third_eye_overseer tool
     expect(Array.isArray(tools)).toBe(true);
     expect(tools.length).toBe(1);
-    expect(tools[0].name).toBe('third_eye_overseer');
+    expect(tools[0].name).toBe("third_eye_overseer");
 
     // Should NOT expose individual Eyes
-    const eyeNames = ['sharingan', 'jogan', 'rinnegan', 'mangekyo', 'tenseigan', 'byakugan'];
+    const eyeNames = [
+      "sharingan",
+      "jogan",
+      "rinnegan",
+      "mangekyo",
+      "tenseigan",
+      "byakugan",
+    ];
     for (const eyeName of eyeNames) {
-      const hasEye = tools.some(t => t.name === eyeName);
+      const hasEye = tools.some((t) => t.name === eyeName);
       expect(hasEye).toBe(false);
     }
   });

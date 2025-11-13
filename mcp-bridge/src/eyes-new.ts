@@ -3,7 +3,13 @@ import { EyeOrchestrator } from "@third-eye/core";
 import { launchPortal } from "./portal.js";
 
 const orchestrator = new EyeOrchestrator();
-const RESERVED_WRAPPER_KEYS = new Set(["signal", "_meta", "requestId", "progressToken", "arguments"]);
+const RESERVED_WRAPPER_KEYS = new Set([
+  "signal",
+  "_meta",
+  "requestId",
+  "progressToken",
+  "arguments",
+]);
 
 type SessionContext = {
   session_id: string;
@@ -15,7 +21,9 @@ type SessionContext = {
 
 let cachedContext: SessionContext | null = null;
 
-function extractEnvelope(raw: Record<string, unknown>): Record<string, unknown> {
+function extractEnvelope(
+  raw: Record<string, unknown>,
+): Record<string, unknown> {
   let envelope: Record<string, unknown> = raw;
   if (raw && typeof raw.arguments === "object" && raw.arguments !== null) {
     envelope = raw.arguments as Record<string, unknown>;
@@ -70,8 +78,14 @@ function coalesceContext(input: unknown): SessionContext {
   return base;
 }
 
-async function executeEye(eyeName: string, input: string, body: Record<string, unknown>) {
-  console.info(`[Third Eye MCP] Executing ${eyeName} with input: ${input.substring(0, 100)}...`);
+async function executeEye(
+  eyeName: string,
+  input: string,
+  body: Record<string, unknown>,
+) {
+  console.info(
+    `[Third Eye MCP] Executing ${eyeName} with input: ${input.substring(0, 100)}...`,
+  );
 
   const envelope = extractEnvelope(body);
   const mergedContext = coalesceContext(envelope.context);
@@ -79,10 +93,10 @@ async function executeEye(eyeName: string, input: string, body: Record<string, u
 
   // Get or create session
   let sessionId = mergedContext.session_id;
-  if (!sessionId || sessionId.startsWith('sess-')) {
+  if (!sessionId || sessionId.startsWith("sess-")) {
     const session = await orchestrator.createSession({
-      agentName: 'MCP Agent',
-      model: 'claude-3.5-sonnet',
+      agentName: "MCP Agent",
+      model: "claude-3.5-sonnet",
     });
     sessionId = session.sessionId;
     cachedContext.session_id = sessionId;
@@ -121,7 +135,10 @@ export function buildEyes(server: McpServer) {
     additionalProperties: false,
   } as const;
 
-  const sharedEnvelope = (payloadSchema: Record<string, unknown>, reasoningRequired: boolean) => ({
+  const sharedEnvelope = (
+    payloadSchema: Record<string, unknown>,
+    reasoningRequired: boolean,
+  ) => ({
     type: "object",
     properties: {
       context: contextSchema,
@@ -130,7 +147,9 @@ export function buildEyes(server: McpServer) {
         ? { type: "string", minLength: 1 }
         : { type: ["string", "null"], minLength: 1 },
     },
-    required: reasoningRequired ? ["context", "payload", "reasoning_md"] : ["context", "payload"],
+    required: reasoningRequired
+      ? ["context", "payload", "reasoning_md"]
+      : ["context", "payload"],
     additionalProperties: false,
   });
 
@@ -152,7 +171,7 @@ export function buildEyes(server: McpServer) {
     },
     async (args) => {
       const envelope = extractEnvelope(args as Record<string, unknown>);
-      const prompt = (envelope.payload as any)?.prompt || '';
+      const prompt = (envelope.payload as any)?.prompt || "";
       return executeEye("sharingan", prompt, args as Record<string, unknown>);
     },
   );
@@ -203,7 +222,7 @@ export function buildEyes(server: McpServer) {
     },
     async (args) => {
       const envelope = extractEnvelope(args as Record<string, unknown>);
-      const prompt = (envelope.payload as any)?.refined_prompt_md || '';
+      const prompt = (envelope.payload as any)?.refined_prompt_md || "";
       return executeEye("jogan", prompt, args as Record<string, unknown>);
     },
   );
@@ -226,7 +245,7 @@ export function buildEyes(server: McpServer) {
     },
     async (args) => {
       const envelope = extractEnvelope(args as Record<string, unknown>);
-      const plan = (envelope.payload as any)?.submitted_plan_md || '';
+      const plan = (envelope.payload as any)?.submitted_plan_md || "";
       return executeEye("rinnegan", plan, args as Record<string, unknown>);
     },
   );
@@ -276,7 +295,7 @@ export function buildEyes(server: McpServer) {
     },
     async (args) => {
       const envelope = extractEnvelope(args as Record<string, unknown>);
-      const draft = (envelope.payload as any)?.draft_md || '';
+      const draft = (envelope.payload as any)?.draft_md || "";
       return executeEye("tenseigan", draft, args as Record<string, unknown>);
     },
   );
@@ -319,7 +338,12 @@ export function buildEyes(server: McpServer) {
             evidence_validated: { type: "boolean" },
             consistent: { type: "boolean" },
           },
-          required: ["plan_approved", "code_approved", "evidence_validated", "consistent"],
+          required: [
+            "plan_approved",
+            "code_approved",
+            "evidence_validated",
+            "consistent",
+          ],
           additionalProperties: false,
         },
         false,

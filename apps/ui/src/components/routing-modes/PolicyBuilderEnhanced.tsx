@@ -7,18 +7,18 @@
  * - Toggle switches for boolean constraints
  */
 
-import { useState } from 'react';
-import type { CreatePolicyRequest } from '@/hooks/useRoutingModes';
+import { useState } from "react";
+import type { CreatePolicyRequest } from "@/hooks/useRoutingModes";
 
 const AVAILABLE_EYES = [
-  { id: 'overseer', name: 'Overseer', description: 'Orchestration & routing' },
-  { id: 'sharingan', name: 'Sharingan', description: 'Ambiguity detection' },
-  { id: 'kyuubi', name: 'Kyuubi', description: 'Scope questions' },
-  { id: 'jogan', name: 'Jōgan', description: 'Intent validation' },
-  { id: 'rinnegan', name: 'Rinnegan', description: 'Feasibility questions' },
-  { id: 'mangekyo', name: 'Mangekyō', description: 'Code review' },
-  { id: 'tenseigan', name: 'Tenseigan', description: 'Evidence validation' },
-  { id: 'byakugan', name: 'Byakugan', description: 'Final approval' },
+  { id: "overseer", name: "Overseer", description: "Orchestration & routing" },
+  { id: "sharingan", name: "Sharingan", description: "Ambiguity detection" },
+  { id: "kyuubi", name: "Kyuubi", description: "Scope questions" },
+  { id: "jogan", name: "Jōgan", description: "Intent validation" },
+  { id: "rinnegan", name: "Rinnegan", description: "Feasibility questions" },
+  { id: "mangekyo", name: "Mangekyō", description: "Code review" },
+  { id: "tenseigan", name: "Tenseigan", description: "Evidence validation" },
+  { id: "byakugan", name: "Byakugan", description: "Final approval" },
 ] as const;
 
 interface PolicyBuilderEnhancedProps {
@@ -40,22 +40,22 @@ export function PolicyBuilderEnhanced({
   onCancel,
   policy,
 }: PolicyBuilderEnhancedProps) {
-  const [name, setName] = useState(policy?.name || '');
-  const [description, setDescription] = useState(policy?.description || '');
+  const [name, setName] = useState(policy?.name || "");
+  const [description, setDescription] = useState(policy?.description || "");
   const [mandatoryEyes, setMandatoryEyes] = useState<Set<string>>(
-    new Set(policy?.mandatoryEyes || [])
+    new Set(policy?.mandatoryEyes || []),
   );
   const [forbiddenEyes, setForbiddenEyes] = useState<Set<string>>(
-    new Set(policy?.forbiddenEyes || [])
+    new Set(policy?.forbiddenEyes || []),
   );
   const [minValidationEyes, setMinValidationEyes] = useState(
-    policy?.minValidationEyes || 2
+    policy?.minValidationEyes || 2,
   );
   const [securityRequired, setSecurityRequired] = useState(
-    policy?.securityRequired || false
+    policy?.securityRequired || false,
   );
   const [alwaysConfirmIntent, setAlwaysConfirmIntent] = useState(
-    policy?.alwaysConfirmIntent || false
+    policy?.alwaysConfirmIntent || false,
   );
 
   const toggleMandatoryEye = (eyeId: string) => {
@@ -93,14 +93,15 @@ export function PolicyBuilderEnhanced({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || mandatoryEyes.size === 0) {
-      alert('Name and at least one mandatory eye are required');
+      alert("Name and at least one mandatory eye are required");
       return;
     }
     onSubmit({
       name,
       description: description || undefined,
       mandatoryEyes: Array.from(mandatoryEyes),
-      forbiddenEyes: forbiddenEyes.size > 0 ? Array.from(forbiddenEyes) : undefined,
+      forbiddenEyes:
+        forbiddenEyes.size > 0 ? Array.from(forbiddenEyes) : undefined,
       minValidationEyes,
       securityRequired,
       alwaysConfirmIntent,
@@ -110,7 +111,7 @@ export function PolicyBuilderEnhanced({
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
       <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-        {policy ? 'Edit Policy' : 'Create New Policy'}
+        {policy ? "Edit Policy" : "Create New Policy"}
       </h3>
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Info */}
@@ -152,8 +153,8 @@ export function PolicyBuilderEnhanced({
                 key={eye.id}
                 className={`flex items-start p-3 border rounded-md cursor-pointer transition-colors ${
                   mandatoryEyes.has(eye.id)
-                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
-                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                    ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20"
+                    : "border-gray-300 dark:border-gray-600 hover:border-gray-400"
                 }`}
               >
                 <input
@@ -185,8 +186,8 @@ export function PolicyBuilderEnhanced({
                 key={eye.id}
                 className={`flex items-start p-3 border rounded-md cursor-pointer transition-colors ${
                   forbiddenEyes.has(eye.id)
-                    ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
-                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                    ? "border-red-500 bg-red-50 dark:bg-red-900/20"
+                    : "border-gray-300 dark:border-gray-600 hover:border-gray-400"
                 }`}
               >
                 <input
@@ -221,7 +222,9 @@ export function PolicyBuilderEnhanced({
             onChange={(e) => setMinValidationEyes(parseInt(e.target.value))}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           />
-          <p className="mt-1 text-xs text-gray-500">Minimum number of eyes that must validate the output</p>
+          <p className="mt-1 text-xs text-gray-500">
+            Minimum number of eyes that must validate the output
+          </p>
         </div>
 
         {/* Boolean Constraints */}
@@ -267,7 +270,7 @@ export function PolicyBuilderEnhanced({
             type="submit"
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium"
           >
-            {policy ? 'Update' : 'Create'} Policy
+            {policy ? "Update" : "Create"} Policy
           </button>
           <button
             type="button"

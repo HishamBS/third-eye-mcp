@@ -1,9 +1,9 @@
-import { BaseProvider, type ProviderConfig } from './base';
-import { GroqProvider } from './groq';
-import { OpenRouterProvider } from './openrouter';
-import { OllamaProvider } from './ollama';
-import { LMStudioProvider } from './lmstudio';
-import { ProviderId, PROVIDERS } from '@third-eye/types/enums';
+import { BaseProvider, type ProviderConfig } from "./base";
+import { GroqProvider } from "./groq";
+import { OpenRouterProvider } from "./openrouter";
+import { OllamaProvider } from "./ollama";
+import { LMStudioProvider } from "./lmstudio";
+import { ProviderId, PROVIDERS } from "@third-eye/types/enums";
 
 export type ProviderType = ProviderId;
 
@@ -12,8 +12,11 @@ type ProviderCacheKey = `${ProviderType}:${string}`;
 export class ProviderFactory {
   private static providers = new Map<ProviderCacheKey, BaseProvider>();
 
-  static createProvider(type: ProviderType, config: ProviderConfig = {}): BaseProvider {
-    const cacheKey: ProviderCacheKey = `${type}:${config.apiKey ?? 'default'}`;
+  static createProvider(
+    type: ProviderType,
+    config: ProviderConfig = {},
+  ): BaseProvider {
+    const cacheKey: ProviderCacheKey = `${type}:${config.apiKey ?? "default"}`;
 
     const cached = this.providers.get(cacheKey);
     if (cached) {
@@ -36,7 +39,9 @@ export class ProviderFactory {
     return [...PROVIDERS];
   }
 
-  static async healthCheckAll(configs: Record<ProviderType, ProviderConfig>): Promise<Record<ProviderType, boolean>> {
+  static async healthCheckAll(
+    configs: Record<ProviderType, ProviderConfig>,
+  ): Promise<Record<ProviderType, boolean>> {
     const results: Record<ProviderType, boolean> = {
       groq: false,
       openrouter: false,
@@ -44,10 +49,13 @@ export class ProviderFactory {
       lmstudio: false,
     };
 
-    const checks = this.getSupportedProviders().map(async providerId => {
+    const checks = this.getSupportedProviders().map(async (providerId) => {
       try {
         const providerConfig = configs[providerId] ?? {};
-        const health = await this.createProvider(providerId, providerConfig).health();
+        const health = await this.createProvider(
+          providerId,
+          providerConfig,
+        ).health();
         results[providerId] = health.healthy;
       } catch {
         results[providerId] = false;
@@ -58,15 +66,18 @@ export class ProviderFactory {
     return results;
   }
 
-  private static instantiateProvider(type: ProviderType, config: ProviderConfig): BaseProvider {
+  private static instantiateProvider(
+    type: ProviderType,
+    config: ProviderConfig,
+  ): BaseProvider {
     switch (type) {
-      case 'groq':
+      case "groq":
         return new GroqProvider(config);
-      case 'openrouter':
+      case "openrouter":
         return new OpenRouterProvider(config);
-      case 'ollama':
+      case "ollama":
         return new OllamaProvider(config);
-      case 'lmstudio':
+      case "lmstudio":
         return new LMStudioProvider(config);
       default:
         throw new Error(`Unsupported provider type: ${type satisfies never}`);

@@ -1,4 +1,8 @@
-import { STATUS_TEXT_COLORS, STATUS_BG_COLORS_SUBTLE, STATUS_BORDER_COLORS_SUBTLE } from '@/constants/color-mappings';
+import {
+  STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS_SUBTLE,
+  STATUS_BORDER_COLORS_SUBTLE,
+} from "@/constants/color-mappings";
 
 export function StatusBadge({ status }: { status: string }) {
   const colors = {
@@ -8,7 +12,9 @@ export function StatusBadge({ status }: { status: string }) {
   };
 
   return (
-    <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${colors[status as keyof typeof colors] || colors.pending}`}>
+    <span
+      className={`rounded-full border px-3 py-1 text-xs font-semibold ${colors[status as keyof typeof colors] || colors.pending}`}
+    >
       {status}
     </span>
   );

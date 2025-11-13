@@ -24,10 +24,12 @@ Connect Third Eye MCP to Cline (formerly Claude Dev) for enhanced AI coding assi
 Cline uses VS Code's settings for MCP configuration.
 
 Open VS Code settings:
+
 - **macOS**: Cmd+,
 - **Windows/Linux**: Ctrl+,
 
 Or edit `settings.json` directly:
+
 - **macOS**: `~/Library/Application Support/Code/User/settings.json`
 - **Linux**: `~/.config/Code/User/settings.json`
 - **Windows**: `%APPDATA%\Code\User\settings.json`
@@ -96,6 +98,7 @@ Use the third_eye_overseer tool to analyze this text: "Hello world"
 ```
 
 Expected behavior:
+
 - Cline calls `third_eye_overseer` tool
 - Third Eye processes request
 - Dashboard shows session at http://127.0.0.1:3300
@@ -197,11 +200,13 @@ Run tasks: Cmd+Shift+P → "Tasks: Run Task"
    - Look for MCP initialization errors
 
 2. **Verify Third Eye is running**:
+
    ```bash
    bunx third-eye-mcp status
    ```
 
 3. **Test MCP server manually**:
+
    ```bash
    bunx third-eye-mcp server
    # Should start without errors
@@ -248,6 +253,7 @@ Run tasks: Cmd+Shift+P → "Tasks: Run Task"
 If API calls fail:
 
 1. **Verify API keys**:
+
    ```bash
    # Check Groq
    curl https://api.groq.com/openai/v1/models \

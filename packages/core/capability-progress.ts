@@ -1,11 +1,11 @@
 /**
  * Capability Progress Tracking
- * 
+ *
  * Tracks which capabilities have been completed in a session pipeline
  * and manages progression through the capability-driven route
  */
 
-import type { EyeId, EyeCapability } from '@third-eye/constants';
+import type { EyeId, EyeCapability } from "@third-eye/constants";
 
 export interface CapabilityProgress {
   sessionId: string;
@@ -20,7 +20,7 @@ export interface CapabilityProgress {
 export interface CapabilityAssignment {
   capability: EyeCapability;
   eyeId: EyeId;
-  stage: 'guidance' | 'validation';
+  stage: "guidance" | "validation";
 }
 
 /**
@@ -57,7 +57,7 @@ export class CapabilityProgressManager {
 
     // Remove from pending if present
     progress.pendingCapabilities = progress.pendingCapabilities.filter(
-      c => c !== capability
+      (c) => c !== capability,
     );
 
     // Update current capability
@@ -70,12 +70,15 @@ export class CapabilityProgressManager {
   /**
    * Set pending capabilities for a session
    */
-  setPendingCapabilities(sessionId: string, capabilities: EyeCapability[]): void {
+  setPendingCapabilities(
+    sessionId: string,
+    capabilities: EyeCapability[],
+  ): void {
     const progress = this.progressMap.get(sessionId);
     if (!progress) return;
 
     progress.pendingCapabilities = capabilities.filter(
-      cap => !progress.completedCapabilities.includes(cap)
+      (cap) => !progress.completedCapabilities.includes(cap),
     );
 
     // Set current capability
@@ -117,13 +120,17 @@ export class CapabilityProgressManager {
     const progress = this.progressMap.get(sessionId);
     if (!progress) return null;
 
-    return progress.currentCapability || progress.pendingCapabilities[0] || null;
+    return (
+      progress.currentCapability || progress.pendingCapabilities[0] || null
+    );
   }
 
   /**
    * Get assignment for a capability
    */
-  getCapabilityAssignment(capability: EyeCapability): CapabilityAssignment | null {
+  getCapabilityAssignment(
+    capability: EyeCapability,
+  ): CapabilityAssignment | null {
     // This will be implemented by looking up which eye provides this capability
     // For now, return null as we need to integrate with capability router
     return null;
@@ -134,7 +141,7 @@ export class CapabilityProgressManager {
    */
   serializeProgress(sessionId: string): string {
     const progress = this.progressMap.get(sessionId);
-    if (!progress) return '';
+    if (!progress) return "";
 
     return JSON.stringify({
       completedCapabilities: progress.completedCapabilities,
@@ -163,7 +170,7 @@ export class CapabilityProgressManager {
         this.progressMap.set(sessionId, existing);
       }
     } catch (error) {
-      console.error('Failed to load capability progress:', error);
+      console.error("Failed to load capability progress:", error);
     }
   }
 
@@ -177,4 +184,3 @@ export class CapabilityProgressManager {
 
 // Export singleton instance
 export const capabilityProgress = new CapabilityProgressManager();
-

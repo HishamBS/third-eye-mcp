@@ -1,5 +1,12 @@
-import { z } from 'zod';
-import { BaseProvider, type CompletionRequest, type CompletionResponse, type HealthStatus, type ModelInfo, type ProviderConfig } from './base';
+import { z } from "zod";
+import {
+  BaseProvider,
+  type CompletionRequest,
+  type CompletionResponse,
+  type HealthStatus,
+  type ModelInfo,
+  type ProviderConfig,
+} from "./base";
 
 const OllamaModelSchema = z.object({
   name: z.string(),
@@ -23,13 +30,13 @@ export class OllamaProvider extends BaseProvider {
   constructor(config: ProviderConfig = {}) {
     super({
       ...config,
-      baseUrl: config.baseUrl || 'http://127.0.0.1:11434',
+      baseUrl: config.baseUrl || "http://127.0.0.1:11434",
     });
-    this.baseUrl = this.config.baseUrl ?? 'http://127.0.0.1:11434';
+    this.baseUrl = this.config.baseUrl ?? "http://127.0.0.1:11434";
   }
 
   get name(): string {
-    return 'ollama';
+    return "ollama";
   }
 
   get requiresApiKey(): boolean {
@@ -39,7 +46,7 @@ export class OllamaProvider extends BaseProvider {
   async listModels(): Promise<ModelInfo[]> {
     try {
       const response = await this.fetchWithRetry(`${this.baseUrl}/api/tags`, {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
 
       if (!response.ok) {
@@ -48,22 +55,24 @@ export class OllamaProvider extends BaseProvider {
 
       const payload = OllamaModelsResponseSchema.parse(await response.json());
 
-      return payload.models.map(model => ({
+      return payload.models.map((model) => ({
         id: model.name,
         name: model.name,
         context_window: this.estimateContextWindow(model.name),
         pricing: undefined,
       }));
     } catch (error) {
-      throw new Error(`Failed to list Ollama models: ${this.normalizeError(error)}`);
+      throw new Error(
+        `Failed to list Ollama models: ${this.normalizeError(error)}`,
+      );
     }
   }
 
   async complete(request: CompletionRequest): Promise<CompletionResponse> {
     try {
       const response = await this.fetchWithRetry(`${this.baseUrl}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: request.model,
           messages: request.messages,
@@ -82,7 +91,9 @@ export class OllamaProvider extends BaseProvider {
         throw new Error(`Ollama completion failed: ${errorText}`);
       }
 
-      const payload = OllamaCompletionResponseSchema.parse(await response.json());
+      const payload = OllamaCompletionResponseSchema.parse(
+        await response.json(),
+      );
       const promptTokens = payload.prompt_eval_count ?? 0;
       const completionTokens = payload.eval_count ?? 0;
 
@@ -95,7 +106,9 @@ export class OllamaProvider extends BaseProvider {
           completion_tokens: completionTokens,
           total_tokens: promptTokens + completionTokens,
         },
-        finish_reason: this.normalizeFinishReason(payload.done === false ? 'length' : 'stop'),
+        finish_reason: this.normalizeFinishReason(
+          payload.done === false ? "length" : "stop",
+        ),
       };
     } catch (error) {
       throw new Error(`Ollama completion error: ${this.normalizeError(error)}`);
@@ -107,7 +120,7 @@ export class OllamaProvider extends BaseProvider {
 
     try {
       const response = await this.fetchWithRetry(`${this.baseUrl}/api/tags`, {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
       });
 
       return {
@@ -125,12 +138,12 @@ export class OllamaProvider extends BaseProvider {
   }
 
   private estimateContextWindow(modelName: string): number {
-    if (modelName.includes('32k')) return 32768;
-    if (modelName.includes('16k')) return 16384;
-    if (modelName.includes('8k')) return 8192;
-    if (modelName.includes('llama3')) return 8192;
-    if (modelName.includes('mistral')) return 8192;
-    if (modelName.includes('gemma')) return 8192;
+    if (modelName.includes("32k")) return 32768;
+    if (modelName.includes("16k")) return 16384;
+    if (modelName.includes("8k")) return 8192;
+    if (modelName.includes("llama3")) return 8192;
+    if (modelName.includes("mistral")) return 8192;
+    if (modelName.includes("gemma")) return 8192;
     return 4096;
   }
 }

@@ -14,12 +14,14 @@ Connect Third Eye MCP to Continue.dev, the open-source AI coding assistant for V
 ### Step 1: Install Continue Extension
 
 **VS Code**:
+
 1. Open Extensions (Cmd+Shift+X / Ctrl+Shift+X)
 2. Search "Continue"
 3. Click Install
 4. Reload VS Code
 
 **JetBrains**:
+
 1. Settings → Plugins
 2. Search "Continue"
 3. Click Install
@@ -100,10 +102,12 @@ Third Eye will auto-detect Ollama/LM Studio.
 ### Step 5: Restart Continue
 
 **VS Code**:
+
 - Command Palette → "Continue: Reload"
 - Or restart VS Code
 
 **JetBrains**:
+
 - File → Invalidate Caches / Restart
 
 ## Verification
@@ -123,6 +127,7 @@ Use the third_eye_overseer tool to test the connection.
 ```
 
 Expected:
+
 - Tool call to `third_eye_overseer`
 - Response from Third Eye
 - Session visible at http://127.0.0.1:3300
@@ -174,6 +179,7 @@ Use the `third_eye_overseer` tool to analyze this error and suggest fixes:
 ### Context Menu Integration
 
 Right-click in editor:
+
 - "Continue: Ask About This Code"
 - Then: "Use the `third_eye_overseer` tool to analyze"
 
@@ -229,11 +235,13 @@ Continue can use Third Eye for context-aware autocomplete:
 ### MCP Server Not Found
 
 1. **Check config file syntax**:
+
    ```bash
    cat ~/.continue/config.json | jq .
    ```
 
 2. **Verify Third Eye is installed**:
+
    ```bash
    bunx third-eye-mcp --version
    ```
@@ -250,11 +258,13 @@ Continue can use Third Eye for context-aware autocomplete:
 ### Connection Failed
 
 1. **Start Third Eye services**:
+
    ```bash
    bunx third-eye-mcp up --verbose
    ```
 
 2. **Check port availability**:
+
    ```bash
    lsof -i :7070  # MCP server
    lsof -i :3300  # Dashboard
@@ -272,6 +282,7 @@ Continue can use Third Eye for context-aware autocomplete:
    - Set Overseer to `llama-3.1-8b-instant`
 
 2. **Enable caching**:
+
    ```json
    {
      "mcpServers": {
@@ -444,6 +455,7 @@ Step 5: "/test" - Add regression test
 ### Continue Context + Third Eye
 
 Continue provides rich context to Third Eye:
+
 - Open files
 - Git history
 - Workspace structure
