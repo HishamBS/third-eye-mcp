@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 
-import { spawn, exec, execSync } from 'child_process';
+import { spawn, exec, execSync, ChildProcess } from 'child_process';
 import { resolve } from 'path';
-import { existsSync, mkdirSync, writeFileSync, readFileSync, rmSync, appendFileSync, readdirSync, statSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync, readFileSync, rmSync, appendFileSync, readdirSync, statSync, renameSync } from 'fs';
 import { homedir } from 'os';
 import { select, input, confirm } from '@inquirer/prompts';
 import ora, { Ora } from 'ora';
@@ -458,6 +458,44 @@ function checkEnvironment() {
     process.exit(1);
   }
 
+  // Validate lock file (detect corruption or merge conflicts)
+  const projectRoot = getProjectRoot();
+  const lockPath = resolve(projectRoot, 'bun.lock');
+  if (existsSync(lockPath)) {
+    try {
+      const lockContent = readFileSync(lockPath, 'utf-8');
+
+      // Check for git merge conflict markers
+      if (lockContent.includes('<<<<<<< ') || lockContent.includes('>>>>>>> ') || lockContent.includes('======= ')) {
+        console.error('❌ bun.lock has merge conflicts');
+        console.error('   Fix: rm bun.lock && bun install');
+        process.exit(1);
+      }
+
+      // Try to parse as binary/text (bun.lock is binary but we check for obvious corruption)
+      // If it's suspiciously small or has NULL bytes in wrong places, it's likely corrupted
+      if (lockContent.length < 10) {
+        throw new Error('Lock file too small');
+      }
+
+      log('   ✓ Lock file valid', true);
+    } catch (error) {
+      console.error(`❌ bun.lock corrupted: ${error instanceof Error ? error.message : String(error)}`);
+      console.error('   Fixing: rm bun.lock && bun install');
+
+      // Auto-fix by removing and reinstalling
+      try {
+        rmSync(lockPath);
+        console.log('   Removed corrupted lock file, reinstalling...');
+        execSync('bun install', { cwd: projectRoot, stdio: 'inherit' });
+        log('   ✓ Lock file recreated', true);
+      } catch (fixError) {
+        console.error(`   ✗ Auto-fix failed: ${fixError}`);
+        process.exit(1);
+      }
+    }
+  }
+
   // Check available memory (warn if < 2GB free)
   try {
     const os = require('os');
@@ -899,8 +937,9 @@ function cleanSourceArtifacts(projectRoot: string, quiet: boolean): number {
 }
 
 /**
- * Update project dependencies
+ * Update project dependencies with retry logic
  * Per R12: Keep dependencies fresh
+ * Implements exponential backoff for network failures
  */
 async function updateDependencies(projectRoot: string, skipUpdate: boolean, quiet: boolean): Promise<void> {
   if (skipUpdate) {
@@ -911,33 +950,75 @@ async function updateDependencies(projectRoot: string, skipUpdate: boolean, quie
   }
 
   const spinner = quiet ? null : ora('Updating dependencies...').start();
+  const maxAttempts = 3;
+  const timeout = 120000; // 2 minutes per attempt
+
+  /**
+   * Run bun update with retry logic
+   */
+  async function updateWithRetry(cwd: string, label: string): Promise<boolean> {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        execSync('bun update', {
+          cwd,
+          stdio: quiet ? 'ignore' : 'inherit',
+          timeout
+        });
+        return true;
+      } catch (error) {
+        if (attempt < maxAttempts) {
+          const delay = Math.pow(2, attempt) * 1000; // Exponential backoff: 2s, 4s, 8s
+          if (spinner) {
+            spinner.text = `${label} failed (attempt ${attempt}/${maxAttempts}), retrying in ${delay/1000}s...`;
+          } else if (!quiet) {
+            console.log(kleur.yellow(`   ⚠ ${label} failed (attempt ${attempt}/${maxAttempts}), retrying in ${delay/1000}s...`));
+          }
+          await new Promise(resolve => setTimeout(resolve, delay));
+        } else {
+          // Final attempt failed
+          if (!quiet) {
+            console.warn(kleur.yellow(`   ⚠ ${label} failed after ${maxAttempts} attempts`));
+          }
+          return false;
+        }
+      }
+    }
+    return false;
+  }
 
   try {
-    // Update root dependencies
-    execSync('bun update', {
-      cwd: projectRoot,
-      stdio: quiet ? 'ignore' : 'inherit'
-    });
+    // Update root dependencies with retry
+    const rootSuccess = await updateWithRetry(projectRoot, 'Root dependency update');
 
-    // Update UI dependencies
+    // Update UI dependencies with retry
     const uiPath = resolve(projectRoot, 'apps/ui');
+    let uiSuccess = true;
     if (existsSync(uiPath)) {
-      execSync('bun update', {
-        cwd: uiPath,
-        stdio: quiet ? 'ignore' : 'inherit'
-      });
+      uiSuccess = await updateWithRetry(uiPath, 'UI dependency update');
     }
 
     if (spinner) {
-      spinner.succeed('Dependencies updated');
+      if (rootSuccess && uiSuccess) {
+        spinner.succeed('Dependencies updated');
+      } else {
+        spinner.warn('Dependencies updated (some failed, using cached versions)');
+      }
+    }
+
+    // Don't block startup if updates failed - cached dependencies may work
+    if (!rootSuccess || !uiSuccess) {
+      if (!quiet) {
+        console.log(kleur.gray('   Continuing with cached dependencies...'));
+      }
     }
   } catch (error) {
     if (spinner) {
-      spinner.fail('Failed to update dependencies');
+      spinner.warn('Dependency update failed, using cached versions');
     }
     if (!quiet) {
-      console.error(kleur.yellow(`Warning: ${error}`));
+      console.warn(kleur.yellow(`   Continuing with cached dependencies: ${error}`));
     }
+    // Don't throw - allow startup to proceed with cached dependencies
   }
 }
 
@@ -1183,6 +1264,147 @@ function cleanStaleBuilds(projectRoot: string, quiet: boolean): void {
     }
     buildLog(`All ${packagesToRebuild.length} package(s) rebuilt successfully`);
   }
+}
+
+/**
+ * Enable health monitoring with auto-restart for detached services
+ * Checks services every 30 seconds and restarts if unhealthy
+ */
+function enableHealthMonitoring(serverPort: number, uiPort: number, noUi: boolean): void {
+  const monitorInterval = 30000; // 30 seconds
+  const maxLogSize = 100 * 1024 * 1024; // 100MB
+  let restartCount = { server: 0, ui: 0 };
+  const maxRestarts = 3; // Max restarts per service before giving up
+
+  const monitor = setInterval(async () => {
+    // Check server health
+    try {
+      const serverPid = getPid(SERVER_PID_FILE);
+      if (serverPid) {
+        const response = await fetch(`http://127.0.0.1:${serverPort}/health`, {
+          signal: AbortSignal.timeout(5000)
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server unhealthy: HTTP ${response.status}`);
+        }
+      } else {
+        // PID file missing - process crashed
+        throw new Error('Server process not found');
+      }
+    } catch (error) {
+      console.error(kleur.red(`\n⚠️  Server health check failed: ${error instanceof Error ? error.message : String(error)}`));
+
+      if (restartCount.server < maxRestarts) {
+        restartCount.server++;
+        console.log(kleur.yellow(`   Attempting to restart server (attempt ${restartCount.server}/${maxRestarts})...`));
+
+        try {
+          // Clean up stale PID
+          if (existsSync(SERVER_PID_FILE)) {
+            rmSync(SERVER_PID_FILE, { force: true });
+          }
+
+          // Restart server
+          const projectRoot = getProjectRoot();
+          const serverCmd = `bun run apps/server/src/start.ts >> ${SERVER_LOG_FILE} 2>&1`;
+          const serverProcess = spawn('sh', ['-c', serverCmd], {
+            cwd: projectRoot,
+            stdio: 'ignore',
+            detached: true,
+            env: { ...process.env, PORT: String(serverPort) },
+          });
+
+          if (serverProcess.pid) {
+            savePid(SERVER_PID_FILE, serverProcess.pid);
+            serverProcess.unref();
+            console.log(kleur.green(`   ✓ Server restarted (PID ${serverProcess.pid})`));
+          }
+        } catch (restartError) {
+          console.error(kleur.red(`   ✗ Failed to restart server: ${restartError}`));
+        }
+      } else {
+        console.error(kleur.red(`   ✗ Server failed ${maxRestarts} times, giving up`));
+        console.error(kleur.dim(`     Check logs: ${SERVER_LOG_FILE}`));
+      }
+    }
+
+    // Check UI health (if enabled)
+    if (!noUi) {
+      try {
+        const uiPid = getPid(UI_PID_FILE);
+        if (uiPid) {
+          const response = await fetch(`http://127.0.0.1:${uiPort}/`, {
+            signal: AbortSignal.timeout(5000)
+          });
+
+          if (!response.ok && response.status !== 404) {
+            // 404 is acceptable for some pages during development
+            throw new Error(`UI unhealthy: HTTP ${response.status}`);
+          }
+        } else {
+          // PID file missing - process crashed
+          throw new Error('UI process not found');
+        }
+      } catch (error) {
+        console.error(kleur.red(`\n⚠️  UI health check failed: ${error instanceof Error ? error.message : String(error)}`));
+
+        if (restartCount.ui < maxRestarts) {
+          restartCount.ui++;
+          console.log(kleur.yellow(`   Attempting to restart UI (attempt ${restartCount.ui}/${maxRestarts})...`));
+
+          try {
+            // Clean up stale PID
+            if (existsSync(UI_PID_FILE)) {
+              rmSync(UI_PID_FILE, { force: true });
+            }
+
+            // Restart UI
+            const projectRoot = getProjectRoot();
+            const uiCmd = `bun run --cwd apps/ui dev --port ${uiPort} >> ${UI_LOG_FILE} 2>&1`;
+            const uiProcess = spawn('sh', ['-c', uiCmd], {
+              cwd: projectRoot,
+              stdio: 'ignore',
+              detached: true,
+            });
+
+            if (uiProcess.pid) {
+              savePid(UI_PID_FILE, uiProcess.pid);
+              uiProcess.unref();
+              console.log(kleur.green(`   ✓ UI restarted (PID ${uiProcess.pid})`));
+            }
+          } catch (restartError) {
+            console.error(kleur.red(`   ✗ Failed to restart UI: ${restartError}`));
+          }
+        } else {
+          console.error(kleur.red(`   ✗ UI failed ${maxRestarts} times, giving up`));
+          console.error(kleur.dim(`     Check logs: ${UI_LOG_FILE}`));
+        }
+      }
+    }
+
+    // Rotate logs if they're too large
+    try {
+      [SERVER_LOG_FILE, UI_LOG_FILE].forEach(logFile => {
+        if (existsSync(logFile)) {
+          const stats = statSync(logFile);
+          if (stats.size > maxLogSize) {
+            const backupFile = `${logFile}.old`;
+            if (existsSync(backupFile)) {
+              rmSync(backupFile);
+            }
+            renameSync(logFile, backupFile);
+          }
+        }
+      });
+    } catch (error) {
+      // Log rotation is non-critical
+    }
+  }, monitorInterval);
+
+  // Cleanup on process exit
+  process.on('SIGINT', () => clearInterval(monitor));
+  process.on('SIGTERM', () => clearInterval(monitor));
 }
 
 /**
@@ -1489,6 +1711,10 @@ async function startServices() {
     process.on('SIGTERM', shutdown);
 
     await new Promise(() => {});
+  } else {
+    // Enable health monitoring for detached mode
+    // This will automatically restart services if they crash
+    enableHealthMonitoring(args.port || SERVER_PORT, args.uiPort || UI_PORT, args.noUi || false);
   }
 }
 
