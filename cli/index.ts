@@ -1881,13 +1881,14 @@ async function startServices() {
 
     // Use shell redirection for logging in detached mode (Bun doesn't support stream.Writable in stdio)
     const uiCmd = args.foreground
-      ? `bun run --cwd apps/ui dev --port ${args.uiPort || UI_PORT}`
-      : `bun run --cwd apps/ui dev --port ${args.uiPort || UI_PORT} >> ${UI_LOG_FILE} 2>&1`;
+      ? `bun --bun --cwd apps/ui run dev --port ${args.uiPort || UI_PORT}`
+      : `bun --bun --cwd apps/ui run dev --port ${args.uiPort || UI_PORT} >> ${UI_LOG_FILE} 2>&1`;
 
     uiProcess = args.foreground
       ? spawn(
           "bun",
           [
+            "--bun",
             "run",
             "--cwd",
             "apps/ui",
