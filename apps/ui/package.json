@@ -4,16 +4,16 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "bun --bun next dev --port 3300",
-    "build": "next build",
-    "start": "next start --port 3300",
+    "dev": "bun --bun x next dev",
+    "build": "bun --bun x next build",
+    "start": "bun --bun x next start",
     "lint": "next lint",
     "test": "vitest",
     "test:integration": "vitest run --runInBand src/app/__tests__/TruthMonitorPage.test.tsx",
     "test:a11y": "vitest run --runInBand src/components/__tests__/SessionHeader.a11y.test.tsx",
     "test:e2e": "playwright test",
     "audit:axe": "playwright test tests/e2e/monitor-accessibility.spec.ts --project=chromium",
-    "audit:perf": "node scripts/run-lighthouse.mjs",
+    "audit:perf": "bun scripts/run-lighthouse.mjs",
     "prepare": "husky"
   },
   "dependencies": {
