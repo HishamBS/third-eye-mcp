@@ -1880,6 +1880,7 @@ async function startServices() {
     const uiStartTime = Date.now();
 
     // Use shell redirection for logging in detached mode (Bun doesn't support stream.Writable in stdio)
+    // The package.json dev script contains "bun --bun next dev" to force Bun runtime
     const uiCmd = args.foreground
       ? `bun --bun --cwd apps/ui run dev --port ${args.uiPort || UI_PORT}`
       : `bun --bun --cwd apps/ui run dev --port ${args.uiPort || UI_PORT} >> ${UI_LOG_FILE} 2>&1`;
