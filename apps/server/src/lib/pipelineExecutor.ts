@@ -58,10 +58,11 @@ export class PipelineExecutor {
 
   /**
    * Execute pipeline with given input
+   * R07 Compliance: Typed input as Record<string, unknown> instead of unknown for spread safety
    */
   async execute(
     pipeline: PipelineDefinition,
-    input: unknown,
+    input: Record<string, unknown>,
     sessionId?: string,
   ): Promise<PipelineResult> {
     const startTime = Date.now();
@@ -89,9 +90,10 @@ export class PipelineExecutor {
 
       try {
         // Execute Eye
+        const eyeInput = JSON.stringify({ ...input, ...step.config });
         const result = await this.orchestrator.runEye(
           step.eye,
-          { ...input, ...step.config },
+          eyeInput,
           sessionId,
         );
 
@@ -106,8 +108,12 @@ export class PipelineExecutor {
 
         outputs[step.eye] = result;
 
-        // Check if step failed
-        if (result.verdict === "REJECTED" || result.code?.startsWith("E_")) {
+        // Check if step failed (use BaseEnvelope properties: ok and code)
+        if (
+          !result.ok ||
+          result.code?.startsWith("REJECT_") ||
+          result.code?.startsWith("E_")
+        ) {
           if (!step.conditions?.continueOnFailure) {
             // Stop pipeline execution on failure
             break;

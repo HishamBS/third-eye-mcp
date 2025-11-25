@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
 import { getDb, getDbPath } from "@third-eye/db";
 import {
   providerKeys,
@@ -164,7 +165,8 @@ app.put("/eyes-routing/:eye", async (c) => {
     const eyeId = await getEyeIdByName(eyeName);
     if (!eyeId) {
       return createErrorResponse(c, {
-        title: "Eye Not Found",
+        title: ApiErrorTitle.EYE_NOT_FOUND,
+        code: ApiErrorCode.EYE_NOT_FOUND,
         status: 404,
         detail: "The requested eye could not be found",
       });
@@ -195,7 +197,8 @@ app.delete("/eyes-routing/:eye", async (c) => {
     const eyeId = await getEyeIdByName(eyeName);
     if (!eyeId) {
       return createErrorResponse(c, {
-        title: "Eye Not Found",
+        title: ApiErrorTitle.EYE_NOT_FOUND,
+        code: ApiErrorCode.EYE_NOT_FOUND,
         status: 404,
         detail: "The requested eye could not be found",
       });

@@ -9,7 +9,8 @@
     "noUncheckedIndexedAccess": false,
     "strict": false,
     "skipLibCheck": true,
-    "noEmit": false
+    "noEmit": false,
+    "types": ["bun-types"]
   },
   "include": ["*.ts", "**/*.ts"],
   "exclude": ["dist", "node_modules", "**/__tests__/**/*", "**/*.test.ts"],

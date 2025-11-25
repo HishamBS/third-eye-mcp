@@ -1,9 +1,11 @@
 import { Hono } from "hono";
+import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage, type ExportFormat } from "@third-eye/constants";
 import { getDb } from "@third-eye/db";
 import {
   sessions,
   runs,
   pipelineEvents,
+  eyes,
   type Session,
   type Run,
   type PipelineEvent,
@@ -18,7 +20,6 @@ import {
   errorHandler,
 } from "../middleware/response";
 import { z } from "zod";
-import { type ExportFormat } from "@third-eye/constants";
 
 /**
  * Export API
@@ -35,6 +36,7 @@ interface ExportData {
   session: Session;
   runs: Run[];
   events: PipelineEvent[];
+  eyeMap: Map<string, string>;
   exportedAt: string;
 }
 
@@ -58,7 +60,8 @@ app.get("/:sessionId", async (c) => {
 
     if (session.length === 0) {
       return createErrorResponse(c, {
-        title: "Session Not Found",
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
         status: 404,
         detail: "The requested session could not be found",
       });
@@ -80,10 +83,15 @@ app.get("/:sessionId", async (c) => {
       .orderBy(desc(pipelineEvents.createdAt))
       .all();
 
+    // Get all eyes for name lookup
+    const allEyes = await db.select().from(eyes).all();
+    const eyeMap = new Map(allEyes.map((e) => [e.id, e.name]));
+
     const exportData = {
       session: session[0],
       runs: sessionRuns,
       events,
+      eyeMap,
       exportedAt: new Date().toISOString(),
     };
 
@@ -118,7 +126,8 @@ app.get("/:sessionId", async (c) => {
 
       default:
         return createErrorResponse(c, {
-          title: "Invalid Format",
+          title: ApiErrorTitle.INVALID_FORMAT,
+        code: ApiErrorCode.INVALID_FORMAT,
           status: 400,
           detail: "Supported formats: pdf, html, json, md",
         });
@@ -150,7 +159,8 @@ function generateMarkdown(data: ExportData): string {
 
   md += `## Timeline Events (${events.length})\n\n`;
   events.forEach((event, index) => {
-    md += `### ${index + 1}. ${event.type} - ${event.eye || "system"}\n`;
+    const eyeName = event.eyeId ? data.eyeMap.get(event.eyeId) || event.eyeId : "system";
+    md += `### ${index + 1}. ${event.type} - ${eyeName}\n`;
     md += `- **Code:** ${event.code || "N/A"}\n`;
     md += `- **Time:** ${new Date(event.createdAt).toLocaleString()}\n`;
     if (event.md) {
@@ -161,7 +171,8 @@ function generateMarkdown(data: ExportData): string {
 
   md += `## Eye Runs (${runs.length})\n\n`;
   runs.forEach((run, index) => {
-    md += `### ${index + 1}. ${run.eye}\n`;
+    const eyeName = run.eyeId ? data.eyeMap.get(run.eyeId) || run.eyeId : "unknown";
+    md += `### ${index + 1}. ${eyeName}\n`;
     md += `- **Provider:** ${run.provider}\n`;
     md += `- **Model:** ${run.model}\n`;
     md += `- **Latency:** ${run.latencyMs || "N/A"}ms\n`;
@@ -276,24 +287,29 @@ function generateHTML(data: ExportData, forPrint = false): string {
   <h2>Timeline Events (${events.length})</h2>
   ${events
     .map(
-      (event, index) => `
+      (event, index) => {
+        const eyeName = event.eyeId ? data.eyeMap.get(event.eyeId) || event.eyeId : "system";
+        return `
     <div class="event">
-      <h3>${index + 1}. ${event.type} - ${event.eye || "system"}</h3>
+      <h3>${index + 1}. ${event.type} - ${eyeName}</h3>
       <p><strong>Code:</strong> ${event.code || "N/A"}</p>
       <p><strong>Time:</strong> ${new Date(event.createdAt).toLocaleString()}</p>
       ${event.md ? `<p><strong>Summary:</strong> ${event.md}</p>` : ""}
       ${event.dataJson ? `<details><summary>Data</summary><pre><code>${JSON.stringify(event.dataJson, null, 2)}</code></pre></details>` : ""}
     </div>
-  `,
+  `;
+      },
     )
     .join("")}
 
   <h2>Eye Runs (${runs.length})</h2>
   ${runs
     .map(
-      (run, index) => `
+      (run, index) => {
+        const eyeName = run.eyeId ? data.eyeMap.get(run.eyeId) || run.eyeId : "unknown";
+        return `
     <div class="run">
-      <h3>${index + 1}. ${run.eye}</h3>
+      <h3>${index + 1}. ${eyeName}</h3>
       <div class="stats">
         <div class="stat">
           <div class="stat-label">Provider</div>
@@ -322,7 +338,8 @@ function generateHTML(data: ExportData, forPrint = false): string {
           : ""
       }
     </div>
-  `,
+  `;
+      },
     )
     .join("")}
 

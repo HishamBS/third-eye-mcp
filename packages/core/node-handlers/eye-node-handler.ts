@@ -60,7 +60,7 @@ export class EyeNodeHandler implements NodeHandler {
         context.sessionId,
         {
           providerOverride,
-          // TODO: Map strictnessOverride to options when supported
+          strictnessOverride: node.strictnessOverride,
         },
       );
 

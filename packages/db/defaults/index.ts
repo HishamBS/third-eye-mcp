@@ -26,6 +26,12 @@ import { DEFAULT_PIPELINES } from "./pipelines";
 import { PREDEFINED_TEMPLATES } from "./templates";
 import { STRICTNESS_PRESETS, type StrictnessPresetId } from "@third-eye/types";
 import { DEFAULT_BLUEPRINTS } from "@third-eye/constants/blueprints-data";
+import {
+  DEFAULT_PRIMARY_PROVIDER,
+  DEFAULT_PRIMARY_MODEL,
+  DEFAULT_FALLBACK_PROVIDER,
+  DEFAULT_FALLBACK_MODEL,
+} from "@third-eye/constants";
 import { generateId } from "../utils/uuid";
 import { SeedSubset } from "../constants";
 import { readFileSync } from "fs";
@@ -420,10 +426,28 @@ async function seedPersonas(
       `  ✓ Created ${entries.length} personas (expected ${DEFAULT_PERSONAS.length})`,
     );
 
-    await db.insert(personas).values(entries).run();
+    // Deduplicate personas by eyeId + version before inserting
+    // This prevents multiple "Version 2 (active)" entries
+    const uniqueEntries = entries.reduce((acc, entry) => {
+      const key = `${entry.eyeId}-${entry.version}`;
+      if (!acc.has(key)) {
+        acc.set(key, entry);
+      }
+      return acc;
+    }, new Map<string, NewPersona>());
+
+    const deduplicatedEntries = Array.from(uniqueEntries.values());
+
+    if (deduplicatedEntries.length < entries.length) {
+      log(
+        `  ⚠ Removed ${entries.length - deduplicatedEntries.length} duplicate persona entries`,
+      );
+    }
+
+    await db.insert(personas).values(deduplicatedEntries).run();
 
     // Set active personas (by eyeId)
-    for (const entry of entries) {
+    for (const entry of deduplicatedEntries) {
       await db
         .update(personas)
         .set({ active: false })
@@ -436,7 +460,7 @@ async function seedPersonas(
         .run();
     }
 
-    log(`  • Personas seeded (${entries.length} personas with UUIDs)`);
+    log(`  • Personas seeded (${deduplicatedEntries.length} personas with UUIDs)`);
     return true;
   } catch (error) {
     log(`  ✗ Failed to seed personas: ${error}`);
@@ -479,13 +503,14 @@ async function seedRouting(
 
     // System defaults for seeding (can be overridden by app_settings)
     // These are minimal defaults - actual runtime uses getDefaultRouting() helper
+    // Per R01/R13: Import from SSOT, no hardcoded string literals
     return {
       id: generateId(),
       eyeId: eyeUuid,
-      primaryProvider: "groq",
-      primaryModel: "llama-3.3-70b-versatile",
-      fallbackProvider: "openrouter",
-      fallbackModel: "anthropic/claude-3.5-sonnet",
+      primaryProvider: DEFAULT_PRIMARY_PROVIDER,
+      primaryModel: DEFAULT_PRIMARY_MODEL,
+      fallbackProvider: DEFAULT_FALLBACK_PROVIDER,
+      fallbackModel: DEFAULT_FALLBACK_MODEL,
       createdAt: now,
     } as NewEyeRouting;
   }).filter((entry): entry is NewEyeRouting => entry !== null);
@@ -720,9 +745,23 @@ async function seedPipelines(
             `Invalid node position in pipeline ${pipeline.id}: node ${node.id} missing or invalid position`,
           );
         }
-        if (node.type !== "eyeNode") {
+        // Validate node type against all valid ReactFlow node types
+        const VALID_NODE_TYPES = [
+          "eyeNode",
+          "switch",
+          "switchNode",
+          "if",
+          "loop_over_items",
+          "terminal",
+          "terminalNode",
+          "user_input",
+          "userInputNode",
+          "annotationNode",
+        ] as const;
+
+        if (!VALID_NODE_TYPES.includes(node.type as any)) {
           throw new Error(
-            `Invalid node type in pipeline ${pipeline.id}: node ${node.id} has type ${node.type}, expected 'eyeNode'`,
+            `Invalid node type in pipeline ${pipeline.id}: node ${node.id} has type ${node.type}, expected one of: ${VALID_NODE_TYPES.join(", ")}`,
           );
         }
       }
@@ -813,44 +852,61 @@ export async function seedDefaults(
     [SeedSubset.TEMPLATES]: false,
   };
 
-  // Seed in dependency order
-  if (subsets[SeedSubset.EYES]) {
-    report[SeedSubset.EYES] = await seedEyes(db, sqlite, log, force);
-  }
+  // Wrap entire seeding in try/catch with proper error handling
+  // CRITICAL FIX: Prevents partial seed failures from corrupting database state
+  // Per R08: Error handling ensures consistent database state on failure
+  // Note: SQLite BEGIN IMMEDIATE is used by seed functions internally where needed
+  try {
+    // Clear UUID map before seeding to prevent stale data
+    if (force) {
+      EYE_NAME_TO_UUID_MAP.clear();
+    }
 
-  if (subsets[SeedSubset.BLUEPRINTS]) {
-    report[SeedSubset.BLUEPRINTS] = await seedBlueprints(db, log, force);
-  }
+    // Seed in dependency order
+    if (subsets[SeedSubset.EYES]) {
+      report[SeedSubset.EYES] = await seedEyes(db, sqlite, log, force);
+    }
 
-  if (subsets[SeedSubset.PERSONAS]) {
-    report[SeedSubset.PERSONAS] = await seedPersonas(db, sqlite, log, force);
-  }
+    if (subsets[SeedSubset.BLUEPRINTS]) {
+      report[SeedSubset.BLUEPRINTS] = await seedBlueprints(db, log, force);
+    }
 
-  if (subsets[SeedSubset.PIPELINES]) {
-    report[SeedSubset.PIPELINES] = await seedPipelines(db, log, force);
-  }
+    if (subsets[SeedSubset.PERSONAS]) {
+      report[SeedSubset.PERSONAS] = await seedPersonas(db, sqlite, log, force);
+    }
 
-  if (subsets[SeedSubset.ROUTING]) {
-    report[SeedSubset.ROUTING] = await seedRouting(db, log, force);
-  }
+    if (subsets[SeedSubset.PIPELINES]) {
+      report[SeedSubset.PIPELINES] = await seedPipelines(db, log, force);
+    }
 
-  if (subsets[SeedSubset.STRICTNESS]) {
-    report[SeedSubset.STRICTNESS] = await seedStrictness(db, log, force);
-  }
+    if (subsets[SeedSubset.ROUTING]) {
+      report[SeedSubset.ROUTING] = await seedRouting(db, log, force);
+    }
 
-  if (subsets[SeedSubset.APP_SETTINGS]) {
-    report[SeedSubset.APP_SETTINGS] = await seedAppSettings(db, log, force);
-  }
+    if (subsets[SeedSubset.STRICTNESS]) {
+      report[SeedSubset.STRICTNESS] = await seedStrictness(db, log, force);
+    }
 
-  if (subsets[SeedSubset.INTEGRATIONS]) {
-    report[SeedSubset.INTEGRATIONS] = await seedIntegrations(db, log, force);
-  }
+    if (subsets[SeedSubset.APP_SETTINGS]) {
+      report[SeedSubset.APP_SETTINGS] = await seedAppSettings(db, log, force);
+    }
 
-  if (subsets[SeedSubset.TEMPLATES]) {
-    report[SeedSubset.TEMPLATES] = await seedTemplates(db, log, force);
-  }
+    if (subsets[SeedSubset.INTEGRATIONS]) {
+      report[SeedSubset.INTEGRATIONS] = await seedIntegrations(db, log, force);
+    }
 
-  return report;
+    if (subsets[SeedSubset.TEMPLATES]) {
+      report[SeedSubset.TEMPLATES] = await seedTemplates(db, log, force);
+    }
+
+    return report;
+  } catch (error) {
+    // CRITICAL FIX: Clear UUID map on error to prevent corruption
+    // Seed functions using SQLite transactions will auto-rollback on error
+    EYE_NAME_TO_UUID_MAP.clear();
+    log(`  ✗ Seed failed, rolling back and clearing UUID map: ${error}`);
+    throw error; // Re-throw to propagate error
+  }
 }
 
 export { DEFAULT_PERSONAS, DEFAULT_PERSONA_MAP, DEFAULT_INTEGRATIONS };

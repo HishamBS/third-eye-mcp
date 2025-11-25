@@ -2,11 +2,14 @@ import { Hono } from "hono";
 import { getDb } from "@third-eye/db";
 import { appSettings } from "@third-eye/db";
 import { eq } from "drizzle-orm";
+import { nanoid } from "nanoid";
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
   createErrorResponse,
   createInternalErrorResponse,
+  createNotFoundResponse,
+  createValidationErrorResponse,
   requestIdMiddleware,
   errorHandler,
 } from "../middleware/response";
@@ -55,7 +58,7 @@ app.get("/:key", async (c) => {
       .get();
 
     if (!setting) {
-      return createErrorResponse(c, "Setting not found", 404);
+      return createNotFoundResponse(c, "Setting", key);
     }
 
     let value;
@@ -79,7 +82,9 @@ app.put("/:key", async (c) => {
     const { value } = body;
 
     if (value === undefined) {
-      return createErrorResponse(c, "Missing required field: value", 400);
+      return createValidationErrorResponse(c, [
+        { path: "value", message: "Missing required field" },
+      ]);
     }
 
     const { db } = getDb();
@@ -99,7 +104,10 @@ app.put("/:key", async (c) => {
         .where(eq(appSettings.key, key))
         .run();
     } else {
-      await db.insert(appSettings).values({ key, value: valueStr }).run();
+      await db
+        .insert(appSettings)
+        .values({ id: nanoid(), createdAt: new Date(), key, value: valueStr })
+        .run();
     }
 
     const updated = await db

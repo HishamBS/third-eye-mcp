@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { nanoid } from "nanoid";
 import { EyeOrchestrator } from "@third-eye/core";
 import { ProviderFactory } from "@third-eye/providers";
 import { getDb } from "@third-eye/db";
@@ -61,7 +62,7 @@ extraOrigins.forEach((origin) => defaultOrigins.add(origin));
 app.use(
   "*",
   cors({
-    origin: (origin) => {
+    origin: (origin, c) => {
       if (!origin) {
         return "*"; // Same-origin (curl, server-to-server)
       }
@@ -74,7 +75,7 @@ app.use(
         return origin; // Return the origin for allowed origins
       }
 
-      return false; // Reject all other origins
+      return null; // Reject all other origins
     },
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: [
@@ -203,19 +204,20 @@ app.get("/models/:provider", async (c) => {
       await db
         .insert(modelsCache)
         .values({
+          id: nanoid(),
           provider: providerId,
           model: model.name,
           displayName: model.name,
-          family: model.family,
-          capabilityJson: model.capability,
+          family: model.family ?? null,
+          capabilityJson: model.capability ?? null,
           lastSeen: new Date(),
         })
         .onConflictDoUpdate({
           target: [modelsCache.provider, modelsCache.model],
           set: {
             displayName: model.name,
-            family: model.family,
-            capabilityJson: model.capability,
+            family: model.family ?? null,
+            capabilityJson: model.capability ?? null,
             lastSeen: new Date(),
           },
         });

@@ -80,6 +80,7 @@ interface EyeRunOptions {
   providerOverride?: EyeRunProviderOverride;
   temperature?: number;
   maxTokens?: number;
+  strictnessOverride?: string;
 }
 
 /**

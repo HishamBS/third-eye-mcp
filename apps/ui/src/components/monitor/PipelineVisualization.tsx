@@ -7,6 +7,7 @@ import {
   STATUS_TEXT_COLORS,
   STATUS_BG_COLORS_SUBTLE,
   STATUS_BORDER_COLORS_SUBTLE,
+  HEX_COLORS,
 } from "@/constants/color-mappings";
 import { ANIMATION_DURATION } from "@/constants/timing";
 import { GRID_PATTERN, LABEL_BG_CLASS } from "@/constants/design-tokens";
@@ -123,18 +124,18 @@ export function PipelineVisualization({
     switch (status.status) {
       case "completed":
         return status.verdict === "APPROVED"
-          ? "#10B981"
+          ? HEX_COLORS.success
           : status.verdict === "REJECTED"
-            ? "#EF4444"
-            : "#F59E0B";
+            ? HEX_COLORS.error
+            : HEX_COLORS.warning;
       case "running":
-        return "#3B82F6";
+        return HEX_COLORS.info;
       case "failed":
-        return "#EF4444";
+        return HEX_COLORS.error;
       case "waiting":
-        return "#6B7280";
+        return HEX_COLORS.muted;
       default:
-        return "#374151";
+        return HEX_COLORS.dark;
     }
   };
 
@@ -200,7 +201,7 @@ export function PipelineVisualization({
               className="h-2 w-2 rounded-full"
               style={{
                 backgroundColor:
-                  EYE_COLORS[eye as keyof typeof EYE_COLORS] || "#6B7280",
+                  EYE_COLORS[eye as keyof typeof EYE_COLORS] || HEX_COLORS.muted,
               }}
               title={eye}
             />
@@ -230,7 +231,7 @@ export function PipelineVisualization({
               y1={`${fromY}%`}
               x2={`${toX}%`}
               y2={`${toY}%`}
-              stroke={connection.active ? "#3B82F6" : "#374151"}
+              stroke={connection.active ? HEX_COLORS.info : HEX_COLORS.dark}
               strokeWidth="2"
               strokeDasharray={connection.active ? "5,5" : "0"}
               opacity={connection.active ? 0.8 : 0.3}

@@ -523,7 +523,10 @@ export default function SettingsPage() {
                   {THEME_METADATA.map((themeOption) => {
                     // Normalize comparison to handle any case sensitivity issues
                     const isSelected =
-                      theme?.toLowerCase() === themeOption.value.toLowerCase();
+                      typeof theme === "string" &&
+                      typeof themeOption.value === "string"
+                        ? theme.toLowerCase() === themeOption.value.toLowerCase()
+                        : theme === themeOption.value;
                     return (
                       <button
                         key={themeOption.value}

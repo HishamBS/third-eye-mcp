@@ -22,6 +22,7 @@ import {
   errorHandler,
 } from "../middleware/response";
 import { z } from "zod";
+import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
 
 /**
  * Eyes API Routes - Data-Driven Unified System
@@ -135,7 +136,7 @@ const eyeTestSchema = z.object({
 // Helper to log pipeline events
 async function logPipelineEvent(
   sessionId: string,
-  eye: string,
+  eyeId: string,
   response: Envelope,
 ) {
   try {
@@ -145,7 +146,7 @@ async function logPipelineEvent(
       .values({
         id: nanoid(),
         sessionId,
-        eye,
+        eyeId,
         type: "eye_call",
         code: response.code,
         md: response.md,
@@ -162,9 +163,7 @@ async function logPipelineEvent(
         type: "pipeline_event",
         sessionId,
         data: {
-          eye,
-          code: response.code,
-          md: response.md,
+          eyeId,
           ...response,
         },
         timestamp: Date.now(),
@@ -192,10 +191,10 @@ app.post("/:id/test", async (c) => {
 
     if (!candidateInput || candidateInput.trim().length === 0) {
       return createErrorResponse(c, {
-        title: "Invalid input",
+        title: ApiErrorTitle.INVALID_INPUT,
         status: 400,
         detail: 'Provide a non-empty string in "input", "prompt", or "task".',
-        code: "E_EMPTY_INPUT",
+        code: ApiErrorCode.EMPTY_INPUT,
       });
     }
 
@@ -239,10 +238,11 @@ app.post("/:id/test", async (c) => {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(c, {
-        title: "Validation Error",
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        code: ApiErrorCode.VALIDATION_ERROR,
         status: 400,
         detail: error.issues.map((issue) => issue.message).join("; "),
-        code: "E_INVALID_PAYLOAD",
+        code: ApiErrorCode.INVALID_PAYLOAD,
       });
     }
 
@@ -316,7 +316,8 @@ app.get("/:name/icon", async (c) => {
 
     if (!eye || !eye.iconSvg) {
       return createErrorResponse(c, {
-        title: "Eye Icon Not Found",
+        title: ApiErrorTitle.EYE_ICON_NOT_FOUND,
+        code: ApiErrorCode.EYE_ICON_NOT_FOUND,
         status: 404,
         detail: `Icon for eye ${eyeName} not found`,
       });
@@ -347,7 +348,8 @@ app.get("/:id", async (c) => {
 
     if (!eye) {
       return createErrorResponse(c, {
-        title: "Eye Not Found",
+        title: ApiErrorTitle.EYE_NOT_FOUND,
+        code: ApiErrorCode.EYE_NOT_FOUND,
         status: 404,
         detail: `Eye ${eyeId} not found`,
       });
@@ -425,7 +427,8 @@ app.patch("/:id/name", async (c) => {
       displayName.trim().length === 0
     ) {
       return createErrorResponse(c, {
-        title: "Validation Error",
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        code: ApiErrorCode.VALIDATION_ERROR,
         status: 400,
         detail: "Display name is required",
       });
@@ -442,7 +445,8 @@ app.patch("/:id/name", async (c) => {
 
     if (!existing) {
       return createErrorResponse(c, {
-        title: "Eye Not Found",
+        title: ApiErrorTitle.EYE_NOT_FOUND,
+        code: ApiErrorCode.EYE_NOT_FOUND,
         status: 404,
         detail: `Eye with id ${eyeId} not found`,
       });
@@ -472,19 +476,18 @@ app.patch("/:id/name", async (c) => {
  * POST /eyes/custom - Create new Eye
  * Unified endpoint - all eyes use same creation flow (seeded on first run, user-created after)
  */
-app.post(
-  "/custom",
-  validateBodyWithEnvelope(createCustomEyeSchema),
-  async (c) => {
-    try {
-      const {
-        name,
-        description,
-        inputSchema,
-        outputSchema,
-        personaId,
-        defaultRouting,
-      } = c.get("validatedBody");
+app.post("/custom", async (c) => {
+  try {
+    const body = await c.req.json();
+    const validatedBody = createCustomEyeSchema.parse(body);
+    const {
+      name,
+      description,
+      inputSchema,
+      outputSchema,
+      personaId,
+      defaultRouting,
+    } = validatedBody;
       console.log("[Eye] Creating with data:", {
         name,
         description,
@@ -542,17 +545,18 @@ app.post(
         .get();
 
       if (!existingRouting) {
-        const defaultRouting = await getDefaultRouting();
+        const defaultRoutingData = await getDefaultRouting();
 
         await db
           .insert(eyesRouting)
           .values({
             id: nanoid(),
             eyeId: id,
-            primaryProvider: defaultRouting.primaryProvider,
-            primaryModel: defaultRouting.primaryModel,
-            fallbackProvider: defaultRouting.fallbackProvider,
-            fallbackModel: defaultRouting.fallbackModel,
+            primaryProvider: defaultRoutingData.primaryProvider,
+            primaryModel: defaultRoutingData.primaryModel,
+            fallbackProvider: defaultRoutingData.fallbackProvider,
+            fallbackModel: defaultRoutingData.fallbackModel,
+            createdAt: now,
           })
           .run();
         console.log(`[Eye] Auto-created routing for ${name}`);
@@ -589,39 +593,53 @@ app.post(
           updatedAt: now,
         };
 
-        await db.insert(personaBlueprints).values(minimalBlueprint).run();
+        await db
+          .insert(personaBlueprints)
+          .values({
+            id: nanoid(),
+            ...minimalBlueprint,
+          })
+          .run();
         console.log(`[Eye] Auto-created persona blueprint for ${name}`);
       }
 
-      console.log("[Eye] Successfully created:", {
-        id,
-        name,
-        version: nextVersion,
+    console.log("[Eye] Successfully created:", {
+      id,
+      name,
+      version: nextVersion,
+    });
+    return createSuccessResponse(
+      c,
+      { id, version: nextVersion, message: "Eye created successfully" },
+      { status: 201 },
+    );
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        code: ApiErrorCode.VALIDATION_ERROR,
+        status: 400,
+        detail: error.issues.map((i) => i.message).join("; "),
       });
-      return createSuccessResponse(
-        c,
-        { id, version: nextVersion, message: "Eye created successfully" },
-        { status: 201 },
-      );
-    } catch (error) {
-      console.error("[Eye] Creation failed:", error);
-      return createInternalErrorResponse(
-        c,
-        `Failed to create eye: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
     }
-  },
-);
+    console.error("[Eye] Creation failed:", error);
+    return createInternalErrorResponse(
+      c,
+      `Failed to create eye: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
+});
 
 /**
  * PUT /eyes/custom/:id - Update existing Eye
  * Unified endpoint - all eyes use same update flow
  */
-app.put(
-  "/custom/:id",
-  validateBodyWithEnvelope(createCustomEyeSchema),
-  async (c) => {
-    const id = c.req.param("id");
+app.put("/custom/:id", async (c) => {
+  const id = c.req.param("id");
+
+  try {
+    const body = await c.req.json();
+    const validatedBody = createCustomEyeSchema.parse(body);
     const {
       name,
       description,
@@ -629,7 +647,7 @@ app.put(
       outputSchema,
       personaId,
       defaultRouting,
-    } = c.get("validatedBody");
+    } = validatedBody;
 
     const { db } = getDb();
 
@@ -643,7 +661,8 @@ app.put(
 
     if (existing.length === 0) {
       return createErrorResponse(c, {
-        title: "Eye Not Found",
+        title: ApiErrorTitle.EYE_NOT_FOUND,
+        code: ApiErrorCode.EYE_NOT_FOUND,
         status: 404,
         detail: `Eye with id ${id} not found`,
       });
@@ -666,8 +685,21 @@ app.put(
       id,
       message: "Custom Eye updated successfully",
     });
-  },
-);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        code: ApiErrorCode.VALIDATION_ERROR,
+        status: 400,
+        detail: error.issues.map((i) => i.message).join("; "),
+      });
+    }
+    return createInternalErrorResponse(
+      c,
+      `Failed to update eye: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
+});
 
 /**
  * DELETE /eyes/custom/:id - Delete (deactivate) Eye
@@ -687,7 +719,8 @@ app.delete("/custom/:id", async (c) => {
 
   if (existing.length === 0) {
     return createErrorResponse(c, {
-      title: "Eye Not Found",
+      title: ApiErrorTitle.EYE_NOT_FOUND,
+        code: ApiErrorCode.EYE_NOT_FOUND,
       status: 404,
       detail: `Eye with id ${id} not found`,
     });
@@ -709,7 +742,8 @@ app.post("/custom/:id/test", async (c) => {
 
   if (!testInput) {
     return createErrorResponse(c, {
-      title: "Missing Input",
+      title: ApiErrorTitle.MISSING_INPUT,
+        code: ApiErrorCode.MISSING_INPUT,
       status: 400,
       detail: "testInput field is required",
     });
@@ -726,7 +760,8 @@ app.post("/custom/:id/test", async (c) => {
 
   if (eye.length === 0) {
     return createErrorResponse(c, {
-      title: "Eye Not Found",
+      title: ApiErrorTitle.EYE_NOT_FOUND,
+        code: ApiErrorCode.EYE_NOT_FOUND,
       status: 404,
       detail: `Eye with id ${id} not found`,
     });

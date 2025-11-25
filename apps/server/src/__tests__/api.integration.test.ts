@@ -1,10 +1,32 @@
 import { describe, test, expect, beforeAll, afterAll } from "vitest";
 import { nanoid } from "nanoid";
+import type {
+  CreateSessionResponse,
+  ListSessionsResponse,
+  GetSessionResponse,
+  UpdateSessionStatusResponse,
+  SessionSummaryResponse,
+  ListPersonasResponse,
+  CreatePersonaResponse,
+  GetActivePersonaResponse,
+  ListRoutingResponse,
+  CreateRoutingResponse,
+  UpdateRoutingResponse,
+  ListStrictnessProfilesResponse,
+  CreateStrictnessProfileResponse,
+  ListCachedModelsResponse,
+  ListProviderModelsResponse,
+  ListPipelinesResponse,
+  CreatePipelineResponse,
+  ErrorResponse,
+  HealthCheckResponse,
+} from "../types/api-responses";
 
 /**
  * API Integration Tests
  *
  * Tests the HTTP API endpoints end-to-end
+ * R07 Compliance: All response types properly typed, no 'as any'
  */
 
 const API_BASE = process.env.API_URL || "http://127.0.0.1:7070";
@@ -20,7 +42,7 @@ describe("Sessions API", () => {
     });
 
     expect(response.ok).toBe(true);
-    const data = await response.json();
+    const data = (await response.json()) as CreateSessionResponse;
 
     expect(data).toHaveProperty("sessionId");
     expect(data).toHaveProperty("portalUrl");
@@ -33,7 +55,7 @@ describe("Sessions API", () => {
     const response = await fetch(`${API_BASE}/sessions`);
 
     expect(response.ok).toBe(true);
-    const data = await response.json();
+    const data = (await response.json()) as ListSessionsResponse;
 
     expect(data).toHaveProperty("sessions");
     expect(Array.isArray(data.sessions)).toBe(true);
@@ -44,7 +66,7 @@ describe("Sessions API", () => {
     const response = await fetch(`${API_BASE}/sessions/${testSessionId}`);
 
     expect(response.ok).toBe(true);
-    const data = await response.json();
+    const data = (await response.json()) as GetSessionResponse;
 
     expect(data.id).toBe(testSessionId);
     expect(data).toHaveProperty("status");
@@ -61,7 +83,7 @@ describe("Sessions API", () => {
     );
 
     expect(response.ok).toBe(true);
-    const data = await response.json();
+    const data = (await response.json()) as UpdateSessionStatusResponse;
 
     expect(data.status).toBe("completed");
   });
@@ -72,7 +94,7 @@ describe("Sessions API", () => {
     );
 
     expect(response.ok).toBe(true);
-    const data = await response.json();
+    const data = (await response.json()) as SessionSummaryResponse;
 
     expect(data).toHaveProperty("sessionId");
     expect(data).toHaveProperty("eventCount");
@@ -85,7 +107,7 @@ describe("Personas API", () => {
     const response = await fetch(`${API_BASE}/personas`);
 
     expect(response.ok).toBe(true);
-    const data = await response.json();
+    const data = (await response.json()) as ListPersonasResponse;
 
     expect(Array.isArray(data)).toBe(true);
   });
@@ -100,7 +122,7 @@ describe("Personas API", () => {
     });
 
     expect(response.ok).toBe(true);
-    const data = await response.json();
+    const data = (await response.json()) as CreatePersonaResponse;
 
     expect(data).toHaveProperty("eye", "test-eye");
     expect(data).toHaveProperty("version");
@@ -110,7 +132,7 @@ describe("Personas API", () => {
     const response = await fetch(`${API_BASE}/personas/test-eye/active`);
 
     if (response.ok) {
-      const data = await response.json();
+      const data = (await response.json()) as GetActivePersonaResponse;
       expect(data).toHaveProperty("active", true);
     } else {
       // No active persona is also valid
@@ -124,7 +146,7 @@ describe("Routing API", () => {
     const response = await fetch(`${API_BASE}/routing`);
 
     expect(response.ok).toBe(true);
-    const data = await response.json();
+    const data = (await response.json()) as ListRoutingResponse;
 
     expect(Array.isArray(data)).toBe(true);
   });
@@ -143,7 +165,7 @@ describe("Routing API", () => {
     });
 
     expect(response.ok).toBe(true);
-    const data = await response.json();
+    const data = (await response.json()) as CreateRoutingResponse;
 
     expect(data).toHaveProperty("eye", "test-routing-eye");
     expect(data).toHaveProperty("primaryProvider", "groq");
@@ -160,7 +182,7 @@ describe("Routing API", () => {
     });
 
     expect(response.ok).toBe(true);
-    const data = await response.json();
+    const data = (await response.json()) as UpdateRoutingResponse;
 
     expect(data.primaryProvider).toBe("ollama");
   });
@@ -171,7 +193,7 @@ describe("Strictness API", () => {
     const response = await fetch(`${API_BASE}/strictness`);
 
     expect(response.ok).toBe(true);
-    const data = await response.json();
+    const data = (await response.json()) as ListStrictnessProfilesResponse;
 
     expect(Array.isArray(data)).toBe(true);
   });
@@ -195,7 +217,7 @@ describe("Strictness API", () => {
     });
 
     expect(response.ok).toBe(true);
-    const data = await response.json();
+    const data = (await response.json()) as CreateStrictnessProfileResponse;
 
     expect(data).toHaveProperty("name", "test-profile");
   });
@@ -206,7 +228,7 @@ describe("Models API", () => {
     const response = await fetch(`${API_BASE}/models`);
 
     expect(response.ok).toBe(true);
-    const data = await response.json();
+    const data = (await response.json()) as ListCachedModelsResponse;
 
     expect(data).toHaveProperty("models");
     expect(Array.isArray(data.models)).toBe(true);
@@ -216,7 +238,7 @@ describe("Models API", () => {
     const response = await fetch(`${API_BASE}/models/groq`);
 
     if (response.ok) {
-      const data = await response.json();
+      const data = (await response.json()) as ListProviderModelsResponse;
       expect(Array.isArray(data)).toBe(true);
     } else {
       // Provider not configured is valid
@@ -230,7 +252,7 @@ describe("Pipelines API", () => {
     const response = await fetch(`${API_BASE}/pipelines`);
 
     expect(response.ok).toBe(true);
-    const data = await response.json();
+    const data = (await response.json()) as ListPipelinesResponse;
 
     expect(Array.isArray(data)).toBe(true);
   });
@@ -249,7 +271,7 @@ describe("Pipelines API", () => {
     });
 
     expect(response.ok).toBe(true);
-    const data = await response.json();
+    const data = (await response.json()) as CreatePipelineResponse;
 
     expect(data).toHaveProperty("name", "test-pipeline");
     expect(data.steps).toHaveLength(3);
@@ -261,7 +283,7 @@ describe("Error Handling", () => {
     const response = await fetch(`${API_BASE}/sessions/nonexistent-id`);
 
     expect(response.status).toBe(404);
-    const data = await response.json();
+    const data = (await response.json()) as ErrorResponse;
 
     expect(data).toHaveProperty("error");
   });
@@ -273,7 +295,7 @@ describe("Error Handling", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({}),
     });
-    const { sessionId } = await createResponse.json();
+    const { sessionId } = (await createResponse.json()) as CreateSessionResponse;
 
     const response = await fetch(`${API_BASE}/sessions/${sessionId}/status`, {
       method: "PATCH",
@@ -282,7 +304,7 @@ describe("Error Handling", () => {
     });
 
     expect(response.status).toBe(400);
-    const data = await response.json();
+    const data = (await response.json()) as ErrorResponse;
 
     expect(data).toHaveProperty("error");
   });
@@ -303,7 +325,7 @@ describe("Health & Status", () => {
     const response = await fetch(`${API_BASE}/health`);
 
     expect(response.ok).toBe(true);
-    const data = await response.json();
+    const data = (await response.json()) as HealthCheckResponse;
 
     expect(data).toHaveProperty("status");
   });

@@ -18,7 +18,6 @@ import { autoRouter } from "@third-eye/core/auto-router";
 // TODO: Recreate PipelineDagSchema in @third-eye/types package
 // import { PipelineDagSchema } from '@third-eye/types/dist/pipeline';
 import {
-  validateBodyWithEnvelope,
   createSuccessResponse,
   createErrorResponse,
   createInternalErrorResponse,
@@ -26,6 +25,7 @@ import {
   errorHandler,
 } from "../middleware/response";
 import { z } from "zod";
+import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
 
 const app = new Hono();
 
@@ -59,14 +59,16 @@ app.post("/execute", async (c) => {
     // Validate request body
     const validation = executePipelineSchema.safeParse(body);
     if (!validation.success) {
-      return c.json(
-        createErrorResponse(
-          "INVALID_REQUEST",
-          "Invalid request body",
-          validation.error.errors,
-        ),
-        400,
-      );
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        status: 400,
+        detail: ApiErrorMessage.INVALID_REQUEST_BODY,
+        code: ApiErrorCode.INVALID_REQUEST,
+        validation: validation.error.errors.map((e) => ({
+          path: e.path.join("."),
+          message: e.message,
+        })),
+      });
     }
 
     const { pipelineId, sessionId, input } = validation.data;
@@ -77,26 +79,69 @@ app.post("/execute", async (c) => {
     });
 
     if (!pipeline) {
-      return c.json(
-        createErrorResponse(
-          "PIPELINE_NOT_FOUND",
-          `Pipeline not found: ${pipelineId}`,
-        ),
-        404,
-      );
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.PIPELINE_NOT_FOUND,
+        status: 404,
+        detail: `Pipeline not found: ${pipelineId}`,
+        code: ApiErrorCode.PIPELINE_NOT_FOUND,
+      });
     }
 
     // Parse and validate pipeline DAG
-    // TODO: Re-enable validation once PipelineDagSchema is recreated
-    // const dagValidation = PipelineDagSchema.safeParse(pipeline.workflowJson);
-    // if (!dagValidation.success) {
-    //   return c.json(
-    //     createErrorResponse('INVALID_PIPELINE_DAG', 'Pipeline workflow is invalid', dagValidation.error.errors),
-    //     400
-    //   );
-    // }
+    // Basic runtime validation (full schema validation pending PipelineDagSchema recreation)
+    const workflowJson = pipeline.workflowJson;
 
-    const dag = pipeline.workflowJson as any; // dagValidation.data;
+    if (!workflowJson || typeof workflowJson !== "object") {
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.INVALID_PIPELINE_DAG,
+        status: 400,
+        detail: ApiErrorMessage.WORKFLOW_JSON_MISSING,
+        code: ApiErrorCode.INVALID_PIPELINE_DAG,
+      });
+    }
+
+    const dag = workflowJson as any;
+
+    // Validate required DAG structure
+    if (!dag.nodes || !Array.isArray(dag.nodes)) {
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.INVALID_PIPELINE_DAG,
+        status: 400,
+        detail: ApiErrorMessage.NODES_ARRAY_REQUIRED,
+        code: ApiErrorCode.INVALID_PIPELINE_DAG,
+      });
+    }
+
+    if (!dag.edges || !Array.isArray(dag.edges)) {
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.INVALID_PIPELINE_DAG,
+        status: 400,
+        detail: ApiErrorMessage.EDGES_ARRAY_REQUIRED,
+        code: ApiErrorCode.INVALID_PIPELINE_DAG,
+      });
+    }
+
+    // Validate at least one node exists
+    if (dag.nodes.length === 0) {
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.INVALID_PIPELINE_DAG,
+        status: 400,
+        detail: ApiErrorMessage.NODES_EMPTY,
+        code: ApiErrorCode.INVALID_PIPELINE_DAG,
+      });
+    }
+
+    // Validate all nodes have required fields
+    for (const node of dag.nodes) {
+      if (!node.id || !node.type) {
+        return createErrorResponse(c, {
+          title: ApiErrorTitle.INVALID_PIPELINE_DAG,
+          status: 400,
+          detail: `Pipeline DAG node missing required 'id' or 'type' field: ${JSON.stringify(node)}`,
+          code: ApiErrorCode.INVALID_PIPELINE_DAG,
+        });
+      }
+    }
 
     // Generate run ID
     const runId = nanoid();
@@ -229,13 +274,12 @@ app.post("/pause/:runId", async (c) => {
     // Check if execution is active
     const engine = activeExecutions.get(runId);
     if (!engine) {
-      return c.json(
-        createErrorResponse(
-          "EXECUTION_NOT_FOUND",
-          `No active execution found for runId: ${runId}`,
-        ),
-        404,
-      );
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.EXECUTION_NOT_FOUND,
+        status: 404,
+        detail: `No active execution found for runId: ${runId}`,
+        code: ApiErrorCode.EXECUTION_NOT_FOUND,
+      });
     }
 
     // Pause execution
@@ -277,14 +321,16 @@ app.post("/resume/:runId", async (c) => {
     // Validate request body
     const validation = resumePipelineSchema.safeParse(body);
     if (!validation.success) {
-      return c.json(
-        createErrorResponse(
-          "INVALID_REQUEST",
-          "Invalid request body",
-          validation.error.errors,
-        ),
-        400,
-      );
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        status: 400,
+        detail: ApiErrorMessage.INVALID_REQUEST_BODY,
+        code: ApiErrorCode.INVALID_REQUEST,
+        validation: validation.error.errors.map((e) => ({
+          path: e.path.join("."),
+          message: e.message,
+        })),
+      });
     }
 
     const { userInput } = validation.data;
@@ -292,13 +338,12 @@ app.post("/resume/:runId", async (c) => {
     // Check if execution is active
     const engine = activeExecutions.get(runId);
     if (!engine) {
-      return c.json(
-        createErrorResponse(
-          "EXECUTION_NOT_FOUND",
-          `No active execution found for runId: ${runId}`,
-        ),
-        404,
-      );
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.EXECUTION_NOT_FOUND,
+        status: 404,
+        detail: `No active execution found for runId: ${runId}`,
+        code: ApiErrorCode.EXECUTION_NOT_FOUND,
+      });
     }
 
     // Resume execution
@@ -342,13 +387,12 @@ app.get("/status/:runId", async (c) => {
     });
 
     if (!queueItem) {
-      return c.json(
-        createErrorResponse(
-          "EXECUTION_NOT_FOUND",
-          `Execution not found for runId: ${runId}`,
-        ),
-        404,
-      );
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.EXECUTION_NOT_FOUND,
+        status: 404,
+        detail: `Execution not found for runId: ${runId}`,
+        code: ApiErrorCode.EXECUTION_NOT_FOUND,
+      });
     }
 
     // Get execution steps

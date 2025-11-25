@@ -1,5 +1,17 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { Hono } from "hono";
+import type {
+  CreateSessionResponse,
+  SessionContextResponse,
+  ClarificationValidationResponse,
+  SessionExportResponse,
+  KillSessionResponse,
+  GetSessionResponse,
+  GetSessionRunsResponse,
+  SessionEvent,
+  SessionSummaryResponse,
+  ErrorResponse,
+} from "../../types/api-responses";
 
 describe("Session Endpoints Integration Tests", () => {
   let app: Hono;
@@ -21,7 +33,7 @@ describe("Session Endpoints Integration Tests", () => {
       });
 
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = (await res.json()) as CreateSessionResponse;
       expect(data).toHaveProperty("sessionId");
       expect(data).toHaveProperty("session");
 
@@ -36,7 +48,7 @@ describe("Session Endpoints Integration Tests", () => {
       });
 
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = (await res.json()) as CreateSessionResponse;
       expect(data).toHaveProperty("sessionId");
     });
 
@@ -47,7 +59,7 @@ describe("Session Endpoints Integration Tests", () => {
         body: JSON.stringify({}),
       });
 
-      const data = await res.json();
+      const data = (await res.json()) as CreateSessionResponse;
       expect(data).toHaveProperty("portalUrl");
       expect(data.portalUrl).toContain("/session/");
     });
@@ -68,7 +80,7 @@ describe("Session Endpoints Integration Tests", () => {
       });
 
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = (await res.json()) as SessionContextResponse;
       expect(data).toHaveProperty("context");
       expect(data.context).toHaveProperty("projectName");
     });
@@ -77,7 +89,7 @@ describe("Session Endpoints Integration Tests", () => {
       const res = await app.request(`/sessions/${testSessionId}/context`);
       expect(res.status).toBe(200);
 
-      const data = await res.json();
+      const data = (await res.json()) as SessionContextResponse;
       expect(data).toHaveProperty("sessionId", testSessionId);
       expect(data).toHaveProperty("context");
     });
@@ -91,7 +103,7 @@ describe("Session Endpoints Integration Tests", () => {
       );
 
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = (await res.json()) as SessionContextResponse;
       expect(data.context).not.toHaveProperty("projectName");
     });
 
@@ -127,7 +139,7 @@ describe("Session Endpoints Integration Tests", () => {
       );
 
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = (await res.json()) as ClarificationValidationResponse;
       expect(data).toHaveProperty("valid");
       expect(data).toHaveProperty("clarificationId", clarificationId);
     });
@@ -142,7 +154,7 @@ describe("Session Endpoints Integration Tests", () => {
         },
       );
 
-      const data = await res.json();
+      const data = (await res.json()) as ClarificationValidationResponse;
       expect(data.valid).toBe(false);
       expect(data).toHaveProperty("reason");
     });
@@ -169,7 +181,7 @@ describe("Session Endpoints Integration Tests", () => {
       expect(res.status).toBe(200);
       expect(res.headers.get("Content-Type")).toContain("application/json");
 
-      const data = await res.json();
+      const data = (await res.json()) as SessionExportResponse;
       expect(data).toHaveProperty("session");
       expect(data).toHaveProperty("runs");
       expect(data).toHaveProperty("events");
@@ -220,7 +232,7 @@ describe("Session Endpoints Integration Tests", () => {
       });
 
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = (await res.json()) as KillSessionResponse;
       expect(data).toHaveProperty("status", "killed");
       expect(data).toHaveProperty("stoppedEyes");
       expect(Array.isArray(data.stoppedEyes)).toBe(true);
@@ -233,7 +245,7 @@ describe("Session Endpoints Integration Tests", () => {
       });
 
       expect(res.status).toBe(400);
-      const data = await res.json();
+      const data = (await res.json()) as ErrorResponse;
       expect(data.error).toContain("already killed");
     });
 
@@ -251,7 +263,7 @@ describe("Session Endpoints Integration Tests", () => {
       const res = await app.request(`/sessions/${testSessionId}`);
       expect(res.status).toBe(200);
 
-      const data = await res.json();
+      const data = (await res.json()) as GetSessionResponse;
       expect(data).toHaveProperty("id", testSessionId);
       expect(data).toHaveProperty("status");
       expect(data).toHaveProperty("createdAt");
@@ -261,7 +273,7 @@ describe("Session Endpoints Integration Tests", () => {
       const res = await app.request(`/sessions/${testSessionId}/runs`);
       expect(res.status).toBe(200);
 
-      const data = await res.json();
+      const data = (await res.json()) as GetSessionRunsResponse;
       expect(data).toHaveProperty("sessionId", testSessionId);
       expect(data).toHaveProperty("runs");
       expect(Array.isArray(data.runs)).toBe(true);
@@ -271,7 +283,7 @@ describe("Session Endpoints Integration Tests", () => {
       const res = await app.request(`/sessions/${testSessionId}/events`);
       expect(res.status).toBe(200);
 
-      const data = await res.json();
+      const data = (await res.json()) as SessionEvent[];
       expect(Array.isArray(data)).toBe(true);
     });
 
@@ -279,7 +291,7 @@ describe("Session Endpoints Integration Tests", () => {
       const res = await app.request(`/sessions/${testSessionId}/summary`);
       expect(res.status).toBe(200);
 
-      const data = await res.json();
+      const data = (await res.json()) as SessionSummaryResponse;
       expect(data).toHaveProperty("sessionId", testSessionId);
       expect(data).toHaveProperty("status");
       expect(data).toHaveProperty("eventCount");
@@ -294,7 +306,7 @@ describe("Session Endpoints Integration Tests", () => {
       );
       expect(res.status).toBe(200);
 
-      const data = await res.json();
+      const data = (await res.json()) as GetSessionRunsResponse;
       expect(data).toHaveProperty("limit", 10);
       expect(data).toHaveProperty("offset", 0);
     });
@@ -305,7 +317,7 @@ describe("Session Endpoints Integration Tests", () => {
       );
       expect(res.status).toBe(200);
 
-      const data = await res.json();
+      const data = (await res.json()) as SessionEvent[];
       expect(Array.isArray(data)).toBe(true);
     });
   });

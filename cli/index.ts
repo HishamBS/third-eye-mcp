@@ -1824,18 +1824,16 @@ async function startServices() {
         env: { ...process.env, PORT: String(args.port || SERVER_PORT) },
       });
 
-  // Monitor for unexpected process exits
-  serverProcess.on("exit", (code, signal) => {
-    if (code !== 0 && code !== null) {
-      console.error(kleur.red(`\n✗ Server process exited with code ${code}`));
-      console.error(kleur.dim(`  Check logs: ${SERVER_LOG_FILE}`));
-      if (!args.foreground) {
-        try {
-          rmSync(SERVER_PID_FILE, { force: true });
-        } catch {}
+  // Monitor for unexpected process exits (only in foreground mode)
+  // In background mode, we don't attach listeners to allow process to exit
+  if (args.foreground) {
+    serverProcess.on("exit", (code, signal) => {
+      if (code !== 0 && code !== null) {
+        console.error(kleur.red(`\n✗ Server process exited with code ${code}`));
+        console.error(kleur.dim(`  Check logs: ${SERVER_LOG_FILE}`));
       }
-    }
-  });
+    });
+  }
 
   if (!args.foreground) {
     savePid(SERVER_PID_FILE, serverProcess.pid!);
@@ -1880,11 +1878,14 @@ async function startServices() {
     const uiStartTime = Date.now();
 
     // Use shell redirection for logging in detached mode (Bun doesn't support stream.Writable in stdio)
-    // The package.json dev script uses "bun --bun x next dev" which forces Bun runtime
-    // We pass --port as an argument which gets forwarded to Next.js
+    // The package.json dev script uses "bun --bun next dev" which forces Bun runtime
+    // We use PORT environment variable which Next.js automatically reads
+    // IMPORTANT: bun run does NOT support --cwd flag, so we set cwd in spawn options instead
+    const uiPort = String(args.uiPort || UI_PORT);
+    const uiDir = resolve(projectRoot, "apps/ui");
     const uiCmd = args.foreground
-      ? `bun --bun --cwd apps/ui run dev --port ${args.uiPort || UI_PORT}`
-      : `bun --bun --cwd apps/ui run dev --port ${args.uiPort || UI_PORT} >> ${UI_LOG_FILE} 2>&1`;
+      ? `bun --bun run dev`
+      : `cd ${uiDir} && PORT=${uiPort} bun --bun run dev >> ${UI_LOG_FILE} 2>&1`;
 
     uiProcess = args.foreground
       ? spawn(
@@ -1892,36 +1893,32 @@ async function startServices() {
           [
             "--bun",
             "run",
-            "--cwd",
-            "apps/ui",
             "dev",
-            "--port",
-            String(args.uiPort || UI_PORT),
           ],
           {
-            cwd: projectRoot,
+            cwd: uiDir,
             stdio: "inherit",
             detached: false,
+            env: { ...process.env, PORT: uiPort },
           },
         )
       : spawn("sh", ["-c", uiCmd], {
-          cwd: projectRoot,
+          cwd: uiDir,
           stdio: "ignore",
           detached: true,
+          env: { ...process.env, PORT: uiPort },
         });
 
-    // Monitor for unexpected process exits
-    uiProcess.on("exit", (code, signal) => {
-      if (code !== 0 && code !== null) {
-        console.error(kleur.red(`\n✗ UI process exited with code ${code}`));
-        console.error(kleur.dim(`  Check logs: ${UI_LOG_FILE}`));
-        if (!args.foreground) {
-          try {
-            rmSync(UI_PID_FILE, { force: true });
-          } catch {}
+    // Monitor for unexpected process exits (only in foreground mode)
+    // In background mode, we don't attach listeners to allow process to exit
+    if (args.foreground) {
+      uiProcess.on("exit", (code, signal) => {
+        if (code !== 0 && code !== null) {
+          console.error(kleur.red(`\n✗ UI process exited with code ${code}`));
+          console.error(kleur.dim(`  Check logs: ${UI_LOG_FILE}`));
         }
-      }
-    });
+      });
+    }
 
     if (!args.foreground) {
       savePid(UI_PID_FILE, uiProcess.pid!);
@@ -2041,13 +2038,17 @@ async function startServices() {
 
     await new Promise(() => {});
   } else {
-    // Enable health monitoring for detached mode
-    // This will automatically restart services if they crash
-    enableHealthMonitoring(
-      args.port || SERVER_PORT,
-      args.uiPort || UI_PORT,
-      args.noUi || false,
-    );
+    // In background mode, we don't enable health monitoring
+    // because the main process will exit and monitoring requires a running process
+    // Services are detached and will continue running independently
+    // Users can manually restart services if needed using 'bun dist/cli.js restart'
+    
+    // Exit main process after ensuring children are spawned
+    // Children are detached and will continue running independently
+    // Give a short delay to ensure processes are fully spawned
+    setTimeout(() => {
+      process.exit(0);
+    }, 2000);
   }
 }
 

@@ -64,10 +64,24 @@ export interface WSMessage {
     | "routing_deleted"
     | "persona_activated"
     | "session_created"
-    | "pipeline_event";
+    | "session_status_updated"
+    | "session_killed"
+    | "eye_rerun"
+    | "context_updated"
+    | "context_removed"
+    | "pipeline_event"
+    | "app_settings_updated"
+    | "app_settings_deleted"
+    | "duel_complete";
   sessionId?: string;
   data?: unknown;
   timestamp: number;
+  // Additional fields for specific message types
+  key?: string; // For app_settings_updated/deleted
+  value?: unknown; // For app_settings_updated
+  duelId?: string; // For duel_complete
+  runs?: unknown; // For duel_complete
+  results?: unknown; // For duel_complete
 }
 
 export interface ConnectionInfo {

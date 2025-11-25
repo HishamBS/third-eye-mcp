@@ -25,6 +25,7 @@ import { IFNode } from "./IFNode";
 import { LoopNode } from "./LoopNode";
 import { TerminalNode } from "./TerminalNode";
 import { UserInputNode } from "./UserInputNode";
+import { AnnotationNode } from "./AnnotationNode";
 import { NodePalette } from "./NodePalette";
 import { NodeEditModal } from "./NodeEditModal";
 import { EdgeConfigModal } from "./EdgeConfigModal";
@@ -34,8 +35,12 @@ import { PipelineTemplateSelector } from "./PipelineTemplateSelector";
 import { SwitchNodeConfigModal } from "./SwitchNodeConfigModal";
 import { IFNodeConfigModal } from "./IFNodeConfigModal";
 import { LoopNodeConfigModal } from "./LoopNodeConfigModal";
+import { SessionSelector } from "./SessionSelector";
+import { RuntimeRouteHighlighter } from "./RuntimeRouteHighlighter";
+import { RoutingDecisionMetadata } from "./RoutingDecisionMetadata";
 import { CANVAS_SETTINGS, LAYOUT, PIPELINE_UI_TEXT } from "./constants";
 import { API_BASE_URL } from "@/consts/api";
+import type { RoutingDecision } from "@/types/routing";
 import type {
   PipelineNode,
   PipelineEdge,
@@ -67,6 +72,10 @@ const VALID_NODE_TYPES = [
   "loop_over_items",
   "terminal",
   "user_input",
+  "annotationNode",
+  "userInputNode",
+  "terminalNode",
+  "switchNode",
 ] as const;
 
 const validateNodes = (nodes: Node[]): void => {
@@ -126,10 +135,14 @@ export function PipelineCanvasEnhanced() {
     () => ({
       eyeNode: EyeNode,
       switch: SwitchNode,
+      switchNode: SwitchNode,
       if: IFNode,
       loop_over_items: LoopNode,
       terminal: TerminalNode,
+      terminalNode: TerminalNode,
       user_input: UserInputNode,
+      userInputNode: UserInputNode,
+      annotationNode: AnnotationNode,
     }),
     [],
   );
@@ -206,6 +219,12 @@ export function PipelineCanvasEnhanced() {
   // Phase 19.4: Template selector modal state
   const [isTemplateSelectorOpen, setIsTemplateSelectorOpen] = useState(false);
 
+  // Session-based routing visualization state
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const [routingDecision, setRoutingDecision] = useState<RoutingDecision | null>(null);
+  const [routingDecisionLoading, setRoutingDecisionLoading] = useState(false);
+  const [routingDecisionError, setRoutingDecisionError] = useState<string | null>(null);
+
   // Control node configuration modal states
   const [selectedSwitchNode, setSelectedSwitchNode] =
     useState<Node<EyeNodeData> | null>(null);
@@ -236,13 +255,13 @@ export function PipelineCanvasEnhanced() {
 
   // Set nodes and edges when pipeline is loaded
   useEffect(() => {
-    if (activePipeline && activePipeline.nodes && activePipeline.edges) {
+    if (activePipeline?.workflowJson?.nodes && activePipeline?.workflowJson?.edges) {
       console.log("[PipelineCanvas] Setting pipeline nodes and edges:", {
-        nodeCount: activePipeline.nodes.length,
-        edgeCount: activePipeline.edges.length,
+        nodeCount: activePipeline.workflowJson.nodes.length,
+        edgeCount: activePipeline.workflowJson.edges.length,
       });
-      setNodesValidated(activePipeline.nodes as Node<EyeNodeData>[]);
-      setEdges(activePipeline.edges as Edge<EdgeConditionData>[]);
+      setNodesValidated(activePipeline.workflowJson.nodes as Node<EyeNodeData>[]);
+      setEdges(activePipeline.workflowJson.edges as Edge<EdgeConditionData>[]);
     }
   }, [activePipeline, setNodesValidated, setEdges]);
 
@@ -657,6 +676,25 @@ export function PipelineCanvasEnhanced() {
     });
   }, [reactFlowInstance]);
 
+  // Session-based routing visualization handlers
+  const handleSessionSelect = useCallback((sessionId: string | null) => {
+    setSelectedSessionId(sessionId);
+    if (!sessionId) {
+      setRoutingDecision(null);
+      setRoutingDecisionError(null);
+    }
+  }, []);
+
+  const handleRoutingDecisionLoaded = useCallback((decision: RoutingDecision) => {
+    setRoutingDecision(decision);
+    setRoutingDecisionLoading(false);
+  }, []);
+
+  const handleRoutingDecisionError = useCallback((error: string) => {
+    setRoutingDecisionError(error);
+    setRoutingDecisionLoading(false);
+  }, []);
+
   // Keyboard shortcuts (Quick Win #7)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -686,23 +724,31 @@ export function PipelineCanvasEnhanced() {
   return (
     <div className="w-full h-full flex flex-col relative">
       {/* Toolbar */}
-      <Toolbar
-        activePipeline={activePipeline}
-        pipelines={pipelines}
-        onSave={handleSave}
-        onActivate={handleActivate}
-        onNew={handleNew}
-        onExport={handleExport}
-        onImport={handleImport}
-        onValidate={handleValidate}
-        onAutoLayout={handleAutoLayout}
-        onZoomFit={handleZoomFit}
-        onToggleMinimap={() => setShowMinimap(!showMinimap)}
-        onToggleGrid={() => setShowGrid(!showGrid)}
-        onLoadTemplate={() => setIsTemplateSelectorOpen(true)}
-        showMinimap={showMinimap}
-        showGrid={showGrid}
-      />
+      <div className="flex items-center justify-between gap-4 border-b border-brand-outline bg-brand-surface px-4 py-2">
+        <Toolbar
+          activePipeline={activePipeline}
+          pipelines={pipelines}
+          onSave={handleSave}
+          onActivate={handleActivate}
+          onNew={handleNew}
+          onExport={handleExport}
+          onImport={handleImport}
+          onValidate={handleValidate}
+          onAutoLayout={handleAutoLayout}
+          onZoomFit={handleZoomFit}
+          onToggleMinimap={() => setShowMinimap(!showMinimap)}
+          onToggleGrid={() => setShowGrid(!showGrid)}
+          onLoadTemplate={() => setIsTemplateSelectorOpen(true)}
+          showMinimap={showMinimap}
+          showGrid={showGrid}
+        />
+
+        {/* Session Selector - Top Right Corner */}
+        <SessionSelector
+          selectedSessionId={selectedSessionId}
+          onSessionSelect={handleSessionSelect}
+        />
+      </div>
 
       {/* Main Canvas */}
       <div className="flex-1 w-full relative">
@@ -764,7 +810,25 @@ export function PipelineCanvasEnhanced() {
               className="bg-brand-paperElev border border-brand-outline"
             />
           )}
+
+          {/* Runtime Route Highlighter - Highlights actual routing paths */}
+          <RuntimeRouteHighlighter
+            sessionId={selectedSessionId}
+            onRoutingDecisionLoaded={handleRoutingDecisionLoaded}
+            onError={handleRoutingDecisionError}
+          />
         </ReactFlow>
+
+        {/* Routing Decision Metadata Overlay - Shows routing decision details */}
+        <RoutingDecisionMetadata
+          decision={routingDecision}
+          sessionId={selectedSessionId}
+          isLoading={routingDecisionLoading}
+          onClose={() => {
+            setSelectedSessionId(null);
+            setRoutingDecision(null);
+          }}
+        />
 
         {/* Node Palette (Eyes + Control Nodes) */}
         <NodePalette

@@ -67,9 +67,10 @@ app.get("/", async (c) => {
       }
     });
 
+    const totalRunsCount = totalRuns?.count ?? 0;
     const approvalRate =
-      totalRuns?.count > 0
-        ? Math.round((successfulRuns.length / totalRuns.count) * 100)
+      totalRunsCount > 0
+        ? Math.round((successfulRuns.length / totalRunsCount) * 100)
         : 0;
 
     return createSuccessResponse(c, {

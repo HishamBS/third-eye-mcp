@@ -15,6 +15,86 @@ import {
   errorHandler,
 } from "../middleware/response";
 import { z } from "zod";
+import {
+  ApiErrorCode,
+  ApiErrorTitle,
+  ApiErrorMessage,
+  SESSION_STATUS_ACTIVE,
+  SESSION_STATUS_COMPLETED,
+  SESSION_STATUS_FAILED,
+  SESSION_STATUS_KILLED,
+  VALID_SESSION_STATUSES,
+  CONTEXT_SOURCE_USER,
+  CONTEXT_SOURCE_EYE,
+  VALID_CONTEXT_SOURCES,
+  EXPORT_FORMAT_JSON,
+  EXPORT_FORMAT_MD,
+  EXPORT_FORMAT_CSV,
+  VALID_EXPORT_FORMATS,
+  DEFAULT_AGENT_NAME,
+  DEFAULT_MODEL_NAME,
+  DEFAULT_EYE_NAME,
+  DEFAULT_SYSTEM_ENTITY_NAME,
+  DEFAULT_VERDICT_STATUS,
+  DEFAULT_PAGINATION_LIMIT,
+  DEFAULT_PAGINATION_OFFSET,
+  DEFAULT_RUNS_PAGINATION_LIMIT,
+  DEFAULT_EVENTS_PAGINATION_LIMIT,
+  WS_EVENT_SESSION_CREATED,
+  WS_EVENT_SESSION_STATUS_UPDATED,
+  WS_EVENT_SESSION_KILLED,
+  WS_EVENT_EYE_RERUN,
+  WS_EVENT_CONTEXT_UPDATED,
+  WS_EVENT_CONTEXT_REMOVED,
+  DISPLAY_NOT_AVAILABLE,
+  SUCCESS_CODE_PREFIX,
+  QUERY_PARAM_TRUE_VALUE,
+  CSV_EXPORT_HEADER,
+  VALIDATION_AFFIRMATIVE_KEYWORD,
+  VALIDATION_NEGATIVE_KEYWORD,
+  VALIDATION_INTENT_BUILD_KEYWORD,
+  VALIDATION_INTENT_DELETE_KEYWORD,
+  formatBrowserOpenedLog,
+  formatSessionKilledLog,
+  formatEyeRerunLog,
+  formatSessionDeleteFailedLog,
+  formatSessionKilledMessage,
+  formatSessionsDeletedMessage,
+  buildMonitorPortalUrl,
+  buildSessionPortalUrl,
+  formatDisplayNameWithVersion,
+  formatJsonExportFilename,
+  formatMarkdownExportFilename,
+  formatCsvExportFilename,
+  formatMarkdownSessionHeader,
+  formatMarkdownEventTitle,
+  formatMarkdownRunHeader,
+  formatCsvRow,
+  formatMissingFieldDetail,
+  formatAnswerTooShortSuggestion,
+  LOG_WS_BROADCAST_SKIPPED,
+  LOG_SESSION_CREATE_FAILED,
+  LOG_SESSION_OPEN_FAILED,
+  LOG_BROWSER_OPEN_FAILED,
+  LOG_ACTIVE_SESSIONS_FETCH_FAILED,
+  LOG_SESSIONS_FETCH_FAILED,
+  LOG_SESSION_FETCH_FAILED,
+  LOG_SESSION_RUNS_FETCH_FAILED,
+  LOG_PIPELINE_EVENTS_FETCH_FAILED,
+  LOG_SESSION_SUMMARY_FETCH_FAILED,
+  LOG_SESSION_STATUS_UPDATE_FAILED,
+  LOG_SESSION_KILL_FAILED,
+  LOG_EYE_RERUN_FAILED,
+  LOG_SESSION_CONTEXT_FETCH_FAILED,
+  LOG_CONTEXT_ADD_FAILED,
+  LOG_CONTEXT_REMOVE_FAILED,
+  LOG_SESSION_EXPORT_FAILED,
+  LOG_CLARIFICATION_VALIDATION_FAILED,
+  LOG_CLARIFICATIONS_FETCH_FAILED,
+  LOG_INTENT_CONFIRMATIONS_FETCH_FAILED,
+  LOG_ROUTING_FETCH_FAILED,
+  LOG_BULK_DELETE_FAILED,
+} from "@third-eye/constants";
 
 /**
  * Session Management Routes
@@ -42,11 +122,11 @@ const createSessionSchema = z.object({
 });
 
 const updateStatusSchema = z.object({
-  status: z.enum(["active", "completed", "failed"]),
+  status: z.enum(VALID_SESSION_STATUSES),
 });
 
 const addContextSchema = z.object({
-  source: z.enum(["user", "eye"]),
+  source: z.enum(VALID_CONTEXT_SOURCES),
   key: z.string().min(1),
   value: z.any(),
 });
@@ -75,7 +155,7 @@ app.post("/", async (c) => {
       agentName:
         (typeof sessionConfig?.agentName === "string"
           ? sessionConfig.agentName
-          : undefined) || "Unknown Agent",
+          : undefined) || DEFAULT_AGENT_NAME,
       model:
         (typeof sessionConfig?.model === "string"
           ? sessionConfig.model
@@ -85,7 +165,7 @@ app.post("/", async (c) => {
           ? sessionConfig.displayName
           : undefined) || sessionId,
       createdAt: new Date(),
-      status: "active",
+      status: SESSION_STATUS_ACTIVE,
       configJson: sessionConfig || null,
     };
 
@@ -98,18 +178,23 @@ app.post("/", async (c) => {
       .get();
 
     // Generate portal URL
-    const portalUrl = `http://${config.server.host}:${config.ui.port}/monitor?sessionId=${sessionId}`;
+    const portalUrl = buildMonitorPortalUrl(
+      config.server.host,
+      config.ui.port,
+      sessionId,
+    );
 
     // Broadcast session creation via WebSocket
     try {
       const { wsManager } = await import("../websocket");
       wsManager.broadcast({
-        type: "session_created",
+        type: WS_EVENT_SESSION_CREATED,
         sessionId,
-        session: inserted,
+        data: { session: inserted },
+        timestamp: Date.now(),
       });
     } catch (e) {
-      console.debug("WebSocket broadcast skipped:", e);
+      console.debug(LOG_WS_BROADCAST_SKIPPED, e);
     }
 
     return createSuccessResponse(c, {
@@ -118,8 +203,8 @@ app.post("/", async (c) => {
       session: inserted,
     });
   } catch (error) {
-    console.error("Failed to create session:", error);
-    return createInternalErrorResponse(c, "Failed to create session");
+    console.error(LOG_SESSION_CREATE_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.SESSION_CREATE_FAILED);
   }
 });
 
@@ -131,9 +216,10 @@ app.post("/open", async (c) => {
 
     if (!sessionId) {
       return createErrorResponse(c, {
-        title: "Validation Error",
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        code: ApiErrorCode.VALIDATION_ERROR,
         status: 400,
-        detail: "Missing required field: sessionId",
+        detail: formatMissingFieldDetail("sessionId"),
       });
     }
 
@@ -149,14 +235,19 @@ app.post("/open", async (c) => {
 
     if (!session) {
       return createErrorResponse(c, {
-        title: "Session Not Found",
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
         status: 404,
-        detail: "Session not found",
+        detail: ApiErrorMessage.SESSION_NOT_FOUND_DETAIL,
       });
     }
 
     // Generate portal URL - use /session/:id for better UX (has session selector + theme preserved)
-    const portalUrl = `http://${config.server.host}:${config.ui.port}/session/${sessionId}`;
+    const portalUrl = buildSessionPortalUrl(
+      config.server.host,
+      config.ui.port,
+      sessionId,
+    );
 
     // Open browser if configured
     if (config.ui.autoOpen) {
@@ -169,9 +260,9 @@ app.post("/open", async (c) => {
               ? "start"
               : "xdg-open";
         spawn(command, [portalUrl], { detached: true, stdio: "ignore" });
-        console.log(`🧿 Browser opened for session ${sessionId}: ${portalUrl}`);
+        console.log(formatBrowserOpenedLog(sessionId, portalUrl));
       } catch (e) {
-        console.warn("Failed to auto-open browser:", e);
+        console.warn(LOG_BROWSER_OPEN_FAILED, e);
       }
     }
 
@@ -181,8 +272,8 @@ app.post("/open", async (c) => {
       opened: config.ui.autoOpen,
     });
   } catch (error) {
-    console.error("Failed to open session:", error);
-    return createInternalErrorResponse(c, "Failed to open session");
+    console.error(LOG_SESSION_OPEN_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.SESSION_OPEN_FAILED);
   }
 });
 
@@ -209,7 +300,7 @@ app.get("/active", async (c) => {
       .from(sessions)
       .where(
         or(
-          eq(sessions.status, "active"),
+          eq(sessions.status, SESSION_STATUS_ACTIVE),
           gte(sessions.createdAt, tenMinutesAgo),
         ),
       )
@@ -253,7 +344,7 @@ app.get("/active", async (c) => {
           session.agentName ||
           config.agentName ||
           clientDisplay ||
-          "Unknown Agent";
+          DEFAULT_AGENT_NAME;
 
         const displayBase =
           session.displayName ||
@@ -268,7 +359,7 @@ app.get("/active", async (c) => {
           typeof clientVersion === "string" &&
           clientVersion.trim().length > 0 &&
           !displayBase.includes(clientVersion)
-            ? `${displayBase} (${clientVersion})`
+            ? formatDisplayNameWithVersion(displayBase, clientVersion)
             : displayBase;
 
         return {
@@ -279,7 +370,7 @@ app.get("/active", async (c) => {
           lastActivity: lastEvent?.createdAt || session.createdAt,
           agentName,
           model:
-            session.model || config.model || metadata.model || "Unknown Model",
+            session.model || config.model || metadata.model || DEFAULT_MODEL_NAME,
           displayName,
         };
       }),
@@ -290,8 +381,8 @@ app.get("/active", async (c) => {
       total: enrichedSessions.length,
     });
   } catch (error) {
-    console.error("Failed to fetch active sessions:", error);
-    return createInternalErrorResponse(c, "Failed to fetch active sessions");
+    console.error(LOG_ACTIVE_SESSIONS_FETCH_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.ACTIVE_SESSIONS_FETCH_FAILED);
   }
 });
 
@@ -299,9 +390,9 @@ app.get("/active", async (c) => {
 app.get("/", async (c) => {
   try {
     const { db } = getDb();
-    const limit = parseInt(c.req.query("limit") || "50");
-    const offset = parseInt(c.req.query("offset") || "0");
-    const includeStats = c.req.query("stats") === "true";
+    const limit = parseInt(c.req.query("limit") || DEFAULT_PAGINATION_LIMIT.toString());
+    const offset = parseInt(c.req.query("offset") || DEFAULT_PAGINATION_OFFSET.toString());
+    const includeStats = c.req.query("stats") === QUERY_PARAM_TRUE_VALUE;
 
     const allSessions = await db
       .select()
@@ -340,7 +431,7 @@ app.get("/", async (c) => {
             typeof r.outputJson === "string"
               ? JSON.parse(r.outputJson)
               : r.outputJson;
-          return output?.ok === true || output?.code?.startsWith("OK_");
+          return output?.ok === true || output?.code?.startsWith(SUCCESS_CODE_PREFIX);
         } catch {
           return false;
         }
@@ -366,8 +457,8 @@ app.get("/", async (c) => {
       offset,
     });
   } catch (error) {
-    console.error("Failed to fetch sessions:", error);
-    return createInternalErrorResponse(c, "Failed to fetch sessions");
+    console.error(LOG_SESSIONS_FETCH_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.SESSIONS_FETCH_FAILED);
   }
 });
 
@@ -386,16 +477,17 @@ app.get("/:id", async (c) => {
 
     if (!session) {
       return createErrorResponse(c, {
-        title: "Session Not Found",
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
         status: 404,
-        detail: "Session not found",
+        detail: ApiErrorMessage.SESSION_NOT_FOUND_DETAIL,
       });
     }
 
     return createSuccessResponse(c, session);
   } catch (error) {
-    console.error("Failed to fetch session:", error);
-    return createInternalErrorResponse(c, "Failed to fetch session");
+    console.error(LOG_SESSION_FETCH_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.SESSION_FETCH_FAILED);
   }
 });
 
@@ -403,9 +495,9 @@ app.get("/:id", async (c) => {
 app.get("/", async (c) => {
   try {
     const { db } = getDb();
-    const limit = parseInt(c.req.query("limit") || "50");
-    const offset = parseInt(c.req.query("offset") || "0");
-    const includeStats = c.req.query("stats") === "true";
+    const limit = parseInt(c.req.query("limit") || DEFAULT_PAGINATION_LIMIT.toString());
+    const offset = parseInt(c.req.query("offset") || DEFAULT_PAGINATION_OFFSET.toString());
+    const includeStats = c.req.query("stats") === QUERY_PARAM_TRUE_VALUE;
 
     const allSessions = await db
       .select()
@@ -444,7 +536,7 @@ app.get("/", async (c) => {
             typeof r.outputJson === "string"
               ? JSON.parse(r.outputJson)
               : r.outputJson;
-          return output?.ok === true || output?.code?.startsWith("OK_");
+          return output?.ok === true || output?.code?.startsWith(SUCCESS_CODE_PREFIX);
         } catch {
           return false;
         }
@@ -470,8 +562,8 @@ app.get("/", async (c) => {
       offset,
     });
   } catch (error) {
-    console.error("Failed to fetch sessions:", error);
-    return createInternalErrorResponse(c, "Failed to fetch sessions");
+    console.error(LOG_SESSIONS_FETCH_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.SESSIONS_FETCH_FAILED);
   }
 });
 
@@ -490,14 +582,15 @@ app.get("/:id/runs", async (c) => {
 
     if (!session) {
       return createErrorResponse(c, {
-        title: "Session Not Found",
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
         status: 404,
-        detail: "Session not found",
+        detail: ApiErrorMessage.SESSION_NOT_FOUND_DETAIL,
       });
     }
 
-    const limit = parseInt(c.req.query("limit") || "100");
-    const offset = parseInt(c.req.query("offset") || "0");
+    const limit = parseInt(c.req.query("limit") || DEFAULT_RUNS_PAGINATION_LIMIT.toString());
+    const offset = parseInt(c.req.query("offset") || DEFAULT_PAGINATION_OFFSET.toString());
 
     const sessionRuns = await db
       .select()
@@ -511,8 +604,8 @@ app.get("/:id/runs", async (c) => {
     // Return runs array directly (frontend expects flat array, not wrapped)
     return createSuccessResponse(c, sessionRuns);
   } catch (error) {
-    console.error("Failed to fetch session runs:", error);
-    return createInternalErrorResponse(c, "Failed to fetch session runs");
+    console.error(LOG_SESSION_RUNS_FETCH_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.SESSION_RUNS_FETCH_FAILED);
   }
 });
 
@@ -531,14 +624,15 @@ app.get("/:id/events", async (c) => {
 
     if (!session) {
       return createErrorResponse(c, {
-        title: "Session Not Found",
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
         status: 404,
-        detail: "Session not found",
+        detail: ApiErrorMessage.SESSION_NOT_FOUND_DETAIL,
       });
     }
 
-    const limit = parseInt(c.req.query("limit") || "500");
-    const offset = parseInt(c.req.query("offset") || "0");
+    const limit = parseInt(c.req.query("limit") || DEFAULT_EVENTS_PAGINATION_LIMIT.toString());
+    const offset = parseInt(c.req.query("offset") || DEFAULT_PAGINATION_OFFSET.toString());
 
     const events = await db
       .select()
@@ -551,8 +645,8 @@ app.get("/:id/events", async (c) => {
 
     return createSuccessResponse(c, events);
   } catch (error) {
-    console.error("Failed to fetch pipeline events:", error);
-    return createInternalErrorResponse(c, "Failed to fetch pipeline events");
+    console.error(LOG_PIPELINE_EVENTS_FETCH_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.PIPELINE_EVENTS_FETCH_FAILED);
   }
 });
 
@@ -570,9 +664,10 @@ app.get("/:id/summary", async (c) => {
 
     if (!session) {
       return createErrorResponse(c, {
-        title: "Session Not Found",
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
         status: 404,
-        detail: "Session not found",
+        detail: ApiErrorMessage.SESSION_NOT_FOUND_DETAIL,
       });
     }
 
@@ -602,8 +697,8 @@ app.get("/:id/summary", async (c) => {
       createdAt: session.createdAt,
     });
   } catch (error) {
-    console.error("Failed to fetch session summary:", error);
-    return createInternalErrorResponse(c, "Failed to fetch session summary");
+    console.error(LOG_SESSION_SUMMARY_FETCH_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.SESSION_SUMMARY_FETCH_FAILED);
   }
 });
 
@@ -614,11 +709,12 @@ app.patch("/:id/status", async (c) => {
     const body = await c.req.json();
     const { status } = body;
 
-    if (!status || !["active", "completed", "failed"].includes(status)) {
+    if (!status || ![SESSION_STATUS_ACTIVE, SESSION_STATUS_COMPLETED, SESSION_STATUS_FAILED].includes(status)) {
       return createErrorResponse(c, {
-        title: "Validation Error",
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        code: ApiErrorCode.VALIDATION_ERROR,
         status: 400,
-        detail: "Invalid status. Must be: active, completed, or failed",
+        detail: ApiErrorMessage.VALIDATION_INVALID_STATUS,
       });
     }
 
@@ -638,9 +734,10 @@ app.patch("/:id/status", async (c) => {
 
     if (!updated) {
       return createErrorResponse(c, {
-        title: "Session Not Found",
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
         status: 404,
-        detail: "Session not found",
+        detail: ApiErrorMessage.SESSION_NOT_FOUND_DETAIL,
       });
     }
 
@@ -648,18 +745,19 @@ app.patch("/:id/status", async (c) => {
     try {
       const { wsManager } = await import("../websocket");
       wsManager.broadcastToSession(sessionId, {
-        type: "session_status_updated",
+        type: WS_EVENT_SESSION_STATUS_UPDATED,
         sessionId,
-        status,
+        data: { status },
+        timestamp: Date.now(),
       });
     } catch (e) {
-      console.debug("WebSocket broadcast skipped:", e);
+      console.debug(LOG_WS_BROADCAST_SKIPPED, e);
     }
 
     return createSuccessResponse(c, updated);
   } catch (error) {
-    console.error("Failed to update session status:", error);
-    return createInternalErrorResponse(c, "Failed to update session status");
+    console.error(LOG_SESSION_STATUS_UPDATE_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.SESSION_STATUS_UPDATE_FAILED);
   }
 });
 
@@ -678,18 +776,20 @@ app.post("/:id/kill", async (c) => {
 
     if (!session) {
       return createErrorResponse(c, {
-        title: "Session Not Found",
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
         status: 404,
-        detail: "Session not found",
+        detail: ApiErrorMessage.SESSION_NOT_FOUND_DETAIL,
       });
     }
 
     // Check if already killed
-    if (session.status === "killed") {
+    if (session.status === SESSION_STATUS_KILLED) {
       return createErrorResponse(c, {
-        title: "Invalid Operation",
+        title: ApiErrorTitle.INVALID_OPERATION,
+        code: ApiErrorCode.INVALID_OPERATION,
         status: 400,
-        detail: "Session already killed",
+        detail: ApiErrorMessage.SESSION_ALREADY_KILLED,
       });
     }
 
@@ -719,7 +819,7 @@ app.post("/:id/kill", async (c) => {
     // Update session status to 'killed'
     await db
       .update(sessions)
-      .set({ status: "killed" })
+      .set({ status: SESSION_STATUS_KILLED })
       .where(eq(sessions.id, sessionId))
       .run();
 
@@ -727,28 +827,28 @@ app.post("/:id/kill", async (c) => {
     try {
       const { wsManager } = await import("../websocket");
       wsManager.broadcastToSession(sessionId, {
-        type: "session_killed",
+        type: WS_EVENT_SESSION_KILLED,
         sessionId,
-        stoppedEyes,
+        data: { stoppedEyes },
         timestamp: Date.now(),
       });
     } catch (e) {
-      console.debug("WebSocket broadcast skipped:", e);
+      console.debug(LOG_WS_BROADCAST_SKIPPED, e);
     }
 
     console.log(
-      `🛑 Session ${sessionId} killed. Stopped ${stoppedEyes.length} Eyes: ${stoppedEyes.join(", ")}`,
+      formatSessionKilledLog(sessionId, stoppedEyes.length, stoppedEyes),
     );
 
     return createSuccessResponse(c, {
       sessionId,
-      status: "killed",
+      status: SESSION_STATUS_KILLED,
       stoppedEyes,
-      message: `Killed session and stopped ${stoppedEyes.length} Eye(s)`,
+      message: formatSessionKilledMessage(stoppedEyes.length),
     });
   } catch (error) {
-    console.error("Failed to kill session:", error);
-    return createInternalErrorResponse(c, "Failed to kill session");
+    console.error(LOG_SESSION_KILL_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.SESSION_KILL_FAILED);
   }
 });
 
@@ -770,9 +870,10 @@ app.post("/:id/rerun/:eye", async (c) => {
 
     if (!session) {
       return createErrorResponse(c, {
-        title: "Session Not Found",
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
         status: 404,
-        detail: "Session not found",
+        detail: ApiErrorMessage.SESSION_NOT_FOUND_DETAIL,
       });
     }
 
@@ -787,22 +888,21 @@ app.post("/:id/rerun/:eye", async (c) => {
     try {
       const { wsManager } = await import("../websocket");
       wsManager.broadcastToSession(sessionId, {
-        type: "eye_rerun",
+        type: WS_EVENT_EYE_RERUN,
         sessionId,
-        eye: eyeName,
-        result,
+        data: { eye: eyeName, result },
         timestamp: Date.now(),
       });
     } catch (e) {
-      console.debug("WebSocket broadcast skipped:", e);
+      console.debug(LOG_WS_BROADCAST_SKIPPED, e);
     }
 
-    console.log(`🔄 Reran ${eyeName} for session ${sessionId}`);
+    console.log(formatEyeRerunLog(eyeName, sessionId));
 
     return createSuccessResponse(c, result);
   } catch (error) {
-    console.error("Failed to rerun Eye:", error);
-    return createInternalErrorResponse(c, "Failed to rerun Eye");
+    console.error(LOG_EYE_RERUN_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.EYE_RERUN_FAILED);
   }
 });
 
@@ -820,9 +920,10 @@ app.get("/:id/context", async (c) => {
 
     if (!session) {
       return createErrorResponse(c, {
-        title: "Session Not Found",
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
         status: 404,
-        detail: "Session not found",
+        detail: ApiErrorMessage.SESSION_NOT_FOUND_DETAIL,
       });
     }
 
@@ -836,8 +937,8 @@ app.get("/:id/context", async (c) => {
       context,
     });
   } catch (error) {
-    console.error("Failed to fetch session context:", error);
-    return createInternalErrorResponse(c, "Failed to fetch session context");
+    console.error(LOG_SESSION_CONTEXT_FETCH_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.SESSION_CONTEXT_FETCH_FAILED);
   }
 });
 
@@ -850,17 +951,19 @@ app.post("/:id/context", async (c) => {
 
     if (!source || !key || value === undefined) {
       return createErrorResponse(c, {
-        title: "Validation Error",
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        code: ApiErrorCode.VALIDATION_ERROR,
         status: 400,
-        detail: "Missing required fields: source, key, value",
+        detail: ApiErrorMessage.VALIDATION_MISSING_CONTEXT_FIELDS,
       });
     }
 
-    if (!["user", "eye"].includes(source)) {
+    if (![CONTEXT_SOURCE_USER, CONTEXT_SOURCE_EYE].includes(source)) {
       return createErrorResponse(c, {
-        title: "Validation Error",
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        code: ApiErrorCode.VALIDATION_ERROR,
         status: 400,
-        detail: "Invalid source. Must be: user or eye",
+        detail: ApiErrorMessage.VALIDATION_INVALID_SOURCE,
       });
     }
 
@@ -874,9 +977,10 @@ app.post("/:id/context", async (c) => {
 
     if (!session) {
       return createErrorResponse(c, {
-        title: "Session Not Found",
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
         status: 404,
-        detail: "Session not found",
+        detail: ApiErrorMessage.SESSION_NOT_FOUND_DETAIL,
       });
     }
 
@@ -904,14 +1008,13 @@ app.post("/:id/context", async (c) => {
     try {
       const { wsManager } = await import("../websocket");
       wsManager.broadcastToSession(sessionId, {
-        type: "context_updated",
+        type: WS_EVENT_CONTEXT_UPDATED,
         sessionId,
-        key,
-        value,
-        source,
+        data: { key, value, source },
+        timestamp: Date.now(),
       });
     } catch (e) {
-      console.debug("WebSocket broadcast skipped:", e);
+      console.debug(LOG_WS_BROADCAST_SKIPPED, e);
     }
 
     return createSuccessResponse(c, {
@@ -919,8 +1022,8 @@ app.post("/:id/context", async (c) => {
       context,
     });
   } catch (error) {
-    console.error("Failed to add context:", error);
-    return createInternalErrorResponse(c, "Failed to add context");
+    console.error(LOG_CONTEXT_ADD_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.CONTEXT_ADD_FAILED);
   }
 });
 
@@ -939,9 +1042,10 @@ app.delete("/:id/context/:key", async (c) => {
 
     if (!session) {
       return createErrorResponse(c, {
-        title: "Session Not Found",
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
         status: 404,
-        detail: "Session not found",
+        detail: ApiErrorMessage.SESSION_NOT_FOUND_DETAIL,
       });
     }
 
@@ -965,12 +1069,13 @@ app.delete("/:id/context/:key", async (c) => {
     try {
       const { wsManager } = await import("../websocket");
       wsManager.broadcastToSession(sessionId, {
-        type: "context_removed",
+        type: WS_EVENT_CONTEXT_REMOVED,
         sessionId,
-        key,
+        data: { key },
+        timestamp: Date.now(),
       });
     } catch (e) {
-      console.debug("WebSocket broadcast skipped:", e);
+      console.debug(LOG_WS_BROADCAST_SKIPPED, e);
     }
 
     return createSuccessResponse(c, {
@@ -978,8 +1083,8 @@ app.delete("/:id/context/:key", async (c) => {
       context,
     });
   } catch (error) {
-    console.error("Failed to remove context:", error);
-    return createInternalErrorResponse(c, "Failed to remove context");
+    console.error(LOG_CONTEXT_REMOVE_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.CONTEXT_REMOVE_FAILED);
   }
 });
 
@@ -987,13 +1092,14 @@ app.delete("/:id/context/:key", async (c) => {
 app.get("/:id/export", async (c) => {
   try {
     const sessionId = c.req.param("id");
-    const format = c.req.query("format") || "json";
+    const format = (c.req.query("format") || EXPORT_FORMAT_JSON) as typeof EXPORT_FORMAT_JSON | typeof EXPORT_FORMAT_MD | typeof EXPORT_FORMAT_CSV;
 
-    if (!["json", "md", "csv"].includes(format)) {
+    if (![EXPORT_FORMAT_JSON, EXPORT_FORMAT_MD, EXPORT_FORMAT_CSV].includes(format)) {
       return createErrorResponse(c, {
-        title: "Validation Error",
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        code: ApiErrorCode.VALIDATION_ERROR,
         status: 400,
-        detail: "Invalid format. Must be: json, md, or csv",
+        detail: ApiErrorMessage.VALIDATION_INVALID_EXPORT_FORMAT,
       });
     }
 
@@ -1008,9 +1114,10 @@ app.get("/:id/export", async (c) => {
 
     if (!session) {
       return createErrorResponse(c, {
-        title: "Session Not Found",
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
         status: 404,
-        detail: "Session not found",
+        detail: ApiErrorMessage.SESSION_NOT_FOUND_DETAIL,
       });
     }
 
@@ -1030,7 +1137,7 @@ app.get("/:id/export", async (c) => {
       .orderBy(pipelineEvents.createdAt)
       .all();
 
-    if (format === "json") {
+    if (format === EXPORT_FORMAT_JSON) {
       // JSON export: Full session data
       const exportData = {
         session: {
@@ -1047,14 +1154,14 @@ app.get("/:id/export", async (c) => {
       c.header("Content-Type", "application/json");
       c.header(
         "Content-Disposition",
-        `attachment; filename="session-${sessionId}.json"`,
+        formatJsonExportFilename(sessionId),
       );
       return c.json(exportData);
     }
 
-    if (format === "md") {
+    if (format === EXPORT_FORMAT_MD) {
       // Markdown export: Human-readable timeline
-      let markdown = `# Session ${sessionId}\n\n`;
+      let markdown = formatMarkdownSessionHeader(sessionId);
       markdown += `**Status:** ${session.status}\n`;
       markdown += `**Created:** ${new Date(session.createdAt).toISOString()}\n\n`;
 
@@ -1062,7 +1169,7 @@ app.get("/:id/export", async (c) => {
       for (const event of events) {
         const timestamp = new Date(event.createdAt).toISOString();
         const eyeName = event.eyeId ? await getEyeNameById(event.eyeId) : null;
-        markdown += `### ${eyeName || "System"} - ${event.code}\n`;
+        markdown += formatMarkdownEventTitle(eyeName, event.code);
         markdown += `**Time:** ${timestamp}\n\n`;
         if (event.md) {
           markdown += `${event.md}\n\n`;
@@ -1073,9 +1180,9 @@ app.get("/:id/export", async (c) => {
       markdown += `## Runs Summary\n\n`;
       for (const run of sessionRuns) {
         const eyeName = await getEyeNameById(run.eyeId);
-        markdown += `### ${eyeName || "Unknown Eye"}\n`;
-        markdown += `- **Model:** ${run.model || "N/A"}\n`;
-        markdown += `- **Latency:** ${run.latencyMs || "N/A"}ms\n`;
+        markdown += formatMarkdownRunHeader(eyeName);
+        markdown += `- **Model:** ${run.model || DISPLAY_NOT_AVAILABLE}\n`;
+        markdown += `- **Latency:** ${run.latencyMs || DISPLAY_NOT_AVAILABLE}ms\n`;
         markdown += `- **Tokens In:** ${run.tokensIn || 0}\n`;
         markdown += `- **Tokens Out:** ${run.tokensOut || 0}\n\n`;
 
@@ -1094,15 +1201,14 @@ app.get("/:id/export", async (c) => {
       c.header("Content-Type", "text/markdown");
       c.header(
         "Content-Disposition",
-        `attachment; filename="session-${sessionId}.md"`,
+        formatMarkdownExportFilename(sessionId),
       );
       return c.text(markdown);
     }
 
-    if (format === "csv") {
+    if (format === EXPORT_FORMAT_CSV) {
       // CSV export: Metrics only
-      let csv =
-        "eye,model,latency_ms,tokens_in,tokens_out,verdict,created_at\n";
+      let csv = CSV_EXPORT_HEADER;
 
       for (const run of sessionRuns) {
         const output =
@@ -1110,28 +1216,37 @@ app.get("/:id/export", async (c) => {
             ? JSON.parse(run.outputJson)
             : run.outputJson;
 
-        const verdict = output?.verdict || "UNKNOWN";
+        const verdict = output?.verdict || DEFAULT_VERDICT_STATUS;
         const eyeName = await getEyeNameById(run.eyeId);
 
-        csv += `${eyeName || "Unknown"},${run.model || "N/A"},${run.latencyMs || 0},${run.tokensIn || 0},${run.tokensOut || 0},${verdict},${new Date(run.createdAt).toISOString()}\n`;
+        csv += formatCsvRow(
+          eyeName,
+          run.model,
+          run.latencyMs,
+          run.tokensIn,
+          run.tokensOut,
+          verdict,
+          run.createdAt,
+        );
       }
 
       c.header("Content-Type", "text/csv");
       c.header(
         "Content-Disposition",
-        `attachment; filename="session-${sessionId}.csv"`,
+        formatCsvExportFilename(sessionId),
       );
       return c.text(csv);
     }
 
     return createErrorResponse(c, {
-      title: "Validation Error",
+      title: ApiErrorTitle.VALIDATION_ERROR,
+        code: ApiErrorCode.VALIDATION_ERROR,
       status: 400,
-      detail: "Invalid format",
+      detail: ApiErrorMessage.INVALID_FORMAT_DETAIL,
     });
   } catch (error) {
-    console.error("Failed to export session:", error);
-    return createInternalErrorResponse(c, "Failed to export session");
+    console.error(LOG_SESSION_EXPORT_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.SESSION_EXPORT_FAILED);
   }
 });
 
@@ -1145,9 +1260,10 @@ app.post("/:id/clarifications/:clarificationId/validate", async (c) => {
 
     if (!answer) {
       return createErrorResponse(c, {
-        title: "Validation Error",
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        code: ApiErrorCode.VALIDATION_ERROR,
         status: 400,
-        detail: "Missing required field: answer",
+        detail: formatMissingFieldDetail("answer"),
       });
     }
 
@@ -1162,9 +1278,10 @@ app.post("/:id/clarifications/:clarificationId/validate", async (c) => {
 
     if (!session) {
       return createErrorResponse(c, {
-        title: "Session Not Found",
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
         status: 404,
-        detail: "Session not found",
+        detail: ApiErrorMessage.SESSION_NOT_FOUND_DETAIL,
       });
     }
 
@@ -1179,9 +1296,10 @@ app.post("/:id/clarifications/:clarificationId/validate", async (c) => {
 
     if (!existingClarification) {
       return createErrorResponse(c, {
-        title: "Clarification Not Found",
+        title: ApiErrorTitle.CLARIFICATION_NOT_FOUND,
+        code: ApiErrorCode.CLARIFICATION_NOT_FOUND,
         status: 404,
-        detail: "Clarification not found",
+        detail: ApiErrorMessage.CLARIFICATION_NOT_FOUND_DETAIL,
       });
     }
 
@@ -1194,8 +1312,8 @@ app.post("/:id/clarifications/:clarificationId/validate", async (c) => {
     // Check answer length
     if (answer.trim().length < 3) {
       valid = false;
-      reason = "Answer too short";
-      suggestion = "Please provide more detail (at least 3 characters)";
+      reason = ApiErrorMessage.VALIDATION_ANSWER_TOO_SHORT_REASON;
+      suggestion = formatAnswerTooShortSuggestion(3);
     }
 
     // Check for contradictions with previous clarifications
@@ -1215,13 +1333,13 @@ app.post("/:id/clarifications/:clarificationId/validate", async (c) => {
       if (
         previousAnswers.some(
           (prev: string) =>
-            (prev.includes("yes") && answerLower.includes("no")) ||
-            (prev.includes("no") && answerLower.includes("yes")),
+            (prev.includes(VALIDATION_AFFIRMATIVE_KEYWORD) && answerLower.includes(VALIDATION_NEGATIVE_KEYWORD)) ||
+            (prev.includes(VALIDATION_NEGATIVE_KEYWORD) && answerLower.includes(VALIDATION_AFFIRMATIVE_KEYWORD)),
         )
       ) {
         valid = false;
-        reason = "Answer contradicts previous clarification";
-        suggestion = "Please review your previous answers for consistency";
+        reason = ApiErrorMessage.VALIDATION_CONTRADICTION_REASON;
+        suggestion = ApiErrorMessage.VALIDATION_CONTRADICTION_SUGGESTION;
       }
     }
 
@@ -1231,11 +1349,10 @@ app.post("/:id/clarifications/:clarificationId/validate", async (c) => {
       const answerLower = answer.toLowerCase();
 
       // Check if answer contradicts stated user intent
-      if (userIntent.includes("build") && answerLower.includes("delete")) {
+      if (userIntent.includes(VALIDATION_INTENT_BUILD_KEYWORD) && answerLower.includes(VALIDATION_INTENT_DELETE_KEYWORD)) {
         valid = false;
-        reason = "Answer contradicts stated intent";
-        suggestion =
-          "Your answer seems to contradict your original intent to build something";
+        reason = ApiErrorMessage.VALIDATION_INTENT_CONTRADICTION_REASON;
+        suggestion = ApiErrorMessage.VALIDATION_INTENT_CONTRADICTION_BUILD_SUGGESTION;
       }
     }
 
@@ -1247,8 +1364,8 @@ app.post("/:id/clarifications/:clarificationId/validate", async (c) => {
       answer,
     });
   } catch (error) {
-    console.error("Failed to validate clarification:", error);
-    return createInternalErrorResponse(c, "Failed to validate clarification");
+    console.error(LOG_CLARIFICATION_VALIDATION_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.CLARIFICATION_VALIDATION_FAILED);
   }
 });
 
@@ -1268,9 +1385,10 @@ app.get("/:sessionId/clarifications", async (c) => {
 
     if (!session) {
       return createErrorResponse(c, {
-        title: "Session Not Found",
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
         status: 404,
-        detail: "Session not found",
+        detail: ApiErrorMessage.SESSION_NOT_FOUND_DETAIL,
       });
     }
 
@@ -1282,8 +1400,8 @@ app.get("/:sessionId/clarifications", async (c) => {
 
     return createSuccessResponse(c, results);
   } catch (error) {
-    console.error("Failed to fetch clarifications:", error);
-    return createInternalErrorResponse(c, "Failed to fetch clarifications");
+    console.error(LOG_CLARIFICATIONS_FETCH_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.CLARIFICATIONS_FETCH_FAILED);
   }
 });
 
@@ -1303,9 +1421,10 @@ app.get("/:sessionId/intent-confirmations", async (c) => {
 
     if (!session) {
       return createErrorResponse(c, {
-        title: "Session Not Found",
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
         status: 404,
-        detail: "Session not found",
+        detail: ApiErrorMessage.SESSION_NOT_FOUND_DETAIL,
       });
     }
 
@@ -1318,10 +1437,10 @@ app.get("/:sessionId/intent-confirmations", async (c) => {
 
     return createSuccessResponse(c, result || null);
   } catch (error) {
-    console.error("Failed to fetch intent confirmations:", error);
+    console.error(LOG_INTENT_CONFIRMATIONS_FETCH_FAILED, error);
     return createInternalErrorResponse(
       c,
-      "Failed to fetch intent confirmations",
+      ApiErrorMessage.INTENT_CONFIRMATIONS_FETCH_FAILED,
     );
   }
 });
@@ -1341,9 +1460,10 @@ app.get("/:id/routing", async (c) => {
 
     if (!session) {
       return createErrorResponse(c, {
-        title: "Session Not Found",
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
         status: 404,
-        detail: "Session not found",
+        detail: ApiErrorMessage.SESSION_NOT_FOUND_DETAIL,
       });
     }
 
@@ -1416,8 +1536,8 @@ app.get("/:id/routing", async (c) => {
       routing: null,
     });
   } catch (error) {
-    console.error("Failed to fetch routing decision:", error);
-    return createInternalErrorResponse(c, "Failed to fetch routing decision");
+    console.error(LOG_ROUTING_FETCH_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.ROUTING_FETCH_FAILED);
   }
 });
 
@@ -1445,7 +1565,7 @@ app.delete("/bulk", async (c) => {
           await db.delete(sessions).where(eq(sessions.id, id)).run();
           deletedCount++;
         } catch (err) {
-          console.error(`Failed to delete session ${id}:`, err);
+          console.error(formatSessionDeleteFailedLog(id), err);
           // Continue with next session
         }
       }
@@ -1470,20 +1590,20 @@ app.delete("/bulk", async (c) => {
       }
     } else {
       return createErrorResponse(c, {
-        title: "Validation Error",
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        code: ApiErrorCode.VALIDATION_ERROR,
         status: 400,
-        detail:
-          "Provide either sessionIds (array) or olderThan (ISO date string)",
+        detail: ApiErrorMessage.VALIDATION_BULK_DELETE_PARAMS,
       });
     }
 
     return createSuccessResponse(c, {
       deleted: deletedCount,
-      message: `Deleted ${deletedCount} session(s) and associated data`,
+      message: formatSessionsDeletedMessage(deletedCount),
     });
   } catch (error) {
-    console.error("Failed to bulk delete sessions:", error);
-    return createInternalErrorResponse(c, "Failed to bulk delete sessions");
+    console.error(LOG_BULK_DELETE_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.SESSIONS_BULK_DELETE_FAILED);
   }
 });
 

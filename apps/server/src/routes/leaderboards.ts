@@ -16,6 +16,7 @@ import {
   errorHandler,
 } from "../middleware/response";
 import { z } from "zod";
+import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
 
 /**
  * Leaderboards API Routes
@@ -61,9 +62,10 @@ app.get("/:category", async (c) => {
       const eyeId = await getEyeIdByName(eye);
       if (!eyeId) {
         return createErrorResponse(c, {
-          title: "Eye Not Found",
+          title: ApiErrorTitle.EYE_NOT_FOUND,
           status: 404,
-          detail: "The requested eye could not be found",
+          detail: ApiErrorMessage.EYE_NOT_FOUND_DETAIL,
+          code: ApiErrorCode.EYE_NOT_FOUND,
         });
       }
       conditions.push(eq(runs.eyeId, eyeId));
@@ -82,7 +84,7 @@ app.get("/:category", async (c) => {
         eye: eye || "all",
         timeRange: days,
         rankings: [],
-        message: "No data available for the selected time range",
+        message: ApiErrorMessage.NO_DATA_AVAILABLE,
       });
     }
 
@@ -206,10 +208,10 @@ app.get("/:category", async (c) => {
 
       default:
         return createErrorResponse(c, {
-          title: "Invalid Category",
+          title: ApiErrorTitle.INVALID_CATEGORY,
           status: 400,
-          detail:
-            "Supported categories: fastest, cheapest, reliable, popular, quality",
+          detail: ApiErrorMessage.INVALID_CATEGORY_DETAIL,
+          code: ApiErrorCode.INVALID_CATEGORY,
         });
     }
 
@@ -227,8 +229,8 @@ app.get("/:category", async (c) => {
       rankings,
     });
   } catch (error) {
-    console.error("Failed to fetch leaderboard:", error);
-    return createInternalErrorResponse(c, "Failed to fetch leaderboard");
+    console.error(ApiErrorMessage.LEADERBOARD_FETCH_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.LEADERBOARD_FETCH_FAILED);
   }
 });
 
@@ -251,7 +253,9 @@ app.get("/", async (c) => {
       const response = await fetch(
         `http://localhost:7070/api/leaderboards/${category}?days=${days}&limit=3`,
       );
-      const data = await response.json();
+      const data = (await response.json()) as {
+        rankings?: LeaderboardEntry[];
+      };
 
       summaries.push({
         category,
@@ -264,10 +268,10 @@ app.get("/", async (c) => {
       categories: summaries,
     });
   } catch (error) {
-    console.error("Failed to fetch leaderboard summary:", error);
+    console.error(ApiErrorMessage.LEADERBOARD_SUMMARY_FETCH_FAILED, error);
     return createInternalErrorResponse(
       c,
-      "Failed to fetch leaderboard summary",
+      ApiErrorMessage.LEADERBOARD_SUMMARY_FETCH_FAILED,
     );
   }
 });
@@ -346,8 +350,8 @@ app.get("/trending/models", async (c) => {
       trending: sorted.slice(0, 10),
     });
   } catch (error) {
-    console.error("Failed to fetch trending models:", error);
-    return createInternalErrorResponse(c, "Failed to fetch trending models");
+    console.error(ApiErrorMessage.TRENDING_MODELS_FETCH_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.TRENDING_MODELS_FETCH_FAILED);
   }
 });
 

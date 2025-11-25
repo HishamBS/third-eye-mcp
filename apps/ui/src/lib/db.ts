@@ -12,9 +12,11 @@ export async function getDb() {
     throw new Error("Database can only be accessed server-side");
   }
 
-  // @ts-ignore - dynamic import
-  const { getDb: getDbImpl } = await import("@third-eye/db");
-  return getDbImpl();
+  // Dynamic import with proper typing
+  const dbModule = (await import("@third-eye/db")) as {
+    getDb: () => ReturnType<typeof import("@third-eye/db").getDb>;
+  };
+  return dbModule.getDb();
 }
 
 // Export schema types

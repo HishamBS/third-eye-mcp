@@ -77,22 +77,28 @@ export function useAPI() {
         }
 
         // Parse JSON response
-        const data = await response.json();
+        const responseData = await response.json();
 
         // Handle error responses (RFC7807 Problem JSON or generic)
         if (!response.ok) {
           const error: APIError = new Error(
-            data.detail ||
-              data.error?.detail ||
-              data.message ||
+            responseData.detail ||
+              responseData.error?.detail ||
+              responseData.message ||
               ERROR_MESSAGES.INTERNAL_ERROR,
           );
           error.status = response.status;
-          error.problem = data as ProblemJson;
+          error.problem = responseData as ProblemJson;
           throw error;
         }
 
-        return data as T;
+        // Unwrap success envelope: {success: true, data: T, meta: {...}}
+        // Backend uses createSuccessResponse which wraps data in this format
+        if (responseData && typeof responseData === 'object' && 'data' in responseData) {
+          return responseData.data as T;
+        }
+
+        return responseData as T;
       } catch (error) {
         if (error instanceof Error) {
           // Network errors
@@ -157,15 +163,18 @@ export function useAPI() {
     [apiFetch],
   );
 
-  return {
-    apiUrl,
-    fetch: apiFetch,
-    get,
-    post,
-    put,
-    patch,
-    delete: del,
-  };
+  return useMemo(
+    () => ({
+      apiUrl,
+      fetch: apiFetch,
+      get,
+      post,
+      put,
+      patch,
+      delete: del,
+    }),
+    [apiUrl, apiFetch, get, post, put, patch, del],
+  );
 }
 
 /**

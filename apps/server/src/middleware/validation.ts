@@ -8,6 +8,23 @@ import { getEyeIdByName } from "@third-eye/db/utils/lookups";
  * Validates request bodies, sanitizes inputs, and enforces rate limits
  */
 
+/**
+ * Type-safe sanitization result types
+ * R07 Compliance: Strict typing for sanitization operations
+ */
+export type SanitizedPrimitive = string | number | boolean | null;
+
+export type SanitizedValue =
+  | SanitizedPrimitive
+  | SanitizedObject
+  | SanitizedArray;
+
+export interface SanitizedObject {
+  [key: string]: SanitizedValue;
+}
+
+export interface SanitizedArray extends Array<SanitizedValue> {}
+
 // Rate limiting storage (in-memory, use Redis in production)
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
@@ -35,8 +52,9 @@ export function sanitizeString(input: string): string {
 
 /**
  * Recursively sanitize object values
+ * R07 Compliance: Returns proper SanitizedValue type instead of unknown
  */
-export function sanitizeObject(obj: unknown): unknown {
+export function sanitizeObject(obj: unknown): SanitizedValue {
   if (typeof obj === "string") {
     return sanitizeString(obj);
   }
@@ -46,14 +64,24 @@ export function sanitizeObject(obj: unknown): unknown {
   }
 
   if (obj !== null && typeof obj === "object") {
-    const sanitized: Record<string, unknown> = {};
+    const sanitized: SanitizedObject = {};
     for (const [key, value] of Object.entries(obj)) {
       sanitized[key] = sanitizeObject(value);
     }
     return sanitized;
   }
 
-  return obj;
+  // Primitive values (number, boolean, null)
+  if (
+    typeof obj === "number" ||
+    typeof obj === "boolean" ||
+    obj === null
+  ) {
+    return obj as SanitizedPrimitive;
+  }
+
+  // Default fallback
+  return null;
 }
 
 /**

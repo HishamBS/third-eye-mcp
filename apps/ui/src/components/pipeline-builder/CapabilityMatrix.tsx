@@ -16,6 +16,7 @@ import { useMemo, useState } from "react";
 import { useEyeCapabilities } from "@/hooks/useEyeCapabilities";
 import { EYE_CAPABILITIES } from "@third-eye/config/eye-capabilities";
 import { ModelRecommendationPanel } from "@/components/model-recommendations/ModelRecommendationPanel";
+import { EyeIcon } from "@/components/EyeIcon";
 import type { EyeWithCapabilities } from "@/hooks/useEyeCapabilities";
 import type { ProviderId } from "@third-eye/types";
 
@@ -39,9 +40,6 @@ function EyeCapabilityCard({
   const eyeName = eye.name.toLowerCase();
   const eyeInfo = EYE_CAPABILITIES[eyeName as keyof typeof EYE_CAPABILITIES];
 
-  // Fallback if eye not in capabilities config
-  const icon = eyeInfo?.icon || "👁️";
-  const color = eyeInfo?.color || "gray";
   const description = eye.description || "No description available";
   const tags =
     eye.capabilityTags.length > 0 ? eye.capabilityTags : eyeInfo?.tags || [];
@@ -62,9 +60,7 @@ function EyeCapabilityCard({
     >
       {/* Eye icon and name */}
       <div className="flex items-center gap-3 mb-3">
-        <span className="text-3xl" aria-label={`${eye.name} icon`}>
-          {icon}
-        </span>
+        <EyeIcon eye={eye.name} size={48} iconSvg={eye.iconSvg} />
         <div className="flex-1 text-left">
           <h3 className="font-semibold text-lg">{eye.name}</h3>
           <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -138,7 +134,7 @@ function EyeDetailModal({
         <div className="border-b border-gray-200 dark:border-gray-700 p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <span className="text-5xl">{eyeInfo?.icon || "👁️"}</span>
+              <EyeIcon eye={eye.name} size={80} iconSvg={eye.iconSvg} />
               <div>
                 <h2 className="text-2xl font-bold">{eye.name}</h2>
                 <p className="text-sm text-gray-500 dark:text-gray-400">

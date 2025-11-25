@@ -190,3 +190,21 @@ export const LEGACY_COLOR_MIGRATION_MAP = {
   "border-green-500/30": STATUS_BORDER_COLORS_SUBTLE.success,
   "border-blue-500/30": STATUS_BORDER_COLORS_SUBTLE.info,
 } as const;
+
+/**
+ * Hex color constants for use in SVG/Canvas contexts
+ * (where Tailwind classes cannot be applied)
+ *
+ * Per R13: No Magic Numbers/Strings
+ * Use these constants instead of literal hex values
+ */
+export const HEX_COLORS = {
+  success: "#10B981", // Green - emerald-500
+  error: "#EF4444", // Red - red-500
+  warning: "#F59E0B", // Amber - amber-500
+  info: "#3B82F6", // Blue - blue-500
+  muted: "#6B7280", // Gray - gray-500
+  dark: "#374151", // Dark Gray - gray-700
+} as const;
+
+export type HexColor = keyof typeof HEX_COLORS;

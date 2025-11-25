@@ -61,7 +61,7 @@ const nextConfig = {
         : false,
   },
 
-  // Webpack configuration to exclude server-only packages
+  // Webpack configuration to exclude server-only packages and resolve workspace packages
   webpack: (config, { isServer }) => {
     if (!isServer) {
       // Don't resolve these on client-side
@@ -73,6 +73,23 @@ const nextConfig = {
         os: false,
       };
     }
+
+    // Add resolve aliases for workspace packages to help webpack find them
+    // This ensures both source and dist files can be resolved
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "@third-eye/constants": path.resolve(__dirname, "../../packages/constants"),
+      "@third-eye/types": path.resolve(__dirname, "../../packages/types"),
+      "@third-eye/config": path.resolve(__dirname, "../../packages/config"),
+      "@third-eye/db": path.resolve(__dirname, "../../packages/db"),
+      "@third-eye/core": path.resolve(__dirname, "../../packages/core"),
+      "@third-eye/providers": path.resolve(__dirname, "../../packages/providers"),
+      "@third-eye/eyes": path.resolve(__dirname, "../../packages/eyes"),
+      "@third-eye/mcp": path.resolve(__dirname, "../../packages/mcp"),
+      "@third-eye/theme": path.resolve(__dirname, "../../packages/theme"),
+      "@third-eye/utils": path.resolve(__dirname, "../../packages/utils"),
+    };
+
     return config;
   },
 

@@ -7,7 +7,7 @@
  * Professional implementation with SSOT constants, strict typing, and no hardcoded values.
  */
 
-import { Suspense, useEffect, useState, useRef } from "react";
+import { Suspense, useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -379,7 +379,7 @@ function MonitorContent() {
     }
   }, [entries, autoScroll]);
 
-  const fetchClarifications = async () => {
+  const fetchClarifications = useCallback(async () => {
     if (!sessionId) return;
     try {
       const res = await fetch(
@@ -421,9 +421,9 @@ function MonitorContent() {
     } catch (err) {
       console.error("Failed to fetch clarifications:", err);
     }
-  };
+  }, [sessionId]);
 
-  const fetchIntentConfirmations = async () => {
+  const fetchIntentConfirmations = useCallback(async () => {
     if (!sessionId) return;
     try {
       const res = await fetch(
@@ -455,9 +455,9 @@ function MonitorContent() {
     } catch (err) {
       console.error("Failed to fetch intent confirmations:", err);
     }
-  };
+  }, [sessionId]);
 
-  const fetchRoutingDecision = async () => {
+  const fetchRoutingDecision = useCallback(async () => {
     if (!sessionId) return;
     try {
       const res = await fetch(
@@ -474,7 +474,7 @@ function MonitorContent() {
     } catch (err) {
       console.error("Failed to fetch routing decision:", err);
     }
-  };
+  }, [sessionId]);
 
   useEffect(() => {
     const mangekyoEvent = entries.find((e) => e.speaker === "mangekyo");
@@ -493,8 +493,7 @@ function MonitorContent() {
     fetchClarifications();
     fetchIntentConfirmations();
     fetchRoutingDecision();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId]);
+  }, [sessionId, fetchClarifications, fetchIntentConfirmations, fetchRoutingDecision]);
 
   if (!sessionId) {
     return (

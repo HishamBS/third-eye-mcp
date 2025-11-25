@@ -9,6 +9,12 @@ import {
   requestIdMiddleware,
   errorHandler,
 } from "../middleware/response";
+import {
+  ApiErrorCode,
+  ApiErrorTitle,
+  ApiErrorMessage,
+  formatPolicyNotFound,
+} from "@third-eye/constants";
 
 /**
  * Routing Policies Routes - Phase 3
@@ -26,8 +32,8 @@ app.use("*", errorHandler());
 // Get all policies
 app.get("/", async (c) => {
   try {
-    const { db } = getDb();
-    const policyManager = new PolicyManager(db);
+    const { db, sqlite } = getDb();
+    const policyManager = new PolicyManager(sqlite);
 
     const isActiveParam = c.req.query("active");
     const filters =
@@ -39,8 +45,8 @@ app.get("/", async (c) => {
 
     return createSuccessResponse(c, { policies });
   } catch (error) {
-    console.error("Failed to fetch policies:", error);
-    return createInternalErrorResponse(c, "Failed to fetch policies");
+    console.error(ApiErrorMessage.POLICY_FETCH_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.POLICY_FETCH_FAILED);
   }
 });
 
@@ -48,19 +54,19 @@ app.get("/", async (c) => {
 app.get("/:id", async (c) => {
   try {
     const policyId = c.req.param("id");
-    const { db } = getDb();
-    const policyManager = new PolicyManager(db);
+    const { db, sqlite } = getDb();
+    const policyManager = new PolicyManager(sqlite);
 
     const policy = policyManager.getPolicy(policyId);
 
     if (!policy) {
-      return createNotFoundResponse(c, `Policy '${policyId}' not found`);
+      return createNotFoundResponse(c, formatPolicyNotFound(policyId));
     }
 
     return createSuccessResponse(c, { policy });
   } catch (error) {
-    console.error("Failed to fetch policy:", error);
-    return createInternalErrorResponse(c, "Failed to fetch policy");
+    console.error(ApiErrorMessage.POLICY_SINGLE_FETCH_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.POLICY_SINGLE_FETCH_FAILED);
   }
 });
 
@@ -68,8 +74,8 @@ app.get("/:id", async (c) => {
 app.post("/", async (c) => {
   try {
     const body = await c.req.json();
-    const { db } = getDb();
-    const policyManager = new PolicyManager(db);
+    const { db, sqlite } = getDb();
+    const policyManager = new PolicyManager(sqlite);
 
     // Validate required fields
     if (
@@ -77,11 +83,12 @@ app.post("/", async (c) => {
       !body.mandatoryEyes ||
       !Array.isArray(body.mandatoryEyes)
     ) {
-      return createErrorResponse(
-        c,
-        "name and mandatoryEyes (array) are required",
-        400,
-      );
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        status: 400,
+        detail: ApiErrorMessage.POLICY_REQUIRED_FIELDS,
+        code: ApiErrorCode.INVALID_REQUEST,
+      });
     }
 
     const policy = await policyManager.createPolicy({
@@ -99,20 +106,29 @@ app.post("/", async (c) => {
     try {
       const { wsManager } = await import("../websocket");
       wsManager.broadcastToAll({
-        type: "policy_created",
-        policy,
+        type: "pipeline_event",
+        timestamp: Date.now(),
+        data: {
+          eventType: "policy_created",
+          policy,
+        },
       });
     } catch (e) {
       console.debug("WebSocket broadcast skipped:", e);
     }
 
-    return createSuccessResponse(c, { policy }, 201);
+    return createSuccessResponse(c, { policy }, { status: 201 });
   } catch (error) {
-    console.error("Failed to create policy:", error);
+    console.error(ApiErrorMessage.POLICY_CREATE_FAILED_DETAIL, error);
     if (error instanceof Error) {
-      return createErrorResponse(c, error.message, 400);
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.POLICY_CREATE_ERROR,
+        status: 400,
+        detail: error.message,
+        code: ApiErrorCode.POLICY_CREATE_FAILED,
+      });
     }
-    return createInternalErrorResponse(c, "Failed to create policy");
+    return createInternalErrorResponse(c, ApiErrorMessage.POLICY_CREATE_FAILED_DETAIL);
   }
 });
 
@@ -121,8 +137,8 @@ app.put("/:id", async (c) => {
   try {
     const policyId = c.req.param("id");
     const body = await c.req.json();
-    const { db } = getDb();
-    const policyManager = new PolicyManager(db);
+    const { db, sqlite } = getDb();
+    const policyManager = new PolicyManager(sqlite);
 
     const policy = await policyManager.updatePolicy(policyId, {
       name: body.name,
@@ -140,8 +156,12 @@ app.put("/:id", async (c) => {
     try {
       const { wsManager } = await import("../websocket");
       wsManager.broadcastToAll({
-        type: "policy_updated",
-        policy,
+        type: "pipeline_event",
+        timestamp: Date.now(),
+        data: {
+          eventType: "policy_updated",
+          policy,
+        },
       });
     } catch (e) {
       console.debug("WebSocket broadcast skipped:", e);
@@ -149,14 +169,19 @@ app.put("/:id", async (c) => {
 
     return createSuccessResponse(c, { policy });
   } catch (error) {
-    console.error("Failed to update policy:", error);
+    console.error(ApiErrorMessage.POLICY_UPDATE_FAILED_DETAIL, error);
     if (error instanceof Error) {
       if (error.message.includes("not found")) {
         return createNotFoundResponse(c, error.message);
       }
-      return createErrorResponse(c, error.message, 400);
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.POLICY_UPDATE_ERROR,
+        status: 400,
+        detail: error.message,
+        code: ApiErrorCode.POLICY_UPDATE_FAILED,
+      });
     }
-    return createInternalErrorResponse(c, "Failed to update policy");
+    return createInternalErrorResponse(c, ApiErrorMessage.POLICY_UPDATE_FAILED_DETAIL);
   }
 });
 
@@ -164,13 +189,13 @@ app.put("/:id", async (c) => {
 app.delete("/:id", async (c) => {
   try {
     const policyId = c.req.param("id");
-    const { db } = getDb();
-    const policyManager = new PolicyManager(db);
+    const { db, sqlite } = getDb();
+    const policyManager = new PolicyManager(sqlite);
 
     const deleted = policyManager.deletePolicy(policyId);
 
     if (!deleted) {
-      return createNotFoundResponse(c, `Policy '${policyId}' not found`);
+      return createNotFoundResponse(c, formatPolicyNotFound(policyId));
     }
 
     // Broadcast policy deletion via WebSocket
@@ -184,10 +209,10 @@ app.delete("/:id", async (c) => {
       console.debug("WebSocket broadcast skipped:", e);
     }
 
-    return createSuccessResponse(c, { message: "Policy deleted successfully" });
+    return createSuccessResponse(c, { message: ApiErrorMessage.POLICY_DELETED });
   } catch (error) {
-    console.error("Failed to delete policy:", error);
-    return createInternalErrorResponse(c, "Failed to delete policy");
+    console.error(ApiErrorMessage.POLICY_DELETE_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.POLICY_DELETE_FAILED);
   }
 });
 
@@ -196,24 +221,29 @@ app.post("/:id/test", async (c) => {
   try {
     const policyId = c.req.param("id");
     const body = await c.req.json();
-    const { db } = getDb();
-    const policyManager = new PolicyManager(db);
+    const { db, sqlite } = getDb();
+    const policyManager = new PolicyManager(sqlite);
 
     if (!body.eyeSequence || !Array.isArray(body.eyeSequence)) {
-      return createErrorResponse(c, "eyeSequence (array) is required", 400);
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        status: 400,
+        detail: ApiErrorMessage.EYE_SEQUENCE_REQUIRED,
+        code: ApiErrorCode.INVALID_REQUEST,
+      });
     }
 
     const policy = policyManager.getPolicy(policyId);
     if (!policy) {
-      return createNotFoundResponse(c, `Policy '${policyId}' not found`);
+      return createNotFoundResponse(c, formatPolicyNotFound(policyId));
     }
 
     const result = policyManager.testPolicy(policy, body.eyeSequence);
 
     return createSuccessResponse(c, { result });
   } catch (error) {
-    console.error("Failed to test policy:", error);
-    return createInternalErrorResponse(c, "Failed to test policy");
+    console.error(ApiErrorMessage.POLICY_TEST_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.POLICY_TEST_FAILED);
   }
 });
 
@@ -221,13 +251,13 @@ app.post("/:id/test", async (c) => {
 app.post("/:id/activate", async (c) => {
   try {
     const policyId = c.req.param("id");
-    const { db } = getDb();
-    const policyManager = new PolicyManager(db);
+    const { db, sqlite } = getDb();
+    const policyManager = new PolicyManager(sqlite);
 
     const activated = await policyManager.activatePolicy(policyId);
 
     if (!activated) {
-      return createNotFoundResponse(c, `Policy '${policyId}' not found`);
+      return createNotFoundResponse(c, formatPolicyNotFound(policyId));
     }
 
     // Broadcast policy activation via WebSocket
@@ -242,11 +272,11 @@ app.post("/:id/activate", async (c) => {
     }
 
     return createSuccessResponse(c, {
-      message: "Policy activated successfully",
+      message: ApiErrorMessage.POLICY_ACTIVATED,
     });
   } catch (error) {
-    console.error("Failed to activate policy:", error);
-    return createInternalErrorResponse(c, "Failed to activate policy");
+    console.error(ApiErrorMessage.POLICY_ACTIVATE_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.POLICY_ACTIVATE_FAILED);
   }
 });
 
@@ -254,13 +284,13 @@ app.post("/:id/activate", async (c) => {
 app.post("/:id/deactivate", async (c) => {
   try {
     const policyId = c.req.param("id");
-    const { db } = getDb();
-    const policyManager = new PolicyManager(db);
+    const { db, sqlite } = getDb();
+    const policyManager = new PolicyManager(sqlite);
 
     const deactivated = await policyManager.deactivatePolicy(policyId);
 
     if (!deactivated) {
-      return createNotFoundResponse(c, `Policy '${policyId}' not found`);
+      return createNotFoundResponse(c, formatPolicyNotFound(policyId));
     }
 
     // Broadcast policy deactivation via WebSocket
@@ -275,11 +305,11 @@ app.post("/:id/deactivate", async (c) => {
     }
 
     return createSuccessResponse(c, {
-      message: "Policy deactivated successfully",
+      message: ApiErrorMessage.POLICY_DEACTIVATED,
     });
   } catch (error) {
-    console.error("Failed to deactivate policy:", error);
-    return createInternalErrorResponse(c, "Failed to deactivate policy");
+    console.error(ApiErrorMessage.POLICY_DEACTIVATE_FAILED, error);
+    return createInternalErrorResponse(c, ApiErrorMessage.POLICY_DEACTIVATE_FAILED);
   }
 });
 

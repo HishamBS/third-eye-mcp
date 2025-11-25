@@ -1,5 +1,13 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Hono } from "hono";
+import type {
+  McpToolsResponse,
+  McpQuickstartResponse,
+  McpSchemasResponse,
+  McpExamplesResponse,
+  McpHealthResponse,
+  ErrorResponse,
+} from "../../types/api-responses";
 
 describe("MCP Endpoints Integration Tests", () => {
   let app: Hono;
@@ -16,7 +24,7 @@ describe("MCP Endpoints Integration Tests", () => {
       const res = await app.request("/mcp/tools");
       expect(res.status).toBe(200);
 
-      const data = await res.json();
+      const data = (await res.json()) as McpToolsResponse;
       expect(data).toHaveProperty("tools");
       expect(Array.isArray(data.tools)).toBe(true);
       expect(data.tools.length).toBeGreaterThan(0);
@@ -24,7 +32,7 @@ describe("MCP Endpoints Integration Tests", () => {
 
     it("should include required Eye metadata", async () => {
       const res = await app.request("/mcp/tools");
-      const data = await res.json();
+      const data = (await res.json()) as McpToolsResponse;
 
       const firstEye = data.tools[0];
       expect(firstEye).toHaveProperty("name");
@@ -36,11 +44,9 @@ describe("MCP Endpoints Integration Tests", () => {
 
     it("should include all 8 core Eyes", async () => {
       const res = await app.request("/mcp/tools");
-      const data = await res.json();
+      const data = (await res.json()) as McpToolsResponse;
 
-      const eyeNames = (data.tools as Array<{ name: string }>).map(
-        (t) => t.name,
-      );
+      const eyeNames = data.tools.map((t) => t.name);
       expect(eyeNames).toContain("sharingan");
       expect(eyeNames).toContain("kyuubi");
       expect(eyeNames).toContain("jogan");
@@ -57,7 +63,7 @@ describe("MCP Endpoints Integration Tests", () => {
       const res = await app.request("/mcp/quickstart");
       expect(res.status).toBe(200);
 
-      const data = await res.json();
+      const data = (await res.json()) as McpQuickstartResponse;
       expect(data).toHaveProperty("quickstart");
       expect(data.quickstart).toHaveProperty("workflows");
       expect(data.quickstart).toHaveProperty("routing");
@@ -66,7 +72,7 @@ describe("MCP Endpoints Integration Tests", () => {
 
     it("should include workflow sequences", async () => {
       const res = await app.request("/mcp/quickstart");
-      const data = await res.json();
+      const data = (await res.json()) as McpQuickstartResponse;
 
       expect(data.quickstart.workflows).toHaveProperty("clarification");
       expect(data.quickstart.workflows).toHaveProperty("planning");
@@ -76,7 +82,7 @@ describe("MCP Endpoints Integration Tests", () => {
 
     it("should provide routing recommendations", async () => {
       const res = await app.request("/mcp/quickstart");
-      const data = await res.json();
+      const data = (await res.json()) as McpQuickstartResponse;
 
       expect(data.quickstart.routing).toHaveProperty("sharingan");
       expect(data.quickstart.routing).toHaveProperty("rinnegan");
@@ -89,7 +95,7 @@ describe("MCP Endpoints Integration Tests", () => {
       const res = await app.request("/mcp/schemas");
       expect(res.status).toBe(200);
 
-      const data = await res.json();
+      const data = (await res.json()) as McpSchemasResponse;
       expect(data).toHaveProperty("envelope");
       expect(data.envelope).toHaveProperty("type");
       expect(data.envelope.type).toBe("object");
@@ -97,7 +103,7 @@ describe("MCP Endpoints Integration Tests", () => {
 
     it("should include error codes reference", async () => {
       const res = await app.request("/mcp/schemas");
-      const data = await res.json();
+      const data = (await res.json()) as McpSchemasResponse;
 
       expect(data).toHaveProperty("errorCodes");
       expect(data.errorCodes).toHaveProperty("success");
@@ -108,7 +114,7 @@ describe("MCP Endpoints Integration Tests", () => {
 
     it("should define envelope required fields", async () => {
       const res = await app.request("/mcp/schemas");
-      const data = await res.json();
+      const data = (await res.json()) as McpSchemasResponse;
 
       expect(data.envelope).toHaveProperty("required");
       expect(data.envelope.required).toContain("eye");
@@ -123,7 +129,7 @@ describe("MCP Endpoints Integration Tests", () => {
       const res = await app.request("/mcp/examples/sharingan");
       expect(res.status).toBe(200);
 
-      const data = await res.json();
+      const data = (await res.json()) as McpExamplesResponse;
       expect(data).toHaveProperty("eye", "sharingan");
       expect(data).toHaveProperty("examples");
       expect(Array.isArray(data.examples)).toBe(true);
@@ -131,7 +137,7 @@ describe("MCP Endpoints Integration Tests", () => {
 
     it("should include input and output in examples", async () => {
       const res = await app.request("/mcp/examples/sharingan");
-      const data = await res.json();
+      const data = (await res.json()) as McpExamplesResponse;
 
       const firstExample = data.examples[0];
       expect(firstExample).toHaveProperty("input");
@@ -144,7 +150,7 @@ describe("MCP Endpoints Integration Tests", () => {
       const res = await app.request("/mcp/examples/nonexistent");
       expect(res.status).toBe(404);
 
-      const data = await res.json();
+      const data = (await res.json()) as ErrorResponse;
       expect(data).toHaveProperty("error");
     });
 
@@ -155,7 +161,7 @@ describe("MCP Endpoints Integration Tests", () => {
         const res = await app.request(`/mcp/examples/${eye}`);
         expect(res.status).toBe(200);
 
-        const data = await res.json();
+        const data = (await res.json()) as McpExamplesResponse;
         expect(data.eye).toBe(eye);
         expect(data.examples.length).toBeGreaterThan(0);
       }
@@ -167,7 +173,7 @@ describe("MCP Endpoints Integration Tests", () => {
       const res = await app.request("/mcp/health");
       expect(res.status).toBe(200);
 
-      const data = await res.json();
+      const data = (await res.json()) as McpHealthResponse;
       expect(data).toHaveProperty("ok");
       expect(data.ok).toBe(true);
       expect(data).toHaveProperty("service", "third-eye-mcp");
@@ -175,7 +181,7 @@ describe("MCP Endpoints Integration Tests", () => {
 
     it("should include timestamp", async () => {
       const res = await app.request("/mcp/health");
-      const data = await res.json();
+      const data = (await res.json()) as McpHealthResponse;
 
       expect(data).toHaveProperty("timestamp");
       const timestamp = new Date(data.timestamp);

@@ -14,7 +14,7 @@
 import { useState, useCallback } from "react";
 import { useRoutingDecisions } from "@/hooks/useRoutingDecisions";
 import type { RoutingDecision } from "@/hooks/useRoutingDecisions";
-import { EYE_CAPABILITIES } from "@third-eye/config/eye-capabilities";
+import { EyeIcon } from "@/components/EyeIcon";
 
 interface LiveRoutingPanelProps {
   maxSessions?: number; // Default 10
@@ -86,16 +86,11 @@ function SessionCard({
       {/* Selected eyes (icons only) */}
       <div className="flex items-center gap-1">
         {decision.selectedEyes.map((eyeName, idx) => {
-          const normalizedName = eyeName.toLowerCase();
-          const eyeInfo =
-            EYE_CAPABILITIES[normalizedName as keyof typeof EYE_CAPABILITIES];
-          const icon = eyeInfo?.icon || "👁️";
-
           return (
             <div key={`${eyeName}-${idx}`} className="flex items-center">
-              <span className="text-lg" title={eyeName}>
-                {icon}
-              </span>
+              <div title={eyeName}>
+                <EyeIcon eye={eyeName} size={24} />
+              </div>
               {idx < decision.selectedEyes.length - 1 && (
                 <span className="text-gray-400 text-xs mx-0.5">→</span>
               )}

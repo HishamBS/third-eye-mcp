@@ -439,7 +439,12 @@ export default function PersonasPage() {
                       }}
                       className="rounded-lg border border-brand-outline bg-brand-paperElev px-3 py-1.5 text-sm font-medium text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
                     >
-                      {personaVersions.map((p) => (
+                      {/* Deduplicate versions to prevent multiple "v2 (active)" entries */}
+                      {Array.from(
+                        new Map(
+                          personaVersions.map((p) => [p.version, p])
+                        ).values()
+                      ).map((p) => (
                         <option key={p.id} value={p.version}>
                           v{p.version} {p.active ? "(active)" : ""}
                         </option>

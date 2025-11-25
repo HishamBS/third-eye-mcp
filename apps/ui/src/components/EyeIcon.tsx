@@ -140,6 +140,7 @@ export function EyeIcon({
  * Uses SHARED_EYE_COLORS from theme system (no hardcoded colors!)
  */
 export function getEyeColor(eye: string): string {
+  if (!eye) return METRIC_COLORS.info; // Guard clause for control nodes (Switch, IF, Loop, Terminal)
   const eyeLower = eye.toLowerCase() as keyof typeof SHARED_EYE_COLORS;
   return SHARED_EYE_COLORS[eyeLower] || METRIC_COLORS.info; // Fallback to SSOT info color if eye not found
 }

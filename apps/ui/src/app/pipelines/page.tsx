@@ -18,11 +18,16 @@ import { CapabilityMatrix } from "@/components/pipeline-builder/CapabilityMatrix
 import { DynamicRouteVisualizer } from "@/components/pipeline-builder/DynamicRouteVisualizer";
 import { LiveRoutingPanel } from "@/components/pipeline-builder/LiveRoutingPanel";
 import { PipelineCanvasEnhanced } from "@/components/pipeline-builder/PipelineCanvasEnhanced";
+import { SessionSelector } from "@/components/pipeline-builder/SessionSelector";
+import { RuntimeRouteHighlighter } from "@/components/pipeline-builder/RuntimeRouteHighlighter";
+import { RoutingDecisionMetadata } from "@/components/pipeline-builder/RoutingDecisionMetadata";
 import type { RoutingModeName } from "@third-eye/config/eye-capabilities";
+import type { RoutingDecision } from "@/types/routing";
 
 export default function PipelinesPage() {
   const [mode, setMode] = useState<RoutingModeName>("fully_dynamic");
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
+  const [routingDecision, setRoutingDecision] = useState<RoutingDecision | null>(null);
 
   const handleModeChange = useCallback((newMode: RoutingModeName) => {
     setMode(newMode);
@@ -35,6 +40,17 @@ export default function PipelinesPage() {
 
   const handleCloseVisualizer = useCallback(() => {
     setSelectedSession(null);
+  }, []);
+
+  const handleSessionSelect = useCallback((sessionId: string | null) => {
+    setSelectedSession(sessionId);
+    if (!sessionId) {
+      setRoutingDecision(null);
+    }
+  }, []);
+
+  const handleRoutingDecisionLoaded = useCallback((decision: RoutingDecision) => {
+    setRoutingDecision(decision);
   }, []);
 
   return (
@@ -73,14 +89,12 @@ export default function PipelinesPage() {
                   onClose={handleCloseVisualizer}
                 />
               )}
-              {/* TODO Phase 4B: Add PolicyBuilderInline component here */}
               <div className="p-6 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
                 <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">
                   Policy Builder
                 </h3>
                 <p className="text-sm text-purple-800 dark:text-purple-200">
-                  Policy builder coming in Phase 4B. You can create policies
-                  from the{" "}
+                  Configure routing policies on the{" "}
                   <a
                     href="/routing-modes"
                     className="underline hover:text-purple-600"
@@ -95,8 +109,41 @@ export default function PipelinesPage() {
 
           {mode === "fixed" && (
             <ReactFlowProvider>
-              <div className="h-full">
-                <PipelineCanvasEnhanced />
+              <div className="h-full flex flex-col gap-4">
+                {/* Session Selector */}
+                <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Select Session:
+                    </h3>
+                    <SessionSelector
+                      selectedSessionId={selectedSession}
+                      onSessionSelect={handleSessionSelect}
+                    />
+                  </div>
+                  {selectedSession && (
+                    <button
+                      onClick={() => handleSessionSelect(null)}
+                      className="px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                    >
+                      Clear Selection
+                    </button>
+                  )}
+                </div>
+
+                {/* Routing Decision Metadata (only when session selected) */}
+                {selectedSession && routingDecision && (
+                  <RoutingDecisionMetadata decision={routingDecision} />
+                )}
+
+                {/* Pipeline Canvas with Runtime Highlighting */}
+                <div className="flex-1 min-h-0">
+                  <PipelineCanvasEnhanced />
+                  <RuntimeRouteHighlighter
+                    sessionId={selectedSession}
+                    onRoutingDecisionLoaded={handleRoutingDecisionLoaded}
+                  />
+                </div>
               </div>
             </ReactFlowProvider>
           )}

@@ -46,7 +46,8 @@ app.get("/session/:sessionId", async (c) => {
       );
     }
 
-    const tracker = new ConversationTracker(getDb());
+    const { sqlite } = getDb();
+    const tracker = new ConversationTracker(sqlite);
     const events = tracker.getConversationTimeline(sessionId);
 
     return c.json({
@@ -81,7 +82,8 @@ app.get("/recent", zValidator("query", RecentEventsQuerySchema), async (c) => {
   try {
     const { limit } = c.req.valid("query");
 
-    const tracker = new ConversationTracker(getDb());
+    const { sqlite } = getDb();
+    const tracker = new ConversationTracker(sqlite);
     const events = tracker.getRecentEvents(limit);
 
     return c.json({
@@ -157,7 +159,8 @@ app.get("/session/:sessionId/type/:eventType", async (c) => {
       );
     }
 
-    const tracker = new ConversationTracker(getDb());
+    const { sqlite } = getDb();
+    const tracker = new ConversationTracker(sqlite);
     const events = tracker.getEventsByType(sessionId, eventType as any);
 
     return c.json({

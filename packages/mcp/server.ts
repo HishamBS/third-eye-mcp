@@ -198,25 +198,6 @@ const OVERSEER_TOOL: Tool = {
     },
     required: ["task"],
   },
-  examples: [
-    {
-      input: {
-        task: "Refactor the payment service controller for clarity and add missing edge-case tests.",
-      },
-      description:
-        "Code refinement task that requires full guidance + validation pipeline.",
-    },
-    {
-      input: {
-        task: "Validate this incident report for contradictions and missing follow-up actions.",
-        context: {
-          reportUrl: "https://intranet.example.com/incidents/2025-04-17",
-        },
-      },
-      description:
-        "Text/ops validation task that triggers evidence + consistency checks.",
-    },
-  ],
 };
 
 /**
@@ -534,8 +515,8 @@ export function createMCPServer(): Server {
               "@third-eye/core"
             );
             const { getDb } = await import("@third-eye/db");
-            const { db } = getDb();
-            const confirmationManager = new IntentConfirmationManager(db);
+            const { sqlite } = getDb();
+            const confirmationManager = new IntentConfirmationManager(sqlite);
 
             const confirmation = await confirmationManager.createConfirmation({
               sessionId: result.sessionId,

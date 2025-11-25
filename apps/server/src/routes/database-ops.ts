@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
 import { getDb } from "@third-eye/db";
 import {
   createSuccessResponse,
@@ -21,7 +22,8 @@ app.post("/backup", async (c) => {
 
     if (!fs.existsSync(dbPath)) {
       return createErrorResponse(c, {
-        title: "Database Not Found",
+        title: ApiErrorTitle.DATABASE_NOT_FOUND,
+        code: ApiErrorCode.DATABASE_NOT_FOUND,
         status: 404,
         detail: "Database file does not exist",
       });
@@ -48,7 +50,8 @@ app.post("/restore", async (c) => {
 
     if (!file || typeof file === "string") {
       return createErrorResponse(c, {
-        title: "Invalid File",
+        title: ApiErrorTitle.INVALID_FILE,
+        code: ApiErrorCode.INVALID_FILE,
         status: 400,
         detail: "No database file provided",
       });

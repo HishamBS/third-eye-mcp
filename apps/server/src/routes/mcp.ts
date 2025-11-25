@@ -1,7 +1,7 @@
 import { Hono } from "hono";
+import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
 import { EyeOrchestrator } from "@third-eye/core";
 import { schemas, rateLimit } from "../middleware/validation";
-import { validateBodyWithEnvelope } from "../middleware/response";
 import { TOOL_NAME } from "@third-eye/types";
 import {
   createSuccessResponse,
@@ -11,6 +11,7 @@ import {
   requestIdMiddleware,
   errorHandler,
 } from "../middleware/response";
+import { z } from "zod";
 
 /**
  * MCP Orchestration Routes
@@ -77,14 +78,16 @@ app.use("*", rateLimit());
 
 // Run an Eye with input and session context
 // GOLDEN RULE #1: ONLY task-based auto-routing allowed - NO direct Eye execution
-app.post("/run", validateBodyWithEnvelope(schemas.mcpRun), async (c) => {
+app.post("/run", async (c) => {
   try {
+    const body = await c.req.json();
+    const validated = schemas.mcpRun.parse(body);
     const {
       task,
       sessionId: providedSessionId,
       context,
       strictness,
-    } = c.get("validatedBody");
+    } = validated;
 
     const contextConfig = isPlainObject(context) ? context : undefined;
     const strictnessConfig = isPlainObject(strictness) ? strictness : undefined;
@@ -171,10 +174,11 @@ app.post("/run", validateBodyWithEnvelope(schemas.mcpRun), async (c) => {
     if (!result.completed) {
       console.error(`❌ Pipeline incomplete: ${result.error}`);
       return createErrorResponse(c, {
-        title: "Pipeline Execution Failed",
+        title: ApiErrorTitle.PIPELINE_EXECUTION_ERROR,
+        code: ApiErrorCode.PIPELINE_EXECUTION_FAILED,
         status: 500,
         detail: result.error || "Pipeline did not complete",
-        code: "E_PIPELINE_INCOMPLETE",
+        code: ApiErrorCode.PIPELINE_EXECUTION_FAILED,
       });
     }
 
@@ -188,6 +192,15 @@ app.post("/run", validateBodyWithEnvelope(schemas.mcpRun), async (c) => {
       totalSteps: result.results.length,
     });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        code: ApiErrorCode.VALIDATION_ERROR,
+        status: 400,
+        detail: error.issues.map((i) => i.message).join("; "),
+        code: ApiErrorCode.INVALID_REQUEST,
+      });
+    }
     console.error("MCP run failed:", error);
     return createInternalErrorResponse(
       c,
@@ -351,7 +364,7 @@ app.get("/examples/:eye", (c) => {
         input: "make it better",
         output: {
           eye: "sharingan",
-          code: "NEED_CLARIFICATION",
+          code: ApiErrorCode.VALIDATION_ERROR,
           verdict: "NEEDS_INPUT",
           summary: "Request is too vague",
           metadata: {
@@ -369,7 +382,7 @@ app.get("/examples/:eye", (c) => {
           "Implement a user authentication system with JWT tokens, bcrypt password hashing, and email verification",
         output: {
           eye: "sharingan",
-          code: "OK",
+          code: ApiErrorCode.VALIDATION_ERROR,
           verdict: "APPROVED",
           summary: "Request is clear and specific",
           metadata: { ambiguityScore: 15, clarifyingQuestions: [] },
@@ -386,7 +399,7 @@ app.get("/examples/:eye", (c) => {
         },
         output: {
           eye: "jogan",
-          code: "OK",
+          code: ApiErrorCode.VALIDATION_ERROR,
           verdict: "APPROVED",
           summary:
             "Intent confirmed: Build a user management REST API with create, read, update, delete operations",
@@ -402,7 +415,7 @@ app.get("/examples/:eye", (c) => {
         },
         output: {
           eye: "tenseigan",
-          code: "REJECT_NO_EVIDENCE",
+          code: ApiErrorCode.VALIDATION_ERROR,
           verdict: "REJECTED",
           summary: "Missing citations for claims",
           metadata: { totalClaims: 2, citedClaims: 1, citationRate: 50 },

@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
 import { getWorkflowGuidance } from "@third-eye/core/guidance";
 import {
   validateBodyWithEnvelope,
@@ -33,10 +34,11 @@ const delegateRequestSchema = z.object({
  * This is the "Smart MCP" meta-tool that makes Third Eye a must-use server.
  * It analyzes the current task and workflow state to recommend the optimal next Eye.
  */
-app.post("/", validateBodyWithEnvelope(guidanceRequestSchema), async (c) => {
+app.post("/", async (c) => {
   try {
-    const { task_description, current_state, last_eye_response, session_id } =
-      c.get("validatedBody");
+    const body = await c.req.json();
+    const validated = guidanceRequestSchema.parse(body);
+    const { task_description, current_state, last_eye_response, session_id } = validated;
 
     const guidance = getWorkflowGuidance({
       taskDescription: task_description,
@@ -54,6 +56,14 @@ app.post("/", validateBodyWithEnvelope(guidanceRequestSchema), async (c) => {
       },
     });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        code: ApiErrorCode.VALIDATION_ERROR,
+        status: 400,
+        detail: error.issues.map((i) => i.message).join("; "),
+      });
+    }
     return createInternalErrorResponse(
       c,
       `Failed to generate guidance: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -66,27 +76,33 @@ app.post("/", validateBodyWithEnvelope(guidanceRequestSchema), async (c) => {
  *
  * Given an Eye response, determines if automatic delegation to another Eye is recommended
  */
-app.post(
-  "/delegate",
-  validateBodyWithEnvelope(delegateRequestSchema),
-  async (c) => {
-    try {
-      const { eye_response } = c.get("validatedBody");
+app.post("/delegate", async (c) => {
+  try {
+    const body = await c.req.json();
+    const validated = delegateRequestSchema.parse(body);
+    const { eye_response } = validated;
 
-      const { shouldDelegate } = await import("@third-eye/core/guidance");
-      const delegation = shouldDelegate(eye_response);
+    const { shouldDelegate } = await import("@third-eye/core/guidance");
+    const delegation = shouldDelegate(eye_response);
 
-      return createSuccessResponse(c, {
-        ok: true,
-        ...delegation,
+    return createSuccessResponse(c, {
+      ok: true,
+      ...delegation,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        code: ApiErrorCode.VALIDATION_ERROR,
+        status: 400,
+        detail: error.issues.map((i) => i.message).join("; "),
       });
-    } catch (error) {
-      return createInternalErrorResponse(
-        c,
-        `Failed to check delegation: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
     }
-  },
-);
+    return createInternalErrorResponse(
+      c,
+      `Failed to check delegation: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
+});
 
 export default app;

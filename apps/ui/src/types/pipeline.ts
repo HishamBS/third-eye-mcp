@@ -236,18 +236,22 @@ export interface PipelineEdge extends Edge<EdgeConditionData> {
 /**
  * Complete Pipeline Definition
  * Per R07: All fields explicitly typed
+ *
+ * Note: Backend returns workflowJson containing {nodes, edges}
+ * This matches the database schema from apps/server/src/routes/pipelines.ts
  */
 export interface Pipeline {
   id: string;
   name: string;
-  description?: string;
-  nodes: PipelineNode[];
-  edges: PipelineEdge[];
-  isActive: boolean;
-  isSystem: boolean;
+  description: string;
+  workflowJson: {
+    nodes: PipelineNode[];
+    edges: PipelineEdge[];
+  };
+  category: string;
+  active: boolean;
   version: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string | Date;
 }
 
 /**

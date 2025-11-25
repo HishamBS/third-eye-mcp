@@ -12,7 +12,7 @@
 "use client";
 
 import { useRoutingDecisionBySession } from "@/hooks/useRoutingDecisions";
-import { EYE_CAPABILITIES } from "@third-eye/config/eye-capabilities";
+import { EyeIcon } from "@/components/EyeIcon";
 
 interface DynamicRouteVisualizerProps {
   sessionId: string;
@@ -169,11 +169,6 @@ export function DynamicRouteVisualizer({
         {/* Eye sequence visualization */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2">
           {selectedEyes.map((eyeName, idx) => {
-            const normalizedName = eyeName.toLowerCase();
-            const eyeInfo =
-              EYE_CAPABILITIES[normalizedName as keyof typeof EYE_CAPABILITIES];
-            const icon = eyeInfo?.icon || "👁️";
-
             return (
               <div
                 key={`${eyeName}-${idx}`}
@@ -181,7 +176,7 @@ export function DynamicRouteVisualizer({
               >
                 {/* Eye chip */}
                 <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-800 border-2 border-green-300 dark:border-green-700 rounded-lg shadow-sm">
-                  <span className="text-xl">{icon}</span>
+                  <EyeIcon eye={eyeName} size={28} />
                   <span className="font-medium text-sm whitespace-nowrap">
                     {eyeName}
                   </span>

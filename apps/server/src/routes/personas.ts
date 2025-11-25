@@ -9,7 +9,6 @@ import { eq, and, desc } from "drizzle-orm";
 import { getEyeIdByName, getEyeNameById } from "@third-eye/db/utils/lookups";
 import { generateId } from "@third-eye/db/utils/uuid";
 import {
-  validateBodyWithEnvelope,
   createSuccessResponse,
   createErrorResponse,
   createInternalErrorResponse,
@@ -17,6 +16,7 @@ import {
   errorHandler,
 } from "../middleware/response";
 import { z } from "zod";
+import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
 
 /**
  * Personas Management Routes
@@ -88,9 +88,10 @@ app.get("/blueprints/:eyeId", async (c) => {
 
     if (!blueprint) {
       return createErrorResponse(c, {
-        title: "Blueprint Not Found",
+        title: ApiErrorTitle.BLUEPRINT_NOT_FOUND,
         status: 404,
-        detail: "Blueprint not found",
+        detail: ApiErrorMessage.BLUEPRINT_NOT_FOUND_DETAIL,
+        code: ApiErrorCode.BLUEPRINT_NOT_FOUND,
       });
     }
 
@@ -139,7 +140,8 @@ app.put("/blueprints/:eyeId", async (c) => {
     const { db } = getDb();
     const now = new Date();
 
-    const updatedBlueprint = {
+    const newBlueprint = {
+      id: generateId(),
       eyeId,
       name: body.name,
       description: body.description,
@@ -154,12 +156,25 @@ app.put("/blueprints/:eyeId", async (c) => {
       updatedAt: now,
     };
 
+    const updateFields = {
+      name: body.name,
+      description: body.description,
+      version: body.version,
+      capabilities: JSON.stringify(body.capabilities),
+      mission: body.mission,
+      phases: JSON.stringify(body.phases),
+      envelopeContract: JSON.stringify(body.envelopeContract),
+      reminders: JSON.stringify(body.reminders || []),
+      notes: body.notes || null,
+      updatedAt: now,
+    };
+
     await db
       .insert(personaBlueprints)
-      .values(updatedBlueprint)
+      .values(newBlueprint)
       .onConflictDoUpdate({
         target: personaBlueprints.eyeId,
-        set: updatedBlueprint,
+        set: updateFields,
       });
 
     return createSuccessResponse(c, {
@@ -259,9 +274,10 @@ app.get("/:eye", async (c) => {
     const eyeId = await getEyeIdByName(eyeName);
     if (!eyeId) {
       return createErrorResponse(c, {
-        title: "Eye Not Found",
+        title: ApiErrorTitle.EYE_NOT_FOUND,
         status: 404,
-        detail: "The requested eye could not be found",
+        detail: ApiErrorMessage.EYE_NOT_FOUND_DETAIL,
+        code: ApiErrorCode.EYE_NOT_FOUND,
       });
     }
 
@@ -275,9 +291,10 @@ app.get("/:eye", async (c) => {
     if (eyePersonas.length === 0) {
       // All personas should exist in database (seeded on startup)
       return createErrorResponse(c, {
-        title: "Eye Not Found",
+        title: ApiErrorTitle.EYE_NOT_FOUND,
         status: 404,
-        detail: "The requested eye could not be found",
+        detail: ApiErrorMessage.EYE_NOT_FOUND_DETAIL,
+        code: ApiErrorCode.EYE_NOT_FOUND,
       });
     }
 
@@ -304,9 +321,10 @@ app.get("/:eye/active", async (c) => {
     const eyeId = await getEyeIdByName(eyeName);
     if (!eyeId) {
       return createErrorResponse(c, {
-        title: "Eye Not Found",
+        title: ApiErrorTitle.EYE_NOT_FOUND,
         status: 404,
-        detail: "The requested eye could not be found",
+        detail: ApiErrorMessage.EYE_NOT_FOUND_DETAIL,
+        code: ApiErrorCode.EYE_NOT_FOUND,
       });
     }
 
@@ -322,9 +340,10 @@ app.get("/:eye/active", async (c) => {
 
     // All personas should exist in database (seeded on startup)
     return createErrorResponse(c, {
-      title: "Persona Not Found",
+      title: ApiErrorTitle.PERSONA_NOT_FOUND,
       status: 404,
       detail: `No active persona for ${eyeName}`,
+      code: ApiErrorCode.PERSONA_NOT_FOUND,
     });
   } catch (error) {
     console.error("Failed to fetch active persona:", error);
@@ -333,9 +352,11 @@ app.get("/:eye/active", async (c) => {
 });
 
 // Create new persona version (staged, not active)
-app.post("/:eye", validateBodyWithEnvelope(createPersonaSchema), async (c) => {
+app.post("/:eye", async (c) => {
   try {
     const eyeName = c.req.param("eye");
+    const body = await c.req.json();
+    const validated = createPersonaSchema.parse(body);
     const {
       name,
       metadataJson,
@@ -346,7 +367,7 @@ app.post("/:eye", validateBodyWithEnvelope(createPersonaSchema), async (c) => {
       remindersJson,
       notes,
       llmConfigJson,
-    } = c.get("validatedBody");
+    } = validated;
 
     const { db } = getDb();
 
@@ -354,9 +375,10 @@ app.post("/:eye", validateBodyWithEnvelope(createPersonaSchema), async (c) => {
     const eyeId = await getEyeIdByName(eyeName);
     if (!eyeId) {
       return createErrorResponse(c, {
-        title: "Eye Not Found",
+        title: ApiErrorTitle.EYE_NOT_FOUND,
         status: 404,
-        detail: "The requested eye could not be found",
+        detail: ApiErrorMessage.EYE_NOT_FOUND_DETAIL,
+        code: ApiErrorCode.EYE_NOT_FOUND,
       });
     }
 
@@ -405,6 +427,14 @@ app.post("/:eye", validateBodyWithEnvelope(createPersonaSchema), async (c) => {
       persona: inserted,
     });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        status: 400,
+        detail: error.issues.map((i) => i.message).join("; "),
+        code: ApiErrorCode.INVALID_REQUEST,
+      });
+    }
     console.error("Failed to create persona:", error);
     return createInternalErrorResponse(c, "Failed to create persona");
   }
@@ -422,9 +452,10 @@ app.patch("/:eye/activate/:version", async (c) => {
     const eyeId = await getEyeIdByName(eyeName);
     if (!eyeId) {
       return createErrorResponse(c, {
-        title: "Eye Not Found",
+        title: ApiErrorTitle.EYE_NOT_FOUND,
         status: 404,
-        detail: "The requested eye could not be found",
+        detail: ApiErrorMessage.EYE_NOT_FOUND_DETAIL,
+        code: ApiErrorCode.EYE_NOT_FOUND,
       });
     }
 
@@ -437,9 +468,10 @@ app.patch("/:eye/activate/:version", async (c) => {
 
     if (!targetPersona) {
       return createErrorResponse(c, {
-        title: "Persona Version Not Found",
+        title: ApiErrorTitle.PERSONA_VERSION_NOT_FOUND,
         status: 404,
         detail: "The requested persona version could not be found",
+        code: ApiErrorCode.PERSONA_VERSION_NOT_FOUND,
       });
     }
 
@@ -468,10 +500,13 @@ app.patch("/:eye/activate/:version", async (c) => {
       const { wsManager } = await import("../websocket");
       wsManager.broadcast({
         type: "persona_activated",
-        eye: eyeName, // Send eye name for frontend
-        eyeId, // Include UUID
-        version,
-        persona: activated,
+        timestamp: Date.now(),
+        data: {
+          eye: eyeName, // Send eye name for frontend
+          eyeId, // Include UUID
+          version,
+          persona: activated,
+        },
       });
     } catch (e) {
       console.debug("WebSocket broadcast skipped:", e);
@@ -500,9 +535,10 @@ app.delete("/:eye/:version", async (c) => {
     const eyeId = await getEyeIdByName(eyeName);
     if (!eyeId) {
       return createErrorResponse(c, {
-        title: "Eye Not Found",
+        title: ApiErrorTitle.EYE_NOT_FOUND,
         status: 404,
-        detail: "The requested eye could not be found",
+        detail: ApiErrorMessage.EYE_NOT_FOUND_DETAIL,
+        code: ApiErrorCode.EYE_NOT_FOUND,
       });
     }
 
@@ -514,17 +550,19 @@ app.delete("/:eye/:version", async (c) => {
 
     if (!targetPersona) {
       return createErrorResponse(c, {
-        title: "Persona Version Not Found",
+        title: ApiErrorTitle.PERSONA_VERSION_NOT_FOUND,
         status: 404,
         detail: "The requested persona version could not be found",
+        code: ApiErrorCode.PERSONA_VERSION_NOT_FOUND,
       });
     }
 
     if (targetPersona.active) {
       return createErrorResponse(c, {
-        title: "Cannot Delete Active Version",
+        title: ApiErrorTitle.CANNOT_DELETE_ACTIVE_VERSION,
         status: 400,
-        detail: "Cannot delete the currently active persona version",
+        detail: ApiErrorMessage.CANNOT_DELETE_ACTIVE_VERSION_DETAIL,
+        code: ApiErrorCode.CANNOT_DELETE_ACTIVE_VERSION,
       });
     }
 
@@ -580,9 +618,10 @@ app.post("/:id/versions", async (c) => {
 
     if (!persona) {
       return createErrorResponse(c, {
-        title: "Persona Not Found",
+        title: ApiErrorTitle.PERSONA_NOT_FOUND,
         status: 404,
-        detail: "The requested persona could not be found",
+        detail: ApiErrorMessage.PERSONA_NOT_FOUND_DETAIL,
+        code: ApiErrorCode.PERSONA_NOT_FOUND,
       });
     }
 
@@ -597,16 +636,20 @@ app.post("/:id/versions", async (c) => {
 
     const nextVersion = versions.length > 0 ? versions[0].versionNumber + 1 : 1;
 
-    // Create new version snapshot
+    // Create new version snapshot from current persona structure
+    // Convert new persona structure to personaVersions format
     const newVersion = {
       id: nanoid(),
       personaId: persona.id,
       versionNumber: nextVersion,
-      systemPrompt: persona.systemPrompt,
+      systemPrompt: persona.mission, // Use mission as system prompt
       settings: {
-        tone: persona.tone,
-        strictness: persona.strictnessLevel,
-        voice: persona.voice,
+        metadata: persona.metadataJson,
+        guidance: persona.guidanceJson,
+        validation: persona.validationJson,
+        envelope: persona.envelopeJson,
+        reminders: persona.remindersJson,
+        llmConfig: persona.llmConfigJson,
       },
       createdAt: new Date(),
       createdBy: "user",
@@ -637,21 +680,24 @@ app.post("/:id/restore/:versionId", async (c) => {
 
     if (!version) {
       return createErrorResponse(c, {
-        title: "Version Not Found",
+        title: ApiErrorTitle.VERSION_NOT_FOUND,
         status: 404,
-        detail: "The requested version could not be found",
+        detail: ApiErrorMessage.VERSION_NOT_FOUND_DETAIL,
+        code: ApiErrorCode.VERSION_NOT_FOUND,
       });
     }
 
     if (version.personaId !== personaId) {
       return createErrorResponse(c, {
-        title: "Version Mismatch",
+        title: ApiErrorTitle.VERSION_MISMATCH,
         status: 400,
-        detail: "Version does not belong to this persona",
+        detail: ApiErrorMessage.VERSION_MISMATCH_DETAIL,
+        code: ApiErrorCode.VERSION_MISMATCH,
       });
     }
 
     // Update persona with version data
+    // Convert personaVersions format back to personas format
     const settings =
       typeof version.settings === "string"
         ? JSON.parse(version.settings)
@@ -660,10 +706,13 @@ app.post("/:id/restore/:versionId", async (c) => {
     await db
       .update(personas)
       .set({
-        systemPrompt: version.systemPrompt,
-        tone: settings.tone,
-        strictnessLevel: settings.strictness,
-        voice: settings.voice,
+        mission: version.systemPrompt,
+        metadataJson: settings.metadata,
+        guidanceJson: settings.guidance,
+        validationJson: settings.validation,
+        envelopeJson: settings.envelope,
+        remindersJson: settings.reminders,
+        llmConfigJson: settings.llmConfig,
       })
       .where(eq(personas.id, personaId))
       .run();
@@ -700,9 +749,10 @@ app.get("/:id/diff/:v1/:v2", async (c) => {
 
     if (!version1 || !version2) {
       return createErrorResponse(c, {
-        title: "Versions Not Found",
+        title: ApiErrorTitle.VERSIONS_NOT_FOUND,
         status: 404,
         detail: "One or both versions could not be found",
+        code: ApiErrorCode.VERSIONS_NOT_FOUND,
       });
     }
 

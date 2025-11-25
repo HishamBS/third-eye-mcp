@@ -1090,7 +1090,7 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
     name: "Overseer",
     description:
       "Navigator that asks strategic questions to determine optimal eye sequence.",
-    version: 2, // Phase 1-A5: Incremented version for persona overhaul
+    version: 1, // V1 release - first production version
     mission: PERSONA_CONTENT.overseer,
   },
   {
@@ -1098,7 +1098,7 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
     name: "Sharingan",
     description:
       "Ambiguity detector that guides agents to identify unclear requirements.",
-    version: 2, // Phase 1-A5: Incremented version
+    version: 1, // V1 release - first production version
     mission: PERSONA_CONTENT.sharingan,
   },
   {
@@ -1106,7 +1106,7 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
     name: "Kyuubi",
     description:
       "Structuring guide that asks questions to help agents think through content organization.",
-    version: 2, // Phase 1-A5: Incremented version
+    version: 1, // V1 release - first production version
     mission: PERSONA_CONTENT["kyuubi"],
   },
   {
@@ -1114,7 +1114,7 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
     name: "Jōgan",
     description:
       "Intent confirmer that guides agents to assess whether human confirmation is needed.",
-    version: 2, // Phase 1-A5: Incremented version
+    version: 1, // V1 release - first production version
     mission: PERSONA_CONTENT.jogan,
   },
   {
@@ -1122,7 +1122,7 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
     name: "Rinnegan",
     description:
       "Strategic planning guide that asks questions to help agents develop comprehensive plans.",
-    version: 2, // Phase 1-A5: Incremented version
+    version: 1, // V1 release - first production version
     mission: PERSONA_CONTENT.rinnegan,
   },
   {
@@ -1130,7 +1130,7 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
     name: "Mangekyō",
     description:
       "Code quality guide that asks questions about structure, safety, and testing.",
-    version: 2, // Phase 1-A5: Incremented version
+    version: 1, // V1 release - first production version
     mission: PERSONA_CONTENT.mangekyo,
   },
   {
@@ -1138,7 +1138,7 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
     name: "Tenseigan",
     description:
       "Evidence guide that helps agents think through citation and verification needs.",
-    version: 2, // Phase 1-A5: Incremented version
+    version: 1, // V1 release - first production version
     mission: PERSONA_CONTENT.tenseigan,
   },
   {
@@ -1146,7 +1146,7 @@ export const DEFAULT_PERSONAS: PersonaSeed[] = [
     name: "Byakugan",
     description:
       "Final validator ensuring clarity, completeness, correctness, and quality before human delivery.",
-    version: 2, // Phase 1-A5: Incremented version
+    version: 1, // V1 release - first production version
     mission: PERSONA_CONTENT.byakugan,
   },
 ];

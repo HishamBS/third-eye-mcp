@@ -11,8 +11,6 @@ export interface EyeCapability {
   readonly tags: readonly string[];
   readonly description: string;
   readonly scenarios: readonly string[];
-  readonly icon: string;
-  readonly color: string;
 }
 
 /**
@@ -28,8 +26,6 @@ export const EYE_CAPABILITIES = {
       "Capability matching",
       "Dynamic routing decisions",
     ],
-    icon: "🧿",
-    color: "purple",
   },
   sharingan: {
     tags: [
@@ -45,8 +41,6 @@ export const EYE_CAPABILITIES = {
       "Unclear requirements",
       "Scope disambiguation",
     ],
-    icon: "🔍",
-    color: "red",
   },
   kyuubi: {
     tags: ["structuring", "guidance", "framework", "content-planning"],
@@ -57,8 +51,6 @@ export const EYE_CAPABILITIES = {
       "Planning templates",
       "Framework design",
     ],
-    icon: "🦊",
-    color: "orange",
   },
   jogan: {
     tags: [
@@ -74,8 +66,6 @@ export const EYE_CAPABILITIES = {
       "User approval needed",
       "Intent validation",
     ],
-    icon: "👁️",
-    color: "blue",
   },
   rinnegan: {
     tags: ["feasibility", "validation", "planning", "resource-estimation"],
@@ -86,8 +76,6 @@ export const EYE_CAPABILITIES = {
       "Resource validation",
       "Feasibility analysis",
     ],
-    icon: "⚫",
-    color: "indigo",
   },
   mangekyo: {
     tags: ["code-review", "security", "best-practices", "quality-assurance"],
@@ -98,8 +86,6 @@ export const EYE_CAPABILITIES = {
       "Technical validation",
       "Best practices check",
     ],
-    icon: "🔥",
-    color: "pink",
   },
   tenseigan: {
     tags: ["quality-check", "completeness", "refinement", "polish"],
@@ -110,8 +96,6 @@ export const EYE_CAPABILITIES = {
       "Quality assurance",
       "Refinement",
     ],
-    icon: "🌙",
-    color: "cyan",
   },
   byakugan: {
     tags: ["final-review", "delivery", "output-formatting", "presentation"],
@@ -122,8 +106,6 @@ export const EYE_CAPABILITIES = {
       "Delivery preparation",
       "Presentation polish",
     ],
-    icon: "👀",
-    color: "green",
   },
 } as const satisfies Record<string, EyeCapability>;
 

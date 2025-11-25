@@ -9,6 +9,7 @@
 import { Hono } from "hono";
 import type { Database } from "better-sqlite3";
 import { getDb } from "@third-eye/db";
+import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
 
 const app = new Hono();
 
@@ -59,7 +60,7 @@ function parseRoutingDecision(row: {
  */
 app.get("/", async (c) => {
   try {
-    const { db } = getDb();
+    const { db, sqlite } = getDb();
 
     // Parse query params
     const limit = Number.parseInt(c.req.query("limit") || "10", 10);
@@ -72,7 +73,7 @@ app.get("/", async (c) => {
         {
           success: false,
           error: {
-            code: "INVALID_LIMIT",
+            code: ApiErrorCode.INVALID_LIMIT,
             detail: "Limit must be between 1 and 100",
           },
         },
@@ -90,7 +91,7 @@ app.get("/", async (c) => {
       LIMIT ? OFFSET ?
     `;
 
-    const rows = db.prepare(query).all(limit, offset) as Array<{
+    const rows = sqlite.prepare(query).all(limit, offset) as Array<{
       id: string;
       session_id: string;
       request_analysis: string;
@@ -103,7 +104,7 @@ app.get("/", async (c) => {
     const decisions = rows.map(parseRoutingDecision);
 
     // Get total count
-    const countRow = db
+    const countRow = sqlite
       .prepare("SELECT COUNT(*) as count FROM routing_decisions")
       .get() as { count: number };
     const total = countRow.count;
@@ -126,7 +127,7 @@ app.get("/", async (c) => {
       {
         success: false,
         error: {
-          code: "INTERNAL_ERROR",
+          code: ApiErrorCode.INTERNAL_ERROR,
           detail:
             error instanceof Error
               ? error.message
@@ -144,7 +145,7 @@ app.get("/", async (c) => {
  */
 app.get("/session/:sessionId", async (c) => {
   try {
-    const { db } = getDb();
+    const { db, sqlite } = getDb();
     const sessionId = c.req.param("sessionId");
 
     if (!sessionId) {
@@ -152,7 +153,7 @@ app.get("/session/:sessionId", async (c) => {
         {
           success: false,
           error: {
-            code: "MISSING_SESSION_ID",
+            code: ApiErrorCode.MISSING_SESSION_ID,
             detail: "Session ID is required",
           },
         },
@@ -170,7 +171,7 @@ app.get("/session/:sessionId", async (c) => {
       LIMIT 1
     `;
 
-    const row = db.prepare(query).get(sessionId) as
+    const row = sqlite.prepare(query).get(sessionId) as
       | {
           id: string;
           session_id: string;
@@ -187,7 +188,7 @@ app.get("/session/:sessionId", async (c) => {
         {
           success: false,
           error: {
-            code: "NOT_FOUND",
+            code: ApiErrorCode.NOT_FOUND,
             detail: `No routing decision found for session ${sessionId}`,
           },
         },
@@ -209,7 +210,7 @@ app.get("/session/:sessionId", async (c) => {
       {
         success: false,
         error: {
-          code: "INTERNAL_ERROR",
+          code: ApiErrorCode.INTERNAL_ERROR,
           detail:
             error instanceof Error
               ? error.message
@@ -227,7 +228,7 @@ app.get("/session/:sessionId", async (c) => {
  */
 app.get("/:id", async (c) => {
   try {
-    const { db } = getDb();
+    const { db, sqlite } = getDb();
     const id = c.req.param("id");
 
     if (!id) {
@@ -235,7 +236,7 @@ app.get("/:id", async (c) => {
         {
           success: false,
           error: {
-            code: "MISSING_ID",
+            code: ApiErrorCode.MISSING_ID,
             detail: "Routing decision ID is required",
           },
         },
@@ -251,7 +252,7 @@ app.get("/:id", async (c) => {
       WHERE id = ?
     `;
 
-    const row = db.prepare(query).get(id) as
+    const row = sqlite.prepare(query).get(id) as
       | {
           id: string;
           session_id: string;
@@ -268,7 +269,7 @@ app.get("/:id", async (c) => {
         {
           success: false,
           error: {
-            code: "NOT_FOUND",
+            code: ApiErrorCode.NOT_FOUND,
             detail: `Routing decision ${id} not found`,
           },
         },
@@ -290,7 +291,7 @@ app.get("/:id", async (c) => {
       {
         success: false,
         error: {
-          code: "INTERNAL_ERROR",
+          code: ApiErrorCode.INTERNAL_ERROR,
           detail:
             error instanceof Error
               ? error.message

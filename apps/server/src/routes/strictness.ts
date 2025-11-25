@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
 import { nanoid } from "nanoid";
 import { getDb } from "@third-eye/db";
 import { strictnessProfiles } from "@third-eye/db";
@@ -78,7 +79,8 @@ app.get("/:id", async (c) => {
 
     if (profile.length === 0) {
       return createErrorResponse(c, {
-        title: "Profile Not Found",
+        title: ApiErrorTitle.PROFILE_NOT_FOUND,
+        code: ApiErrorCode.PROFILE_NOT_FOUND,
         status: 404,
         detail: "The requested strictness profile could not be found",
       });
@@ -168,7 +170,8 @@ app.put(
 
       if (existing.length === 0) {
         return createErrorResponse(c, {
-          title: "Profile Not Found",
+          title: ApiErrorTitle.PROFILE_NOT_FOUND,
+        code: ApiErrorCode.PROFILE_NOT_FOUND,
           status: 404,
           detail: "The requested strictness profile could not be found",
         });
@@ -177,7 +180,8 @@ app.put(
       // Don't allow editing built-in profiles
       if (existing[0].isBuiltIn) {
         return createErrorResponse(c, {
-          title: "Cannot Edit Built-in Profile",
+          title: ApiErrorTitle.CANNOT_EDIT_BUILTIN,
+        code: ApiErrorCode.CANNOT_EDIT_BUILTIN,
           status: 403,
           detail: "Built-in strictness profiles cannot be modified",
         });
@@ -239,7 +243,8 @@ app.delete("/:id", async (c) => {
 
     if (existing.length === 0) {
       return createErrorResponse(c, {
-        title: "Profile Not Found",
+        title: ApiErrorTitle.PROFILE_NOT_FOUND,
+        code: ApiErrorCode.PROFILE_NOT_FOUND,
         status: 404,
         detail: "The requested strictness profile could not be found",
       });
@@ -248,7 +253,8 @@ app.delete("/:id", async (c) => {
     // Don't allow deleting built-in profiles
     if (existing[0].isBuiltIn) {
       return createErrorResponse(c, {
-        title: "Cannot Delete Built-in Profile",
+        title: ApiErrorTitle.CANNOT_DELETE_BUILTIN,
+        code: ApiErrorCode.CANNOT_DELETE_BUILTIN,
         status: 403,
         detail: "Built-in strictness profiles cannot be deleted",
       });

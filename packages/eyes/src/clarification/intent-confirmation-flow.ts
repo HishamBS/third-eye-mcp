@@ -5,6 +5,8 @@
  */
 
 import type { IntentConfirmation } from "@third-eye/db";
+import { getDb, sessions, intentConfirmations } from "@third-eye/db";
+import { eq } from "drizzle-orm";
 import {
   getIntentConfirmationStatus,
   storeIntentConfirmation,
@@ -69,8 +71,62 @@ export async function processConfirmationResponse(
   }
 
   if (response === "modified" && modification) {
-    // Store modification details
-    // TODO: Update session state with modified requirements
+    // Store modification details in session config
+    try {
+      const { db } = getDb();
+
+      // First get the sessionId from the confirmation record
+      const confirmation = await db
+        .select()
+        .from(intentConfirmations)
+        .where(eq(intentConfirmations.id, confirmationId))
+        .limit(1)
+        .all();
+
+      if (confirmation.length === 0) {
+        console.error(
+          `Confirmation not found for confirmationId: ${confirmationId}`,
+        );
+        return;
+      }
+
+      const sessionId = confirmation[0].sessionId;
+
+      // Get current session config
+      const session = await db
+        .select()
+        .from(sessions)
+        .where(eq(sessions.id, sessionId))
+        .limit(1)
+        .all();
+
+      if (session.length > 0) {
+        const currentConfig = (session[0].configJson as Record<
+          string,
+          unknown
+        >) || {};
+
+        // Update config with modified requirements
+        const updatedConfig = {
+          ...currentConfig,
+          modifiedRequirements: modification,
+          modifiedAt: new Date().toISOString(),
+        };
+
+        // Update session with modified config
+        await db
+          .update(sessions)
+          .set({ configJson: updatedConfig })
+          .where(eq(sessions.id, sessionId))
+          .run();
+      }
+    } catch (error) {
+      console.error(
+        `Failed to update session state with modified requirements:`,
+        error,
+      );
+      // Don't throw - allow pipeline to continue even if update fails
+    }
   }
 }
 

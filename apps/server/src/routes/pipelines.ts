@@ -4,7 +4,6 @@ import { getDb } from "@third-eye/db";
 import { pipelines, pipelineRuns } from "@third-eye/db";
 import { eq, desc } from "drizzle-orm";
 import {
-  validateBodyWithEnvelope,
   createSuccessResponse,
   createErrorResponse,
   createInternalErrorResponse,
@@ -13,6 +12,13 @@ import {
 } from "../middleware/response";
 import { z } from "zod";
 import { WorkflowInterpreter, type WorkflowDefinition } from "@third-eye/core";
+import {
+  ApiErrorCode,
+  ApiErrorTitle,
+  ApiErrorMessage,
+  formatErrorWithMessage,
+  formatPipelineVersionActivated,
+} from "@third-eye/constants";
 
 const app = new Hono();
 
@@ -65,7 +71,10 @@ app.get("/", async (c) => {
   } catch (error) {
     return createInternalErrorResponse(
       c,
-      `Failed to fetch pipelines: ${error instanceof Error ? error.message : "Unknown error"}`,
+      formatErrorWithMessage(
+        ApiErrorMessage.PIPELINE_FETCH_FAILED,
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR
+      ),
     );
   }
 });
@@ -87,9 +96,10 @@ app.get("/:id", async (c) => {
 
     if (pipeline.length === 0) {
       return createErrorResponse(c, {
-        title: "Pipeline Not Found",
+        title: ApiErrorTitle.PIPELINE_NOT_FOUND,
         status: 404,
-        detail: "The requested pipeline could not be found",
+        detail: ApiErrorMessage.PIPELINE_NOT_FOUND_DETAIL,
+        code: ApiErrorCode.PIPELINE_NOT_FOUND,
       });
     }
 
@@ -97,7 +107,10 @@ app.get("/:id", async (c) => {
   } catch (error) {
     return createInternalErrorResponse(
       c,
-      `Failed to fetch pipeline: ${error instanceof Error ? error.message : "Unknown error"}`,
+      formatErrorWithMessage(
+        ApiErrorMessage.PIPELINE_SINGLE_FETCH_FAILED,
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR
+      ),
     );
   }
 });
@@ -121,7 +134,10 @@ app.get("/name/:name/versions", async (c) => {
   } catch (error) {
     return createInternalErrorResponse(
       c,
-      `Failed to fetch pipeline versions: ${error instanceof Error ? error.message : "Unknown error"}`,
+      formatErrorWithMessage(
+        ApiErrorMessage.PIPELINE_VERSIONS_FETCH_FAILED,
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR
+      ),
     );
   }
 });
@@ -129,9 +145,11 @@ app.get("/name/:name/versions", async (c) => {
 /**
  * POST /api/pipelines - Create new pipeline
  */
-app.post("/", validateBodyWithEnvelope(createPipelineSchema), async (c) => {
+app.post("/", async (c) => {
   try {
-    const { name, description, workflow, category } = c.get("validatedBody");
+    const body = await c.req.json();
+    const validated = createPipelineSchema.parse(body);
+    const { name, description, workflow, category } = validated;
 
     const { db } = getDb();
 
@@ -175,13 +193,24 @@ app.post("/", validateBodyWithEnvelope(createPipelineSchema), async (c) => {
 
     return createSuccessResponse(
       c,
-      { id, version: nextVersion, message: "Pipeline created successfully" },
+      { id, version: nextVersion, message: ApiErrorMessage.PIPELINE_CREATED },
       { status: 201 },
     );
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        status: 400,
+        detail: error.issues.map((i) => i.message).join("; "),
+        code: ApiErrorCode.INVALID_REQUEST,
+      });
+    }
     return createInternalErrorResponse(
       c,
-      `Failed to create pipeline: ${error instanceof Error ? error.message : "Unknown error"}`,
+      formatErrorWithMessage(
+        ApiErrorMessage.PIPELINE_CREATE_FAILED_DETAIL,
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR
+      ),
     );
   }
 });
@@ -189,10 +218,11 @@ app.post("/", validateBodyWithEnvelope(createPipelineSchema), async (c) => {
 /**
  * PUT /api/pipelines/:id - Update pipeline (creates new version)
  */
-app.put("/:id", validateBodyWithEnvelope(updatePipelineSchema), async (c) => {
+app.put("/:id", async (c) => {
   try {
     const id = c.req.param("id");
-    const body = c.get("validatedBody");
+    const bodyRaw = await c.req.json();
+    const body = updatePipelineSchema.parse(bodyRaw);
 
     const { db } = getDb();
 
@@ -205,9 +235,10 @@ app.put("/:id", validateBodyWithEnvelope(updatePipelineSchema), async (c) => {
 
     if (existing.length === 0) {
       return createErrorResponse(c, {
-        title: "Pipeline Not Found",
+        title: ApiErrorTitle.PIPELINE_NOT_FOUND,
         status: 404,
-        detail: "The requested pipeline could not be found",
+        detail: ApiErrorMessage.PIPELINE_NOT_FOUND_DETAIL,
+        code: ApiErrorCode.PIPELINE_NOT_FOUND,
       });
     }
 
@@ -241,12 +272,23 @@ app.put("/:id", validateBodyWithEnvelope(updatePipelineSchema), async (c) => {
     return createSuccessResponse(c, {
       id: newId,
       version: nextVersion,
-      message: "Pipeline updated (new version created)",
+      message: ApiErrorMessage.PIPELINE_UPDATED,
     });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        status: 400,
+        detail: error.issues.map((i) => i.message).join("; "),
+        code: ApiErrorCode.INVALID_REQUEST,
+      });
+    }
     return createInternalErrorResponse(
       c,
-      `Failed to update pipeline: ${error instanceof Error ? error.message : "Unknown error"}`,
+      formatErrorWithMessage(
+        ApiErrorMessage.PIPELINE_UPDATE_FAILED_DETAIL,
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR
+      ),
     );
   }
 });
@@ -268,9 +310,10 @@ app.post("/:id/activate", async (c) => {
 
     if (pipeline.length === 0) {
       return createErrorResponse(c, {
-        title: "Pipeline Not Found",
+        title: ApiErrorTitle.PIPELINE_NOT_FOUND,
         status: 404,
-        detail: "The requested pipeline could not be found",
+        detail: ApiErrorMessage.PIPELINE_NOT_FOUND_DETAIL,
+        code: ApiErrorCode.PIPELINE_NOT_FOUND,
       });
     }
 
@@ -291,12 +334,15 @@ app.post("/:id/activate", async (c) => {
       .run();
 
     return createSuccessResponse(c, {
-      message: `Pipeline version ${targetPipeline.version} activated`,
+      message: formatPipelineVersionActivated(targetPipeline.version),
     });
   } catch (error) {
     return createInternalErrorResponse(
       c,
-      `Failed to activate pipeline: ${error instanceof Error ? error.message : "Unknown error"}`,
+      formatErrorWithMessage(
+        ApiErrorMessage.PIPELINE_ACTIVATE_FAILED,
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR
+      ),
     );
   }
 });
@@ -315,11 +361,14 @@ app.delete("/:id", async (c) => {
       .where(eq(pipelines.id, id))
       .run();
 
-    return createSuccessResponse(c, { message: "Pipeline deactivated" });
+    return createSuccessResponse(c, { message: ApiErrorMessage.PIPELINE_DEACTIVATED });
   } catch (error) {
     return createInternalErrorResponse(
       c,
-      `Failed to delete pipeline: ${error instanceof Error ? error.message : "Unknown error"}`,
+      formatErrorWithMessage(
+        ApiErrorMessage.PIPELINE_DELETE_FAILED,
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR
+      ),
     );
   }
 });
@@ -331,13 +380,12 @@ app.delete("/:id", async (c) => {
  * Handles all node types: eye, condition, switch, loop, user_input, terminal.
  * Supports conditional branching, loops, and complex routing logic.
  */
-app.post(
-  "/:id/execute",
-  validateBodyWithEnvelope(executePipelineSchema),
-  async (c) => {
-    try {
-      const id = c.req.param("id");
-      const { session_id, input } = c.get("validatedBody");
+app.post("/:id/execute", async (c) => {
+  try {
+    const id = c.req.param("id");
+    const bodyRaw = await c.req.json();
+    const validated = executePipelineSchema.parse(bodyRaw);
+    const { session_id, input } = validated;
 
       const { db } = getDb();
 
@@ -351,9 +399,10 @@ app.post(
 
       if (pipeline.length === 0) {
         return createErrorResponse(c, {
-          title: "Pipeline Not Found",
+          title: ApiErrorTitle.PIPELINE_NOT_FOUND,
           status: 404,
-          detail: "The requested pipeline could not be found",
+          detail: ApiErrorMessage.PIPELINE_NOT_FOUND_DETAIL,
+          code: ApiErrorCode.PIPELINE_NOT_FOUND,
         });
       }
 
@@ -394,9 +443,10 @@ app.post(
           .run();
 
         return createErrorResponse(c, {
-          title: "Invalid Workflow",
+          title: ApiErrorTitle.INVALID_WORKFLOW,
           status: 400,
           detail: `Workflow validation failed: ${validation.errors.join(", ")}`,
+          code: ApiErrorCode.INVALID_WORKFLOW,
         });
       }
 
@@ -430,16 +480,26 @@ app.post(
         steps: result.steps,
         output: result.output,
         totalLatency: result.totalLatency,
-        error: result.error,
+      error: result.error,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        status: 400,
+        detail: error.issues.map((i) => i.message).join("; "),
+        code: ApiErrorCode.INVALID_REQUEST,
       });
-    } catch (error) {
-      return createInternalErrorResponse(
-        c,
-        `Failed to execute pipeline: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
     }
-  },
-);
+    return createInternalErrorResponse(
+      c,
+      formatErrorWithMessage(
+        ApiErrorMessage.PIPELINE_EXECUTE_FAILED,
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR
+      ),
+    );
+  }
+});
 
 /**
  * GET /api/pipelines/:id/runs - Get execution history
@@ -460,7 +520,10 @@ app.get("/:id/runs", async (c) => {
   } catch (error) {
     return createInternalErrorResponse(
       c,
-      `Failed to fetch pipeline runs: ${error instanceof Error ? error.message : "Unknown error"}`,
+      formatErrorWithMessage(
+        ApiErrorMessage.PIPELINE_RUNS_FETCH_FAILED,
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR
+      ),
     );
   }
 });

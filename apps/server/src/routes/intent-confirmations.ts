@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
 import { getDb } from "@third-eye/db";
 import { IntentConfirmationManager } from "@third-eye/core";
 import {
@@ -28,8 +29,8 @@ app.use("*", errorHandler());
 app.get("/:id", async (c) => {
   try {
     const confirmationId = c.req.param("id");
-    const { db } = getDb();
-    const manager = new IntentConfirmationManager(db);
+    const { sqlite } = getDb();
+    const manager = new IntentConfirmationManager(sqlite);
 
     const confirmation = await manager.getConfirmation(confirmationId);
 
@@ -55,7 +56,7 @@ app.get("/:id", async (c) => {
 app.get("/session/:sessionId", async (c) => {
   try {
     const sessionId = c.req.param("sessionId");
-    const { db } = getDb();
+    const { sqlite } = getDb();
 
     const query = `
       SELECT id, session_id, intent_analysis, confirmation_prompt,
@@ -65,7 +66,7 @@ app.get("/session/:sessionId", async (c) => {
       ORDER BY created_at DESC
     `;
 
-    const rows = db.prepare(query).all(sessionId) as Array<{
+    const rows = sqlite.prepare(query).all(sessionId) as Array<{
       id: string;
       session_id: string;
       intent_analysis: string | null;
@@ -109,11 +110,16 @@ app.post("/:id/submit", async (c) => {
     const body = await c.req.json();
 
     if (!body.response || typeof body.response !== "string") {
-      return createErrorResponse(c, "response (string) is required", 400);
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.VALIDATION_ERROR,
+        code: ApiErrorCode.VALIDATION_ERROR,
+        status: 400,
+        detail: "response (string) is required",
+      });
     }
 
-    const { db } = getDb();
-    const manager = new IntentConfirmationManager(db);
+    const { sqlite } = getDb();
+    const manager = new IntentConfirmationManager(sqlite);
 
     await manager.submitConfirmation(
       confirmationId,
@@ -141,7 +147,7 @@ app.post("/:id/submit", async (c) => {
 // Get all pending intent confirmations
 app.get("/pending", async (c) => {
   try {
-    const { db } = getDb();
+    const { sqlite } = getDb();
 
     const query = `
       SELECT id, session_id, confirmation_prompt, status, created_at
@@ -150,7 +156,7 @@ app.get("/pending", async (c) => {
       ORDER BY created_at ASC
     `;
 
-    const rows = db.prepare(query).all() as Array<{
+    const rows = sqlite.prepare(query).all() as Array<{
       id: string;
       session_id: string;
       confirmation_prompt: string;

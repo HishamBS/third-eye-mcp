@@ -8,10 +8,11 @@
 import { useState, useCallback } from "react";
 import { useAPI } from "./useAPI";
 import type { Pipeline, PipelineNode, PipelineEdge } from "@/types/pipeline";
+import { MASTER_PIPELINE_ID } from "@third-eye/constants";
 
 /**
  * Get all pipelines
- * TODO (Backend): Connect to /api/pipelines endpoint
+ * Backend: ✅ Connected to /api/pipelines endpoint (apps/server/src/routes/pipelines.ts:49)
  */
 export function usePipelines() {
   const { get } = useAPI();
@@ -37,7 +38,9 @@ export function usePipelines() {
 
 /**
  * Get active pipeline
- * TODO (Backend): Connect to /api/pipelines/active endpoint
+ * Backend: GET /api/pipelines/active endpoint not implemented
+ * Workaround: Client-side filtering for active=true with max version
+ * Per MASTER_PIPELINE_ID: Prefer overseer-dynamic-master as the production pipeline
  */
 export function useActivePipeline() {
   const { get } = useAPI();
@@ -49,8 +52,35 @@ export function useActivePipeline() {
     setLoading(true);
     setError(null);
     try {
-      const data = await get<Pipeline>("/api/pipelines/active");
-      setPipeline(data);
+      // Workaround: Fetch all pipelines and filter client-side
+      const allPipelines = await get<Pipeline[]>("/api/pipelines");
+
+      // Filter for active pipelines
+      const activePipelines = allPipelines.filter((p) => p.active);
+
+      if (activePipelines.length === 0) {
+        setPipeline(null);
+      } else if (activePipelines.length === 1) {
+        // Only one active pipeline - use it
+        setPipeline(activePipelines[0]);
+      } else {
+        // Multiple active pipelines - prefer master, then highest version
+        // CRITICAL FIX: Explicit master selection prevents wrong pipeline in Fixed Template mode
+        // Per R13: Import from SSOT, no hardcoded string literals
+        const masterPipeline = activePipelines.find(
+          (p) => p.id === MASTER_PIPELINE_ID
+        );
+
+        if (masterPipeline) {
+          setPipeline(masterPipeline);
+        } else {
+          // Fallback: Get pipeline with highest version number
+          const latestActive = activePipelines.reduce((prev, current) =>
+            current.version > prev.version ? current : prev
+          );
+          setPipeline(latestActive);
+        }
+      }
     } catch (err) {
       setError(err as Error);
     } finally {
@@ -63,7 +93,8 @@ export function useActivePipeline() {
 
 /**
  * Save pipeline
- * TODO (Backend): Connect to POST /api/pipelines endpoint
+ * Backend: ✅ Connected to POST /api/pipelines endpoint (apps/server/src/routes/pipelines.ts:132)
+ * Backend: ✅ Connected to PUT /api/pipelines/:id endpoint (apps/server/src/routes/pipelines.ts:192)
  */
 export function useSavePipeline() {
   const { post, put } = useAPI();
@@ -81,18 +112,18 @@ export function useSavePipeline() {
       setLoading(true);
       setError(null);
       try {
+        // Backend expects workflow: {nodes, edges} format, stored as workflowJson
+        const workflow = { nodes, edges };
         const data = pipelineId
           ? await put<Pipeline>(`/api/pipelines/${pipelineId}`, {
               name,
               description,
-              nodes,
-              edges,
+              workflow,
             })
           : await post<Pipeline>("/api/pipelines", {
               name,
               description,
-              nodes,
-              edges,
+              workflow,
             });
         return data;
       } catch (err) {
@@ -110,7 +141,7 @@ export function useSavePipeline() {
 
 /**
  * Activate pipeline
- * TODO (Backend): Connect to POST /api/pipelines/{id}/activate endpoint
+ * Backend: ✅ Connected to POST /api/pipelines/:id/activate endpoint (apps/server/src/routes/pipelines.ts:257)
  */
 export function useActivatePipeline() {
   const { post } = useAPI();
@@ -139,7 +170,7 @@ export function useActivatePipeline() {
 
 /**
  * Delete pipeline
- * TODO (Backend): Connect to DELETE /api/pipelines/{id} endpoint
+ * Backend: ✅ Connected to DELETE /api/pipelines/:id endpoint (apps/server/src/routes/pipelines.ts:307)
  */
 export function useDeletePipeline() {
   const { delete: del } = useAPI();

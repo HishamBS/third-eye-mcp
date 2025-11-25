@@ -12,7 +12,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { EYE_CAPABILITIES } from "@third-eye/config/eye-capabilities";
+import { EyeIcon } from "@/components/EyeIcon";
 
 /**
  * Conversation event type (matches backend CONVERSATION_EVENT_TYPES)
@@ -104,14 +104,6 @@ function formatTimestamp(date: string | Date): string {
   });
 }
 
-/**
- * Get eye icon from capabilities config
- */
-function getEyeIcon(speaker: string): string {
-  const eyeName = speaker.toLowerCase();
-  const eyeInfo = EYE_CAPABILITIES[eyeName as keyof typeof EYE_CAPABILITIES];
-  return eyeInfo?.icon || "👁️";
-}
 
 /**
  * Timeline event card component
@@ -135,9 +127,9 @@ function TimelineEventCard({ event }: { event: ConversationEventRecord }) {
 
           {/* Eye icon for agent messages */}
           {isAgent && (
-            <span className="text-2xl" title={event.speaker}>
-              {getEyeIcon(event.speaker)}
-            </span>
+            <div title={event.speaker}>
+              <EyeIcon eye={event.speaker} size={32} />
+            </div>
           )}
 
           {/* Speaker label */}

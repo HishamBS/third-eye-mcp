@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { sanitizeString, sanitizeObject, schemas } from "../validation";
+import {
+  sanitizeString,
+  sanitizeObject,
+  schemas,
+  type SanitizedObject,
+  type SanitizedArray,
+} from "../validation";
 
 describe("Validation Middleware", () => {
   describe("sanitizeString", () => {
@@ -44,22 +50,22 @@ describe("Validation Middleware", () => {
         },
       };
 
-      const result = sanitizeObject(input);
+      const result = sanitizeObject(input) as SanitizedObject;
       expect(result.name).toBe("John");
-      expect(result.details.bio).toBe("Evil bio");
-      expect(result.details.tags[0]).toBe("");
-      expect(result.details.tags[1]).toBe("safe tag");
+      expect((result.details as SanitizedObject).bio).toBe("Evil bio");
+      expect(((result.details as SanitizedObject).tags as SanitizedArray)[0]).toBe("");
+      expect(((result.details as SanitizedObject).tags as SanitizedArray)[1]).toBe("safe tag");
     });
 
     it("should handle arrays", () => {
       const input = ["<script>bad</script>", "good", "<h1>header</h1>"];
-      const result = sanitizeObject(input);
+      const result = sanitizeObject(input) as SanitizedArray;
       expect(result).toEqual(["bad", "good", "header"]);
     });
 
     it("should preserve numbers and booleans", () => {
       const input = { age: 25, active: true };
-      const result = sanitizeObject(input);
+      const result = sanitizeObject(input) as SanitizedObject;
       expect(result).toEqual({ age: 25, active: true });
     });
   });

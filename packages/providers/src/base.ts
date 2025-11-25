@@ -5,6 +5,12 @@ export interface ModelInfo {
   id: string;
   name: string;
   context_window: number;
+  family?: string;
+  capability?: {
+    ctx?: number;
+    vision?: boolean;
+    jsonMode?: boolean;
+  };
   pricing?: {
     prompt: number; // per 1M tokens
     completion: number; // per 1M tokens

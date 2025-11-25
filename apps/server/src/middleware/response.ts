@@ -1,4 +1,5 @@
 import { Context } from "hono";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { z } from "zod";
 
 const RESPONSE_VERSION = process.env.npm_package_version || "dev";
@@ -93,28 +94,33 @@ export function createSuccessResponse(
   const requestId =
     options?.requestId || c.req.header("x-request-id") || generateRequestId();
 
+  // R07 Compliance: Explicitly type envelope to resolve conditional type inference
+  const baseMeta = {
+    timestamp: Date.now(),
+    requestId,
+    version: RESPONSE_VERSION,
+  };
+
   const envelope: SuccessEnvelope = {
     success: true,
     data,
-    meta: {
-      timestamp: Date.now(),
-      requestId,
-      version: RESPONSE_VERSION,
-      ...(options?.pagination && {
-        pagination: {
-          page: options.pagination.page,
-          limit: options.pagination.limit,
-          total: options.pagination.total,
-          hasNext:
-            options.pagination.page * options.pagination.limit <
-            options.pagination.total,
-          hasPrev: options.pagination.page > 1,
-        },
-      }),
-    },
+    meta: options?.pagination
+      ? {
+          ...baseMeta,
+          pagination: {
+            page: options.pagination.page,
+            limit: options.pagination.limit,
+            total: options.pagination.total,
+            hasNext:
+              options.pagination.page * options.pagination.limit <
+              options.pagination.total,
+            hasPrev: options.pagination.page > 1,
+          },
+        }
+      : baseMeta,
   };
 
-  return c.json(envelope, status);
+  return c.json(envelope, status as ContentfulStatusCode);
 }
 
 /**
@@ -158,7 +164,7 @@ export function createErrorResponse(
     },
   };
 
-  return c.json(envelope, error.status);
+  return c.json(envelope, error.status as ContentfulStatusCode);
 }
 
 /**

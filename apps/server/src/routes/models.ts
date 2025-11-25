@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
 import { ModelDiscoveryService } from "@third-eye/core/model-discovery";
 import { type ProviderId } from "@third-eye/types";
 import { logger } from "@third-eye/core";
@@ -51,7 +52,8 @@ app.get("/:provider", async (c) => {
     });
     if (error instanceof Error && /401/.test(error.message)) {
       return createErrorResponse(c, {
-        title: "Provider Authentication Failed",
+        title: ApiErrorTitle.PROVIDER_AUTH_ERROR,
+        code: ApiErrorCode.PROVIDER_AUTH_FAILED,
         status: 401,
         detail: error.message,
       });
@@ -95,7 +97,8 @@ app.post("/:provider/refresh", async (c) => {
     });
     if (error instanceof Error && /401/.test(error.message)) {
       return createErrorResponse(c, {
-        title: "Provider Authentication Failed",
+        title: ApiErrorTitle.PROVIDER_AUTH_ERROR,
+        code: ApiErrorCode.PROVIDER_AUTH_FAILED,
         status: 401,
         detail: error.message,
       });

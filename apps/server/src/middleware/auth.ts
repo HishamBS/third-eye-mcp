@@ -142,8 +142,10 @@ export function cors(options?: {
     c.header("Access-Control-Max-Age", "86400"); // 24 hours
 
     // Handle preflight requests
+    // R07 Compliance: Use proper Hono pattern for 204 No Content status
     if (c.req.method === "OPTIONS") {
-      return c.text("", 204);
+      c.status(204);
+      return c.body(null);
     }
 
     await next();

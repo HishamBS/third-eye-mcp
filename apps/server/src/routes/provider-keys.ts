@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
 import { getDb } from "@third-eye/db";
 import { providerKeys } from "@third-eye/db/schema";
 import {
@@ -276,7 +277,8 @@ app.delete("/:id", async (c) => {
 
     if (isNaN(id)) {
       return createErrorResponse(c, {
-        title: "Invalid ID",
+        title: ApiErrorTitle.INVALID_ID,
+        code: ApiErrorCode.INVALID_ID,
         status: 400,
         detail: "Provider key ID must be a number",
       });
