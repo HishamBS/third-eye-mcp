@@ -1,6 +1,14 @@
 import { Hono } from "hono";
-import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
-import { generateId, generateDuelSessionId, generateEventId } from "@third-eye/db/utils/uuid";
+import {
+  ApiErrorCode,
+  ApiErrorTitle,
+  ApiErrorMessage,
+} from "@third-eye/constants";
+import {
+  generateId,
+  generateDuelSessionId,
+  generateEventId,
+} from "@third-eye/db/utils/uuid";
 import { getDb } from "@third-eye/db";
 import { sessions, runs, pipelineEvents, duels, eyes } from "@third-eye/db";
 import { EyeOrchestrator } from "@third-eye/core";
@@ -213,7 +221,11 @@ app.post("/", async (c) => {
     const finalSessionId = sessionId || generateDuelSessionId();
 
     // Lookup eyeId from eyeName
-    const eyeRecord = await db.select().from(eyes).where(eq(eyes.name, eyeName)).get();
+    const eyeRecord = await db
+      .select()
+      .from(eyes)
+      .where(eq(eyes.name, eyeName))
+      .get();
     if (!eyeRecord) {
       return createErrorResponse(c, {
         title: ApiErrorTitle.VALIDATION_ERROR,
@@ -593,7 +605,11 @@ app.post("/v2", validateBody(schemas.duelCreate), async (c) => {
     const { db } = getDb();
 
     // Lookup eyeId from eyeName
-    const eye = await db.select().from(eyes).where(eq(eyes.name, eyeName)).get();
+    const eye = await db
+      .select()
+      .from(eyes)
+      .where(eq(eyes.name, eyeName))
+      .get();
     if (!eye) {
       return createErrorResponse(c, {
         title: ApiErrorTitle.VALIDATION_ERROR,
@@ -663,7 +679,11 @@ app.get("/:id/status", async (c) => {
     }
 
     // Lookup eye name from eyeId
-    const eye = await db.select().from(eyes).where(eq(eyes.id, duel.eyeId)).get();
+    const eye = await db
+      .select()
+      .from(eyes)
+      .where(eq(eyes.id, duel.eyeId))
+      .get();
     const eyeName = eye?.name || duel.eyeId;
 
     return createSuccessResponse(c, {
@@ -720,7 +740,11 @@ app.get("/:id/results", async (c) => {
     }
 
     // Lookup eye name from eyeId
-    const eye = await db.select().from(eyes).where(eq(eyes.id, duel.eyeId)).get();
+    const eye = await db
+      .select()
+      .from(eyes)
+      .where(eq(eyes.id, duel.eyeId))
+      .get();
     const eyeName = eye?.name || duel.eyeId;
 
     return createSuccessResponse(c, {

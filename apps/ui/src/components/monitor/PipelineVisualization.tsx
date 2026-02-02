@@ -201,7 +201,8 @@ export function PipelineVisualization({
               className="h-2 w-2 rounded-full"
               style={{
                 backgroundColor:
-                  EYE_COLORS[eye as keyof typeof EYE_COLORS] || HEX_COLORS.muted,
+                  EYE_COLORS[eye as keyof typeof EYE_COLORS] ||
+                  HEX_COLORS.muted,
               }}
               title={eye}
             />

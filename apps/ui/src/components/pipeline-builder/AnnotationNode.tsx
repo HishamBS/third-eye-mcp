@@ -2,7 +2,13 @@
 
 import { memo, useState } from "react";
 import { type NodeProps } from "reactflow";
-import { Info, AlertCircle, Lightbulb, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Info,
+  AlertCircle,
+  Lightbulb,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import {
   ANNOTATION_BORDER_STYLE,
   ANNOTATION_BG_COLOR,
@@ -87,8 +93,12 @@ function AnnotationNodeComponent({
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 flex-1">
-          <IconComponent className={`w-4 h-4 ${ANNOTATION_TEXT_COLOR} flex-shrink-0`} />
-          <div className={`font-semibold text-sm ${ANNOTATION_TEXT_COLOR} truncate`}>
+          <IconComponent
+            className={`w-4 h-4 ${ANNOTATION_TEXT_COLOR} flex-shrink-0`}
+          />
+          <div
+            className={`font-semibold text-sm ${ANNOTATION_TEXT_COLOR} truncate`}
+          >
             {title}
           </div>
         </div>
@@ -100,7 +110,9 @@ function AnnotationNodeComponent({
             e.stopPropagation();
             setIsExpanded(!isExpanded);
           }}
-          aria-label={showExpanded ? "Collapse annotation" : "Expand annotation"}
+          aria-label={
+            showExpanded ? "Collapse annotation" : "Expand annotation"
+          }
         >
           {showExpanded ? (
             <ChevronUp className="w-4 h-4" />

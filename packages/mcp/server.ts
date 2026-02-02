@@ -323,7 +323,9 @@ export function createMCPServer(): Server {
                     details: {
                       healthy: health.healthy,
                       message: health.message,
-                      ...(health.details ? { diagnostics: health.details } : {}),
+                      ...(health.details
+                        ? { diagnostics: health.details }
+                        : {}),
                       recommendation:
                         "Run 'third-eye-mcp up' to initialize the server, then retry your request.",
                     },
@@ -542,9 +544,8 @@ export function createMCPServer(): Server {
                 : {};
 
             // Create confirmation request
-            const { IntentConfirmationManager } = await import(
-              "@third-eye/core"
-            );
+            const { IntentConfirmationManager } =
+              await import("@third-eye/core");
             const { getDb } = await import("@third-eye/db");
             const { sqlite } = getDb();
             const confirmationManager = new IntentConfirmationManager(sqlite);
@@ -716,7 +717,11 @@ export function createMCPServer(): Server {
 }
 
 // Track server readiness state for graceful degradation
-let serverReadinessState: { ready: boolean; error?: string; details?: Record<string, number> } = {
+let serverReadinessState: {
+  ready: boolean;
+  error?: string;
+  details?: Record<string, number>;
+} = {
   ready: false,
 };
 
@@ -736,8 +741,14 @@ async function validateServerReadiness(): Promise<{
 
     // Verify critical tables have data
     const eyeCount = await db.select({ value: count() }).from(eyes).get();
-    const personaCount = await db.select({ value: count() }).from(personas).get();
-    const pipelineCount = await db.select({ value: count() }).from(pipelines).get();
+    const personaCount = await db
+      .select({ value: count() })
+      .from(personas)
+      .get();
+    const pipelineCount = await db
+      .select({ value: count() })
+      .from(pipelines)
+      .get();
 
     const details = {
       eyes: eyeCount?.value ?? 0,
@@ -841,8 +852,12 @@ export async function startMCPServer() {
       dbInitialized = true;
       console.error("[MCP Server] Database initialized");
     } catch (dbError) {
-      const errorMsg = dbError instanceof Error ? dbError.message : String(dbError);
-      console.error("[MCP Server] WARNING: Database initialization failed:", errorMsg);
+      const errorMsg =
+        dbError instanceof Error ? dbError.message : String(dbError);
+      console.error(
+        "[MCP Server] WARNING: Database initialization failed:",
+        errorMsg,
+      );
       serverReadinessState = {
         ready: false,
         error: `Database initialization failed: ${errorMsg}. Run 'third-eye-mcp up' to initialize.`,
@@ -878,7 +893,9 @@ export async function startMCPServer() {
       console.error("[MCP Server] Validation passed - server fully ready");
     } else {
       console.error(`[MCP Server] WARNING: ${validation.error}`);
-      console.error("[MCP Server] Server will start in degraded mode - agents will receive error messages");
+      console.error(
+        "[MCP Server] Server will start in degraded mode - agents will receive error messages",
+      );
       serverReadinessState = {
         ready: false,
         error: validation.error,
@@ -887,8 +904,12 @@ export async function startMCPServer() {
       // Continue anyway - agents will get meaningful error messages
     }
   } catch (importError) {
-    const errorMsg = importError instanceof Error ? importError.message : String(importError);
-    console.error("[MCP Server] WARNING: Failed to import database modules:", errorMsg);
+    const errorMsg =
+      importError instanceof Error ? importError.message : String(importError);
+    console.error(
+      "[MCP Server] WARNING: Failed to import database modules:",
+      errorMsg,
+    );
     serverReadinessState = {
       ready: false,
       error: `Failed to initialize: ${errorMsg}. Ensure @third-eye/db is properly installed.`,
@@ -907,7 +928,9 @@ export async function startMCPServer() {
     console.error("Third Eye MCP Server running on stdio");
     console.error("Ready for agent connections");
     console.error(`Public tool: ${MCP_TOOL_NAME} (single entry point)`);
-    console.error("Golden Rule #1: Agents call only third_eye_overseer - Eyes are internal");
+    console.error(
+      "Golden Rule #1: Agents call only third_eye_overseer - Eyes are internal",
+    );
   } else {
     console.error("Third Eye MCP Server running on stdio (DEGRADED MODE)");
     console.error(`Status: ${serverReadinessState.error}`);

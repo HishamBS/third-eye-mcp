@@ -488,7 +488,9 @@ async function seedPersonas(
         .run();
     }
 
-    log(`  • Personas seeded (${deduplicatedEntries.length} personas with UUIDs)`);
+    log(
+      `  • Personas seeded (${deduplicatedEntries.length} personas with UUIDs)`,
+    );
     return true;
   } catch (error) {
     log(`  ✗ Failed to seed personas: ${error}`);

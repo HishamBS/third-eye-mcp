@@ -211,9 +211,8 @@ async function postInstall() {
     console.log("\n🔧 First-time installation detected...");
     try {
       // Dynamically import to avoid issues if the module has dependencies
-      const { firstTimeSetup, writeEnvConfig } = await import(
-        "./first-time-setup.js"
-      );
+      const { firstTimeSetup, writeEnvConfig } =
+        await import("./first-time-setup.js");
       const config = await firstTimeSetup();
       writeEnvConfig(config);
     } catch (error) {

@@ -4,11 +4,17 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useUI } from "@/contexts/UIContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { Search, Check, ExternalLink, Loader2, AlertCircle, Trash2, RefreshCw, X } from "lucide-react";
 import {
-  useSessionList,
-  type NormalizedSession,
-} from "@/hooks/useSessionList";
+  Search,
+  Check,
+  ExternalLink,
+  Loader2,
+  AlertCircle,
+  Trash2,
+  RefreshCw,
+  X,
+} from "lucide-react";
+import { useSessionList, type NormalizedSession } from "@/hooks/useSessionList";
 import {
   STATUS_TEXT_COLORS,
   STATUS_BG_COLORS_SUBTLE,
@@ -144,7 +150,9 @@ export function SessionSelector(props: SessionSelectorProps) {
   const isControlled = "controlled" in props && props.controlled === true;
 
   // Get appropriate config defaults
-  const defaultConfig = isControlled ? DEFAULT_PIPELINE_CONFIG : DEFAULT_GLOBAL_CONFIG;
+  const defaultConfig = isControlled
+    ? DEFAULT_PIPELINE_CONFIG
+    : DEFAULT_GLOBAL_CONFIG;
   const config = { ...defaultConfig, ...props.config };
 
   // UIContext for uncontrolled mode
@@ -201,10 +209,21 @@ export function SessionSelector(props: SessionSelectorProps) {
 
   // Auto-select first session if none selected (uncontrolled mode only)
   useEffect(() => {
-    if (!isControlled && !selectedSessionId && sessions.length > 0 && !hasUserInteracted) {
+    if (
+      !isControlled &&
+      !selectedSessionId &&
+      sessions.length > 0 &&
+      !hasUserInteracted
+    ) {
       setSelectedSession(sessions[0].sessionId);
     }
-  }, [isControlled, selectedSessionId, sessions, hasUserInteracted, setSelectedSession]);
+  }, [
+    isControlled,
+    selectedSessionId,
+    sessions,
+    hasUserInteracted,
+    setSelectedSession,
+  ]);
 
   // Click outside handler
   useEffect(() => {
@@ -222,7 +241,8 @@ export function SessionSelector(props: SessionSelectorProps) {
 
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isOpen]);
 
@@ -253,7 +273,9 @@ export function SessionSelector(props: SessionSelectorProps) {
       }
 
       const next = params.toString();
-      router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+      router.replace(next ? `${pathname}?${next}` : pathname, {
+        scroll: false,
+      });
     },
     [config.useNavigation, pathname, router, searchParams],
   );
@@ -391,7 +413,8 @@ export function SessionSelector(props: SessionSelectorProps) {
 
   // Display helpers
   const displayName = selectedSession?.displayName ?? "No Session Selected";
-  const truncatedName = displayName.length > 24 ? `${displayName.substring(0, 24)}…` : displayName;
+  const truncatedName =
+    displayName.length > 24 ? `${displayName.substring(0, 24)}…` : displayName;
   const placeholder = config.placeholder ?? "No Session Selected";
 
   return (
@@ -479,7 +502,9 @@ export function SessionSelector(props: SessionSelectorProps) {
                   className="rounded-lg p-1 text-semantic-muted transition-colors hover:bg-brand-paper hover:text-brand-accent disabled:opacity-50"
                   type="button"
                 >
-                  <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                  <RefreshCw
+                    className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+                  />
                 </button>
               </div>
             </div>
@@ -519,7 +544,9 @@ export function SessionSelector(props: SessionSelectorProps) {
               {!loading && !error && filteredSessions.length === 0 && (
                 <div className="py-8 text-center">
                   <p className="text-sm text-semantic-muted">
-                    {config.showSearch && searchQuery ? SESSION_SELECTOR_NO_RESULTS : "No active sessions"}
+                    {config.showSearch && searchQuery
+                      ? SESSION_SELECTOR_NO_RESULTS
+                      : "No active sessions"}
                   </p>
                   {!searchQuery && (
                     <p className="mt-1 text-xs text-semantic-muted">
@@ -559,18 +586,22 @@ export function SessionSelector(props: SessionSelectorProps) {
                               )}
                             </div>
 
-                            {session.agentName && session.agentName !== session.displayName && (
-                              <p className="mt-1 text-xs text-semantic-muted truncate">
-                                {session.agentName}
-                              </p>
-                            )}
+                            {session.agentName &&
+                              session.agentName !== session.displayName && (
+                                <p className="mt-1 text-xs text-semantic-muted truncate">
+                                  {session.agentName}
+                                </p>
+                              )}
 
                             <div className="mt-1 flex items-center gap-2 flex-wrap">
-                              {config.showSearch && getStatusBadge(session.status)}
+                              {config.showSearch &&
+                                getStatusBadge(session.status)}
                               <span className="text-xs text-semantic-muted truncate">
                                 {session.model}
                               </span>
-                              <span className="text-xs text-semantic-muted">•</span>
+                              <span className="text-xs text-semantic-muted">
+                                •
+                              </span>
                               <span className="text-xs text-semantic-muted">
                                 {session.eventCount} events
                               </span>
@@ -580,7 +611,9 @@ export function SessionSelector(props: SessionSelectorProps) {
                           <div className="flex items-center gap-2">
                             {config.showMonitorLink && (
                               <button
-                                onClick={(e) => handleSelectAndNavigate(session.sessionId, e)}
+                                onClick={(e) =>
+                                  handleSelectAndNavigate(session.sessionId, e)
+                                }
                                 className="rounded p-1 text-semantic-muted hover:text-brand-accent transition-colors"
                                 title={ARIA_LABELS.SELECT_AND_VIEW_SESSION}
                                 type="button"
@@ -591,7 +624,9 @@ export function SessionSelector(props: SessionSelectorProps) {
 
                             {config.allowDelete && (
                               <button
-                                onClick={(e) => handleDeleteSession(session.sessionId, e)}
+                                onClick={(e) =>
+                                  handleDeleteSession(session.sessionId, e)
+                                }
                                 className={`rounded p-1 text-semantic-muted ${STATUS_BG_COLORS_SUBTLE.error} hover:${STATUS_TEXT_COLORS.error} transition-colors`}
                                 title={ARIA_LABELS.DELETE_SESSION}
                                 type="button"
@@ -690,7 +725,9 @@ export function SessionSelector(props: SessionSelectorProps) {
           >
             <div className="flex items-center gap-3">
               <Check className={`h-5 w-5 ${STATUS_TEXT_COLORS.success}`} />
-              <span className={`text-sm font-medium ${STATUS_TEXT_COLORS.success}`}>
+              <span
+                className={`text-sm font-medium ${STATUS_TEXT_COLORS.success}`}
+              >
                 All sessions deleted successfully
               </span>
             </div>

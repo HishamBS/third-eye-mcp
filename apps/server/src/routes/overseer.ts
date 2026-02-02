@@ -1,5 +1,9 @@
 import { Hono } from "hono";
-import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
+import {
+  ApiErrorCode,
+  ApiErrorTitle,
+  ApiErrorMessage,
+} from "@third-eye/constants";
 import { autoRouter } from "@third-eye/core";
 import { getDb, sessions, runs, pipelineEvents } from "@third-eye/db";
 import { eq, desc, count } from "drizzle-orm";
@@ -165,7 +169,10 @@ app.get("/status", async (c) => {
       title: ApiErrorTitle.INTERNAL_ERROR,
       code: ApiErrorCode.INTERNAL_ERROR,
       status: 500,
-      detail: error instanceof Error ? error.message : "Failed to fetch session status",
+      detail:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch session status",
     });
   }
 });

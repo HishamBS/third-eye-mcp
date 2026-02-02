@@ -555,7 +555,10 @@ export default function StrictnessPage() {
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            mangekyoStrictness: e.target.value as "lenient" | "standard" | "strict",
+                            mangekyoStrictness: e.target.value as
+                              | "lenient"
+                              | "standard"
+                              | "strict",
                           })
                         }
                         className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-brand-foreground focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/40"

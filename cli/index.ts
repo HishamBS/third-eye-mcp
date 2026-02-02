@@ -1677,9 +1677,7 @@ async function ensureGlobalLink(
       }
     } catch (err) {
       if (!quiet) {
-        log(
-          '   ⚠ Auto-link failed (not critical, you can still use "bun up")',
-        );
+        log('   ⚠ Auto-link failed (not critical, you can still use "bun up")');
       }
     }
   }
@@ -1888,20 +1886,12 @@ async function startServices() {
       : `cd ${uiDir} && PORT=${uiPort} bun --bun run dev >> ${UI_LOG_FILE} 2>&1`;
 
     uiProcess = args.foreground
-      ? spawn(
-          "bun",
-          [
-            "--bun",
-            "run",
-            "dev",
-          ],
-          {
-            cwd: uiDir,
-            stdio: "inherit",
-            detached: false,
-            env: { ...process.env, PORT: uiPort },
-          },
-        )
+      ? spawn("bun", ["--bun", "run", "dev"], {
+          cwd: uiDir,
+          stdio: "inherit",
+          detached: false,
+          env: { ...process.env, PORT: uiPort },
+        })
       : spawn("sh", ["-c", uiCmd], {
           cwd: uiDir,
           stdio: "ignore",
@@ -2042,7 +2032,7 @@ async function startServices() {
     // because the main process will exit and monitoring requires a running process
     // Services are detached and will continue running independently
     // Users can manually restart services if needed using 'bun dist/cli.js restart'
-    
+
     // Exit main process after ensuring children are spawned
     // Children are detached and will continue running independently
     // Give a short delay to ensure processes are fully spawned

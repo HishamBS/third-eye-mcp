@@ -1,5 +1,8 @@
 export interface WebSocketBridge {
-  broadcastToSession: (sessionId: string, message: Record<string, unknown>) => void;
+  broadcastToSession: (
+    sessionId: string,
+    message: Record<string, unknown>,
+  ) => void;
 }
 
 let bridge: WebSocketBridge | null = null;

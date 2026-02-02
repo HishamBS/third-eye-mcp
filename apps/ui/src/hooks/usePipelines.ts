@@ -68,7 +68,7 @@ export function useActivePipeline() {
         // CRITICAL FIX: Explicit master selection prevents wrong pipeline in Fixed Template mode
         // Per R13: Import from SSOT, no hardcoded string literals
         const masterPipeline = activePipelines.find(
-          (p) => p.id === MASTER_PIPELINE_ID
+          (p) => p.id === MASTER_PIPELINE_ID,
         );
 
         if (masterPipeline) {
@@ -76,7 +76,7 @@ export function useActivePipeline() {
         } else {
           // Fallback: Get pipeline with highest version number
           const latestActive = activePipelines.reduce((prev, current) =>
-            current.version > prev.version ? current : prev
+            current.version > prev.version ? current : prev,
           );
           setPipeline(latestActive);
         }

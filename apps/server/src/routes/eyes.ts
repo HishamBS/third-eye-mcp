@@ -22,7 +22,11 @@ import {
   errorHandler,
 } from "../middleware/response";
 import { z } from "zod";
-import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
+import {
+  ApiErrorCode,
+  ApiErrorTitle,
+  ApiErrorMessage,
+} from "@third-eye/constants";
 
 /**
  * Eyes API Routes - Data-Driven Unified System
@@ -325,7 +329,9 @@ app.get("/:name/icon", async (c) => {
     const eye = await db
       .select()
       .from(eyes)
-      .where(sql`LOWER(${eyes.name}) = LOWER(${normalizedName}) OR LOWER(${eyes.name}) = LOWER(${eyeName})`)
+      .where(
+        sql`LOWER(${eyes.name}) = LOWER(${normalizedName}) OR LOWER(${eyes.name}) = LOWER(${eyeName})`,
+      )
       .orderBy(desc(eyes.active), desc(eyes.createdAt))
       .get();
 
@@ -507,120 +513,120 @@ app.post("/custom", async (c) => {
       personaId,
       defaultRouting,
     } = validatedBody;
-      console.log("[Eye] Creating with data:", {
-        name,
-        description,
-        hasInputSchema: !!inputSchema,
-        hasOutputSchema: !!outputSchema,
-      });
+    console.log("[Eye] Creating with data:", {
+      name,
+      description,
+      hasInputSchema: !!inputSchema,
+      hasOutputSchema: !!outputSchema,
+    });
 
-      const { db } = getDb();
+    const { db } = getDb();
 
-      // Check if Eye with this name already exists
-      const existing = await db
-        .select()
-        .from(eyes)
-        .where(eq(eyes.name, name))
-        .orderBy(desc(eyes.version))
-        .limit(1)
-        .all();
+    // Check if Eye with this name already exists
+    const existing = await db
+      .select()
+      .from(eyes)
+      .where(eq(eyes.name, name))
+      .orderBy(desc(eyes.version))
+      .limit(1)
+      .all();
 
-      const nextVersion = existing.length > 0 ? existing[0].version + 1 : 1;
+    const nextVersion = existing.length > 0 ? existing[0].version + 1 : 1;
 
-      const id = generateId();
-      const now = new Date();
+    const id = generateId();
+    const now = new Date();
 
-      // Deactivate previous versions
-      if (existing.length > 0) {
-        await db
-          .update(eyes)
-          .set({ active: false })
-          .where(eq(eyes.name, name))
-          .run();
-      }
-
-      // Insert new version
+    // Deactivate previous versions
+    if (existing.length > 0) {
       await db
-        .insert(eyes)
+        .update(eyes)
+        .set({ active: false })
+        .where(eq(eyes.name, name))
+        .run();
+    }
+
+    // Insert new version
+    await db
+      .insert(eyes)
+      .values({
+        id,
+        name,
+        version: nextVersion,
+        description,
+        inputSchemaJson: inputSchema,
+        outputSchemaJson: outputSchema,
+        personaId: personaId || null,
+        iconSvg: "",
+        active: true,
+        createdAt: now,
+      })
+      .run();
+
+    // Auto-create routing entry if it doesn't exist
+    const existingRouting = await db
+      .select()
+      .from(eyesRouting)
+      .where(eq(eyesRouting.eyeId, id))
+      .get();
+
+    if (!existingRouting) {
+      const defaultRoutingData = await getDefaultRouting();
+
+      await db
+        .insert(eyesRouting)
         .values({
-          id,
-          name,
-          version: nextVersion,
-          description,
-          inputSchemaJson: inputSchema,
-          outputSchemaJson: outputSchema,
-          personaId: personaId || null,
-          iconSvg: "",
-          active: true,
+          id: generateId(),
+          eyeId: id,
+          primaryProvider: defaultRoutingData.primaryProvider,
+          primaryModel: defaultRoutingData.primaryModel,
+          fallbackProvider: defaultRoutingData.fallbackProvider,
+          fallbackModel: defaultRoutingData.fallbackModel,
           createdAt: now,
         })
         .run();
+      console.log(`[Eye] Auto-created routing for ${name}`);
+    }
 
-      // Auto-create routing entry if it doesn't exist
-      const existingRouting = await db
-        .select()
-        .from(eyesRouting)
-        .where(eq(eyesRouting.eyeId, id))
-        .get();
+    // Auto-create persona blueprint if it doesn't exist
+    const existingBlueprint = await db
+      .select()
+      .from(personaBlueprints)
+      .where(eq(personaBlueprints.eyeId, id))
+      .get();
 
-      if (!existingRouting) {
-        const defaultRoutingData = await getDefaultRouting();
+    if (!existingBlueprint) {
+      // Create minimal blueprint with basic structure
+      const minimalBlueprint = {
+        eyeId: id,
+        name: name,
+        description: description,
+        version: String(nextVersion),
+        capabilities: JSON.stringify([]), // Empty capabilities array - user can add later
+        mission: `Mission for ${name}: ${description}`,
+        phases: JSON.stringify({
+          guidance: null,
+          validation: null,
+        }),
+        envelopeContract: JSON.stringify({
+          requiredKeys: ["tag", "ok", "code", "data", "ui", "next"],
+          requiredDataKeys: [],
+          requiredUiKeys: ["title", "summary", "details", "icon", "color"],
+        }),
+        reminders: JSON.stringify([]),
+        notes: null,
+        createdAt: now,
+        updatedAt: now,
+      };
 
-        await db
-          .insert(eyesRouting)
-          .values({
-            id: generateId(),
-            eyeId: id,
-            primaryProvider: defaultRoutingData.primaryProvider,
-            primaryModel: defaultRoutingData.primaryModel,
-            fallbackProvider: defaultRoutingData.fallbackProvider,
-            fallbackModel: defaultRoutingData.fallbackModel,
-            createdAt: now,
-          })
-          .run();
-        console.log(`[Eye] Auto-created routing for ${name}`);
-      }
-
-      // Auto-create persona blueprint if it doesn't exist
-      const existingBlueprint = await db
-        .select()
-        .from(personaBlueprints)
-        .where(eq(personaBlueprints.eyeId, id))
-        .get();
-
-      if (!existingBlueprint) {
-        // Create minimal blueprint with basic structure
-        const minimalBlueprint = {
-          eyeId: id,
-          name: name,
-          description: description,
-          version: String(nextVersion),
-          capabilities: JSON.stringify([]), // Empty capabilities array - user can add later
-          mission: `Mission for ${name}: ${description}`,
-          phases: JSON.stringify({
-            guidance: null,
-            validation: null,
-          }),
-          envelopeContract: JSON.stringify({
-            requiredKeys: ["tag", "ok", "code", "data", "ui", "next"],
-            requiredDataKeys: [],
-            requiredUiKeys: ["title", "summary", "details", "icon", "color"],
-          }),
-          reminders: JSON.stringify([]),
-          notes: null,
-          createdAt: now,
-          updatedAt: now,
-        };
-
-        await db
-          .insert(personaBlueprints)
-          .values({
-            id: generateId(),
-            ...minimalBlueprint,
-          })
-          .run();
-        console.log(`[Eye] Auto-created persona blueprint for ${name}`);
-      }
+      await db
+        .insert(personaBlueprints)
+        .values({
+          id: generateId(),
+          ...minimalBlueprint,
+        })
+        .run();
+      console.log(`[Eye] Auto-created persona blueprint for ${name}`);
+    }
 
     console.log("[Eye] Successfully created:", {
       id,
@@ -739,7 +745,7 @@ app.delete("/custom/:id", async (c) => {
   if (existing.length === 0) {
     return createErrorResponse(c, {
       title: ApiErrorTitle.EYE_NOT_FOUND,
-        code: ApiErrorCode.EYE_NOT_FOUND,
+      code: ApiErrorCode.EYE_NOT_FOUND,
       status: 404,
       detail: `Eye with id ${id} not found`,
     });
@@ -762,7 +768,7 @@ app.post("/custom/:id/test", async (c) => {
   if (!testInput) {
     return createErrorResponse(c, {
       title: ApiErrorTitle.MISSING_INPUT,
-        code: ApiErrorCode.MISSING_INPUT,
+      code: ApiErrorCode.MISSING_INPUT,
       status: 400,
       detail: "testInput field is required",
     });
@@ -780,7 +786,7 @@ app.post("/custom/:id/test", async (c) => {
   if (eye.length === 0) {
     return createErrorResponse(c, {
       title: ApiErrorTitle.EYE_NOT_FOUND,
-        code: ApiErrorCode.EYE_NOT_FOUND,
+      code: ApiErrorCode.EYE_NOT_FOUND,
       status: 404,
       detail: `Eye with id ${id} not found`,
     });

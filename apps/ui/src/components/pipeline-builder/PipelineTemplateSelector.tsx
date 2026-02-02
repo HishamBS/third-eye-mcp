@@ -73,7 +73,9 @@ export function PipelineTemplateSelector({
         const pipelines = envelope.data || [];
 
         // Convert database pipelines to template format
-        const templatesFromDb: PipelineTemplate[] = (pipelines as RawPipeline[]).map((p) => {
+        const templatesFromDb: PipelineTemplate[] = (
+          pipelines as RawPipeline[]
+        ).map((p) => {
           const workflow = p.workflowJson ?? {};
           return {
             id: p.id,

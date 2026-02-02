@@ -9,7 +9,11 @@
  */
 
 import { Hono } from "hono";
-import { generateId, generateRunId, generateSessionId } from "@third-eye/db/utils/uuid";
+import {
+  generateId,
+  generateRunId,
+  generateSessionId,
+} from "@third-eye/db/utils/uuid";
 import { getDb } from "@third-eye/db";
 import { pipelines, pipelineQueue, executionSteps } from "@third-eye/db";
 import { eq, desc } from "drizzle-orm";
@@ -25,7 +29,11 @@ import {
   errorHandler,
 } from "../middleware/response";
 import { z } from "zod";
-import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
+import {
+  ApiErrorCode,
+  ApiErrorTitle,
+  ApiErrorMessage,
+} from "@third-eye/constants";
 
 const app = new Hono();
 
@@ -243,12 +251,16 @@ app.post("/execute", async (c) => {
       })
       .where(eq(pipelineQueue.runId, runId));
 
-    return createSuccessResponse(c, {
-      runId,
-      sessionId: actualSessionId,
-      status: "running",
-      message: "Pipeline execution started",
-    }, { status: 202 });
+    return createSuccessResponse(
+      c,
+      {
+        runId,
+        sessionId: actualSessionId,
+        status: "running",
+        message: "Pipeline execution started",
+      },
+      { status: 202 },
+    );
   } catch (error) {
     console.error("Execute pipeline error:", error);
     return createInternalErrorResponse(

@@ -72,11 +72,7 @@ export function sanitizeObject(obj: unknown): SanitizedValue {
   }
 
   // Primitive values (number, boolean, null)
-  if (
-    typeof obj === "number" ||
-    typeof obj === "boolean" ||
-    obj === null
-  ) {
+  if (typeof obj === "number" || typeof obj === "boolean" || obj === null) {
     return obj as SanitizedPrimitive;
   }
 

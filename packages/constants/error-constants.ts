@@ -170,7 +170,8 @@ export const ApiErrorMessage = {
   EYE_NOT_FOUND_DETAIL: "The requested eye could not be found",
   EYE_ICON_NOT_FOUND_DETAIL: "Eye icon not found",
   PERSONA_NOT_FOUND_DETAIL: "The requested persona could not be found",
-  PERSONA_VERSION_NOT_FOUND_DETAIL: "The requested persona version could not be found",
+  PERSONA_VERSION_NOT_FOUND_DETAIL:
+    "The requested persona version could not be found",
   VERSION_NOT_FOUND_DETAIL: "The requested version could not be found",
   VERSIONS_NOT_FOUND_DETAIL: "No versions found",
   SESSION_NOT_FOUND_DETAIL: "The requested session could not be found",
@@ -191,7 +192,8 @@ export const ApiErrorMessage = {
   CANNOT_DELETE_BUILTIN_DETAIL: "Cannot delete built-in profiles",
 
   // Leaderboard messages
-  INVALID_CATEGORY_DETAIL: "Supported categories: fastest, cheapest, reliable, popular, quality",
+  INVALID_CATEGORY_DETAIL:
+    "Supported categories: fastest, cheapest, reliable, popular, quality",
   NO_DATA_AVAILABLE: "No data available for the selected time range",
   LEADERBOARD_FETCH_FAILED: "Failed to fetch leaderboard",
   LEADERBOARD_SUMMARY_FETCH_FAILED: "Failed to fetch leaderboard summary",
@@ -261,19 +263,25 @@ export const ApiErrorMessage = {
   ROUTING_FETCH_FAILED: "Failed to fetch routing decision",
 
   // Session validation details
-  VALIDATION_INVALID_STATUS: "Invalid status. Must be: active, completed, or failed",
+  VALIDATION_INVALID_STATUS:
+    "Invalid status. Must be: active, completed, or failed",
   VALIDATION_INVALID_SOURCE: "Invalid source. Must be: user or eye",
   VALIDATION_INVALID_EXPORT_FORMAT: "Invalid format. Must be: json, md, or csv",
-  VALIDATION_MISSING_CONTEXT_FIELDS: "Missing required fields: source, key, value",
-  VALIDATION_BULK_DELETE_PARAMS: "Provide either sessionIds (array) or olderThan (ISO date string)",
+  VALIDATION_MISSING_CONTEXT_FIELDS:
+    "Missing required fields: source, key, value",
+  VALIDATION_BULK_DELETE_PARAMS:
+    "Provide either sessionIds (array) or olderThan (ISO date string)",
 
   // Clarification validation messages
   VALIDATION_ANSWER_TOO_SHORT_REASON: "Answer too short",
-  VALIDATION_ANSWER_TOO_SHORT_SUGGESTION: "Please provide more detail (at least 3 characters)",
+  VALIDATION_ANSWER_TOO_SHORT_SUGGESTION:
+    "Please provide more detail (at least 3 characters)",
   VALIDATION_CONTRADICTION_REASON: "Answer contradicts previous clarification",
-  VALIDATION_CONTRADICTION_SUGGESTION: "Please review your previous answers for consistency",
+  VALIDATION_CONTRADICTION_SUGGESTION:
+    "Please review your previous answers for consistency",
   VALIDATION_INTENT_CONTRADICTION_REASON: "Answer contradicts stated intent",
-  VALIDATION_INTENT_CONTRADICTION_BUILD_SUGGESTION: "Your answer seems to contradict your original intent to build something",
+  VALIDATION_INTENT_CONTRADICTION_BUILD_SUGGESTION:
+    "Your answer seems to contradict your original intent to build something",
 
   // Session operation messages (not errors - descriptive only)
   SESSION_ALREADY_KILLED: "Session already killed",

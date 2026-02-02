@@ -94,7 +94,11 @@ export function useAPI() {
 
         // Unwrap success envelope: {success: true, data: T, meta: {...}}
         // Backend uses createSuccessResponse which wraps data in this format
-        if (responseData && typeof responseData === 'object' && 'data' in responseData) {
+        if (
+          responseData &&
+          typeof responseData === "object" &&
+          "data" in responseData
+        ) {
           return responseData.data as T;
         }
 

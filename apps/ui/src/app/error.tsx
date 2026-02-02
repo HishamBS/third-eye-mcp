@@ -34,7 +34,9 @@ export default function GlobalError({
       >
         <div className="flex justify-center mb-6">
           <div className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.error} p-4`}>
-            <AlertTriangle className={`h-12 w-12 ${STATUS_TEXT_COLORS.error}`} />
+            <AlertTriangle
+              className={`h-12 w-12 ${STATUS_TEXT_COLORS.error}`}
+            />
           </div>
         </div>
 
@@ -43,7 +45,8 @@ export default function GlobalError({
         </h1>
 
         <p className="text-semantic-muted mb-6">
-          An unexpected error occurred. Please try again or return to the home page.
+          An unexpected error occurred. Please try again or return to the home
+          page.
         </p>
 
         {process.env.NODE_ENV === "development" && (

@@ -176,7 +176,7 @@ app.put(
       if (existing.length === 0) {
         return createErrorResponse(c, {
           title: ApiErrorTitle.PROFILE_NOT_FOUND,
-        code: ApiErrorCode.PROFILE_NOT_FOUND,
+          code: ApiErrorCode.PROFILE_NOT_FOUND,
           status: 404,
           detail: "The requested strictness profile could not be found",
         });
@@ -186,7 +186,7 @@ app.put(
       if (existing[0].isBuiltIn) {
         return createErrorResponse(c, {
           title: ApiErrorTitle.CANNOT_EDIT_BUILTIN,
-        code: ApiErrorCode.CANNOT_EDIT_BUILTIN,
+          code: ApiErrorCode.CANNOT_EDIT_BUILTIN,
           status: 403,
           detail: "Built-in strictness profiles cannot be modified",
         });

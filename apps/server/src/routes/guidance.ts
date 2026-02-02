@@ -1,5 +1,9 @@
 import { Hono } from "hono";
-import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
+import {
+  ApiErrorCode,
+  ApiErrorTitle,
+  ApiErrorMessage,
+} from "@third-eye/constants";
 import { getWorkflowGuidance } from "@third-eye/core/guidance";
 import type { EyeResponse } from "@third-eye/eyes";
 import {
@@ -39,7 +43,8 @@ app.post("/", async (c) => {
   try {
     const body = await c.req.json();
     const validated = guidanceRequestSchema.parse(body);
-    const { task_description, current_state, last_eye_response, session_id } = validated;
+    const { task_description, current_state, last_eye_response, session_id } =
+      validated;
 
     const guidance = getWorkflowGuidance({
       taskDescription: task_description,

@@ -63,7 +63,8 @@ app.post(
   validateBodyWithEnvelope(schemas.providerKeyCreate),
   async (c) => {
     try {
-      const { provider, label, apiKey, metadata } = getValidatedBody<ProviderKeyCreate>(c);
+      const { provider, label, apiKey, metadata } =
+        getValidatedBody<ProviderKeyCreate>(c);
 
       // Check for duplicate label for same provider
       const { db } = getDb();
@@ -122,7 +123,8 @@ app.put(
   async (c) => {
     try {
       const id = c.req.param("id"); // String UUID, not parseInt
-      const { label, apiKey, metadata } = getValidatedBody<ProviderKeyUpdate>(c);
+      const { label, apiKey, metadata } =
+        getValidatedBody<ProviderKeyUpdate>(c);
 
       const { db } = getDb();
 

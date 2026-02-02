@@ -78,12 +78,18 @@ const nextConfig = {
     // This ensures both source and dist files can be resolved
     config.resolve.alias = {
       ...config.resolve.alias,
-      "@third-eye/constants": path.resolve(__dirname, "../../packages/constants"),
+      "@third-eye/constants": path.resolve(
+        __dirname,
+        "../../packages/constants",
+      ),
       "@third-eye/types": path.resolve(__dirname, "../../packages/types"),
       "@third-eye/config": path.resolve(__dirname, "../../packages/config"),
       "@third-eye/db": path.resolve(__dirname, "../../packages/db"),
       "@third-eye/core": path.resolve(__dirname, "../../packages/core"),
-      "@third-eye/providers": path.resolve(__dirname, "../../packages/providers"),
+      "@third-eye/providers": path.resolve(
+        __dirname,
+        "../../packages/providers",
+      ),
       "@third-eye/eyes": path.resolve(__dirname, "../../packages/eyes"),
       "@third-eye/mcp": path.resolve(__dirname, "../../packages/mcp"),
       "@third-eye/theme": path.resolve(__dirname, "../../packages/theme"),

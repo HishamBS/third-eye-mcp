@@ -66,7 +66,10 @@ app.get("/:id", async (c) => {
     return createSuccessResponse(c, { policy });
   } catch (error) {
     console.error(ApiErrorMessage.POLICY_SINGLE_FETCH_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.POLICY_SINGLE_FETCH_FAILED);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.POLICY_SINGLE_FETCH_FAILED,
+    );
   }
 });
 
@@ -128,7 +131,10 @@ app.post("/", async (c) => {
         code: ApiErrorCode.POLICY_CREATE_FAILED,
       });
     }
-    return createInternalErrorResponse(c, ApiErrorMessage.POLICY_CREATE_FAILED_DETAIL);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.POLICY_CREATE_FAILED_DETAIL,
+    );
   }
 });
 
@@ -181,7 +187,10 @@ app.put("/:id", async (c) => {
         code: ApiErrorCode.POLICY_UPDATE_FAILED,
       });
     }
-    return createInternalErrorResponse(c, ApiErrorMessage.POLICY_UPDATE_FAILED_DETAIL);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.POLICY_UPDATE_FAILED_DETAIL,
+    );
   }
 });
 
@@ -210,7 +219,9 @@ app.delete("/:id", async (c) => {
       console.debug("WebSocket broadcast skipped:", e);
     }
 
-    return createSuccessResponse(c, { message: ApiErrorMessage.POLICY_DELETED });
+    return createSuccessResponse(c, {
+      message: ApiErrorMessage.POLICY_DELETED,
+    });
   } catch (error) {
     console.error(ApiErrorMessage.POLICY_DELETE_FAILED, error);
     return createInternalErrorResponse(c, ApiErrorMessage.POLICY_DELETE_FAILED);
@@ -278,7 +289,10 @@ app.post("/:id/activate", async (c) => {
     });
   } catch (error) {
     console.error(ApiErrorMessage.POLICY_ACTIVATE_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.POLICY_ACTIVATE_FAILED);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.POLICY_ACTIVATE_FAILED,
+    );
   }
 });
 
@@ -312,7 +326,10 @@ app.post("/:id/deactivate", async (c) => {
     });
   } catch (error) {
     console.error(ApiErrorMessage.POLICY_DEACTIVATE_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.POLICY_DEACTIVATE_FAILED);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.POLICY_DEACTIVATE_FAILED,
+    );
   }
 });
 

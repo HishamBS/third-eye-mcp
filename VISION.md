@@ -15,24 +15,31 @@ Empower every AI agent with an invisible inner perception that clarifies intent,
 ## Core Philosophy
 
 ### 1. Invisible Empowerment
+
 Humans talk to their preferred agent (Claude, GPT, Cursor, Warp) while Third Eye operates silently through MCP. The human sees only sharper questions and better answers.
 
 ### 2. Two-Phase Intelligence
+
 Every capability operates in GUIDANCE (pre-creation) and VALIDATION (post-creation) stages. Guidance removes ambiguity; validation confirms alignment and evidence. No shortcuts.
 
 ### 3. Dynamic Routing
+
 Overseer LLM analyses each request and assembles the optimal pipeline using capability tags. No static routes, no heuristics. If required eye capability absent, we fail fast with actionable telemetry.
 
 ### 4. Strict Single Source of Truth
+
 Enums, tokens, prompts, themes, pipeline templates, status codes—everything flows from shared TypeScript constants. Literal strings and magic numbers are banned.
 
 ### 5. Local-First Reliability
+
 Entire platform runs offline with Bun + SQLite + LM Studio (or any OpenAI-compatible endpoint). Deterministic prompts guarantee OSS model compliance.
 
 ### 6. Human-Friendly UX
+
 Non-technical operators must immediately understand what is happening. Markdown renders as magazine-quality articles. Pipeline editor feels like n8n. Monitor is a cinematic timeline of the agent's inner thoughts.
 
 ### 7. No Fallbacks, No Heuristics
+
 When an eye misbehaves, we re-prompt with crystal-clear reminders. We do not auto-patch envelopes or guess. Either the persona complies or we surface a precise error.
 
 ---
@@ -40,6 +47,7 @@ When an eye misbehaves, we re-prompt with crystal-clear reminders. We do not aut
 ## What Third Eye Really Is
 
 **NOT:**
+
 - ❌ A linear validation pipeline that every request goes through
 - ❌ A content generator that creates work for agents
 - ❌ A rigid rule-based system with hardcoded logic
@@ -47,6 +55,7 @@ When an eye misbehaves, we re-prompt with crystal-clear reminders. We do not aut
 - ❌ A blocker or rejection machine
 
 **IS:**
+
 - ✅ An intelligent overseer that empowers AI agents with inner perception
 - ✅ A dynamic routing system where Overseer LLM decides the validation flow
 - ✅ Completely invisible to human users (seamless agent experience)
@@ -92,18 +101,22 @@ When an eye misbehaves, we re-prompt with crystal-clear reminders. We do not aut
 The updated playground delivers a full local-first diagnostic surface for Overseer flows and individual Eye runs.
 
 ### Dual Modes
+
 - **Overseer Pipeline**: the primary form submits a task to `POST /api/mcp/run`, passes the active strictness profile, and streams the full dynamic pipeline.
 - **Eye Test Panel**: a second form targets `POST /api/eyes/:eyeId/test`, allowing direct execution of a single Eye with ad-hoc input. Responses surface the raw envelope, alongside a prettified summary card.
 
 ### Session Cohesion
+
 - Every playground session reuses the global session selector. Selecting a session updates the URL query string (`/monitor?sessionId=…`) so the monitor view opens in sync.
 - Sessions created on demand use the slug pattern `<tool>-<agent>-NN` (for example `third_eye_overseer-claude-desktop-04`), matching the naming logic in `SessionManager`.
 
 ### Local-First UX
+
 - Endpoints intentionally remain unauthenticated—mirroring the desktop, single-user environment the product targets.
 - Results cache in the existing session timeline, giving immediate parity with the monitor view and keeping all Eye outputs in one place.
 
 ### Strictness Awareness
+
 - The strictness slider writes 0–100 values consistently (UI, docs, DB seed, auto-router), so every test run honors the same thresholds.
 
 ---
@@ -113,17 +126,21 @@ The updated playground delivers a full local-first diagnostic surface for Overse
 Duel mode now offers a model-agnostic comparison harness fully driven by backend data.
 
 ### Dynamic Provider Catalogue
+
 - The UI fetches `/api/models` to populate supported providers/models (Groq, Ollama, LM Studio). No more hardcoded competitors.
 - Model refreshes surface provider authentication errors with explicit 401 responses, helping diagnose key issues quickly.
 
 ### Flexible Competitors
+
 - Users can stage 2–4 configurations, each with provider + model selection. The POST body to `/api/duel` (and `/api/duel/v2`) passes these configs, which the backend feeds into `EyeOrchestrator.runEye` via provider overrides.
 
 ### Rich Telemetry
+
 - Duel results include provider labels, model names, latency, token usage, verdicts, and a composite score, making side-by-side evaluation actionable.
 - Pipeline events and duel result cards mirror the provider metadata so the monitor, duel dashboard, and stored history stay in sync.
 
 ### Graceful Defaults
+
 - Legacy identifiers (e.g., `groq:llama-3.3-70b-versatile`) continue to work through parsing helpers that map providers/models sensibly.
 - Errors remain local-friendly—no external tooling or auth layers block experimentation.
 
@@ -138,17 +155,17 @@ Duel mode now offers a model-agnostic comparison harness fully driven by backend
 
 ## Capability & Persona Matrix
 
-| Eye | Stage | Capability Tags | Primary Output | Key Notes |
-|-----|-------|-----------------|----------------|-----------|
-| **Overseer** | Guidance only | `capability:analysis`, `capability:routing` | `capabilityPlan`, canonical questions, routing reasoning | Single MCP entry point; never skipped |
-| **Sharingan** | Guidance | `capability:clarification` | Canonical questions, ambiguity score, resolved facts summary | Re-asks only unanswered questions; emits `OK_NO_CLARIFICATION_NEEDED` when complete |
-| **Prompt Helper (Kyuubi)** | Guidance & Validation | `capability:briefing`, `capability:quality_gate` | Detailed brief, success metrics, alignment score | Validation returns `OK_WITH_NOTES` or `REJECT_INCOMPLETE` only |
-| **Jōgan** | Guidance & Validation | `capability:intent_confirmation` | Intent analysis, confirmation prompt, suggested response | Validation emits `AWAIT_CONFIRMATION` then `OK_INTENT_CONFIRMED` |
-| **Rinnegan** | Guidance | `capability:pipeline_planning` | Stepwise action plan, risk notes | Optional based on request type |
-| **Mangekyō** | Validation | `capability:code_review` | Code issues, diffs, severity metrics | Works with agent-supplied draft |
-| **Tenseigan** | Validation | `capability:factual_validation` | Evidence table with citations, status, risk summary | Requires confirmed citations |
-| **Byakugan** | Validation | `capability:final_approval` | Final readiness verdict, residual risks, go/no-go | Always last validation step |
-| **Custom Eyes** | Dynamic | Capability tags defined by user | Stage templates derived from SSOT | Must register capabilities to participate in routing |
+| Eye                        | Stage                 | Capability Tags                                  | Primary Output                                               | Key Notes                                                                           |
+| -------------------------- | --------------------- | ------------------------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| **Overseer**               | Guidance only         | `capability:analysis`, `capability:routing`      | `capabilityPlan`, canonical questions, routing reasoning     | Single MCP entry point; never skipped                                               |
+| **Sharingan**              | Guidance              | `capability:clarification`                       | Canonical questions, ambiguity score, resolved facts summary | Re-asks only unanswered questions; emits `OK_NO_CLARIFICATION_NEEDED` when complete |
+| **Prompt Helper (Kyuubi)** | Guidance & Validation | `capability:briefing`, `capability:quality_gate` | Detailed brief, success metrics, alignment score             | Validation returns `OK_WITH_NOTES` or `REJECT_INCOMPLETE` only                      |
+| **Jōgan**                  | Guidance & Validation | `capability:intent_confirmation`                 | Intent analysis, confirmation prompt, suggested response     | Validation emits `AWAIT_CONFIRMATION` then `OK_INTENT_CONFIRMED`                    |
+| **Rinnegan**               | Guidance              | `capability:pipeline_planning`                   | Stepwise action plan, risk notes                             | Optional based on request type                                                      |
+| **Mangekyō**               | Validation            | `capability:code_review`                         | Code issues, diffs, severity metrics                         | Works with agent-supplied draft                                                     |
+| **Tenseigan**              | Validation            | `capability:factual_validation`                  | Evidence table with citations, status, risk summary          | Requires confirmed citations                                                        |
+| **Byakugan**               | Validation            | `capability:final_approval`                      | Final readiness verdict, residual risks, go/no-go            | Always last validation step                                                         |
+| **Custom Eyes**            | Dynamic               | Capability tags defined by user                  | Stage templates derived from SSOT                            | Must register capabilities to participate in routing                                |
 
 ---
 
@@ -166,13 +183,13 @@ Every request → Overseer → Sharingan → Prompt Helper → Jogan → Rinnega
 
 Overseer is the **INTELLIGENT ROUTER** that decides the pipeline based on request analysis:
 
-| Request Example | Pipeline Route | Reasoning |
-|----------------|----------------|-----------|
-| "Generate a report" | Sharingan → Prompt Helper → Jogan → Tenseigan → Byakugan | Text content needs ambiguity check, refinement, intent confirmation, fact validation, and final approval |
-| "Review this code" | Mangekyo only | Already have content, skip guidance Eyes, go straight to code review |
-| "Is this claim accurate?" | Tenseigan only | Single validation task - just fact-checking needed |
-| "Plan this feature" | Sharingan → Prompt Helper → Jogan → Rinnegan | Planning task - needs clarity, refinement, intent, then plan review (not code) |
-| "Here's my draft code + tests" | Mangekyo → Tenseigan | Code validation + any factual claims check |
+| Request Example                | Pipeline Route                                           | Reasoning                                                                                                |
+| ------------------------------ | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| "Generate a report"            | Sharingan → Prompt Helper → Jogan → Tenseigan → Byakugan | Text content needs ambiguity check, refinement, intent confirmation, fact validation, and final approval |
+| "Review this code"             | Mangekyo only                                            | Already have content, skip guidance Eyes, go straight to code review                                     |
+| "Is this claim accurate?"      | Tenseigan only                                           | Single validation task - just fact-checking needed                                                       |
+| "Plan this feature"            | Sharingan → Prompt Helper → Jogan → Rinnegan             | Planning task - needs clarity, refinement, intent, then plan review (not code)                           |
+| "Here's my draft code + tests" | Mangekyo → Tenseigan                                     | Code validation + any factual claims check                                                               |
 
 **Key Insight**: Overseer LLM decides on the fly - no rigid patterns!
 
@@ -240,6 +257,7 @@ Each Eye generates a `ui` field in their response for human-readable monitoring:
 ```
 
 **UI Field Structure**:
+
 - `title`: 2-4 words describing Eye action
 - `summary`: One sentence for collapsed view
 - `details`: 2-3 conversational sentences for expanded view
@@ -255,6 +273,7 @@ Each Eye generates a `ui` field in their response for human-readable monitoring:
 3. **eye_complete**: Eye finished with results
 
 **Plus special events**:
+
 - **agent_message**: Agent communicating with human or Third Eye
 - **session_status**: Session state changes (active, awaiting_input, complete, etc.)
 - **pipeline_event**: Generic pipeline milestones
@@ -487,6 +506,7 @@ The web portal displays a **chat-like conversation log**:
 ### ✅ Fully Implemented (100%)
 
 **Phase 1: Foundation & Dynamic Routing** - Complete (2025-10)
+
 - Dynamic routing via Overseer LLM
 - Routing decisions storage & retrieval (`routing_decisions` table)
 - MCP server integration (`packages/mcp/server.ts`)
@@ -496,6 +516,7 @@ The web portal displays a **chat-like conversation log**:
 - Process management (start/stop/status)
 
 **Phase 2: Pause/Resume & Human-in-the-Loop** - Complete (2025-10)
+
 - State persistence across restarts
 - Intent confirmation flow (Jōgan Eye)
 - Session resume capability
@@ -504,12 +525,14 @@ The web portal displays a **chat-like conversation log**:
 - Clarification request flow
 
 **Phase 3: Routing Modes (Policies & Templates)** - Complete (2025-11)
+
 - **Policy System**: Define routing constraints (mandatory/forbidden eyes, validation thresholds, boolean constraints, policy activation/deactivation)
 - **Template System**: Fixed eye sequences (predefined pipelines, auto-trigger patterns, template import/export, usage tracking)
 - **Three Routing Modes**: Fully Dynamic, Constrained, Fixed Template
 - **Management UI**: `/routing-modes` page (658 lines) with mode selector, policy builder (visual interface), template manager, policy preview
 
 **Phase 4A: Pipeline Builder Core** - Complete (2025-11)
+
 - Capability Matrix with 8 Eyes (capability tags, descriptions, scenarios)
 - Interactive eye cards with model recommendation integration
 - Eye detail modals
@@ -521,6 +544,7 @@ The web portal displays a **chat-like conversation log**:
 ### ⚠️ Partially Implemented (~70%)
 
 **Phase 4B: Policy/Template Enhancements**
+
 - ✅ PolicyBuilderEnhanced component (286 lines) - Full visual builder
 - ✅ PolicyPreview component - Shows expected routing behavior
 - ✅ Template import/export functionality
@@ -532,6 +556,7 @@ The web portal displays a **chat-like conversation log**:
 - ❌ Session comparison - Compare routing decisions across sessions
 
 **Backend Integration** (~80%)
+
 - ✅ Verified Endpoints: `/api/mcp/run`, `/api/eyes`, `/api/personas`, `/api/sessions`, `/api/routing-decisions`, `/api/app-settings`
 - ⚠️ Needs Verification: `/api/pipelines` endpoints (list, active, create, activate, delete)
 - ⚠️ WebSocket integration (partial) - `packages/core/pipeline-execution-engine.ts:591`
@@ -539,6 +564,7 @@ The web portal displays a **chat-like conversation log**:
 ### ❌ Not Implemented
 
 **Automation Enhancements (Tier 2+)** - Planning complete, implementation pending (0%)
+
 - First-time setup wizard
 - Health monitoring & auto-restart
 - Network retry logic (exponential backoff)
@@ -547,6 +573,7 @@ The web portal displays a **chat-like conversation log**:
 - Cross-platform CI (GitHub Actions)
 
 **Technical Debt (Priority P2)**
+
 - UUID-based eye identifiers migration (currently using eye names)
 - PipelineDagSchema recreation in `@third-eye/types`
 - Session state update logic (stub implementation)
@@ -557,15 +584,18 @@ The web portal displays a **chat-like conversation log**:
 ## Related Documentation
 
 For detailed implementation status and task tracking:
+
 - **[IMPLEMENTATION_STATUS.md](../IMPLEMENTATION_STATUS.md)** - Complete phase-by-phase status
 - **[REMAINING_TASKS.md](../REMAINING_TASKS.md)** - All outstanding tasks by priority (P0-P3)
 
 For technical specifications:
+
 - **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System design and component interactions (to be extracted)
 - **[PERSONA_SPECIFICATIONS.md](./PERSONA_SPECIFICATIONS.md)** - All 8 Eye persona specifications (to be extracted)
 - **[DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md)** - Complete database schema with SQL (to be extracted)
 
 For operational guides:
+
 - **[README.md](../README.md)** - Getting started and project overview
 - **[USER_GUIDE.md](../USER_GUIDE.md)** - End-user documentation
 - **[CONTRIBUTING.md](../CONTRIBUTING.md)** - Contribution guidelines
@@ -574,6 +604,7 @@ For operational guides:
 - **[AUTOMATION_GAPS.md](../AUTOMATION_GAPS.md)** - Technical analysis of automation opportunities
 
 For development:
+
 - **[CLAUDE.md](../CLAUDE.md)** - Agent instructions and rules
 
 ---
@@ -581,6 +612,7 @@ For development:
 ## Archived Documentation
 
 The following files have been archived to `docs/archive/` as they have been superseded by this consolidated vision:
+
 - `THIRD_EYE_VISION.md` (v1) - Original concise vision (142 lines)
 - `FINAL_OVERSEER_VISION.md` (v1) - Comprehensive implementation blueprint (1,983 lines)
 

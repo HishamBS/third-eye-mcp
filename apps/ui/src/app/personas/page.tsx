@@ -442,8 +442,8 @@ export default function PersonasPage() {
                       {/* Deduplicate versions to prevent multiple "v2 (active)" entries */}
                       {Array.from(
                         new Map(
-                          personaVersions.map((p) => [p.version, p])
-                        ).values()
+                          personaVersions.map((p) => [p.version, p]),
+                        ).values(),
                       ).map((p) => (
                         <option key={p.id} value={p.version}>
                           v{p.version} {p.active ? "(active)" : ""}

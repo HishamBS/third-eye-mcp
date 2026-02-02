@@ -235,7 +235,8 @@ export const UI_ICON_NAMES = {
 /**
  * Type for all valid UI icon names
  */
-export type UIIconName = (typeof UI_ICON_NAMES)[keyof typeof UI_ICON_NAMES][keyof (typeof UI_ICON_NAMES)[keyof typeof UI_ICON_NAMES]];
+export type UIIconName =
+  (typeof UI_ICON_NAMES)[keyof typeof UI_ICON_NAMES][keyof (typeof UI_ICON_NAMES)[keyof typeof UI_ICON_NAMES]];
 
 /**
  * Helper to check if a string is a valid UI icon name

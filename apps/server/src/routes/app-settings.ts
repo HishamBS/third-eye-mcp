@@ -106,7 +106,12 @@ app.put("/:key", async (c) => {
     } else {
       await db
         .insert(appSettings)
-        .values({ id: generateId(), createdAt: new Date(), key, value: valueStr })
+        .values({
+          id: generateId(),
+          createdAt: new Date(),
+          key,
+          value: valueStr,
+        })
         .run();
     }
 

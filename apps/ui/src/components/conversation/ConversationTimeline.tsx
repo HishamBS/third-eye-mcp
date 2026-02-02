@@ -104,7 +104,6 @@ function formatTimestamp(date: string | Date): string {
   });
 }
 
-
 /**
  * Timeline event card component
  */

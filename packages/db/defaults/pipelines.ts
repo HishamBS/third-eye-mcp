@@ -61,7 +61,10 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         {
           id: EyeId.OVERSEER,
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X, y: PIPELINE_START_NODE_Y },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X,
+            y: PIPELINE_START_NODE_Y,
+          },
           data: { eyeId: EyeId.OVERSEER },
         },
 
@@ -69,7 +72,10 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         {
           id: "annotation-overseer",
           type: "annotationNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X, y: PIPELINE_START_NODE_Y - 150 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X,
+            y: PIPELINE_START_NODE_Y - 150,
+          },
           data: {
             title: ANNOTATION_OVERSEER_TITLE,
             content: ANNOTATION_OVERSEER_CONTENT,
@@ -81,7 +87,10 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         {
           id: "switch-request-type",
           type: "switchNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 2, y: PIPELINE_START_NODE_Y },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 2,
+            y: PIPELINE_START_NODE_Y,
+          },
           data: {
             label: "Request Type",
             switchConfig: {
@@ -99,7 +108,10 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         {
           id: "annotation-request-type",
           type: "annotationNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 2, y: PIPELINE_START_NODE_Y - 150 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 2,
+            y: PIPELINE_START_NODE_Y - 150,
+          },
           data: {
             title: ANNOTATION_REQUEST_TYPE_TITLE,
             content: ANNOTATION_REQUEST_TYPE_CONTENT,
@@ -112,7 +124,10 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         {
           id: "switch-new-task-content",
           type: "switchNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 3, y: PIPELINE_START_NODE_Y - SPACING_Y * 2 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 3,
+            y: PIPELINE_START_NODE_Y - SPACING_Y * 2,
+          },
           data: {
             label: "Content Domain (NEW_TASK)",
             switchConfig: {
@@ -131,19 +146,28 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         {
           id: "nt-text-sharingan",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 4, y: PIPELINE_START_NODE_Y - SPACING_Y * 3 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 4,
+            y: PIPELINE_START_NODE_Y - SPACING_Y * 3,
+          },
           data: { eyeId: EyeId.SHARINGAN },
         },
         {
           id: "nt-text-kyuubi",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 5, y: PIPELINE_START_NODE_Y - SPACING_Y * 3 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 5,
+            y: PIPELINE_START_NODE_Y - SPACING_Y * 3,
+          },
           data: { eyeId: EyeId.KYUUBI },
         },
         {
           id: "nt-text-jogan",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 6, y: PIPELINE_START_NODE_Y - SPACING_Y * 3 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 6,
+            y: PIPELINE_START_NODE_Y - SPACING_Y * 3,
+          },
           data: { eyeId: EyeId.JOGAN },
         },
 
@@ -151,31 +175,46 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         {
           id: "nt-code-sharingan",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 4, y: PIPELINE_START_NODE_Y - SPACING_Y * 2 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 4,
+            y: PIPELINE_START_NODE_Y - SPACING_Y * 2,
+          },
           data: { eyeId: EyeId.SHARINGAN },
         },
         {
           id: "nt-code-kyuubi",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 5, y: PIPELINE_START_NODE_Y - SPACING_Y * 2 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 5,
+            y: PIPELINE_START_NODE_Y - SPACING_Y * 2,
+          },
           data: { eyeId: EyeId.KYUUBI },
         },
         {
           id: "nt-code-jogan",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 6, y: PIPELINE_START_NODE_Y - SPACING_Y * 2 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 6,
+            y: PIPELINE_START_NODE_Y - SPACING_Y * 2,
+          },
           data: { eyeId: EyeId.JOGAN },
         },
         {
           id: "nt-code-rinnegan",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 7, y: PIPELINE_START_NODE_Y - SPACING_Y * 2 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 7,
+            y: PIPELINE_START_NODE_Y - SPACING_Y * 2,
+          },
           data: { eyeId: EyeId.RINNEGAN },
         },
         {
           id: "nt-code-mangekyo",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 8, y: PIPELINE_START_NODE_Y - SPACING_Y * 2 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 8,
+            y: PIPELINE_START_NODE_Y - SPACING_Y * 2,
+          },
           data: { eyeId: EyeId.MANGEKYO },
         },
 
@@ -183,13 +222,19 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         {
           id: "nt-plan-sharingan",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 4, y: PIPELINE_START_NODE_Y - SPACING_Y * 1 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 4,
+            y: PIPELINE_START_NODE_Y - SPACING_Y * 1,
+          },
           data: { eyeId: EyeId.SHARINGAN },
         },
         {
           id: "nt-plan-rinnegan",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 5, y: PIPELINE_START_NODE_Y - SPACING_Y * 1 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 5,
+            y: PIPELINE_START_NODE_Y - SPACING_Y * 1,
+          },
           data: { eyeId: EyeId.RINNEGAN },
         },
 
@@ -197,19 +242,28 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         {
           id: "nt-mixed-sharingan",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 4, y: PIPELINE_START_NODE_Y },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 4,
+            y: PIPELINE_START_NODE_Y,
+          },
           data: { eyeId: EyeId.SHARINGAN },
         },
         {
           id: "nt-mixed-kyuubi",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 5, y: PIPELINE_START_NODE_Y },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 5,
+            y: PIPELINE_START_NODE_Y,
+          },
           data: { eyeId: EyeId.KYUUBI },
         },
         {
           id: "nt-mixed-jogan",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 6, y: PIPELINE_START_NODE_Y },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 6,
+            y: PIPELINE_START_NODE_Y,
+          },
           data: { eyeId: EyeId.JOGAN },
         },
 
@@ -218,7 +272,10 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         {
           id: "switch-draft-content",
           type: "switchNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 3, y: PIPELINE_START_NODE_Y + SPACING_Y * 1.5 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 3,
+            y: PIPELINE_START_NODE_Y + SPACING_Y * 1.5,
+          },
           data: {
             label: "Content Domain (DRAFT_REVIEW)",
             switchConfig: {
@@ -239,7 +296,10 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         {
           id: "dr-code-mangekyo",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 4, y: PIPELINE_START_NODE_Y + SPACING_Y * 2 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 4,
+            y: PIPELINE_START_NODE_Y + SPACING_Y * 2,
+          },
           data: { eyeId: EyeId.MANGEKYO },
         },
 
@@ -247,7 +307,10 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         {
           id: "dr-plan-rinnegan",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 4, y: PIPELINE_START_NODE_Y + SPACING_Y * 2.5 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 4,
+            y: PIPELINE_START_NODE_Y + SPACING_Y * 2.5,
+          },
           data: { eyeId: EyeId.RINNEGAN },
         },
 
@@ -256,7 +319,10 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         {
           id: "switch-validation-content",
           type: "switchNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 3, y: PIPELINE_START_NODE_Y + SPACING_Y * 3.5 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 3,
+            y: PIPELINE_START_NODE_Y + SPACING_Y * 3.5,
+          },
           data: {
             label: "Content Domain (VALIDATION)",
             switchConfig: {
@@ -277,7 +343,10 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         {
           id: "vo-code-mangekyo",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 4, y: PIPELINE_START_NODE_Y + SPACING_Y * 4 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 4,
+            y: PIPELINE_START_NODE_Y + SPACING_Y * 4,
+          },
           data: { eyeId: EyeId.MANGEKYO },
         },
 
@@ -285,7 +354,10 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         {
           id: "vo-plan-rinnegan",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 4, y: PIPELINE_START_NODE_Y + SPACING_Y * 4.5 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 4,
+            y: PIPELINE_START_NODE_Y + SPACING_Y * 4.5,
+          },
           data: { eyeId: EyeId.RINNEGAN },
         },
 
@@ -294,13 +366,19 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         {
           id: "final-tenseigan",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 9, y: PIPELINE_START_NODE_Y },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 9,
+            y: PIPELINE_START_NODE_Y,
+          },
           data: { eyeId: EyeId.TENSEIGAN },
         },
         {
           id: "final-byakugan",
           type: "eyeNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 10, y: PIPELINE_START_NODE_Y },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 10,
+            y: PIPELINE_START_NODE_Y,
+          },
           data: { eyeId: EyeId.BYAKUGAN },
         },
 
@@ -308,7 +386,10 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         {
           id: "annotation-final-validation",
           type: "annotationNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 9, y: PIPELINE_START_NODE_Y - 150 },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 9,
+            y: PIPELINE_START_NODE_Y - 150,
+          },
           data: {
             title: ANNOTATION_FINAL_VALIDATION_TITLE,
             content: ANNOTATION_FINAL_VALIDATION_CONTENT,
@@ -320,7 +401,10 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         {
           id: "terminal",
           type: "terminalNode",
-          position: { x: PIPELINE_START_NODE_X + SPACING_X * 11, y: PIPELINE_START_NODE_Y },
+          position: {
+            x: PIPELINE_START_NODE_X + SPACING_X * 11,
+            y: PIPELINE_START_NODE_Y,
+          },
           data: { label: "Complete" },
         },
       ],
@@ -329,7 +413,11 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         { id: "e-start-overseer", source: "start", target: EyeId.OVERSEER },
 
         // Overseer → Request Type Switch
-        { id: "e-overseer-switch", source: EyeId.OVERSEER, target: "switch-request-type" },
+        {
+          id: "e-overseer-switch",
+          source: EyeId.OVERSEER,
+          target: "switch-request-type",
+        },
 
         // Request Type Switch → Content Domain Switches
         {
@@ -362,8 +450,16 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
           target: "nt-text-sharingan",
           label: EDGE_LABEL_CONTENT_TEXT,
         },
-        { id: "e-nt-text-2", source: "nt-text-sharingan", target: "nt-text-kyuubi" },
-        { id: "e-nt-text-3", source: "nt-text-kyuubi", target: "nt-text-jogan" },
+        {
+          id: "e-nt-text-2",
+          source: "nt-text-sharingan",
+          target: "nt-text-kyuubi",
+        },
+        {
+          id: "e-nt-text-3",
+          source: "nt-text-kyuubi",
+          target: "nt-text-jogan",
+        },
         {
           id: "e-nt-text-4",
           source: "nt-text-jogan",
@@ -379,10 +475,26 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
           target: "nt-code-sharingan",
           label: EDGE_LABEL_CONTENT_CODE,
         },
-        { id: "e-nt-code-2", source: "nt-code-sharingan", target: "nt-code-kyuubi" },
-        { id: "e-nt-code-3", source: "nt-code-kyuubi", target: "nt-code-jogan" },
-        { id: "e-nt-code-4", source: "nt-code-jogan", target: "nt-code-rinnegan" },
-        { id: "e-nt-code-5", source: "nt-code-rinnegan", target: "nt-code-mangekyo" },
+        {
+          id: "e-nt-code-2",
+          source: "nt-code-sharingan",
+          target: "nt-code-kyuubi",
+        },
+        {
+          id: "e-nt-code-3",
+          source: "nt-code-kyuubi",
+          target: "nt-code-jogan",
+        },
+        {
+          id: "e-nt-code-4",
+          source: "nt-code-jogan",
+          target: "nt-code-rinnegan",
+        },
+        {
+          id: "e-nt-code-5",
+          source: "nt-code-rinnegan",
+          target: "nt-code-mangekyo",
+        },
         {
           id: "e-nt-code-6",
           source: "nt-code-mangekyo",
@@ -398,7 +510,11 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
           target: "nt-plan-sharingan",
           label: EDGE_LABEL_CONTENT_PLAN,
         },
-        { id: "e-nt-plan-2", source: "nt-plan-sharingan", target: "nt-plan-rinnegan" },
+        {
+          id: "e-nt-plan-2",
+          source: "nt-plan-sharingan",
+          target: "nt-plan-rinnegan",
+        },
         {
           id: "e-nt-plan-3",
           source: "nt-plan-rinnegan",
@@ -414,8 +530,16 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
           target: "nt-mixed-sharingan",
           label: EDGE_LABEL_CONTENT_MIXED,
         },
-        { id: "e-nt-mixed-2", source: "nt-mixed-sharingan", target: "nt-mixed-kyuubi" },
-        { id: "e-nt-mixed-3", source: "nt-mixed-kyuubi", target: "nt-mixed-jogan" },
+        {
+          id: "e-nt-mixed-2",
+          source: "nt-mixed-sharingan",
+          target: "nt-mixed-kyuubi",
+        },
+        {
+          id: "e-nt-mixed-3",
+          source: "nt-mixed-kyuubi",
+          target: "nt-mixed-jogan",
+        },
         {
           id: "e-nt-mixed-4",
           source: "nt-mixed-jogan",
@@ -502,7 +626,11 @@ export const DEFAULT_PIPELINES: Omit<NewPipeline, "createdAt" | "active">[] = [
         },
 
         // Final Validation → Approval
-        { id: "e-final-1", source: "final-tenseigan", target: "final-byakugan" },
+        {
+          id: "e-final-1",
+          source: "final-tenseigan",
+          target: "final-byakugan",
+        },
         { id: "e-final-2", source: "final-byakugan", target: "terminal" },
       ],
     },

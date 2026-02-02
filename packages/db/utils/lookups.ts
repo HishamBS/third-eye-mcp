@@ -339,7 +339,8 @@ export async function normalizeEyeIdentifier(
 ): Promise<string | null> {
   // Check if it's already a UUID (crypto.randomUUID format: 36 characters with hyphens)
   // or legacy nanoid format (21 characters)
-  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const UUID_REGEX =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (UUID_REGEX.test(identifier) || identifier.length === 21) {
     // Verify it exists
     const eye = await getEyeById(identifier);

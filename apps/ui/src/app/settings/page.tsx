@@ -525,7 +525,8 @@ export default function SettingsPage() {
                     const isSelected =
                       typeof theme === "string" &&
                       typeof themeOption.value === "string"
-                        ? theme.toLowerCase() === themeOption.value.toLowerCase()
+                        ? theme.toLowerCase() ===
+                          themeOption.value.toLowerCase()
                         : theme === themeOption.value;
                     return (
                       <button

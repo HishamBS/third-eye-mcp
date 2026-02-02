@@ -16,7 +16,11 @@ import {
   errorHandler,
 } from "../middleware/response";
 import { z } from "zod";
-import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
+import {
+  ApiErrorCode,
+  ApiErrorTitle,
+  ApiErrorMessage,
+} from "@third-eye/constants";
 
 /**
  * Leaderboards API Routes
@@ -230,7 +234,10 @@ app.get("/:category", async (c) => {
     });
   } catch (error) {
     console.error(ApiErrorMessage.LEADERBOARD_FETCH_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.LEADERBOARD_FETCH_FAILED);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.LEADERBOARD_FETCH_FAILED,
+    );
   }
 });
 
@@ -351,7 +358,10 @@ app.get("/trending/models", async (c) => {
     });
   } catch (error) {
     console.error(ApiErrorMessage.TRENDING_MODELS_FETCH_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.TRENDING_MODELS_FETCH_FAILED);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.TRENDING_MODELS_FETCH_FAILED,
+    );
   }
 });
 

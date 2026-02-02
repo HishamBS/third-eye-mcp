@@ -101,10 +101,8 @@ export async function processConfirmationResponse(
         .all();
 
       if (session.length > 0) {
-        const currentConfig = (session[0].configJson as Record<
-          string,
-          unknown
-        >) || {};
+        const currentConfig =
+          (session[0].configJson as Record<string, unknown>) || {};
 
         // Update config with modified requirements
         const updatedConfig = {

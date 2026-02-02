@@ -53,8 +53,12 @@ describe("Validation Middleware", () => {
       const result = sanitizeObject(input) as SanitizedObject;
       expect(result.name).toBe("John");
       expect((result.details as SanitizedObject).bio).toBe("Evil bio");
-      expect(((result.details as SanitizedObject).tags as SanitizedArray)[0]).toBe("");
-      expect(((result.details as SanitizedObject).tags as SanitizedArray)[1]).toBe("safe tag");
+      expect(
+        ((result.details as SanitizedObject).tags as SanitizedArray)[0],
+      ).toBe("");
+      expect(
+        ((result.details as SanitizedObject).tags as SanitizedArray)[1],
+      ).toBe("safe tag");
     });
 
     it("should handle arrays", () => {

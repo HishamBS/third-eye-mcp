@@ -33,7 +33,9 @@ export default function MonitorError({
       >
         <div className="flex justify-center mb-6">
           <div className={`rounded-full ${STATUS_BG_COLORS_SUBTLE.error} p-4`}>
-            <AlertTriangle className={`h-12 w-12 ${STATUS_TEXT_COLORS.error}`} />
+            <AlertTriangle
+              className={`h-12 w-12 ${STATUS_TEXT_COLORS.error}`}
+            />
           </div>
         </div>
 

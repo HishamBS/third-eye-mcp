@@ -57,7 +57,7 @@ export const NodeEditModal = memo(function NodeEditModal({
 
   // Fetch eye details to get capabilities and other metadata
   const { eye: fetchedEye, loading: eyeLoading } = useEyeCapability(
-    node?.data.eyeId ?? null
+    node?.data.eyeId ?? null,
   );
 
   // Initialize form when node changes or eye data is fetched

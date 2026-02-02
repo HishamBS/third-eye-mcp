@@ -1,7 +1,13 @@
 import { Hono } from "hono";
 import { generateSessionId } from "@third-eye/db/utils/uuid";
 import { getDb } from "@third-eye/db";
-import { sessions, runs, pipelineEvents, clarifications, intentConfirmations } from "@third-eye/db";
+import {
+  sessions,
+  runs,
+  pipelineEvents,
+  clarifications,
+  intentConfirmations,
+} from "@third-eye/db";
 import { getConfig } from "@third-eye/config";
 import { eq, desc, count, sql, or, gte, and } from "drizzle-orm";
 import { validateBody, schemas, rateLimit } from "../middleware/validation";
@@ -164,10 +170,7 @@ interface SessionConfig {
  * Safely parse JSON with fallback to default value
  * Prevents crashes from malformed JSON in database
  */
-function safeJsonParse<T>(
-  jsonStr: string | null | undefined,
-  fallback: T,
-): T {
+function safeJsonParse<T>(jsonStr: string | null | undefined, fallback: T): T {
   if (!jsonStr || typeof jsonStr !== "string") {
     return fallback;
   }
@@ -214,7 +217,13 @@ const updateStatusSchema = z.object({
 const addContextSchema = z.object({
   source: z.enum(VALID_CONTEXT_SOURCES),
   key: z.string().min(1),
-  value: z.union([z.string(), z.number(), z.boolean(), z.record(z.unknown()), z.array(z.unknown())]),
+  value: z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.record(z.unknown()),
+    z.array(z.unknown()),
+  ]),
 });
 
 const validateClarificationSchema = z.object({
@@ -290,7 +299,10 @@ app.post("/", async (c) => {
     });
   } catch (error) {
     console.error(LOG_SESSION_CREATE_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.SESSION_CREATE_FAILED);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.SESSION_CREATE_FAILED,
+    );
   }
 });
 
@@ -453,7 +465,10 @@ app.get("/active", async (c) => {
           lastActivity: lastEvent?.createdAt || session.createdAt,
           agentName,
           model:
-            session.model || config.model || metadata.model || DEFAULT_MODEL_NAME,
+            session.model ||
+            config.model ||
+            metadata.model ||
+            DEFAULT_MODEL_NAME,
           displayName,
         };
       }),
@@ -465,7 +480,10 @@ app.get("/active", async (c) => {
     });
   } catch (error) {
     console.error(LOG_ACTIVE_SESSIONS_FETCH_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.ACTIVE_SESSIONS_FETCH_FAILED);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.ACTIVE_SESSIONS_FETCH_FAILED,
+    );
   }
 });
 
@@ -473,8 +491,12 @@ app.get("/active", async (c) => {
 app.get("/", async (c) => {
   try {
     const { db } = getDb();
-    const limit = parseInt(c.req.query("limit") || DEFAULT_PAGINATION_LIMIT.toString());
-    const offset = parseInt(c.req.query("offset") || DEFAULT_PAGINATION_OFFSET.toString());
+    const limit = parseInt(
+      c.req.query("limit") || DEFAULT_PAGINATION_LIMIT.toString(),
+    );
+    const offset = parseInt(
+      c.req.query("offset") || DEFAULT_PAGINATION_OFFSET.toString(),
+    );
     const includeStats = c.req.query("stats") === QUERY_PARAM_TRUE_VALUE;
 
     const allSessions = await db
@@ -514,7 +536,9 @@ app.get("/", async (c) => {
             typeof r.outputJson === "string"
               ? JSON.parse(r.outputJson)
               : r.outputJson;
-          return output?.ok === true || output?.code?.startsWith(SUCCESS_CODE_PREFIX);
+          return (
+            output?.ok === true || output?.code?.startsWith(SUCCESS_CODE_PREFIX)
+          );
         } catch {
           return false;
         }
@@ -542,7 +566,10 @@ app.get("/", async (c) => {
     });
   } catch (error) {
     console.error(LOG_SESSIONS_FETCH_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.SESSIONS_FETCH_FAILED);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.SESSIONS_FETCH_FAILED,
+    );
   }
 });
 
@@ -597,8 +624,12 @@ app.get("/:id/runs", async (c) => {
       });
     }
 
-    const limit = parseInt(c.req.query("limit") || DEFAULT_RUNS_PAGINATION_LIMIT.toString());
-    const offset = parseInt(c.req.query("offset") || DEFAULT_PAGINATION_OFFSET.toString());
+    const limit = parseInt(
+      c.req.query("limit") || DEFAULT_RUNS_PAGINATION_LIMIT.toString(),
+    );
+    const offset = parseInt(
+      c.req.query("offset") || DEFAULT_PAGINATION_OFFSET.toString(),
+    );
 
     const sessionRuns = await db
       .select()
@@ -613,7 +644,10 @@ app.get("/:id/runs", async (c) => {
     return createSuccessResponse(c, sessionRuns);
   } catch (error) {
     console.error(LOG_SESSION_RUNS_FETCH_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.SESSION_RUNS_FETCH_FAILED);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.SESSION_RUNS_FETCH_FAILED,
+    );
   }
 });
 
@@ -639,8 +673,12 @@ app.get("/:id/events", async (c) => {
       });
     }
 
-    const limit = parseInt(c.req.query("limit") || DEFAULT_EVENTS_PAGINATION_LIMIT.toString());
-    const offset = parseInt(c.req.query("offset") || DEFAULT_PAGINATION_OFFSET.toString());
+    const limit = parseInt(
+      c.req.query("limit") || DEFAULT_EVENTS_PAGINATION_LIMIT.toString(),
+    );
+    const offset = parseInt(
+      c.req.query("offset") || DEFAULT_PAGINATION_OFFSET.toString(),
+    );
 
     const events = await db
       .select()
@@ -654,7 +692,10 @@ app.get("/:id/events", async (c) => {
     return createSuccessResponse(c, events);
   } catch (error) {
     console.error(LOG_PIPELINE_EVENTS_FETCH_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.PIPELINE_EVENTS_FETCH_FAILED);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.PIPELINE_EVENTS_FETCH_FAILED,
+    );
   }
 });
 
@@ -708,7 +749,10 @@ app.get("/:id/summary", async (c) => {
     });
   } catch (error) {
     console.error(LOG_SESSION_SUMMARY_FETCH_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.SESSION_SUMMARY_FETCH_FAILED);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.SESSION_SUMMARY_FETCH_FAILED,
+    );
   }
 });
 
@@ -719,7 +763,14 @@ app.patch("/:id/status", async (c) => {
     const body = await c.req.json();
     const { status } = body;
 
-    if (!status || ![SESSION_STATUS_ACTIVE, SESSION_STATUS_COMPLETED, SESSION_STATUS_FAILED].includes(status)) {
+    if (
+      !status ||
+      ![
+        SESSION_STATUS_ACTIVE,
+        SESSION_STATUS_COMPLETED,
+        SESSION_STATUS_FAILED,
+      ].includes(status)
+    ) {
       return createErrorResponse(c, {
         title: ApiErrorTitle.VALIDATION_ERROR,
         code: ApiErrorCode.VALIDATION_ERROR,
@@ -767,7 +818,10 @@ app.patch("/:id/status", async (c) => {
     return createSuccessResponse(c, updated);
   } catch (error) {
     console.error(LOG_SESSION_STATUS_UPDATE_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.SESSION_STATUS_UPDATE_FAILED);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.SESSION_STATUS_UPDATE_FAILED,
+    );
   }
 });
 
@@ -945,7 +999,10 @@ app.get("/:id/context", async (c) => {
     });
   } catch (error) {
     console.error(LOG_SESSION_CONTEXT_FETCH_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.SESSION_CONTEXT_FETCH_FAILED);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.SESSION_CONTEXT_FETCH_FAILED,
+    );
   }
 });
 
@@ -1085,7 +1142,10 @@ app.delete("/:id/context/:key", async (c) => {
     });
   } catch (error) {
     console.error(LOG_CONTEXT_REMOVE_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.CONTEXT_REMOVE_FAILED);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.CONTEXT_REMOVE_FAILED,
+    );
   }
 });
 
@@ -1093,9 +1153,16 @@ app.delete("/:id/context/:key", async (c) => {
 app.get("/:id/export", async (c) => {
   try {
     const sessionId = c.req.param("id");
-    const format = (c.req.query("format") || EXPORT_FORMAT_JSON) as typeof EXPORT_FORMAT_JSON | typeof EXPORT_FORMAT_MD | typeof EXPORT_FORMAT_CSV;
+    const format = (c.req.query("format") || EXPORT_FORMAT_JSON) as
+      | typeof EXPORT_FORMAT_JSON
+      | typeof EXPORT_FORMAT_MD
+      | typeof EXPORT_FORMAT_CSV;
 
-    if (![EXPORT_FORMAT_JSON, EXPORT_FORMAT_MD, EXPORT_FORMAT_CSV].includes(format)) {
+    if (
+      ![EXPORT_FORMAT_JSON, EXPORT_FORMAT_MD, EXPORT_FORMAT_CSV].includes(
+        format,
+      )
+    ) {
       return createErrorResponse(c, {
         title: ApiErrorTitle.VALIDATION_ERROR,
         code: ApiErrorCode.VALIDATION_ERROR,
@@ -1153,10 +1220,7 @@ app.get("/:id/export", async (c) => {
       };
 
       c.header("Content-Type", "application/json");
-      c.header(
-        "Content-Disposition",
-        formatJsonExportFilename(sessionId),
-      );
+      c.header("Content-Disposition", formatJsonExportFilename(sessionId));
       return c.json(exportData);
     }
 
@@ -1200,10 +1264,7 @@ app.get("/:id/export", async (c) => {
       }
 
       c.header("Content-Type", "text/markdown");
-      c.header(
-        "Content-Disposition",
-        formatMarkdownExportFilename(sessionId),
-      );
+      c.header("Content-Disposition", formatMarkdownExportFilename(sessionId));
       return c.text(markdown);
     }
 
@@ -1232,22 +1293,22 @@ app.get("/:id/export", async (c) => {
       }
 
       c.header("Content-Type", "text/csv");
-      c.header(
-        "Content-Disposition",
-        formatCsvExportFilename(sessionId),
-      );
+      c.header("Content-Disposition", formatCsvExportFilename(sessionId));
       return c.text(csv);
     }
 
     return createErrorResponse(c, {
       title: ApiErrorTitle.VALIDATION_ERROR,
-        code: ApiErrorCode.VALIDATION_ERROR,
+      code: ApiErrorCode.VALIDATION_ERROR,
       status: 400,
       detail: ApiErrorMessage.INVALID_FORMAT_DETAIL,
     });
   } catch (error) {
     console.error(LOG_SESSION_EXPORT_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.SESSION_EXPORT_FAILED);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.SESSION_EXPORT_FAILED,
+    );
   }
 });
 
@@ -1331,8 +1392,10 @@ app.post("/:id/clarifications/:clarificationId/validate", async (c) => {
       if (
         previousAnswers.some(
           (prev: string) =>
-            (prev.includes(VALIDATION_AFFIRMATIVE_KEYWORD) && answerLower.includes(VALIDATION_NEGATIVE_KEYWORD)) ||
-            (prev.includes(VALIDATION_NEGATIVE_KEYWORD) && answerLower.includes(VALIDATION_AFFIRMATIVE_KEYWORD)),
+            (prev.includes(VALIDATION_AFFIRMATIVE_KEYWORD) &&
+              answerLower.includes(VALIDATION_NEGATIVE_KEYWORD)) ||
+            (prev.includes(VALIDATION_NEGATIVE_KEYWORD) &&
+              answerLower.includes(VALIDATION_AFFIRMATIVE_KEYWORD)),
         )
       ) {
         valid = false;
@@ -1347,10 +1410,14 @@ app.post("/:id/clarifications/:clarificationId/validate", async (c) => {
       const answerLower = answer.toLowerCase();
 
       // Check if answer contradicts stated user intent
-      if (userIntent.includes(VALIDATION_INTENT_BUILD_KEYWORD) && answerLower.includes(VALIDATION_INTENT_DELETE_KEYWORD)) {
+      if (
+        userIntent.includes(VALIDATION_INTENT_BUILD_KEYWORD) &&
+        answerLower.includes(VALIDATION_INTENT_DELETE_KEYWORD)
+      ) {
         valid = false;
         reason = ApiErrorMessage.VALIDATION_INTENT_CONTRADICTION_REASON;
-        suggestion = ApiErrorMessage.VALIDATION_INTENT_CONTRADICTION_BUILD_SUGGESTION;
+        suggestion =
+          ApiErrorMessage.VALIDATION_INTENT_CONTRADICTION_BUILD_SUGGESTION;
       }
     }
 
@@ -1363,7 +1430,10 @@ app.post("/:id/clarifications/:clarificationId/validate", async (c) => {
     });
   } catch (error) {
     console.error(LOG_CLARIFICATION_VALIDATION_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.CLARIFICATION_VALIDATION_FAILED);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.CLARIFICATION_VALIDATION_FAILED,
+    );
   }
 });
 
@@ -1398,7 +1468,10 @@ app.get("/:sessionId/clarifications", async (c) => {
     return createSuccessResponse(c, results);
   } catch (error) {
     console.error(LOG_CLARIFICATIONS_FETCH_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.CLARIFICATIONS_FETCH_FAILED);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.CLARIFICATIONS_FETCH_FAILED,
+    );
   }
 });
 
@@ -1600,7 +1673,10 @@ app.delete("/bulk", async (c) => {
     });
   } catch (error) {
     console.error(LOG_BULK_DELETE_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.SESSIONS_BULK_DELETE_FAILED);
+    return createInternalErrorResponse(
+      c,
+      ApiErrorMessage.SESSIONS_BULK_DELETE_FAILED,
+    );
   }
 });
 

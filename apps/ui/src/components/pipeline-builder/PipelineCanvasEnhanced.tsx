@@ -202,10 +202,15 @@ export function PipelineCanvasEnhanced() {
   const [isTemplateSelectorOpen, setIsTemplateSelectorOpen] = useState(false);
 
   // Session-based routing visualization state
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
-  const [routingDecision, setRoutingDecision] = useState<RoutingDecision | null>(null);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+    null,
+  );
+  const [routingDecision, setRoutingDecision] =
+    useState<RoutingDecision | null>(null);
   const [routingDecisionLoading, setRoutingDecisionLoading] = useState(false);
-  const [routingDecisionError, setRoutingDecisionError] = useState<string | null>(null);
+  const [routingDecisionError, setRoutingDecisionError] = useState<
+    string | null
+  >(null);
 
   // Control node configuration modal states
   const [selectedSwitchNode, setSelectedSwitchNode] =
@@ -236,8 +241,13 @@ export function PipelineCanvasEnhanced() {
 
   // Set nodes and edges when pipeline is loaded
   useEffect(() => {
-    if (activePipeline?.workflowJson?.nodes && activePipeline?.workflowJson?.edges) {
-      setNodesValidated(activePipeline.workflowJson.nodes as Node<EyeNodeData>[]);
+    if (
+      activePipeline?.workflowJson?.nodes &&
+      activePipeline?.workflowJson?.edges
+    ) {
+      setNodesValidated(
+        activePipeline.workflowJson.nodes as Node<EyeNodeData>[],
+      );
       setEdges(activePipeline.workflowJson.edges as Edge<EdgeConditionData>[]);
     }
   }, [activePipeline, setNodesValidated, setEdges]);
@@ -711,10 +721,13 @@ export function PipelineCanvasEnhanced() {
     }
   }, []);
 
-  const handleRoutingDecisionLoaded = useCallback((decision: RoutingDecision) => {
-    setRoutingDecision(decision);
-    setRoutingDecisionLoading(false);
-  }, []);
+  const handleRoutingDecisionLoaded = useCallback(
+    (decision: RoutingDecision) => {
+      setRoutingDecision(decision);
+      setRoutingDecisionLoading(false);
+    },
+    [],
+  );
 
   const handleRoutingDecisionError = useCallback((error: string) => {
     setRoutingDecisionError(error);

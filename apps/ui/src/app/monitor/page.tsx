@@ -248,9 +248,7 @@ function normalizeWebSocketMessage(
   ].filter(Boolean);
 
   const id =
-    idParts.length > 0
-      ? `ws-${idParts.join(":")}`
-      : `ws-${Date.now()}`;
+    idParts.length > 0 ? `ws-${idParts.join(":")}` : `ws-${Date.now()}`;
 
   const code =
     getString(payload.code) || (result ? getString(result.code) : undefined);
@@ -530,7 +528,12 @@ function MonitorContent() {
     fetchClarifications();
     fetchIntentConfirmations();
     fetchRoutingDecision();
-  }, [sessionId, fetchClarifications, fetchIntentConfirmations, fetchRoutingDecision]);
+  }, [
+    sessionId,
+    fetchClarifications,
+    fetchIntentConfirmations,
+    fetchRoutingDecision,
+  ]);
 
   if (!sessionId) {
     return (
@@ -758,8 +761,7 @@ function MonitorContent() {
                         exportSession("json", sid, exportEvents, {
                           agent: "Third Eye MCP",
                           createdAt: createdAtStr,
-                          },
-                        );
+                        });
                       }}
                       className="flex items-center gap-1 rounded-md bg-brand-accent/10 px-3 py-1.5 text-xs font-medium text-brand-accent hover:bg-brand-accent/20 transition-colors"
                       title="Export as JSON"

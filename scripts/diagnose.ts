@@ -8,7 +8,10 @@
 
 console.log("🔍 Third Eye MCP Diagnostic\n");
 
-async function measure<T>(name: string, fn: () => Promise<T>): Promise<T | null> {
+async function measure<T>(
+  name: string,
+  fn: () => Promise<T>,
+): Promise<T | null> {
   const start = Date.now();
   console.log(`⏱️  Testing: ${name}...`);
   try {
@@ -19,7 +22,9 @@ async function measure<T>(name: string, fn: () => Promise<T>): Promise<T | null>
   } catch (error) {
     const elapsed = Date.now() - start;
     console.log(`   ❌ ${name}: FAILED after ${elapsed}ms`);
-    console.log(`   Error: ${error instanceof Error ? error.message : error}\n`);
+    console.log(
+      `   Error: ${error instanceof Error ? error.message : error}\n`,
+    );
     return null;
   }
 }
@@ -56,7 +61,10 @@ async function diagnose() {
   await measure("Count Provider Keys", async () => {
     const { providerKeys } = await import("@third-eye/db");
     const { count } = await import("drizzle-orm");
-    const result = await db.db.select({ value: count() }).from(providerKeys).get();
+    const result = await db.db
+      .select({ value: count() })
+      .from(providerKeys)
+      .get();
     console.log(`   Found: ${result?.value ?? 0} provider keys`);
     return result;
   });
@@ -82,7 +90,9 @@ async function diagnose() {
     if (!routing) {
       throw new Error("No routing config for Overseer");
     }
-    console.log(`   Provider: ${routing.primaryProvider}, Model: ${routing.primaryModel}`);
+    console.log(
+      `   Provider: ${routing.primaryProvider}, Model: ${routing.primaryModel}`,
+    );
     return routing;
   });
 
@@ -104,9 +114,10 @@ async function diagnose() {
 
     // Try to decrypt (just test if it works, don't log the key)
     const encrypted = result.encryptedKey;
-    const apiKey = encrypted instanceof Uint8Array
-      ? decryptFromStorage(Buffer.from(encrypted))
-      : null;
+    const apiKey =
+      encrypted instanceof Uint8Array
+        ? decryptFromStorage(Buffer.from(encrypted))
+        : null;
 
     if (!apiKey) {
       throw new Error("Failed to decrypt Groq API key");
@@ -133,9 +144,10 @@ async function diagnose() {
     }
 
     const encrypted = result.encryptedKey;
-    const apiKey = encrypted instanceof Uint8Array
-      ? decryptFromStorage(Buffer.from(encrypted))
-      : null;
+    const apiKey =
+      encrypted instanceof Uint8Array
+        ? decryptFromStorage(Buffer.from(encrypted))
+        : null;
 
     if (!apiKey) {
       throw new Error("Failed to decrypt API key");

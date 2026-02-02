@@ -21,7 +21,8 @@ export const PIPELINE_START_NODE_Y = 400;
 /**
  * Runtime Highlighting Constants
  */
-export const ACTIVE_PATH_GLOW_COLOR = "ring-4 ring-emerald-500/50 shadow-lg shadow-emerald-500/30";
+export const ACTIVE_PATH_GLOW_COLOR =
+  "ring-4 ring-emerald-500/50 shadow-lg shadow-emerald-500/30";
 export const ACTIVE_PATH_NODE_BORDER = "border-emerald-500 border-4";
 export const ACTIVE_PATH_EDGE_STYLE = "stroke-emerald-500 stroke-[3px]";
 export const INACTIVE_PATH_OPACITY = 0.3;
@@ -57,12 +58,14 @@ export const METADATA_EMPTY_STATE = "Select a session to view routing decision";
  * Pipeline Info Panel Constants
  */
 export const PIPELINE_INFO_PANEL_TITLE = "Routing Decision Tree";
-export const PIPELINE_INFO_PANEL_DESCRIPTION = "Comprehensive visualization showing all possible Overseer routing paths based on request type and content domain.";
+export const PIPELINE_INFO_PANEL_DESCRIPTION =
+  "Comprehensive visualization showing all possible Overseer routing paths based on request type and content domain.";
 export const PIPELINE_INFO_LEGEND_TITLE = "Legend";
 export const PIPELINE_INFO_LEGEND_EYE_NODE = "Eye (Persona Execution)";
 export const PIPELINE_INFO_LEGEND_SWITCH_NODE = "Routing Decision Point";
 export const PIPELINE_INFO_LEGEND_ANNOTATION = "Explanatory Note";
-export const PIPELINE_INFO_LEGEND_ACTIVE_PATH = "Active Path (Selected Session)";
+export const PIPELINE_INFO_LEGEND_ACTIVE_PATH =
+  "Active Path (Selected Session)";
 export const PIPELINE_INFO_LEGEND_INACTIVE_PATH = "Alternative Path";
 export const PIPELINE_INFO_STATS_TITLE = "Pipeline Statistics";
 export const PIPELINE_INFO_STAT_TOTAL_PATHS = "Total Routing Paths";
@@ -72,7 +75,8 @@ export const PIPELINE_INFO_STAT_DECISION_POINTS = "Decision Points";
 /**
  * Session Selector Constants
  */
-export const SESSION_SELECTOR_PLACEHOLDER = "Select a session to highlight its routing path";
+export const SESSION_SELECTOR_PLACEHOLDER =
+  "Select a session to highlight its routing path";
 export const SESSION_SELECTOR_SEARCH_PLACEHOLDER = "Search sessions...";
 export const SESSION_SELECTOR_NO_RESULTS = "No sessions found";
 export const SESSION_SELECTOR_LOADING = "Loading sessions...";
@@ -104,7 +108,8 @@ export const CONTROLS_LAYOUT_RADIAL = "Radial Layout";
 export const ANNOTATION_ICON_INFO = "info";
 export const ANNOTATION_ICON_ALERT = "alert";
 export const ANNOTATION_ICON_LIGHTBULB = "lightbulb";
-export const ANNOTATION_BORDER_STYLE = "border-2 border-dashed border-brand-outline/40";
+export const ANNOTATION_BORDER_STYLE =
+  "border-2 border-dashed border-brand-outline/40";
 export const ANNOTATION_BG_COLOR = "bg-brand-surface/60 backdrop-blur-sm";
 export const ANNOTATION_TEXT_COLOR = "text-brand-foreground/80";
 export const ANNOTATION_COLLAPSED_HEIGHT = 40;
@@ -114,26 +119,32 @@ export const ANNOTATION_EXPANDED_MIN_HEIGHT = 100;
  * Annotation Content (Explanatory Text)
  */
 export const ANNOTATION_OVERSEER_TITLE = "Overseer Analysis";
-export const ANNOTATION_OVERSEER_CONTENT = "Analyzes incoming request to determine:\n• Request type (NEW_TASK, DRAFT_REVIEW, VALIDATION_ONLY)\n• Content domain (TEXT, CODE, PLAN, MIXED)\n• Complexity level (SIMPLE, MEDIUM, COMPLEX)\n• Required capabilities for optimal routing";
+export const ANNOTATION_OVERSEER_CONTENT =
+  "Analyzes incoming request to determine:\n• Request type (NEW_TASK, DRAFT_REVIEW, VALIDATION_ONLY)\n• Content domain (TEXT, CODE, PLAN, MIXED)\n• Complexity level (SIMPLE, MEDIUM, COMPLEX)\n• Required capabilities for optimal routing";
 
 export const ANNOTATION_REQUEST_TYPE_TITLE = "Request Type Routing";
-export const ANNOTATION_REQUEST_TYPE_CONTENT = "Branches based on user intent:\n• **NEW_TASK**: Full pipeline with guidance + validation\n• **DRAFT_REVIEW**: Skip guidance, focus on validation only\n• **VALIDATION_ONLY**: Quick fact-check or approval pass";
+export const ANNOTATION_REQUEST_TYPE_CONTENT =
+  "Branches based on user intent:\n• **NEW_TASK**: Full pipeline with guidance + validation\n• **DRAFT_REVIEW**: Skip guidance, focus on validation only\n• **VALIDATION_ONLY**: Quick fact-check or approval pass";
 
 export const ANNOTATION_CONTENT_DOMAIN_TITLE = "Content Domain Analysis";
-export const ANNOTATION_CONTENT_DOMAIN_CONTENT = "Routes based on content type:\n• **CODE**: Requires strategic planning (Rinnegan) + code review (Mangekyo)\n• **TEXT**: Focuses on fact-checking (Tenseigan) + evidence grounding\n• **PLAN**: Architectural analysis (Sharingan + Rinnegan)\n• **MIXED**: Hybrid approach with multiple validation layers";
+export const ANNOTATION_CONTENT_DOMAIN_CONTENT =
+  "Routes based on content type:\n• **CODE**: Requires strategic planning (Rinnegan) + code review (Mangekyo)\n• **TEXT**: Focuses on fact-checking (Tenseigan) + evidence grounding\n• **PLAN**: Architectural analysis (Sharingan + Rinnegan)\n• **MIXED**: Hybrid approach with multiple validation layers";
 
 export const ANNOTATION_FINAL_VALIDATION_TITLE = "Final Validation Phase";
-export const ANNOTATION_FINAL_VALIDATION_CONTENT = "All routing paths converge at Tenseigan (fact validation) followed by Byakugan (ultimate approval authority).\n\nTenseigan ensures accuracy, evidence grounding, and claim verification.\nByakugan provides final sign-off and quality assurance.";
+export const ANNOTATION_FINAL_VALIDATION_CONTENT =
+  "All routing paths converge at Tenseigan (fact validation) followed by Byakugan (ultimate approval authority).\n\nTenseigan ensures accuracy, evidence grounding, and claim verification.\nByakugan provides final sign-off and quality assurance.";
 
 export const ANNOTATION_CAPABILITY_MATRIX_TITLE = "Capability-Based Routing";
-export const ANNOTATION_CAPABILITY_MATRIX_CONTENT = "Overseer uses a capability matrix to match required capabilities with available Eyes:\n• CLARIFICATION: Sharingan\n• PROMPT_STRUCTURING: Kyuubi\n• INTENT_VALIDATION: Jogan\n• STRATEGIC_PLANNING: Rinnegan\n• CODE_REVIEW: Mangekyo\n• FACT_VALIDATION: Tenseigan\n• FINAL_APPROVAL: Byakugan";
+export const ANNOTATION_CAPABILITY_MATRIX_CONTENT =
+  "Overseer uses a capability matrix to match required capabilities with available Eyes:\n• CLARIFICATION: Sharingan\n• PROMPT_STRUCTURING: Kyuubi\n• INTENT_VALIDATION: Jogan\n• STRATEGIC_PLANNING: Rinnegan\n• CODE_REVIEW: Mangekyo\n• FACT_VALIDATION: Tenseigan\n• FINAL_APPROVAL: Byakugan";
 
 /**
  * Master Pipeline Metadata
  */
 export const MASTER_PIPELINE_ID = "overseer-dynamic-master";
 export const MASTER_PIPELINE_NAME = "Overseer Dynamic Routing - All Paths";
-export const MASTER_PIPELINE_DESCRIPTION = "Comprehensive visualization showing all possible Overseer routing branches based on request type and content domain. This pipeline represents the complete decision tree for dynamic routing.";
+export const MASTER_PIPELINE_DESCRIPTION =
+  "Comprehensive visualization showing all possible Overseer routing branches based on request type and content domain. This pipeline represents the complete decision tree for dynamic routing.";
 export const MASTER_PIPELINE_CATEGORY = "system";
 export const MASTER_PIPELINE_VERSION = 1;
 
@@ -141,20 +152,25 @@ export const MASTER_PIPELINE_VERSION = 1;
  * Routing Decision API Constants
  */
 export const API_ROUTE_ROUTING_DECISIONS = "/api/routing-decisions";
-export const API_ROUTE_ROUTING_DECISIONS_BY_SESSION = "/api/routing-decisions/:sessionId";
+export const API_ROUTE_ROUTING_DECISIONS_BY_SESSION =
+  "/api/routing-decisions/:sessionId";
 
 /**
  * Error Messages
  */
-export const ERROR_ROUTING_DECISION_NOT_FOUND = "Routing decision not found for this session";
-export const ERROR_ROUTING_DECISION_FETCH_FAILED = "Failed to fetch routing decision";
-export const ERROR_SESSION_LIST_FETCH_FAILED = "Failed to fetch sessions for selector";
+export const ERROR_ROUTING_DECISION_NOT_FOUND =
+  "Routing decision not found for this session";
+export const ERROR_ROUTING_DECISION_FETCH_FAILED =
+  "Failed to fetch routing decision";
+export const ERROR_SESSION_LIST_FETCH_FAILED =
+  "Failed to fetch sessions for selector";
 export const ERROR_PIPELINE_EXPORT_FAILED = "Failed to export pipeline";
 
 /**
  * Success Messages
  */
-export const SUCCESS_ROUTING_JSON_COPIED = "Routing decision JSON copied to clipboard";
+export const SUCCESS_ROUTING_JSON_COPIED =
+  "Routing decision JSON copied to clipboard";
 export const SUCCESS_PIPELINE_EXPORTED = "Pipeline exported successfully";
 
 /**
@@ -163,7 +179,8 @@ export const SUCCESS_PIPELINE_EXPORTED = "Pipeline exported successfully";
 export const GLASSMORPHISM_BG = "bg-brand-surface/80 backdrop-blur-md";
 export const GLASSMORPHISM_BORDER = "border border-brand-outline/30";
 export const GLASSMORPHISM_SHADOW = "shadow-xl shadow-brand-shadow/20";
-export const GLASSMORPHISM_FULL = "bg-brand-surface/80 backdrop-blur-md border border-brand-outline/30 shadow-xl shadow-brand-shadow/20";
+export const GLASSMORPHISM_FULL =
+  "bg-brand-surface/80 backdrop-blur-md border border-brand-outline/30 shadow-xl shadow-brand-shadow/20";
 
 /**
  * Confidence Score Display
@@ -208,8 +225,7 @@ export const formatExecutionTooltip = (
   eyeName: string,
   duration: number,
   verdict: string,
-): string =>
-  `${eyeName}\nExecution Time: ${duration}ms\nVerdict: ${verdict}`;
+): string => `${eyeName}\nExecution Time: ${duration}ms\nVerdict: ${verdict}`;
 
 export const formatConfidenceTooltip = (confidence: number): string =>
   `Confidence Score: ${(confidence * 100).toFixed(0)}%`;

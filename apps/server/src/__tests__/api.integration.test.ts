@@ -294,7 +294,8 @@ describe("Error Handling", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({}),
     });
-    const { sessionId } = (await createResponse.json()) as CreateSessionResponse;
+    const { sessionId } =
+      (await createResponse.json()) as CreateSessionResponse;
 
     const response = await fetch(`${API_BASE}/sessions/${sessionId}/status`, {
       method: "PATCH",

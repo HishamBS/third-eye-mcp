@@ -184,7 +184,9 @@ export function RoutingDecisionMetadata({
                   {METADATA_FIELD_CONTENT_DOMAIN}
                 </label>
                 <div className="px-3 py-2 bg-brand-surface/60 border border-brand-outline/30 rounded-md text-sm text-brand-foreground">
-                  {getContentDomainDisplay(decision.requestAnalysis.contentDomain)}
+                  {getContentDomainDisplay(
+                    decision.requestAnalysis.contentDomain,
+                  )}
                 </div>
               </div>
 
@@ -212,7 +214,9 @@ export function RoutingDecisionMetadata({
                           style={{ width: "85%" }}
                         />
                       </div>
-                      <span className={`text-sm font-medium ${CONFIDENCE_SCORE_HIGH_COLOR}`}>
+                      <span
+                        className={`text-sm font-medium ${CONFIDENCE_SCORE_HIGH_COLOR}`}
+                      >
                         85%
                       </span>
                     </div>

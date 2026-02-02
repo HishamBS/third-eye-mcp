@@ -1,5 +1,9 @@
 import { Hono } from "hono";
-import { generateId, generatePipelineId, generateRunId } from "@third-eye/db/utils/uuid";
+import {
+  generateId,
+  generatePipelineId,
+  generateRunId,
+} from "@third-eye/db/utils/uuid";
 import { getDb } from "@third-eye/db";
 import { pipelines, pipelineRuns } from "@third-eye/db";
 import { eq, desc } from "drizzle-orm";
@@ -26,10 +30,12 @@ app.use("*", requestIdMiddleware());
 app.use("*", errorHandler());
 
 // Workflow schema for pipeline DAG definition
-const workflowSchema = z.object({
-  nodes: z.array(z.record(z.unknown())).optional(),
-  edges: z.array(z.record(z.unknown())).optional(),
-}).passthrough();
+const workflowSchema = z
+  .object({
+    nodes: z.array(z.record(z.unknown())).optional(),
+    edges: z.array(z.record(z.unknown())).optional(),
+  })
+  .passthrough();
 
 // Zod schemas for validation
 const createPipelineSchema = z.object({
@@ -79,7 +85,7 @@ app.get("/", async (c) => {
       c,
       formatErrorWithMessage(
         ApiErrorMessage.PIPELINE_FETCH_FAILED,
-        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR,
       ),
     );
   }
@@ -115,7 +121,7 @@ app.get("/:id", async (c) => {
       c,
       formatErrorWithMessage(
         ApiErrorMessage.PIPELINE_SINGLE_FETCH_FAILED,
-        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR,
       ),
     );
   }
@@ -142,7 +148,7 @@ app.get("/name/:name/versions", async (c) => {
       c,
       formatErrorWithMessage(
         ApiErrorMessage.PIPELINE_VERSIONS_FETCH_FAILED,
-        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR,
       ),
     );
   }
@@ -215,7 +221,7 @@ app.post("/", async (c) => {
       c,
       formatErrorWithMessage(
         ApiErrorMessage.PIPELINE_CREATE_FAILED_DETAIL,
-        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR,
       ),
     );
   }
@@ -293,7 +299,7 @@ app.put("/:id", async (c) => {
       c,
       formatErrorWithMessage(
         ApiErrorMessage.PIPELINE_UPDATE_FAILED_DETAIL,
-        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR,
       ),
     );
   }
@@ -347,7 +353,7 @@ app.post("/:id/activate", async (c) => {
       c,
       formatErrorWithMessage(
         ApiErrorMessage.PIPELINE_ACTIVATE_FAILED,
-        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR,
       ),
     );
   }
@@ -367,13 +373,15 @@ app.delete("/:id", async (c) => {
       .where(eq(pipelines.id, id))
       .run();
 
-    return createSuccessResponse(c, { message: ApiErrorMessage.PIPELINE_DEACTIVATED });
+    return createSuccessResponse(c, {
+      message: ApiErrorMessage.PIPELINE_DEACTIVATED,
+    });
   } catch (error) {
     return createInternalErrorResponse(
       c,
       formatErrorWithMessage(
         ApiErrorMessage.PIPELINE_DELETE_FAILED,
-        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR,
       ),
     );
   }
@@ -393,101 +401,102 @@ app.post("/:id/execute", async (c) => {
     const validated = executePipelineSchema.parse(bodyRaw);
     const { session_id, input } = validated;
 
-      const { db } = getDb();
+    const { db } = getDb();
 
-      // Get pipeline
-      const pipeline = await db
-        .select()
-        .from(pipelines)
-        .where(eq(pipelines.id, id))
-        .limit(1)
-        .all();
+    // Get pipeline
+    const pipeline = await db
+      .select()
+      .from(pipelines)
+      .where(eq(pipelines.id, id))
+      .limit(1)
+      .all();
 
-      if (pipeline.length === 0) {
-        return createErrorResponse(c, {
-          title: ApiErrorTitle.PIPELINE_NOT_FOUND,
-          status: 404,
-          detail: ApiErrorMessage.PIPELINE_NOT_FOUND_DETAIL,
-          code: ApiErrorCode.PIPELINE_NOT_FOUND,
-        });
-      }
-
-      // Create pipeline run record for tracking
-      const runId = generateRunId();
-      await db
-        .insert(pipelineRuns)
-        .values({
-          id: runId,
-          pipelineId: id,
-          sessionId: session_id,
-          status: "running",
-          currentStep: 0,
-          stateJson: {
-            input,
-            startTime: new Date().toISOString(),
-            workflow: pipeline[0].workflowJson,
-          },
-          createdAt: new Date(),
-        })
-        .run();
-
-      // Execute workflow using WorkflowInterpreter
-      const interpreter = new WorkflowInterpreter();
-      const workflow = pipeline[0].workflowJson as WorkflowDefinition;
-
-      // Validate workflow before execution
-      const validation = WorkflowInterpreter.validate(workflow);
-      if (!validation.valid) {
-        await db
-          .update(pipelineRuns)
-          .set({
-            status: "failed",
-            errorMessage: `Workflow validation failed: ${validation.errors.join(", ")}`,
-            completedAt: new Date(),
-          })
-          .where(eq(pipelineRuns.id, runId))
-          .run();
-
-        return createErrorResponse(c, {
-          title: ApiErrorTitle.INVALID_WORKFLOW,
-          status: 400,
-          detail: `Workflow validation failed: ${validation.errors.join(", ")}`,
-          code: ApiErrorCode.INVALID_WORKFLOW,
-        });
-      }
-
-      // Execute workflow
-      // Convert string input to object if needed
-      const inputObj = typeof input === "string" ? { text: input } : input ?? {};
-      const result = await interpreter.execute(workflow, {
-        sessionId: session_id,
-        input: inputObj,
+    if (pipeline.length === 0) {
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.PIPELINE_NOT_FOUND,
+        status: 404,
+        detail: ApiErrorMessage.PIPELINE_NOT_FOUND_DETAIL,
+        code: ApiErrorCode.PIPELINE_NOT_FOUND,
       });
+    }
 
-      // Update pipeline run with results
+    // Create pipeline run record for tracking
+    const runId = generateRunId();
+    await db
+      .insert(pipelineRuns)
+      .values({
+        id: runId,
+        pipelineId: id,
+        sessionId: session_id,
+        status: "running",
+        currentStep: 0,
+        stateJson: {
+          input,
+          startTime: new Date().toISOString(),
+          workflow: pipeline[0].workflowJson,
+        },
+        createdAt: new Date(),
+      })
+      .run();
+
+    // Execute workflow using WorkflowInterpreter
+    const interpreter = new WorkflowInterpreter();
+    const workflow = pipeline[0].workflowJson as WorkflowDefinition;
+
+    // Validate workflow before execution
+    const validation = WorkflowInterpreter.validate(workflow);
+    if (!validation.valid) {
       await db
         .update(pipelineRuns)
         .set({
-          status: result.success ? "completed" : "failed",
-          currentStep: result.steps.length,
-          stateJson: {
-            input,
-            startTime: new Date().toISOString(),
-            workflow: pipeline[0].workflowJson,
-            result,
-          },
-          errorMessage: result.error,
+          status: "failed",
+          errorMessage: `Workflow validation failed: ${validation.errors.join(", ")}`,
           completedAt: new Date(),
         })
         .where(eq(pipelineRuns.id, runId))
         .run();
 
-      return createSuccessResponse(c, {
-        runId,
-        success: result.success,
-        steps: result.steps,
-        output: result.output,
-        totalLatency: result.totalLatency,
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.INVALID_WORKFLOW,
+        status: 400,
+        detail: `Workflow validation failed: ${validation.errors.join(", ")}`,
+        code: ApiErrorCode.INVALID_WORKFLOW,
+      });
+    }
+
+    // Execute workflow
+    // Convert string input to object if needed
+    const inputObj =
+      typeof input === "string" ? { text: input } : (input ?? {});
+    const result = await interpreter.execute(workflow, {
+      sessionId: session_id,
+      input: inputObj,
+    });
+
+    // Update pipeline run with results
+    await db
+      .update(pipelineRuns)
+      .set({
+        status: result.success ? "completed" : "failed",
+        currentStep: result.steps.length,
+        stateJson: {
+          input,
+          startTime: new Date().toISOString(),
+          workflow: pipeline[0].workflowJson,
+          result,
+        },
+        errorMessage: result.error,
+        completedAt: new Date(),
+      })
+      .where(eq(pipelineRuns.id, runId))
+      .run();
+
+    return createSuccessResponse(c, {
+      runId,
+      success: result.success,
+      steps: result.steps,
+      output: result.output,
+      totalLatency: result.totalLatency,
       error: result.error,
     });
   } catch (error) {
@@ -503,7 +512,7 @@ app.post("/:id/execute", async (c) => {
       c,
       formatErrorWithMessage(
         ApiErrorMessage.PIPELINE_EXECUTE_FAILED,
-        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR,
       ),
     );
   }
@@ -530,7 +539,7 @@ app.get("/:id/runs", async (c) => {
       c,
       formatErrorWithMessage(
         ApiErrorMessage.PIPELINE_RUNS_FETCH_FAILED,
-        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR,
       ),
     );
   }

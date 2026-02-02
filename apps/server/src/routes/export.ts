@@ -1,5 +1,10 @@
 import { Hono } from "hono";
-import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage, type ExportFormat } from "@third-eye/constants";
+import {
+  ApiErrorCode,
+  ApiErrorTitle,
+  ApiErrorMessage,
+  type ExportFormat,
+} from "@third-eye/constants";
 import { getDb } from "@third-eye/db";
 import {
   sessions,
@@ -127,7 +132,7 @@ app.get("/:sessionId", async (c) => {
       default:
         return createErrorResponse(c, {
           title: ApiErrorTitle.INVALID_FORMAT,
-        code: ApiErrorCode.INVALID_FORMAT,
+          code: ApiErrorCode.INVALID_FORMAT,
           status: 400,
           detail: "Supported formats: pdf, html, json, md",
         });
@@ -159,7 +164,9 @@ function generateMarkdown(data: ExportData): string {
 
   md += `## Timeline Events (${events.length})\n\n`;
   events.forEach((event, index) => {
-    const eyeName = event.eyeId ? data.eyeMap.get(event.eyeId) || event.eyeId : "system";
+    const eyeName = event.eyeId
+      ? data.eyeMap.get(event.eyeId) || event.eyeId
+      : "system";
     md += `### ${index + 1}. ${event.type} - ${eyeName}\n`;
     md += `- **Code:** ${event.code || "N/A"}\n`;
     md += `- **Time:** ${new Date(event.createdAt).toLocaleString()}\n`;
@@ -171,7 +178,9 @@ function generateMarkdown(data: ExportData): string {
 
   md += `## Eye Runs (${runs.length})\n\n`;
   runs.forEach((run, index) => {
-    const eyeName = run.eyeId ? data.eyeMap.get(run.eyeId) || run.eyeId : "unknown";
+    const eyeName = run.eyeId
+      ? data.eyeMap.get(run.eyeId) || run.eyeId
+      : "unknown";
     md += `### ${index + 1}. ${eyeName}\n`;
     md += `- **Provider:** ${run.provider}\n`;
     md += `- **Model:** ${run.model}\n`;
@@ -286,10 +295,11 @@ function generateHTML(data: ExportData, forPrint = false): string {
 
   <h2>Timeline Events (${events.length})</h2>
   ${events
-    .map(
-      (event, index) => {
-        const eyeName = event.eyeId ? data.eyeMap.get(event.eyeId) || event.eyeId : "system";
-        return `
+    .map((event, index) => {
+      const eyeName = event.eyeId
+        ? data.eyeMap.get(event.eyeId) || event.eyeId
+        : "system";
+      return `
     <div class="event">
       <h3>${index + 1}. ${event.type} - ${eyeName}</h3>
       <p><strong>Code:</strong> ${event.code || "N/A"}</p>
@@ -298,16 +308,16 @@ function generateHTML(data: ExportData, forPrint = false): string {
       ${event.dataJson ? `<details><summary>Data</summary><pre><code>${JSON.stringify(event.dataJson, null, 2)}</code></pre></details>` : ""}
     </div>
   `;
-      },
-    )
+    })
     .join("")}
 
   <h2>Eye Runs (${runs.length})</h2>
   ${runs
-    .map(
-      (run, index) => {
-        const eyeName = run.eyeId ? data.eyeMap.get(run.eyeId) || run.eyeId : "unknown";
-        return `
+    .map((run, index) => {
+      const eyeName = run.eyeId
+        ? data.eyeMap.get(run.eyeId) || run.eyeId
+        : "unknown";
+      return `
     <div class="run">
       <h3>${index + 1}. ${eyeName}</h3>
       <div class="stats">
@@ -339,8 +349,7 @@ function generateHTML(data: ExportData, forPrint = false): string {
       }
     </div>
   `;
-      },
-    )
+    })
     .join("")}
 
   ${

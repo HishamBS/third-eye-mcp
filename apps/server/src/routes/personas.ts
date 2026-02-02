@@ -15,7 +15,11 @@ import {
   errorHandler,
 } from "../middleware/response";
 import { z } from "zod";
-import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
+import {
+  ApiErrorCode,
+  ApiErrorTitle,
+  ApiErrorMessage,
+} from "@third-eye/constants";
 
 /**
  * Personas Management Routes
@@ -168,13 +172,10 @@ app.put("/blueprints/:eyeId", async (c) => {
       updatedAt: now,
     };
 
-    await db
-      .insert(personaBlueprints)
-      .values(newBlueprint)
-      .onConflictDoUpdate({
-        target: personaBlueprints.eyeId,
-        set: updateFields,
-      });
+    await db.insert(personaBlueprints).values(newBlueprint).onConflictDoUpdate({
+      target: personaBlueprints.eyeId,
+      set: updateFields,
+    });
 
     return createSuccessResponse(c, {
       message: "Blueprint updated successfully",

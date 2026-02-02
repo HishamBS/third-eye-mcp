@@ -1,5 +1,9 @@
 import { Buffer } from "node:buffer";
-import { generateId, generateRunId, generateSessionId } from "@third-eye/db/utils/uuid";
+import {
+  generateId,
+  generateRunId,
+  generateSessionId,
+} from "@third-eye/db/utils/uuid";
 import { getDb } from "@third-eye/db";
 import {
   runs,
@@ -434,9 +438,8 @@ export class EyeOrchestrator {
             let personaPrompt: PersonaPrompt;
             if (dynamicRouterPersona && isOverseer) {
               // REPAIR_PLAN A4: Use function calling for dynamic router too
-              const { EYE_RESPONSE_TOOL } = await import(
-                "@third-eye/eyes/src/renderer/persona-renderer"
-              );
+              const { EYE_RESPONSE_TOOL } =
+                await import("@third-eye/eyes/src/renderer/persona-renderer");
               personaPrompt = {
                 systemPrompt: dynamicRouterPersona,
                 userMessage: enrichedInput,
@@ -600,9 +603,8 @@ export class EyeOrchestrator {
               }
 
               // 10. Persona guard validation with retry logic
-              const { ensureEyeBehavior, buildReminderMessage } = await import(
-                "@third-eye/eyes"
-              );
+              const { ensureEyeBehavior, buildReminderMessage } =
+                await import("@third-eye/eyes");
               const guardResult = ensureEyeBehavior(blueprint, envelope);
 
               if (!guardResult.valid) {
@@ -1064,7 +1066,7 @@ export class EyeOrchestrator {
     // Check if this Eye has already been called in this session
     const eyeNameLower = eyeName.toLowerCase();
     const hasBeenCalled = state.completedEyes.some(
-      (completed) => completed.toLowerCase() === eyeNameLower
+      (completed) => completed.toLowerCase() === eyeNameLower,
     );
 
     // If Eye was already called and completed, this is a VALIDATION pass
@@ -1075,21 +1077,30 @@ export class EyeOrchestrator {
     // For Overseer, check if we're past the initialization phase
     // If clarification/planning has happened, Overseer should be in VALIDATION mode
     if (eyeNameLower === EyeId.OVERSEER.toLowerCase()) {
-      if (state.currentPhase !== "initialization" && state.completedEyes.length > 0) {
+      if (
+        state.currentPhase !== "initialization" &&
+        state.completedEyes.length > 0
+      ) {
         return EyeStageToken.VALIDATION;
       }
     }
 
     // For Sharingan, check if clarification has been resolved
     if (eyeNameLower === EyeId.SHARINGAN.toLowerCase()) {
-      if (state.currentPhase !== "initialization" && state.currentPhase !== "clarification") {
+      if (
+        state.currentPhase !== "initialization" &&
+        state.currentPhase !== "clarification"
+      ) {
         return EyeStageToken.VALIDATION;
       }
     }
 
     // For other Eyes, check based on phase progression
     // If we're in implementation or completion phase, use VALIDATION
-    if (state.currentPhase === "implementation" || state.currentPhase === "completion") {
+    if (
+      state.currentPhase === "implementation" ||
+      state.currentPhase === "completion"
+    ) {
       // Eyes that typically run in later phases should be in VALIDATION mode
       const laterPhaseEyes = [
         EyeId.MANGEKYO.toLowerCase(),

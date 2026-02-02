@@ -279,7 +279,8 @@ export class WSConnectionManager {
     }
 
     if (sentCount > 0) {
-      const msgType = typeof message.type === "string" ? message.type : "unknown";
+      const msgType =
+        typeof message.type === "string" ? message.type : "unknown";
       console.log(
         `📡 Broadcasted ${msgType} to ${sentCount} connections for session:${sessionId}`,
       );
@@ -473,7 +474,9 @@ export class WSConnectionManager {
   /**
    * Handle pong message from client - clears timeout and resets retry counter
    */
-  handlePong(ws: ServerWebSocket<{ sessionId: string; userId?: string }>): void {
+  handlePong(
+    ws: ServerWebSocket<{ sessionId: string; userId?: string }>,
+  ): void {
     for (const [, connection] of this.connections) {
       if (connection.ws === ws) {
         connection.lastPong = Date.now();

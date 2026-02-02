@@ -56,7 +56,9 @@ export const WEBSOCKET_CLEANUP = Object.freeze({
 export function getWebSocketBackoffDelay(attempt: number): number {
   const index = Math.min(attempt, WEBSOCKET_BACKOFF_MS.length - 1);
   const baseDelay = WEBSOCKET_BACKOFF_MS[index];
-  const jitter = Math.floor(Math.random() * WEBSOCKET_HEARTBEAT.BACKOFF_JITTER_MAX_MS);
+  const jitter = Math.floor(
+    Math.random() * WEBSOCKET_HEARTBEAT.BACKOFF_JITTER_MAX_MS,
+  );
   return baseDelay + jitter;
 }
 

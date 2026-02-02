@@ -27,7 +27,9 @@ export type ValidNodeType = (typeof VALID_NODE_TYPES)[number];
  * Type guard for valid node type
  */
 export function isValidNodeType(type: unknown): type is ValidNodeType {
-  return typeof type === "string" && VALID_NODE_TYPES.includes(type as ValidNodeType);
+  return (
+    typeof type === "string" && VALID_NODE_TYPES.includes(type as ValidNodeType)
+  );
 }
 
 /**
@@ -99,7 +101,7 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
  */
 export function isArrayOf<T>(
   value: unknown,
-  guard: (item: unknown) => item is T
+  guard: (item: unknown) => item is T,
 ): value is T[] {
   return Array.isArray(value) && value.every(guard);
 }
@@ -108,7 +110,7 @@ export function isArrayOf<T>(
  * Type guard for error object with message
  */
 export function isErrorWithMessage(
-  error: unknown
+  error: unknown,
 ): error is { message: string } {
   return (
     isRecord(error) &&
@@ -120,7 +122,7 @@ export function isErrorWithMessage(
  * Type guard for error with status code
  */
 export function isErrorWithStatus(
-  error: unknown
+  error: unknown,
 ): error is { status: number } | { statusCode: number } {
   if (!isRecord(error)) return false;
   const obj = error as Record<string, unknown>;
@@ -131,7 +133,10 @@ export function isErrorWithStatus(
  * Type guard for error with error code
  */
 export function isErrorWithCode(error: unknown): error is { code: string } {
-  return isRecord(error) && typeof (error as Record<string, unknown>).code === "string";
+  return (
+    isRecord(error) &&
+    typeof (error as Record<string, unknown>).code === "string"
+  );
 }
 
 /**
@@ -139,7 +144,7 @@ export function isErrorWithCode(error: unknown): error is { code: string } {
  */
 export function safeCast<T>(
   value: unknown,
-  guard: (v: unknown) => v is T
+  guard: (v: unknown) => v is T,
 ): T | undefined {
   return guard(value) ? value : undefined;
 }
@@ -150,7 +155,7 @@ export function safeCast<T>(
 export function assertType<T>(
   value: unknown,
   guard: (v: unknown) => v is T,
-  message: string
+  message: string,
 ): asserts value is T {
   if (!guard(value)) {
     throw new Error(message);

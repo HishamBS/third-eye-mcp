@@ -1,5 +1,9 @@
 import { Hono } from "hono";
-import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
+import {
+  ApiErrorCode,
+  ApiErrorTitle,
+  ApiErrorMessage,
+} from "@third-eye/constants";
 import {
   getDb,
   mcpIntegrations,
@@ -94,7 +98,7 @@ app.get("/:id", async (c) => {
   if (!integration || integration.length === 0) {
     return createErrorResponse(c, {
       title: ApiErrorTitle.INTEGRATION_NOT_FOUND,
-        code: ApiErrorCode.INTEGRATION_NOT_FOUND,
+      code: ApiErrorCode.INTEGRATION_NOT_FOUND,
       status: 404,
       detail: "Integration not found",
     });
@@ -117,7 +121,7 @@ app.get("/:id/config", async (c) => {
   if (!integration || integration.length === 0) {
     return createErrorResponse(c, {
       title: ApiErrorTitle.INTEGRATION_NOT_FOUND,
-        code: ApiErrorCode.INTEGRATION_NOT_FOUND,
+      code: ApiErrorCode.INTEGRATION_NOT_FOUND,
       status: 404,
       detail: "Integration not found",
     });
@@ -182,7 +186,7 @@ app.put("/:id", async (c) => {
   if (!existing || existing.length === 0) {
     return createErrorResponse(c, {
       title: ApiErrorTitle.INTEGRATION_NOT_FOUND,
-        code: ApiErrorCode.INTEGRATION_NOT_FOUND,
+      code: ApiErrorCode.INTEGRATION_NOT_FOUND,
       status: 404,
       detail: "Integration not found",
     });
@@ -217,7 +221,7 @@ app.patch("/:id", async (c) => {
   if (!existing || existing.length === 0) {
     return createErrorResponse(c, {
       title: ApiErrorTitle.INTEGRATION_NOT_FOUND,
-        code: ApiErrorCode.INTEGRATION_NOT_FOUND,
+      code: ApiErrorCode.INTEGRATION_NOT_FOUND,
       status: 404,
       detail: "Integration not found",
     });
@@ -264,7 +268,7 @@ app.delete("/:id", async (c) => {
   if (!existing || existing.length === 0) {
     return createErrorResponse(c, {
       title: ApiErrorTitle.INTEGRATION_NOT_FOUND,
-        code: ApiErrorCode.INTEGRATION_NOT_FOUND,
+      code: ApiErrorCode.INTEGRATION_NOT_FOUND,
       status: 404,
       detail: "Integration not found",
     });

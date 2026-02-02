@@ -125,29 +125,38 @@ export const LOG_WS_BROADCAST_SKIPPED = "WebSocket broadcast skipped:";
 export const LOG_SESSION_CREATE_FAILED = "Failed to create session:";
 export const LOG_SESSION_OPEN_FAILED = "Failed to open session:";
 export const LOG_BROWSER_OPEN_FAILED = "Failed to auto-open browser:";
-export const LOG_ACTIVE_SESSIONS_FETCH_FAILED = "Failed to fetch active sessions:";
+export const LOG_ACTIVE_SESSIONS_FETCH_FAILED =
+  "Failed to fetch active sessions:";
 export const LOG_SESSIONS_FETCH_FAILED = "Failed to fetch sessions:";
 export const LOG_SESSION_FETCH_FAILED = "Failed to fetch session:";
 export const LOG_SESSION_RUNS_FETCH_FAILED = "Failed to fetch session runs:";
-export const LOG_PIPELINE_EVENTS_FETCH_FAILED = "Failed to fetch pipeline events:";
-export const LOG_SESSION_SUMMARY_FETCH_FAILED = "Failed to fetch session summary:";
-export const LOG_SESSION_STATUS_UPDATE_FAILED = "Failed to update session status:";
+export const LOG_PIPELINE_EVENTS_FETCH_FAILED =
+  "Failed to fetch pipeline events:";
+export const LOG_SESSION_SUMMARY_FETCH_FAILED =
+  "Failed to fetch session summary:";
+export const LOG_SESSION_STATUS_UPDATE_FAILED =
+  "Failed to update session status:";
 export const LOG_SESSION_KILL_FAILED = "Failed to kill session:";
 export const LOG_EYE_RERUN_FAILED = "Failed to rerun Eye:";
-export const LOG_SESSION_CONTEXT_FETCH_FAILED = "Failed to fetch session context:";
+export const LOG_SESSION_CONTEXT_FETCH_FAILED =
+  "Failed to fetch session context:";
 export const LOG_CONTEXT_ADD_FAILED = "Failed to add context:";
 export const LOG_CONTEXT_REMOVE_FAILED = "Failed to remove context:";
 export const LOG_SESSION_EXPORT_FAILED = "Failed to export session:";
-export const LOG_CLARIFICATION_VALIDATION_FAILED = "Failed to validate clarification:";
-export const LOG_CLARIFICATIONS_FETCH_FAILED = "Failed to fetch clarifications:";
-export const LOG_INTENT_CONFIRMATIONS_FETCH_FAILED = "Failed to fetch intent confirmations:";
+export const LOG_CLARIFICATION_VALIDATION_FAILED =
+  "Failed to validate clarification:";
+export const LOG_CLARIFICATIONS_FETCH_FAILED =
+  "Failed to fetch clarifications:";
+export const LOG_INTENT_CONFIRMATIONS_FETCH_FAILED =
+  "Failed to fetch intent confirmations:";
 export const LOG_ROUTING_FETCH_FAILED = "Failed to fetch routing decision:";
 export const LOG_BULK_DELETE_FAILED = "Failed to bulk delete sessions:";
 
 /**
  * CSV Export Constants
  */
-export const CSV_EXPORT_HEADER = "eye,model,latency_ms,tokens_in,tokens_out,verdict,created_at\n";
+export const CSV_EXPORT_HEADER =
+  "eye,model,latency_ms,tokens_in,tokens_out,verdict,created_at\n";
 
 /**
  * Validation Contradiction Keywords
@@ -164,8 +173,10 @@ export const VALIDATION_INTENT_DELETE_KEYWORD = "delete";
 /**
  * Format browser opened log message with emoji
  */
-export const formatBrowserOpenedLog = (sessionId: string, portalUrl: string): string =>
-  `🧿 Browser opened for session ${sessionId}: ${portalUrl}`;
+export const formatBrowserOpenedLog = (
+  sessionId: string,
+  portalUrl: string,
+): string => `🧿 Browser opened for session ${sessionId}: ${portalUrl}`;
 
 /**
  * Format session killed log message with emoji
@@ -208,8 +219,7 @@ export const buildMonitorPortalUrl = (
   host: string,
   port: number,
   sessionId: string,
-): string =>
-  `http://${host}:${port}/monitor?sessionId=${sessionId}`;
+): string => `http://${host}:${port}/monitor?sessionId=${sessionId}`;
 
 /**
  * Build session portal URL
@@ -218,8 +228,7 @@ export const buildSessionPortalUrl = (
   host: string,
   port: number,
   sessionId: string,
-): string =>
-  `http://${host}:${port}/session/${sessionId}`;
+): string => `http://${host}:${port}/session/${sessionId}`;
 
 /**
  * Format display name with version
@@ -227,8 +236,7 @@ export const buildSessionPortalUrl = (
 export const formatDisplayNameWithVersion = (
   displayBase: string,
   version: string,
-): string =>
-  `${displayBase} (${version})`;
+): string => `${displayBase} (${version})`;
 
 /**
  * Format JSON export filename
@@ -260,8 +268,7 @@ export const formatMarkdownSessionHeader = (sessionId: string): string =>
 export const formatMarkdownEventTitle = (
   eyeName: string | null,
   eventCode: string,
-): string =>
-  `### ${eyeName || DEFAULT_SYSTEM_ENTITY_NAME} - ${eventCode}\n`;
+): string => `### ${eyeName || DEFAULT_SYSTEM_ENTITY_NAME} - ${eventCode}\n`;
 
 /**
  * Format Markdown run summary header
@@ -301,8 +308,7 @@ export const formatMissingFieldsDetail = (fields: string[]): string =>
 export const formatValidOptionsDetail = (
   fieldName: string,
   options: string[],
-): string =>
-  `Invalid ${fieldName}. Must be: ${options.join(", ")}`;
+): string => `Invalid ${fieldName}. Must be: ${options.join(", ")}`;
 
 /**
  * Format answer too short suggestion

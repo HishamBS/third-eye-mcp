@@ -111,7 +111,9 @@ export function createDb(dbPath?: string) {
         // If stat fails, try to remove anyway - corrupted files might not stat correctly
         try {
           rmSync(walFile, { force: true });
-          console.error("🔧 Removed WAL file (stat failed, assuming corrupted)");
+          console.error(
+            "🔧 Removed WAL file (stat failed, assuming corrupted)",
+          );
         } catch {
           // Ignore removal errors
         }
@@ -124,13 +126,17 @@ export function createDb(dbPath?: string) {
         // Very small SHM files (< 100 bytes) might be corrupted
         if (shmStats.size < 100) {
           rmSync(shmFile, { force: true });
-          console.error("🔧 Proactively removed potentially corrupted SHM file");
+          console.error(
+            "🔧 Proactively removed potentially corrupted SHM file",
+          );
         }
       } catch (err) {
         // If stat fails, try to remove anyway
         try {
           rmSync(shmFile, { force: true });
-          console.error("🔧 Removed SHM file (stat failed, assuming corrupted)");
+          console.error(
+            "🔧 Removed SHM file (stat failed, assuming corrupted)",
+          );
         } catch {
           // Ignore removal errors
         }

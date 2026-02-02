@@ -54,7 +54,9 @@ const DEFAULT_POLL_INTERVAL = 5000;
  */
 function normalizeSession(raw: RawSession): NormalizedSession {
   const createdAt = new Date(raw.createdAt);
-  const lastActivity = raw.lastActivity ? new Date(raw.lastActivity) : createdAt;
+  const lastActivity = raw.lastActivity
+    ? new Date(raw.lastActivity)
+    : createdAt;
   const displayName = raw.displayName || raw.agentName || raw.sessionId;
 
   return {

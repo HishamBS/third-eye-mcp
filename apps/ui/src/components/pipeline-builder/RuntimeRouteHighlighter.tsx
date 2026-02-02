@@ -86,7 +86,9 @@ export function RuntimeRouteHighlighter({
         return decision;
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : ERROR_ROUTING_DECISION_FETCH_FAILED;
+          err instanceof Error
+            ? err.message
+            : ERROR_ROUTING_DECISION_FETCH_FAILED;
         setError(errorMessage);
         onError?.(errorMessage);
         console.error("[RuntimeRouteHighlighter] Fetch error:", err);

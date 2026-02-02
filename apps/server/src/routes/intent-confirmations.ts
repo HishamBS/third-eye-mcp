@@ -1,5 +1,9 @@
 import { Hono } from "hono";
-import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
+import {
+  ApiErrorCode,
+  ApiErrorTitle,
+  ApiErrorMessage,
+} from "@third-eye/constants";
 import { getDb } from "@third-eye/db";
 import { IntentConfirmationManager } from "@third-eye/core";
 import {
@@ -121,10 +125,7 @@ app.post("/:id/submit", async (c) => {
     const { sqlite } = getDb();
     const manager = new IntentConfirmationManager(sqlite);
 
-    await manager.submitConfirmation(
-      confirmationId,
-      body.response,
-    );
+    await manager.submitConfirmation(confirmationId, body.response);
 
     return createSuccessResponse(c, {
       message: "Intent confirmation submitted successfully",

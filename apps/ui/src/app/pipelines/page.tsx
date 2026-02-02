@@ -27,7 +27,8 @@ import type { RoutingDecision } from "@/types/routing";
 export default function PipelinesPage() {
   const [mode, setMode] = useState<RoutingModeName>("fully_dynamic");
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
-  const [routingDecision, setRoutingDecision] = useState<RoutingDecision | null>(null);
+  const [routingDecision, setRoutingDecision] =
+    useState<RoutingDecision | null>(null);
 
   const handleModeChange = useCallback((newMode: RoutingModeName) => {
     setMode(newMode);
@@ -49,9 +50,12 @@ export default function PipelinesPage() {
     }
   }, []);
 
-  const handleRoutingDecisionLoaded = useCallback((decision: RoutingDecision) => {
-    setRoutingDecision(decision);
-  }, []);
+  const handleRoutingDecisionLoaded = useCallback(
+    (decision: RoutingDecision) => {
+      setRoutingDecision(decision);
+    },
+    [],
+  );
 
   return (
     <div className="flex h-screen flex-col bg-gray-50 dark:bg-gray-900">
