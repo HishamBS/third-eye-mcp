@@ -122,6 +122,14 @@ export const LAYOUT = {
   FIT_VIEW_PADDING: 0.15,
   HEADER_HEIGHT: 64,
   BREADCRUMB_HEIGHT: 48,
+  // Auto-layout with Dagre algorithm
+  AUTO_LAYOUT_DIRECTION: "TB" as const, // Top to Bottom
+  AUTO_LAYOUT_NODE_WIDTH: 200,
+  AUTO_LAYOUT_NODE_HEIGHT: 60,
+  AUTO_LAYOUT_NODE_SEP: 80, // Vertical separation between nodes
+  AUTO_LAYOUT_RANK_SEP: 120, // Horizontal separation between ranks
+  AUTO_LAYOUT_EDGE_SEP: 30, // Separation between edges
+  AUTO_LAYOUT_RANKER: "longest-path" as const, // Dagre ranker algorithm
 } as const;
 
 /**

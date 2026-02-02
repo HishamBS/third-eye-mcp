@@ -6,7 +6,7 @@ import {
   type McpIntegration,
   type NewMcpIntegration,
 } from "@third-eye/db";
-import { nanoid } from "nanoid";
+import { generateId } from "@third-eye/db/utils/uuid";
 import { eq } from "drizzle-orm";
 import { homedir } from "os";
 import {
@@ -140,7 +140,7 @@ app.post("/", async (c) => {
   const body = await c.req.json();
 
   const newIntegration: NewMcpIntegration = {
-    id: nanoid(),
+    id: generateId(),
     name: body.name,
     slug: body.slug,
     logoUrl: body.logoUrl || null,

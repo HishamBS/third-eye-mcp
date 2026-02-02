@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
-import { nanoid } from "nanoid";
+import { generateId, generateDuelSessionId, generateEventId } from "@third-eye/db/utils/uuid";
 import { getDb } from "@third-eye/db";
 import { sessions, runs, pipelineEvents, duels, eyes } from "@third-eye/db";
 import { EyeOrchestrator } from "@third-eye/core";
@@ -209,8 +209,8 @@ app.post("/", async (c) => {
     }
 
     const { db } = getDb();
-    const duelId = nanoid();
-    const finalSessionId = sessionId || `duel-${duelId}`;
+    const duelId = generateId();
+    const finalSessionId = sessionId || generateDuelSessionId();
 
     // Lookup eyeId from eyeName
     const eyeRecord = await db.select().from(eyes).where(eq(eyes.name, eyeName)).get();
@@ -245,7 +245,7 @@ app.post("/", async (c) => {
     await db
       .insert(pipelineEvents)
       .values({
-        id: nanoid(),
+        id: generateEventId(),
         sessionId: finalSessionId,
         eyeId: eyeId,
         type: "duel_start",
@@ -306,7 +306,7 @@ app.post("/", async (c) => {
         await db
           .insert(pipelineEvents)
           .values({
-            id: nanoid(),
+            id: generateEventId(),
             sessionId: finalSessionId,
             eyeId: eyeId,
             type: "eye_call",
@@ -386,7 +386,7 @@ app.post("/", async (c) => {
         await db
           .insert(pipelineEvents)
           .values({
-            id: nanoid(),
+            id: generateEventId(),
             sessionId: finalSessionId,
             eyeId: eyeId,
             type: "eye_call",
@@ -433,7 +433,7 @@ app.post("/", async (c) => {
     await db
       .insert(pipelineEvents)
       .values({
-        id: nanoid(),
+        id: generateEventId(),
         sessionId: finalSessionId,
         eyeId: eyeId,
         type: "duel_complete",
@@ -589,7 +589,7 @@ app.post("/v2", validateBody(schemas.duelCreate), async (c) => {
       });
     }
 
-    const duelId = nanoid();
+    const duelId = generateId();
     const { db } = getDb();
 
     // Lookup eyeId from eyeName

@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { nanoid } from "nanoid";
 import { EyeOrchestrator } from "@third-eye/core";
 import { ProviderFactory } from "@third-eye/providers";
+import { generateId } from "@third-eye/db/utils/uuid";
 import { getDb } from "@third-eye/db";
 import { eyesRouting, personas, modelsCache } from "@third-eye/db";
 import { getConfig } from "@third-eye/config";
@@ -204,7 +204,7 @@ app.get("/models/:provider", async (c) => {
       await db
         .insert(modelsCache)
         .values({
-          id: nanoid(),
+          id: generateId(),
           provider: providerId,
           model: model.name,
           displayName: model.name,

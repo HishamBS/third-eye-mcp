@@ -479,7 +479,7 @@ export function RemindersStep({ state, dispatch }: WizardStepProps) {
               <span className="text-sm text-brand-foreground">{reminder}</span>
               <button
                 onClick={() => handleRemoveReminder(index)}
-                className="text-brand-foreground/40 hover:${STATUS_TEXT_COLORS.error} transition-colors"
+                className={`text-brand-foreground/40 hover:${STATUS_TEXT_COLORS.error} transition-colors`}
               >
                 <X className="w-4 h-4" />
               </button>

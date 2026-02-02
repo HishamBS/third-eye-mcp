@@ -16,7 +16,10 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { getDb } from "@third-eye/db";
-import { ConversationTracker } from "@third-eye/core/conversation-tracker";
+import {
+  ConversationTracker,
+  type ConversationEventType,
+} from "@third-eye/core/conversation-tracker";
 
 const app = new Hono();
 
@@ -161,7 +164,10 @@ app.get("/session/:sessionId/type/:eventType", async (c) => {
 
     const { sqlite } = getDb();
     const tracker = new ConversationTracker(sqlite);
-    const events = tracker.getEventsByType(sessionId, eventType as any);
+    const events = tracker.getEventsByType(
+      sessionId,
+      eventType as ConversationEventType,
+    );
 
     return c.json({
       success: true,

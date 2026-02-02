@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import { nanoid } from "nanoid";
+import { generateId, generateRunId, generateSessionId } from "@third-eye/db/utils/uuid";
 import { getDb } from "@third-eye/db";
 import {
   runs,
@@ -113,11 +113,11 @@ export class EyeOrchestrator {
     options: EyeRunOptions = {},
   ): Promise<EyeResponse> {
     const startTime = Date.now();
-    const runId = nanoid();
+    const runId = generateRunId();
     let actualSessionId = sessionId;
 
     if (!actualSessionId) {
-      actualSessionId = nanoid();
+      actualSessionId = generateSessionId();
       const createdAt = new Date();
       const agentLabel = "Third Eye Pipeline";
       const displayLabel = `Manual Session (${eyeName})`;
@@ -377,7 +377,9 @@ export class EyeOrchestrator {
           });
 
           // Determine stage based on pipeline state
-          const stage = EyeStageToken.GUIDANCE; // TODO: Get actual stage from context
+          // GUIDANCE: First call to an Eye in a session
+          // VALIDATION: Follow-up call after clarification/confirmation or second pass
+          const stage = this.determineStage(actualSessionId, eyeName);
 
           // Retry loop for persona guard validation
           const MAX_PERSONA_RETRIES = RETRY_CONFIG.MAX_PERSONA_RETRIES;
@@ -667,7 +669,7 @@ export class EyeOrchestrator {
                 const eyeId = await getEyeIdByName(eyeName);
                 if (eyeId) {
                   await this.db.insert(providerFailovers).values({
-                    id: nanoid(),
+                    id: generateId(),
                     sessionId: actualSessionId,
                     eyeId,
                     primaryProvider: providerChain[0].provider,
@@ -758,7 +760,7 @@ export class EyeOrchestrator {
             };
 
       await this.db.insert(pipelineEvents).values({
-        id: nanoid(),
+        id: generateId(),
         sessionId: actualSessionId,
         eyeId,
         type: "eye_call",
@@ -1043,6 +1045,67 @@ export class EyeOrchestrator {
   }
 
   /**
+   * Determine the current stage (GUIDANCE or VALIDATION) for an Eye call
+   *
+   * Stage logic:
+   * - GUIDANCE: First call to an Eye in a session (gathering context, asking questions)
+   * - VALIDATION: Second pass after clarification/confirmation has been provided
+   *
+   * The stage affects which status codes and response formats are valid for the Eye.
+   */
+  private determineStage(sessionId: string, eyeName: string): EyeStageToken {
+    const state = orderGuard.getState(sessionId);
+
+    // No state yet = first call = GUIDANCE
+    if (!state) {
+      return EyeStageToken.GUIDANCE;
+    }
+
+    // Check if this Eye has already been called in this session
+    const eyeNameLower = eyeName.toLowerCase();
+    const hasBeenCalled = state.completedEyes.some(
+      (completed) => completed.toLowerCase() === eyeNameLower
+    );
+
+    // If Eye was already called and completed, this is a VALIDATION pass
+    if (hasBeenCalled) {
+      return EyeStageToken.VALIDATION;
+    }
+
+    // For Overseer, check if we're past the initialization phase
+    // If clarification/planning has happened, Overseer should be in VALIDATION mode
+    if (eyeNameLower === EyeId.OVERSEER.toLowerCase()) {
+      if (state.currentPhase !== "initialization" && state.completedEyes.length > 0) {
+        return EyeStageToken.VALIDATION;
+      }
+    }
+
+    // For Sharingan, check if clarification has been resolved
+    if (eyeNameLower === EyeId.SHARINGAN.toLowerCase()) {
+      if (state.currentPhase !== "initialization" && state.currentPhase !== "clarification") {
+        return EyeStageToken.VALIDATION;
+      }
+    }
+
+    // For other Eyes, check based on phase progression
+    // If we're in implementation or completion phase, use VALIDATION
+    if (state.currentPhase === "implementation" || state.currentPhase === "completion") {
+      // Eyes that typically run in later phases should be in VALIDATION mode
+      const laterPhaseEyes = [
+        EyeId.MANGEKYO.toLowerCase(),
+        EyeId.TENSEIGAN.toLowerCase(),
+        EyeId.BYAKUGAN.toLowerCase(),
+      ];
+      if (!laterPhaseEyes.includes(eyeNameLower)) {
+        return EyeStageToken.VALIDATION;
+      }
+    }
+
+    // Default to GUIDANCE for first-time calls
+    return EyeStageToken.GUIDANCE;
+  }
+
+  /**
    * Create error envelope
    */
   private async createErrorEnvelope(
@@ -1161,7 +1224,7 @@ export class EyeOrchestrator {
   async createSession(
     config: SessionBootstrapConfig = {},
   ): Promise<{ sessionId: string; portalUrl: string }> {
-    const sessionId = nanoid();
+    const sessionId = generateSessionId();
 
     await this.db.insert(sessions).values({
       id: sessionId,

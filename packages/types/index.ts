@@ -82,4 +82,23 @@ export type {
 
 export type { PipelineDagNode, PipelineDagEdge, PipelineDag } from "./pipeline";
 
+// Type Guards - R07 SSOT
+export {
+  VALID_NODE_TYPES,
+  type ValidNodeType,
+  isValidNodeType,
+  isPipelineDagNode,
+  isPipelineDagEdge,
+  isPipelineDag,
+  isNotNull,
+  isNonEmptyString,
+  isRecord,
+  isArrayOf,
+  isErrorWithMessage,
+  isErrorWithStatus,
+  isErrorWithCode,
+  safeCast,
+  assertType,
+} from "./guards";
+
 export { z } from "zod";

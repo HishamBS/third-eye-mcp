@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { nanoid } from "nanoid";
+import { generateId, generateEventId } from "@third-eye/db/utils/uuid";
 import { getDb } from "@third-eye/db";
 import {
   pipelineEvents,
@@ -89,41 +89,41 @@ const eyeRequestSchema = z.object({
   payload: z
     .object({
       prompt: z.string().optional(),
-      clarifications: z.any().optional(),
+      clarifications: z.record(z.unknown()).optional(),
       task: z.string().optional(),
-      plan: z.any().optional(),
-      scaffold: z.any().optional(),
-      diffs: z.any().optional(),
-      reasoning: z.any().optional(),
-      tests: z.any().optional(),
-      coverage: z.any().optional(),
-      docs: z.any().optional(),
-      content: z.any().optional(),
-      sources: z.any().optional(),
-      implementation: z.any().optional(),
+      plan: z.unknown().optional(),
+      scaffold: z.unknown().optional(),
+      diffs: z.array(z.string()).optional(),
+      reasoning: z.unknown().optional(),
+      tests: z.unknown().optional(),
+      coverage: z.unknown().optional(),
+      docs: z.unknown().optional(),
+      content: z.unknown().optional(),
+      sources: z.array(z.string()).optional(),
+      implementation: z.unknown().optional(),
     })
     .optional(),
   prompt: z.string().optional(),
   task: z.string().optional(),
-  plan: z.any().optional(),
-  scaffold: z.any().optional(),
-  diffs: z.any().optional(),
-  reasoning: z.any().optional(),
-  tests: z.any().optional(),
-  coverage: z.any().optional(),
-  docs: z.any().optional(),
-  content: z.any().optional(),
-  sources: z.any().optional(),
-  implementation: z.any().optional(),
+  plan: z.unknown().optional(),
+  scaffold: z.unknown().optional(),
+  diffs: z.array(z.string()).optional(),
+  reasoning: z.unknown().optional(),
+  tests: z.unknown().optional(),
+  coverage: z.unknown().optional(),
+  docs: z.unknown().optional(),
+  content: z.unknown().optional(),
+  sources: z.array(z.string()).optional(),
+  implementation: z.unknown().optional(),
 });
 
 const createCustomEyeSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
-  inputSchema: z.any(),
-  outputSchema: z.any(),
+  inputSchema: z.record(z.unknown()),
+  outputSchema: z.record(z.unknown()),
   personaId: z.string().optional(),
-  defaultRouting: z.any().optional(),
+  defaultRouting: z.record(z.unknown()).optional(),
 });
 
 const eyeTestSchema = z.object({
@@ -144,7 +144,7 @@ async function logPipelineEvent(
     await db
       .insert(pipelineEvents)
       .values({
-        id: nanoid(),
+        id: generateEventId(),
         sessionId,
         eyeId,
         type: "eye_call",
@@ -242,7 +242,6 @@ app.post("/:id/test", async (c) => {
         code: ApiErrorCode.VALIDATION_ERROR,
         status: 400,
         detail: error.issues.map((issue) => issue.message).join("; "),
-        code: ApiErrorCode.INVALID_PAYLOAD,
       });
     }
 
@@ -270,10 +269,10 @@ app.get("/all", async (c) => {
     .orderBy(desc(eyes.createdAt))
     .all();
 
-  // Map eyes to response format with capability_tags
+  // Map eyes to response format with capabilities
   const eyeData = allEyes.map((eye) => {
     // Parse capability_tags from JSON column (Phase 1-A1)
-    const capabilityTags =
+    const capabilities =
       typeof eye.capabilityTags === "string"
         ? JSON.parse(eye.capabilityTags)
         : eye.capabilityTags || [];
@@ -283,7 +282,8 @@ app.get("/all", async (c) => {
       name: eye.name, // Display name (e.g., 'Overseer', 'Jōgan')
       version: eye.version,
       description: eye.description,
-      capabilityTags, // Phase 4: For CapabilityMatrix
+      capabilities, // For NodePalette/EyePalette - unified name
+      capabilityTags: capabilities, // Backwards compat for CapabilityMatrix
       inputSchema: eye.inputSchemaJson,
       outputSchema: eye.outputSchemaJson,
       personaId: eye.personaId,
@@ -297,20 +297,35 @@ app.get("/all", async (c) => {
 });
 
 /**
+ * Normalize eye name for database lookup
+ * Maps ASCII names to their special character variants (e.g., jogan -> Jōgan)
+ */
+function normalizeEyeName(name: string): string {
+  const nameMap: Record<string, string> = {
+    jogan: "Jōgan",
+    mangekyo: "Mangekyō",
+  };
+  const lower = name.toLowerCase();
+  return nameMap[lower] || name;
+}
+
+/**
  * GET /eyes/:name/icon - Get icon SVG for an Eye by name
  * Used by EyeIcon component to fetch custom SVG icons
  */
 app.get("/:name/icon", async (c) => {
   const eyeName = c.req.param("name");
+  const normalizedName = normalizeEyeName(eyeName);
 
   try {
     const { db } = getDb();
 
     // Find eye by name (case-insensitive, match active eyes first)
+    // Try both the original name and normalized name
     const eye = await db
       .select()
       .from(eyes)
-      .where(sql`LOWER(${eyes.name}) = LOWER(${eyeName})`)
+      .where(sql`LOWER(${eyes.name}) = LOWER(${normalizedName}) OR LOWER(${eyes.name}) = LOWER(${eyeName})`)
       .orderBy(desc(eyes.active), desc(eyes.createdAt))
       .get();
 
@@ -362,18 +377,22 @@ app.get("/:id", async (c) => {
       .where(eq(personaBlueprints.eyeId, eyeId))
       .get();
 
+    const capabilitiesArray = blueprint
+      ? JSON.parse(blueprint.capabilities as string)
+      : [];
+
     return createSuccessResponse(c, {
       id: eye.id,
       name: eye.name,
       version: eye.version,
       description: eye.description,
-      capabilities: blueprint
-        ? JSON.parse(blueprint.capabilities as string)
-        : [],
+      capabilities: capabilitiesArray,
+      capabilityTags: capabilitiesArray,
       inputSchema: eye.inputSchemaJson,
       outputSchema: eye.outputSchemaJson,
       personaId: eye.personaId,
       iconSvg: eye.iconSvg,
+      active: eye.active,
       createdAt: eye.createdAt,
     });
   } catch (error) {
@@ -508,7 +527,7 @@ app.post("/custom", async (c) => {
 
       const nextVersion = existing.length > 0 ? existing[0].version + 1 : 1;
 
-      const id = nanoid();
+      const id = generateId();
       const now = new Date();
 
       // Deactivate previous versions
@@ -550,7 +569,7 @@ app.post("/custom", async (c) => {
         await db
           .insert(eyesRouting)
           .values({
-            id: nanoid(),
+            id: generateId(),
             eyeId: id,
             primaryProvider: defaultRoutingData.primaryProvider,
             primaryModel: defaultRoutingData.primaryModel,
@@ -596,7 +615,7 @@ app.post("/custom", async (c) => {
         await db
           .insert(personaBlueprints)
           .values({
-            id: nanoid(),
+            id: generateId(),
             ...minimalBlueprint,
           })
           .run();
@@ -768,7 +787,7 @@ app.post("/custom/:id/test", async (c) => {
   }
 
   const eyeData = eye[0];
-  const sessionId = nanoid();
+  const sessionId = generateId();
 
   try {
     const response = await orchestrator.runEye(

@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { DuelMode } from "@/components/DuelMode";
-import { nanoid } from "nanoid";
 
 export default function DuelPage() {
-  const [sessionId] = useState(() => `duel-${nanoid()}`);
+  // sessionId is optional - backend will generate if not provided
+  // Using undefined lets backend be the SSOT for session IDs
+  const [sessionId] = useState<string | undefined>(undefined);
   const [prompt, setPrompt] = useState("");
   const [showDuel, setShowDuel] = useState(false);
 

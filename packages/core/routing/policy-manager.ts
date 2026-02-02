@@ -8,7 +8,7 @@
  * Per R13: Centralized policy management SSOT
  */
 
-import { randomUUID } from "node:crypto";
+import { generateId } from "@third-eye/db/utils/uuid";
 import type { Database } from "bun:sqlite";
 import type { RoutingPolicy, Constraint } from "./routing-modes";
 import { PolicyValidator } from "./policy-validator";
@@ -36,7 +36,7 @@ export class PolicyManager {
     alwaysConfirmIntent?: boolean;
     customConstraints?: readonly Constraint[];
   }): Promise<RoutingPolicy> {
-    const id = randomUUID();
+    const id = generateId();
     const createdAt = Date.now();
 
     const policy: RoutingPolicy = {

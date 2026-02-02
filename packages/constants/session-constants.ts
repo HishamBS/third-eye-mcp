@@ -59,6 +59,8 @@ export const ExportFormat = freezeTokens({
   JSON: "json",
   MARKDOWN: "md",
   CSV: "csv",
+  HTML: "html",
+  PDF: "pdf",
 } as const);
 
 export type ExportFormat = TokenLiteral<typeof ExportFormat>;
@@ -67,11 +69,15 @@ export const ALL_EXPORT_FORMATS = tokenValues(ExportFormat);
 export const EXPORT_FORMAT_JSON = ExportFormat.JSON;
 export const EXPORT_FORMAT_MD = ExportFormat.MARKDOWN;
 export const EXPORT_FORMAT_CSV = ExportFormat.CSV;
+export const EXPORT_FORMAT_HTML = ExportFormat.HTML;
+export const EXPORT_FORMAT_PDF = ExportFormat.PDF;
 
 export const VALID_EXPORT_FORMATS = [
   EXPORT_FORMAT_JSON,
   EXPORT_FORMAT_MD,
   EXPORT_FORMAT_CSV,
+  EXPORT_FORMAT_HTML,
+  EXPORT_FORMAT_PDF,
 ] as const;
 
 /**

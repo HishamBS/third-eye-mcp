@@ -126,6 +126,7 @@ export const ApiErrorTitle = freezeTokens({
   OVERSEER_EXECUTION_ERROR: "Overseer Execution Failed",
   PIPELINE_EXECUTION_ERROR: "Pipeline Execution Failed",
   PROVIDER_AUTH_ERROR: "Provider Authentication Failed",
+  INTERNAL_ERROR: "Internal Server Error",
 } as const);
 
 export type ApiErrorTitle = TokenLiteral<typeof ApiErrorTitle>;

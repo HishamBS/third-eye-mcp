@@ -17,6 +17,7 @@ import ReactFlow, {
   MarkerType,
   BackgroundVariant,
 } from "reactflow";
+import dagre from "dagre";
 import "reactflow/dist/style.css";
 import { getEyeColor } from "@/components/EyeIcon";
 import { EyeNode } from "./EyeNode";
@@ -35,7 +36,7 @@ import { PipelineTemplateSelector } from "./PipelineTemplateSelector";
 import { SwitchNodeConfigModal } from "./SwitchNodeConfigModal";
 import { IFNodeConfigModal } from "./IFNodeConfigModal";
 import { LoopNodeConfigModal } from "./LoopNodeConfigModal";
-import { SessionSelector } from "./SessionSelector";
+import { SessionSelector } from "@/components/SessionSelector";
 import { RuntimeRouteHighlighter } from "./RuntimeRouteHighlighter";
 import { RoutingDecisionMetadata } from "./RoutingDecisionMetadata";
 import { CANVAS_SETTINGS, LAYOUT, PIPELINE_UI_TEXT } from "./constants";
@@ -128,8 +129,6 @@ const validateNodes = (nodes: Node[]): void => {
  * Per R13: All constants from SSOT
  */
 export function PipelineCanvasEnhanced() {
-  console.log("[DEBUG] PipelineCanvasEnhanced component mounting");
-
   // Memoize nodeTypes to prevent ReactFlow warning
   const nodeTypes = useMemo(
     () => ({
@@ -167,28 +166,11 @@ export function PipelineCanvasEnhanced() {
             ? nodesOrUpdater(currentNodes)
             : nodesOrUpdater;
 
-        // DEBUG: Log nodes being set
-        console.log("[DEBUG] setNodesValidated called with:", {
-          isFunction: typeof nodesOrUpdater === "function",
-          nodesCount: nodesToSet.length,
-          nodes: nodesToSet.map((n) => ({
-            id: n.id,
-            type: n.type,
-            hasPosition: !!n.position,
-            position: n.position,
-            positionType: typeof n.position,
-          })),
-        });
-
         // Validate nodes before setting - throws error if invalid (per R12)
         if (nodesToSet.length > 0) {
           validateNodes(nodesToSet as PipelineNode[]);
         }
 
-        // DEBUG: Log after validation
-        console.log("[DEBUG] Validation passed, setting nodes");
-
-        // Return validated nodes to React
         return nodesToSet;
       });
     },
@@ -249,17 +231,12 @@ export function PipelineCanvasEnhanced() {
 
   // Load default pipeline on mount
   useEffect(() => {
-    console.log("[PipelineCanvas] Loading default pipeline on mount");
     refetchPipeline();
   }, [refetchPipeline]);
 
   // Set nodes and edges when pipeline is loaded
   useEffect(() => {
     if (activePipeline?.workflowJson?.nodes && activePipeline?.workflowJson?.edges) {
-      console.log("[PipelineCanvas] Setting pipeline nodes and edges:", {
-        nodeCount: activePipeline.workflowJson.nodes.length,
-        edgeCount: activePipeline.workflowJson.edges.length,
-      });
       setNodesValidated(activePipeline.workflowJson.nodes as Node<EyeNodeData>[]);
       setEdges(activePipeline.workflowJson.edges as Edge<EdgeConditionData>[]);
     }
@@ -392,9 +369,9 @@ export function PipelineCanvasEnhanced() {
   }, []);
 
   const handlePersonaSaved = useCallback(() => {
-    // Could refresh node data here if needed
-    console.log("Persona saved for pipeline node");
-  }, []);
+    // Refresh node data after persona is saved
+    refetchPipeline();
+  }, [refetchPipeline]);
 
   // Control node configuration save handlers
   const handleSaveSwitchConfig = useCallback(
@@ -557,19 +534,6 @@ export function PipelineCanvasEnhanced() {
       return nodes;
     }
 
-    // DEBUG: Log nodes in state before validation
-    console.log(
-      "[DEBUG] validatedNodes useMemo - nodes in state:",
-      nodes.map((n) => ({
-        id: n.id,
-        type: n.type,
-        hasPosition: !!n.position,
-        position: n.position,
-        positionType: typeof n.position,
-        positionKeys: n.position ? Object.keys(n.position) : [],
-      })),
-    );
-
     // Validate all nodes - throws error if any are malformed (no fallback)
     validateNodes(nodes as PipelineNode[]);
     return nodes;
@@ -588,7 +552,6 @@ export function PipelineCanvasEnhanced() {
         edges as PipelineEdge[],
       );
       if (result) {
-        console.log("Pipeline saved:", result);
         await refetchPipeline();
       }
     } else {
@@ -599,7 +562,9 @@ export function PipelineCanvasEnhanced() {
         validatedNodes as PipelineNode[],
         edges as PipelineEdge[],
       );
-      if (result) console.log("Pipeline updated:", result);
+      if (result) {
+        await refetchPipeline();
+      }
     }
   }, [validatedNodes, edges, activePipeline, savePipeline, refetchPipeline]);
 
@@ -608,8 +573,7 @@ export function PipelineCanvasEnhanced() {
       alert("Please save the pipeline first");
       return;
     }
-    const success = await activatePipeline(activePipeline.id);
-    if (success) console.log("Pipeline activated");
+    await activatePipeline(activePipeline.id);
   }, [activePipeline, activatePipeline]);
 
   const handleNew = useCallback(() => {
@@ -667,7 +631,69 @@ export function PipelineCanvasEnhanced() {
     }
   }, [validatedNodes]);
 
-  const handleAutoLayout = useCallback(() => console.log("Auto layout"), []);
+  /**
+   * Auto-layout pipeline nodes using Dagre algorithm
+   * Organizes nodes in a top-to-bottom hierarchical layout
+   */
+  const handleAutoLayout = useCallback(() => {
+    if (validatedNodes.length === 0) {
+      return;
+    }
+
+    // Create a new dagre graph
+    const dagreGraph = new dagre.graphlib.Graph();
+    dagreGraph.setDefaultEdgeLabel(() => ({}));
+    dagreGraph.setGraph({
+      rankdir: LAYOUT.AUTO_LAYOUT_DIRECTION,
+      nodesep: LAYOUT.AUTO_LAYOUT_NODE_SEP,
+      ranksep: LAYOUT.AUTO_LAYOUT_RANK_SEP,
+      edgesep: LAYOUT.AUTO_LAYOUT_EDGE_SEP,
+      ranker: LAYOUT.AUTO_LAYOUT_RANKER,
+    });
+
+    // Add nodes to dagre graph
+    validatedNodes.forEach((node) => {
+      // Use node dimensions if available, otherwise use defaults
+      const nodeWidth = node.width || LAYOUT.AUTO_LAYOUT_NODE_WIDTH;
+      const nodeHeight = node.height || LAYOUT.AUTO_LAYOUT_NODE_HEIGHT;
+      dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+    });
+
+    // Add edges to dagre graph
+    edges.forEach((edge) => {
+      dagreGraph.setEdge(edge.source, edge.target);
+    });
+
+    // Calculate layout
+    dagre.layout(dagreGraph);
+
+    // Apply calculated positions to nodes
+    const layoutedNodes = validatedNodes.map((node) => {
+      const nodeWithPosition = dagreGraph.node(node.id);
+      const nodeWidth = node.width || LAYOUT.AUTO_LAYOUT_NODE_WIDTH;
+      const nodeHeight = node.height || LAYOUT.AUTO_LAYOUT_NODE_HEIGHT;
+
+      return {
+        ...node,
+        position: {
+          // Dagre returns center position, convert to top-left for ReactFlow
+          x: nodeWithPosition.x - nodeWidth / 2,
+          y: nodeWithPosition.y - nodeHeight / 2,
+        },
+      };
+    });
+
+    // Update nodes state
+    setNodesValidated(layoutedNodes as Node<EyeNodeData>[]);
+
+    // Fit view after layout
+    setTimeout(() => {
+      reactFlowInstance.fitView({
+        padding: LAYOUT.FIT_VIEW_PADDING,
+        duration: LAYOUT.ZOOM_DURATION,
+      });
+    }, 50);
+  }, [validatedNodes, edges, setNodesValidated, reactFlowInstance]);
 
   const handleZoomFit = useCallback(() => {
     reactFlowInstance.fitView({
@@ -745,6 +771,7 @@ export function PipelineCanvasEnhanced() {
 
         {/* Session Selector - Top Right Corner */}
         <SessionSelector
+          controlled
           selectedSessionId={selectedSessionId}
           onSessionSelect={handleSessionSelect}
         />

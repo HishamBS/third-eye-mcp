@@ -323,7 +323,7 @@ export async function createDatabaseIndexes(): Promise<void> {
       ON runs(created_at)
     `);
 
-    console.log("✅ Database indexes created successfully");
+    console.error("✅ Database indexes created successfully");
   } catch (error) {
     console.error("❌ Failed to create database indexes:", error);
     throw error;

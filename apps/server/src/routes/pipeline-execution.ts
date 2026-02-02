@@ -9,12 +9,12 @@
  */
 
 import { Hono } from "hono";
-import { nanoid } from "nanoid";
+import { generateId, generateRunId, generateSessionId } from "@third-eye/db/utils/uuid";
 import { getDb } from "@third-eye/db";
 import { pipelines, pipelineQueue, executionSteps } from "@third-eye/db";
 import { eq, desc } from "drizzle-orm";
 import { PipelineExecutionEngine } from "@third-eye/core/pipeline-execution-engine";
-import { autoRouter } from "@third-eye/core/auto-router";
+import { autoRouter } from "@third-eye/core";
 // TODO: Recreate PipelineDagSchema in @third-eye/types package
 // import { PipelineDagSchema } from '@third-eye/types/dist/pipeline';
 import {
@@ -39,11 +39,11 @@ const activeExecutions = new Map<string, PipelineExecutionEngine>();
 const executePipelineSchema = z.object({
   pipelineId: z.string().min(1),
   sessionId: z.string().optional(),
-  input: z.any(),
+  input: z.union([z.string(), z.record(z.unknown())]),
 });
 
 const resumePipelineSchema = z.object({
-  userInput: z.any().optional(),
+  userInput: z.union([z.string(), z.record(z.unknown())]).optional(),
 });
 
 /**
@@ -144,8 +144,8 @@ app.post("/execute", async (c) => {
     }
 
     // Generate run ID
-    const runId = nanoid();
-    const actualSessionId = sessionId || nanoid();
+    const runId = generateRunId();
+    const actualSessionId = sessionId || generateSessionId();
 
     // Intelligent routing: analyze task to determine optimal Eye sequence
     let recommendedEyes: string[] | undefined;
@@ -181,7 +181,7 @@ app.post("/execute", async (c) => {
     // Create queue entry
     const now = new Date();
     await db.insert(pipelineQueue).values({
-      id: nanoid(),
+      id: generateId(),
       runId,
       pipelineId,
       sessionId: actualSessionId,
@@ -243,22 +243,17 @@ app.post("/execute", async (c) => {
       })
       .where(eq(pipelineQueue.runId, runId));
 
-    return c.json(
-      createSuccessResponse({
-        runId,
-        sessionId: actualSessionId,
-        status: "running",
-        message: "Pipeline execution started",
-      }),
-      202, // Accepted
-    );
+    return createSuccessResponse(c, {
+      runId,
+      sessionId: actualSessionId,
+      status: "running",
+      message: "Pipeline execution started",
+    }, { status: 202 });
   } catch (error) {
     console.error("Execute pipeline error:", error);
-    return c.json(
-      createInternalErrorResponse(
-        error instanceof Error ? error.message : "Unknown error",
-      ),
-      500,
+    return createInternalErrorResponse(
+      c,
+      error instanceof Error ? error.message : "Unknown error",
     );
   }
 });
@@ -291,20 +286,16 @@ app.post("/pause/:runId", async (c) => {
       .set({ status: "paused" })
       .where(eq(pipelineQueue.runId, runId));
 
-    return c.json(
-      createSuccessResponse({
-        runId,
-        status: "paused",
-        message: "Pipeline execution paused",
-      }),
-    );
+    return createSuccessResponse(c, {
+      runId,
+      status: "paused",
+      message: "Pipeline execution paused",
+    });
   } catch (error) {
     console.error("Pause pipeline error:", error);
-    return c.json(
-      createInternalErrorResponse(
-        error instanceof Error ? error.message : "Unknown error",
-      ),
-      500,
+    return createInternalErrorResponse(
+      c,
+      error instanceof Error ? error.message : "Unknown error",
     );
   }
 });
@@ -355,20 +346,16 @@ app.post("/resume/:runId", async (c) => {
       .set({ status: "running" })
       .where(eq(pipelineQueue.runId, runId));
 
-    return c.json(
-      createSuccessResponse({
-        runId,
-        status: "running",
-        message: "Pipeline execution resumed",
-      }),
-    );
+    return createSuccessResponse(c, {
+      runId,
+      status: "running",
+      message: "Pipeline execution resumed",
+    });
   } catch (error) {
     console.error("Resume pipeline error:", error);
-    return c.json(
-      createInternalErrorResponse(
-        error instanceof Error ? error.message : "Unknown error",
-      ),
-      500,
+    return createInternalErrorResponse(
+      c,
+      error instanceof Error ? error.message : "Unknown error",
     );
   }
 });
@@ -405,26 +392,22 @@ app.get("/status/:runId", async (c) => {
     const engine = activeExecutions.get(runId);
     const currentState = engine ? engine.getState() : null;
 
-    return c.json(
-      createSuccessResponse({
-        runId,
-        status: queueItem.status,
-        finalVerdict: queueItem.finalVerdict,
-        errorMessage: queueItem.errorMessage,
-        createdAt: queueItem.createdAt,
-        startedAt: queueItem.startedAt,
-        completedAt: queueItem.completedAt,
-        steps,
-        currentState,
-      }),
-    );
+    return createSuccessResponse(c, {
+      runId,
+      status: queueItem.status,
+      finalVerdict: queueItem.finalVerdict,
+      errorMessage: queueItem.errorMessage,
+      createdAt: queueItem.createdAt,
+      startedAt: queueItem.startedAt,
+      completedAt: queueItem.completedAt,
+      steps,
+      currentState,
+    });
   } catch (error) {
     console.error("Get execution status error:", error);
-    return c.json(
-      createInternalErrorResponse(
-        error instanceof Error ? error.message : "Unknown error",
-      ),
-      500,
+    return createInternalErrorResponse(
+      c,
+      error instanceof Error ? error.message : "Unknown error",
     );
   }
 });

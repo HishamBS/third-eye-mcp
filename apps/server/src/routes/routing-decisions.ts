@@ -7,9 +7,8 @@
  */
 
 import { Hono } from "hono";
-import type { Database } from "better-sqlite3";
 import { getDb } from "@third-eye/db";
-import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
+import { ApiErrorCode } from "@third-eye/constants";
 
 const app = new Hono();
 

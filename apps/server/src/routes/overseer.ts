@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
-import { autoRouter } from "@third-eye/core/auto-router";
+import { autoRouter } from "@third-eye/core";
+import { getDb, sessions, runs, pipelineEvents } from "@third-eye/db";
+import { eq, desc, count } from "drizzle-orm";
 import { schemas } from "../middleware/validation";
 import {
   createSuccessResponse,
@@ -37,7 +39,6 @@ app.post("/run", async (c) => {
         status: 400,
         detail:
           'The request body must include a non-empty "task" string for auto-routing.',
-        code: ApiErrorCode.INVALID_REQUEST,
       });
     }
 
@@ -79,15 +80,13 @@ app.post("/run", async (c) => {
         code: ApiErrorCode.VALIDATION_ERROR,
         status: 400,
         detail: error.issues.map((i) => i.message).join("; "),
-        code: ApiErrorCode.INVALID_REQUEST,
       });
     }
     return createErrorResponse(c, {
       title: ApiErrorTitle.OVERSEER_EXECUTION_ERROR,
-        code: ApiErrorCode.OVERSEER_EXECUTION_FAILED,
+      code: ApiErrorCode.OVERSEER_EXECUTION_FAILED,
       status: 500,
       detail: error instanceof Error ? error.message : "Unknown error",
-      code: ApiErrorCode.OVERSEER_EXECUTION_FAILED,
     });
   }
 });
@@ -98,28 +97,77 @@ app.get("/status", async (c) => {
   if (!sessionId) {
     return createErrorResponse(c, {
       title: ApiErrorTitle.MISSING_SESSION_ID,
-        code: ApiErrorCode.MISSING_SESSION_ID,
+      code: ApiErrorCode.MISSING_SESSION_ID,
       status: 400,
       detail: "sessionId query parameter is required",
     });
   }
 
-  // TODO: Implement session manager integration
-  // const session = await sessionManager.getSession(sessionId);
-  //
-  // if (!session) {
-  //   return createErrorResponse(c, {
-  //     title: "Session not found",
-  //     status: 404,
-  //     detail: `No session found with ID: ${sessionId}`,
-  //   });
-  // }
+  try {
+    const { db } = getDb();
 
-  return createSuccessResponse(c, {
-    sessionId,
-    // TODO: Add session and pipeline progress data
-    message: "Session status endpoint - implementation pending",
-  });
+    // Get session data
+    const session = await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.id, sessionId))
+      .get();
+
+    if (!session) {
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
+        status: 404,
+        detail: `No session found with ID: ${sessionId}`,
+      });
+    }
+
+    // Get run count for this session
+    const runCount = await db
+      .select({ count: count() })
+      .from(runs)
+      .where(eq(runs.sessionId, sessionId))
+      .get();
+
+    // Get pipeline event count
+    const eventCount = await db
+      .select({ count: count() })
+      .from(pipelineEvents)
+      .where(eq(pipelineEvents.sessionId, sessionId))
+      .get();
+
+    // Get most recent run
+    const latestRun = await db
+      .select()
+      .from(runs)
+      .where(eq(runs.sessionId, sessionId))
+      .orderBy(desc(runs.createdAt))
+      .limit(1)
+      .get();
+
+    return createSuccessResponse(c, {
+      sessionId,
+      status: session.status,
+      createdAt: session.createdAt,
+      agentName: session.agentName,
+      model: session.model,
+      displayName: session.displayName,
+      progress: {
+        totalRuns: runCount?.count ?? 0,
+        totalEvents: eventCount?.count ?? 0,
+        latestRunId: latestRun?.id ?? null,
+        latestRunEyeId: latestRun?.eyeId ?? null,
+        latestRunCreatedAt: latestRun?.createdAt ?? null,
+      },
+    });
+  } catch (error) {
+    return createErrorResponse(c, {
+      title: ApiErrorTitle.INTERNAL_ERROR,
+      code: ApiErrorCode.INTERNAL_ERROR,
+      status: 500,
+      detail: error instanceof Error ? error.message : "Failed to fetch session status",
+    });
+  }
 });
 
 export default app;

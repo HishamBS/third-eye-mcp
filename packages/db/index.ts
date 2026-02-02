@@ -11,6 +11,8 @@ export * from "./schema";
 export { schema }; // Export the exact schema object used by drizzle initialization
 export * from "./defaults";
 export * from "./constants";
+export * from "./utils/lookups";
+export * from "./utils/uuid";
 
 // Default database path: ~/.third-eye-mcp/mcp.db (following prompt.md spec)
 export function getDbPath(): string {
@@ -35,12 +37,12 @@ function recoverDatabaseFromWal(dbPath: string): void {
   const walFile = `${dbPath}-wal`;
   const shmFile = `${dbPath}-shm`;
 
-  console.log("🔧 Attempting database recovery from corrupted WAL files...");
+  console.error("🔧 Attempting database recovery from corrupted WAL files...");
 
   if (existsSync(walFile)) {
     try {
       rmSync(walFile, { force: true });
-      console.log(`   ✓ Removed corrupted WAL file: ${walFile}`);
+      console.error(`   ✓ Removed corrupted WAL file: ${walFile}`);
     } catch (err) {
       console.warn(
         `   ⚠️  Could not remove WAL file (may be locked): ${err instanceof Error ? err.message : String(err)}`,
@@ -51,7 +53,7 @@ function recoverDatabaseFromWal(dbPath: string): void {
   if (existsSync(shmFile)) {
     try {
       rmSync(shmFile, { force: true });
-      console.log(`   ✓ Removed corrupted SHM file: ${shmFile}`);
+      console.error(`   ✓ Removed corrupted SHM file: ${shmFile}`);
     } catch (err) {
       console.warn(
         `   ⚠️  Could not remove SHM file (may be locked): ${err instanceof Error ? err.message : String(err)}`,
@@ -59,7 +61,7 @@ function recoverDatabaseFromWal(dbPath: string): void {
     }
   }
 
-  console.log("   ✓ Recovery complete - retrying database connection...");
+  console.error("   ✓ Recovery complete - retrying database connection...");
 }
 
 export function createDb(dbPath?: string) {
@@ -103,13 +105,13 @@ export function createDb(dbPath?: string) {
         // Also remove if file is suspiciously small (< 1000 bytes) as it might be corrupted
         if (walStats.size === 0 || walStats.size < 1000) {
           rmSync(walFile, { force: true });
-          console.log("🔧 Proactively removed empty/corrupted WAL file");
+          console.error("🔧 Proactively removed empty/corrupted WAL file");
         }
       } catch (err) {
         // If stat fails, try to remove anyway - corrupted files might not stat correctly
         try {
           rmSync(walFile, { force: true });
-          console.log("🔧 Removed WAL file (stat failed, assuming corrupted)");
+          console.error("🔧 Removed WAL file (stat failed, assuming corrupted)");
         } catch {
           // Ignore removal errors
         }
@@ -122,13 +124,13 @@ export function createDb(dbPath?: string) {
         // Very small SHM files (< 100 bytes) might be corrupted
         if (shmStats.size < 100) {
           rmSync(shmFile, { force: true });
-          console.log("🔧 Proactively removed potentially corrupted SHM file");
+          console.error("🔧 Proactively removed potentially corrupted SHM file");
         }
       } catch (err) {
         // If stat fails, try to remove anyway
         try {
           rmSync(shmFile, { force: true });
-          console.log("🔧 Removed SHM file (stat failed, assuming corrupted)");
+          console.error("🔧 Removed SHM file (stat failed, assuming corrupted)");
         } catch {
           // Ignore removal errors
         }
@@ -257,7 +259,7 @@ export function runMigrations(
       .all() as Array<{ name: string }>;
 
     if (tables.length === 0) {
-      console.log("📋 No tables found - applying initial schema...");
+      console.error("📋 No tables found - applying initial schema...");
 
       // Single consolidated migration file for V1 release (R17 - SSOT)
       // Use process.cwd() which is always project root when CLI/server runs
@@ -278,19 +280,19 @@ export function runMigrations(
           .map((s) => s.trim())
           .filter((s) => s.length > 0);
 
-        console.log(`📝 Executing ${statements.length} SQL statements...`);
+        console.error(`📝 Executing ${statements.length} SQL statements...`);
 
         for (const statement of statements) {
           sqlite.exec(statement);
         }
 
-        console.log("✅ Schema created successfully");
+        console.error("✅ Schema created successfully");
       } else {
         console.warn(`⚠️  Migration file not found: ${migrationFile}`);
         console.warn("⚠️  Database will be empty - seed defaults to populate");
       }
     } else {
-      console.log(`✅ Database initialized with ${tables.length} tables`);
+      console.error(`✅ Database initialized with ${tables.length} tables`);
 
       // Validate schema - check if critical columns exist
       // This ensures migration was applied correctly even if tables already existed

@@ -13,7 +13,7 @@ import {
   appSettings,
 } from "../schema";
 import { eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
+import { generateId } from "../utils/uuid";
 
 describe("Database Schema - Sessions", () => {
   let db: ReturnType<typeof getDb>["db"];
@@ -24,7 +24,7 @@ describe("Database Schema - Sessions", () => {
   });
 
   test("should create a session", async () => {
-    const sessionId = nanoid(12);
+    const sessionId = generateId();
     const newSession = {
       id: sessionId,
       createdAt: new Date(),
@@ -46,7 +46,7 @@ describe("Database Schema - Sessions", () => {
   });
 
   test("should update session status", async () => {
-    const sessionId = nanoid(12);
+    const sessionId = generateId();
 
     await db
       .insert(sessions)
@@ -74,7 +74,7 @@ describe("Database Schema - Sessions", () => {
   });
 
   test("should delete a session", async () => {
-    const sessionId = nanoid(12);
+    const sessionId = generateId();
 
     await db
       .insert(sessions)
@@ -279,7 +279,7 @@ describe("Database Schema - Runs", () => {
     db = result.db;
 
     // Create a session first
-    sessionId = nanoid(12);
+    sessionId = generateId();
     await db
       .insert(sessions)
       .values({
@@ -292,7 +292,7 @@ describe("Database Schema - Runs", () => {
   });
 
   test("should create a run", async () => {
-    const runId = nanoid(16);
+    const runId = generateId();
     const runData = {
       id: runId,
       sessionId,
@@ -324,7 +324,7 @@ describe("Database Schema - Runs", () => {
     await db
       .insert(runs)
       .values({
-        id: nanoid(16),
+        id: generateId(),
         sessionId,
         eye: "sharingan",
         provider: "groq",
@@ -341,7 +341,7 @@ describe("Database Schema - Runs", () => {
     await db
       .insert(runs)
       .values({
-        id: nanoid(16),
+        id: generateId(),
         sessionId,
         eye: "rinnegan",
         provider: "groq",

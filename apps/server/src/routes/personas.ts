@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { nanoid } from "nanoid";
+import { generateId } from "@third-eye/db/utils/uuid";
 import { getDb } from "@third-eye/db";
 import { personas, personaVersions } from "@third-eye/db";
 import { personaBlueprints } from "@third-eye/db/schema";
@@ -7,7 +7,6 @@ import { personaBlueprints } from "@third-eye/db/schema";
 import { EyeId } from "@third-eye/constants";
 import { eq, and, desc } from "drizzle-orm";
 import { getEyeIdByName, getEyeNameById } from "@third-eye/db/utils/lookups";
-import { generateId } from "@third-eye/db/utils/uuid";
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -639,7 +638,7 @@ app.post("/:id/versions", async (c) => {
     // Create new version snapshot from current persona structure
     // Convert new persona structure to personaVersions format
     const newVersion = {
-      id: nanoid(),
+      id: generateId(),
       personaId: persona.id,
       versionNumber: nextVersion,
       systemPrompt: persona.mission, // Use mission as system prompt

@@ -45,7 +45,7 @@ interface DuelResult {
 }
 
 export interface DuelModeProps {
-  sessionId: string;
+  sessionId?: string; // Optional - backend generates if not provided
   prompt: string;
   onComplete?: (results: DuelResult[]) => void;
 }

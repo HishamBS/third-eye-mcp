@@ -35,35 +35,40 @@ export const EyePalette = memo(function EyePalette({
   const [search, setSearch] = useState<string>("");
   const [allEyes, setAllEyes] = useState<EyeDefinition[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch ALL eyes from unified endpoint
   useEffect(() => {
     const fetchAllEyes = async () => {
       setLoading(true);
+      setError(null);
       try {
         const response = await fetch(`${API_BASE_URL}/api/eyes/all`);
         if (!response.ok) {
-          throw new Error("Failed to fetch eyes");
+          throw new Error(`Failed to fetch eyes (HTTP ${response.status})`);
         }
 
         const envelope = await response.json();
         const eyesData = envelope.data || [];
 
-        const mapped: EyeDefinition[] = eyesData.map((eye: any) => ({
-          id: eye.id,
-          name: eye.name,
-          description: eye.description,
-          iconSvg: eye.iconSvg,
-          capabilities: eye.capabilities || [],
-          version: eye.version,
-          stage: eye.stage,
-          inputSchema: eye.inputSchemaJson,
-          outputSchema: eye.outputSchemaJson,
-        }));
+        const mapped: EyeDefinition[] = eyesData.map(
+          (eye: Record<string, unknown>) => ({
+            id: eye.id,
+            name: eye.name,
+            description: eye.description,
+            iconSvg: eye.iconSvg,
+            capabilities: eye.capabilities || [],
+            version: eye.version,
+            stage: eye.stage,
+            inputSchema: eye.inputSchemaJson,
+            outputSchema: eye.outputSchemaJson,
+          }),
+        );
 
         setAllEyes(mapped);
-      } catch (error) {
-        console.error("[EyePalette] Failed to fetch eyes:", error);
+      } catch (err) {
+        console.error("[EyePalette] Failed to fetch eyes:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch eyes");
         setAllEyes([]);
       } finally {
         setLoading(false);
@@ -189,6 +194,46 @@ export const EyePalette = memo(function EyePalette({
           {loading ? (
             <div className="text-sm text-semantic-muted text-center py-4">
               Loading eyes...
+            </div>
+          ) : error ? (
+            <div className="text-sm text-red-500 text-center py-4 px-2">
+              <p className="font-semibold">Failed to load eyes</p>
+              <p className="text-xs mt-1 text-semantic-muted">{error}</p>
+              <button
+                onClick={() => {
+                  setError(null);
+                  setLoading(true);
+                  fetch(`${API_BASE_URL}/api/eyes/all`)
+                    .then((res) => res.json())
+                    .then((envelope) => {
+                      const eyesData = envelope.data || [];
+                      setAllEyes(
+                        eyesData.map((eye: Record<string, unknown>) => ({
+                          id: eye.id,
+                          name: eye.name,
+                          description: eye.description,
+                          iconSvg: eye.iconSvg,
+                          capabilities: eye.capabilities || [],
+                          version: eye.version,
+                          stage: eye.stage,
+                          inputSchema: eye.inputSchemaJson,
+                          outputSchema: eye.outputSchemaJson,
+                        })),
+                      );
+                    })
+                    .catch((err) => {
+                      setError(
+                        err instanceof Error
+                          ? err.message
+                          : "Failed to fetch eyes",
+                      );
+                    })
+                    .finally(() => setLoading(false));
+                }}
+                className="mt-2 px-3 py-1 text-xs bg-brand-primary text-white rounded hover:bg-brand-primary/80 transition-colors"
+              >
+                Retry
+              </button>
             </div>
           ) : filteredEyes.length > 0 ? (
             <div className="space-y-2">

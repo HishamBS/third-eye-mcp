@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
-import { nanoid } from "nanoid";
+import { ApiErrorCode, ApiErrorTitle } from "@third-eye/constants";
+import { generateId } from "@third-eye/db/utils/uuid";
 import { getDb } from "@third-eye/db";
 import { strictnessProfiles } from "@third-eye/db";
 import { eq, desc } from "drizzle-orm";
@@ -12,6 +12,7 @@ import {
   requestIdMiddleware,
   errorHandler,
 } from "../middleware/response";
+import { getValidatedBody } from "../middleware/validation";
 import { z } from "zod";
 
 const app = new Hono();
@@ -36,6 +37,10 @@ const updateStrictnessProfileSchema = z.object({
   consistencyTolerance: z.number().min(0).max(100).optional(),
   mangekyoStrictness: z.enum(["lenient", "standard", "strict"]).optional(),
 });
+
+// Type inference from schemas
+type CreateStrictnessProfile = z.infer<typeof createStrictnessProfileSchema>;
+type UpdateStrictnessProfile = z.infer<typeof updateStrictnessProfileSchema>;
 
 /**
  * GET /api/strictness - Get all strictness profiles
@@ -110,11 +115,11 @@ app.post(
         citationCutoff,
         consistencyTolerance,
         mangekyoStrictness,
-      } = c.get("validatedBody");
+      } = getValidatedBody<CreateStrictnessProfile>(c);
 
       const { db } = getDb();
 
-      const id = nanoid();
+      const id = generateId();
 
       await db
         .insert(strictnessProfiles)
@@ -157,7 +162,7 @@ app.put(
   async (c) => {
     try {
       const id = c.req.param("id");
-      const body = c.get("validatedBody");
+      const body = getValidatedBody<UpdateStrictnessProfile>(c);
 
       const { db } = getDb();
 

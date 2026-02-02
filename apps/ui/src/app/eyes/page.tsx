@@ -35,6 +35,7 @@ interface Eye {
   defaultRouting?: Record<string, unknown>;
   createdAt?: string;
   personaId?: string | null;
+  iconSvg?: string;
 }
 
 interface Persona {
@@ -234,7 +235,7 @@ export default function EyesPage() {
     const data = {
       name: eye.name,
       description: eye.description,
-      iconSvg: (eye as any).iconSvg || "",
+      iconSvg: eye.iconSvg ?? "",
       inputSchema: JSON.stringify(eye.inputSchema, null, 2),
       outputSchema: JSON.stringify(eye.outputSchema, null, 2),
       personaTemplate: eye.personaTemplate || "",

@@ -104,5 +104,9 @@ export type {
 export { logger, createLogger, LogLevel } from "./logger";
 export type { LogContext, LoggerConfig } from "./logger";
 
+// Auto-Router for intelligent pipeline routing
+export { AutoRouter, autoRouter } from "./auto-router";
+export type { AutoRouterOptions } from "./auto-router";
+
 // Re-export Eyes for convenience
 export * from "@third-eye/eyes";

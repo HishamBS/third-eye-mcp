@@ -61,6 +61,12 @@ export const TIMING = {
    * Used in: SessionSelector component
    */
   POLL_RETRY_MS: 500,
+
+  /**
+   * Auto-save delay for routing changes
+   * Used in: models page
+   */
+  AUTO_SAVE_DELAY_MS: 1500,
 } as const;
 
 /**

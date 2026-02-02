@@ -27,7 +27,7 @@ export default defineConfig({
       },
     },
     include: ["**/__tests__/**/*.test.ts", "**/*.test.ts"],
-    exclude: ["node_modules", "dist", "build", ".next"],
+    exclude: ["**/node_modules/**", "dist", "build", ".next"],
     poolOptions: {
       threads: {
         singleThread: true, // Run E2E tests in single thread for MCP stdio

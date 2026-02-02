@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useState, useCallback, useEffect } from "react";
-import { Settings } from "lucide-react";
+import { Settings, Loader2 } from "lucide-react";
 import { NODE_EDIT_TEXT } from "./constants";
 import { UI_HELP_TEXT, PHASE_CONFIG_TEXT } from "@third-eye/constants";
 import type { PipelineNode, EyeNodeData } from "@/types/pipeline";
@@ -10,6 +10,7 @@ import {
   STATUS_BG_COLORS_SUBTLE,
   STATUS_BORDER_COLORS_SUBTLE,
 } from "@/constants/color-mappings";
+import { useEyeCapability } from "@/hooks/useEyeCapabilities";
 
 /**
  * Node Edit Modal Props
@@ -54,19 +55,30 @@ export const NodeEditModal = memo(function NodeEditModal({
   const [enableGuidance, setEnableGuidance] = useState<boolean>(true);
   const [enableValidation, setEnableValidation] = useState<boolean>(true);
 
-  // Initialize form when node changes
+  // Fetch eye details to get capabilities and other metadata
+  const { eye: fetchedEye, loading: eyeLoading } = useEyeCapability(
+    node?.data.eyeId ?? null
+  );
+
+  // Initialize form when node changes or eye data is fetched
   useEffect(() => {
     if (node) {
       const config = node.data.customConfig || {};
       const phases = (config as Record<string, unknown>).phases as
         | Record<string, boolean>
         | undefined;
+
+      // Use fetched eye data for capabilities if node doesn't have them
+      const capabilities = node.data.capabilities?.length
+        ? node.data.capabilities
+        : fetchedEye?.capabilityTags || [];
+
       setFormData({
         eyeId: node.data.eyeId,
-        displayName: node.data.displayName,
-        capabilities: node.data.capabilities || [],
+        displayName: fetchedEye?.name || node.data.displayName,
+        capabilities: [...capabilities],
         customConfig: config,
-        iconSvg: node.data.iconSvg,
+        iconSvg: fetchedEye?.iconSvg || node.data.iconSvg,
       });
       // Initialize form fields from customConfig
       setNodeName(((config as Record<string, unknown>).name as string) || "");
@@ -81,7 +93,7 @@ export const NodeEditModal = memo(function NodeEditModal({
       setNewCapability("");
       setShowAdvanced(false);
     }
-  }, [node]);
+  }, [node, fetchedEye]);
 
   // Handle JSON config changes
   const handleConfigChange = useCallback((value: string) => {
@@ -255,7 +267,12 @@ export const NodeEditModal = memo(function NodeEditModal({
             </label>
             <div className="space-y-2">
               {/* List of capabilities */}
-              {formData.capabilities && formData.capabilities.length > 0 ? (
+              {eyeLoading ? (
+                <div className="flex items-center gap-2 text-sm text-semantic-muted">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Loading eye capabilities...</span>
+                </div>
+              ) : formData.capabilities && formData.capabilities.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {formData.capabilities.map((cap, index) => (
                     <div

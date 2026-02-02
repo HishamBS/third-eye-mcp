@@ -194,6 +194,38 @@ function normalizeApiEvent(event: ApiPipelineEvent): ConversationEntryData {
   };
 }
 
+/**
+ * Convert ConversationEntryData to ExportEvent for export utilities
+ */
+function toExportEvent(
+  entry: ConversationEntryData,
+  sessionId: string,
+): ExportEvent {
+  // Extract eyeId/eyeName from speaker if it's an eye
+  const speakerStr = String(entry.speaker);
+  const isEye =
+    speakerStr !== "agent" &&
+    speakerStr !== "human" &&
+    speakerStr !== "overseer";
+  const eyeId = isEye ? speakerStr : undefined;
+  const eyeName = isEye ? speakerStr : undefined;
+
+  return {
+    id: entry.id,
+    sessionId,
+    eyeId,
+    eyeName,
+    stage: entry.stage,
+    status: entry.metadata?.code,
+    message: entry.message,
+    timestamp:
+      entry.timestamp instanceof Date
+        ? entry.timestamp.toISOString()
+        : String(entry.timestamp),
+    data: entry.metadata?.dataJson,
+  };
+}
+
 function normalizeWebSocketMessage(
   message: WSMessage,
 ): ConversationEntryData | null {
@@ -218,7 +250,7 @@ function normalizeWebSocketMessage(
   const id =
     idParts.length > 0
       ? `ws-${idParts.join(":")}`
-      : `ws-${typeof crypto !== "undefined" && typeof crypto.randomUUID === "function" ? crypto.randomUUID() : String(Date.now())}`;
+      : `ws-${Date.now()}`;
 
   const code =
     getString(payload.code) || (result ? getString(result.code) : undefined);
@@ -360,11 +392,15 @@ function MonitorContent() {
     if (!sessionId) return;
 
     const unsubscribe = subscribe((message) => {
-      if (message.type === "pipeline_event") {
-        const entry = normalizeWebSocketMessage(message);
-        if (entry) {
-          setEntries((prev) => [...prev, entry]);
+      try {
+        if (message.type === "pipeline_event") {
+          const entry = normalizeWebSocketMessage(message);
+          if (entry) {
+            setEntries((prev) => [...prev, entry]);
+          }
         }
+      } catch (err) {
+        console.error("Failed to process WebSocket message:", err);
       }
     });
 
@@ -395,10 +431,11 @@ function MonitorContent() {
         const resolved: ResolvedClarificationItem[] = [];
 
         for (const q of clarificationsArray) {
-          if (q && typeof q === "object") {
+          // Server data must have ID - skip malformed items
+          if (q && typeof q === "object" && q.id) {
             if (q.answer) {
               resolved.push({
-                id: q.id || crypto.randomUUID(),
+                id: q.id,
                 field: q.field || "unknown",
                 question: q.text || q.question || "",
                 answer: q.answer,
@@ -407,7 +444,7 @@ function MonitorContent() {
               });
             } else {
               outstanding.push({
-                id: q.id || crypto.randomUUID(),
+                id: q.id,
                 field: q.field || "unknown",
                 question: q.text || q.question || "",
                 status: "pending",
@@ -671,29 +708,17 @@ function MonitorContent() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => {
-                        const exportEvents: ExportEvent[] = entries.map(
-                          (e) => ({
-                            id: e.id || "",
-                            sessionId: sessionId || "",
-                            eyeId: e.eyeId,
-                            eyeName: e.eyeName,
-                            stage: e.stage,
-                            status: e.status,
-                            message: e.message || "",
-                            timestamp: e.timestamp || new Date().toISOString(),
-                            latencyMs: e.latencyMs,
-                            data: e.data,
-                          }),
+                        const sid = sessionId || "unknown";
+                        const exportEvents = entries.map((e) =>
+                          toExportEvent(e, sid),
                         );
-                        exportSession(
-                          "markdown",
-                          sessionId || "unknown",
-                          exportEvents,
-                          {
-                            agent: summary?.agentName || "Unknown Agent",
-                            createdAt: entries[0]?.timestamp,
-                          },
-                        );
+                        const createdAtStr = entries[0]?.timestamp
+                          ? entries[0].timestamp.toISOString()
+                          : undefined;
+                        exportSession("markdown", sid, exportEvents, {
+                          agent: "Third Eye MCP",
+                          createdAt: createdAtStr,
+                        });
                       }}
                       className="flex items-center gap-1 rounded-md bg-brand-accent/10 px-3 py-1.5 text-xs font-medium text-brand-accent hover:bg-brand-accent/20 transition-colors"
                       title="Export as Markdown"
@@ -703,29 +728,17 @@ function MonitorContent() {
                     </button>
                     <button
                       onClick={() => {
-                        const exportEvents: ExportEvent[] = entries.map(
-                          (e) => ({
-                            id: e.id || "",
-                            sessionId: sessionId || "",
-                            eyeId: e.eyeId,
-                            eyeName: e.eyeName,
-                            stage: e.stage,
-                            status: e.status,
-                            message: e.message || "",
-                            timestamp: e.timestamp || new Date().toISOString(),
-                            latencyMs: e.latencyMs,
-                            data: e.data,
-                          }),
+                        const sid = sessionId || "unknown";
+                        const exportEvents = entries.map((e) =>
+                          toExportEvent(e, sid),
                         );
-                        exportSession(
-                          "pdf",
-                          sessionId || "unknown",
-                          exportEvents,
-                          {
-                            agent: summary?.agentName || "Unknown Agent",
-                            createdAt: entries[0]?.timestamp,
-                          },
-                        );
+                        const createdAtStr = entries[0]?.timestamp
+                          ? entries[0].timestamp.toISOString()
+                          : undefined;
+                        exportSession("pdf", sid, exportEvents, {
+                          agent: "Third Eye MCP",
+                          createdAt: createdAtStr,
+                        });
                       }}
                       className="flex items-center gap-1 rounded-md bg-brand-accent/10 px-3 py-1.5 text-xs font-medium text-brand-accent hover:bg-brand-accent/20 transition-colors"
                       title="Export as PDF"
@@ -735,27 +748,16 @@ function MonitorContent() {
                     </button>
                     <button
                       onClick={() => {
-                        const exportEvents: ExportEvent[] = entries.map(
-                          (e) => ({
-                            id: e.id || "",
-                            sessionId: sessionId || "",
-                            eyeId: e.eyeId,
-                            eyeName: e.eyeName,
-                            stage: e.stage,
-                            status: e.status,
-                            message: e.message || "",
-                            timestamp: e.timestamp || new Date().toISOString(),
-                            latencyMs: e.latencyMs,
-                            data: e.data,
-                          }),
+                        const sid = sessionId || "unknown";
+                        const exportEvents = entries.map((e) =>
+                          toExportEvent(e, sid),
                         );
-                        exportSession(
-                          "json",
-                          sessionId || "unknown",
-                          exportEvents,
-                          {
-                            agent: summary?.agentName || "Unknown Agent",
-                            createdAt: entries[0]?.timestamp,
+                        const createdAtStr = entries[0]?.timestamp
+                          ? entries[0].timestamp.toISOString()
+                          : undefined;
+                        exportSession("json", sid, exportEvents, {
+                          agent: "Third Eye MCP",
+                          createdAt: createdAtStr,
                           },
                         );
                       }}

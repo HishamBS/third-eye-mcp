@@ -6,7 +6,7 @@
  * R07 (Strict Typing): Fully typed rate limiter with generics
  */
 
-import { nanoid } from "nanoid";
+import { generateId } from "@third-eye/db/utils/uuid";
 import { getDb } from "@third-eye/db";
 import { rateLimitTracking } from "@third-eye/db";
 import { getEyeIdByName } from "@third-eye/db/utils/lookups";
@@ -230,7 +230,7 @@ export class RateLimiter {
 
     try {
       await this.db.insert(rateLimitTracking).values({
-        id: nanoid(),
+        id: generateId(),
         provider,
         eyeId: eyeId,
         windowStart,

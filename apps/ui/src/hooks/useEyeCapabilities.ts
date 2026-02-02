@@ -46,15 +46,13 @@ export function useEyeCapabilities() {
       setLoading(true);
       setError(null);
 
-      const response = await api.get<{
-        success: boolean;
-        data: EyeWithCapabilities[];
-      }>("/api/eyes/all");
+      // useAPI automatically unwraps the response envelope
+      const data = await api.get<EyeWithCapabilities[]>("/api/eyes/all");
 
-      if (response.success && Array.isArray(response.data)) {
-        setEyes(response.data);
+      if (Array.isArray(data)) {
+        setEyes(data);
       } else {
-        throw new Error("Failed to fetch eyes");
+        throw new Error("Invalid response format from eyes API");
       }
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Failed to fetch eyes"));
@@ -89,13 +87,11 @@ export function useEyeCapability(eyeId: string | null) {
       setLoading(true);
       setError(null);
 
-      const response = await api.get<{
-        success: boolean;
-        data: EyeWithCapabilities;
-      }>(`/api/eyes/${eyeId}`);
+      // useAPI automatically unwraps the response envelope
+      const data = await api.get<EyeWithCapabilities>(`/api/eyes/${eyeId}`);
 
-      if (response.success) {
-        setEye(response.data);
+      if (data && typeof data === "object" && "id" in data) {
+        setEye(data);
       } else {
         throw new Error(`Eye ${eyeId} not found`);
       }

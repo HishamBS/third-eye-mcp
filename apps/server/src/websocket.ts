@@ -1,5 +1,6 @@
 import type { ServerWebSocket } from "bun";
 import { registerWebSocketBridge } from "@third-eye/core";
+import { generateWebSocketId } from "@third-eye/db/utils/uuid";
 
 type IntervalHandle = ReturnType<typeof setInterval>;
 type TimeoutHandle = ReturnType<typeof setTimeout>;
@@ -72,16 +73,28 @@ export interface WSMessage {
     | "pipeline_event"
     | "app_settings_updated"
     | "app_settings_deleted"
-    | "duel_complete";
+    | "duel_complete"
+    | "policy_created"
+    | "policy_updated"
+    | "policy_deleted"
+    | "policy_activated"
+    | "policy_deactivated"
+    | "template_created"
+    | "template_deleted";
   sessionId?: string;
   data?: unknown;
   timestamp: number;
   // Additional fields for specific message types
   key?: string; // For app_settings_updated/deleted
+  policyId?: string; // For policy events
+  templateId?: string; // For template events
+  template?: unknown; // For template_created
   value?: unknown; // For app_settings_updated
   duelId?: string; // For duel_complete
   runs?: unknown; // For duel_complete
   results?: unknown; // For duel_complete
+  eye?: string; // For routing_updated/deleted
+  routing?: unknown; // For routing_updated
 }
 
 export interface ConnectionInfo {
@@ -239,8 +252,9 @@ export class WSConnectionManager {
 
   /**
    * Broadcast message to all connections for a session
+   * Accepts Record<string, unknown> for compatibility with WebSocketBridge interface
    */
-  broadcastToSession(sessionId: string, message: WSMessage) {
+  broadcastToSession(sessionId: string, message: Record<string, unknown>) {
     const connectionIds = this.sessionConnections.get(sessionId);
     if (!connectionIds) return;
 
@@ -265,8 +279,9 @@ export class WSConnectionManager {
     }
 
     if (sentCount > 0) {
+      const msgType = typeof message.type === "string" ? message.type : "unknown";
       console.log(
-        `📡 Broadcasted ${message.type} to ${sentCount} connections for session:${sessionId}`,
+        `📡 Broadcasted ${msgType} to ${sentCount} connections for session:${sessionId}`,
       );
     }
   }
@@ -449,8 +464,39 @@ export class WSConnectionManager {
 
     for (const [connectionId, connection] of this.connections) {
       if (now - connection.connectedAt > staleThreshold) {
-        console.log(`🧹 Cleaning up stale connection: ${connectionId}`);
+        console.log(`Cleaning up stale connection: ${connectionId}`);
         this.removeConnection(connectionId);
+      }
+    }
+  }
+
+  /**
+   * Handle pong message from client - clears timeout and resets retry counter
+   */
+  handlePong(ws: ServerWebSocket<{ sessionId: string; userId?: string }>): void {
+    for (const [, connection] of this.connections) {
+      if (connection.ws === ws) {
+        connection.lastPong = Date.now();
+        if (connection.pongTimeout) {
+          clearTimeout(connection.pongTimeout);
+          connection.pongTimeout = undefined;
+        }
+        connection.retryAttempt = 0;
+        break;
+      }
+    }
+  }
+
+  /**
+   * Find and remove connection by WebSocket instance
+   */
+  removeConnectionByWs(
+    ws: ServerWebSocket<{ sessionId: string; userId?: string }>,
+  ): void {
+    for (const [connectionId, connection] of this.connections) {
+      if (connection.ws === ws) {
+        this.removeConnection(connectionId);
+        break;
       }
     }
   }
@@ -489,7 +535,7 @@ export function createWebSocketHandler(): WebSocketHandler {
 
     websocket: {
       open(ws: ServerWebSocket<{ sessionId: string; userId?: string }>) {
-        const connectionId = crypto.randomUUID();
+        const connectionId = generateWebSocketId();
         const { sessionId, userId } = ws.data;
 
         wsManager.addConnection(connectionId, ws, sessionId, userId);
@@ -521,17 +567,7 @@ export function createWebSocketHandler(): WebSocketHandler {
             ws.send(JSON.stringify(pongMessage));
           } else if (data.type === "pong") {
             // Client responded to our ping, clear the pong timeout
-            for (const [connectionId, connection] of wsManager["connections"]) {
-              if (connection.ws === ws) {
-                connection.lastPong = Date.now();
-                if (connection.pongTimeout) {
-                  clearTimeout(connection.pongTimeout);
-                  connection.pongTimeout = undefined;
-                }
-                connection.retryAttempt = 0;
-                break;
-              }
-            }
+            wsManager.handlePong(ws);
           }
         } catch (error) {
           console.error("Failed to parse WebSocket message:", error);
@@ -540,12 +576,7 @@ export function createWebSocketHandler(): WebSocketHandler {
 
       close(ws: ServerWebSocket<{ sessionId: string; userId?: string }>) {
         // Find and remove connection
-        for (const [connectionId, connection] of wsManager["connections"]) {
-          if (connection.ws === ws) {
-            wsManager.removeConnection(connectionId);
-            break;
-          }
-        }
+        wsManager.removeConnectionByWs(ws);
       },
 
       error(
@@ -555,12 +586,7 @@ export function createWebSocketHandler(): WebSocketHandler {
         console.error("WebSocket error:", error);
 
         // Find and remove connection
-        for (const [connectionId, connection] of wsManager["connections"]) {
-          if (connection.ws === ws) {
-            wsManager.removeConnection(connectionId);
-            break;
-          }
-        }
+        wsManager.removeConnectionByWs(ws);
       },
     },
   };

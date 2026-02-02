@@ -204,6 +204,7 @@ app.delete("/:id", async (c) => {
       wsManager.broadcastToAll({
         type: "policy_deleted",
         policyId,
+        timestamp: Date.now(),
       });
     } catch (e) {
       console.debug("WebSocket broadcast skipped:", e);
@@ -266,6 +267,7 @@ app.post("/:id/activate", async (c) => {
       wsManager.broadcastToAll({
         type: "policy_activated",
         policyId,
+        timestamp: Date.now(),
       });
     } catch (e) {
       console.debug("WebSocket broadcast skipped:", e);
@@ -299,6 +301,7 @@ app.post("/:id/deactivate", async (c) => {
       wsManager.broadcastToAll({
         type: "policy_deactivated",
         policyId,
+        timestamp: Date.now(),
       });
     } catch (e) {
       console.debug("WebSocket broadcast skipped:", e);

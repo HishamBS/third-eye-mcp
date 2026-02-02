@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useUI } from "@/contexts/UIContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { API_BASE_URL } from "@/consts/api";
+import { Search, Check, ExternalLink, Loader2, AlertCircle, Trash2, RefreshCw, X } from "lucide-react";
+import {
+  useSessionList,
+  type NormalizedSession,
+} from "@/hooks/useSessionList";
 import {
   STATUS_TEXT_COLORS,
   STATUS_BG_COLORS_SUBTLE,
@@ -15,103 +19,194 @@ import { TIMING } from "@/constants/timing";
 import { ROUTES } from "@/constants/routes";
 import { ARIA_LABELS } from "@/constants/accessibility";
 import { MESSAGES } from "@/constants/messages";
+import {
+  SESSION_SELECTOR_PLACEHOLDER,
+  SESSION_SELECTOR_SEARCH_PLACEHOLDER,
+  SESSION_SELECTOR_NO_RESULTS,
+  SESSION_SELECTOR_LOADING,
+  SESSION_SELECTOR_ERROR,
+  SESSION_SELECTOR_LABEL_ACTIVE,
+  SESSION_SELECTOR_LABEL_COMPLETED,
+  SESSION_SELECTOR_LABEL_FAILED,
+  SESSION_STATUS_ACTIVE,
+  SESSION_STATUS_COMPLETED,
+  SESSION_STATUS_FAILED,
+  GLASSMORPHISM_BG,
+  GLASSMORPHISM_BORDER,
+} from "@third-eye/constants";
 
-// API response session (before normalization)
-interface RawSession {
-  sessionId: string;
-  status: string;
-  createdAt: string;
-  eventCount: number;
-  lastActivity?: string;
-  agentName?: string;
-  model?: string;
-  displayName?: string;
-  [key: string]: unknown;
+/**
+ * Configuration options for SessionSelector behavior
+ */
+interface SessionSelectorConfig {
+  /** Enable delete single session functionality */
+  readonly allowDelete?: boolean;
+  /** Enable delete all sessions functionality */
+  readonly allowDeleteAll?: boolean;
+  /** Show search input in dropdown */
+  readonly showSearch?: boolean;
+  /** Show "View in Monitor" link per session */
+  readonly showMonitorLink?: boolean;
+  /** Auto-poll for session updates */
+  readonly autoPoll?: boolean;
+  /** Poll interval in milliseconds */
+  readonly pollInterval?: number;
+  /** Use navigation to update URL on selection */
+  readonly useNavigation?: boolean;
+  /** Custom placeholder text */
+  readonly placeholder?: string;
+  /** Minimum width for the trigger button */
+  readonly minWidth?: string;
 }
 
-// Normalized session (after date parsing)
-interface ActiveSession {
-  sessionId: string;
-  status: string;
-  createdAt: Date;
-  eventCount: number;
-  lastActivity: Date;
-  agentName: string;
-  model: string;
-  displayName: string;
+/**
+ * Props for controlled mode (external state management)
+ */
+interface ControlledProps {
+  /** Currently selected session ID (controlled mode) */
+  readonly selectedSessionId: string | null;
+  /** Callback when session selection changes (controlled mode) */
+  readonly onSessionSelect: (sessionId: string | null) => void;
+  /** Component is in controlled mode (not using UIContext) */
+  readonly controlled: true;
 }
 
-interface SessionSelectorProps {
-  className?: string;
+/**
+ * Props for uncontrolled mode (UIContext state management)
+ */
+interface UncontrolledProps {
+  /** Component uses UIContext for state (default behavior) */
+  readonly controlled?: false;
 }
 
-export function SessionSelector({ className = "" }: SessionSelectorProps) {
-  const { selectedSessionId, setSelectedSession } = useUI();
-  const [sessions, setSessions] = useState<ActiveSession[]>([]);
+type SessionSelectorProps = {
+  readonly className?: string;
+  readonly config?: SessionSelectorConfig;
+} & (ControlledProps | UncontrolledProps);
+
+/**
+ * Default configuration for global nav usage
+ */
+const DEFAULT_GLOBAL_CONFIG: SessionSelectorConfig = {
+  allowDelete: true,
+  allowDeleteAll: true,
+  showSearch: false,
+  showMonitorLink: true,
+  autoPoll: true,
+  pollInterval: 5000,
+  useNavigation: true,
+  minWidth: "180px",
+};
+
+/**
+ * Default configuration for pipeline builder usage
+ */
+const DEFAULT_PIPELINE_CONFIG: SessionSelectorConfig = {
+  allowDelete: false,
+  allowDeleteAll: false,
+  showSearch: true,
+  showMonitorLink: true,
+  autoPoll: false,
+  pollInterval: 5000,
+  useNavigation: false,
+  placeholder: SESSION_SELECTOR_PLACEHOLDER,
+  minWidth: "280px",
+};
+
+/**
+ * Unified Session Selector Component
+ *
+ * Supports two modes:
+ * 1. Uncontrolled (default): Uses UIContext for state management
+ * 2. Controlled: Uses external state via props
+ *
+ * Per R01: SSOT for session selection UI
+ * Per R04: Optimized with useCallback/useMemo
+ * Per R07: Strict typing throughout
+ *
+ * @example
+ * // Global nav usage (uncontrolled, with delete)
+ * <SessionSelector config={{ allowDelete: true, autoPoll: true }} />
+ *
+ * @example
+ * // Pipeline builder usage (controlled, with search)
+ * <SessionSelector
+ *   controlled
+ *   selectedSessionId={sessionId}
+ *   onSessionSelect={setSessionId}
+ *   config={{ showSearch: true, autoPoll: false }}
+ * />
+ */
+export function SessionSelector(props: SessionSelectorProps) {
+  const { className = "" } = props;
+
+  // Determine if controlled mode
+  const isControlled = "controlled" in props && props.controlled === true;
+
+  // Get appropriate config defaults
+  const defaultConfig = isControlled ? DEFAULT_PIPELINE_CONFIG : DEFAULT_GLOBAL_CONFIG;
+  const config = { ...defaultConfig, ...props.config };
+
+  // UIContext for uncontrolled mode
+  const uiContext = useUI();
+
+  // State management based on mode
+  const selectedSessionId = isControlled
+    ? (props as ControlledProps).selectedSessionId
+    : uiContext.selectedSessionId;
+
+  const setSelectedSession = useCallback(
+    (sessionId: string | null) => {
+      if (isControlled) {
+        (props as ControlledProps).onSessionSelect(sessionId);
+      } else {
+        uiContext.setSelectedSession(sessionId);
+      }
+    },
+    [isControlled, props, uiContext],
+  );
+
+  // Use the shared session list hook
+  const {
+    sessions,
+    loading,
+    error,
+    refetch,
+    deleteSession,
+    deleteAllSessions,
+    filterSessions,
+  } = useSessionList({
+    autoPoll: config.autoPoll,
+    pollInterval: config.pollInterval,
+    fetchOnMount: true,
+    enabled: true,
+  });
+
+  // Local state
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
+
+  // Navigation (only used in uncontrolled mode with navigation enabled)
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // Refs
   const popoverRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const fetchActiveSessions = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/session/active`);
-
-      if (response.ok) {
-        const result = await response.json();
-        const data = result.data || result;
-        const normalized: ActiveSession[] = (data.sessions || [])
-          .map((session: RawSession) => {
-            const createdAt = new Date(session.createdAt);
-            const lastActivity = session.lastActivity
-              ? new Date(session.lastActivity)
-              : createdAt;
-            const displayName =
-              session.displayName || session.agentName || session.sessionId;
-            return {
-              ...session,
-              createdAt,
-              lastActivity,
-              displayName,
-              agentName: session.agentName || displayName,
-            } as ActiveSession;
-          })
-          .sort(
-            (a: ActiveSession, b: ActiveSession) =>
-              b.createdAt.getTime() - a.createdAt.getTime(),
-          );
-
-        setSessions(normalized);
-      }
-    } catch (error) {
-      console.error("Failed to fetch active sessions:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Auto-select first session if none selected (uncontrolled mode only)
   useEffect(() => {
-    fetchActiveSessions();
-
-    // Refresh every 5 seconds
-    const interval = setInterval(fetchActiveSessions, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (!selectedSessionId && sessions.length > 0 && !hasUserInteracted) {
+    if (!isControlled && !selectedSessionId && sessions.length > 0 && !hasUserInteracted) {
       setSelectedSession(sessions[0].sessionId);
     }
-  }, [selectedSessionId, sessions, hasUserInteracted, setSelectedSession]);
+  }, [isControlled, selectedSessionId, sessions, hasUserInteracted, setSelectedSession]);
 
+  // Click outside handler
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -127,140 +222,194 @@ export function SessionSelector({ className = "" }: SessionSelectorProps) {
 
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isOpen]);
 
-  const selectedSession = sessions.find(
-    (s) => s.sessionId === selectedSessionId,
+  // Filtered sessions based on search
+  const filteredSessions = useMemo(() => {
+    return config.showSearch ? filterSessions(searchQuery) : sessions;
+  }, [config.showSearch, filterSessions, searchQuery, sessions]);
+
+  // Find selected session
+  const selectedSession = useMemo(
+    () => sessions.find((s) => s.sessionId === selectedSessionId),
+    [sessions, selectedSessionId],
   );
 
-  const handleSelectAndNavigate = (sessionId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSelectedSession(sessionId);
-    setIsOpen(false);
-    setHasUserInteracted(true);
-    router.push(`${ROUTES.MONITOR}?sessionId=${sessionId}`);
-  };
+  // Navigation helpers
+  const updateUrlParams = useCallback(
+    (sessionId: string | null) => {
+      if (!config.useNavigation) return;
 
-  const handleDeleteSession = async (
-    sessionId: string,
-    e: React.MouseEvent,
-  ) => {
-    e.stopPropagation(); // Prevent session selection
+      const params = new URLSearchParams(
+        searchParams ? Array.from(searchParams.entries()) : [],
+      );
 
-    if (!confirm(MESSAGES.CONFIRM_DELETE_SESSION)) return;
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/session/bulk`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionIds: [sessionId] }),
-      });
-
-      if (response.ok) {
-        // Remove from UI immediately
-        setSessions((prev) => prev.filter((s) => s.sessionId !== sessionId));
-        if (selectedSessionId === sessionId) {
-          setSelectedSession(null);
-          setHasUserInteracted(true);
-          if (pathname === ROUTES.MONITOR) {
-            const params = new URLSearchParams(
-              searchParams ? Array.from(searchParams.entries()) : [],
-            );
-            params.delete("sessionId");
-            const next = params.toString();
-            router.replace(next ? `${pathname}?${next}` : pathname, {
-              scroll: false,
-            });
-          }
-        }
-        // Refresh to confirm
-        setTimeout(() => fetchActiveSessions(), TIMING.POLL_DEBOUNCE_MS);
+      if (sessionId) {
+        params.set("sessionId", sessionId);
       } else {
-        alert(MESSAGES.ERROR_DELETE_SESSION);
+        params.delete("sessionId");
       }
-    } catch (error) {
-      console.error("Error deleting session:", error);
-      alert(MESSAGES.ERROR_DELETE_SESSION_GENERIC);
+
+      const next = params.toString();
+      router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+    },
+    [config.useNavigation, pathname, router, searchParams],
+  );
+
+  // Selection handlers
+  const handleSelect = useCallback(
+    (sessionId: string) => {
+      setHasUserInteracted(true);
+      setSelectedSession(sessionId);
+      setIsOpen(false);
+      if (config.useNavigation && pathname === ROUTES.MONITOR) {
+        updateUrlParams(sessionId);
+      }
+    },
+    [config.useNavigation, pathname, setSelectedSession, updateUrlParams],
+  );
+
+  const handleClear = useCallback(() => {
+    setHasUserInteracted(true);
+    setSelectedSession(null);
+    setIsOpen(false);
+    if (config.useNavigation && pathname === ROUTES.MONITOR) {
+      updateUrlParams(null);
     }
-  };
+  }, [config.useNavigation, pathname, setSelectedSession, updateUrlParams]);
 
-  const handleDeleteAllSessions = async () => {
-    try {
-      setDeleting(true);
+  const handleSelectAndNavigate = useCallback(
+    (sessionId: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      setSelectedSession(sessionId);
+      setIsOpen(false);
+      setHasUserInteracted(true);
+      router.push(`${ROUTES.MONITOR}?sessionId=${sessionId}`);
+    },
+    [router, setSelectedSession],
+  );
 
-      // Get all session IDs to delete
-      const sessionIds = sessions.map((s) => s.sessionId);
+  // Delete handlers
+  const handleDeleteSession = useCallback(
+    async (sessionId: string, e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!confirm(MESSAGES.CONFIRM_DELETE_SESSION)) return;
 
-      if (sessionIds.length === 0) {
-        setShowDeleteConfirm(false);
-        setDeleting(false);
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/session/bulk`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionIds }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        const deletedCount = result.data?.deleted || 0;
-
-        // Force clear UI immediately
-        setSessions([]);
+      const success = await deleteSession(sessionId);
+      if (success && selectedSessionId === sessionId) {
         setSelectedSession(null);
         setHasUserInteracted(true);
-        setShowDeleteConfirm(false);
-        if (pathname === ROUTES.MONITOR) {
-          const params = new URLSearchParams(
-            searchParams ? Array.from(searchParams.entries()) : [],
-          );
-          params.delete("sessionId");
-          const next = params.toString();
-          router.replace(next ? `${pathname}?${next}` : pathname, {
-            scroll: false,
-          });
+        if (config.useNavigation && pathname === ROUTES.MONITOR) {
+          updateUrlParams(null);
         }
-
-        // Show success only if we actually deleted something
-        if (deletedCount > 0) {
-          setDeleteSuccess(true);
-          setTimeout(() => setDeleteSuccess(false), TIMING.DELETE_SUCCESS_MS);
-        }
-
-        // Refresh from server to confirm
-        setTimeout(() => fetchActiveSessions(), TIMING.POLL_RETRY_MS);
-      } else {
-        console.error("Failed to delete sessions");
-        alert(MESSAGES.ERROR_DELETE_SESSIONS);
+      } else if (!success) {
+        alert(MESSAGES.ERROR_DELETE_SESSION);
       }
-    } catch (error) {
-      console.error("Error deleting sessions:", error);
-      alert(MESSAGES.ERROR_DELETE_SESSIONS_GENERIC);
+
+      // Refresh to confirm
+      setTimeout(() => refetch(), TIMING.POLL_DEBOUNCE_MS);
+    },
+    [
+      config.useNavigation,
+      deleteSession,
+      pathname,
+      refetch,
+      selectedSessionId,
+      setSelectedSession,
+      updateUrlParams,
+    ],
+  );
+
+  const handleDeleteAllSessions = useCallback(async () => {
+    setDeleting(true);
+
+    try {
+      const deletedCount = await deleteAllSessions();
+
+      setSelectedSession(null);
+      setHasUserInteracted(true);
+      setShowDeleteConfirm(false);
+
+      if (config.useNavigation && pathname === ROUTES.MONITOR) {
+        updateUrlParams(null);
+      }
+
+      if (deletedCount > 0) {
+        setDeleteSuccess(true);
+        setTimeout(() => setDeleteSuccess(false), TIMING.DELETE_SUCCESS_MS);
+      }
+
+      // Refresh from server
+      setTimeout(() => refetch(), TIMING.POLL_RETRY_MS);
+    } catch {
+      alert(MESSAGES.ERROR_DELETE_SESSIONS);
     } finally {
       setDeleting(false);
     }
-  };
+  }, [
+    config.useNavigation,
+    deleteAllSessions,
+    pathname,
+    refetch,
+    setSelectedSession,
+    updateUrlParams,
+  ]);
+
+  // Status badge helper
+  const getStatusBadge = useCallback((status: string) => {
+    switch (status) {
+      case SESSION_STATUS_ACTIVE:
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-blue-700 bg-blue-100 rounded-full">
+            {SESSION_SELECTOR_LABEL_ACTIVE}
+          </span>
+        );
+      case SESSION_STATUS_COMPLETED:
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-green-700 bg-green-100 rounded-full">
+            {SESSION_SELECTOR_LABEL_COMPLETED}
+          </span>
+        );
+      case SESSION_STATUS_FAILED:
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-red-700 bg-red-100 rounded-full">
+            {SESSION_SELECTOR_LABEL_FAILED}
+          </span>
+        );
+      default:
+        return null;
+    }
+  }, []);
+
+  // Activity indicator
+  const isRecentActivity = useCallback((session: NormalizedSession) => {
+    const timeSinceActivity = Date.now() - session.lastActivity.getTime();
+    return timeSinceActivity < 60000; // Less than 1 minute
+  }, []);
+
+  // Display helpers
+  const displayName = selectedSession?.displayName ?? "No Session Selected";
+  const truncatedName = displayName.length > 24 ? `${displayName.substring(0, 24)}…` : displayName;
+  const placeholder = config.placeholder ?? "No Session Selected";
 
   return (
     <div className={`relative ${className}`}>
+      {/* Trigger Button */}
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 rounded-xl border border-brand-outline/40 bg-brand-paper/80 px-4 py-2.5 text-sm transition-all hover:border-brand-accent/60 hover:bg-brand-paper min-w-[180px]"
+        className={`flex items-center gap-3 rounded-xl border border-brand-outline/40 bg-brand-paper/80 px-4 py-2.5 text-sm transition-all hover:border-brand-accent/60 hover:bg-brand-paper`}
+        style={{ minWidth: config.minWidth }}
+        type="button"
       >
         <div className="flex items-center gap-2">
           <div
             className={`h-2 w-2 rounded-full ${selectedSession ? `${STATUS_BG_COLORS.success} animate-pulse` : "bg-brand-outline"}`}
           />
-          <span className="font-medium text-brand-foreground">
-            {selectedSession
-              ? `${selectedSession.displayName.substring(0, 24)}${selectedSession.displayName.length > 24 ? "…" : ""}`
-              : "No Session Selected"}
+          <span className="font-medium text-brand-foreground truncate">
+            {selectedSession ? truncatedName : placeholder}
           </span>
         </div>
 
@@ -274,19 +423,7 @@ export function SessionSelector({ className = "" }: SessionSelectorProps) {
           <div
             onClick={(e) => {
               e.stopPropagation();
-              setSelectedSession(null);
-              setIsOpen(false);
-              setHasUserInteracted(true);
-              if (pathname === ROUTES.MONITOR) {
-                const params = new URLSearchParams(
-                  searchParams ? Array.from(searchParams.entries()) : [],
-                );
-                params.delete("sessionId");
-                const next = params.toString();
-                router.replace(next ? `${pathname}?${next}` : pathname, {
-                  scroll: false,
-                });
-              }
+              handleClear();
             }}
             className="h-4 w-4 text-semantic-muted hover:text-brand-foreground transition-colors cursor-pointer flex items-center justify-center"
             title={ARIA_LABELS.CLEAR_SELECTION}
@@ -296,30 +433,11 @@ export function SessionSelector({ className = "" }: SessionSelectorProps) {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 e.stopPropagation();
-                setSelectedSession(null);
-                setIsOpen(false);
-                setHasUserInteracted(true);
-                if (pathname === ROUTES.MONITOR) {
-                  const params = new URLSearchParams(
-                    searchParams ? Array.from(searchParams.entries()) : [],
-                  );
-                  params.delete("sessionId");
-                  const next = params.toString();
-                  router.replace(next ? `${pathname}?${next}` : pathname, {
-                    scroll: false,
-                  });
-                }
+                handleClear();
               }
             }}
           >
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <X className="h-4 w-4" />
           </div>
         ) : (
           <svg
@@ -338,6 +456,7 @@ export function SessionSelector({ className = "" }: SessionSelectorProps) {
         )}
       </button>
 
+      {/* Dropdown */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -346,72 +465,80 @@ export function SessionSelector({ className = "" }: SessionSelectorProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 z-50 mt-2 w-80 rounded-xl border border-brand-outline/40 bg-brand-paperElev shadow-2xl"
+            className={`absolute right-0 z-50 mt-2 rounded-xl border border-brand-outline/40 bg-brand-paperElev shadow-2xl ${config.showSearch ? "w-[400px]" : "w-80"}`}
           >
+            {/* Header */}
             <div className="border-b border-brand-outline/30 px-4 py-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-brand-foreground">
                   Active Sessions
                 </h3>
                 <button
-                  onClick={fetchActiveSessions}
+                  onClick={() => refetch()}
                   disabled={loading}
                   className="rounded-lg p-1 text-semantic-muted transition-colors hover:bg-brand-paper hover:text-brand-accent disabled:opacity-50"
+                  type="button"
                 >
-                  <svg
-                    className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                    />
-                  </svg>
+                  <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
                 </button>
               </div>
             </div>
 
+            {/* Search Input */}
+            {config.showSearch && (
+              <div className="p-3 border-b border-brand-outline/30">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-foreground/50" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={SESSION_SELECTOR_SEARCH_PLACEHOLDER}
+                    className="w-full pl-10 pr-4 py-2 bg-brand-surface/60 border border-brand-outline/30 rounded-md text-sm text-brand-foreground placeholder:text-brand-foreground/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Session List */}
             <div className="max-h-96 overflow-y-auto p-2">
-              {sessions.length === 0 ? (
+              {loading && filteredSessions.length === 0 && (
+                <div className="flex items-center justify-center gap-2 p-8 text-brand-foreground/70">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-sm">{SESSION_SELECTOR_LOADING}</span>
+                </div>
+              )}
+
+              {error && (
+                <div className="flex items-center justify-center gap-2 p-8 text-red-500">
+                  <AlertCircle className="w-4 h-4" />
+                  <span className="text-sm">{SESSION_SELECTOR_ERROR}</span>
+                </div>
+              )}
+
+              {!loading && !error && filteredSessions.length === 0 && (
                 <div className="py-8 text-center">
                   <p className="text-sm text-semantic-muted">
-                    No active sessions
+                    {config.showSearch && searchQuery ? SESSION_SELECTOR_NO_RESULTS : "No active sessions"}
                   </p>
-                  <p className="mt-1 text-xs text-semantic-muted">
-                    Connect an MCP agent to start a session
-                  </p>
+                  {!searchQuery && (
+                    <p className="mt-1 text-xs text-semantic-muted">
+                      Connect an MCP agent to start a session
+                    </p>
+                  )}
                 </div>
-              ) : (
+              )}
+
+              {!loading && !error && filteredSessions.length > 0 && (
                 <div className="space-y-1">
-                  {sessions.map((session) => {
+                  {filteredSessions.map((session) => {
                     const isSelected = session.sessionId === selectedSessionId;
-                    const timeSinceActivity =
-                      Date.now() - new Date(session.lastActivity).getTime();
-                    const isRecent = timeSinceActivity < 60000; // Less than 1 minute
+                    const isRecent = isRecentActivity(session);
 
                     return (
                       <div
                         key={session.sessionId}
-                        onClick={() => {
-                          setHasUserInteracted(true);
-                          setSelectedSession(session.sessionId);
-                          setIsOpen(false);
-                          if (pathname === ROUTES.MONITOR) {
-                            const params = new URLSearchParams(
-                              searchParams
-                                ? Array.from(searchParams.entries())
-                                : [],
-                            );
-                            params.set("sessionId", session.sessionId);
-                            router.replace(`${pathname}?${params.toString()}`, {
-                              scroll: false,
-                            });
-                          }
-                        }}
+                        onClick={() => handleSelect(session.sessionId)}
                         className={`w-full rounded-lg border p-3 cursor-pointer transition-all ${
                           isSelected
                             ? "border-brand-accent/60 bg-brand-accent/10"
@@ -427,80 +554,55 @@ export function SessionSelector({ className = "" }: SessionSelectorProps) {
                               <span className="truncate text-sm font-medium text-brand-foreground">
                                 {session.displayName}
                               </span>
-                            </div>
-                            {session.agentName &&
-                              session.agentName !== session.displayName && (
-                                <p className="mt-1 text-xs text-semantic-muted truncate">
-                                  {session.agentName}
-                                </p>
+                              {isSelected && (
+                                <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                               )}
-                            <div className="mt-1 flex items-center gap-2 text-xs text-semantic-muted">
-                              <span className="truncate">{session.model}</span>
-                              <span>•</span>
-                              <span>{session.eventCount} events</span>
+                            </div>
+
+                            {session.agentName && session.agentName !== session.displayName && (
+                              <p className="mt-1 text-xs text-semantic-muted truncate">
+                                {session.agentName}
+                              </p>
+                            )}
+
+                            <div className="mt-1 flex items-center gap-2 flex-wrap">
+                              {config.showSearch && getStatusBadge(session.status)}
+                              <span className="text-xs text-semantic-muted truncate">
+                                {session.model}
+                              </span>
+                              <span className="text-xs text-semantic-muted">•</span>
+                              <span className="text-xs text-semantic-muted">
+                                {session.eventCount} events
+                              </span>
                             </div>
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <button
-                              onClick={(e) =>
-                                handleSelectAndNavigate(session.sessionId, e)
-                              }
-                              className="rounded p-1 text-semantic-muted hover:text-brand-accent transition-colors"
-                              title={ARIA_LABELS.SELECT_AND_VIEW_SESSION}
-                            >
-                              <svg
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
+                            {config.showMonitorLink && (
+                              <button
+                                onClick={(e) => handleSelectAndNavigate(session.sessionId, e)}
+                                className="rounded p-1 text-semantic-muted hover:text-brand-accent transition-colors"
+                                title={ARIA_LABELS.SELECT_AND_VIEW_SESSION}
+                                type="button"
                               >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                                />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={(e) =>
-                                handleDeleteSession(session.sessionId, e)
-                              }
-                              className={`rounded p-1 text-semantic-muted ${STATUS_BG_COLORS_SUBTLE.error} hover:${STATUS_TEXT_COLORS.error} transition-colors`}
-                              title={ARIA_LABELS.DELETE_SESSION}
-                            >
-                              <svg
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
+                                <ExternalLink className="h-4 w-4" />
+                              </button>
+                            )}
+
+                            {config.allowDelete && (
+                              <button
+                                onClick={(e) => handleDeleteSession(session.sessionId, e)}
+                                className={`rounded p-1 text-semantic-muted ${STATUS_BG_COLORS_SUBTLE.error} hover:${STATUS_TEXT_COLORS.error} transition-colors`}
+                                title={ARIA_LABELS.DELETE_SESSION}
+                                type="button"
                               >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                />
-                              </svg>
-                            </button>
-                            {isSelected && (
-                              <svg
-                                className="h-5 w-5 flex-shrink-0 text-brand-accent"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
+                                <Trash2 className="h-4 w-4" />
+                              </button>
                             )}
                           </div>
                         </div>
 
-                        <div className="mt-2 text-xs text-semantic-muted">
+                        <div className="mt-2 text-xs text-semantic-muted font-mono">
                           ID: {session.sessionId.substring(0, 8)}...
                         </div>
                       </div>
@@ -510,11 +612,13 @@ export function SessionSelector({ className = "" }: SessionSelectorProps) {
               )}
             </div>
 
-            {sessions.length > 0 && (
+            {/* Delete All Button */}
+            {config.allowDeleteAll && sessions.length > 0 && (
               <div className="border-t border-brand-outline/30 p-2">
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
                   className={`w-full rounded-lg px-3 py-2 text-sm ${STATUS_TEXT_COLORS.error} transition-colors hover:${STATUS_BG_COLORS_SUBTLE.error} hover:opacity-90`}
+                  type="button"
                 >
                   Delete All Sessions
                 </button>
@@ -557,6 +661,7 @@ export function SessionSelector({ className = "" }: SessionSelectorProps) {
                   onClick={() => setShowDeleteConfirm(false)}
                   disabled={deleting}
                   className="flex-1 rounded-lg border border-brand-outline/40 px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:bg-brand-paper disabled:opacity-50"
+                  type="button"
                 >
                   Cancel
                 </button>
@@ -564,6 +669,7 @@ export function SessionSelector({ className = "" }: SessionSelectorProps) {
                   onClick={handleDeleteAllSessions}
                   disabled={deleting}
                   className={`flex-1 rounded-lg ${STATUS_BG_COLORS.error} px-4 py-2 text-sm font-medium text-brand-foreground transition-colors hover:opacity-90 disabled:opacity-50`}
+                  type="button"
                 >
                   {deleting ? MESSAGES.DELETING : MESSAGES.DELETE_ALL}
                 </button>
@@ -583,26 +689,31 @@ export function SessionSelector({ className = "" }: SessionSelectorProps) {
             className={`fixed bottom-6 right-6 z-50 rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.success} ${STATUS_BG_COLORS_SUBTLE.success} px-6 py-3 shadow-lg backdrop-blur-sm`}
           >
             <div className="flex items-center gap-3">
-              <svg
-                className={`h-5 w-5 ${STATUS_TEXT_COLORS.success}`}
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span
-                className={`text-sm font-medium ${STATUS_TEXT_COLORS.success}`}
-              >
+              <Check className={`h-5 w-5 ${STATUS_TEXT_COLORS.success}`} />
+              <span className={`text-sm font-medium ${STATUS_TEXT_COLORS.success}`}>
                 All sessions deleted successfully
               </span>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Overlay for closing dropdown (for controlled mode without click-outside) */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setIsOpen(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setIsOpen(false);
+            }
+          }}
+          role="presentation"
+        />
+      )}
     </div>
   );
 }
+
+// Export type for consumers
+export type { SessionSelectorConfig, NormalizedSession };

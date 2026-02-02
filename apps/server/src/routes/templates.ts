@@ -26,8 +26,8 @@ app.use("*", errorHandler());
 // Get all templates
 app.get("/", async (c) => {
   try {
-    const { db } = getDb();
-    const templateExecutor = new TemplateExecutor(db);
+    const { sqlite } = getDb();
+    const templateExecutor = new TemplateExecutor(sqlite);
 
     const isPublicParam = c.req.query("public");
     const createdBy = c.req.query("createdBy");
@@ -55,8 +55,8 @@ app.get("/", async (c) => {
 app.get("/:id", async (c) => {
   try {
     const templateId = c.req.param("id");
-    const { db } = getDb();
-    const templateExecutor = new TemplateExecutor(db);
+    const { sqlite } = getDb();
+    const templateExecutor = new TemplateExecutor(sqlite);
 
     const template = await templateExecutor.getTemplate(templateId);
 
@@ -75,8 +75,8 @@ app.get("/:id", async (c) => {
 app.post("/", async (c) => {
   try {
     const body = await c.req.json();
-    const { db } = getDb();
-    const templateExecutor = new TemplateExecutor(db);
+    const { sqlite } = getDb();
+    const templateExecutor = new TemplateExecutor(sqlite);
 
     // Validate required fields
     if (
@@ -85,11 +85,11 @@ app.post("/", async (c) => {
       !Array.isArray(body.eyes) ||
       body.eyes.length === 0
     ) {
-      return createErrorResponse(
-        c,
-        "name and eyes (non-empty array) are required",
-        400,
-      );
+      return createErrorResponse(c, {
+        title: "Validation Error",
+        status: 400,
+        detail: "name and eyes (non-empty array) are required",
+      });
     }
 
     const template = await templateExecutor.createTemplate({
@@ -108,16 +108,21 @@ app.post("/", async (c) => {
       wsManager.broadcastToAll({
         type: "template_created",
         template,
+        timestamp: Date.now(),
       });
     } catch (e) {
       console.debug("WebSocket broadcast skipped:", e);
     }
 
-    return createSuccessResponse(c, { template }, 201);
+    return createSuccessResponse(c, { template }, { status: 201 });
   } catch (error) {
     console.error("Failed to create template:", error);
     if (error instanceof Error) {
-      return createErrorResponse(c, error.message, 400);
+      return createErrorResponse(c, {
+        title: "Template Creation Error",
+        status: 400,
+        detail: error.message,
+      });
     }
     return createInternalErrorResponse(c, "Failed to create template");
   }
@@ -127,8 +132,8 @@ app.post("/", async (c) => {
 app.delete("/:id", async (c) => {
   try {
     const templateId = c.req.param("id");
-    const { db } = getDb();
-    const templateExecutor = new TemplateExecutor(db);
+    const { sqlite } = getDb();
+    const templateExecutor = new TemplateExecutor(sqlite);
 
     const deleted = await templateExecutor.deleteTemplate(templateId);
 
@@ -142,6 +147,7 @@ app.delete("/:id", async (c) => {
       wsManager.broadcastToAll({
         type: "template_deleted",
         templateId,
+        timestamp: Date.now(),
       });
     } catch (e) {
       console.debug("WebSocket broadcast skipped:", e);
@@ -160,11 +166,15 @@ app.delete("/:id", async (c) => {
 app.post("/match", async (c) => {
   try {
     const body = await c.req.json();
-    const { db } = getDb();
-    const templateExecutor = new TemplateExecutor(db);
+    const { sqlite } = getDb();
+    const templateExecutor = new TemplateExecutor(sqlite);
 
     if (!body.request || typeof body.request !== "string") {
-      return createErrorResponse(c, "request (string) is required", 400);
+      return createErrorResponse(c, {
+        title: "Validation Error",
+        status: 400,
+        detail: "request (string) is required",
+      });
     }
 
     const template = await templateExecutor.findTemplateByPattern(body.request);
@@ -184,8 +194,8 @@ app.post("/match", async (c) => {
 app.post("/:id/execute", async (c) => {
   try {
     const templateId = c.req.param("id");
-    const { db } = getDb();
-    const templateExecutor = new TemplateExecutor(db);
+    const { sqlite } = getDb();
+    const templateExecutor = new TemplateExecutor(sqlite);
 
     const executionPlan = await templateExecutor.executeTemplate(templateId);
 
@@ -203,8 +213,8 @@ app.post("/:id/execute", async (c) => {
 app.get("/:id/stats", async (c) => {
   try {
     const templateId = c.req.param("id");
-    const { db } = getDb();
-    const templateExecutor = new TemplateExecutor(db);
+    const { sqlite } = getDb();
+    const templateExecutor = new TemplateExecutor(sqlite);
 
     const template = await templateExecutor.getTemplate(templateId);
 

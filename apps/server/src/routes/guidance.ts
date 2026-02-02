@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
 import { getWorkflowGuidance } from "@third-eye/core/guidance";
+import type { EyeResponse } from "@third-eye/eyes";
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
@@ -19,13 +20,13 @@ app.use("*", errorHandler());
 // Zod schemas for validation
 const guidanceRequestSchema = z.object({
   task_description: z.string().min(1),
-  current_state: z.any().optional(),
-  last_eye_response: z.any().optional(),
+  current_state: z.string().optional(),
+  last_eye_response: z.unknown().optional(),
   session_id: z.string().min(1),
 });
 
 const delegateRequestSchema = z.object({
-  eye_response: z.any(),
+  eye_response: z.unknown(),
 });
 
 /**
@@ -43,7 +44,7 @@ app.post("/", async (c) => {
     const guidance = getWorkflowGuidance({
       taskDescription: task_description,
       currentState: current_state,
-      lastEyeResponse: last_eye_response,
+      lastEyeResponse: last_eye_response as EyeResponse | undefined,
       sessionId: session_id,
     });
 
@@ -83,7 +84,7 @@ app.post("/delegate", async (c) => {
     const { eye_response } = validated;
 
     const { shouldDelegate } = await import("@third-eye/core/guidance");
-    const delegation = shouldDelegate(eye_response);
+    const delegation = shouldDelegate(eye_response as EyeResponse);
 
     return createSuccessResponse(c, {
       ok: true,

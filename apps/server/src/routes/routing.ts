@@ -4,7 +4,8 @@ import { eyesRouting, eyes } from "@third-eye/db";
 import { getEyeIdByName, getEyeNameById } from "@third-eye/db/utils/lookups";
 import { generateId } from "@third-eye/db/utils/uuid";
 import { eq } from "drizzle-orm";
-import { schemas } from "../middleware/validation";
+import { z } from "zod";
+import { schemas, getValidatedBody } from "../middleware/validation";
 import { getDefaultRouting } from "../lib/defaults";
 import {
   validateBodyWithEnvelope,
@@ -15,6 +16,10 @@ import {
   requestIdMiddleware,
   errorHandler,
 } from "../middleware/response";
+
+// Type inference from schemas
+type RoutingCreate = z.infer<typeof schemas.routingCreate>;
+type RoutingUpdate = z.infer<typeof schemas.routingUpdate>;
 
 /**
  * Routing Configuration Routes
@@ -114,7 +119,7 @@ app.post("/", validateBodyWithEnvelope(schemas.routingCreate), async (c) => {
       primaryModel,
       fallbackProvider,
       fallbackModel,
-    } = c.get("validatedBody");
+    } = getValidatedBody<RoutingCreate>(c);
 
     const { db } = getDb();
 
@@ -172,6 +177,7 @@ app.post("/", validateBodyWithEnvelope(schemas.routingCreate), async (c) => {
         type: "routing_updated",
         eye,
         routing: { ...updated, eye }, // Include eye name for frontend
+        timestamp: Date.now(),
       });
     } catch (e) {
       console.debug("WebSocket broadcast skipped:", e);
@@ -211,6 +217,7 @@ app.delete("/:eye", async (c) => {
       wsManager.broadcastToAll({
         type: "routing_deleted",
         eye: eyeName,
+        timestamp: Date.now(),
       });
     } catch (e) {
       console.debug("WebSocket broadcast skipped:", e);

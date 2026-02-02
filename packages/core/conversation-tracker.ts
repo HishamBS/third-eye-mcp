@@ -10,7 +10,7 @@
  */
 
 import type { Database } from "bun:sqlite";
-import { nanoid } from "nanoid";
+import { generateId } from "@third-eye/db/utils/uuid";
 
 /**
  * Event type constants (SSOT)
@@ -42,13 +42,43 @@ export interface ConversationEventData {
  * Conversation Tracker - Logs agent and human interactions
  */
 export class ConversationTracker {
+  private tableExists: boolean | null = null;
+
   constructor(private readonly db: Database) {}
 
   /**
+   * Check if the conversation_events table exists
+   * Results are cached for performance
+   */
+  private checkTableExists(): boolean {
+    if (this.tableExists !== null) {
+      return this.tableExists;
+    }
+
+    try {
+      const stmt = this.db.prepare(`
+        SELECT name FROM sqlite_master
+        WHERE type='table' AND name='conversation_events'
+      `);
+      const result = stmt.get() as { name: string } | undefined;
+      this.tableExists = result !== undefined;
+      return this.tableExists;
+    } catch {
+      this.tableExists = false;
+      return false;
+    }
+  }
+
+  /**
    * Log a conversation event
+   * Returns empty string if table doesn't exist (graceful degradation)
    */
   logEvent(event: ConversationEventData): string {
-    const id = nanoid();
+    if (!this.checkTableExists()) {
+      return "";
+    }
+
+    const id = generateId();
     const createdAt = Date.now();
 
     const stmt = this.db.prepare(`
@@ -185,10 +215,15 @@ export class ConversationTracker {
 
   /**
    * Get conversation timeline for a session
+   * Returns empty array if table doesn't exist (graceful degradation)
    */
   getConversationTimeline(
     sessionId: string,
   ): readonly ConversationEventRecord[] {
+    if (!this.checkTableExists()) {
+      return [];
+    }
+
     const stmt = this.db.prepare(`
       SELECT id, session_id, event_type, speaker, message, metadata, created_at
       FROM conversation_events
@@ -210,8 +245,13 @@ export class ConversationTracker {
 
   /**
    * Get recent conversation events across all sessions
+   * Returns empty array if table doesn't exist (graceful degradation)
    */
   getRecentEvents(limit: number = 50): readonly ConversationEventRecord[] {
+    if (!this.checkTableExists()) {
+      return [];
+    }
+
     const stmt = this.db.prepare(`
       SELECT id, session_id, event_type, speaker, message, metadata, created_at
       FROM conversation_events
@@ -233,11 +273,16 @@ export class ConversationTracker {
 
   /**
    * Get conversation events by type
+   * Returns empty array if table doesn't exist (graceful degradation)
    */
   getEventsByType(
     sessionId: string,
     eventType: ConversationEventType,
   ): readonly ConversationEventRecord[] {
+    if (!this.checkTableExists()) {
+      return [];
+    }
+
     const stmt = this.db.prepare(`
       SELECT id, session_id, event_type, speaker, message, metadata, created_at
       FROM conversation_events
@@ -259,8 +304,13 @@ export class ConversationTracker {
 
   /**
    * Delete old conversation events (cleanup)
+   * Returns 0 if table doesn't exist (graceful degradation)
    */
   deleteOldEvents(daysOld: number): number {
+    if (!this.checkTableExists()) {
+      return 0;
+    }
+
     const cutoffTime = Date.now() - daysOld * 24 * 60 * 60 * 1000;
     const stmt = this.db.prepare(`
       DELETE FROM conversation_events

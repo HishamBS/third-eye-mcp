@@ -1,5 +1,4 @@
 import { describe, test, expect, beforeAll, afterAll } from "vitest";
-import { nanoid } from "nanoid";
 import type {
   CreateSessionResponse,
   ListSessionsResponse,

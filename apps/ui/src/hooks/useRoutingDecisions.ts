@@ -67,19 +67,17 @@ export function useRoutingDecisions(filters?: {
       const queryString = params.toString();
       const url = `/api/routing-decisions${queryString ? `?${queryString}` : ""}`;
 
-      const response = await api.get<{
-        success: boolean;
-        data: {
-          decisions: RoutingDecision[];
-          pagination: RoutingDecisionsPagination;
-        };
+      // useAPI automatically unwraps the response envelope
+      const data = await api.get<{
+        decisions: RoutingDecision[];
+        pagination: RoutingDecisionsPagination;
       }>(url);
 
-      if (response.success) {
-        setDecisions(response.data.decisions);
-        setPagination(response.data.pagination);
+      if (data && "decisions" in data && "pagination" in data) {
+        setDecisions(data.decisions);
+        setPagination(data.pagination);
       } else {
-        throw new Error("Failed to fetch routing decisions");
+        throw new Error("Invalid response format from routing decisions API");
       }
     } catch (err) {
       setError(
@@ -118,15 +116,13 @@ export function useRoutingDecisionBySession(sessionId: string | null) {
       setLoading(true);
       setError(null);
 
-      const response = await api.get<{
-        success: boolean;
-        data: {
-          decision: RoutingDecision;
-        };
+      // useAPI automatically unwraps the response envelope
+      const data = await api.get<{
+        decision: RoutingDecision;
       }>(`/api/routing-decisions/session/${sessionId}`);
 
-      if (response.success) {
-        setDecision(response.data.decision);
+      if (data && "decision" in data) {
+        setDecision(data.decision);
       } else {
         throw new Error(`No routing decision found for session ${sessionId}`);
       }
@@ -168,15 +164,13 @@ export function useRoutingDecision(decisionId: string | null) {
       setLoading(true);
       setError(null);
 
-      const response = await api.get<{
-        success: boolean;
-        data: {
-          decision: RoutingDecision;
-        };
+      // useAPI automatically unwraps the response envelope
+      const data = await api.get<{
+        decision: RoutingDecision;
       }>(`/api/routing-decisions/${decisionId}`);
 
-      if (response.success) {
-        setDecision(response.data.decision);
+      if (data && "decision" in data) {
+        setDecision(data.decision);
       } else {
         throw new Error(`Routing decision ${decisionId} not found`);
       }

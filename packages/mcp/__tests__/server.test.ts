@@ -72,7 +72,7 @@ describe("MCP Server", () => {
     it("should process valid requests", () => {
       const request = {
         task: "Please analyze this code",
-        sessionId: crypto.randomUUID(),
+        sessionId: globalThis.crypto.randomUUID(),
       };
 
       expect(request.task).toBeTruthy();
@@ -85,7 +85,7 @@ describe("MCP Server", () => {
       };
 
       // Server should auto-generate sessionId
-      const sessionId = request.sessionId || crypto.randomUUID();
+      const sessionId = request.sessionId || globalThis.crypto.randomUUID();
 
       expect(sessionId).toBeDefined();
       expect(sessionId.length).toBeGreaterThan(0);

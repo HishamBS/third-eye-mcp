@@ -1,15 +1,12 @@
 import { Hono } from "hono";
-import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
+import { ApiErrorCode, ApiErrorTitle } from "@third-eye/constants";
+import { generateId } from "@third-eye/db/utils/uuid";
 import { getDb } from "@third-eye/db";
 import { providerKeys } from "@third-eye/db/schema";
-import {
-  encryptForStorage,
-  decryptFromStorage,
-  testEncryption,
-} from "@third-eye/core";
+import { encryptForStorage, testEncryption } from "@third-eye/core";
 import { eq, desc } from "drizzle-orm";
 import { ProviderId } from "@third-eye/types";
-import { schemas } from "../middleware/validation";
+import { schemas, getValidatedBody } from "../middleware/validation";
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
@@ -20,6 +17,11 @@ import {
   requestIdMiddleware,
   errorHandler,
 } from "../middleware/response";
+import { z } from "zod";
+
+// Type inference from schemas
+type ProviderKeyCreate = z.infer<typeof schemas.providerKeyCreate>;
+type ProviderKeyUpdate = z.infer<typeof schemas.providerKeyUpdate>;
 
 const app = new Hono();
 
@@ -61,7 +63,7 @@ app.post(
   validateBodyWithEnvelope(schemas.providerKeyCreate),
   async (c) => {
     try {
-      const { provider, label, apiKey, metadata } = c.get("validatedBody");
+      const { provider, label, apiKey, metadata } = getValidatedBody<ProviderKeyCreate>(c);
 
       // Check for duplicate label for same provider
       const { db } = getDb();
@@ -78,16 +80,23 @@ app.post(
         );
       }
 
-      // Encrypt the API key
-      const encryptedKey = encryptForStorage(apiKey);
+      // Encrypt the API key (apiKey is required for non-local providers)
+      const encryptedKey = apiKey ? encryptForStorage(apiKey) : Buffer.from("");
+
+      // Generate UUID for new key
+      const id = generateId();
+
+      // Serialize metadata for storage
+      const metadataJson = metadata ? JSON.stringify(metadata) : null;
 
       const result = await db
         .insert(providerKeys)
         .values({
+          id,
           provider,
           label,
           encryptedKey,
-          metadata: metadata || null,
+          metadata: metadataJson,
           createdAt: new Date(),
         })
         .returning({
@@ -112,8 +121,8 @@ app.put(
   validateBodyWithEnvelope(schemas.providerKeyUpdate),
   async (c) => {
     try {
-      const id = parseInt(c.req.param("id"));
-      const { label, apiKey, metadata } = c.get("validatedBody");
+      const id = c.req.param("id"); // String UUID, not parseInt
+      const { label, apiKey, metadata } = getValidatedBody<ProviderKeyUpdate>(c);
 
       const { db } = getDb();
 
@@ -125,18 +134,20 @@ app.put(
         .limit(1);
 
       if (existing.length === 0) {
-        return createNotFoundResponse(c, "Provider key", id.toString());
+        return createNotFoundResponse(c, "Provider key", id);
       }
 
-      // Build update object
+      // Build update object with proper types
       const updateData: Partial<{
         label: string;
         metadata: string | null;
-        encryptedKey: string;
+        encryptedKey: Buffer;
       }> = {};
 
       if (label) updateData.label = label;
-      if (metadata !== undefined) updateData.metadata = metadata;
+      if (metadata !== undefined) {
+        updateData.metadata = metadata ? JSON.stringify(metadata) : null;
+      }
       if (apiKey) {
         // Encrypt new API key
         updateData.encryptedKey = encryptForStorage(apiKey);
@@ -161,58 +172,39 @@ app.put(
 // Delete provider key
 app.delete("/:id", async (c) => {
   try {
-    const id = parseInt(c.req.param("id"));
+    const id = c.req.param("id"); // String UUID, not parseInt
 
-    const { db } = getDb();
-    const result = await db
-      .delete(providerKeys)
-      .where(eq(providerKeys.id, id))
-      .returning({ id: providerKeys.id });
-
-    if (result.length === 0) {
-      return createNotFoundResponse(c, "Provider key", id.toString());
+    if (!id) {
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.INVALID_ID,
+        code: ApiErrorCode.INVALID_ID,
+        status: 400,
+        detail: "Provider key ID is required",
+      });
     }
 
+    const { db } = getDb();
+
+    // Check if key exists before deleting
+    const existing = await db
+      .select({ id: providerKeys.id })
+      .from(providerKeys)
+      .where(eq(providerKeys.id, id))
+      .limit(1);
+
+    if (existing.length === 0) {
+      return createNotFoundResponse(c, "Provider key", id);
+    }
+
+    await db.delete(providerKeys).where(eq(providerKeys.id, id));
+
     return createSuccessResponse(c, {
-      id: result[0].id,
+      id,
       message: "Provider key deleted successfully",
     });
   } catch (error) {
     console.error("Failed to delete provider key:", error);
     return createInternalErrorResponse(c, "Failed to delete provider key");
-  }
-});
-
-// Get decrypted API key (for internal use only)
-app.get("/:id/decrypt", async (c) => {
-  try {
-    const id = parseInt(c.req.param("id"));
-
-    const { db } = getDb();
-    const result = await db
-      .select()
-      .from(providerKeys)
-      .where(eq(providerKeys.id, id))
-      .limit(1);
-
-    if (result.length === 0) {
-      return createNotFoundResponse(c, "Provider key", id.toString());
-    }
-
-    const key = result[0];
-    const decryptedKey = decryptFromStorage(key.encryptedKey);
-
-    return createSuccessResponse(c, {
-      id: key.id,
-      provider: key.provider,
-      label: key.label,
-      apiKey: decryptedKey,
-      metadata: key.metadata,
-      createdAt: key.createdAt,
-    });
-  } catch (error) {
-    console.error("Failed to decrypt provider key:", error);
-    return createInternalErrorResponse(c, "Failed to decrypt provider key");
   }
 });
 
@@ -267,43 +259,6 @@ app.get("/by-provider/:provider", async (c) => {
   } catch (error) {
     console.error("Failed to get provider key:", error);
     return createInternalErrorResponse(c, "Failed to get provider key");
-  }
-});
-
-// DELETE /api/provider-keys/:id - Delete provider key
-app.delete("/:id", async (c) => {
-  try {
-    const id = parseInt(c.req.param("id"));
-
-    if (isNaN(id)) {
-      return createErrorResponse(c, {
-        title: ApiErrorTitle.INVALID_ID,
-        code: ApiErrorCode.INVALID_ID,
-        status: 400,
-        detail: "Provider key ID must be a number",
-      });
-    }
-
-    const { db } = getDb();
-
-    const existing = await db
-      .select()
-      .from(providerKeys)
-      .where(eq(providerKeys.id, id))
-      .limit(1);
-
-    if (existing.length === 0) {
-      return createNotFoundResponse(c, `Provider key with ID: ${id}`);
-    }
-
-    await db.delete(providerKeys).where(eq(providerKeys.id, id)).run();
-
-    return createSuccessResponse(c, {
-      message: "Provider key deleted successfully",
-    });
-  } catch (error) {
-    console.error("Failed to delete provider key:", error);
-    return createInternalErrorResponse(c, "Failed to delete provider key");
   }
 });
 

@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { nanoid } from "nanoid";
+import { generateId, generatePipelineId, generateRunId } from "@third-eye/db/utils/uuid";
 import { getDb } from "@third-eye/db";
 import { pipelines, pipelineRuns } from "@third-eye/db";
 import { eq, desc } from "drizzle-orm";
@@ -25,27 +25,33 @@ const app = new Hono();
 app.use("*", requestIdMiddleware());
 app.use("*", errorHandler());
 
+// Workflow schema for pipeline DAG definition
+const workflowSchema = z.object({
+  nodes: z.array(z.record(z.unknown())).optional(),
+  edges: z.array(z.record(z.unknown())).optional(),
+}).passthrough();
+
 // Zod schemas for validation
 const createPipelineSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
-  workflow: z.any(),
+  workflow: workflowSchema,
   category: z.string().optional(),
 });
 
 const updatePipelineSchema = z.object({
   description: z.string().optional(),
-  workflow: z.any().optional(),
+  workflow: workflowSchema.optional(),
   category: z.string().optional(),
 });
 
 const executePipelineSchema = z.object({
   session_id: z.string().min(1),
-  input: z.any(),
+  input: z.union([z.string(), z.record(z.unknown())]),
 });
 
 const executePipelineV2Schema = z.object({
-  input: z.any(),
+  input: z.union([z.string(), z.record(z.unknown())]),
   sessionId: z.string().optional(),
 });
 
@@ -164,7 +170,7 @@ app.post("/", async (c) => {
 
     const nextVersion = existing.length > 0 ? existing[0].version + 1 : 1;
 
-    const id = nanoid();
+    const id = generatePipelineId();
     const now = new Date();
 
     // Deactivate previous versions
@@ -252,7 +258,7 @@ app.put("/:id", async (c) => {
       .run();
 
     // Create new version
-    const newId = nanoid();
+    const newId = generatePipelineId();
     const nextVersion = currentPipeline.version + 1;
 
     await db
@@ -407,7 +413,7 @@ app.post("/:id/execute", async (c) => {
       }
 
       // Create pipeline run record for tracking
-      const runId = nanoid();
+      const runId = generateRunId();
       await db
         .insert(pipelineRuns)
         .values({
@@ -451,9 +457,11 @@ app.post("/:id/execute", async (c) => {
       }
 
       // Execute workflow
+      // Convert string input to object if needed
+      const inputObj = typeof input === "string" ? { text: input } : input ?? {};
       const result = await interpreter.execute(workflow, {
         sessionId: session_id,
-        input: input || {},
+        input: inputObj,
       });
 
       // Update pipeline run with results

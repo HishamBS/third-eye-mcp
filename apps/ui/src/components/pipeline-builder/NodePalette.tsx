@@ -111,6 +111,7 @@ export const NodePalette = memo(function NodePalette({
   const [search, setSearch] = useState<string>("");
   const [allEyes, setAllEyes] = useState<EyeDefinition[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
   >({
@@ -122,10 +123,11 @@ export const NodePalette = memo(function NodePalette({
   useEffect(() => {
     const fetchAllEyes = async () => {
       setLoading(true);
+      setError(null);
       try {
         const response = await fetch(`${API_BASE_URL}/api/eyes/all`);
         if (!response.ok) {
-          throw new Error("Failed to fetch eyes");
+          throw new Error(`Failed to fetch eyes (HTTP ${response.status})`);
         }
 
         const envelope = await response.json();
@@ -146,8 +148,9 @@ export const NodePalette = memo(function NodePalette({
         );
 
         setAllEyes(mapped);
-      } catch (error) {
-        console.error("[NodePalette] Failed to fetch eyes:", error);
+      } catch (err) {
+        console.error("[NodePalette] Failed to fetch eyes:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch eyes");
         setAllEyes([]);
       } finally {
         setLoading(false);
@@ -394,6 +397,46 @@ export const NodePalette = memo(function NodePalette({
                 <div className="text-sm text-semantic-muted text-center py-4">
                   Loading eyes...
                 </div>
+              ) : error ? (
+                <div className="text-sm text-red-500 text-center py-4 px-2">
+                  <p className="font-semibold">Failed to load eyes</p>
+                  <p className="text-xs mt-1 text-semantic-muted">{error}</p>
+                  <button
+                    onClick={() => {
+                      setError(null);
+                      setLoading(true);
+                      fetch(`${API_BASE_URL}/api/eyes/all`)
+                        .then((res) => res.json())
+                        .then((envelope) => {
+                          const eyesData = envelope.data || [];
+                          setAllEyes(
+                            eyesData.map((eye: Record<string, unknown>) => ({
+                              id: eye.id,
+                              name: eye.name,
+                              description: eye.description,
+                              iconSvg: eye.iconSvg,
+                              capabilities: eye.capabilities || [],
+                              version: eye.version,
+                              stage: eye.stage,
+                              inputSchema: eye.inputSchemaJson,
+                              outputSchema: eye.outputSchemaJson,
+                            })),
+                          );
+                        })
+                        .catch((err) => {
+                          setError(
+                            err instanceof Error
+                              ? err.message
+                              : "Failed to fetch eyes",
+                          );
+                        })
+                        .finally(() => setLoading(false));
+                    }}
+                    className="mt-2 px-3 py-1 text-xs bg-brand-primary text-white rounded hover:bg-brand-primary/80 transition-colors"
+                  >
+                    Retry
+                  </button>
+                </div>
               ) : filteredEyes.length > 0 ? (
                 <div className="space-y-2">
                   {filteredEyes.map((eye) => (
@@ -404,7 +447,11 @@ export const NodePalette = memo(function NodePalette({
                       className="flex items-start gap-3 p-3 bg-brand-paper border border-brand-outline rounded-lg cursor-grab hover:border-brand-primary hover:shadow-md transition-all"
                     >
                       <div className="flex-shrink-0 mt-0.5">
-                        <EyeIcon eye={eye.name} size={32} />
+                        <EyeIcon
+                          eye={eye.name}
+                          size={32}
+                          iconSvg={eye.iconSvg}
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-semibold text-brand-foreground">

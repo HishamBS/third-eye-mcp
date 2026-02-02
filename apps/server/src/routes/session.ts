@@ -1,9 +1,9 @@
 import { Hono } from "hono";
-import { nanoid } from "nanoid";
+import { generateSessionId } from "@third-eye/db/utils/uuid";
 import { getDb } from "@third-eye/db";
-import { sessions, runs, pipelineEvents } from "@third-eye/db";
+import { sessions, runs, pipelineEvents, clarifications, intentConfirmations } from "@third-eye/db";
 import { getConfig } from "@third-eye/config";
-import { eq, desc, count, sql, or, gte } from "drizzle-orm";
+import { eq, desc, count, sql, or, gte, and } from "drizzle-orm";
 import { validateBody, schemas, rateLimit } from "../middleware/validation";
 import { getEyeNameById, getEyeIdByName } from "@third-eye/db/utils/lookups";
 import {
@@ -108,6 +108,92 @@ interface Clarification {
   [key: string]: unknown;
 }
 
+/**
+ * Session Config Interface - represents the configJson structure
+ * Per R07: Strict typing for session configuration
+ */
+interface SessionConfigMetadata {
+  client?: {
+    displayName?: string;
+    title?: string;
+    name?: string;
+    version?: string;
+  };
+  clientDisplayName?: string;
+  clientName?: string;
+  clientVersion?: string;
+  model?: string;
+}
+
+interface SessionConfigRouting {
+  flow?: string[];
+  recommendedFlow?: string[];
+  taskType?: string;
+  reasoning?: string;
+  recommendedEye?: string;
+}
+
+/**
+ * Run Output Interface - represents the outputJson structure from runs table
+ */
+interface RunOutput {
+  summary?: string;
+  verdict?: string;
+  [key: string]: unknown;
+}
+
+interface SessionConfig {
+  agentName?: string;
+  displayName?: string;
+  model?: string;
+  metadata?: SessionConfigMetadata;
+  summary?: string;
+  verdict?: string;
+  flow?: string;
+  recommendedFlow?: string;
+  taskType?: string;
+  reasoning?: string;
+  recommendedEye?: string;
+  routing?: SessionConfigRouting;
+  clarifications?: Record<string, Clarification>;
+  userIntent?: string;
+  [key: string]: unknown; // Allow additional properties
+}
+
+/**
+ * Safely parse JSON with fallback to default value
+ * Prevents crashes from malformed JSON in database
+ */
+function safeJsonParse<T>(
+  jsonStr: string | null | undefined,
+  fallback: T,
+): T {
+  if (!jsonStr || typeof jsonStr !== "string") {
+    return fallback;
+  }
+  try {
+    return JSON.parse(jsonStr) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Parse session configJson safely - used throughout session routes
+ */
+function parseSessionConfig(
+  configJson: string | unknown | null | undefined,
+): SessionConfig {
+  if (!configJson) return {};
+  if (typeof configJson === "object" && configJson !== null) {
+    return configJson as SessionConfig;
+  }
+  if (typeof configJson === "string") {
+    return safeJsonParse<SessionConfig>(configJson, {});
+  }
+  return {};
+}
+
 const app = new Hono();
 
 app.use("*", requestIdMiddleware());
@@ -118,7 +204,7 @@ app.use("*", rateLimit({ maxRequests: 200 })); // Higher limit for session ops
 
 // Schemas for validation
 const createSessionSchema = z.object({
-  config: z.any().optional(),
+  config: z.record(z.unknown()).optional(),
 });
 
 const updateStatusSchema = z.object({
@@ -128,7 +214,7 @@ const updateStatusSchema = z.object({
 const addContextSchema = z.object({
   source: z.enum(VALID_CONTEXT_SOURCES),
   key: z.string().min(1),
-  value: z.any(),
+  value: z.union([z.string(), z.number(), z.boolean(), z.record(z.unknown()), z.array(z.unknown())]),
 });
 
 const validateClarificationSchema = z.object({
@@ -146,7 +232,7 @@ app.post("/", async (c) => {
     }
     const sessionConfig = body.config as Record<string, unknown> | undefined;
 
-    const sessionId = nanoid(12);
+    const sessionId = generateSessionId();
     const { db } = getDb();
     const config = getConfig();
 
@@ -325,10 +411,7 @@ app.get("/active", async (c) => {
           .limit(1)
           .get();
 
-        const config =
-          typeof session.configJson === "string"
-            ? JSON.parse(session.configJson)
-            : session.configJson || {};
+        const config = parseSessionConfig(session.configJson);
 
         const metadata = config.metadata || {};
         const clientInfo = metadata.client || {};
@@ -437,9 +520,10 @@ app.get("/", async (c) => {
         }
       });
 
+      const totalRunCount = totalRuns?.count ?? 0;
       const successRate =
-        totalRuns?.count > 0
-          ? Math.round((successfulRuns.length / totalRuns.count) * 100)
+        totalRunCount > 0
+          ? Math.round((successfulRuns.length / totalRunCount) * 100)
           : 0;
 
       stats = {
@@ -488,82 +572,6 @@ app.get("/:id", async (c) => {
   } catch (error) {
     console.error(LOG_SESSION_FETCH_FAILED, error);
     return createInternalErrorResponse(c, ApiErrorMessage.SESSION_FETCH_FAILED);
-  }
-});
-
-// Get all sessions
-app.get("/", async (c) => {
-  try {
-    const { db } = getDb();
-    const limit = parseInt(c.req.query("limit") || DEFAULT_PAGINATION_LIMIT.toString());
-    const offset = parseInt(c.req.query("offset") || DEFAULT_PAGINATION_OFFSET.toString());
-    const includeStats = c.req.query("stats") === QUERY_PARAM_TRUE_VALUE;
-
-    const allSessions = await db
-      .select()
-      .from(sessions)
-      .orderBy(desc(sessions.createdAt))
-      .limit(limit)
-      .offset(offset)
-      .all();
-
-    let stats = null;
-    if (includeStats) {
-      const totalRuns = await db.select({ count: count() }).from(runs).get();
-
-      const runsWithLatency = await db
-        .select({
-          latencyMs: runs.latencyMs,
-          outputJson: runs.outputJson,
-        })
-        .from(runs)
-        .all();
-
-      const validRuns = runsWithLatency.filter(
-        (r) => r.latencyMs != null && r.latencyMs > 0,
-      );
-      const avgLatency =
-        validRuns.length > 0
-          ? Math.round(
-              validRuns.reduce((sum, r) => sum + (r.latencyMs || 0), 0) /
-                validRuns.length,
-            )
-          : 0;
-
-      const successfulRuns = runsWithLatency.filter((r) => {
-        try {
-          const output =
-            typeof r.outputJson === "string"
-              ? JSON.parse(r.outputJson)
-              : r.outputJson;
-          return output?.ok === true || output?.code?.startsWith(SUCCESS_CODE_PREFIX);
-        } catch {
-          return false;
-        }
-      });
-
-      const successRate =
-        totalRuns?.count > 0
-          ? Math.round((successfulRuns.length / totalRuns.count) * 100)
-          : 0;
-
-      stats = {
-        totalSessions: allSessions.length,
-        totalRuns: totalRuns?.count || 0,
-        successRate,
-        avgLatency,
-      };
-    }
-
-    return createSuccessResponse(c, {
-      sessions: allSessions,
-      stats,
-      limit,
-      offset,
-    });
-  } catch (error) {
-    console.error(LOG_SESSIONS_FETCH_FAILED, error);
-    return createInternalErrorResponse(c, ApiErrorMessage.SESSIONS_FETCH_FAILED);
   }
 });
 
@@ -684,9 +692,11 @@ app.get("/:id/summary", async (c) => {
       .groupBy(pipelineEvents.eyeId)
       .all();
 
-    // Convert eyeIds to eye names
+    // Convert eyeIds to eye names (filter out null eyeIds)
     const eyeNames = await Promise.all(
-      uniqueEyeIds.map(async (e) => await getEyeNameById(e.eyeId)),
+      uniqueEyeIds
+        .filter((e) => e.eyeId !== null)
+        .map(async (e) => await getEyeNameById(e.eyeId as string)),
     );
 
     return createSuccessResponse(c, {
@@ -927,10 +937,7 @@ app.get("/:id/context", async (c) => {
       });
     }
 
-    const context =
-      typeof session.configJson === "string"
-        ? JSON.parse(session.configJson)
-        : session.configJson || {};
+    const context = parseSessionConfig(session.configJson);
 
     return createSuccessResponse(c, {
       sessionId,
@@ -984,11 +991,8 @@ app.post("/:id/context", async (c) => {
       });
     }
 
-    // Parse existing context
-    const context =
-      typeof session.configJson === "string"
-        ? JSON.parse(session.configJson)
-        : session.configJson || {};
+    // Parse existing context safely
+    const context = parseSessionConfig(session.configJson);
 
     // Add new context item
     context[key] = {
@@ -1049,11 +1053,8 @@ app.delete("/:id/context/:key", async (c) => {
       });
     }
 
-    // Parse existing context
-    const context =
-      typeof session.configJson === "string"
-        ? JSON.parse(session.configJson)
-        : session.configJson || {};
+    // Parse existing context safely
+    const context = parseSessionConfig(session.configJson);
 
     // Remove context item
     delete context[key];
@@ -1169,7 +1170,7 @@ app.get("/:id/export", async (c) => {
       for (const event of events) {
         const timestamp = new Date(event.createdAt).toISOString();
         const eyeName = event.eyeId ? await getEyeNameById(event.eyeId) : null;
-        markdown += formatMarkdownEventTitle(eyeName, event.code);
+        markdown += formatMarkdownEventTitle(eyeName, event.code ?? "");
         markdown += `**Time:** ${timestamp}\n\n`;
         if (event.md) {
           markdown += `${event.md}\n\n`;
@@ -1179,19 +1180,19 @@ app.get("/:id/export", async (c) => {
 
       markdown += `## Runs Summary\n\n`;
       for (const run of sessionRuns) {
-        const eyeName = await getEyeNameById(run.eyeId);
+        const eyeName = run.eyeId ? await getEyeNameById(run.eyeId) : null;
         markdown += formatMarkdownRunHeader(eyeName);
         markdown += `- **Model:** ${run.model || DISPLAY_NOT_AVAILABLE}\n`;
         markdown += `- **Latency:** ${run.latencyMs || DISPLAY_NOT_AVAILABLE}ms\n`;
         markdown += `- **Tokens In:** ${run.tokensIn || 0}\n`;
         markdown += `- **Tokens Out:** ${run.tokensOut || 0}\n\n`;
 
-        const output =
-          typeof run.outputJson === "string"
-            ? JSON.parse(run.outputJson)
-            : run.outputJson;
+        const output = safeJsonParse<RunOutput>(
+          typeof run.outputJson === "string" ? run.outputJson : null,
+          (run.outputJson as RunOutput) || {},
+        );
 
-        if (output?.summary) {
+        if (output.summary) {
           markdown += `**Summary:** ${output.summary}\n\n`;
         }
 
@@ -1211,12 +1212,12 @@ app.get("/:id/export", async (c) => {
       let csv = CSV_EXPORT_HEADER;
 
       for (const run of sessionRuns) {
-        const output =
-          typeof run.outputJson === "string"
-            ? JSON.parse(run.outputJson)
-            : run.outputJson;
+        const output = safeJsonParse<RunOutput>(
+          typeof run.outputJson === "string" ? run.outputJson : null,
+          (run.outputJson as RunOutput) || {},
+        );
 
-        const verdict = output?.verdict || DEFAULT_VERDICT_STATUS;
+        const verdict = output.verdict || DEFAULT_VERDICT_STATUS;
         const eyeName = await getEyeNameById(run.eyeId);
 
         csv += formatCsvRow(
@@ -1286,10 +1287,7 @@ app.post("/:id/clarifications/:clarificationId/validate", async (c) => {
     }
 
     // Parse session context
-    const context =
-      typeof session.configJson === "string"
-        ? JSON.parse(session.configJson)
-        : session.configJson || {};
+    const context = parseSessionConfig(session.configJson);
 
     const clarifications = context.clarifications || {};
     const existingClarification = clarifications[clarificationId];
@@ -1344,7 +1342,7 @@ app.post("/:id/clarifications/:clarificationId/validate", async (c) => {
     }
 
     // Check against session context for contradictions
-    if (valid && context.userIntent) {
+    if (valid && typeof context.userIntent === "string") {
       const userIntent = context.userIntent.toLowerCase();
       const answerLower = answer.toLowerCase();
 
@@ -1374,7 +1372,6 @@ app.get("/:sessionId/clarifications", async (c) => {
   try {
     const { sessionId } = c.req.param();
     const { db } = getDb();
-    const { clarifications } = await import("@third-eye/db/schema");
 
     // Verify session exists
     const session = await db
@@ -1410,7 +1407,6 @@ app.get("/:sessionId/intent-confirmations", async (c) => {
   try {
     const { sessionId } = c.req.param();
     const { db } = getDb();
-    const { intentConfirmations } = await import("@third-eye/db/schema");
 
     // Verify session exists
     const session = await db
@@ -1467,11 +1463,8 @@ app.get("/:id/routing", async (c) => {
       });
     }
 
-    // Try to extract routing from session context first
-    const context =
-      typeof session.configJson === "string"
-        ? JSON.parse(session.configJson)
-        : session.configJson || {};
+    // Try to extract routing from session context first (safely)
+    const context = parseSessionConfig(session.configJson);
 
     // Check if routing is stored in context (from overseer/mcp routes)
     if (context.routing && typeof context.routing === "object") {
@@ -1496,8 +1489,12 @@ app.get("/:id/routing", async (c) => {
       ? await db
           .select()
           .from(pipelineEvents)
-          .where(eq(pipelineEvents.sessionId, sessionId))
-          .where(eq(pipelineEvents.eyeId, overseerEyeId))
+          .where(
+            and(
+              eq(pipelineEvents.sessionId, sessionId),
+              eq(pipelineEvents.eyeId, overseerEyeId),
+            ),
+          )
           .orderBy(pipelineEvents.createdAt)
           .limit(1)
           .get()

@@ -6,7 +6,7 @@ import {
   InitializeRequestSchema,
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
-import { autoRouter } from "../core/auto-router";
+import { autoRouter } from "@third-eye/core";
 import { TOOL_NAME } from "@third-eye/types";
 import { z } from "zod";
 
@@ -307,6 +307,37 @@ export function createMCPServer(): Server {
 
       // Handle overseer tool - main entry point
       if (name === MCP_TOOL_NAME) {
+        // Check server readiness - return meaningful error if not ready
+        if (!serverReadinessState.ready) {
+          const health = getServerHealthStatus();
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(
+                  {
+                    status: "error",
+                    code: "E_SERVER_NOT_READY",
+                    verdict: "ERROR",
+                    summary: `Third Eye MCP server is not fully initialized: ${health.message}`,
+                    details: {
+                      healthy: health.healthy,
+                      message: health.message,
+                      ...(health.details ? { diagnostics: health.details } : {}),
+                      recommendation:
+                        "Run 'third-eye-mcp up' to initialize the server, then retry your request.",
+                    },
+                    tool: MCP_TOOL_NAME,
+                  },
+                  null,
+                  2,
+                ),
+              },
+            ],
+            isError: true,
+          };
+        }
+
         const toolArgs = args as MCPToolArguments;
         const task = toolArgs.task;
         if (!task) {
@@ -684,40 +715,203 @@ export function createMCPServer(): Server {
   return server;
 }
 
+// Track server readiness state for graceful degradation
+let serverReadinessState: { ready: boolean; error?: string; details?: Record<string, number> } = {
+  ready: false,
+};
+
+/**
+ * Validate server can process requests by checking database and required tables
+ * Returns detailed status instead of just ok/error for better diagnostics
+ */
+async function validateServerReadiness(): Promise<{
+  ok: boolean;
+  error?: string;
+  details?: { eyes: number; personas: number; pipelines: number };
+}> {
+  try {
+    const { getDb, eyes, personas, pipelines } = await import("@third-eye/db");
+    const { count } = await import("drizzle-orm");
+    const { db } = getDb();
+
+    // Verify critical tables have data
+    const eyeCount = await db.select({ value: count() }).from(eyes).get();
+    const personaCount = await db.select({ value: count() }).from(personas).get();
+    const pipelineCount = await db.select({ value: count() }).from(pipelines).get();
+
+    const details = {
+      eyes: eyeCount?.value ?? 0,
+      personas: personaCount?.value ?? 0,
+      pipelines: pipelineCount?.value ?? 0,
+    };
+
+    const missingItems: string[] = [];
+    if (details.eyes === 0) missingItems.push("eyes");
+    if (details.personas === 0) missingItems.push("personas");
+    if (details.pipelines === 0) missingItems.push("pipelines");
+
+    if (missingItems.length > 0) {
+      return {
+        ok: false,
+        error: `Missing data in: ${missingItems.join(", ")} - database may need seeding`,
+        details,
+      };
+    }
+
+    return { ok: true, details };
+  } catch (error) {
+    return {
+      ok: false,
+      error: `Database validation failed: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
+}
+
+/**
+ * Get current server health status for agents
+ */
+function getServerHealthStatus(): {
+  healthy: boolean;
+  message: string;
+  details?: Record<string, unknown>;
+} {
+  if (serverReadinessState.ready) {
+    return {
+      healthy: true,
+      message: "Server is ready to process requests",
+      details: serverReadinessState.details,
+    };
+  }
+  return {
+    healthy: false,
+    message: serverReadinessState.error || "Server not ready",
+    details: serverReadinessState.details,
+  };
+}
+
 /**
  * Start MCP server with stdio transport
+ * Uses graceful degradation - server starts even if DB validation fails
+ * Agents receive meaningful error messages instead of silent timeout
  */
 export async function startMCPServer() {
+  // Set up graceful shutdown handlers
+  const shutdown = () => {
+    console.error("\n[MCP Server] Shutting down gracefully...");
+    process.exit(0);
+  };
+
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+
+  // Handle uncaught errors - log but try to continue
+  process.on("uncaughtException", (error) => {
+    console.error("[MCP Server] Uncaught exception:", error.message);
+    // Don't exit - try to keep serving agents with degraded functionality
+    serverReadinessState = {
+      ready: false,
+      error: `Uncaught exception: ${error.message}`,
+    };
+  });
+
+  process.on("unhandledRejection", (reason) => {
+    console.error("[MCP Server] Unhandled rejection:", reason);
+    // Don't exit - try to keep serving agents with degraded functionality
+    serverReadinessState = {
+      ready: false,
+      error: `Unhandled rejection: ${String(reason)}`,
+    };
+  });
+
+  console.error("[MCP Server] Initializing...");
+
+  // Track initialization state for better error messages
+  let dbInitialized = false;
+  let seedingCompleted = false;
+
   // Seed database with defaults (eyes, personas, pipelines, routing, etc.)
   // This ensures MCP server works with fresh or in-memory databases
-  const { seedDefaults } = await import("@third-eye/db/defaults");
-  const { getDb } = await import("@third-eye/db");
-
-  // Initialize database (creates tables if needed)
-  const { db } = getDb();
-
-  // Seed defaults silently (only logs if verbose)
   try {
-    await seedDefaults({
-      log: () => {}, // Silent seeding for MCP server
-    });
-  } catch (error) {
-    // Log error but don't fail startup (database might already be seeded)
-    console.error(
-      "[MCP Server] Seeding warning:",
-      error instanceof Error ? error.message : String(error),
-    );
+    const { seedDefaults } = await import("@third-eye/db/defaults");
+    const { getDb } = await import("@third-eye/db");
+
+    // Initialize database (creates tables if needed)
+    try {
+      const { db } = getDb();
+      dbInitialized = true;
+      console.error("[MCP Server] Database initialized");
+    } catch (dbError) {
+      const errorMsg = dbError instanceof Error ? dbError.message : String(dbError);
+      console.error("[MCP Server] WARNING: Database initialization failed:", errorMsg);
+      serverReadinessState = {
+        ready: false,
+        error: `Database initialization failed: ${errorMsg}. Run 'third-eye-mcp up' to initialize.`,
+      };
+      // Continue anyway - server will report this error to agents
+    }
+
+    // Seed defaults silently (only logs if verbose)
+    if (dbInitialized) {
+      try {
+        await seedDefaults({
+          log: () => {}, // Silent seeding for MCP server
+        });
+        seedingCompleted = true;
+        console.error("[MCP Server] Database seeded");
+      } catch (error) {
+        // Log error but don't fail startup (database might already be seeded)
+        console.error(
+          "[MCP Server] Seeding warning:",
+          error instanceof Error ? error.message : String(error),
+        );
+        // Seeding might have partially succeeded - continue to validation
+      }
+    }
+
+    // Validate server is ready to process requests
+    const validation = await validateServerReadiness();
+    if (validation.ok) {
+      serverReadinessState = {
+        ready: true,
+        details: validation.details,
+      };
+      console.error("[MCP Server] Validation passed - server fully ready");
+    } else {
+      console.error(`[MCP Server] WARNING: ${validation.error}`);
+      console.error("[MCP Server] Server will start in degraded mode - agents will receive error messages");
+      serverReadinessState = {
+        ready: false,
+        error: validation.error,
+        details: validation.details,
+      };
+      // Continue anyway - agents will get meaningful error messages
+    }
+  } catch (importError) {
+    const errorMsg = importError instanceof Error ? importError.message : String(importError);
+    console.error("[MCP Server] WARNING: Failed to import database modules:", errorMsg);
+    serverReadinessState = {
+      ready: false,
+      error: `Failed to initialize: ${errorMsg}. Ensure @third-eye/db is properly installed.`,
+    };
+    // Continue anyway - agents will get meaningful error messages
   }
 
   const server = createMCPServer();
   const transport = new StdioServerTransport();
 
+  // Connect to transport - this is blocking by design for stdio
   await server.connect(transport);
 
-  console.error("🧿 Third Eye MCP Server running on stdio");
-  console.error("📡 Ready for agent connections");
-  console.error(`🔧 Public tool: ${MCP_TOOL_NAME} (single entry point)`);
-  console.error(
-    "⚡ Golden Rule #1: Agents call only third_eye_overseer - Eyes are internal",
-  );
+  // Log startup status
+  if (serverReadinessState.ready) {
+    console.error("Third Eye MCP Server running on stdio");
+    console.error("Ready for agent connections");
+    console.error(`Public tool: ${MCP_TOOL_NAME} (single entry point)`);
+    console.error("Golden Rule #1: Agents call only third_eye_overseer - Eyes are internal");
+  } else {
+    console.error("Third Eye MCP Server running on stdio (DEGRADED MODE)");
+    console.error(`Status: ${serverReadinessState.error}`);
+    console.error("Agents will receive error messages explaining the issue");
+    console.error("Run 'third-eye-mcp up' to fully initialize the server");
+  }
 }

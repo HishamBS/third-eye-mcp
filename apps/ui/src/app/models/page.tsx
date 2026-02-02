@@ -45,8 +45,6 @@ interface ProviderHealth {
   [provider: string]: boolean;
 }
 
-const AUTO_SAVE_DELAY_MS = 1500;
-
 export default function ModelsPage() {
   const [models, setModels] = useState<Record<string, ModelInfo[]>>({});
   const [routing, setRouting] = useState<EyeRouting[]>([]);
@@ -315,7 +313,7 @@ export default function ModelsPage() {
 
     autoSaveTimerRef.current = setTimeout(() => {
       saveAllRoutingChanges();
-    }, AUTO_SAVE_DELAY_MS);
+    }, TIMING.AUTO_SAVE_DELAY_MS);
 
     return () => {
       if (autoSaveTimerRef.current) {

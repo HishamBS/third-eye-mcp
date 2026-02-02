@@ -8,7 +8,7 @@
  * - Auto-routing with context awareness
  */
 
-import { nanoid } from "nanoid";
+import { generateId } from "@third-eye/db/utils/uuid";
 import { getDb } from "@third-eye/db";
 import {
   pipelines,
@@ -145,7 +145,7 @@ export class PipelineOrchestrator {
     input: string,
     context: PipelineExecutionContext,
   ): Promise<PipelineExecutionResult> {
-    const runId = nanoid();
+    const runId = generateId();
     const startTime = Date.now();
 
     try {
@@ -404,7 +404,7 @@ export class PipelineOrchestrator {
   async createCustomPipeline(
     definition: Omit<PipelineDefinition, "id">,
   ): Promise<string> {
-    const id = nanoid();
+    const id = generateId();
     const pipelineData = {
       id,
       name: definition.name,

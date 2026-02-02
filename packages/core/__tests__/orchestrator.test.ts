@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll, afterAll } from "vitest";
-import { randomUUID } from "crypto";
+import { generateId } from "@third-eye/db/utils/uuid";
 import { EyeOrchestrator } from "../orchestrator";
 import { getDb } from "@third-eye/db";
 import { sessions, personas, eyesRouting } from "@third-eye/db";
@@ -30,7 +30,7 @@ suite("EyeOrchestrator", () => {
 
     if (existingPersona.length === 0) {
       await db.insert(personas).values({
-        id: randomUUID(),
+        id: generateId(),
         eye: "sharingan",
         version: 1,
         content:

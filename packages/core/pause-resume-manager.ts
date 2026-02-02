@@ -9,7 +9,7 @@
  * Per R13: Interfaces exported for SSOT
  */
 
-import { randomUUID } from "node:crypto";
+import { generateId } from "@third-eye/db/utils/uuid";
 import type { Database } from "bun:sqlite";
 
 /**
@@ -73,7 +73,7 @@ export class PauseResumeManager {
     pendingData?: Record<string, unknown>;
     expiresInMs?: number;
   }): Promise<PipelineState> {
-    const resumeToken = randomUUID();
+    const resumeToken = generateId();
     const pausedAt = Date.now();
     const expiresAt = params.expiresInMs
       ? pausedAt + params.expiresInMs
@@ -264,7 +264,7 @@ export class PauseResumeManager {
     context?: Record<string, unknown>;
     expiresInMs?: number;
   }): Promise<PendingQuestion> {
-    const id = randomUUID();
+    const id = generateId();
     const createdAt = Date.now();
     const expiresAt = createdAt + (params.expiresInMs ?? 3600000); // Default 1 hour
 
@@ -345,7 +345,7 @@ export class PauseResumeManager {
     answers: Record<string, unknown>;
     source: "human" | "agent";
   }): Promise<HumanResponse> {
-    const id = randomUUID();
+    const id = generateId();
     const createdAt = Date.now();
 
     const response: HumanResponse = {

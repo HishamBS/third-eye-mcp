@@ -124,7 +124,6 @@ app.post("/:id/submit", async (c) => {
     await manager.submitConfirmation(
       confirmationId,
       body.response,
-      body.userIdentity || "human-via-ui",
     );
 
     return createSuccessResponse(c, {

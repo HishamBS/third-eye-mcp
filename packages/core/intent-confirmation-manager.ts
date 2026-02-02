@@ -11,7 +11,7 @@
  * Per R13: Interfaces exported for SSOT
  */
 
-import { randomUUID } from "node:crypto";
+import { generateId } from "@third-eye/db/utils/uuid";
 import type { Database } from "bun:sqlite";
 
 /**
@@ -54,7 +54,7 @@ export class IntentConfirmationManager {
     intentAnalysis: Record<string, unknown>;
     confirmationPrompt: string;
   }): Promise<IntentConfirmation> {
-    const id = randomUUID();
+    const id = generateId();
     const createdAt = Date.now();
 
     const confirmation: IntentConfirmation = {

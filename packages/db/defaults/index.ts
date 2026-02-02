@@ -34,8 +34,9 @@ import {
 } from "@third-eye/constants";
 import { generateId } from "../utils/uuid";
 import { SeedSubset } from "../constants";
-import { readFileSync } from "fs";
-import { join } from "path";
+import { readFileSync, existsSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
 
 // Minimal type for workflow validation (avoids circular dependency with @third-eye/core)
 interface WorkflowNode {
@@ -138,8 +139,35 @@ async function seedEyes(
 
   try {
     const now = new Date();
-    // Construct path to SVG files (relative to workspace root)
-    const svgBasePath = join(process.cwd(), "apps", "ui", "public", "eyes");
+
+    // Find SVG base path by trying multiple possible locations
+    // This ensures seeding works regardless of current working directory
+    // Using __dirname alternative for ESM modules
+    const currentFileDir = dirname(fileURLToPath(import.meta.url));
+    const possiblePaths = [
+      // From monorepo root (most common case)
+      join(process.cwd(), "apps", "ui", "public", "eyes"),
+      // From packages/db/defaults directory (relative to this file)
+      join(currentFileDir, "..", "..", "..", "apps", "ui", "public", "eyes"),
+      // From packages/db directory
+      join(process.cwd(), "..", "..", "apps", "ui", "public", "eyes"),
+      // From apps/server directory
+      join(process.cwd(), "..", "ui", "public", "eyes"),
+    ];
+
+    let svgBasePath = "";
+    for (const path of possiblePaths) {
+      if (existsSync(path)) {
+        svgBasePath = path;
+        log(`  📂 Found SVG directory at: ${path}`);
+        break;
+      }
+    }
+
+    if (!svgBasePath) {
+      log("  ⚠ Warning: Could not find SVG directory, icons will be empty");
+      svgBasePath = possiblePaths[0]; // Use first path for consistency
+    }
 
     // Validate DEFAULT_BLUEPRINTS exists and has entries
     if (!DEFAULT_BLUEPRINTS || typeof DEFAULT_BLUEPRINTS !== "object") {
@@ -824,7 +852,7 @@ export async function seedDefaults(
   options: SeedDefaultsOptions = {},
 ): Promise<SeedReport> {
   const { db, sqlite } = getDb();
-  const log = options.log ?? ((message: string) => console.log(message));
+  const log = options.log ?? ((message: string) => console.error(message));
   const force = options.force ?? false;
 
   const subsets = {

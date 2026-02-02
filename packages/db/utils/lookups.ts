@@ -1,17 +1,26 @@
 import { getDb } from "../index";
 import { eyes, personas, pipelines, personaBlueprints } from "../schema";
 import { eq, and, sql } from "drizzle-orm";
+import { CACHE_TTL } from "@third-eye/constants";
 
 /**
  * Entity Lookup Utilities - SSOT for name to UUID conversion
  *
  * V1 Standard: All entity references MUST use UUIDs
  * These utilities provide name → UUID lookups with caching for performance
+ *
+ * R07: Using `unknown` instead of `any` for cache values
+ * R13: Using CACHE_TTL from constants instead of magic number
  */
 
-// Cache configuration
-const CACHE_TTL_MS = 60000; // 1 minute
-const cache = new Map<string, { value: any; expires: number }>();
+// Cache entry interface - R07 compliant
+interface CacheEntry<T = unknown> {
+  value: T;
+  expires: number;
+}
+
+// Cache configuration - R13 compliant
+const cache = new Map<string, CacheEntry>();
 
 function getCacheKey(prefix: string, ...args: string[]): string {
   return `${prefix}:${args.join(":")}`;
@@ -30,7 +39,7 @@ function getCached<T>(key: string): T | null {
 function setCache<T>(key: string, value: T): void {
   cache.set(key, {
     value,
-    expires: Date.now() + CACHE_TTL_MS,
+    expires: Date.now() + CACHE_TTL.DB_LOOKUP_CACHE_MS,
   });
 }
 
@@ -328,8 +337,10 @@ export async function getEyeIdsByNames(
 export async function normalizeEyeIdentifier(
   identifier: string,
 ): Promise<string | null> {
-  // Check if it's already a UUID (nanoid format: 21 characters)
-  if (identifier.length === 21) {
+  // Check if it's already a UUID (crypto.randomUUID format: 36 characters with hyphens)
+  // or legacy nanoid format (21 characters)
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (UUID_REGEX.test(identifier) || identifier.length === 21) {
     // Verify it exists
     const eye = await getEyeById(identifier);
     return eye ? identifier : null;

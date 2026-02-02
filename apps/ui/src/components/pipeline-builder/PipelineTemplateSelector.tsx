@@ -36,6 +36,20 @@ interface PipelineTemplate {
   edges: PipelineEdge[];
 }
 
+/**
+ * Raw pipeline from API (before transformation)
+ * Per R07: Strict typing for API responses
+ */
+interface RawPipeline {
+  readonly id: string;
+  readonly name: string;
+  readonly description?: string;
+  readonly workflowJson?: {
+    readonly nodes?: readonly PipelineNode[];
+    readonly edges?: readonly PipelineEdge[];
+  };
+}
+
 export function PipelineTemplateSelector({
   isOpen,
   onClose,
@@ -59,14 +73,14 @@ export function PipelineTemplateSelector({
         const pipelines = envelope.data || [];
 
         // Convert database pipelines to template format
-        const templatesFromDb: PipelineTemplate[] = pipelines.map((p: any) => {
-          const workflow = p.workflowJson || {};
+        const templatesFromDb: PipelineTemplate[] = (pipelines as RawPipeline[]).map((p) => {
+          const workflow = p.workflowJson ?? {};
           return {
             id: p.id,
             name: p.name,
-            description: p.description || "",
-            nodes: workflow.nodes || [],
-            edges: workflow.edges || [],
+            description: p.description ?? "",
+            nodes: workflow.nodes ? [...workflow.nodes] : [],
+            edges: workflow.edges ? [...workflow.edges] : [],
           };
         });
 

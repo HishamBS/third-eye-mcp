@@ -18,7 +18,7 @@ import { CapabilityMatrix } from "@/components/pipeline-builder/CapabilityMatrix
 import { DynamicRouteVisualizer } from "@/components/pipeline-builder/DynamicRouteVisualizer";
 import { LiveRoutingPanel } from "@/components/pipeline-builder/LiveRoutingPanel";
 import { PipelineCanvasEnhanced } from "@/components/pipeline-builder/PipelineCanvasEnhanced";
-import { SessionSelector } from "@/components/pipeline-builder/SessionSelector";
+import { SessionSelector } from "@/components/SessionSelector";
 import { RuntimeRouteHighlighter } from "@/components/pipeline-builder/RuntimeRouteHighlighter";
 import { RoutingDecisionMetadata } from "@/components/pipeline-builder/RoutingDecisionMetadata";
 import type { RoutingModeName } from "@third-eye/config/eye-capabilities";
@@ -117,6 +117,7 @@ export default function PipelinesPage() {
                       Select Session:
                     </h3>
                     <SessionSelector
+                      controlled
                       selectedSessionId={selectedSession}
                       onSessionSelect={handleSessionSelect}
                     />

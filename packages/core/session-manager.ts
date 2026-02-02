@@ -4,7 +4,7 @@
  * Manages session lifecycle, state persistence, and pipeline progress tracking
  */
 
-import { nanoid } from "nanoid";
+import { generateSessionId } from "@third-eye/db/utils/uuid";
 import { getDb } from "@third-eye/db";
 import { sessions, runs } from "@third-eye/db";
 import { getEyeNameById } from "@third-eye/db/utils/lookups";
@@ -146,7 +146,7 @@ export class SessionManager {
    * Create new session with configuration
    */
   async createSession(config: SessionConfig = {}): Promise<SessionInfo> {
-    const sessionId = nanoid();
+    const sessionId = generateSessionId();
     const now = new Date();
     const identity = deriveSessionIdentity(config);
 

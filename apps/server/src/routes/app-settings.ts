@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { getDb } from "@third-eye/db";
 import { appSettings } from "@third-eye/db";
 import { eq } from "drizzle-orm";
-import { nanoid } from "nanoid";
+import { generateId } from "@third-eye/db/utils/uuid";
 import {
   validateBodyWithEnvelope,
   createSuccessResponse,
@@ -106,7 +106,7 @@ app.put("/:key", async (c) => {
     } else {
       await db
         .insert(appSettings)
-        .values({ id: nanoid(), createdAt: new Date(), key, value: valueStr })
+        .values({ id: generateId(), createdAt: new Date(), key, value: valueStr })
         .run();
     }
 

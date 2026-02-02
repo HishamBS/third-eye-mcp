@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import { ApiErrorCode, ApiErrorTitle, ApiErrorMessage } from "@third-eye/constants";
 import { EyeOrchestrator } from "@third-eye/core";
+import { getDb } from "@third-eye/db";
+import { eyes } from "@third-eye/db/schema";
 import { schemas, rateLimit } from "../middleware/validation";
 import { TOOL_NAME } from "@third-eye/types";
 import {
@@ -103,7 +105,6 @@ app.post("/run", async (c) => {
       const { getDb } = await import("@third-eye/db");
       const { sessions } = await import("@third-eye/db");
       const { eq } = await import("drizzle-orm");
-      const { nanoid } = await import("nanoid");
 
       const { db } = getDb();
       const existingSession = await db
@@ -178,7 +179,6 @@ app.post("/run", async (c) => {
         code: ApiErrorCode.PIPELINE_EXECUTION_FAILED,
         status: 500,
         detail: result.error || "Pipeline did not complete",
-        code: ApiErrorCode.PIPELINE_EXECUTION_FAILED,
       });
     }
 
@@ -198,7 +198,6 @@ app.post("/run", async (c) => {
         code: ApiErrorCode.VALIDATION_ERROR,
         status: 400,
         detail: error.issues.map((i) => i.message).join("; "),
-        code: ApiErrorCode.INVALID_REQUEST,
       });
     }
     console.error("MCP run failed:", error);
@@ -220,18 +219,61 @@ app.get("/health", (c) => {
 // GET /mcp/tools - List all registered Eyes
 // GOLDEN RULE #1: Only third_eye_overseer is publicly callable - filter out individual Eyes
 app.get("/tools", async (c) => {
-  const { getToolsJSON } = await import("../../../../mcp-bridge/src/registry");
+  try {
+    const { db } = getDb();
 
-  const allTools = getToolsJSON();
-  // Only expose third_eye_overseer - individual Eyes are internal implementation details
-  const publicTools = allTools.filter((tool) => tool.name === TOOL_NAME);
+    // Get all eyes from database (SSOT)
+    const allEyes = await db
+      .select({
+        name: eyes.name,
+        description: eyes.description,
+        capabilityTags: eyes.capabilityTags,
+      })
+      .from(eyes);
 
-  return createSuccessResponse(c, {
-    tools: publicTools,
-    count: publicTools.length,
-    _internal_note:
-      "Individual Eyes (sharingan, jogan, etc.) are internal - only third_eye_overseer is public",
-  });
+    // Build the tools list with third_eye_overseer as the public tool
+    const publicTools = [
+      {
+        name: TOOL_NAME,
+        description:
+          "Third Eye MCP Orchestrator - Single entry point for all AI oversight operations",
+        inputSchema: {
+          type: "object",
+          properties: {
+            task: {
+              type: "string",
+              description: "The task to perform",
+            },
+            sessionId: {
+              type: "string",
+              description: "Optional session ID for context continuity",
+            },
+          },
+          required: ["task"],
+        },
+        outputSchema: {
+          type: "object",
+          properties: {
+            success: { type: "boolean" },
+            data: { type: "object" },
+          },
+        },
+        version: "1.0.0",
+        tags: ["orchestrator", "mcp"],
+      },
+    ];
+
+    return createSuccessResponse(c, {
+      tools: publicTools,
+      count: publicTools.length,
+      available_eyes: allEyes.length,
+      _internal_note:
+        "Individual Eyes (sharingan, jogan, etc.) are internal - only third_eye_overseer is public",
+    });
+  } catch (error) {
+    console.error("Failed to get tools:", error);
+    return createInternalErrorResponse(c, "Failed to retrieve tools");
+  }
 });
 
 // GET /mcp/quickstart - Agent primers and examples
