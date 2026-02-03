@@ -166,7 +166,7 @@ Routing Rules:
 Request Types Examples (dynamically generated from available eyes):
 ${generateDynamicExamples(registry)}
 
-You MUST return ONLY valid JSON in this exact envelope format (required fields):
+You MUST call the submit_eye_analysis function with this exact structure (required fields):
 {
   "tag": "overseer",
   "ok": true,
