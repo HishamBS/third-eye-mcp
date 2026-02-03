@@ -47,6 +47,7 @@ import { orderGuard, type OrderViolation } from "./order-guard";
 import { ensureEyeBehavior, EyeBehaviorError } from "./persona-guards";
 import { retryWithThrow } from "./provider-retry";
 import { getWebSocketBridge } from "./websocket-registry";
+import { ConversationTracker } from "./conversation-tracker";
 
 function isSupportedProvider(value: unknown): value is ProviderType {
   if (typeof value !== "string") {
@@ -775,6 +776,30 @@ export class EyeOrchestrator {
             createdAt: new Date(),
           });
 
+          // 12. Log Eye execution to conversation timeline
+          try {
+            const { getDb: getDbForConv } = await import("@third-eye/db");
+            const { sqlite: sqliteDb } = getDbForConv();
+            const conversationTracker = new ConversationTracker(sqliteDb);
+            conversationTracker.logAgentMessage(
+              actualSessionId,
+              eyeName,
+              envelope.md || `${eyeName} completed analysis`,
+              {
+                code: envelope.code,
+                ok: envelope.ok,
+                provider: successfulProviderType,
+                model: successfulModel,
+              },
+            );
+          } catch (convError) {
+            // Don't fail the Eye run if conversation logging fails
+            console.warn(
+              "[Orchestrator] Failed to log to conversation timeline:",
+              convError,
+            );
+          }
+
           // Emit completed event
           if (ws && sessionId) {
             // Broadcast eye_update (backward compatibility)
@@ -833,6 +858,24 @@ export class EyeOrchestrator {
           return envelope;
         } catch (error) {
           const errorMessage = `AI execution error: ${error instanceof Error ? error.message : "Unknown error"}`;
+
+          // Log error to conversation timeline
+          try {
+            const { getDb: getDbForErr } = await import("@third-eye/db");
+            const { sqlite: sqliteErr } = getDbForErr();
+            const conversationTracker = new ConversationTracker(sqliteErr);
+            conversationTracker.logError(
+              actualSessionId,
+              eyeName,
+              error instanceof Error ? error.message : "Unknown error",
+              { runId },
+            );
+          } catch (convError) {
+            console.warn(
+              "[Orchestrator] Failed to log error to conversation timeline:",
+              convError,
+            );
+          }
 
           const ws = getWebSocketBridge();
           if (ws && sessionId) {
@@ -1058,17 +1101,38 @@ export class EyeOrchestrator {
    * - VALIDATION: Second pass after clarification/confirmation has been provided
    *
    * The stage affects which status codes and response formats are valid for the Eye.
+   *
+   * IMPORTANT: Some Eyes are validation-only (e.g., Byakugan) and don't have a GUIDANCE template.
+   * For these Eyes, always return VALIDATION regardless of session state.
    */
   private determineStage(sessionId: string, eyeName: string): EyeStageToken {
+    // First, check if this Eye even has a GUIDANCE template
+    // Some Eyes (like Byakugan) are validation-only per VISION.md
+    const eyeNameLower = eyeName.toLowerCase();
+    const eyeId = this.getEyeIdFromName(eyeNameLower);
+
+    // STRICT: Check if Eye has GUIDANCE phase - if not, always use VALIDATION
+    // Byakugan is validation-only per VISION.md
+    if (eyeId) {
+      const hasGuidanceTemplate =
+        getStageTemplate(eyeId, EyeStageToken.GUIDANCE) !== null;
+      if (!hasGuidanceTemplate) {
+        // This Eye is validation-only - ALWAYS use VALIDATION
+        console.log(
+          `[${eyeName}] Eye is validation-only (no GUIDANCE template), using VALIDATION stage`,
+        );
+        return EyeStageToken.VALIDATION;
+      }
+    }
+
     const state = orderGuard.getState(sessionId);
 
-    // No state yet = first call = GUIDANCE
+    // No state yet = first call = GUIDANCE (for Eyes that have GUIDANCE phase)
     if (!state) {
       return EyeStageToken.GUIDANCE;
     }
 
     // Check if this Eye has already been called in this session
-    const eyeNameLower = eyeName.toLowerCase();
     const hasBeenCalled = state.completedEyes.some(
       (completed) => completed.toLowerCase() === eyeNameLower,
     );
@@ -1105,19 +1169,24 @@ export class EyeOrchestrator {
       state.currentPhase === "implementation" ||
       state.currentPhase === "completion"
     ) {
-      // Eyes that typically run in later phases should be in VALIDATION mode
-      const laterPhaseEyes = [
-        EyeId.MANGEKYO.toLowerCase(),
-        EyeId.TENSEIGAN.toLowerCase(),
-        EyeId.BYAKUGAN.toLowerCase(),
-      ];
-      if (!laterPhaseEyes.includes(eyeNameLower)) {
-        return EyeStageToken.VALIDATION;
-      }
+      return EyeStageToken.VALIDATION;
     }
 
-    // Default to GUIDANCE for first-time calls
+    // Default to GUIDANCE for first-time calls (only for Eyes that have GUIDANCE phase)
     return EyeStageToken.GUIDANCE;
+  }
+
+  /**
+   * Get EyeId enum value from eye name string
+   */
+  private getEyeIdFromName(eyeName: string): EyeId | null {
+    const nameLower = eyeName.toLowerCase();
+    for (const [key, value] of Object.entries(EyeId)) {
+      if (value.toLowerCase() === nameLower) {
+        return value as EyeId;
+      }
+    }
+    return null;
   }
 
   /**

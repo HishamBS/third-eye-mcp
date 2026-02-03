@@ -52,6 +52,7 @@ export interface CompletionRequest {
   tool_choice?:
     | "auto"
     | "none"
+    | "required"
     | { type: "function"; function: { name: string } }; // Phase 1-A4
 }
 

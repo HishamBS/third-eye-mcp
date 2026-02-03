@@ -508,6 +508,28 @@ export class AutoRouter {
             expiresInMs: 24 * 60 * 60 * 1000, // 24 hours
           });
 
+          // Log the clarification questions to conversation timeline
+          const questions = result.data?.questions as
+            | Array<{ id?: string; text?: string } | string>
+            | undefined;
+          if (questions && Array.isArray(questions)) {
+            const questionTexts = questions
+              .map((q, idx) => {
+                const text = typeof q === "string" ? q : q.text || q.id || "";
+                return `${idx + 1}. ${text}`;
+              })
+              .join("\n");
+            conversationTracker.logAgentMessage(
+              decision.sessionId,
+              eyeName,
+              `**Clarification Questions:**\n\n${questionTexts}`,
+              {
+                type: "clarification_request",
+                questions: questions,
+              },
+            );
+          }
+
           conversationTracker.logPause(
             decision.sessionId,
             "clarification",
@@ -546,6 +568,22 @@ export class AutoRouter {
             pendingData: result.data,
             expiresInMs: 24 * 60 * 60 * 1000,
           });
+
+          // Log the intent confirmation request to conversation timeline
+          const confirmationPrompt =
+            (result.data?.confirmationPrompt as string) ||
+            (result.data?.intentAnalysis as string) ||
+            "Intent requires confirmation";
+          conversationTracker.logAgentMessage(
+            decision.sessionId,
+            eyeName,
+            `**Intent Confirmation Required:**\n\n${confirmationPrompt}`,
+            {
+              type: "intent_confirmation_request",
+              intentAnalysis: result.data?.intentAnalysis,
+              confirmationPrompt: result.data?.confirmationPrompt,
+            },
+          );
 
           conversationTracker.logPause(
             decision.sessionId,

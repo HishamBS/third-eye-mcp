@@ -108,6 +108,30 @@ export class GroqProvider extends BaseProvider {
       throw new Error("Groq API key required");
     }
 
+    // STRICT: Validate tool_choice format when tools are provided
+    if (request.tools?.length && request.tool_choice) {
+      if (typeof request.tool_choice === "string") {
+        if (!["auto", "none", "required"].includes(request.tool_choice)) {
+          throw new Error(
+            `[Groq] Invalid tool_choice: "${request.tool_choice}". ` +
+              `Must be "auto", "none", "required", or {type: "function", function: {name: "..."}}`,
+          );
+        }
+      }
+    }
+
+    const requestBody = {
+      model: request.model,
+      messages: request.messages,
+      temperature: request.temperature ?? 0.7,
+      max_tokens: request.max_tokens,
+      top_p: request.top_p,
+      stop: request.stop,
+      response_format: request.response_format,
+      tools: request.tools,
+      tool_choice: request.tool_choice,
+    };
+
     try {
       const response = await this.fetchWithRetry(
         `${this.baseUrl}/chat/completions`,
@@ -117,17 +141,7 @@ export class GroqProvider extends BaseProvider {
             Authorization: `Bearer ${this.config.apiKey}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            model: request.model,
-            messages: request.messages,
-            temperature: request.temperature ?? 0.7,
-            max_tokens: request.max_tokens,
-            top_p: request.top_p,
-            stop: request.stop,
-            response_format: request.response_format,
-            tools: request.tools, // Phase 1-A4: Function calling
-            tool_choice: request.tool_choice, // Phase 1-A4
-          }),
+          body: JSON.stringify(requestBody),
         },
       );
 
@@ -149,6 +163,31 @@ export class GroqProvider extends BaseProvider {
           arguments: tc.function.arguments,
         },
       }));
+
+      // STRICT: When tool_choice requires function calling, enforce it
+      const requiresToolCall =
+        request.tool_choice === "required" ||
+        (typeof request.tool_choice === "object" &&
+          request.tool_choice?.type === "function");
+
+      if (requiresToolCall && !toolCalls?.length) {
+        // Log full request/response for debugging
+        console.error(
+          "[Groq] Tool call required but model returned text instead.",
+        );
+        console.error(
+          "[Groq] Request body:",
+          JSON.stringify(requestBody, null, 2),
+        );
+        console.error("[Groq] Response data:", JSON.stringify(data, null, 2));
+        throw new Error(
+          `[Groq] Tool choice is required, but model did not call a tool.\n` +
+            `Model: ${request.model}\n` +
+            `Content returned: ${primaryChoice.message.content?.substring(0, 300) ?? "(empty)"}...\n` +
+            `Action: Verify model supports function calling or adjust prompt.`,
+        );
+      }
+
       // When tool_calls are present, content may be null/undefined - this is expected
       // When no tool_calls, content MUST be present
       const content = primaryChoice.message.content;

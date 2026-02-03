@@ -13,6 +13,7 @@
 
 import { useMemo } from "react";
 import { EyeIcon } from "@/components/EyeIcon";
+import { TimelineMarkdownRenderer } from "@/components/MarkdownRenderer";
 
 /**
  * Conversation event type (matches backend CONVERSATION_EVENT_TYPES)
@@ -148,11 +149,9 @@ function TimelineEventCard({ event }: { event: ConversationEventRecord }) {
         </span>
       </div>
 
-      {/* Message content */}
+      {/* Message content - rendered as markdown */}
       <div className="mt-2">
-        <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-          {event.message}
-        </p>
+        <TimelineMarkdownRenderer content={event.message} />
       </div>
 
       {/* Metadata (for routing decisions) */}
@@ -161,9 +160,9 @@ function TimelineEventCard({ event }: { event: ConversationEventRecord }) {
           <div className="text-xs font-semibold text-purple-700 dark:text-purple-300 uppercase mb-1">
             Reasoning
           </div>
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-            {String(event.metadata.reasoning)}
-          </p>
+          <TimelineMarkdownRenderer
+            content={String(event.metadata.reasoning)}
+          />
         </div>
       )}
 
