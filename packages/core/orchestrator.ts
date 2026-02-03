@@ -46,7 +46,6 @@ import { decryptFromStorage } from "./encryption";
 import { orderGuard, type OrderViolation } from "./order-guard";
 import { ensureEyeBehavior, EyeBehaviorError } from "./persona-guards";
 import { retryWithThrow } from "./provider-retry";
-import { getRateLimiter } from "./rate-limiter";
 import { getWebSocketBridge } from "./websocket-registry";
 
 function isSupportedProvider(value: unknown): value is ProviderType {
@@ -119,751 +118,763 @@ export class EyeOrchestrator {
     options: EyeRunOptions = {},
   ): Promise<EyeResponse> {
     const startTime = Date.now();
-    const runId = generateRunId();
-    let actualSessionId = sessionId;
 
-    if (!actualSessionId) {
-      actualSessionId = generateSessionId();
-      const createdAt = new Date();
-      const agentLabel = "Third Eye Pipeline";
-      const displayLabel = `Manual Session (${eyeName})`;
-      await this.db.insert(sessions).values({
-        id: actualSessionId,
-        createdAt,
-        status: "active",
-        configJson: JSON.stringify({
-          agentName: agentLabel,
-          displayName: displayLabel,
-          origin: "orchestrator",
-          firstEye: eyeName,
-        }),
-        agentName: agentLabel,
-        model: null,
-        displayName: displayLabel,
-        lastActivity: createdAt,
-      });
-    }
-
-    // Validate eye exists in database (SSOT) and get UUID
-    const eyeId = await getEyeIdByName(eyeName);
-    if (!eyeId) {
-      return this.createErrorEnvelope(
-        eyeName,
-        `Eye not found: ${eyeName}`,
-        runId,
-        actualSessionId,
-        startTime,
+    // Overall timeout for the entire runEye operation (60 seconds)
+    const OVERALL_TIMEOUT_MS = 60000;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(
+        () =>
+          reject(
+            new Error(`Eye ${eyeName} timed out after ${OVERALL_TIMEOUT_MS}ms`),
+          ),
+        OVERALL_TIMEOUT_MS,
       );
-    }
+    });
 
-    // Emit run started event
-    const ws = getWebSocketBridge();
-    if (ws && sessionId) {
-      // Broadcast eye_update (backward compatibility)
-      ws.broadcastToSession(sessionId, {
-        type: "eye_update",
-        sessionId,
-        data: {
-          runId,
-          eye: eyeName,
-          status: "started",
-          input: input.substring(0, 200) + (input.length > 200 ? "..." : ""),
-          timestamp: startTime,
-        },
-        timestamp: startTime,
-      });
+    // Wrap main logic in Promise.race with timeout
+    return Promise.race([
+      timeoutPromise,
+      (async (): Promise<EyeResponse> => {
+        const runId = generateRunId();
+        let actualSessionId = sessionId;
 
-      // Also broadcast pipeline_event (for Monitor page)
-      ws.broadcastToSession(sessionId, {
-        type: "pipeline_event",
-        sessionId,
-        data: {
-          runId,
-          eye: eyeName,
-          status: "started",
-          input: input.substring(0, 200) + (input.length > 200 ? "..." : ""),
-          timestamp: startTime,
-        },
-        timestamp: startTime,
-      });
-    }
-
-    try {
-      // 1. Validate pipeline order
-      // Cast to EyeName since we've validated it exists in database
-      const orderViolation = orderGuard.validateOrder(
-        actualSessionId,
-        eyeName as EyeName,
-      );
-      if (orderViolation) {
-        return this.createOrderViolationEnvelope(
-          eyeName,
-          orderViolation,
-          runId,
-          actualSessionId,
-          startTime,
-        );
-      }
-
-      // 2. Get Eye implementation to access persona
-      const eye = getEye(eyeName);
-      if (!eye) {
-        return this.createErrorEnvelope(
-          eyeName,
-          `Eye not found: ${eyeName}`,
-          runId,
-          actualSessionId,
-          startTime,
-        );
-      }
-
-      // Emit eye_started event
-      try {
-        const wsManager = getWebSocketBridge();
-        if (
-          wsManager &&
-          "emitEyeStarted" in wsManager &&
-          typeof (wsManager as { emitEyeStarted?: unknown }).emitEyeStarted ===
-            "function"
-        ) {
-          const eyeIcon = this.getEyeIcon(eyeName);
-          (
-            wsManager as {
-              emitEyeStarted: (
-                sessionId: string,
-                eyeName: string,
-                ui: Record<string, unknown>,
-              ) => void;
-            }
-          ).emitEyeStarted(actualSessionId, eyeName, {
-            title: `${eye.name} Started`,
-            summary: `Analyzing request...`,
-            details: `Eye ${eyeName} is processing the input`,
-            icon: eyeIcon,
-            color: "info",
+        if (!actualSessionId) {
+          actualSessionId = generateSessionId();
+          const createdAt = new Date();
+          const agentLabel = "Third Eye Pipeline";
+          const displayLabel = `Manual Session (${eyeName})`;
+          await this.db.insert(sessions).values({
+            id: actualSessionId,
+            createdAt,
+            status: "active",
+            configJson: JSON.stringify({
+              agentName: agentLabel,
+              displayName: displayLabel,
+              origin: "orchestrator",
+              firstEye: eyeName,
+            }),
+            agentName: agentLabel,
+            model: null,
+            displayName: displayLabel,
+            lastActivity: createdAt,
           });
         }
-      } catch (e) {
-        console.debug("WebSocket broadcast skipped:", e);
-      }
 
-      const providerOverride = options.providerOverride;
-
-      // 3. Load routing configuration (with optional override)
-      const routing = providerOverride
-        ? {
-            eye: eyeName,
-            primaryProvider: providerOverride.provider,
-            primaryModel: providerOverride.model,
-            fallbackProvider: null,
-            fallbackModel: null,
-          }
-        : await this.getEyeRouting(eyeName);
-
-      if (!routing || !routing.primaryProvider || !routing.primaryModel) {
-        return this.createErrorEnvelope(
-          eyeName,
-          `No routing configuration found for Eye: ${eyeName}. Run migration 0004 to seed routing.`,
-          runId,
-          actualSessionId,
-          startTime,
-        );
-      }
-
-      // 4. Build provider chain (primary + fallback if configured)
-      interface ProviderConfig {
-        provider: string;
-        model: string;
-        isPrimary: boolean;
-      }
-
-      const providerChain: ProviderConfig[] = [
-        {
-          provider: routing.primaryProvider,
-          model: routing.primaryModel,
-          isPrimary: true,
-        },
-      ];
-
-      // Add fallback provider if configured and fallback is enabled
-      if (
-        FALLBACK_CONFIG.ENABLED &&
-        routing.fallbackProvider &&
-        routing.fallbackModel &&
-        providerChain.length < FALLBACK_CONFIG.MAX_PROVIDERS_TO_TRY
-      ) {
-        providerChain.push({
-          provider: routing.fallbackProvider,
-          model: routing.fallbackModel,
-          isPrimary: false,
-        });
-      }
-
-      // Track which providers we've tried
-      let lastError: unknown = null;
-      let providerAttemptIndex = 0;
-
-      // 5. Build persona prompt using blueprint renderer (done once, used for all providers)
-      // Query database first (SSOT), fallback to defaults
-      // Convert eyeName to eyeId first (per V1 SSOT standard: all lookups use UUIDs)
-      const eyeId = await getEyeIdByName(eyeName);
-      if (!eyeId) {
-        return this.createErrorEnvelope(
-          eyeName,
-          `Eye not found in database: ${eyeName}`,
-          runId,
-          actualSessionId,
-          startTime,
-        );
-      }
-
-      const blueprint = await getPersonaBlueprint(eyeId);
-      if (!blueprint) {
-        return this.createErrorEnvelope(
-          eyeName,
-          `No blueprint found for Eye: ${eyeName} (eyeId: ${eyeId})`,
-          runId,
-          actualSessionId,
-          startTime,
-        );
-      }
-
-      // Variables to hold successful results
-      let envelope: BaseEnvelope | null = null;
-      let completion: CompletionResponse | null = null;
-      let latencyMs = 0;
-      let successfulProviderType: ProviderType | null = null;
-      let successfulModel: string | null = null;
-      let providerLabel = "";
-
-      // 6. **FALLBACK LOOP**: Try each provider in chain until one succeeds
-      for (const providerConfig of providerChain) {
-        const targetProvider = providerConfig.provider;
-        const targetModel = providerConfig.model;
-        const isPrimary = providerConfig.isPrimary;
-
-        // Skip if we already succeeded
-        if (envelope !== null) {
-          break;
+        // Validate eye exists in database (SSOT) and get UUID
+        const eyeId = await getEyeIdByName(eyeName);
+        if (!eyeId) {
+          return this.createErrorEnvelope(
+            eyeName,
+            `Eye not found: ${eyeName}`,
+            runId,
+            actualSessionId,
+            startTime,
+          );
         }
 
-        console.log(
-          `\n🔄 Attempting ${isPrimary ? "primary" : "fallback"} provider: ${targetProvider}/${targetModel}`,
-        );
+        // Emit run started event
+        const ws = getWebSocketBridge();
+        if (ws && sessionId) {
+          // Broadcast eye_update (backward compatibility)
+          ws.broadcastToSession(sessionId, {
+            type: "eye_update",
+            sessionId,
+            data: {
+              runId,
+              eye: eyeName,
+              status: "started",
+              input:
+                input.substring(0, 200) + (input.length > 200 ? "..." : ""),
+              timestamp: startTime,
+            },
+            timestamp: startTime,
+          });
+
+          // Also broadcast pipeline_event (for Monitor page)
+          ws.broadcastToSession(sessionId, {
+            type: "pipeline_event",
+            sessionId,
+            data: {
+              runId,
+              eye: eyeName,
+              status: "started",
+              input:
+                input.substring(0, 200) + (input.length > 200 ? "..." : ""),
+              timestamp: startTime,
+            },
+            timestamp: startTime,
+          });
+        }
 
         try {
-          // Resolve provider type
-          const providerType = this.resolveProviderType(targetProvider);
-          if (!providerType) {
-            throw new Error(
-              `Unsupported provider configured: ${targetProvider}`,
+          // 1. Validate pipeline order
+          // Cast to EyeName since we've validated it exists in database
+          const orderViolation = orderGuard.validateOrder(
+            actualSessionId,
+            eyeName as EyeName,
+          );
+          if (orderViolation) {
+            return this.createOrderViolationEnvelope(
+              eyeName,
+              orderViolation,
+              runId,
+              actualSessionId,
+              startTime,
             );
           }
 
-          // Get credentials
-          const providerCredentials =
-            await this.getProviderCredentials(providerType);
-          const apiKey = providerCredentials?.apiKey ?? null;
+          // 2. Get Eye implementation to access persona
+          const eye = getEye(eyeName);
+          if (!eye) {
+            return this.createErrorEnvelope(
+              eyeName,
+              `Eye not found: ${eyeName}`,
+              runId,
+              actualSessionId,
+              startTime,
+            );
+          }
+
+          // Emit eye_started event
+          try {
+            const wsManager = getWebSocketBridge();
+            if (
+              wsManager &&
+              "emitEyeStarted" in wsManager &&
+              typeof (wsManager as { emitEyeStarted?: unknown })
+                .emitEyeStarted === "function"
+            ) {
+              const eyeIcon = this.getEyeIcon(eyeName);
+              (
+                wsManager as {
+                  emitEyeStarted: (
+                    sessionId: string,
+                    eyeName: string,
+                    ui: Record<string, unknown>,
+                  ) => void;
+                }
+              ).emitEyeStarted(actualSessionId, eyeName, {
+                title: `${eye.name} Started`,
+                summary: `Analyzing request...`,
+                details: `Eye ${eyeName} is processing the input`,
+                icon: eyeIcon,
+                color: "info",
+              });
+            }
+          } catch (e) {
+            console.debug("WebSocket broadcast skipped:", e);
+          }
+
+          const providerOverride = options.providerOverride;
+
+          // 3. Load routing configuration (with optional override)
+          const routing = providerOverride
+            ? {
+                eye: eyeName,
+                primaryProvider: providerOverride.provider,
+                primaryModel: providerOverride.model,
+                fallbackProvider: null,
+                fallbackModel: null,
+              }
+            : await this.getEyeRouting(eyeName);
+
+          if (!routing || !routing.primaryProvider || !routing.primaryModel) {
+            return this.createErrorEnvelope(
+              eyeName,
+              `No routing configuration found for Eye: ${eyeName}. Run migration 0004 to seed routing.`,
+              runId,
+              actualSessionId,
+              startTime,
+            );
+          }
+
+          // 4. Build provider chain (primary + fallback if configured)
+          interface ProviderConfig {
+            provider: string;
+            model: string;
+            isPrimary: boolean;
+          }
+
+          const providerChain: ProviderConfig[] = [
+            {
+              provider: routing.primaryProvider,
+              model: routing.primaryModel,
+              isPrimary: true,
+            },
+          ];
+
+          // Add fallback provider if configured and fallback is enabled
           if (
-            !apiKey &&
-            providerType !== "ollama" &&
-            providerType !== "lmstudio"
+            FALLBACK_CONFIG.ENABLED &&
+            routing.fallbackProvider &&
+            routing.fallbackModel &&
+            providerChain.length < FALLBACK_CONFIG.MAX_PROVIDERS_TO_TRY
           ) {
-            throw new Error(
-              `No API key configured for provider: ${providerType}`,
+            providerChain.push({
+              provider: routing.fallbackProvider,
+              model: routing.fallbackModel,
+              isPrimary: false,
+            });
+          }
+
+          // Track which providers we've tried
+          let lastError: unknown = null;
+          let providerAttemptIndex = 0;
+
+          // 5. Build persona prompt using blueprint renderer (done once, used for all providers)
+          // Query database first (SSOT), fallback to defaults
+          // Convert eyeName to eyeId first (per V1 SSOT standard: all lookups use UUIDs)
+          const eyeId = await getEyeIdByName(eyeName);
+          if (!eyeId) {
+            return this.createErrorEnvelope(
+              eyeName,
+              `Eye not found in database: ${eyeName}`,
+              runId,
+              actualSessionId,
+              startTime,
             );
           }
 
-          providerLabel = providerOverride?.label ?? providerType;
-
-          // Create provider instance
-          const provider = ProviderFactory.createProvider(providerType, {
-            apiKey: apiKey ?? undefined,
-            baseUrl: providerCredentials?.baseUrl,
-          });
-
-          // Determine stage based on pipeline state
-          // GUIDANCE: First call to an Eye in a session
-          // VALIDATION: Follow-up call after clarification/confirmation or second pass
-          const stage = this.determineStage(actualSessionId, eyeName);
-
-          // Retry loop for persona guard validation
-          const MAX_PERSONA_RETRIES = RETRY_CONFIG.MAX_PERSONA_RETRIES;
-          let attempt = 0;
-          let enrichedInput = input;
-
-          // **DYNAMIC ROUTING**: If this is the Overseer eye, load capabilities from DB
-          // Check by name (case-insensitive match)
-          let dynamicRouterPersona: string | null = null;
-          const isOverseer = eyeName.toLowerCase() === EyeId.OVERSEER;
-
-          if (isOverseer) {
-            try {
-              const {
-                loadDynamicCapabilities,
-                buildRouterPersona,
-                extractUserNeeds,
-              } = await import("./capability-loader");
-              const { getDb } = await import("@third-eye/db");
-              const { db } = getDb();
-
-              const capabilityRegistry = await loadDynamicCapabilities(db);
-              dynamicRouterPersona = buildRouterPersona(capabilityRegistry);
-
-              // Enrich input with user needs analysis
-              const userNeeds = extractUserNeeds(input);
-              enrichedInput = `${input}\n\n[User Needs Detected: ${userNeeds.join(", ")}]`;
-
-              console.log(
-                "[Orchestrator] Dynamic capabilities loaded for Overseer routing",
-              );
-              console.log(
-                `[Orchestrator] Capability Registry:`,
-                Object.keys(capabilityRegistry),
-              );
-            } catch (error) {
-              console.error(
-                "[Orchestrator] Failed to load dynamic capabilities:",
-                error,
-              );
-              // Continue with static blueprint as fallback
-            }
+          const blueprint = await getPersonaBlueprint(eyeId);
+          if (!blueprint) {
+            return this.createErrorEnvelope(
+              eyeName,
+              `No blueprint found for Eye: ${eyeName} (eyeId: ${eyeId})`,
+              runId,
+              actualSessionId,
+              startTime,
+            );
           }
 
-          // Persona validation retry loop
-          while (attempt < MAX_PERSONA_RETRIES) {
-            attempt++;
-            const attemptStartTime = Date.now();
+          // Variables to hold successful results
+          let envelope: BaseEnvelope | null = null;
+          let completion: CompletionResponse | null = null;
+          let latencyMs = 0;
+          let successfulProviderType: ProviderType | null = null;
+          let successfulModel: string | null = null;
+          let providerLabel = "";
 
-            // Build persona prompt (may include reminder on retries)
-            // Use dynamic router persona for Overseer, otherwise use blueprint
-            let personaPrompt: PersonaPrompt;
-            if (dynamicRouterPersona && isOverseer) {
-              // REPAIR_PLAN A4: Use function calling for dynamic router too
-              const { EYE_RESPONSE_TOOL } =
-                await import("@third-eye/eyes/src/renderer/persona-renderer");
-              personaPrompt = {
-                systemPrompt: dynamicRouterPersona,
-                userMessage: enrichedInput,
-                config: {
-                  temperature: 0,
-                  top_p: 1,
-                  tools: [EYE_RESPONSE_TOOL],
-                  tool_choice: {
-                    type: "function",
-                    function: { name: "submit_eye_analysis" },
-                  },
-                },
-              };
-            } else {
-              personaPrompt = renderPersonaPrompt(
-                blueprint,
-                stage,
-                enrichedInput,
-              );
-            }
+          // 6. **FALLBACK LOOP**: Try each provider in chain until one succeeds
+          for (const providerConfig of providerChain) {
+            const targetProvider = providerConfig.provider;
+            const targetModel = providerConfig.model;
+            const isPrimary = providerConfig.isPrimary;
 
-            // 6.5. Check rate limit before calling provider
-            const rateLimiter = getRateLimiter();
-            const rateLimitResult = await rateLimiter.waitForLimit({
-              provider: providerType,
-              eye: eyeName,
-              tokensRequired: 1,
-            });
-
-            if (!rateLimitResult.allowed) {
-              console.warn(
-                `⚠️  Rate limit exceeded for ${providerType}. ${rateLimitResult.reason}`,
-              );
-              throw new Error(`Rate limit exceeded: ${rateLimitResult.reason}`);
+            // Skip if we already succeeded
+            if (envelope !== null) {
+              break;
             }
 
             console.log(
-              `✅ Rate limit check passed for ${providerType} (${rateLimitResult.tokensRemaining} tokens remaining)`,
+              `\n🔄 Attempting ${isPrimary ? "primary" : "fallback"} provider: ${targetProvider}/${targetModel}`,
             );
 
-            // 7. Call provider with persona as system prompt (with retry logic)
             try {
-              completion = (await retryWithThrow<CompletionResponse>(
-                async () =>
-                  provider.complete({
-                    model: targetModel,
-                    messages: [
-                      { role: "system", content: personaPrompt.systemPrompt },
-                      { role: "user", content: personaPrompt.userMessage },
-                    ],
-                    temperature:
-                      options.temperature ?? personaPrompt.config.temperature,
-                    max_tokens: options.maxTokens ?? 4096,
-                    // REPAIR_PLAN A4: Use function calling instead of JSON mode
-                    tools: personaPrompt.config.tools,
-                    tool_choice: personaPrompt.config.tool_choice,
-                  }),
-                {
-                  context: `${providerType}/${targetModel} API call for ${eyeName} Eye`,
-                  onRetry: (attemptNum, maxAttempts, delayMs, error) => {
-                    console.warn(
-                      `🔄 Retrying ${eyeName} provider call (${attemptNum}/${maxAttempts}) after ${delayMs}ms`,
-                    );
-                  },
-                },
-              )) as CompletionResponse;
-
-              latencyMs = Date.now() - attemptStartTime;
-
-              // 8. Parse response from tool_calls - NO FALLBACKS
-              // All providers MUST support function calling. No content parsing fallback.
-              if (
-                !completion.tool_calls ||
-                completion.tool_calls.length === 0
-              ) {
+              // Resolve provider type
+              const providerType = this.resolveProviderType(targetProvider);
+              if (!providerType) {
                 throw new Error(
-                  `Provider did not return tool_calls. Function calling is required - no fallback to content parsing.`,
+                  `Unsupported provider configured: ${targetProvider}`,
                 );
               }
 
-              const toolCall = completion.tool_calls[0];
+              // Get credentials
+              const providerCredentials =
+                await this.getProviderCredentials(providerType);
+              const apiKey = providerCredentials?.apiKey ?? null;
               if (
-                toolCall.type !== "function" ||
-                toolCall.function.name !== "submit_eye_analysis"
+                !apiKey &&
+                providerType !== "ollama" &&
+                providerType !== "lmstudio"
               ) {
                 throw new Error(
-                  `Expected function call 'submit_eye_analysis', got: ${toolCall.function.name ?? toolCall.type}`,
+                  `No API key configured for provider: ${providerType}`,
                 );
               }
 
-              // Parse arguments as JSON
-              try {
-                envelope = JSON.parse(toolCall.function.arguments);
-              } catch (parseError) {
-                // Retry on invalid JSON from function call
-                if (attempt < MAX_PERSONA_RETRIES) {
-                  console.warn(
-                    `⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Invalid JSON in function arguments`,
+              providerLabel = providerOverride?.label ?? providerType;
+
+              // Create provider instance
+              const provider = ProviderFactory.createProvider(providerType, {
+                apiKey: apiKey ?? undefined,
+                baseUrl: providerCredentials?.baseUrl,
+              });
+
+              // Determine stage based on pipeline state
+              // GUIDANCE: First call to an Eye in a session
+              // VALIDATION: Follow-up call after clarification/confirmation or second pass
+              const stage = this.determineStage(actualSessionId, eyeName);
+
+              // Retry loop for persona guard validation
+              const MAX_PERSONA_RETRIES = RETRY_CONFIG.MAX_PERSONA_RETRIES;
+              let attempt = 0;
+              let enrichedInput = input;
+
+              // **DYNAMIC ROUTING**: If this is the Overseer eye, load capabilities from DB
+              // Check by name (case-insensitive match)
+              let dynamicRouterPersona: string | null = null;
+              const isOverseer = eyeName.toLowerCase() === EyeId.OVERSEER;
+
+              if (isOverseer) {
+                try {
+                  const {
+                    loadDynamicCapabilities,
+                    buildRouterPersona,
+                    extractUserNeeds,
+                  } = await import("./capability-loader");
+                  const { getDb } = await import("@third-eye/db");
+                  const { db } = getDb();
+
+                  const capabilityRegistry = await loadDynamicCapabilities(db);
+                  dynamicRouterPersona = buildRouterPersona(capabilityRegistry);
+
+                  // Enrich input with user needs analysis
+                  const userNeeds = extractUserNeeds(input);
+                  enrichedInput = `${input}\n\n[User Needs Detected: ${userNeeds.join(", ")}]`;
+
+                  console.log(
+                    "[Orchestrator] Dynamic capabilities loaded for Overseer routing",
                   );
-                  enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\nYour previous function call had invalid JSON arguments. You MUST call submit_eye_analysis with valid JSON.`;
-                  continue;
-                } else {
-                  throw new Error(
-                    `Function call arguments are not valid JSON after ${MAX_PERSONA_RETRIES} attempts: ${parseError}`,
+                  console.log(
+                    `[Orchestrator] Capability Registry:`,
+                    Object.keys(capabilityRegistry),
                   );
+                } catch (error) {
+                  console.error(
+                    "[Orchestrator] Failed to load dynamic capabilities:",
+                    error,
+                  );
+                  // Continue with static blueprint as fallback
                 }
               }
 
+              // Persona validation retry loop
+              while (attempt < MAX_PERSONA_RETRIES) {
+                attempt++;
+                const attemptStartTime = Date.now();
+
+                // Build persona prompt (may include reminder on retries)
+                // Use dynamic router persona for Overseer, otherwise use blueprint
+                let personaPrompt: PersonaPrompt;
+                if (dynamicRouterPersona && isOverseer) {
+                  // REPAIR_PLAN A4: Use function calling for dynamic router too
+                  const { EYE_RESPONSE_TOOL } =
+                    await import("@third-eye/eyes/src/renderer/persona-renderer");
+                  personaPrompt = {
+                    systemPrompt: dynamicRouterPersona,
+                    userMessage: enrichedInput,
+                    config: {
+                      temperature: 0,
+                      top_p: 1,
+                      tools: [EYE_RESPONSE_TOOL],
+                      tool_choice: {
+                        type: "function",
+                        function: { name: "submit_eye_analysis" },
+                      },
+                    },
+                  };
+                } else {
+                  personaPrompt = renderPersonaPrompt(
+                    blueprint,
+                    stage,
+                    enrichedInput,
+                  );
+                }
+
+                // 7. Call provider with persona as system prompt (with retry logic)
+                try {
+                  completion = (await retryWithThrow<CompletionResponse>(
+                    async () =>
+                      provider.complete({
+                        model: targetModel,
+                        messages: [
+                          {
+                            role: "system",
+                            content: personaPrompt.systemPrompt,
+                          },
+                          { role: "user", content: personaPrompt.userMessage },
+                        ],
+                        temperature:
+                          options.temperature ??
+                          personaPrompt.config.temperature,
+                        max_tokens: options.maxTokens ?? 4096,
+                        // REPAIR_PLAN A4: Use function calling instead of JSON mode
+                        tools: personaPrompt.config.tools,
+                        tool_choice: personaPrompt.config.tool_choice,
+                      }),
+                    {
+                      context: `${providerType}/${targetModel} API call for ${eyeName} Eye`,
+                      onRetry: (attemptNum, maxAttempts, delayMs, error) => {
+                        console.warn(
+                          `🔄 Retrying ${eyeName} provider call (${attemptNum}/${maxAttempts}) after ${delayMs}ms`,
+                        );
+                      },
+                    },
+                  )) as CompletionResponse;
+
+                  latencyMs = Date.now() - attemptStartTime;
+
+                  // 8. Parse response from tool_calls - NO FALLBACKS
+                  // All providers MUST support function calling. No content parsing fallback.
+                  if (
+                    !completion.tool_calls ||
+                    completion.tool_calls.length === 0
+                  ) {
+                    throw new Error(
+                      `Provider did not return tool_calls. Function calling is required - no fallback to content parsing.`,
+                    );
+                  }
+
+                  const toolCall = completion.tool_calls[0];
+                  if (
+                    toolCall.type !== "function" ||
+                    toolCall.function.name !== "submit_eye_analysis"
+                  ) {
+                    throw new Error(
+                      `Expected function call 'submit_eye_analysis', got: ${toolCall.function.name ?? toolCall.type}`,
+                    );
+                  }
+
+                  // Parse arguments as JSON
+                  try {
+                    envelope = JSON.parse(toolCall.function.arguments);
+                  } catch (parseError) {
+                    // Retry on invalid JSON from function call
+                    if (attempt < MAX_PERSONA_RETRIES) {
+                      console.warn(
+                        `⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Invalid JSON in function arguments`,
+                      );
+                      enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\nYour previous function call had invalid JSON arguments. You MUST call submit_eye_analysis with valid JSON.`;
+                      continue;
+                    } else {
+                      throw new Error(
+                        `Function call arguments are not valid JSON after ${MAX_PERSONA_RETRIES} attempts: ${parseError}`,
+                      );
+                    }
+                  }
+
+                  console.log(
+                    `\n📤 ${eyeName} LLM function call response (attempt ${attempt}/${MAX_PERSONA_RETRIES}):\n${toolCall.function.arguments}\n`,
+                  );
+
+                  // 9. Validate envelope with Eye's validator
+                  // Handle legacy next_action field (some Eyes may still use it)
+                  if (
+                    envelope &&
+                    "next" in envelope &&
+                    envelope.next === undefined &&
+                    "next_action" in envelope &&
+                    envelope.next_action
+                  ) {
+                    (
+                      envelope as BaseEnvelope & { next: string | string[] }
+                    ).next = envelope.next_action;
+                  }
+
+                  // Enhanced schema validation with detailed error logging
+                  const validationResult =
+                    BaseEnvelopeSchema.safeParse(envelope);
+                  if (!validationResult.success) {
+                    const errorDetails = validationResult.error.errors
+                      .map(
+                        (e: { path: (string | number)[]; message: string }) =>
+                          `${e.path.join(".")}: ${e.message}`,
+                      )
+                      .join("; ");
+                    console.warn(
+                      `⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Schema validation failed`,
+                    );
+                    console.warn(`   Validation errors: ${errorDetails}`);
+                    console.warn(
+                      `   Received envelope: ${JSON.stringify(envelope, null, 2).substring(0, 500)}`,
+                    );
+
+                    if (attempt < MAX_PERSONA_RETRIES) {
+                      enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\nYour previous response failed schema validation: ${errorDetails}\n\nReview the envelope schema in your prompt and ensure all required fields are present with correct types:\n- tag: string (required)\n- ok: boolean (required)\n- code: EyeStatusCode enum (required)\n- md: string (required, min 1 char)\n- data: object (required)\n- next: string or string[] (required)\n- ui: object (optional)\n\nYour response must be valid JSON matching this schema exactly.`;
+                      envelope = null;
+                      continue;
+                    } else {
+                      throw new Error(
+                        `LLM response does not match Eye's envelope schema after ${MAX_PERSONA_RETRIES} attempts. Errors: ${errorDetails}`,
+                      );
+                    }
+                  }
+
+                  // 10. Persona guard validation with retry logic
+                  const { ensureEyeBehavior, buildReminderMessage } =
+                    await import("@third-eye/eyes");
+                  const guardResult = ensureEyeBehavior(blueprint, envelope);
+
+                  if (!guardResult.valid) {
+                    console.warn(
+                      `⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Persona contract violated`,
+                    );
+
+                    if (attempt < MAX_PERSONA_RETRIES) {
+                      // Build targeted reminder from violations
+                      const reminder = buildReminderMessage(
+                        guardResult.violations,
+                      );
+                      enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\n${reminder}`;
+                      envelope = null;
+                      continue;
+                    } else {
+                      throw new Error(
+                        `Persona contract violated after ${MAX_PERSONA_RETRIES} attempts: ${guardResult.violations.map((v: { message: string }) => v.message).join("; ")}`,
+                      );
+                    }
+                  }
+
+                  // Success! Break out of retry loop
+                  break;
+                } catch (error) {
+                  // LLM call failed
+                  if (attempt < MAX_PERSONA_RETRIES) {
+                    console.warn(
+                      `⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: LLM call failed:`,
+                      error,
+                    );
+                    continue;
+                  } else {
+                    throw error;
+                  }
+                }
+              } // End of persona validation while loop
+
+              // Successfully got valid envelope from this provider
+              successfulProviderType = providerType;
+              successfulModel = targetModel;
               console.log(
-                `\n📤 ${eyeName} LLM function call response (attempt ${attempt}/${MAX_PERSONA_RETRIES}):\n${toolCall.function.arguments}\n`,
+                `✅ Successfully received valid response from ${providerType}/${targetModel}`,
               );
 
-              // 9. Validate envelope with Eye's validator
-              // Handle legacy next_action field (some Eyes may still use it)
-              if (
-                envelope &&
-                "next" in envelope &&
-                envelope.next === undefined &&
-                "next_action" in envelope &&
-                envelope.next_action
-              ) {
-                (envelope as BaseEnvelope & { next: string | string[] }).next =
-                  envelope.next_action;
-              }
-
-              // Enhanced schema validation with detailed error logging
-              const validationResult = BaseEnvelopeSchema.safeParse(envelope);
-              if (!validationResult.success) {
-                const errorDetails = validationResult.error.errors
-                  .map(
-                    (e: { path: (string | number)[]; message: string }) =>
-                      `${e.path.join(".")}: ${e.message}`,
-                  )
-                  .join("; ");
-                console.warn(
-                  `⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Schema validation failed`,
-                );
-                console.warn(`   Validation errors: ${errorDetails}`);
-                console.warn(
-                  `   Received envelope: ${JSON.stringify(envelope, null, 2).substring(0, 500)}`,
-                );
-
-                if (attempt < MAX_PERSONA_RETRIES) {
-                  enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\nYour previous response failed schema validation: ${errorDetails}\n\nReview the envelope schema in your prompt and ensure all required fields are present with correct types:\n- tag: string (required)\n- ok: boolean (required)\n- code: EyeStatusCode enum (required)\n- md: string (required, min 1 char)\n- data: object (required)\n- next: string or string[] (required)\n- ui: object (optional)\n\nYour response must be valid JSON matching this schema exactly.`;
-                  envelope = null;
-                  continue;
-                } else {
-                  throw new Error(
-                    `LLM response does not match Eye's envelope schema after ${MAX_PERSONA_RETRIES} attempts. Errors: ${errorDetails}`,
-                  );
-                }
-              }
-
-              // 10. Persona guard validation with retry logic
-              const { ensureEyeBehavior, buildReminderMessage } =
-                await import("@third-eye/eyes");
-              const guardResult = ensureEyeBehavior(blueprint, envelope);
-
-              if (!guardResult.valid) {
-                console.warn(
-                  `⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Persona contract violated`,
-                );
-
-                if (attempt < MAX_PERSONA_RETRIES) {
-                  // Build targeted reminder from violations
-                  const reminder = buildReminderMessage(guardResult.violations);
-                  enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\n${reminder}`;
-                  envelope = null;
-                  continue;
-                } else {
-                  throw new Error(
-                    `Persona contract violated after ${MAX_PERSONA_RETRIES} attempts: ${guardResult.violations.map((v: { message: string }) => v.message).join("; ")}`,
-                  );
-                }
-              }
-
-              // Success! Break out of retry loop
+              // Break out of fallback loop
               break;
-            } catch (error) {
-              // LLM call failed
-              if (attempt < MAX_PERSONA_RETRIES) {
-                console.warn(
-                  `⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: LLM call failed:`,
-                  error,
+            } catch (providerError) {
+              // This provider (after all retries) failed
+              lastError = providerError;
+              providerAttemptIndex++;
+
+              const errorReason = categorizeRetryReason(providerError);
+              const isLastProvider =
+                providerAttemptIndex >= providerChain.length;
+
+              if (isLastProvider) {
+                // All providers exhausted - fail
+                console.error(
+                  `❌ All ${providerChain.length} provider(s) exhausted for ${eyeName}`,
                 );
-                continue;
+                throw providerError;
               } else {
-                throw error;
-              }
-            }
-          } // End of persona validation while loop
-
-          // Successfully got valid envelope from this provider
-          successfulProviderType = providerType;
-          successfulModel = targetModel;
-          console.log(
-            `✅ Successfully received valid response from ${providerType}/${targetModel}`,
-          );
-
-          // Break out of fallback loop
-          break;
-        } catch (providerError) {
-          // This provider (after all retries) failed
-          lastError = providerError;
-          providerAttemptIndex++;
-
-          const errorReason = categorizeRetryReason(providerError);
-          const isLastProvider = providerAttemptIndex >= providerChain.length;
-
-          if (isLastProvider) {
-            // All providers exhausted - fail
-            console.error(
-              `❌ All ${providerChain.length} provider(s) exhausted for ${eyeName}`,
-            );
-            throw providerError;
-          } else {
-            // Log failover event to database
-            if (FALLBACK_CONFIG.LOG_FAILOVER_EVENTS && !isPrimary) {
-              try {
-                const eyeId = await getEyeIdByName(eyeName);
-                if (eyeId) {
-                  await this.db.insert(providerFailovers).values({
-                    id: generateId(),
-                    sessionId: actualSessionId,
-                    eyeId,
-                    primaryProvider: providerChain[0].provider,
-                    primaryModel: providerChain[0].model,
-                    failedReason: errorReason,
-                    fallbackProvider: targetProvider,
-                    fallbackModel: targetModel,
-                    fallbackSuccess: false,
-                    errorDetails: JSON.stringify({
-                      error: String(providerError),
-                    }),
-                    createdAt: new Date(),
-                  });
+                // Log failover event to database
+                if (FALLBACK_CONFIG.LOG_FAILOVER_EVENTS && !isPrimary) {
+                  try {
+                    const eyeId = await getEyeIdByName(eyeName);
+                    if (eyeId) {
+                      await this.db.insert(providerFailovers).values({
+                        id: generateId(),
+                        sessionId: actualSessionId,
+                        eyeId,
+                        primaryProvider: providerChain[0].provider,
+                        primaryModel: providerChain[0].model,
+                        failedReason: errorReason,
+                        fallbackProvider: targetProvider,
+                        fallbackModel: targetModel,
+                        fallbackSuccess: false,
+                        errorDetails: JSON.stringify({
+                          error: String(providerError),
+                        }),
+                        createdAt: new Date(),
+                      });
+                    }
+                  } catch (dbError) {
+                    console.error("Failed to log failover event:", dbError);
+                  }
                 }
-              } catch (dbError) {
-                console.error("Failed to log failover event:", dbError);
+
+                console.warn(
+                  `⚠️  Provider ${targetProvider}/${targetModel} failed. Trying next provider in chain...`,
+                );
+                // Continue to next provider in chain
               }
             }
+          } // End of fallback loop
 
-            console.warn(
-              `⚠️  Provider ${targetProvider}/${targetModel} failed. Trying next provider in chain...`,
+          // Ensure we have a valid envelope after fallback loop
+          if (
+            !envelope ||
+            !successfulProviderType ||
+            !successfulModel ||
+            !completion
+          ) {
+            return this.createErrorEnvelope(
+              eyeName,
+              `Failed to get valid response from any provider in chain. Last error: ${lastError}`,
+              runId,
+              actualSessionId,
+              startTime,
             );
-            // Continue to next provider in chain
           }
+
+          // 9. Record successful completion in order guard
+          // Cast to EyeName since we've validated it exists in database
+          orderGuard.recordEyeCompletion(actualSessionId, eyeName as EyeName, {
+            code: envelope.code,
+            metadata: envelope.data,
+          });
+
+          // 10. Persist run
+          await this.persistRun({
+            id: runId,
+            sessionId: actualSessionId,
+            eyeId,
+            provider: successfulProviderType,
+            model: successfulModel,
+            inputMd: input,
+            outputJson: envelope,
+            tokensIn:
+              completion.usage?.prompt_tokens ?? completion.tokensIn ?? 0,
+            tokensOut:
+              completion.usage?.completion_tokens ?? completion.tokensOut ?? 0,
+            latencyMs,
+            createdAt: new Date(),
+          });
+
+          // 11. Persist pipeline event for Monitor page
+          const { pipelineEvents } = await import("@third-eye/db");
+
+          // Extract next action (can be string or array from Overseer)
+          const nextAction = envelope.next || envelope.next_action;
+          const nextActionStr = Array.isArray(nextAction)
+            ? nextAction[0]
+            : nextAction;
+
+          const eventData =
+            envelope.data && typeof envelope.data === "object"
+              ? {
+                  ...envelope.data,
+                  provider: successfulProviderType,
+                  providerLabel,
+                  model: successfulModel,
+                }
+              : {
+                  provider: successfulProviderType,
+                  providerLabel,
+                  model: successfulModel,
+                };
+
+          await this.db.insert(pipelineEvents).values({
+            id: generateId(),
+            sessionId: actualSessionId,
+            eyeId,
+            type: "eye_call",
+            code: envelope.code,
+            md: envelope.md,
+            dataJson: eventData,
+            nextAction: nextActionStr,
+            createdAt: new Date(),
+          });
+
+          // Emit completed event
+          if (ws && sessionId) {
+            // Broadcast eye_update (backward compatibility)
+            ws.broadcastToSession(sessionId, {
+              type: "eye_update",
+              sessionId,
+              data: {
+                runId,
+                eye: eyeName,
+                status: "completed",
+                envelope,
+                metrics: {
+                  tokensIn:
+                    completion.usage?.prompt_tokens ?? completion.tokensIn ?? 0,
+                  tokensOut:
+                    completion.usage?.completion_tokens ??
+                    completion.tokensOut ??
+                    0,
+                  latencyMs,
+                  provider: successfulProviderType,
+                  providerLabel,
+                  model: successfulModel,
+                },
+                timestamp: Date.now(),
+              },
+              timestamp: Date.now(),
+            });
+
+            // Also broadcast pipeline_event (for Monitor page)
+            ws.broadcastToSession(sessionId, {
+              type: "pipeline_event",
+              sessionId,
+              data: {
+                ...envelope,
+                runId,
+                eye: eyeName,
+                status: "completed",
+                metrics: {
+                  tokensIn:
+                    completion.usage?.prompt_tokens ?? completion.tokensIn ?? 0,
+                  tokensOut:
+                    completion.usage?.completion_tokens ??
+                    completion.tokensOut ??
+                    0,
+                  latencyMs,
+                  provider: successfulProviderType,
+                  providerLabel,
+                  model: successfulModel,
+                },
+                timestamp: Date.now(),
+              },
+              timestamp: Date.now(),
+            });
+          }
+
+          return envelope;
+        } catch (error) {
+          const errorMessage = `AI execution error: ${error instanceof Error ? error.message : "Unknown error"}`;
+
+          const ws = getWebSocketBridge();
+          if (ws && sessionId) {
+            // Broadcast eye_update (backward compatibility)
+            ws.broadcastToSession(sessionId, {
+              type: "eye_update",
+              sessionId,
+              data: {
+                runId,
+                eye: eyeName,
+                status: "error",
+                error: errorMessage,
+                timestamp: Date.now(),
+              },
+              timestamp: Date.now(),
+            });
+
+            // Also broadcast pipeline_event (for Monitor page)
+            ws.broadcastToSession(sessionId, {
+              type: "pipeline_event",
+              sessionId,
+              data: {
+                runId,
+                eye: eyeName,
+                status: "error",
+                error: errorMessage,
+                timestamp: Date.now(),
+              },
+              timestamp: Date.now(),
+            });
+          }
+
+          return this.createErrorEnvelope(
+            eyeName,
+            errorMessage,
+            runId,
+            actualSessionId,
+            startTime,
+          );
         }
-      } // End of fallback loop
-
-      // Ensure we have a valid envelope after fallback loop
-      if (
-        !envelope ||
-        !successfulProviderType ||
-        !successfulModel ||
-        !completion
-      ) {
-        return this.createErrorEnvelope(
-          eyeName,
-          `Failed to get valid response from any provider in chain. Last error: ${lastError}`,
-          runId,
-          actualSessionId,
-          startTime,
-        );
-      }
-
-      // 9. Record successful completion in order guard
-      // Cast to EyeName since we've validated it exists in database
-      orderGuard.recordEyeCompletion(actualSessionId, eyeName as EyeName, {
-        code: envelope.code,
-        metadata: envelope.data,
-      });
-
-      // 10. Persist run
-      await this.persistRun({
-        id: runId,
-        sessionId: actualSessionId,
-        eyeId,
-        provider: successfulProviderType,
-        model: successfulModel,
-        inputMd: input,
-        outputJson: envelope,
-        tokensIn: completion.usage?.prompt_tokens ?? completion.tokensIn ?? 0,
-        tokensOut:
-          completion.usage?.completion_tokens ?? completion.tokensOut ?? 0,
-        latencyMs,
-        createdAt: new Date(),
-      });
-
-      // 11. Persist pipeline event for Monitor page
-      const { pipelineEvents } = await import("@third-eye/db");
-
-      // Extract next action (can be string or array from Overseer)
-      const nextAction = envelope.next || envelope.next_action;
-      const nextActionStr = Array.isArray(nextAction)
-        ? nextAction[0]
-        : nextAction;
-
-      const eventData =
-        envelope.data && typeof envelope.data === "object"
-          ? {
-              ...envelope.data,
-              provider: successfulProviderType,
-              providerLabel,
-              model: successfulModel,
-            }
-          : {
-              provider: successfulProviderType,
-              providerLabel,
-              model: successfulModel,
-            };
-
-      await this.db.insert(pipelineEvents).values({
-        id: generateId(),
-        sessionId: actualSessionId,
-        eyeId,
-        type: "eye_call",
-        code: envelope.code,
-        md: envelope.md,
-        dataJson: eventData,
-        nextAction: nextActionStr,
-        createdAt: new Date(),
-      });
-
-      // Emit completed event
-      if (ws && sessionId) {
-        // Broadcast eye_update (backward compatibility)
-        ws.broadcastToSession(sessionId, {
-          type: "eye_update",
-          sessionId,
-          data: {
-            runId,
-            eye: eyeName,
-            status: "completed",
-            envelope,
-            metrics: {
-              tokensIn:
-                completion.usage?.prompt_tokens ?? completion.tokensIn ?? 0,
-              tokensOut:
-                completion.usage?.completion_tokens ??
-                completion.tokensOut ??
-                0,
-              latencyMs,
-              provider: successfulProviderType,
-              providerLabel,
-              model: successfulModel,
-            },
-            timestamp: Date.now(),
-          },
-          timestamp: Date.now(),
-        });
-
-        // Also broadcast pipeline_event (for Monitor page)
-        ws.broadcastToSession(sessionId, {
-          type: "pipeline_event",
-          sessionId,
-          data: {
-            ...envelope,
-            runId,
-            eye: eyeName,
-            status: "completed",
-            metrics: {
-              tokensIn:
-                completion.usage?.prompt_tokens ?? completion.tokensIn ?? 0,
-              tokensOut:
-                completion.usage?.completion_tokens ??
-                completion.tokensOut ??
-                0,
-              latencyMs,
-              provider: successfulProviderType,
-              providerLabel,
-              model: successfulModel,
-            },
-            timestamp: Date.now(),
-          },
-          timestamp: Date.now(),
-        });
-      }
-
-      return envelope;
-    } catch (error) {
-      const errorMessage = `AI execution error: ${error instanceof Error ? error.message : "Unknown error"}`;
-
-      const ws = getWebSocketBridge();
-      if (ws && sessionId) {
-        // Broadcast eye_update (backward compatibility)
-        ws.broadcastToSession(sessionId, {
-          type: "eye_update",
-          sessionId,
-          data: {
-            runId,
-            eye: eyeName,
-            status: "error",
-            error: errorMessage,
-            timestamp: Date.now(),
-          },
-          timestamp: Date.now(),
-        });
-
-        // Also broadcast pipeline_event (for Monitor page)
-        ws.broadcastToSession(sessionId, {
-          type: "pipeline_event",
-          sessionId,
-          data: {
-            runId,
-            eye: eyeName,
-            status: "error",
-            error: errorMessage,
-            timestamp: Date.now(),
-          },
-          timestamp: Date.now(),
-        });
-      }
-
-      return this.createErrorEnvelope(
-        eyeName,
-        errorMessage,
-        runId,
-        actualSessionId,
-        startTime,
-      );
-    }
+      })(),
+    ]);
   }
 
   /**

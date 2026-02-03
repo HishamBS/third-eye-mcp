@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { ConversationEventRecord } from "@/components/conversation/ConversationTimeline";
+import { API_BASE_URL } from "@/consts/api";
 
 /**
  * Hook to fetch conversation timeline for a specific session
@@ -31,7 +32,7 @@ export function useConversationTimeline(sessionId: string | null) {
 
     try {
       const response = await fetch(
-        `/api/conversation-events/session/${sessionId}`,
+        `${API_BASE_URL}/api/conversation-events/session/${sessionId}`,
       );
 
       if (!response.ok) {
@@ -83,7 +84,7 @@ export function useRecentConversationEvents(limit: number = 50) {
 
     try {
       const response = await fetch(
-        `/api/conversation-events/recent?limit=${limit}`,
+        `${API_BASE_URL}/api/conversation-events/recent?limit=${limit}`,
       );
 
       if (!response.ok) {
