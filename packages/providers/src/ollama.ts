@@ -18,7 +18,21 @@ const OllamaModelsResponseSchema = z.object({
 
 const OllamaCompletionResponseSchema = z.object({
   model: z.string(),
-  message: z.object({ content: z.string() }),
+  message: z.object({
+    content: z.string(),
+    tool_calls: z
+      .array(
+        z.object({
+          type: z.literal("function").optional(),
+          function: z.object({
+            index: z.number().optional(),
+            name: z.string(),
+            arguments: z.record(z.unknown()), // Ollama returns object, not string
+          }),
+        }),
+      )
+      .optional(),
+  }),
   prompt_eval_count: z.number().optional(),
   eval_count: z.number().optional(),
   done: z.boolean().optional(),
@@ -83,6 +97,9 @@ export class OllamaProvider extends BaseProvider {
             top_p: request.top_p,
             stop: request.stop,
           },
+          // Function calling support (requires tool-capable models like llama3.1+)
+          ...(request.tools && { tools: request.tools }),
+          // Note: Ollama does not officially support tool_choice parameter
         }),
       });
 
@@ -107,8 +124,24 @@ export class OllamaProvider extends BaseProvider {
           total_tokens: promptTokens + completionTokens,
         },
         finish_reason: this.normalizeFinishReason(
-          payload.done === false ? "length" : "stop",
+          payload.message.tool_calls?.length
+            ? "tool_calls"
+            : payload.done === false
+              ? "length"
+              : "stop",
         ),
+        tool_calls: payload.message.tool_calls?.map((tc) => ({
+          id: `ollama-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          type: "function" as const,
+          function: {
+            name: tc.function.name,
+            // Ollama returns arguments as object, convert to string for consistency
+            arguments:
+              typeof tc.function.arguments === "string"
+                ? tc.function.arguments
+                : JSON.stringify(tc.function.arguments),
+          },
+        })),
       };
     } catch (error) {
       throw new Error(`Ollama completion error: ${this.normalizeError(error)}`);
