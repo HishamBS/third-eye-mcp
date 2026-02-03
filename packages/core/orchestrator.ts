@@ -1,51 +1,53 @@
-import { Buffer } from "node:buffer";
+import {
+  categorizeRetryReason,
+  EyeId,
+  EyeStageToken,
+  FALLBACK_CONFIG,
+  FALLBACK_EVENT_TYPE,
+  getStageTemplate,
+  RETRY_CONFIG,
+} from "@third-eye/constants";
+import {
+  eyesRouting,
+  getDb,
+  personas,
+  providerFailovers,
+  providerKeys,
+  runs,
+  sessions,
+} from "@third-eye/db";
+import {
+  getEyeByName,
+  getEyeIdByName,
+  getEyeNameById,
+} from "@third-eye/db/utils/lookups";
 import {
   generateId,
   generateRunId,
   generateSessionId,
 } from "@third-eye/db/utils/uuid";
-import { getDb } from "@third-eye/db";
 import {
-  runs,
-  sessions,
-  personas,
-  eyesRouting,
-  providerKeys,
-  providerFailovers,
-} from "@third-eye/db";
-import {
-  getEyeIdByName,
-  getEyeNameById,
-  getEyeByName,
-} from "@third-eye/db/utils/lookups";
-import { ProviderFactory, type CompletionResponse } from "@third-eye/providers";
-import type { ProviderType } from "@third-eye/providers";
-import {
-  getEye,
-  type EyeResponse,
-  type BaseEnvelope,
-  type PersonaPrompt,
   BaseEnvelopeSchema,
+  getEye,
+  getPersonaBlueprint,
+  renderPersonaPrompt,
+  type BaseEnvelope,
+  type EyeResponse,
+  type PersonaPrompt,
 } from "@third-eye/eyes";
+import type { ProviderType } from "@third-eye/providers";
+import { ProviderFactory, type CompletionResponse } from "@third-eye/providers";
 import type { EyeName } from "@third-eye/types";
-import { PROVIDERS, EYES } from "@third-eye/types";
-import { eq, and, desc } from "drizzle-orm";
-import { orderGuard, type OrderViolation } from "./order-guard";
-import { getWebSocketBridge } from "./websocket-registry";
-import { decryptFromStorage } from "./encryption";
-import { ensureEyeBehavior, EyeBehaviorError } from "./persona-guards";
-import { renderPersonaPrompt, getPersonaBlueprint } from "@third-eye/eyes";
-import { getStageTemplate, EyeId } from "@third-eye/constants";
-import { EyeStageToken } from "@third-eye/constants";
+import { EYES, PROVIDERS } from "@third-eye/types";
+import { and, desc, eq } from "drizzle-orm";
+import { Buffer } from "node:buffer";
 import { capabilityProgress } from "./capability-progress";
+import { decryptFromStorage } from "./encryption";
+import { orderGuard, type OrderViolation } from "./order-guard";
+import { ensureEyeBehavior, EyeBehaviorError } from "./persona-guards";
 import { retryWithThrow } from "./provider-retry";
 import { getRateLimiter } from "./rate-limiter";
-import {
-  RETRY_CONFIG,
-  FALLBACK_CONFIG,
-  FALLBACK_EVENT_TYPE,
-  categorizeRetryReason,
-} from "@third-eye/constants";
+import { getWebSocketBridge } from "./websocket-registry";
 
 function isSupportedProvider(value: unknown): value is ProviderType {
   if (typeof value !== "string") {
@@ -509,57 +511,48 @@ export class EyeOrchestrator {
 
               latencyMs = Date.now() - attemptStartTime;
 
-              // REPAIR_PLAN A4: Parse response from tool_calls instead of content
-              // 8. Parse response as envelope from function calling
-              try {
-                // Check if response has tool_calls (function calling)
-                if (completion.tool_calls && completion.tool_calls.length > 0) {
-                  const toolCall = completion.tool_calls[0];
-                  if (
-                    toolCall.type !== "function" ||
-                    toolCall.function.name !== "submit_eye_analysis"
-                  ) {
-                    throw new Error(
-                      `Expected function call 'submit_eye_analysis', got: ${toolCall.type}`,
-                    );
-                  }
-                  // Parse arguments as JSON
-                  envelope = JSON.parse(toolCall.function.arguments);
-                  console.log(
-                    `\n📤 ${eyeName} LLM function call response (attempt ${attempt}/${MAX_PERSONA_RETRIES}):\n${toolCall.function.arguments}\n`,
-                  );
-                } else {
-                  // Fallback: Try parsing from content (for providers that don't support function calling yet)
-                  console.warn(
-                    `⚠️  Provider returned no tool_calls, falling back to content parsing`,
-                  );
-                  envelope = JSON.parse(completion.content);
-                  console.log(
-                    `\n📤 ${eyeName} LLM raw response (attempt ${attempt}/${MAX_PERSONA_RETRIES}):\n${completion.content}\n`,
-                  );
-                }
-              } catch (parseError) {
-                // Try to extract JSON from markdown code blocks (legacy fallback)
-                const jsonMatch = completion.content.match(
-                  /```(?:json)?\s*(\{[\s\S]*?\})\s*```/,
+              // 8. Parse response from tool_calls - NO FALLBACKS
+              // All providers MUST support function calling. No content parsing fallback.
+              if (
+                !completion.tool_calls ||
+                completion.tool_calls.length === 0
+              ) {
+                throw new Error(
+                  `Provider did not return tool_calls. Function calling is required - no fallback to content parsing.`,
                 );
-                if (jsonMatch) {
-                  envelope = JSON.parse(jsonMatch[1]);
+              }
+
+              const toolCall = completion.tool_calls[0];
+              if (
+                toolCall.type !== "function" ||
+                toolCall.function.name !== "submit_eye_analysis"
+              ) {
+                throw new Error(
+                  `Expected function call 'submit_eye_analysis', got: ${toolCall.function.name ?? toolCall.type}`,
+                );
+              }
+
+              // Parse arguments as JSON
+              try {
+                envelope = JSON.parse(toolCall.function.arguments);
+              } catch (parseError) {
+                // Retry on invalid JSON from function call
+                if (attempt < MAX_PERSONA_RETRIES) {
+                  console.warn(
+                    `⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Invalid JSON in function arguments`,
+                  );
+                  enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\nYour previous function call had invalid JSON arguments. You MUST call submit_eye_analysis with valid JSON.`;
+                  continue;
                 } else {
-                  // Response is not valid envelope
-                  if (attempt < MAX_PERSONA_RETRIES) {
-                    console.warn(
-                      `⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Invalid JSON response`,
-                    );
-                    enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\nYour previous response was not valid JSON. You MUST call the submit_eye_analysis function with valid arguments.`;
-                    continue;
-                  } else {
-                    throw new Error(
-                      `LLM response is not valid JSON envelope after ${MAX_PERSONA_RETRIES} attempts`,
-                    );
-                  }
+                  throw new Error(
+                    `Function call arguments are not valid JSON after ${MAX_PERSONA_RETRIES} attempts: ${parseError}`,
+                  );
                 }
               }
+
+              console.log(
+                `\n📤 ${eyeName} LLM function call response (attempt ${attempt}/${MAX_PERSONA_RETRIES}):\n${toolCall.function.arguments}\n`,
+              );
 
               // 9. Validate envelope with Eye's validator
               // Handle legacy next_action field (some Eyes may still use it)

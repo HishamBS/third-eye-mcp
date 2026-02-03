@@ -34,7 +34,7 @@ const OpenRouterToolCallSchema = z.object({
 
 const OpenRouterChoiceSchema = z.object({
   message: z.object({
-    content: z.string().nullable(), // Phase 1-A4: Nullable when using tool_calls
+    content: z.string().nullish(), // When using tool_calls, content may be undefined (not just null)
     tool_calls: z.array(OpenRouterToolCallSchema).optional(), // Phase 1-A4: Function calling
   }),
   finish_reason: z.string().optional().nullable(),
@@ -159,12 +159,19 @@ export class OpenRouterProvider extends BaseProvider {
           arguments: tc.function.arguments,
         },
       }));
-      const content = choice.message.content ?? "";
+      // When tool_calls are present, content may be null/undefined - this is expected
+      // When no tool_calls, content MUST be present
+      const content = choice.message.content;
+      if (!toolCalls?.length && content === undefined) {
+        throw new Error(
+          "OpenRouter response missing both content and tool_calls",
+        );
+      }
 
       return {
         id: payload.id,
         model: payload.model,
-        content,
+        content: content ?? "", // Safe: validated above that content exists when no tool_calls
         usage: {
           prompt_tokens: usage.prompt_tokens ?? 0,
           completion_tokens: usage.completion_tokens ?? 0,
