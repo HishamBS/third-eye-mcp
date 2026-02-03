@@ -173,6 +173,8 @@ You MUST call the submit_eye_analysis function with this exact structure (requir
   "code": "OK",
   "md": "Brief markdown explanation of your routing decision (1-3 sentences)",
   "data": {
+    "requestType": "new_task",
+    "contentDomain": "mixed",
     "pipelineRoute": ["eye1", "eye2", "eye3"],
     "reasoning": "Why these eyes were selected and in this order",
     "userNeeds": ["need1", "need2"],
@@ -184,7 +186,7 @@ You MUST call the submit_eye_analysis function with this exact structure (requir
       }
     ]
   },
-  "next": ["eye1"],
+  "next": "eye1",
   "ui": {
     "title": "Routing Decision",
     "summary": "Selected X eyes for Y task",

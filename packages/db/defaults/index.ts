@@ -1,42 +1,42 @@
-import { getDb } from "../index";
-import type { Database } from "bun:sqlite";
 import {
-  personas,
-  eyes,
-  pipelines,
-  personaBlueprints,
-  eyesRouting,
-  strictnessProfiles,
-  appSettings,
-  mcpIntegrations,
-  pipelineTemplates,
-  type NewPersona,
-  type NewEye,
-  type NewPipeline,
-  type NewPersonaBlueprint,
-  type NewEyeRouting,
-  type NewStrictnessProfile,
-  type NewAppSetting,
-  type NewMcpIntegration,
-} from "../schema";
+  DEFAULT_FALLBACK_MODEL,
+  DEFAULT_FALLBACK_PROVIDER,
+  DEFAULT_PRIMARY_MODEL,
+  DEFAULT_PRIMARY_PROVIDER,
+} from "@third-eye/constants";
+import { DEFAULT_BLUEPRINTS } from "@third-eye/constants/blueprints-data";
+import { STRICTNESS_PRESETS, type StrictnessPresetId } from "@third-eye/types";
+import type { Database } from "bun:sqlite";
 import { eq, inArray } from "drizzle-orm";
-import { DEFAULT_PERSONAS, DEFAULT_PERSONA_MAP } from "./personas";
+import { existsSync, readFileSync } from "fs";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+import { SeedSubset } from "../constants";
+import { getDb } from "../index";
+import {
+  appSettings,
+  eyes,
+  eyesRouting,
+  mcpIntegrations,
+  personaBlueprints,
+  personas,
+  pipelineTemplates,
+  pipelines,
+  strictnessProfiles,
+  type NewAppSetting,
+  type NewEye,
+  type NewEyeRouting,
+  type NewMcpIntegration,
+  type NewPersona,
+  type NewPersonaBlueprint,
+  type NewPipeline,
+  type NewStrictnessProfile,
+} from "../schema";
+import { generateId } from "../utils/uuid";
 import { DEFAULT_INTEGRATIONS } from "./integrations";
+import { DEFAULT_PERSONAS, DEFAULT_PERSONA_MAP } from "./personas";
 import { DEFAULT_PIPELINES } from "./pipelines";
 import { PREDEFINED_TEMPLATES } from "./templates";
-import { STRICTNESS_PRESETS, type StrictnessPresetId } from "@third-eye/types";
-import { DEFAULT_BLUEPRINTS } from "@third-eye/constants/blueprints-data";
-import {
-  DEFAULT_PRIMARY_PROVIDER,
-  DEFAULT_PRIMARY_MODEL,
-  DEFAULT_FALLBACK_PROVIDER,
-  DEFAULT_FALLBACK_MODEL,
-} from "@third-eye/constants";
-import { generateId } from "../utils/uuid";
-import { SeedSubset } from "../constants";
-import { readFileSync, existsSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
 
 // Minimal type for workflow validation (avoids circular dependency with @third-eye/core)
 interface WorkflowNode {
@@ -214,6 +214,7 @@ async function seedEyes(
 
         const entry: NewEye = {
           id: eyeUuid, // UUID instead of name
+          slug: eyeId.toLowerCase(), // Canonical identifier (e.g., 'overseer', 'sharingan') - SSOT for code/prompts/API
           name: blueprint.metadata.name, // Display name (e.g., 'Overseer', 'Jōgan')
           version: 1,
           description: blueprint.metadata.description || "",
@@ -234,7 +235,7 @@ async function seedEyes(
     // Log entries before insertion
     log(`  📝 Prepared ${eyeEntries.length} eye entries for insertion`);
     eyeEntries.forEach((entry, idx) => {
-      const entryLog = `${idx + 1}. ${entry.name} (id: ${entry.id})`;
+      const entryLog = `${idx + 1}. ${entry.name} (slug: ${entry.slug}, id: ${entry.id})`;
       log(`    ${entryLog}`);
     });
 
@@ -939,4 +940,4 @@ export async function seedDefaults(
   }
 }
 
-export { DEFAULT_PERSONAS, DEFAULT_PERSONA_MAP, DEFAULT_INTEGRATIONS };
+export { DEFAULT_INTEGRATIONS, DEFAULT_PERSONAS, DEFAULT_PERSONA_MAP };

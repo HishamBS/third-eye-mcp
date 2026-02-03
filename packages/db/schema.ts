@@ -1,8 +1,8 @@
 import {
+  blob,
+  integer,
   sqliteTable,
   text,
-  integer,
-  blob,
   unique,
 } from "drizzle-orm/sqlite-core";
 
@@ -54,6 +54,7 @@ export const eyes = sqliteTable(
   "eyes",
   {
     id: text().primaryKey(), // UUID
+    slug: text().notNull().unique(), // Canonical identifier (e.g., 'overseer', 'sharingan', 'jogan') - SSOT for code/prompts/API
     name: text().notNull(), // Display name (e.g., 'Overseer', 'Sharingan', 'Jōgan')
     version: integer().notNull(),
     description: text().notNull(),

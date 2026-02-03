@@ -72,6 +72,7 @@ CREATE TABLE `eye_leaderboard` (
 CREATE UNIQUE INDEX `eye_leaderboard_eye_id_unique` ON `eye_leaderboard` (`eye_id`);--> statement-breakpoint
 CREATE TABLE `eyes` (
 	`id` text PRIMARY KEY NOT NULL,
+	`slug` text NOT NULL,
 	`name` text NOT NULL,
 	`version` integer NOT NULL,
 	`description` text NOT NULL,
@@ -84,6 +85,7 @@ CREATE TABLE `eyes` (
 	`capability_tags` text NOT NULL DEFAULT '[]'
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `eyes_slug_unique` ON `eyes` (`slug`);--> statement-breakpoint
 CREATE UNIQUE INDEX `eyes_name_version_unique` ON `eyes` (`name`,`version`);--> statement-breakpoint
 CREATE UNIQUE INDEX `eyes_name_unique` ON `eyes` (`name`);--> statement-breakpoint
 CREATE TABLE `eyes_routing` (

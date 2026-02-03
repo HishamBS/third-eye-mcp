@@ -1,7 +1,7 @@
-import { getDb } from "../index";
-import { eyes, personas, pipelines, personaBlueprints } from "../schema";
-import { eq, and, sql } from "drizzle-orm";
 import { CACHE_TTL } from "@third-eye/constants";
+import { and, eq, sql } from "drizzle-orm";
+import { getDb } from "../index";
+import { eyes, personaBlueprints, personas, pipelines } from "../schema";
 
 /**
  * Entity Lookup Utilities - SSOT for name to UUID conversion
@@ -71,6 +71,71 @@ export async function getEyeIdByName(name: string): Promise<string | null> {
   const id = eye?.id || null;
   if (id) setCache(cacheKey, id);
   return id;
+}
+
+/**
+ * Get eye UUID by slug (SSOT canonical identifier)
+ * Slug is the primary lookup method - e.g., 'overseer', 'sharingan'
+ */
+export async function getEyeIdBySlug(slug: string): Promise<string | null> {
+  const cacheKey = getCacheKey("eye:id-by-slug", slug.toLowerCase());
+  const cached = getCached<string>(cacheKey);
+  if (cached) return cached;
+
+  const { db } = getDb();
+  const eye = await db
+    .select({ id: eyes.id })
+    .from(eyes)
+    .where(sql`LOWER(${eyes.slug}) = LOWER(${slug})`)
+    .limit(1)
+    .get();
+
+  const id = eye?.id || null;
+  if (id) setCache(cacheKey, id);
+  return id;
+}
+
+/**
+ * Get full eye record by slug (SSOT canonical identifier)
+ */
+export async function getEyeBySlug(
+  slug: string,
+): Promise<typeof eyes.$inferSelect | null> {
+  const cacheKey = getCacheKey("eye:full-by-slug", slug.toLowerCase());
+  const cached = getCached<typeof eyes.$inferSelect>(cacheKey);
+  if (cached) return cached;
+
+  const { db } = getDb();
+  const eye = await db
+    .select()
+    .from(eyes)
+    .where(sql`LOWER(${eyes.slug}) = LOWER(${slug})`)
+    .limit(1)
+    .get();
+
+  if (eye) setCache(cacheKey, eye);
+  return eye || null;
+}
+
+/**
+ * Get eye slug by UUID
+ */
+export async function getEyeSlugById(id: string): Promise<string | null> {
+  const cacheKey = getCacheKey("eye:slug-by-id", id);
+  const cached = getCached<string>(cacheKey);
+  if (cached) return cached;
+
+  const { db } = getDb();
+  const eye = await db
+    .select({ slug: eyes.slug })
+    .from(eyes)
+    .where(eq(eyes.id, id))
+    .limit(1)
+    .get();
+
+  const slug = eye?.slug || null;
+  if (slug) setCache(cacheKey, slug);
+  return slug;
 }
 
 export async function getEyeByName(

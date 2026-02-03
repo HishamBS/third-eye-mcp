@@ -9,8 +9,8 @@
 export * from "./data";
 
 // Re-export for backwards compatibility (seeding only)
-import { getPersonaBlueprint as getPersonaBlueprintFromDefaults } from "./data";
 import type { PersonaBlueprint } from "@third-eye/constants/blueprints-data";
+import { getPersonaBlueprint as getPersonaBlueprintFromDefaults } from "./data";
 
 /**
  * Load persona blueprint from database (SSOT)
@@ -26,16 +26,27 @@ export async function loadPersonaBlueprintFromDb(
     const schemaModule = await import(("@third-eye/" + "db/schema") as any);
     const ormModule = await import("drizzle-orm");
     const { getDb } = dbModule;
-    const { personaBlueprints } = schemaModule;
+    const { personaBlueprints, eyes } = schemaModule;
     const { eq } = ormModule;
 
     const { db } = getDb();
 
-    const blueprint = await db
-      .select()
+    // Join with eyes table to get the slug (SSOT for eye identification)
+    const result = await db
+      .select({
+        blueprint: personaBlueprints,
+        eyeSlug: eyes.slug,
+      })
       .from(personaBlueprints)
+      .innerJoin(eyes, eq(personaBlueprints.eyeId, eyes.id))
       .where(eq(personaBlueprints.eyeId, eyeId))
       .get();
+
+    if (!result) {
+      return null;
+    }
+
+    const { blueprint, eyeSlug } = result;
 
     if (!blueprint) {
       return null;
@@ -128,7 +139,7 @@ export async function loadPersonaBlueprintFromDb(
 
     const personaBlueprint: PersonaBlueprint = {
       metadata: {
-        eyeId: eyeId as any, // Type assertion needed due to EyeId type
+        eyeId: eyeSlug as any, // Slug is SSOT for eye identification (e.g., 'overseer', 'sharingan')
         name: blueprint.name,
         description: blueprint.description,
         version: blueprint.version,
