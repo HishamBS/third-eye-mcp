@@ -17,7 +17,21 @@ const LMStudioModelsResponseSchema = z.object({
 });
 
 const LMStudioChoiceSchema = z.object({
-  message: z.object({ content: z.string() }),
+  message: z.object({
+    content: z.string().nullable(),
+    tool_calls: z
+      .array(
+        z.object({
+          id: z.string(),
+          type: z.literal("function"),
+          function: z.object({
+            name: z.string(),
+            arguments: z.string(), // LM Studio returns JSON string like OpenAI
+          }),
+        }),
+      )
+      .optional(),
+  }),
   finish_reason: z.string().optional().nullable(),
 });
 
@@ -99,6 +113,14 @@ export class LMStudioProvider extends BaseProvider {
       }
       // If json_object is requested, we omit response_format and rely on prompt instructions
 
+      // Function calling support (LM Studio supports OpenAI-compatible tools)
+      if (request.tools) {
+        requestBody.tools = request.tools;
+      }
+      if (request.tool_choice) {
+        requestBody.tool_choice = request.tool_choice;
+      }
+
       const response = await this.fetchWithRetry(
         `${this.baseUrl}/chat/completions`,
         {
@@ -122,13 +144,21 @@ export class LMStudioProvider extends BaseProvider {
       return {
         id: payload.id,
         model: payload.model,
-        content: choice.message.content,
+        content: choice.message.content ?? "",
         usage: {
           prompt_tokens: usage.prompt_tokens ?? 0,
           completion_tokens: usage.completion_tokens ?? 0,
           total_tokens: usage.total_tokens ?? 0,
         },
         finish_reason: this.normalizeFinishReason(choice.finish_reason),
+        tool_calls: choice.message.tool_calls?.map((tc) => ({
+          id: tc.id,
+          type: tc.type,
+          function: {
+            name: tc.function.name,
+            arguments: tc.function.arguments,
+          },
+        })),
       };
     } catch (error) {
       throw new Error(

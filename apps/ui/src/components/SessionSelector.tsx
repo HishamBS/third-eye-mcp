@@ -25,6 +25,22 @@ import { TIMING } from "@/constants/timing";
 import { ROUTES } from "@/constants/routes";
 import { ARIA_LABELS } from "@/constants/accessibility";
 import { MESSAGES } from "@/constants/messages";
+
+/**
+ * Paths where auto-session selection should NOT occur.
+ * Prevents disrupting user workflow on configuration pages.
+ */
+const NON_AUTO_SELECT_PATHS = [
+  "/eyes",
+  "/settings",
+  "/providers",
+  "/personas",
+  "/models",
+  "/connections",
+  "/pipelines",
+  "/strictness",
+  "/database",
+];
 import {
   SESSION_SELECTOR_PLACEHOLDER,
   SESSION_SELECTOR_SEARCH_PLACEHOLDER,
@@ -208,12 +224,18 @@ export function SessionSelector(props: SessionSelectorProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   // Auto-select first session if none selected (uncontrolled mode only)
+  // Bug Fix: Skip auto-selection on configuration pages to prevent disrupting workflow
   useEffect(() => {
+    const isOnConfigPage = NON_AUTO_SELECT_PATHS.some(
+      (path) => pathname === path || pathname.startsWith(`${path}/`),
+    );
+
     if (
       !isControlled &&
       !selectedSessionId &&
       sessions.length > 0 &&
-      !hasUserInteracted
+      !hasUserInteracted &&
+      !isOnConfigPage // Don't auto-select on config pages
     ) {
       setSelectedSession(sessions[0].sessionId);
     }
@@ -223,6 +245,7 @@ export function SessionSelector(props: SessionSelectorProps) {
     sessions,
     hasUserInteracted,
     setSelectedSession,
+    pathname,
   ]);
 
   // Click outside handler

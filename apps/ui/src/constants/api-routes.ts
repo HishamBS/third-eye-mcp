@@ -36,6 +36,16 @@ export const API_ROUTES = {
     `/api/session/${id}/intent-confirmations`,
   SESSION_ROUTING: (id: string) => `/api/session/${id}/routing`,
   SESSION_CONTEXT: (id: string) => `/api/session/${id}/context`,
+  SESSION_CLARIFICATION_VALIDATE: (
+    sessionId: string,
+    clarificationId: string,
+  ) => `/api/session/${sessionId}/clarifications/${clarificationId}/validate`,
+
+  // Intent Confirmations
+  INTENT_CONFIRMATION_SUBMIT: (id: string) =>
+    `/api/intent-confirmations/${id}/submit`,
+  INTENT_CONFIRMATIONS_SESSION: (sessionId: string) =>
+    `/api/intent-confirmations/session/${sessionId}`,
 
   // Routing
   ROUTING: "/api/routing",

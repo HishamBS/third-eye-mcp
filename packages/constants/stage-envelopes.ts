@@ -133,10 +133,8 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
         md: "## Clarification Needed ...",
         data: {
           summary: "...",
-          metrics: {
-            ambiguityScore: 72,
-            confidence: 24,
-          },
+          ambiguityScore: 72,
+          confidence: 24,
           questions: CANONICAL_CLARIFICATION_QUESTIONS,
         },
         next: "AWAIT_INPUT",
@@ -146,7 +144,7 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
       }),
       checklist: Object.freeze([
         "Produce 2–5 questions using ClarificationField tokens (audience, deliverable, scope, successCriteria, references).",
-        "Keep `metrics.ambiguityScore` and `metrics.confidence` between 0 and 100.",
+        "Keep `data.ambiguityScore` and `data.confidence` between 0 and 100.",
         "Avoid populating `data.resolved` until answers are confirmed.",
         "Always include the `code` field; regenerate locally if JSON validation would fail.",
       ]),
@@ -163,10 +161,8 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
         md: "## Clarity Locked ...",
         data: {
           summary: "...",
-          metrics: {
-            ambiguityScore: 12,
-            confidence: 86,
-          },
+          ambiguityScore: 12,
+          confidence: 86,
           resolved: {
             audience: "...",
             deliverable: "...",
@@ -495,32 +491,7 @@ const stageTemplates: Record<EyeId, EyeStageTemplateMap> = Object.freeze({
     }),
   }),
   [EyeId.BYAKUGAN]: Object.freeze({
-    [EyeStageToken.GUIDANCE]: Object.freeze({
-      allowedCodes: Object.freeze([
-        EyeStatusCode.OK_ALL_APPROVED,
-        EyeStatusCode.OK_CONSISTENT,
-      ]),
-      skeleton: JSON.stringify({
-        tag: EyeId.BYAKUGAN,
-        ok: false,
-        code: EyeStatusCode.OK_ALL_APPROVED,
-        md: "## Final Approval ...",
-        data: {
-          readinessChecklist: Object.freeze(["..."]),
-          finalStatus: "approved",
-        },
-        next: "COMPLETE",
-        ui: {
-          title: "ui.text.byakugan.approval.title",
-        },
-      }),
-      checklist: Object.freeze([
-        "Compile `data.readinessChecklist` covering all validation criteria.",
-        'Set `data.finalStatus` to "approved" when all checks pass.',
-        "Use OK_ALL_APPROVED or OK_CONSISTENT as status codes.",
-        "Regenerate locally if structure invalid.",
-      ]),
-    }),
+    // Byakugan is VALIDATION-ONLY per VISION.md - no GUIDANCE phase
     [EyeStageToken.VALIDATION]: Object.freeze({
       allowedCodes: Object.freeze([
         EyeStatusCode.OK_ALL_APPROVED,

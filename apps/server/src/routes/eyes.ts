@@ -8,6 +8,7 @@ import {
   eyesRouting,
   personas,
 } from "@third-eye/db";
+import { getEyeNameById } from "@third-eye/db/utils/lookups";
 import { EyeOrchestrator } from "@third-eye/core";
 import { sessionManager } from "@third-eye/core/session-manager";
 import { eq, desc, inArray, and, sql } from "drizzle-orm";
@@ -184,11 +185,26 @@ async function logPipelineEvent(
 
 /**
  * POST /eyes/:id/test - Execute a single Eye for playground validation
+ *
+ * Bug Fix: The endpoint receives a UUID from the URL parameter but runEye()
+ * expects an Eye name (e.g., "Rinnegan", "Sharingan"). We now convert the
+ * UUID to the Eye name before calling runEye().
  */
 app.post("/:id/test", async (c) => {
-  const eyeId = c.req.param("id");
+  const eyeUuid = c.req.param("id");
 
   try {
+    // Convert UUID to Eye name before calling runEye
+    const eyeName = await getEyeNameById(eyeUuid);
+    if (!eyeName) {
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.EYE_NOT_FOUND,
+        status: 404,
+        detail: `Eye not found: ${eyeUuid}`,
+        code: ApiErrorCode.EYE_NOT_FOUND,
+      });
+    }
+
     const body = await c.req.json();
     const parsed = eyeTestSchema.parse(body);
     const candidateInput = parsed.input || parsed.prompt || parsed.task;
@@ -214,7 +230,7 @@ app.post("/:id/test", async (c) => {
       const session = await sessionManager.createSession({
         agentName: "Playground Tester",
         metadata: {
-          entryTool: eyeId,
+          entryTool: eyeName,
           source: "playground",
         },
       });
@@ -229,11 +245,11 @@ app.post("/:id/test", async (c) => {
     }
 
     const result = await orchestrator.runEye(
-      eyeId,
+      eyeName, // Now passing Eye name correctly instead of UUID
       candidateInput.trim(),
       sessionId,
     );
-    await logPipelineEvent(sessionId, eyeId, result as Envelope);
+    await logPipelineEvent(sessionId, eyeUuid, result as Envelope);
 
     return createSuccessResponse(c, {
       sessionId,

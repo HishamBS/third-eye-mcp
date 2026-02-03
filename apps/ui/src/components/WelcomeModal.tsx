@@ -60,7 +60,6 @@ const STORAGE_KEY = "third-eye-welcome-seen";
 export function WelcomeModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [neverShow, setNeverShow] = useState(false);
 
   // Phase 20.1: Focus trap for accessibility
   const modalRef = useFocusTrap({
@@ -79,9 +78,9 @@ export function WelcomeModal() {
 
   const handleClose = () => {
     setIsOpen(false);
-    if (neverShow) {
-      localStorage.setItem(STORAGE_KEY, "true");
-    }
+    // Always persist that user has seen/dismissed the welcome modal
+    // This prevents the modal from reappearing on every navigation
+    localStorage.setItem(STORAGE_KEY, "true");
   };
 
   const handleNext = () => {
@@ -99,7 +98,6 @@ export function WelcomeModal() {
   };
 
   const handleSkip = () => {
-    setNeverShow(true);
     handleClose();
   };
 
@@ -239,29 +237,6 @@ export function WelcomeModal() {
                   </button>
                 </div>
               </div>
-
-              {/* "Don't show again" checkbox */}
-              {currentStep === WELCOME_STEPS.length - 1 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mt-6 flex items-center justify-center gap-2"
-                >
-                  <input
-                    type="checkbox"
-                    id="never-show"
-                    checked={neverShow}
-                    onChange={(e) => setNeverShow(e.target.checked)}
-                    className="h-4 w-4 rounded border-brand-outline/50 bg-brand-ink text-brand-accent focus:ring-brand-accent focus:ring-offset-brand-ink"
-                  />
-                  <label
-                    htmlFor="never-show"
-                    className="text-sm text-semantic-muted cursor-pointer"
-                  >
-                    Don&apos;t show this again
-                  </label>
-                </motion.div>
-              )}
             </div>
           </motion.div>
         </motion.div>

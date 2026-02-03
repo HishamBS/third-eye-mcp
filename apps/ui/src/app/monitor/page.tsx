@@ -11,12 +11,20 @@ import { Suspense, useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Eye, Download } from "lucide-react";
+import {
+  Eye,
+  Download,
+  Send,
+  CheckCircle,
+  XCircle,
+  Loader2,
+} from "lucide-react";
 import {
   exportSession,
   type ExportFormat,
   type ExportEvent,
 } from "@third-eye/utils";
+import { toast } from "sonner";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { useWebSocket, type WSMessage } from "@/hooks/useWebSocket";
 import { useUI } from "@/contexts/UIContext";
@@ -319,6 +327,20 @@ function MonitorContent() {
     null,
   );
 
+  // State for clarification response form
+  const [clarificationAnswers, setClarificationAnswers] = useState<
+    Record<string, string>
+  >({});
+  const [submittingClarification, setSubmittingClarification] = useState<
+    string | null
+  >(null);
+
+  // State for intent confirmation actions
+  const [intentConfirmationId, setIntentConfirmationId] = useState<
+    string | null
+  >(null);
+  const [submittingIntent, setSubmittingIntent] = useState(false);
+
   // Phase 5: Narrative timeline hook
   const {
     events: narrativeEvents,
@@ -470,6 +492,11 @@ function MonitorContent() {
         const data = result.data !== undefined ? result.data : result;
 
         if (data && typeof data === "object") {
+          // Store the confirmation ID for later submission
+          if (typeof data.id === "string") {
+            setIntentConfirmationId(data.id);
+          }
+
           setIntentData({
             intentAnalysis: data.intentAnalysis as
               | Record<string, unknown>
@@ -485,6 +512,10 @@ function MonitorContent() {
                 ? data.userIdentity
                 : undefined,
           });
+        } else {
+          // No pending intent confirmations
+          setIntentConfirmationId(null);
+          setIntentData(null);
         }
       }
     } catch (err) {
@@ -534,6 +565,105 @@ function MonitorContent() {
     fetchIntentConfirmations,
     fetchRoutingDecision,
   ]);
+
+  /**
+   * Submit a clarification answer
+   */
+  const handleSubmitClarification = useCallback(
+    async (clarificationId: string) => {
+      if (!sessionId) return;
+
+      const answer = clarificationAnswers[clarificationId]?.trim();
+      if (!answer) {
+        toast.error("Please provide an answer");
+        return;
+      }
+
+      setSubmittingClarification(clarificationId);
+
+      try {
+        const res = await fetch(
+          `${API_BASE_URL}${API_ROUTES.SESSION_CLARIFICATION_VALIDATE(sessionId, clarificationId)}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ answer }),
+          },
+        );
+
+        if (res.ok) {
+          const result = await res.json();
+          const data = result.data || result;
+
+          if (data.valid) {
+            toast.success("Answer submitted successfully");
+            // Clear the answer field and refresh clarifications
+            setClarificationAnswers((prev) => {
+              const next = { ...prev };
+              delete next[clarificationId];
+              return next;
+            });
+            await fetchClarifications();
+          } else {
+            toast.error(data.reason || "Answer validation failed", {
+              description: data.suggestion,
+            });
+          }
+        } else {
+          toast.error("Failed to submit answer");
+        }
+      } catch (err) {
+        console.error("Failed to submit clarification:", err);
+        toast.error("Failed to submit answer");
+      } finally {
+        setSubmittingClarification(null);
+      }
+    },
+    [sessionId, clarificationAnswers, fetchClarifications],
+  );
+
+  /**
+   * Submit intent confirmation (approve/reject)
+   */
+  const handleIntentConfirmation = useCallback(
+    async (response: "approved" | "rejected") => {
+      if (!intentConfirmationId) {
+        toast.error("No intent confirmation pending");
+        return;
+      }
+
+      setSubmittingIntent(true);
+
+      try {
+        const res = await fetch(
+          `${API_BASE_URL}${API_ROUTES.INTENT_CONFIRMATION_SUBMIT(intentConfirmationId)}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ response }),
+          },
+        );
+
+        if (res.ok) {
+          toast.success(
+            response === "approved"
+              ? "Intent approved - proceeding with task"
+              : "Intent rejected - task halted",
+          );
+          await fetchIntentConfirmations();
+        } else {
+          const text = await res.text();
+          toast.error(`Failed to ${response} intent: ${text}`);
+        }
+      } catch (err) {
+        console.error("Failed to submit intent confirmation:", err);
+        toast.error("Failed to submit intent confirmation");
+      } finally {
+        setSubmittingIntent(false);
+      }
+    },
+    [intentConfirmationId, fetchIntentConfirmations],
+  );
 
   if (!sessionId) {
     return (
@@ -862,10 +992,47 @@ function MonitorContent() {
                             {c.field}
                           </p>
                           <p
-                            className={`text-sm ${STATUS_TEXT_COLORS.warning}`}
+                            className={`text-sm ${STATUS_TEXT_COLORS.warning} mb-3`}
                           >
                             {c.question}
                           </p>
+                          {/* Clarification response form */}
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="Type your answer..."
+                              value={clarificationAnswers[c.id] || ""}
+                              onChange={(e) =>
+                                setClarificationAnswers((prev) => ({
+                                  ...prev,
+                                  [c.id]: e.target.value,
+                                }))
+                              }
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                  e.preventDefault();
+                                  handleSubmitClarification(c.id);
+                                }
+                              }}
+                              className="flex-1 px-3 py-2 text-sm bg-brand-paper border border-brand-outline/40 rounded-lg text-brand-foreground placeholder:text-semantic-muted focus:outline-none focus:ring-2 focus:ring-brand-accent/50"
+                              disabled={submittingClarification === c.id}
+                            />
+                            <button
+                              onClick={() => handleSubmitClarification(c.id)}
+                              disabled={
+                                submittingClarification === c.id ||
+                                !clarificationAnswers[c.id]?.trim()
+                              }
+                              className="px-4 py-2 text-sm font-medium bg-brand-accent text-brand-foreground rounded-lg hover:bg-brand-accent/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            >
+                              {submittingClarification === c.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Send className="h-4 w-4" />
+                              )}
+                              Submit
+                            </button>
+                          </div>
                         </div>
                       ))
                     )}
@@ -983,6 +1150,42 @@ function MonitorContent() {
                           </span>
                         </div>
                       )}
+
+                    {/* Approve/Reject buttons - only show when pending */}
+                    {!intentData.response && intentConfirmationId && (
+                      <div className="mt-6 pt-4 border-t border-brand-outline/30">
+                        <p className="text-sm text-semantic-muted mb-4">
+                          Please review the intent analysis above and decide
+                          whether to proceed:
+                        </p>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => handleIntentConfirmation("approved")}
+                            disabled={submittingIntent}
+                            className={`flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${STATUS_BG_COLORS.success} text-brand-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed`}
+                          >
+                            {submittingIntent ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <CheckCircle className="h-4 w-4" />
+                            )}
+                            Approve & Proceed
+                          </button>
+                          <button
+                            onClick={() => handleIntentConfirmation("rejected")}
+                            disabled={submittingIntent}
+                            className={`flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${STATUS_BG_COLORS.error} text-brand-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed`}
+                          >
+                            {submittingIntent ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <XCircle className="h-4 w-4" />
+                            )}
+                            Reject & Stop
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-16">

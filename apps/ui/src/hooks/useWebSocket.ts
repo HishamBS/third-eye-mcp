@@ -39,17 +39,55 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const reconnectAttemptsRef = useRef(0);
   const missedEventsRef = useRef<WSMessage[]>([]);
   const subscribersRef = useRef<Array<(message: WSMessage) => void>>([]);
+  const lastPongRef = useRef<number>(Date.now());
+  const healthCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Configuration constants
+  const MAX_RECONNECT_ATTEMPTS = 10;
+  const HEALTH_CHECK_INTERVAL = 45000; // 45 seconds
+  const STALE_CONNECTION_THRESHOLD = 90000; // 90 seconds without pong = stale
 
   const getReconnectDelay = () => {
-    // Exponential backoff: 1s, 2s, 4s, 8s, 16s (max)
-    const delays = [1000, 2000, 4000, 8000, 16000];
-    const index = Math.min(reconnectAttemptsRef.current, delays.length - 1);
-    return delays[index];
+    // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 32s (max)
+    const baseDelay = 1000;
+    const maxDelay = 32000;
+    const delay = Math.min(
+      baseDelay * Math.pow(2, reconnectAttemptsRef.current),
+      maxDelay,
+    );
+    // Add jitter (random ±20%) to prevent thundering herd
+    const jitter = delay * (0.8 + Math.random() * 0.4);
+    return Math.floor(jitter);
   };
 
   const connect = () => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
+    // Don't reconnect if we've exceeded max attempts
+    if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+      console.warn(
+        `[WebSocket] Max reconnect attempts (${MAX_RECONNECT_ATTEMPTS}) reached, stopping`,
+      );
+      setConnectionStatus("disconnected");
       return;
+    }
+
+    // Don't create new connection if one is already open or connecting
+    if (
+      wsRef.current?.readyState === WebSocket.OPEN ||
+      wsRef.current?.readyState === WebSocket.CONNECTING
+    ) {
+      return;
+    }
+
+    // Clean up any existing connection before creating new one
+    if (wsRef.current) {
+      wsRef.current.onopen = null;
+      wsRef.current.onmessage = null;
+      wsRef.current.onerror = null;
+      wsRef.current.onclose = null;
+      if (wsRef.current.readyState !== WebSocket.CLOSED) {
+        wsRef.current.close();
+      }
+      wsRef.current = null;
     }
 
     // Build WebSocket URL - ensure we always have /ws/monitor path for session monitoring
@@ -67,6 +105,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         setIsConnected(true);
         setConnectionStatus("connected");
         reconnectAttemptsRef.current = 0;
+        lastPongRef.current = Date.now(); // Reset pong timer on fresh connection
         onOpen?.();
 
         // Clear any pending reconnect attempts
@@ -83,6 +122,9 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
           missedEventsRef.current.forEach((msg) => onMessage?.(msg));
           missedEventsRef.current = [];
         }
+
+        // Start connection health monitoring
+        startHealthCheck();
 
         // Start ping/pong heartbeat
         const heartbeatInterval = setInterval(() => {
@@ -110,7 +152,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
           // Handle pong messages (responses to our client-initiated pings)
           if (message.type === "pong") {
-            // Connection is alive
+            // Connection is alive - update last pong time
+            lastPongRef.current = Date.now();
             return;
           }
 
@@ -160,16 +203,23 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         onClose?.();
 
         // Auto-reconnect with exponential backoff
-        if (autoReconnect) {
+        if (
+          autoReconnect &&
+          reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS
+        ) {
           const delay = getReconnectDelay();
           reconnectAttemptsRef.current++;
 
           console.log(
-            `[WebSocket] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current})`,
+            `[WebSocket] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS})`,
           );
           reconnectTimeoutRef.current = setTimeout(() => {
             connect();
           }, delay);
+        } else if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+          console.warn(
+            "[WebSocket] Max reconnect attempts reached, connection abandoned",
+          );
         }
       };
 
@@ -189,13 +239,49 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       reconnectTimeoutRef.current = null;
     }
 
+    if (healthCheckIntervalRef.current) {
+      clearInterval(healthCheckIntervalRef.current);
+      healthCheckIntervalRef.current = null;
+    }
+
     if (wsRef.current) {
+      // Clear handlers first to prevent close event from triggering reconnect
+      wsRef.current.onopen = null;
+      wsRef.current.onmessage = null;
+      wsRef.current.onerror = null;
+      wsRef.current.onclose = null;
       wsRef.current.close();
       wsRef.current = null;
     }
 
     setConnectionStatus("disconnected");
     reconnectAttemptsRef.current = 0;
+  };
+
+  /**
+   * Start connection health monitoring
+   * Detects stale connections that might appear connected but aren't responsive
+   */
+  const startHealthCheck = () => {
+    if (healthCheckIntervalRef.current) {
+      clearInterval(healthCheckIntervalRef.current);
+    }
+
+    healthCheckIntervalRef.current = setInterval(() => {
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        const timeSincePong = Date.now() - lastPongRef.current;
+
+        if (timeSincePong > STALE_CONNECTION_THRESHOLD) {
+          console.warn(
+            `[WebSocket] Connection stale (${Math.floor(timeSincePong / 1000)}s without pong), forcing reconnect`,
+          );
+          // Force close and reconnect
+          if (wsRef.current) {
+            wsRef.current.close();
+          }
+        }
+      }
+    }, HEALTH_CHECK_INTERVAL);
   };
 
   const send = (message: Record<string, unknown>) => {

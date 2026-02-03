@@ -17,8 +17,10 @@ export const PromptSection = freezeTokens({
   BEHAVIOR_CHECKLIST_INTRO: "Verify that your response:",
   RESPONSE_FORMAT: "## Response Format",
   RESPONSE_FORMAT_INSTRUCTION:
-    "You MUST respond with ONLY a JSON object. No Markdown, no explanations, no code blocks.",
-  RESPONSE_SCHEMA_INTRO: "Your response MUST match this schema:",
+    "You MUST call the submit_eye_analysis function to submit your response. Do NOT return JSON as plain text - you MUST use the function call.",
+  TOOL_CALL_REQUIREMENT:
+    "IMPORTANT: Your response MUST be a function call to submit_eye_analysis. Any response that is not a function call will be rejected.",
+  RESPONSE_SCHEMA_INTRO: "The function argument MUST match this schema:",
   ALLOWED_STATUS_CODES: "## Allowed Status Codes",
   ALLOWED_STATUS_CODES_INTRO: "You can only use these status codes:",
   SELF_CHECK: "## Self-Check Instructions",
@@ -30,8 +32,9 @@ export const PromptSection = freezeTokens({
   CURRENT_CONTEXT: "## Current Context",
   YOUR_TASK: "## Your Task",
   TASK_OUTRO:
-    "Analyze the context above and generate a response following the schema and example provided.",
-  REMEMBER: "Remember: respond with ONLY a JSON object, no other text.",
+    "Analyze the context above and call submit_eye_analysis with your response following the schema and example provided.",
+  REMEMBER:
+    "Remember: You MUST call the submit_eye_analysis function. Do NOT respond with text or raw JSON.",
   JSON_BLOCK_START: "```json",
   JSON_BLOCK_END: "```",
   DASH_BULLET: "-",

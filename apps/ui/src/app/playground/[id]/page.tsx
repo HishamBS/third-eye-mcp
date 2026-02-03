@@ -27,6 +27,14 @@ import {
   STATUS_BORDER_COLORS_SUBTLE,
   STATUS_BG_COLORS,
 } from "@/constants/color-mappings";
+import { toast } from "sonner";
+
+/**
+ * Minimum character length for task/input submissions.
+ * Prevents submitting single characters or very short inputs
+ * that would likely fail validation or produce poor results.
+ */
+const MIN_INPUT_LENGTH = 10;
 
 interface Run {
   id: string;
@@ -119,15 +127,36 @@ export default function PlaygroundPage() {
     fetchSessionEvents();
   }, [sessionId]);
 
-  const fetchSession = async () => {
+  /**
+   * Fetch session with retry logic and exponential backoff.
+   * Bug fix: New playground sessions may not be immediately available,
+   * causing 404 errors. We retry with backoff to handle race conditions.
+   */
+  const fetchSession = async (retryCount = 0) => {
+    const MAX_RETRIES = 3;
+    const BASE_DELAY = 500; // Start with 500ms delay
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/session/${sessionId}`);
       if (response.ok) {
         const data = await response.json();
         setSession(data.data);
+      } else if (response.status === 404 && retryCount < MAX_RETRIES) {
+        // Session not found - might be race condition, retry with backoff
+        const delay = BASE_DELAY * Math.pow(2, retryCount); // Exponential backoff
+        console.log(
+          `Session not found, retrying in ${delay}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`,
+        );
+        setTimeout(() => fetchSession(retryCount + 1), delay);
+      } else if (response.status === 404) {
+        console.warn("Session not found after retries:", sessionId);
       }
     } catch (error) {
       console.error("Failed to fetch session:", error);
+      if (retryCount < MAX_RETRIES) {
+        const delay = BASE_DELAY * Math.pow(2, retryCount);
+        setTimeout(() => fetchSession(retryCount + 1), delay);
+      }
     }
   };
 
@@ -193,6 +222,9 @@ export default function PlaygroundPage() {
     };
   }, [sessionId]);
 
+  /**
+   * Fetch runs with silent 404 handling (empty list is acceptable for new sessions)
+   */
   const fetchRuns = async () => {
     if (!sessionId) return;
     try {
@@ -201,13 +233,25 @@ export default function PlaygroundPage() {
       );
       if (response.ok) {
         const runsData = await response.json();
-        setRuns(runsData);
+        // Handle both { data: [...] } and direct array formats
+        const runsArray = Array.isArray(runsData?.data)
+          ? runsData.data
+          : Array.isArray(runsData)
+            ? runsData
+            : [];
+        setRuns(runsArray);
+      } else if (response.status === 404) {
+        // Session may not have runs yet, this is acceptable
+        setRuns([]);
       }
     } catch (error) {
       console.error("Failed to fetch runs:", error);
     }
   };
 
+  /**
+   * Fetch session events with silent 404 handling (empty list is acceptable for new sessions)
+   */
   const fetchSessionEvents = async () => {
     if (!sessionId) return;
     try {
@@ -215,6 +259,10 @@ export default function PlaygroundPage() {
         `${API_BASE_URL}/api/session/${sessionId}/events`,
       );
       if (!response.ok) {
+        if (response.status === 404) {
+          // Session may not have events yet, this is acceptable
+          setByakuganEvents([]);
+        }
         return;
       }
 
@@ -236,7 +284,19 @@ export default function PlaygroundPage() {
 
   const submitTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!taskInput.trim()) return;
+    const trimmedInput = taskInput.trim();
+
+    if (!trimmedInput) {
+      toast.warning("Please enter a task description");
+      return;
+    }
+
+    if (trimmedInput.length < MIN_INPUT_LENGTH) {
+      toast.warning(
+        `Task description too short. Please provide at least ${MIN_INPUT_LENGTH} characters.`,
+      );
+      return;
+    }
 
     setLoading(true);
 
@@ -259,11 +319,27 @@ export default function PlaygroundPage() {
         console.log("✅ Task submitted:", result);
         setTaskInput(""); // Clear input after submission
         fetchRuns(); // Refresh runs
+        toast.success("Task submitted to pipeline");
       } else {
-        console.error("❌ Task submission failed:", await response.text());
+        const errorText = await response.text();
+        console.error("❌ Task submission failed:", errorText);
+        // Parse error response if JSON, otherwise use raw text
+        let errorMessage = "Task submission failed";
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.detail || errorJson.message || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+        toast.error(errorMessage);
       }
     } catch (error) {
       console.error("Failed to submit task:", error);
+      toast.error(
+        error instanceof Error
+          ? `Failed to submit: ${error.message}`
+          : "Failed to submit task",
+      );
     } finally {
       setLoading(false);
     }
@@ -271,8 +347,26 @@ export default function PlaygroundPage() {
 
   const runEyeTest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedEye || !eyeInput.trim()) {
-      setEyeError("Select an eye and provide input to test.");
+    const trimmedInput = eyeInput.trim();
+
+    if (!selectedEye) {
+      const errorMsg = "Please select an Eye to test.";
+      setEyeError(errorMsg);
+      toast.warning(errorMsg);
+      return;
+    }
+
+    if (!trimmedInput) {
+      const errorMsg = "Please provide input to test.";
+      setEyeError(errorMsg);
+      toast.warning(errorMsg);
+      return;
+    }
+
+    if (trimmedInput.length < MIN_INPUT_LENGTH) {
+      const errorMsg = `Input too short. Please provide at least ${MIN_INPUT_LENGTH} characters.`;
+      setEyeError(errorMsg);
+      toast.warning(errorMsg);
       return;
     }
 
@@ -294,7 +388,15 @@ export default function PlaygroundPage() {
 
       if (!response.ok) {
         const text = await response.text();
-        setEyeError(text || "Eye execution failed");
+        let errorMessage = "Eye execution failed";
+        try {
+          const errorJson = JSON.parse(text);
+          errorMessage = errorJson.detail || errorJson.message || errorMessage;
+        } catch {
+          errorMessage = text || errorMessage;
+        }
+        setEyeError(errorMessage);
+        toast.error(errorMessage);
         return;
       }
 
@@ -405,9 +507,28 @@ export default function PlaygroundPage() {
                   rows={6}
                   disabled={loading}
                 />
+                {/* Character count indicator */}
+                <div className="flex justify-between text-xs text-semantic-muted">
+                  <span>
+                    {taskInput.trim().length < MIN_INPUT_LENGTH
+                      ? `Minimum ${MIN_INPUT_LENGTH} characters required`
+                      : ""}
+                  </span>
+                  <span
+                    className={
+                      taskInput.trim().length < MIN_INPUT_LENGTH
+                        ? STATUS_TEXT_COLORS.warning
+                        : STATUS_TEXT_COLORS.success
+                    }
+                  >
+                    {taskInput.trim().length} / {MIN_INPUT_LENGTH}
+                  </span>
+                </div>
                 <button
                   type="submit"
-                  disabled={loading || !taskInput.trim()}
+                  disabled={
+                    loading || taskInput.trim().length < MIN_INPUT_LENGTH
+                  }
                   className="w-full flex items-center justify-center gap-2 bg-brand-primary hover:bg-brand-primary-hover disabled:bg-semantic-muted text-brand-foreground py-3 px-6 rounded-lg font-semibold transition-all disabled:cursor-not-allowed"
                 >
                   {loading ? (
@@ -480,9 +601,31 @@ export default function PlaygroundPage() {
                   </div>
                 )}
 
+                {/* Character count indicator for eye input */}
+                <div className="flex justify-between text-xs text-semantic-muted">
+                  <span>
+                    {eyeInput.trim().length < MIN_INPUT_LENGTH
+                      ? `Minimum ${MIN_INPUT_LENGTH} characters required`
+                      : ""}
+                  </span>
+                  <span
+                    className={
+                      eyeInput.trim().length < MIN_INPUT_LENGTH
+                        ? STATUS_TEXT_COLORS.warning
+                        : STATUS_TEXT_COLORS.success
+                    }
+                  >
+                    {eyeInput.trim().length} / {MIN_INPUT_LENGTH}
+                  </span>
+                </div>
+
                 <button
                   type="submit"
-                  disabled={eyeLoading || !selectedEye || !eyeInput.trim()}
+                  disabled={
+                    eyeLoading ||
+                    !selectedEye ||
+                    eyeInput.trim().length < MIN_INPUT_LENGTH
+                  }
                   className="w-full flex items-center justify-center gap-2 bg-brand-primary hover:bg-brand-primary-hover disabled:bg-semantic-muted text-brand-foreground py-3 px-6 rounded-lg font-semibold transition-all disabled:cursor-not-allowed"
                 >
                   {eyeLoading ? (

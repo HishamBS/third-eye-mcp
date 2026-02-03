@@ -177,9 +177,10 @@ function buildSystemPrompt(
     parts.push(PromptSection.EMPTY_LINE);
   }
 
-  // Response format requirements
+  // Response format requirements - explicit tool-calling instruction
   parts.push(PromptSection.RESPONSE_FORMAT);
   parts.push(PromptSection.RESPONSE_FORMAT_INSTRUCTION);
+  parts.push(PromptSection.TOOL_CALL_REQUIREMENT);
   parts.push(PromptSection.EMPTY_LINE);
   parts.push(PromptSection.RESPONSE_SCHEMA_INTRO);
   parts.push(PromptSection.JSON_BLOCK_START);

@@ -142,7 +142,7 @@ export function useConversationEventsByType(
 
     try {
       const response = await fetch(
-        `/api/conversation-events/session/${sessionId}/type/${eventType}`,
+        `${API_BASE_URL}/api/conversation-events/session/${sessionId}/type/${eventType}`,
       );
 
       if (!response.ok) {
