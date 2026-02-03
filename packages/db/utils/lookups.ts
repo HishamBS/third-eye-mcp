@@ -44,6 +44,17 @@ function setCache<T>(key: string, value: T): void {
 }
 
 /**
+ * Normalize name by removing diacritics and special characters
+ * e.g., "Mangekyō" → "mangekyo", "Jōgan" → "jogan"
+ */
+function normalizeEyeName(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFD") // Decompose accented characters
+    .replace(/[\u0300-\u036f]/g, ""); // Remove combining diacritical marks
+}
+
+/**
  * Clear all cached lookups (call after database modifications)
  */
 export function clearLookupCache(): void {
@@ -55,18 +66,34 @@ export function clearLookupCache(): void {
  */
 
 export async function getEyeIdByName(name: string): Promise<string | null> {
-  const cacheKey = getCacheKey("eye:id", name.toLowerCase());
+  const normalizedInput = normalizeEyeName(name);
+  const cacheKey = getCacheKey("eye:id", normalizedInput);
   const cached = getCached<string>(cacheKey);
   if (cached) return cached;
 
   const { db } = getDb();
-  // Case-insensitive lookup: database stores "Overseer" but middleware sends "overseer"
-  const eye = await db
+
+  // First try exact case-insensitive match
+  let eye = await db
     .select({ id: eyes.id })
     .from(eyes)
     .where(sql`LOWER(${eyes.name}) = LOWER(${name})`)
     .limit(1)
     .get();
+
+  // If not found, fetch all eyes and match with diacritic normalization
+  if (!eye) {
+    const allEyes = await db
+      .select({ id: eyes.id, name: eyes.name })
+      .from(eyes)
+      .all();
+    for (const e of allEyes) {
+      if (normalizeEyeName(e.name) === normalizedInput) {
+        eye = { id: e.id };
+        break;
+      }
+    }
+  }
 
   const id = eye?.id || null;
   if (id) setCache(cacheKey, id);
@@ -141,18 +168,31 @@ export async function getEyeSlugById(id: string): Promise<string | null> {
 export async function getEyeByName(
   name: string,
 ): Promise<typeof eyes.$inferSelect | null> {
-  const cacheKey = getCacheKey("eye:full", name.toLowerCase());
+  const normalizedInput = normalizeEyeName(name);
+  const cacheKey = getCacheKey("eye:full", normalizedInput);
   const cached = getCached<typeof eyes.$inferSelect>(cacheKey);
   if (cached) return cached;
 
   const { db } = getDb();
-  // Case-insensitive lookup: database stores "Overseer" but middleware sends "overseer"
-  const eye = await db
+
+  // First try exact case-insensitive match
+  let eye = await db
     .select()
     .from(eyes)
     .where(sql`LOWER(${eyes.name}) = LOWER(${name})`)
     .limit(1)
     .get();
+
+  // If not found, fetch all eyes and match with diacritic normalization
+  if (!eye) {
+    const allEyes = await db.select().from(eyes).all();
+    for (const e of allEyes) {
+      if (normalizeEyeName(e.name) === normalizedInput) {
+        eye = e;
+        break;
+      }
+    }
+  }
 
   if (eye) setCache(cacheKey, eye);
   return eye || null;

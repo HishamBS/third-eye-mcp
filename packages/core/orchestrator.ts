@@ -1111,11 +1111,19 @@ export class EyeOrchestrator {
     const eyeNameLower = eyeName.toLowerCase();
     const eyeId = this.getEyeIdFromName(eyeNameLower);
 
+    // DEBUG: Log stage determination
+    console.log(
+      `[determineStage] eyeName="${eyeName}", eyeNameLower="${eyeNameLower}", eyeId="${eyeId}"`,
+    );
+
     // STRICT: Check if Eye has GUIDANCE phase - if not, always use VALIDATION
     // Byakugan is validation-only per VISION.md
     if (eyeId) {
       const hasGuidanceTemplate =
         getStageTemplate(eyeId, EyeStageToken.GUIDANCE) !== null;
+      console.log(
+        `[determineStage] eyeId="${eyeId}", hasGuidanceTemplate=${hasGuidanceTemplate}`,
+      );
       if (!hasGuidanceTemplate) {
         // This Eye is validation-only - ALWAYS use VALIDATION
         console.log(
@@ -1123,6 +1131,10 @@ export class EyeOrchestrator {
         );
         return EyeStageToken.VALIDATION;
       }
+    } else {
+      console.warn(
+        `[determineStage] WARNING: eyeId is null for "${eyeName}" - stage check skipped`,
+      );
     }
 
     const state = orderGuard.getState(sessionId);
@@ -1177,12 +1189,25 @@ export class EyeOrchestrator {
   }
 
   /**
+   * Normalize eye name by removing diacritics and special characters
+   * e.g., "Mangekyō" → "mangekyo", "Jōgan" → "jogan"
+   */
+  private normalizeEyeName(name: string): string {
+    return name
+      .toLowerCase()
+      .normalize("NFD") // Decompose accented characters
+      .replace(/[\u0300-\u036f]/g, ""); // Remove combining diacritical marks
+  }
+
+  /**
    * Get EyeId enum value from eye name string
+   * Handles special characters like ō, ā, etc.
    */
   private getEyeIdFromName(eyeName: string): EyeId | null {
-    const nameLower = eyeName.toLowerCase();
+    const normalizedInput = this.normalizeEyeName(eyeName);
     for (const [key, value] of Object.entries(EyeId)) {
-      if (value.toLowerCase() === nameLower) {
+      const normalizedValue = this.normalizeEyeName(value);
+      if (normalizedValue === normalizedInput) {
         return value as EyeId;
       }
     }
