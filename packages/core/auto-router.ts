@@ -290,11 +290,22 @@ export class AutoRouter {
 
     const pipelineRoute = overseerResult.data?.pipelineRoute;
     if (!Array.isArray(pipelineRoute) || pipelineRoute.length === 0) {
-      console.error(
-        "[AutoRouter] Overseer returned invalid pipeline route:",
+      // Graceful fallback: Route to Sharingan for clarification instead of throwing
+      console.warn(
+        "[AutoRouter] Overseer returned empty/invalid pipeline route. Falling back to Sharingan for clarification.",
         overseerResult.data,
       );
-      throw new Error("Overseer did not provide a valid pipelineRoute array");
+
+      // Return a minimal routing decision that asks for clarification
+      return {
+        sessionId: actualSessionId,
+        taskType: "text" as const,
+        complexity: "simple" as const,
+        recommendedFlow: ["sharingan"] as EyeName[],
+        reasoning:
+          "Overseer could not determine a specific pipeline. Routing to Sharingan for clarification.",
+        estimatedSteps: 1,
+      };
     }
 
     // ========================================================================
