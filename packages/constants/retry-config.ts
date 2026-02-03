@@ -102,7 +102,8 @@ export const RETRY_REASON = Object.freeze({
  */
 export const FALLBACK_CONFIG = Object.freeze({
   // Enable automatic fallback to backup providers
-  ENABLED: true,
+  // DISABLED per SSOT policy - no error masking, fail fast
+  ENABLED: false,
 
   // Maximum number of providers to try in fallback chain (primary + fallbacks)
   MAX_PROVIDERS_TO_TRY: 3,
