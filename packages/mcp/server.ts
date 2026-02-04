@@ -514,7 +514,60 @@ export function createMCPServer(): Server {
             };
           }
 
-          // Status is "confirmed" - human approved
+          // Status is "confirmed" - human approved. Resume the pipeline.
+          const { autoRouter } = await import("@third-eye/core");
+          const resumeResult = await autoRouter.resumeFlow(
+            confirmation.sessionId,
+            undefined,
+            {
+              strictness: strictnessOptions,
+              context: contextOptions,
+            },
+          );
+
+          // If resume failed, return the error
+          if (!resumeResult.completed && resumeResult.error) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      status: "error",
+                      code: "E_RESUME_FAILED",
+                      verdict: "ERROR",
+                      summary: `Pipeline resume failed after confirmation: ${resumeResult.error}`,
+                      metadata: {
+                        sessionId: confirmation.sessionId,
+                        confirmationId: confirmation.id,
+                        portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${confirmation.sessionId}`,
+                      },
+                      data: {
+                        error: resumeResult.error,
+                      },
+                    },
+                    null,
+                    2,
+                  ),
+                },
+              ],
+              isError: true,
+            };
+          }
+
+          // Pipeline resumed and completed successfully
+          const finalResult = resumeResult.results[
+            resumeResult.results.length - 1
+          ] as Record<string, unknown> | undefined;
+
+          const sanitizedData: Record<string, unknown> = {};
+
+          if (finalResult && typeof finalResult === "object") {
+            if ("md" in finalResult && typeof finalResult.md === "string") {
+              sanitizedData.content = finalResult.md;
+            }
+          }
+
           return {
             content: [
               {
@@ -522,15 +575,26 @@ export function createMCPServer(): Server {
                 text: JSON.stringify(
                   {
                     status: "success",
-                    code: "INTENT_CONFIRMED",
-                    verdict: "APPROVED",
+                    code:
+                      typeof finalResult?.code === "string"
+                        ? finalResult.code
+                        : "OK",
+                    verdict:
+                      typeof finalResult?.verdict === "string"
+                        ? finalResult.verdict
+                        : "APPROVED",
                     summary:
-                      "Human confirmed the intent. You may proceed with the task.",
+                      typeof finalResult?.summary === "string"
+                        ? finalResult.summary
+                        : "Pipeline completed after intent confirmation.",
                     metadata: {
                       sessionId: confirmation.sessionId,
                       confirmationId: confirmation.id,
                       portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${confirmation.sessionId}`,
+                      stepsExecuted: resumeResult.results.length,
+                      resumedAfterConfirmation: true,
                     },
+                    data: sanitizedData,
                   },
                   null,
                   2,
@@ -594,10 +658,66 @@ export function createMCPServer(): Server {
             };
           }
 
-          // No pending = all answered. Get resolved facts.
+          // No pending = all answered. Get resolved facts and RESUME the pipeline.
           const resolvedFacts = await getResolvedFacts(
             checkClarificationStatus,
           );
+
+          // Resume the pipeline with the clarified information
+          const { autoRouter } = await import("@third-eye/core");
+          const resumeResult = await autoRouter.resumeFlow(
+            checkClarificationStatus,
+            undefined,
+            {
+              strictness: strictnessOptions,
+              context: contextOptions,
+            },
+          );
+
+          // If resume failed, return the error
+          if (!resumeResult.completed && resumeResult.error) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      status: "error",
+                      code: "E_RESUME_FAILED",
+                      verdict: "ERROR",
+                      summary: `Pipeline resume failed: ${resumeResult.error}`,
+                      metadata: {
+                        sessionId: checkClarificationStatus,
+                        portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${checkClarificationStatus}`,
+                      },
+                      data: {
+                        resolvedFacts,
+                        error: resumeResult.error,
+                      },
+                    },
+                    null,
+                    2,
+                  ),
+                },
+              ],
+              isError: true,
+            };
+          }
+
+          // Pipeline resumed and completed successfully
+          const finalResult = resumeResult.results[
+            resumeResult.results.length - 1
+          ] as Record<string, unknown> | undefined;
+
+          const sanitizedData: Record<string, unknown> = {
+            resolvedFacts,
+          };
+
+          if (finalResult && typeof finalResult === "object") {
+            if ("md" in finalResult && typeof finalResult.md === "string") {
+              sanitizedData.content = finalResult.md;
+            }
+          }
 
           return {
             content: [
@@ -606,17 +726,25 @@ export function createMCPServer(): Server {
                 text: JSON.stringify(
                   {
                     status: "success",
-                    code: "CLARIFICATION_ANSWERED",
-                    verdict: "PROCEED",
+                    code:
+                      typeof finalResult?.code === "string"
+                        ? finalResult.code
+                        : "OK",
+                    verdict:
+                      typeof finalResult?.verdict === "string"
+                        ? finalResult.verdict
+                        : "APPROVED",
                     summary:
-                      "Human answered all clarification questions. You may proceed with the task using these answers.",
+                      typeof finalResult?.summary === "string"
+                        ? finalResult.summary
+                        : "Pipeline completed after clarification.",
                     metadata: {
                       sessionId: checkClarificationStatus,
                       portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${checkClarificationStatus}`,
+                      stepsExecuted: resumeResult.results.length,
+                      resumedAfterClarification: true,
                     },
-                    data: {
-                      resolvedFacts,
-                    },
+                    data: sanitizedData,
                   },
                   null,
                   2,
