@@ -163,25 +163,10 @@ describe("Eye Routing", () => {
         eye: "sharingan",
         primaryProvider: "groq",
         primaryModel: "mixtral-8x7b",
-        fallbackProvider: "openrouter",
-        fallbackModel: "mistral-7b",
       };
 
       expect(routing.primaryProvider).toBe("groq");
       expect(routing.primaryModel).toBe("mixtral-8x7b");
-    });
-
-    it("should have fallback configuration", () => {
-      const routing = {
-        eye: "rinnegan",
-        primaryProvider: "groq",
-        primaryModel: "llama-70b",
-        fallbackProvider: "ollama",
-        fallbackModel: "llama3",
-      };
-
-      expect(routing.fallbackProvider).toBeDefined();
-      expect(routing.fallbackModel).toBeDefined();
     });
   });
 });

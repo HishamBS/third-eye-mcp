@@ -595,8 +595,6 @@ app.post("/custom", async (c) => {
           eyeId: id,
           primaryProvider: defaultRoutingData.primaryProvider,
           primaryModel: defaultRoutingData.primaryModel,
-          fallbackProvider: defaultRoutingData.fallbackProvider,
-          fallbackModel: defaultRoutingData.fallbackModel,
           createdAt: now,
         })
         .run();

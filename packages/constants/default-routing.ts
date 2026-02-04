@@ -23,25 +23,11 @@ export const DEFAULT_PRIMARY_PROVIDER = "groq" as const;
 export const DEFAULT_PRIMARY_MODEL = "llama-3.3-70b-versatile" as const;
 
 /**
- * Default Fallback Provider
- * Used when primary provider fails or rate limits
- */
-export const DEFAULT_FALLBACK_PROVIDER = "openrouter" as const;
-
-/**
- * Default Fallback Model
- * High-quality fallback for when Groq is unavailable
- */
-export const DEFAULT_FALLBACK_MODEL = "anthropic/claude-3.5-sonnet" as const;
-
-/**
  * Type-safe routing defaults
  */
 export interface DefaultRoutingConfig {
   primaryProvider: typeof DEFAULT_PRIMARY_PROVIDER;
   primaryModel: typeof DEFAULT_PRIMARY_MODEL;
-  fallbackProvider: typeof DEFAULT_FALLBACK_PROVIDER;
-  fallbackModel: typeof DEFAULT_FALLBACK_MODEL;
 }
 
 /**
@@ -51,7 +37,5 @@ export function getDefaultRoutingConfig(): DefaultRoutingConfig {
   return {
     primaryProvider: DEFAULT_PRIMARY_PROVIDER,
     primaryModel: DEFAULT_PRIMARY_MODEL,
-    fallbackProvider: DEFAULT_FALLBACK_PROVIDER,
-    fallbackModel: DEFAULT_FALLBACK_MODEL,
   };
 }

@@ -1,6 +1,4 @@
 import {
-  DEFAULT_FALLBACK_MODEL,
-  DEFAULT_FALLBACK_PROVIDER,
   DEFAULT_PRIMARY_MODEL,
   DEFAULT_PRIMARY_PROVIDER,
 } from "@third-eye/constants";
@@ -540,8 +538,6 @@ async function seedRouting(
       eyeId: eyeUuid,
       primaryProvider: DEFAULT_PRIMARY_PROVIDER,
       primaryModel: DEFAULT_PRIMARY_MODEL,
-      fallbackProvider: DEFAULT_FALLBACK_PROVIDER,
-      fallbackModel: DEFAULT_FALLBACK_MODEL,
       createdAt: now,
     } as NewEyeRouting;
   }).filter((entry): entry is NewEyeRouting => entry !== null);
@@ -937,6 +933,71 @@ export async function seedDefaults(
     EYE_NAME_TO_UUID_MAP.clear();
     log(`  ✗ Seed failed, rolling back and clearing UUID map: ${error}`);
     throw error; // Re-throw to propagate error
+  }
+}
+
+/**
+ * Update blueprint missions only - safe operation that preserves routing/keys
+ * Use this when blueprint prompts change but you don't want to reset user config
+ */
+export async function updateBlueprintMissions(
+  options: { log?: (message: string) => void } = {},
+): Promise<number> {
+  const { db } = getDb();
+  const log = options.log ?? ((message: string) => console.error(message));
+  const now = new Date();
+  let updated = 0;
+
+  try {
+    // Get all eyes to map slug -> id
+    const allEyes = await db
+      .select({ id: eyes.id, slug: eyes.slug })
+      .from(eyes)
+      .all();
+
+    const slugToId = new Map(allEyes.map((e) => [e.slug, e.id]));
+
+    // Update each blueprint's mission from DEFAULT_BLUEPRINTS
+    for (const [eyeSlug, blueprintData] of Object.entries(DEFAULT_BLUEPRINTS)) {
+      const blueprint = blueprintData as {
+        metadata: { name: string };
+        mission: string;
+        phases: unknown;
+        reminders?: readonly string[];
+      };
+      const eyeId = slugToId.get(eyeSlug.toLowerCase());
+      if (!eyeId) {
+        log(`  ⚠ Skipping ${eyeSlug} - eye not found in database`);
+        continue;
+      }
+
+      // Update the persona_blueprints table
+      await db
+        .update(personaBlueprints)
+        .set({
+          mission: blueprint.mission,
+          phases: JSON.stringify(blueprint.phases),
+          reminders: JSON.stringify(blueprint.reminders || []),
+          updatedAt: now,
+        })
+        .where(eq(personaBlueprints.eyeId, eyeId))
+        .run();
+
+      // Also update the personas table mission field
+      await db
+        .update(personas)
+        .set({ mission: blueprint.mission })
+        .where(eq(personas.eyeId, eyeId))
+        .run();
+
+      log(`  ✓ Updated ${blueprint.metadata.name} mission`);
+      updated++;
+    }
+
+    return updated;
+  } catch (error) {
+    log(`  ✗ Failed to update blueprint missions: ${error}`);
+    throw error;
   }
 }
 

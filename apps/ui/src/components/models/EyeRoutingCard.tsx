@@ -25,7 +25,6 @@ import {
 import { MESSAGES } from "@/constants/messages";
 import { PROVIDERS } from "@/constants/models";
 import { EyeId } from "@third-eye/constants";
-import type { ProviderDefinition } from "@/constants/models";
 
 interface ModelInfo {
   name: string;
@@ -42,8 +41,6 @@ interface EyeRouting {
   eye: string;
   primaryProvider: string;
   primaryModel: string;
-  fallbackProvider?: string;
-  fallbackModel?: string;
 }
 
 interface EyeRoutingCardProps {
@@ -55,9 +52,7 @@ interface EyeRoutingCardProps {
   saving: boolean;
   lastSaved: Date | null;
   onChange: (updates: Partial<EyeRouting>) => void;
-  onQuickAction: (
-    action: "copy-overseer" | "reset-default" | "use-same-primary" | "clear",
-  ) => void;
+  onQuickAction: (action: "copy-overseer" | "reset-default" | "clear") => void;
   expanded: boolean;
   onToggle: () => void;
 }
@@ -77,11 +72,7 @@ export function EyeRoutingCard({
 }: EyeRoutingCardProps) {
   const [showProviderSelector, setShowProviderSelector] = useState(false);
   const [showModelSelector, setShowModelSelector] = useState(false);
-  const [showFallback, setShowFallback] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
-  const [selectorType, setSelectorType] = useState<"primary" | "fallback">(
-    "primary",
-  );
   const quickActionsRef = useRef<HTMLDivElement>(null);
 
   // Close popover when clicking outside
@@ -125,8 +116,6 @@ export function EyeRoutingCard({
 
   const primaryProvider = routing?.primaryProvider || "";
   const primaryModel = routing?.primaryModel || "";
-  const fallbackProvider = routing?.fallbackProvider || "";
-  const fallbackModel = routing?.fallbackModel || "";
 
   const primaryDisplay =
     primaryProvider && primaryModel
@@ -134,46 +123,24 @@ export function EyeRoutingCard({
       : MESSAGES.SELECT_PROVIDER;
 
   const handleProviderSelect = (providerId: string) => {
-    if (selectorType === "primary") {
-      onChange({ primaryProvider: providerId });
-      if (models[providerId] && models[providerId].length > 0) {
-        setShowProviderSelector(false);
-        setShowModelSelector(true);
-      }
-    } else {
-      onChange({ fallbackProvider: providerId });
-      if (models[providerId] && models[providerId].length > 0) {
-        setShowProviderSelector(false);
-        setShowModelSelector(true);
-      }
+    onChange({ primaryProvider: providerId });
+    if (models[providerId] && models[providerId].length > 0) {
+      setShowProviderSelector(false);
+      setShowModelSelector(true);
     }
   };
 
   const handleModelSelect = (modelName: string) => {
-    if (selectorType === "primary") {
-      onChange({ primaryModel: modelName });
-    } else {
-      onChange({ fallbackModel: modelName });
-    }
+    onChange({ primaryModel: modelName });
     setShowModelSelector(false);
   };
 
-  const handleRoutingClick = (type: "primary" | "fallback") => {
-    setSelectorType(type);
-    if (type === "primary") {
-      const currentProvider = primaryProvider;
-      if (currentProvider && models[currentProvider]) {
-        setShowModelSelector(true);
-      } else {
-        setShowProviderSelector(true);
-      }
+  const handleRoutingClick = () => {
+    const currentProvider = primaryProvider;
+    if (currentProvider && models[currentProvider]) {
+      setShowModelSelector(true);
     } else {
-      const currentProvider = fallbackProvider;
-      if (currentProvider && models[currentProvider]) {
-        setShowModelSelector(true);
-      } else {
-        setShowProviderSelector(true);
-      }
+      setShowProviderSelector(true);
     }
   };
 
@@ -257,16 +224,6 @@ export function EyeRoutingCard({
                 </button>
                 <button
                   onClick={() => {
-                    onQuickAction("use-same-primary");
-                    setShowQuickActions(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-brand-foreground hover:bg-brand-paperElev transition-colors"
-                >
-                  <ArrowRight className="h-4 w-4" />
-                  {MESSAGES.USE_SAME_AS_PRIMARY}
-                </button>
-                <button
-                  onClick={() => {
                     onQuickAction("clear");
                     setShowQuickActions(false);
                   }}
@@ -291,9 +248,11 @@ export function EyeRoutingCard({
             >
               {/* Primary Routing */}
               <div className="space-y-2">
-                <h4 className="font-medium text-semantic-muted">Primary</h4>
+                <h4 className="font-medium text-semantic-muted">
+                  Provider & Model
+                </h4>
                 <button
-                  onClick={() => handleRoutingClick("primary")}
+                  onClick={handleRoutingClick}
                   className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-left text-brand-foreground transition-colors hover:border-brand-accent hover:bg-brand-paperElev focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
                 >
                   <div className="flex items-center justify-between">
@@ -310,40 +269,6 @@ export function EyeRoutingCard({
                   </div>
                 </button>
               </div>
-
-              {/* Fallback Routing */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-semantic-muted">Fallback</h4>
-                  <button
-                    onClick={() => setShowFallback(!showFallback)}
-                    className="text-xs text-semantic-muted hover:text-brand-accent transition-colors"
-                  >
-                    {showFallback ? "Hide" : "Show"}
-                  </button>
-                </div>
-                {showFallback && (
-                  <button
-                    onClick={() => handleRoutingClick("fallback")}
-                    className="w-full rounded-xl border border-brand-outline/50 bg-brand-paper px-4 py-3 text-left text-brand-foreground transition-colors hover:border-brand-accent hover:bg-brand-paperElev focus:outline-none focus:ring-2 focus:ring-brand-accent/40"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span
-                        className={
-                          fallbackProvider && fallbackModel
-                            ? ""
-                            : "text-semantic-muted"
-                        }
-                      >
-                        {fallbackProvider && fallbackModel
-                          ? `${getProviderName(fallbackProvider)} → ${getModelDisplayName(fallbackProvider, fallbackModel)}`
-                          : MESSAGES.NONE}
-                      </span>
-                      <ArrowRight className="h-4 w-4 text-semantic-muted" />
-                    </div>
-                  </button>
-                )}
-              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -351,9 +276,7 @@ export function EyeRoutingCard({
 
       <ProviderSelector
         providers={PROVIDERS}
-        selectedProvider={
-          selectorType === "primary" ? primaryProvider : fallbackProvider
-        }
+        selectedProvider={primaryProvider}
         onSelect={handleProviderSelect}
         onClose={() => setShowProviderSelector(false)}
         isOpen={showProviderSelector}
@@ -361,17 +284,9 @@ export function EyeRoutingCard({
       />
 
       <ModelSelector
-        provider={
-          selectorType === "primary" ? primaryProvider : fallbackProvider
-        }
-        models={
-          models[
-            selectorType === "primary" ? primaryProvider : fallbackProvider
-          ] || []
-        }
-        selectedModel={
-          selectorType === "primary" ? primaryModel : fallbackModel
-        }
+        provider={primaryProvider}
+        models={models[primaryProvider] || []}
+        selectedModel={primaryModel}
         onSelect={handleModelSelect}
         onClose={() => setShowModelSelector(false)}
         isOpen={showModelSelector}

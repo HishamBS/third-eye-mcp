@@ -201,8 +201,6 @@ describe("Database Schema - Eyes Routing", () => {
       eye: "sharingan",
       primaryProvider: "groq",
       primaryModel: "llama-3.3-70b-versatile",
-      fallbackProvider: "openrouter",
-      fallbackModel: "anthropic/claude-3.5-sonnet",
     };
 
     await db.insert(eyesRouting).values(routing).run();
@@ -215,28 +213,7 @@ describe("Database Schema - Eyes Routing", () => {
 
     expect(retrieved).toBeDefined();
     expect(retrieved?.primaryProvider).toBe("groq");
-    expect(retrieved?.fallbackProvider).toBe("openrouter");
-  });
-
-  test("should allow routing without fallback", async () => {
-    const routing = {
-      eye: "byakugan",
-      primaryProvider: "ollama",
-      primaryModel: "llama3.1:8b",
-      fallbackProvider: null,
-      fallbackModel: null,
-    };
-
-    await db.insert(eyesRouting).values(routing).run();
-
-    const retrieved = await db
-      .select()
-      .from(eyesRouting)
-      .where(eq(eyesRouting.eye, "byakugan"))
-      .get();
-
-    expect(retrieved?.fallbackProvider).toBeNull();
-    expect(retrieved?.fallbackModel).toBeNull();
+    expect(retrieved?.primaryModel).toBe("llama-3.3-70b-versatile");
   });
 
   test("should update routing configuration", async () => {
@@ -246,16 +223,14 @@ describe("Database Schema - Eyes Routing", () => {
         eye: "jogan",
         primaryProvider: "groq",
         primaryModel: "llama-3.3-70b-versatile",
-        fallbackProvider: null,
-        fallbackModel: null,
       })
       .run();
 
     await db
       .update(eyesRouting)
       .set({
-        fallbackProvider: "openrouter",
-        fallbackModel: "anthropic/claude-3.5-sonnet",
+        primaryProvider: "ollama",
+        primaryModel: "llama3.1:8b",
       })
       .where(eq(eyesRouting.eye, "jogan"))
       .run();
@@ -266,7 +241,8 @@ describe("Database Schema - Eyes Routing", () => {
       .where(eq(eyesRouting.eye, "jogan"))
       .get();
 
-    expect(updated?.fallbackProvider).toBe("openrouter");
+    expect(updated?.primaryProvider).toBe("ollama");
+    expect(updated?.primaryModel).toBe("llama3.1:8b");
   });
 });
 

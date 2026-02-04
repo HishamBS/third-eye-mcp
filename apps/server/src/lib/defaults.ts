@@ -12,8 +12,6 @@ import { eq } from "drizzle-orm";
 export interface DefaultRouting {
   primaryProvider: string;
   primaryModel: string;
-  fallbackProvider: string;
-  fallbackModel: string;
 }
 
 /**
@@ -39,9 +37,7 @@ export async function getDefaultRouting(): Promise<DefaultRouting> {
       // Validate structure
       if (
         typeof parsed.primaryProvider === "string" &&
-        typeof parsed.primaryModel === "string" &&
-        typeof parsed.fallbackProvider === "string" &&
-        typeof parsed.fallbackModel === "string"
+        typeof parsed.primaryModel === "string"
       ) {
         return parsed;
       }
@@ -52,11 +48,9 @@ export async function getDefaultRouting(): Promise<DefaultRouting> {
     }
   }
 
-  // System defaults (fallback only)
+  // System defaults
   return {
     primaryProvider: "groq",
     primaryModel: "llama-3.3-70b-versatile",
-    fallbackProvider: "openrouter",
-    fallbackModel: "anthropic/claude-3.5-sonnet",
   };
 }

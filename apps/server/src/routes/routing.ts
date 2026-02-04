@@ -113,13 +113,8 @@ app.get("/:eye", async (c) => {
 app.post("/", validateBodyWithEnvelope(schemas.routingCreate), async (c) => {
   try {
     // Eye name is already normalized to lowercase by validation middleware
-    const {
-      eye,
-      primaryProvider,
-      primaryModel,
-      fallbackProvider,
-      fallbackModel,
-    } = getValidatedBody<RoutingCreate>(c);
+    const { eye, primaryProvider, primaryModel } =
+      getValidatedBody<RoutingCreate>(c);
 
     const { db } = getDb();
 
@@ -143,8 +138,6 @@ app.post("/", validateBodyWithEnvelope(schemas.routingCreate), async (c) => {
         .set({
           primaryProvider,
           primaryModel,
-          fallbackProvider: fallbackProvider || null,
-          fallbackModel: fallbackModel || null,
         })
         .where(eq(eyesRouting.eyeId, eyeId))
         .run();
@@ -157,8 +150,6 @@ app.post("/", validateBodyWithEnvelope(schemas.routingCreate), async (c) => {
           eyeId,
           primaryProvider,
           primaryModel,
-          fallbackProvider: fallbackProvider || null,
-          fallbackModel: fallbackModel || null,
           createdAt: new Date(),
         })
         .run();

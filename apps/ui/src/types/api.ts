@@ -128,8 +128,6 @@ export interface EyeRouting {
   eye: string;
   primaryProvider: string;
   primaryModel: string;
-  fallbackProvider: string | null;
-  fallbackModel: string | null;
 }
 
 // GET /api/routing - Get all routing configs

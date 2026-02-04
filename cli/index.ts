@@ -62,6 +62,7 @@ interface CliArgs {
   skipUpdate?: boolean;
   nuclear?: boolean;
   quick?: boolean;
+  reseedBlueprints?: boolean;
 }
 
 function showHelp() {
@@ -97,6 +98,7 @@ ${kleur.cyan("OPTIONS:")}
   --skip-update   Skip dependency updates (faster iterations)
   --quick         Skip updates and stale checks (just start)
   --nuclear       Full clean (remove node_modules, reinstall)
+  --reseed-blueprints  Update eye prompts only (preserves routing/keys)
 
 ${kleur.cyan("EXAMPLES:")}
   ${CLI_EXEC} up
@@ -104,6 +106,7 @@ ${kleur.cyan("EXAMPLES:")}
   ${CLI_EXEC} up --no-ui --port 8080
   ${CLI_EXEC} up --quick
   ${CLI_EXEC} up --nuclear
+  ${CLI_EXEC} up --reseed-blueprints   ${kleur.gray("# Update eye prompts (safe)")}
   ${CLI_EXEC} status
   ${CLI_EXEC} logs --tail
   ${CLI_EXEC} stop
@@ -154,6 +157,9 @@ function parseArgs(): CliArgs {
         break;
       case "--quick":
         parsed.quick = true;
+        break;
+      case "--reseed-blueprints":
+        parsed.reseedBlueprints = true;
         break;
     }
   }
@@ -321,7 +327,10 @@ async function installWithFallback(
   throw lastError ?? new Error(`Failed to install dependencies for ${label}`);
 }
 
-async function prepareDatabase(verbose: boolean) {
+async function prepareDatabase(
+  verbose: boolean,
+  reseedBlueprints: boolean = false,
+) {
   const start = Date.now();
 
   try {
@@ -452,7 +461,21 @@ async function prepareDatabase(verbose: boolean) {
     const scopedLog = verbose
       ? (message: string) => console.log(`   ${message}`)
       : () => {};
+
+    // Normal seeding (only seeds empty tables)
     const report = await seedDefaults({ log: scopedLog });
+
+    // If --reseed-blueprints, update mission prompts without touching routing/keys
+    if (reseedBlueprints) {
+      const { updateBlueprintMissions } =
+        await import("@third-eye/db/defaults");
+      const updated = await updateBlueprintMissions({ log: scopedLog });
+      if (verbose) {
+        console.log(
+          `   🔄 Updated ${updated} blueprint missions (routing/keys preserved)`,
+        );
+      }
+    }
 
     const personaCounts = await db
       .select({ value: count() })
@@ -1792,7 +1815,7 @@ async function startServices() {
     }
   }
 
-  await prepareDatabase(!args.quiet);
+  await prepareDatabase(!args.quiet, args.reseedBlueprints || false);
   await cleanStaleProcesses([args.port || SERVER_PORT, args.uiPort || UI_PORT]);
 
   if (!args.quiet) {

@@ -82,8 +82,6 @@ export const eyesRouting = sqliteTable(
       .references(() => eyes.id), // FK to eyes
     primaryProvider: text(),
     primaryModel: text(),
-    fallbackProvider: text(),
-    fallbackModel: text(),
     createdAt: integer({ mode: "timestamp" }).notNull(),
   },
   (table) => ({
@@ -164,24 +162,6 @@ export const pipelineEvents = sqliteTable("pipeline_events", {
 });
 
 // Provider failover events for tracking fallback chain usage
-export const providerFailovers = sqliteTable("provider_failovers", {
-  id: text().primaryKey(), // UUID
-  sessionId: text()
-    .notNull()
-    .references(() => sessions.id), // FK
-  eyeId: text()
-    .notNull()
-    .references(() => eyes.id), // FK to eyes
-  primaryProvider: text().notNull(),
-  primaryModel: text().notNull(),
-  failedReason: text().notNull(),
-  fallbackProvider: text().notNull(),
-  fallbackModel: text().notNull(),
-  fallbackSuccess: integer({ mode: "boolean" }).notNull(),
-  errorDetails: text({ mode: "json" }),
-  createdAt: integer({ mode: "timestamp" }).notNull(),
-});
-
 // Rate Limit Tracking - tracks rate limit usage per provider
 export const rateLimitTracking = sqliteTable("rate_limit_tracking", {
   id: text().primaryKey(), // UUID
@@ -559,9 +539,6 @@ export type NewRun = typeof runs.$inferInsert;
 
 export type PipelineEvent = typeof pipelineEvents.$inferSelect;
 export type NewPipelineEvent = typeof pipelineEvents.$inferInsert;
-
-export type ProviderFailover = typeof providerFailovers.$inferSelect;
-export type NewProviderFailover = typeof providerFailovers.$inferInsert;
 
 export type RateLimitTracking = typeof rateLimitTracking.$inferSelect;
 export type NewRateLimitTracking = typeof rateLimitTracking.$inferInsert;

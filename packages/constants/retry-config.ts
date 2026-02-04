@@ -98,41 +98,6 @@ export const RETRY_REASON = Object.freeze({
 });
 
 /**
- * Provider Fallback Configuration
- */
-export const FALLBACK_CONFIG = Object.freeze({
-  // Enable automatic fallback to backup providers
-  // DISABLED per SSOT policy - no error masking, fail fast
-  ENABLED: false,
-
-  // Maximum number of providers to try in fallback chain (primary + fallbacks)
-  MAX_PROVIDERS_TO_TRY: 3,
-
-  // Log fallover events for analytics
-  LOG_FAILOVER_EVENTS: true,
-});
-
-/**
- * Fallback Event Types for logging
- */
-export const FALLBACK_EVENT_TYPE = Object.freeze({
-  FALLBACK_TRIGGERED: "fallback_triggered",
-  FALLBACK_SUCCESS: "fallback_success",
-  FALLBACK_FAILED: "fallback_failed",
-  ALL_PROVIDERS_EXHAUSTED: "all_providers_exhausted",
-});
-
-/**
- * Fallback Reason Categories
- */
-export const FALLBACK_REASON = Object.freeze({
-  PRIMARY_EXHAUSTED: "primary_exhausted",
-  PRIMARY_UNAVAILABLE: "primary_unavailable",
-  RETRY_LIMIT_REACHED: "retry_limit_reached",
-  PROVIDER_ERROR: "provider_error",
-});
-
-/**
  * Calculate exponential backoff delay with jitter
  *
  * Formula: min(BASE_DELAY * (MULTIPLIER ^ attempt) + jitter, MAX_DELAY)

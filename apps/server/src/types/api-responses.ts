@@ -148,8 +148,6 @@ export interface RoutingConfigResponse {
   eye: string;
   primaryProvider: string;
   primaryModel: string;
-  fallbackProvider?: string;
-  fallbackModel?: string;
   createdAt: string;
 }
 

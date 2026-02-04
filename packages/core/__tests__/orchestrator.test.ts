@@ -52,8 +52,6 @@ suite("EyeOrchestrator", () => {
         eye: "sharingan",
         primaryProvider: "ollama",
         primaryModel: "llama3.2",
-        fallbackProvider: null,
-        fallbackModel: null,
       });
     }
   });

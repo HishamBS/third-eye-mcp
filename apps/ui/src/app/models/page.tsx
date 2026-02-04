@@ -37,8 +37,6 @@ interface EyeRouting {
   eye: string;
   primaryProvider: string;
   primaryModel: string;
-  fallbackProvider?: string;
-  fallbackModel?: string;
 }
 
 interface ProviderHealth {
@@ -336,10 +334,7 @@ export default function ModelsPage() {
   };
 
   const handleQuickAction = useCallback(
-    (
-      eye: string,
-      action: "copy-overseer" | "reset-default" | "use-same-primary" | "clear",
-    ) => {
+    (eye: string, action: "copy-overseer" | "reset-default" | "clear") => {
       if (action === "copy-overseer") {
         const overseerRouting = routing.find(
           (r) => r.eye.toLowerCase() === EyeId.OVERSEER.toLowerCase(),
@@ -348,31 +343,12 @@ export default function ModelsPage() {
           handleRoutingChange(eye, {
             primaryProvider: overseerRouting.primaryProvider,
             primaryModel: overseerRouting.primaryModel,
-            fallbackProvider: overseerRouting.fallbackProvider,
-            fallbackModel: overseerRouting.fallbackModel,
           });
         }
-      } else if (action === "reset-default") {
+      } else if (action === "reset-default" || action === "clear") {
         handleRoutingChange(eye, {
           primaryProvider: "",
           primaryModel: "",
-          fallbackProvider: undefined,
-          fallbackModel: undefined,
-        });
-      } else if (action === "use-same-primary") {
-        const currentRouting = getRoutingForEye(eye);
-        if (currentRouting?.primaryProvider && currentRouting?.primaryModel) {
-          handleRoutingChange(eye, {
-            fallbackProvider: currentRouting.primaryProvider,
-            fallbackModel: currentRouting.primaryModel,
-          });
-        }
-      } else if (action === "clear") {
-        handleRoutingChange(eye, {
-          primaryProvider: "",
-          primaryModel: "",
-          fallbackProvider: undefined,
-          fallbackModel: undefined,
         });
       }
     },
@@ -391,15 +367,10 @@ export default function ModelsPage() {
 
     try {
       const promises = allEyes.map(async (eye) => {
-        const currentRouting = routing.find(
-          (r) => r.eye.toLowerCase() === eye.toLowerCase(),
-        );
         const fullRouting: EyeRouting = {
           eye,
           primaryProvider: globalProvider,
           primaryModel: globalModel,
-          fallbackProvider: currentRouting?.fallbackProvider,
-          fallbackModel: currentRouting?.fallbackModel,
         };
         return saveRoutingForEye(eye, fullRouting);
       });

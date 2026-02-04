@@ -35,8 +35,6 @@ app.use("*", errorHandler());
 const updateEyeRoutingSchema = z.object({
   primaryProvider: z.string().optional(),
   primaryModel: z.string().optional(),
-  fallbackProvider: z.string().optional(),
-  fallbackModel: z.string().optional(),
 });
 
 // Get all tables with their data
@@ -90,8 +88,6 @@ app.get("/tables", async (c) => {
             { name: "eyeId", type: "text" },
             { name: "primaryProvider", type: "text" },
             { name: "primaryModel", type: "text" },
-            { name: "fallbackProvider", type: "text" },
-            { name: "fallbackModel", type: "text" },
           ],
         },
         personas: {

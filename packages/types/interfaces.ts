@@ -129,8 +129,6 @@ export interface EyeRouting {
   eye: EyeName;
   primaryProvider: ProviderId;
   primaryModel: string;
-  fallbackProvider?: ProviderId;
-  fallbackModel?: string;
 }
 
 /**

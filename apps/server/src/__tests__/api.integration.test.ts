@@ -158,8 +158,6 @@ describe("Routing API", () => {
         eye: "test-routing-eye",
         primaryProvider: "groq",
         primaryModel: "llama-3.3-70b-versatile",
-        fallbackProvider: "openrouter",
-        fallbackModel: "anthropic/claude-3.5-sonnet",
       }),
     });
 

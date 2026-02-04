@@ -37,8 +37,6 @@ interface EyeRouting {
   eye: string;
   primaryProvider: string | null;
   primaryModel: string | null;
-  fallbackProvider: string | null;
-  fallbackModel: string | null;
 }
 
 export default function EyeDetailPage() {
@@ -541,22 +539,6 @@ export default function EyeDetailPage() {
                   </label>
                   <p className="text-brand-foreground">
                     {routing.primaryModel || "Not configured"}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-semantic-muted mb-2">
-                    Fallback Provider
-                  </label>
-                  <p className="text-brand-foreground">
-                    {routing.fallbackProvider || "Not configured"}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-semantic-muted mb-2">
-                    Fallback Model
-                  </label>
-                  <p className="text-brand-foreground">
-                    {routing.fallbackModel || "Not configured"}
                   </p>
                 </div>
               </div>

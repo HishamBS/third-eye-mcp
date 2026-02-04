@@ -2,8 +2,6 @@ import {
   categorizeRetryReason,
   EyeId,
   EyeStageToken,
-  FALLBACK_CONFIG,
-  FALLBACK_EVENT_TYPE,
   getStageTemplate,
   RETRY_CONFIG,
 } from "@third-eye/constants";
@@ -11,7 +9,6 @@ import {
   eyesRouting,
   getDb,
   personas,
-  providerFailovers,
   providerKeys,
   runs,
   sessions,
@@ -274,8 +271,6 @@ export class EyeOrchestrator {
                 eye: eyeName,
                 primaryProvider: providerOverride.provider,
                 primaryModel: providerOverride.model,
-                fallbackProvider: null,
-                fallbackModel: null,
               }
             : await this.getEyeRouting(eyeName);
 
@@ -289,38 +284,12 @@ export class EyeOrchestrator {
             );
           }
 
-          // 4. Build provider chain (primary + fallback if configured)
-          interface ProviderConfig {
-            provider: string;
-            model: string;
-            isPrimary: boolean;
-          }
+          // 4. Get provider configuration
+          const targetProvider = routing.primaryProvider;
+          const targetModel = routing.primaryModel;
 
-          const providerChain: ProviderConfig[] = [
-            {
-              provider: routing.primaryProvider,
-              model: routing.primaryModel,
-              isPrimary: true,
-            },
-          ];
-
-          // Add fallback provider if configured and fallback is enabled
-          if (
-            FALLBACK_CONFIG.ENABLED &&
-            routing.fallbackProvider &&
-            routing.fallbackModel &&
-            providerChain.length < FALLBACK_CONFIG.MAX_PROVIDERS_TO_TRY
-          ) {
-            providerChain.push({
-              provider: routing.fallbackProvider,
-              model: routing.fallbackModel,
-              isPrimary: false,
-            });
-          }
-
-          // Track which providers we've tried
+          // Track error for reporting
           let lastError: unknown = null;
-          let providerAttemptIndex = 0;
 
           // 5. Build persona prompt using blueprint renderer (done once, used for all providers)
           // Query database first (SSOT), fallback to defaults
@@ -355,20 +324,13 @@ export class EyeOrchestrator {
           let successfulModel: string | null = null;
           let providerLabel = "";
 
-          // 6. **FALLBACK LOOP**: Try each provider in chain until one succeeds
-          for (const providerConfig of providerChain) {
-            const targetProvider = providerConfig.provider;
-            const targetModel = providerConfig.model;
-            const isPrimary = providerConfig.isPrimary;
+          // 6. Execute with configured provider
+          console.log(
+            `\n🔄 Attempting provider: ${targetProvider}/${targetModel}`,
+          );
 
-            // Skip if we already succeeded
-            if (envelope !== null) {
-              break;
-            }
-
-            console.log(
-              `\n🔄 Attempting ${isPrimary ? "primary" : "fallback"} provider: ${targetProvider}/${targetModel}`,
-            );
+          {
+            // Provider execution block
 
             try {
               // Resolve provider type
@@ -648,60 +610,18 @@ export class EyeOrchestrator {
               console.log(
                 `✅ Successfully received valid response from ${providerType}/${targetModel}`,
               );
-
-              // Break out of fallback loop
-              break;
             } catch (providerError) {
-              // This provider (after all retries) failed
+              // Provider failed
               lastError = providerError;
-              providerAttemptIndex++;
-
-              const errorReason = categorizeRetryReason(providerError);
-              const isLastProvider =
-                providerAttemptIndex >= providerChain.length;
-
-              if (isLastProvider) {
-                // All providers exhausted - fail
-                console.error(
-                  `❌ All ${providerChain.length} provider(s) exhausted for ${eyeName}`,
-                );
-                throw providerError;
-              } else {
-                // Log failover event to database
-                if (FALLBACK_CONFIG.LOG_FAILOVER_EVENTS && !isPrimary) {
-                  try {
-                    const eyeId = await getEyeIdByName(eyeName);
-                    if (eyeId) {
-                      await this.db.insert(providerFailovers).values({
-                        id: generateId(),
-                        sessionId: actualSessionId,
-                        eyeId,
-                        primaryProvider: providerChain[0].provider,
-                        primaryModel: providerChain[0].model,
-                        failedReason: errorReason,
-                        fallbackProvider: targetProvider,
-                        fallbackModel: targetModel,
-                        fallbackSuccess: false,
-                        errorDetails: JSON.stringify({
-                          error: String(providerError),
-                        }),
-                        createdAt: new Date(),
-                      });
-                    }
-                  } catch (dbError) {
-                    console.error("Failed to log failover event:", dbError);
-                  }
-                }
-
-                console.warn(
-                  `⚠️  Provider ${targetProvider}/${targetModel} failed. Trying next provider in chain...`,
-                );
-                // Continue to next provider in chain
-              }
+              console.error(
+                `❌ Provider ${targetProvider}/${targetModel} failed for ${eyeName}:`,
+                providerError,
+              );
+              throw providerError;
             }
-          } // End of fallback loop
+          } // End of provider execution block
 
-          // Ensure we have a valid envelope after fallback loop
+          // Ensure we have a valid envelope
           if (
             !envelope ||
             !successfulProviderType ||
@@ -710,7 +630,7 @@ export class EyeOrchestrator {
           ) {
             return this.createErrorEnvelope(
               eyeName,
-              `Failed to get valid response from any provider in chain. Last error: ${lastError}`,
+              `Failed to get valid response from provider ${targetProvider}/${targetModel}. Error: ${lastError}`,
               runId,
               actualSessionId,
               startTime,

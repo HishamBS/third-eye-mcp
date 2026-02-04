@@ -291,8 +291,6 @@ export const schemas = {
     eye: z.string().min(1),
     primaryProvider: z.string().min(1),
     primaryModel: z.string().min(1),
-    fallbackProvider: z.string().min(1).optional(),
-    fallbackModel: z.string().optional(),
     temperature: z.number().min(0).max(2).optional(),
     maxTokens: z.number().int().positive().optional(),
   }),
@@ -300,8 +298,6 @@ export const schemas = {
   routingUpdate: z.object({
     primaryProvider: z.string().min(1).optional(),
     primaryModel: z.string().min(1).optional(),
-    fallbackProvider: z.string().min(1).optional(),
-    fallbackModel: z.string().optional(),
     temperature: z.number().min(0).max(2).optional(),
     maxTokens: z.number().int().positive().optional(),
   }),
