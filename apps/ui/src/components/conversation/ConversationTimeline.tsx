@@ -19,13 +19,13 @@ import {
   CONVERSATION_EVENT_ICONS,
   CONVERSATION_EVENT_LABELS,
   CONVERSATION_EVENT_COLORS,
-  type ConversationEventTypeValue,
+  type ConversationEventType as ConversationEventTypeConstant,
 } from "@third-eye/constants";
 
 /**
  * Conversation event type - re-export from SSOT constants
  */
-export type ConversationEventType = ConversationEventTypeValue;
+export type ConversationEventType = ConversationEventTypeConstant;
 
 /**
  * Conversation event record from API
@@ -63,9 +63,9 @@ function getEventConfig(eventType: ConversationEventType) {
   return {
     icon,
     label,
-    bgColor: colors.bg,
-    borderColor: colors.border,
-    textColor: colors.text,
+    bgColor: colors.bgColor,
+    borderColor: colors.borderColor,
+    textColor: colors.textColor,
   };
 }
 
