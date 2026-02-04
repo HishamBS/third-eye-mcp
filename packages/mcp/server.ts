@@ -646,8 +646,82 @@ export function createMCPServer(): Server {
             | Record<string, unknown>
             | undefined;
 
-          // Phase 2-B: Check for intent confirmation pause
-          if (finalResult && finalResult.code === "NEED_CONFIRMATION") {
+          // Phase 2-B: Check for intent confirmation pause (from auto-router paused state)
+          if (result.paused && result.pauseReason === "confirmation") {
+            const lastResult = result.results[result.results.length - 1] as
+              | Record<string, unknown>
+              | undefined;
+
+            const confirmationPrompt =
+              typeof lastResult?.data === "object" &&
+              lastResult.data !== null &&
+              "confirmationPrompt" in lastResult.data
+                ? String(
+                    (lastResult.data as Record<string, unknown>)
+                      .confirmationPrompt,
+                  )
+                : "Please confirm your intent to proceed with this task.";
+
+            const intentAnalysis =
+              typeof lastResult?.data === "object" &&
+              lastResult.data !== null &&
+              "intentAnalysis" in lastResult.data
+                ? ((lastResult.data as Record<string, unknown>)
+                    .intentAnalysis as Record<string, unknown>)
+                : {};
+
+            // Create confirmation request
+            const { IntentConfirmationManager } =
+              await import("@third-eye/core");
+            const { getDb } = await import("@third-eye/db");
+            const { sqlite } = getDb();
+            const confirmationManager = new IntentConfirmationManager(sqlite);
+
+            const confirmation = await confirmationManager.createConfirmation({
+              sessionId: result.sessionId,
+              intentAnalysis,
+              confirmationPrompt,
+            });
+
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      status: "awaiting_confirmation",
+                      code: "AWAIT_CONFIRMATION",
+                      verdict: "PAUSED",
+                      summary:
+                        "Intent confirmation required before proceeding. Please ask the user to confirm in the Third Eye portal.",
+                      metadata: {
+                        sessionId: result.sessionId,
+                        portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${result.sessionId}`,
+                        confirmationId: confirmation.id,
+                        stepsExecuted: result.results.length,
+                      },
+                      data: {
+                        confirmationPrompt,
+                        intentAnalysis,
+                        confirmationId: confirmation.id,
+                        instruction:
+                          "Use checkConfirmationStatus with this confirmationId to poll for human response.",
+                      },
+                    },
+                    null,
+                    2,
+                  ),
+                },
+              ],
+            };
+          }
+
+          // Fallback: Check finalResult code directly (legacy path for NEED_CONFIRMATION or AWAIT_CONFIRMATION)
+          if (
+            finalResult &&
+            (finalResult.code === "NEED_CONFIRMATION" ||
+              finalResult.code === "AWAIT_CONFIRMATION")
+          ) {
             const confirmationPrompt =
               typeof finalResult.data === "object" &&
               finalResult.data !== null &&
@@ -711,16 +785,89 @@ export function createMCPServer(): Server {
           }
 
           // Phase 2-B: Check for clarification pause
+          // Fix: Check for paused pipeline first (from auto-router)
+          if (result.paused && result.pauseReason === "clarification") {
+            // Pipeline was paused by auto-router, get questions from last result
+            const lastResult = result.results[result.results.length - 1] as
+              | Record<string, unknown>
+              | undefined;
+            const rawQuestions =
+              typeof lastResult?.data === "object" &&
+              lastResult.data !== null &&
+              "questions" in lastResult.data
+                ? ((lastResult.data as Record<string, unknown>)
+                    .questions as Array<{
+                    id?: string;
+                    text?: string;
+                    field?: string;
+                    question?: string;
+                  }>)
+                : [];
+
+            // Map questions supporting both {id, text} and {field, question} formats
+            const questions = rawQuestions.map((q) => ({
+              field: q.field || q.id || "unknown",
+              question: q.question || q.text || "No question provided",
+            }));
+
+            // Store clarification request
+            if (questions.length > 0) {
+              const { addClarificationRequest } =
+                await import("@third-eye/eyes");
+              await addClarificationRequest(result.sessionId, questions);
+            }
+
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      status: "awaiting_clarification",
+                      code: "NEED_CLARIFICATION",
+                      verdict: "PAUSED",
+                      summary:
+                        "Clarification required before proceeding. Please ask the user to answer questions in the Third Eye portal.",
+                      metadata: {
+                        sessionId: result.sessionId,
+                        portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${result.sessionId}`,
+                        stepsExecuted: result.results.length,
+                      },
+                      data: {
+                        questions,
+                        clarificationId: result.sessionId,
+                        instruction:
+                          "Use checkClarificationStatus with this sessionId to poll for human responses.",
+                      },
+                    },
+                    null,
+                    2,
+                  ),
+                },
+              ],
+            };
+          }
+
+          // Fallback: Check finalResult code directly (legacy path)
           if (finalResult && finalResult.code === "NEED_CLARIFICATION") {
-            const questions =
+            const rawQuestions =
               typeof finalResult.data === "object" &&
               finalResult.data !== null &&
               "questions" in finalResult.data
-                ? (
-                    (finalResult.data as Record<string, unknown>)
-                      .questions as Array<{ field: string; question: string }>
-                  ).map((q) => ({ field: q.field, question: q.question }))
+                ? ((finalResult.data as Record<string, unknown>)
+                    .questions as Array<{
+                    id?: string;
+                    text?: string;
+                    field?: string;
+                    question?: string;
+                  }>)
                 : [];
+
+            // Map questions supporting both {id, text} and {field, question} formats
+            const questions = rawQuestions.map((q) => ({
+              field: q.field || q.id || "unknown",
+              question: q.question || q.text || "No question provided",
+            }));
 
             // Store clarification request
             if (questions.length > 0) {

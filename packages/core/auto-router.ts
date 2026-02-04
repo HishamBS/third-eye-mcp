@@ -494,7 +494,11 @@ export class AutoRouter {
         }
 
         // REPAIR_PLAN A3: Check for pause codes - BEFORE rejection check
-        if (result.code === EyeStatusCode.E_NEEDS_CLARIFICATION) {
+        // Fix: Check for BOTH NEED_CLARIFICATION (from blueprints) and E_NEEDS_CLARIFICATION (error code)
+        if (
+          result.code === EyeStatusCode.NEED_CLARIFICATION ||
+          result.code === EyeStatusCode.E_NEEDS_CLARIFICATION
+        ) {
           const { PauseResumeManager } = await import("./pause-resume-manager");
           const { getDb } = await import("@third-eye/db");
           const { sqlite } = getDb();
@@ -555,7 +559,11 @@ export class AutoRouter {
           };
         }
 
-        if (result.code === EyeStatusCode.E_INTENT_UNCONFIRMED) {
+        // Fix: Check for BOTH AWAIT_CONFIRMATION (from blueprints) and E_INTENT_UNCONFIRMED (error code)
+        if (
+          result.code === EyeStatusCode.AWAIT_CONFIRMATION ||
+          result.code === EyeStatusCode.E_INTENT_UNCONFIRMED
+        ) {
           const { PauseResumeManager } = await import("./pause-resume-manager");
           const { getDb } = await import("@third-eye/db");
           const { sqlite } = getDb();
