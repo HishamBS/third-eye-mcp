@@ -180,12 +180,18 @@ export default function EyesPage() {
               );
               if (blueprintRes.ok) {
                 const blueprint = await blueprintRes.json();
-                if (
-                  blueprint.success &&
-                  blueprint.data &&
-                  blueprint.data.capabilities
-                ) {
-                  return { ...eye, capabilities: blueprint.data.capabilities };
+                // Safely extract capabilities with null checks
+                // Backend may return capabilities at data.capabilities, data.metadata.capabilities, or data root
+                if (blueprint.success && blueprint.data) {
+                  const data = blueprint.data;
+                  const capabilities =
+                    data.capabilities ??
+                    data.metadata?.capabilities ??
+                    data.metadataJson?.capabilities ??
+                    [];
+                  if (Array.isArray(capabilities) && capabilities.length > 0) {
+                    return { ...eye, capabilities };
+                  }
                 }
               }
             } catch (e) {

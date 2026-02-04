@@ -102,3 +102,20 @@ export {
 } from "./guards";
 
 export { z } from "zod";
+
+// Persona types - SSOT for persona/blueprint data structures
+export type {
+  PersonaLLMConfig,
+  PersonaPhase,
+  PersonaEnvelopeContract,
+  PersonaMetadata,
+  BlueprintApiResponse,
+} from "./persona";
+
+export {
+  extractMetadata,
+  extractPhases,
+  extractEnvelopeContract,
+  extractReminders,
+  extractLLMConfig,
+} from "./persona";

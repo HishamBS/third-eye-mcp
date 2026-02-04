@@ -35,6 +35,7 @@ export const API_ROUTES = {
   SESSION_INTENT_CONFIRMATIONS: (id: string) =>
     `/api/session/${id}/intent-confirmations`,
   SESSION_ROUTING: (id: string) => `/api/session/${id}/routing`,
+  SESSION_PIPELINE_STATE: (id: string) => `/api/session/${id}/pipeline-state`,
   SESSION_CONTEXT: (id: string) => `/api/session/${id}/context`,
   SESSION_CLARIFICATION_VALIDATE: (
     sessionId: string,

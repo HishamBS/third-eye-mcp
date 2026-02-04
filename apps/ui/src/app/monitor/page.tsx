@@ -408,6 +408,14 @@ function MonitorContent() {
     fetchData();
   }, [sessionId]);
 
+  // Pipeline state for pause/resume display
+  const [pipelineState, setPipelineState] = useState<{
+    status: string;
+    pauseReason: string | null;
+    awaitingClarification: boolean;
+    awaitingConfirmation: boolean;
+  } | null>(null);
+
   useEffect(() => {
     if (!sessionId) return;
 
@@ -416,8 +424,48 @@ function MonitorContent() {
         if (message.type === "pipeline_event") {
           const entry = normalizeWebSocketMessage(message);
           if (entry) {
-            setEntries((prev) => [...prev, entry]);
+            // Deduplication: Check if entry with same ID already exists
+            setEntries((prev) => {
+              const existingIds = new Set(prev.map((e) => e.id));
+              if (existingIds.has(entry.id)) {
+                // Skip duplicate
+                return prev;
+              }
+              return [...prev, entry];
+            });
           }
+        }
+
+        // Handle pipeline paused event
+        if (message.type === "pipeline_paused") {
+          const payload = message.data as Record<string, unknown> | undefined;
+          setPipelineState({
+            status: "paused",
+            pauseReason: (payload?.reason as string) ?? "Awaiting input",
+            awaitingClarification:
+              (payload?.awaitingClarification as boolean) ?? false,
+            awaitingConfirmation:
+              (payload?.awaitingConfirmation as boolean) ?? false,
+          });
+        }
+
+        // Handle pipeline resumed event
+        if (message.type === "pipeline_resumed") {
+          setPipelineState((prev) => ({
+            ...(prev ?? {
+              pauseReason: null,
+              awaitingClarification: false,
+              awaitingConfirmation: false,
+            }),
+            status: "running",
+            pauseReason: null,
+          }));
+        }
+
+        // Handle clarification answered event
+        if (message.type === "clarification_answered") {
+          // Refresh clarifications list
+          fetchClarifications();
         }
       } catch (err) {
         console.error("Failed to process WebSocket message:", err);
@@ -427,7 +475,7 @@ function MonitorContent() {
     return () => {
       unsubscribe();
     };
-  }, [sessionId, subscribe]);
+  }, [sessionId, subscribe, fetchClarifications]);
 
   useEffect(() => {
     if (autoScroll && conversationEndRef.current) {
@@ -790,6 +838,27 @@ function MonitorContent() {
                       summary.eyes.length > 0 &&
                       ` · Eyes: ${summary.eyes.join(", ")}`}
                   </p>
+                )}
+                {/* Pipeline state indicator */}
+                {pipelineState && pipelineState.status === "paused" && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-500/20 px-3 py-1 text-xs font-medium text-yellow-400">
+                      <span className="h-2 w-2 rounded-full bg-yellow-400 animate-pulse" />
+                      Pipeline Paused
+                      {pipelineState.pauseReason &&
+                        ` - ${pipelineState.pauseReason}`}
+                    </span>
+                    {pipelineState.awaitingClarification && (
+                      <span className="text-xs text-yellow-400">
+                        Awaiting clarification
+                      </span>
+                    )}
+                    {pipelineState.awaitingConfirmation && (
+                      <span className="text-xs text-purple-400">
+                        Awaiting confirmation
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

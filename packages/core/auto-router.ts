@@ -998,6 +998,20 @@ Do NOT ask clarifying questions - the task requirements are already clear.`;
       const { getWebSocketBridge } = await import("./websocket-registry");
       const ws = getWebSocketBridge();
 
+      // Broadcast pipeline_resumed event via WebSocket
+      if (ws) {
+        ws.broadcastToSession(sessionId, {
+          type: "pipeline_resumed",
+          sessionId,
+          data: {
+            remainingEyes,
+            resolvedFacts,
+            completedEyes: state.completedEyes,
+          },
+          timestamp: Date.now(),
+        });
+      }
+
       for (let i = 0; i < remainingEyes.length; i++) {
         const eyeName = remainingEyes[i];
 

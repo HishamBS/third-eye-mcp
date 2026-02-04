@@ -35,42 +35,6 @@ interface PersonaWizardModalProps {
   readonly onSave: () => void;
 }
 
-interface PersonaBlueprintDB {
-  readonly metadata_json: {
-    readonly eyeId: string;
-    readonly name: string;
-    readonly description: string;
-    readonly version: number;
-    readonly capabilities: readonly string[];
-  };
-  readonly mission: string;
-  readonly guidance_json: {
-    readonly mission: string;
-    readonly check: string;
-    readonly reminders: readonly string[];
-    readonly example: string;
-  } | null;
-  readonly validation_json: {
-    readonly mission: string;
-    readonly check: string;
-    readonly reminders: readonly string[];
-    readonly example: string;
-  } | null;
-  readonly envelope_json: {
-    readonly requiredKeys: readonly string[];
-    readonly requiredDataKeys: readonly string[];
-    readonly requiredUiKeys: readonly string[];
-  };
-  readonly reminders_json: readonly string[];
-  readonly llm_config_json: {
-    readonly temperature: number;
-    readonly top_p: number;
-    readonly response_format: "text" | "json_object";
-    readonly max_tokens: number;
-  };
-  readonly notes: string;
-}
-
 export function PersonaWizardModal({
   isOpen,
   eyeId,
@@ -119,36 +83,78 @@ export function PersonaWizardModal({
 
       const result = await response.json();
       if (result.success && result.data) {
-        const dbData: PersonaBlueprintDB = result.data;
+        const apiData = result.data;
 
-        // Transform database format to PersonaFormState
+        // Safely extract data with null checks
+        // Backend may return camelCase (metadata) or snake_case (metadata_json)
+        const metadata = apiData.metadata ?? apiData.metadataJson ?? {};
+        const guidancePhase =
+          apiData.phases?.guidance ??
+          apiData.guidanceJson ??
+          apiData.guidance_json ??
+          null;
+        const validationPhase =
+          apiData.phases?.validation ??
+          apiData.validationJson ??
+          apiData.validation_json ??
+          null;
+        const envelope =
+          apiData.envelopeContract ??
+          apiData.envelopeJson ??
+          apiData.envelope_json ??
+          {};
+        const reminders =
+          apiData.reminders ??
+          apiData.remindersJson ??
+          apiData.reminders_json ??
+          [];
+        const llmConfig =
+          apiData.llmConfig ??
+          apiData.llmConfigJson ??
+          apiData.llm_config_json ??
+          {};
+
+        // Transform database format to PersonaFormState with null coalescing
         const transformedData: Partial<PersonaFormState> = {
           metadata: {
-            eyeId: dbData.metadataJson.eyeId,
-            name: dbData.metadataJson.name,
-            description: dbData.metadataJson.description,
-            version: dbData.metadataJson.version,
-            capabilities: [...dbData.metadataJson.capabilities],
+            eyeId: metadata.eyeId ?? apiData.eyeId ?? eyeId,
+            name: metadata.name ?? apiData.name ?? eyeName,
+            description: metadata.description ?? "",
+            version: metadata.version ?? apiData.version ?? 1,
+            capabilities: [
+              ...(metadata.capabilities ?? apiData.capabilities ?? []),
+            ],
           },
-          mission: dbData.mission,
-          guidancePhase: dbData.guidanceJson,
-          validationPhase: dbData.validationJson,
+          mission: apiData.mission ?? "",
+          guidancePhase: guidancePhase,
+          validationPhase: validationPhase,
           envelopeContract: {
-            requiredKeys: [...dbData.envelopeJson.requiredKeys],
-            requiredDataKeys: [...dbData.envelopeJson.requiredDataKeys],
-            requiredUiKeys: [...dbData.envelopeJson.requiredUiKeys],
+            requiredKeys: [...(envelope.requiredKeys ?? [])],
+            requiredDataKeys: [...(envelope.requiredDataKeys ?? [])],
+            requiredUiKeys: [...(envelope.requiredUiKeys ?? [])],
           },
-          reminders: [...dbData.remindersJson],
+          reminders: [...reminders],
           llmConfig: {
-            temperature: dbData.llmConfigJson.temperature,
-            top_p: dbData.llmConfigJson.top_p,
-            response_format: dbData.llmConfigJson.response_format,
-            max_tokens: dbData.llmConfigJson.max_tokens,
+            temperature: llmConfig.temperature ?? 0.7,
+            top_p: llmConfig.top_p ?? 1.0,
+            response_format: llmConfig.response_format ?? "text",
+            max_tokens: llmConfig.max_tokens ?? 4096,
           },
-          notes: dbData.notes || "",
+          notes: apiData.notes ?? "",
         };
 
         setInitialData(transformedData);
+      } else {
+        // No data in response - set defaults
+        setInitialData({
+          metadata: {
+            eyeId,
+            name: eyeName,
+            description: "",
+            version: 1,
+            capabilities: [],
+          },
+        });
       }
     } catch (err) {
       console.error("Failed to load persona:", err);
@@ -260,7 +266,9 @@ export function PersonaWizardModal({
 
           {/* Error Display */}
           {error && (
-            <div className="mb-4 rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} p-4 ${STATUS_TEXT_COLORS.error}">
+            <div
+              className={`mb-4 rounded-lg border ${STATUS_BORDER_COLORS_SUBTLE.error} ${STATUS_BG_COLORS_SUBTLE.error} p-4 ${STATUS_TEXT_COLORS.error}`}
+            >
               {error}
             </div>
           )}

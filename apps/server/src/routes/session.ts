@@ -1421,6 +1421,44 @@ app.post("/:id/clarifications/:clarificationId/validate", async (c) => {
       }
     }
 
+    // If valid, log the human answer as a conversation event
+    if (valid) {
+      try {
+        // Import ConversationTracker for logging
+        const { ConversationTracker } = await import("@third-eye/core");
+        const { sqlite } = getDb();
+        const conversationTracker = new ConversationTracker(sqlite);
+
+        // Log human message with the answer
+        conversationTracker.logHumanMessage(
+          sessionId,
+          `Clarification answered: ${existingClarification.question}\n\nAnswer: ${answer}`,
+          {
+            clarificationId,
+            field: existingClarification.field || "unknown",
+            question: existingClarification.question,
+            answer,
+          },
+        );
+
+        // Broadcast clarification answered event via WebSocket
+        const { wsManager } = await import("../websocket");
+        wsManager.broadcastToSession(sessionId, {
+          type: "clarification_answered",
+          sessionId,
+          data: {
+            clarificationId,
+            question: existingClarification.question,
+            answer,
+          },
+          timestamp: Date.now(),
+        });
+      } catch (e) {
+        // Log but don't fail the request if conversation tracking fails
+        console.debug("Failed to log clarification answer:", e);
+      }
+    }
+
     return createSuccessResponse(c, {
       valid,
       reason,
@@ -1608,6 +1646,85 @@ app.get("/:id/routing", async (c) => {
   } catch (error) {
     console.error(LOG_ROUTING_FETCH_FAILED, error);
     return createInternalErrorResponse(c, ApiErrorMessage.ROUTING_FETCH_FAILED);
+  }
+});
+
+// Get pipeline state for a session (pause/resume status)
+app.get("/:id/pipeline-state", async (c) => {
+  try {
+    const sessionId = c.req.param("id");
+    const { db } = getDb();
+
+    // Verify session exists
+    const session = await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.id, sessionId))
+      .get();
+
+    if (!session) {
+      return createErrorResponse(c, {
+        title: ApiErrorTitle.SESSION_NOT_FOUND,
+        code: ApiErrorCode.SESSION_NOT_FOUND,
+        status: 404,
+        detail: ApiErrorMessage.SESSION_NOT_FOUND_DETAIL,
+      });
+    }
+
+    // Get context for pipeline state
+    const context = parseSessionConfig(session.configJson);
+
+    // Extract pipeline state from context
+    const pipelineState = {
+      status: context.pipelineStatus || session.status || "unknown",
+      pauseReason: context.pauseReason || null,
+      currentEye: context.currentEye || null,
+      resumeToken: context.resumeToken || null,
+      awaitingClarification: context.awaitingClarification || false,
+      awaitingConfirmation: context.awaitingConfirmation || false,
+      completedEyes: context.completedEyes || [],
+      pendingEyes: context.pendingEyes || [],
+    };
+
+    // Check for pending clarifications
+    const pendingClarifications = await db
+      .select()
+      .from(clarifications)
+      .where(
+        and(
+          eq(clarifications.sessionId, sessionId),
+          sql`${clarifications.answer} IS NULL`,
+        ),
+      )
+      .all();
+
+    if (pendingClarifications.length > 0) {
+      pipelineState.awaitingClarification = true;
+      pipelineState.status = "awaiting_clarification";
+    }
+
+    // Check for pending intent confirmations
+    const pendingConfirmation = await db
+      .select()
+      .from(intentConfirmations)
+      .where(
+        and(
+          eq(intentConfirmations.sessionId, sessionId),
+          sql`${intentConfirmations.response} IS NULL`,
+        ),
+      )
+      .limit(1)
+      .get();
+
+    if (pendingConfirmation) {
+      pipelineState.awaitingConfirmation = true;
+      pipelineState.status = "awaiting_confirmation";
+    }
+
+    return createSuccessResponse(c, pipelineState);
+  } catch (error) {
+    console.error("Failed to fetch pipeline state:", error);
+    return createInternalErrorResponse(c, "Failed to fetch pipeline state");
   }
 });
 

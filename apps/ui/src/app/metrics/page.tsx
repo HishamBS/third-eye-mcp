@@ -25,12 +25,15 @@ export default function MetricsPage() {
       const apiData = result.data || result;
 
       // Transform API response to MetricsData format
+      // Backend now provides all metrics (per plan fix in metrics.ts)
       setMetrics({
-        providers: [], // Not provided by current API
-        totalCalls: apiData.totalCalls || apiData.totalRuns || 0,
-        totalTokens: 0, // Not provided by current API
-        uptime: 0, // Not provided by current API
-        approvalRate: apiData.approvalRate || 0,
+        providers: apiData.providers ?? [],
+        totalCalls: apiData.totalCalls ?? apiData.totalRuns ?? 0,
+        totalTokens: apiData.totalTokens ?? 0,
+        uptime: apiData.uptime ?? 0,
+        latencyHistogram: apiData.latencyHistogram,
+        tokensPerSession: apiData.tokensPerSession ?? 0,
+        approvalRate: apiData.approvalRate ?? 0,
       });
     } catch (err) {
       setError(

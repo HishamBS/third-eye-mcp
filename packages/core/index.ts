@@ -108,5 +108,12 @@ export type { LogContext, LoggerConfig } from "./logger";
 export { AutoRouter, autoRouter } from "./auto-router";
 export type { AutoRouterOptions } from "./auto-router";
 
+// Conversation tracking for narrative timeline
+export { ConversationTracker } from "./conversation-tracker";
+export type {
+  ConversationEventData,
+  ConversationEventType,
+} from "./conversation-tracker";
+
 // Re-export Eyes for convenience
 export * from "@third-eye/eyes";

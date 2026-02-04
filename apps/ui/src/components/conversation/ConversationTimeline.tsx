@@ -14,17 +14,18 @@
 import { useMemo } from "react";
 import { EyeIcon } from "@/components/EyeIcon";
 import { TimelineMarkdownRenderer } from "@/components/MarkdownRenderer";
+import {
+  CONVERSATION_EVENT_TYPES,
+  CONVERSATION_EVENT_ICONS,
+  CONVERSATION_EVENT_LABELS,
+  CONVERSATION_EVENT_COLORS,
+  type ConversationEventTypeValue,
+} from "@third-eye/constants";
 
 /**
- * Conversation event type (matches backend CONVERSATION_EVENT_TYPES)
+ * Conversation event type - re-export from SSOT constants
  */
-export type ConversationEventType =
-  | "agent_message"
-  | "human_message"
-  | "routing_decision"
-  | "pause"
-  | "resume"
-  | "error";
+export type ConversationEventType = ConversationEventTypeValue;
 
 /**
  * Conversation event record from API
@@ -46,52 +47,27 @@ interface ConversationTimelineProps {
 }
 
 /**
- * Event type icons and colors (SSOT)
+ * Get event config from SSOT constants
  */
-const EVENT_TYPE_CONFIG = {
-  agent_message: {
-    icon: "🤖",
-    label: "Agent Message",
-    bgColor: "bg-blue-50 dark:bg-blue-900/20",
-    borderColor: "border-blue-200 dark:border-blue-800",
-    textColor: "text-blue-900 dark:text-blue-100",
-  },
-  human_message: {
-    icon: "👤",
-    label: "Human Message",
-    bgColor: "bg-green-50 dark:bg-green-900/20",
-    borderColor: "border-green-200 dark:border-green-800",
-    textColor: "text-green-900 dark:text-green-100",
-  },
-  routing_decision: {
-    icon: "🧠",
-    label: "Routing Decision",
-    bgColor: "bg-purple-50 dark:bg-purple-900/20",
-    borderColor: "border-purple-200 dark:border-purple-800",
-    textColor: "text-purple-900 dark:text-purple-100",
-  },
-  pause: {
-    icon: "⏸️",
-    label: "Pipeline Paused",
-    bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
-    borderColor: "border-yellow-200 dark:border-yellow-800",
-    textColor: "text-yellow-900 dark:text-yellow-100",
-  },
-  resume: {
-    icon: "▶️",
-    label: "Pipeline Resumed",
-    bgColor: "bg-green-50 dark:bg-green-900/20",
-    borderColor: "border-green-200 dark:border-green-800",
-    textColor: "text-green-900 dark:text-green-100",
-  },
-  error: {
-    icon: "❌",
-    label: "Error",
-    bgColor: "bg-red-50 dark:bg-red-900/20",
-    borderColor: "border-red-200 dark:border-red-800",
-    textColor: "text-red-900 dark:text-red-100",
-  },
-} as const;
+function getEventConfig(eventType: ConversationEventType) {
+  const icon =
+    CONVERSATION_EVENT_ICONS[eventType] ??
+    CONVERSATION_EVENT_ICONS[CONVERSATION_EVENT_TYPES.AGENT_MESSAGE];
+  const label =
+    CONVERSATION_EVENT_LABELS[eventType] ??
+    CONVERSATION_EVENT_LABELS[CONVERSATION_EVENT_TYPES.AGENT_MESSAGE];
+  const colors =
+    CONVERSATION_EVENT_COLORS[eventType] ??
+    CONVERSATION_EVENT_COLORS[CONVERSATION_EVENT_TYPES.AGENT_MESSAGE];
+
+  return {
+    icon,
+    label,
+    bgColor: colors.bg,
+    borderColor: colors.border,
+    textColor: colors.text,
+  };
+}
 
 /**
  * Format timestamp
@@ -109,11 +85,11 @@ function formatTimestamp(date: string | Date): string {
  * Timeline event card component
  */
 function TimelineEventCard({ event }: { event: ConversationEventRecord }) {
-  const config =
-    EVENT_TYPE_CONFIG[event.eventType] || EVENT_TYPE_CONFIG.agent_message;
-  const isAgent = event.eventType === "agent_message";
-  const isHuman = event.eventType === "human_message";
-  const isRoutingDecision = event.eventType === "routing_decision";
+  const config = getEventConfig(event.eventType);
+  const isAgent = event.eventType === CONVERSATION_EVENT_TYPES.AGENT_MESSAGE;
+  const isHuman = event.eventType === CONVERSATION_EVENT_TYPES.HUMAN_MESSAGE;
+  const isRoutingDecision =
+    event.eventType === CONVERSATION_EVENT_TYPES.ROUTING_DECISION;
 
   return (
     <div
@@ -167,11 +143,12 @@ function TimelineEventCard({ event }: { event: ConversationEventRecord }) {
       )}
 
       {/* Metadata (for pauses) */}
-      {event.eventType === "pause" && event.metadata?.reason && (
-        <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-          Reason: {String(event.metadata.reason)}
-        </div>
-      )}
+      {event.eventType === CONVERSATION_EVENT_TYPES.PAUSE &&
+        event.metadata?.reason && (
+          <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+            Reason: {String(event.metadata.reason)}
+          </div>
+        )}
     </div>
   );
 }
@@ -274,22 +251,36 @@ export function ConversationTimeline({
         <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
           <div>
             <strong>Agent Messages:</strong>{" "}
-            {sortedEvents.filter((e) => e.eventType === "agent_message").length}
+            {
+              sortedEvents.filter(
+                (e) => e.eventType === CONVERSATION_EVENT_TYPES.AGENT_MESSAGE,
+              ).length
+            }
           </div>
           <div>
             <strong>Human Messages:</strong>{" "}
-            {sortedEvents.filter((e) => e.eventType === "human_message").length}
+            {
+              sortedEvents.filter(
+                (e) => e.eventType === CONVERSATION_EVENT_TYPES.HUMAN_MESSAGE,
+              ).length
+            }
           </div>
           <div>
             <strong>Routing Decisions:</strong>{" "}
             {
-              sortedEvents.filter((e) => e.eventType === "routing_decision")
-                .length
+              sortedEvents.filter(
+                (e) =>
+                  e.eventType === CONVERSATION_EVENT_TYPES.ROUTING_DECISION,
+              ).length
             }
           </div>
           <div>
             <strong>Pauses:</strong>{" "}
-            {sortedEvents.filter((e) => e.eventType === "pause").length}
+            {
+              sortedEvents.filter(
+                (e) => e.eventType === CONVERSATION_EVENT_TYPES.PAUSE,
+              ).length
+            }
           </div>
         </div>
       </div>
