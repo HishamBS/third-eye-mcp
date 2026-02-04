@@ -27,6 +27,88 @@ export interface AutoRouterOptions {
 const STRICTNESS_HEADER = "STRICTNESS CONTROLS (from UI):";
 const CLARITY_VALIDATED_HEADER = "CLARITY_VALIDATED:";
 
+/**
+ * Dangerous operation keywords that should trigger immediate confirmation
+ * These bypass Sharingan clarification and go straight to human confirmation
+ */
+const DANGEROUS_KEYWORDS = {
+  // Database destructive operations
+  database: [
+    /\bdrop\s+(table|database|index|schema)/i,
+    /\btruncate\s+table/i,
+    /\bdelete\s+from\b.*\bwhere\s+1\s*=\s*1/i,
+    /\bdelete\s+all\b/i,
+    /\balter\s+table\b.*\bdrop\b/i,
+  ],
+  // Production environment indicators
+  production: [
+    /\bproduction\b/i,
+    /\bprod\s+(database|server|environment|db)/i,
+    /\blive\s+(environment|server|database)/i,
+  ],
+  // Mass operations
+  mass: [
+    /\breset\s+all\b/i,
+    /\bdelete\s+all\b/i,
+    /\bremove\s+all\b/i,
+    /\bclear\s+all\b/i,
+    /\bwipe\b/i,
+    /\bpurge\b/i,
+    /\ball\s+(users?|passwords?|accounts?|data)\b/i,
+  ],
+  // Privileged operations
+  privileged: [/\bsudo\b/i, /\broot\b/i, /\bforce\b/i, /\b--force\b/i],
+};
+
+interface RiskAssessment {
+  isRisky: boolean;
+  riskLevel: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  detectedPatterns: string[];
+  categories: string[];
+}
+
+/**
+ * Pre-screen input for dangerous operations before routing to any eye
+ * This ensures risky operations trigger confirmation, not clarification
+ */
+function assessRisk(input: string): RiskAssessment {
+  const detectedPatterns: string[] = [];
+  const categories: string[] = [];
+
+  for (const [category, patterns] of Object.entries(DANGEROUS_KEYWORDS)) {
+    for (const pattern of patterns) {
+      const match = input.match(pattern);
+      if (match) {
+        detectedPatterns.push(match[0]);
+        if (!categories.includes(category)) {
+          categories.push(category);
+        }
+      }
+    }
+  }
+
+  const isRisky = detectedPatterns.length > 0;
+
+  // Determine risk level based on category combinations
+  let riskLevel: RiskAssessment["riskLevel"] = "LOW";
+  if (isRisky) {
+    if (categories.includes("database") && categories.includes("production")) {
+      riskLevel = "CRITICAL";
+    } else if (
+      categories.includes("production") ||
+      categories.includes("database")
+    ) {
+      riskLevel = "HIGH";
+    } else if (categories.includes("mass")) {
+      riskLevel = "HIGH";
+    } else {
+      riskLevel = "MEDIUM";
+    }
+  }
+
+  return { isRisky, riskLevel, detectedPatterns, categories };
+}
+
 // Codes that indicate clarity has been validated (no need for guidance questions)
 const CLARITY_VALIDATED_CODES = new Set([
   EyeStatusCode.OK,
@@ -412,9 +494,88 @@ export class AutoRouter {
     options: AutoRouterOptions = {},
   ): Promise<AutoRoutingResult> {
     try {
-      // NOTE: We DO NOT reject generation requests
-      // Instead, we route through Sharingan → asks clarifying questions
-      // Then through the full pipeline to GUIDE the agent step-by-step
+      // ========================================================================
+      // RISK PRE-SCREENING: Detect dangerous operations BEFORE routing to eyes
+      // This ensures risky operations trigger confirmation, not clarification
+      // ========================================================================
+      const riskAssessment = assessRisk(input);
+
+      if (riskAssessment.isRisky) {
+        // Create a session for the dangerous operation
+        const bootstrapConfig: Record<string, unknown> = {
+          agentName: "Risk-Detector",
+          displayName: "Dangerous Operation Detected",
+        };
+        const session = await this.orchestrator.createSession(bootstrapConfig);
+        const sessionId = session.sessionId;
+
+        // Mark as auto-router controlled
+        orderGuard.markAsAutoRouterSession(sessionId);
+
+        // Initialize tracking
+        const { getDb } = await import("@third-eye/db");
+        const { sqlite } = getDb();
+        const conversationTracker = new ConversationTracker(sqlite);
+
+        // Log the dangerous operation detection
+        conversationTracker.logHumanMessage(sessionId, input);
+        conversationTracker.logAgentMessage(
+          sessionId,
+          "risk-detector",
+          `**DANGEROUS OPERATION DETECTED**\n\nRisk Level: ${riskAssessment.riskLevel}\nCategories: ${riskAssessment.categories.join(", ")}\nDetected Patterns: ${riskAssessment.detectedPatterns.join(", ")}\n\nThis operation requires explicit human confirmation before proceeding.`,
+          {
+            type: "risk_detection",
+            riskLevel: riskAssessment.riskLevel,
+            categories: riskAssessment.categories,
+            patterns: riskAssessment.detectedPatterns,
+          },
+        );
+
+        // Pause for confirmation
+        const { PauseResumeManager } = await import("./pause-resume-manager");
+        const pauseManager = new PauseResumeManager(sqlite);
+        await pauseManager.pausePipeline({
+          sessionId,
+          currentEye: "risk-detector",
+          reason: "confirmation",
+          pendingData: {
+            riskAssessment,
+            confirmationPrompt: `⚠️ DANGEROUS OPERATION DETECTED\n\nRisk Level: ${riskAssessment.riskLevel}\nCategories: ${riskAssessment.categories.join(", ")}\nPatterns Found: ${riskAssessment.detectedPatterns.join(", ")}\n\nThis operation may cause irreversible changes. Please confirm you want to proceed.`,
+          },
+          expiresInMs: 24 * 60 * 60 * 1000,
+        });
+
+        conversationTracker.logPause(
+          sessionId,
+          "confirmation",
+          `Dangerous operation requires confirmation: ${riskAssessment.riskLevel} risk`,
+        );
+
+        // Emit WebSocket event
+        const { getWebSocketBridge } = await import("./websocket-registry");
+        const ws = getWebSocketBridge();
+        if (ws) {
+          ws.broadcastToSession(sessionId, {
+            type: "pipeline_paused",
+            reason: "confirmation",
+            eye: "risk-detector",
+            riskLevel: riskAssessment.riskLevel,
+            timestamp: Date.now(),
+          });
+        }
+
+        return {
+          sessionId,
+          results: [],
+          completed: false,
+          paused: true,
+          pauseReason: "confirmation",
+        };
+      }
+
+      // ========================================================================
+      // NORMAL FLOW: Route through eyes for non-dangerous operations
+      // ========================================================================
 
       // Analyze task if no routing provided
       // Note: analyzeTask already marks the session as auto-router before calling Overseer
