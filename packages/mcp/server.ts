@@ -573,29 +573,36 @@ export function createMCPServer(): Server {
               {
                 type: "text",
                 text: JSON.stringify(
-                  {
-                    status: "success",
-                    code:
+                  (() => {
+                    const responseCode =
                       typeof finalResult?.code === "string"
                         ? finalResult.code
-                        : "OK",
-                    verdict:
-                      typeof finalResult?.verdict === "string"
-                        ? finalResult.verdict
-                        : "APPROVED",
-                    summary:
-                      typeof finalResult?.summary === "string"
-                        ? finalResult.summary
-                        : "Pipeline completed after intent confirmation.",
-                    metadata: {
-                      sessionId: confirmation.sessionId,
-                      confirmationId: confirmation.id,
-                      portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${confirmation.sessionId}`,
-                      stepsExecuted: resumeResult.results.length,
-                      resumedAfterConfirmation: true,
-                    },
-                    data: sanitizedData,
-                  },
+                        : "OK";
+                    // Derive verdict from code for consistency
+                    const derivedVerdict = responseCode.startsWith("OK")
+                      ? "APPROVED"
+                      : responseCode.startsWith("REJECT_") ||
+                          responseCode.startsWith("E_")
+                        ? "REJECTED"
+                        : "APPROVED";
+                    return {
+                      status: "success",
+                      code: responseCode,
+                      verdict: derivedVerdict,
+                      summary:
+                        typeof finalResult?.summary === "string"
+                          ? finalResult.summary
+                          : "Pipeline completed after intent confirmation.",
+                      metadata: {
+                        sessionId: confirmation.sessionId,
+                        confirmationId: confirmation.id,
+                        portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${confirmation.sessionId}`,
+                        stepsExecuted: resumeResult.results.length,
+                        resumedAfterConfirmation: true,
+                      },
+                      data: sanitizedData,
+                    };
+                  })(),
                   null,
                   2,
                 ),
@@ -724,28 +731,35 @@ export function createMCPServer(): Server {
               {
                 type: "text",
                 text: JSON.stringify(
-                  {
-                    status: "success",
-                    code:
+                  (() => {
+                    const responseCode =
                       typeof finalResult?.code === "string"
                         ? finalResult.code
-                        : "OK",
-                    verdict:
-                      typeof finalResult?.verdict === "string"
-                        ? finalResult.verdict
-                        : "APPROVED",
-                    summary:
-                      typeof finalResult?.summary === "string"
-                        ? finalResult.summary
-                        : "Pipeline completed after clarification.",
-                    metadata: {
-                      sessionId: checkClarificationStatus,
-                      portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${checkClarificationStatus}`,
-                      stepsExecuted: resumeResult.results.length,
-                      resumedAfterClarification: true,
-                    },
-                    data: sanitizedData,
-                  },
+                        : "OK";
+                    // Derive verdict from code for consistency
+                    const derivedVerdict = responseCode.startsWith("OK")
+                      ? "APPROVED"
+                      : responseCode.startsWith("REJECT_") ||
+                          responseCode.startsWith("E_")
+                        ? "REJECTED"
+                        : "APPROVED";
+                    return {
+                      status: "success",
+                      code: responseCode,
+                      verdict: derivedVerdict,
+                      summary:
+                        typeof finalResult?.summary === "string"
+                          ? finalResult.summary
+                          : "Pipeline completed after clarification.",
+                      metadata: {
+                        sessionId: checkClarificationStatus,
+                        portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${checkClarificationStatus}`,
+                        stepsExecuted: resumeResult.results.length,
+                        resumedAfterClarification: true,
+                      },
+                      data: sanitizedData,
+                    };
+                  })(),
                   null,
                   2,
                 ),
@@ -924,19 +938,28 @@ export function createMCPServer(): Server {
               lastResult.data !== null &&
               "questions" in lastResult.data
                 ? ((lastResult.data as Record<string, unknown>)
-                    .questions as Array<{
-                    id?: string;
-                    text?: string;
-                    field?: string;
-                    question?: string;
-                  }>)
+                    .questions as Array<
+                    | string
+                    | {
+                        id?: string;
+                        text?: string;
+                        field?: string;
+                        question?: string;
+                      }
+                  >)
                 : [];
 
-            // Map questions supporting both {id, text} and {field, question} formats
-            const questions = rawQuestions.map((q) => ({
-              field: q.field || q.id || "unknown",
-              question: q.question || q.text || "No question provided",
-            }));
+            // Map questions supporting string, {id, text}, and {field, question} formats
+            const questions = rawQuestions.map((q) => {
+              // Handle plain string questions from LLM
+              if (typeof q === "string") {
+                return { field: "question", question: q };
+              }
+              return {
+                field: q.field || q.id || "unknown",
+                question: q.question || q.text || "No question provided",
+              };
+            });
 
             // Store clarification request
             if (questions.length > 0) {
@@ -983,19 +1006,28 @@ export function createMCPServer(): Server {
               finalResult.data !== null &&
               "questions" in finalResult.data
                 ? ((finalResult.data as Record<string, unknown>)
-                    .questions as Array<{
-                    id?: string;
-                    text?: string;
-                    field?: string;
-                    question?: string;
-                  }>)
+                    .questions as Array<
+                    | string
+                    | {
+                        id?: string;
+                        text?: string;
+                        field?: string;
+                        question?: string;
+                      }
+                  >)
                 : [];
 
-            // Map questions supporting both {id, text} and {field, question} formats
-            const questions = rawQuestions.map((q) => ({
-              field: q.field || q.id || "unknown",
-              question: q.question || q.text || "No question provided",
-            }));
+            // Map questions supporting string, {id, text}, and {field, question} formats
+            const questions = rawQuestions.map((q) => {
+              // Handle plain string questions from LLM
+              if (typeof q === "string") {
+                return { field: "question", question: q };
+              }
+              return {
+                field: q.field || q.id || "unknown",
+                question: q.question || q.text || "No question provided",
+              };
+            });
 
             // Store clarification request
             if (questions.length > 0) {
@@ -1045,12 +1077,31 @@ export function createMCPServer(): Server {
             return "E_PIPELINE_FAILED";
           })();
 
-          const verdict =
-            typeof finalResult?.verdict === "string"
-              ? (finalResult.verdict as string)
-              : result.completed
-                ? "APPROVED"
-                : "REJECTED";
+          // Derive verdict from code for consistency
+          const verdict = (() => {
+            // If code indicates success → APPROVED
+            if (
+              code.startsWith("OK") ||
+              code === "OK_NO_CLARIFICATION_NEEDED" ||
+              code === "OK_ALL_APPROVED"
+            ) {
+              return "APPROVED";
+            }
+            // If code indicates rejection → REJECTED
+            if (code.startsWith("REJECT_") || code.startsWith("E_")) {
+              return "REJECTED";
+            }
+            // If code indicates pause → PAUSED
+            if (
+              code === "NEED_CLARIFICATION" ||
+              code === "NEED_CONFIRMATION" ||
+              code === "AWAIT_CONFIRMATION"
+            ) {
+              return "PAUSED";
+            }
+            // Fallback based on completion status
+            return result.completed ? "APPROVED" : "REJECTED";
+          })();
 
           let summary =
             typeof finalResult?.summary === "string"

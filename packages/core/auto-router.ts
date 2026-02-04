@@ -25,6 +25,14 @@ export interface AutoRouterOptions {
 }
 
 const STRICTNESS_HEADER = "STRICTNESS CONTROLS (from UI):";
+const CLARITY_VALIDATED_HEADER = "CLARITY_VALIDATED:";
+
+// Codes that indicate clarity has been validated (no need for guidance questions)
+const CLARITY_VALIDATED_CODES = new Set([
+  EyeStatusCode.OK,
+  EyeStatusCode.OK_WITH_NOTES,
+  EyeStatusCode.OK_NO_CLARIFICATION_NEEDED,
+]);
 
 const STRICTNESS_LABELS: Record<string, string> = {
   ambiguityThreshold: "Ambiguity Threshold (0-100, lower = stricter)",
@@ -662,6 +670,30 @@ export class AutoRouter {
         const nextInput = NextInputSchema.safeParse(result.data);
         if (nextInput.success && nextInput.data.outputForNext) {
           currentInput = nextInput.data.outputForNext;
+        }
+
+        // Propagate clarity signal when an eye validates clarity
+        // This tells subsequent eyes to skip guidance questions and proceed to validation
+        if (
+          CLARITY_VALIDATED_CODES.has(result.code) &&
+          !currentInput.includes(CLARITY_VALIDATED_HEADER)
+        ) {
+          const ambiguityScore =
+            typeof result.data?.ambiguityScore === "number"
+              ? result.data.ambiguityScore
+              : null;
+
+          // Only propagate if eye explicitly validated clarity (low ambiguity)
+          // or if it's a clear approval from Sharingan
+          if (
+            eyeName.toLowerCase() === EyeId.SHARINGAN ||
+            (ambiguityScore !== null && ambiguityScore < 30)
+          ) {
+            currentInput = `${currentInput}\n\n${CLARITY_VALIDATED_HEADER}
+Task clarity has been validated by ${eyeName}${ambiguityScore !== null ? ` (ambiguity: ${ambiguityScore}/100)` : ""}.
+Skip guidance-phase questions and proceed directly to validation/analysis.
+Do NOT ask clarifying questions - the task requirements are already clear.`;
+          }
         }
       }
 

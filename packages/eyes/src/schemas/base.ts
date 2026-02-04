@@ -73,7 +73,7 @@ export const BaseEnvelopeSchema = z.object({
       summary: z.string().min(1).max(200), // Brief summary (e.g., "Request too vague - asking 4 questions")
       details: z.string().min(1).max(1000), // Conversational explanation
       icon: z.string().max(10), // Icon/emoji (e.g., "🔍") - can be empty
-      color: z.enum(["success", "warning", "error", "info"]), // UI color theme
+      color: z.enum(["success", "warning", "error", "info", "danger"]), // UI color theme
     })
     .optional(), // Optional for backward compatibility during migration
 });

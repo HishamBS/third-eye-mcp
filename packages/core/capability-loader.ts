@@ -199,7 +199,7 @@ You MUST call the submit_eye_analysis function with this exact structure (requir
 CRITICAL: All fields above are REQUIRED. The "code" field MUST be one of: OK, OK_WITH_NOTES, NEED_CLARIFICATION, REJECT_AMBIGUOUS, REJECT_UNSAFE, REJECT_INCOMPLETE, REJECT_INCONSISTENT, REJECT_NO_EVIDENCE, REJECT_BAD_PLAN, REJECT_CODE_ISSUES, E_NEEDS_CLARIFICATION, E_INTENT_UNCONFIRMED, E_PLAN_INCOMPLETE, E_REASONING_MISSING, E_SCAFFOLD_ISSUES, E_IMPL_ISSUES, E_TESTS_INSUFFICIENT, E_DOCS_MISSING, E_CITATIONS_MISSING, E_CONTRADICTION_DETECTED, E_PHASES_INCOMPLETE, NEED_MORE_CONTEXT, SUGGEST_ALTERNATIVE, EYE_ERROR, EYE_TIMEOUT, INVALID_ENVELOPE.
 
 The "next" field MUST be a string or non-empty array of strings (eye IDs).
-The "ui.color" field MUST be one of: "success", "warning", "error", "info" (NOT a hex color).
+The "ui.color" field MUST be one of: "success", "warning", "error", "info", "danger" (NOT a hex color).
 `;
 }
 
