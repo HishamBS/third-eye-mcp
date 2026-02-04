@@ -31,7 +31,9 @@ export interface ClarificationResolution {
 }
 
 /**
- * Add clarification request for a session
+ * Add clarification request for a session.
+ * Uses upsert semantics to handle re-asking the same questions
+ * (e.g., when a session retries with the same ambiguous task).
  */
 export async function addClarificationRequest(
   sessionId: string,
@@ -40,18 +42,33 @@ export async function addClarificationRequest(
   const { db } = getDb();
   const now = new Date();
 
-  const newClarifications: NewClarification[] = requests.map((req) => ({
-    id: `clar_${sessionId}_${req.field}`,
-    sessionId,
-    field: req.field,
-    question: req.question,
-    answer: null,
-    status: "pending",
-    createdAt: now,
-    answeredAt: null,
-  }));
-
-  await db.insert(clarifications).values(newClarifications);
+  // Insert each clarification with upsert semantics
+  // We use the deterministic ID (clar_{sessionId}_{field}) as the conflict target
+  // This reliably handles upserts since the ID is derived from sessionId+field
+  for (const req of requests) {
+    const clarId = `clar_${sessionId}_${req.field}`;
+    await db
+      .insert(clarifications)
+      .values({
+        id: clarId,
+        sessionId,
+        field: req.field,
+        question: req.question,
+        answer: null,
+        status: "pending",
+        createdAt: now,
+        answeredAt: null,
+      })
+      .onConflictDoUpdate({
+        target: clarifications.id,
+        set: {
+          question: req.question,
+          status: "pending",
+          answer: null,
+          answeredAt: null,
+        },
+      });
+  }
 }
 
 /**
@@ -129,7 +146,9 @@ export async function getResolvedFacts(
 }
 
 /**
- * Store intent confirmation
+ * Store intent confirmation.
+ * Uses upsert semantics to handle re-confirming intents
+ * (e.g., when a session retries with the same task).
  */
 export async function storeIntentConfirmation(
   sessionId: string,
@@ -140,18 +159,28 @@ export async function storeIntentConfirmation(
   const now = new Date();
   const id = `intent_${sessionId}`;
 
-  const newConfirmation: NewIntentConfirmation = {
-    id,
-    sessionId,
-    intentAnalysis,
-    confirmationPrompt,
-    response: null,
-    userIdentity: null,
-    createdAt: now,
-    respondedAt: null,
-  };
-
-  await db.insert(intentConfirmations).values(newConfirmation);
+  await db
+    .insert(intentConfirmations)
+    .values({
+      id,
+      sessionId,
+      intentAnalysis,
+      confirmationPrompt,
+      response: null,
+      userIdentity: null,
+      createdAt: now,
+      respondedAt: null,
+    })
+    .onConflictDoUpdate({
+      target: intentConfirmations.id,
+      set: {
+        intentAnalysis,
+        confirmationPrompt,
+        response: null,
+        status: "pending",
+        respondedAt: null,
+      },
+    });
 
   return id;
 }
