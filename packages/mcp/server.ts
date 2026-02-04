@@ -62,8 +62,8 @@ interface MCPToolArguments {
   sessionId?: string;
   strictness?: Record<string, unknown>;
   context?: Record<string, unknown>;
-  confirmationId?: string;
-  confirmationResponse?: string;
+  checkConfirmationStatus?: string;
+  checkClarificationStatus?: string;
 }
 
 function buildSessionMetadata(): Record<string, unknown> {
@@ -185,15 +185,15 @@ const OVERSEER_TOOL: Tool = {
         description:
           "Optional gates (ambiguity threshold, citation cutoff, consistency tolerance, mangekyoStrictness). Defaults map to Enterprise strictness.",
       },
-      confirmationId: {
+      checkConfirmationStatus: {
         type: "string",
         description:
-          "Phase 2-B: Confirmation ID if resuming from intent confirmation pause.",
+          "Poll for human confirmation status. Pass the confirmationId received from a previous 'awaiting_confirmation' response. Returns current status (pending/confirmed/rejected). Human must confirm via the Third Eye portal UI.",
       },
-      confirmationResponse: {
+      checkClarificationStatus: {
         type: "string",
         description:
-          "Phase 2-B: 'confirmed' or 'rejected' - response to intent confirmation request.",
+          "Poll for human clarification response. Pass the clarificationId received from a previous 'awaiting_clarification' response. Returns current status and answers if human has responded. Human must answer via the Third Eye portal UI.",
       },
     },
     required: ["task"],
@@ -419,50 +419,65 @@ export function createMCPServer(): Server {
           };
         }
 
-        // Phase 2-B: Handle confirmation resume
-        const confirmationId =
-          typeof toolArgs.confirmationId === "string"
-            ? toolArgs.confirmationId
-            : undefined;
-        const confirmationResponse =
-          typeof toolArgs.confirmationResponse === "string"
-            ? toolArgs.confirmationResponse
+        // Phase 2-B: Poll for human confirmation status (human-in-the-loop)
+        // Agent cannot self-confirm - must wait for human to confirm via UI
+        const checkConfirmationStatus =
+          typeof toolArgs.checkConfirmationStatus === "string"
+            ? toolArgs.checkConfirmationStatus
             : undefined;
 
-        if (confirmationId && confirmationResponse) {
+        if (checkConfirmationStatus) {
           const { IntentConfirmationManager } = await import("@third-eye/core");
           const { getDb } = await import("@third-eye/db");
           const { sqlite } = getDb();
           const confirmationManager = new IntentConfirmationManager(sqlite);
 
-          // Submit the confirmation response
-          const confirmation = await confirmationManager.submitConfirmation(
-            confirmationId,
-            {
-              confirmed: confirmationResponse.toLowerCase() === "confirmed",
-              response: confirmationResponse,
-              source: "agent",
-            },
+          // Get current status (read-only - no submission)
+          const confirmation = confirmationManager.getConfirmation(
+            checkConfirmationStatus,
           );
 
-          // If rejected, return early with rejection status
-          if (!confirmation || confirmation.status === "rejected") {
+          if (!confirmation) {
             return {
               content: [
                 {
                   type: "text",
                   text: JSON.stringify(
                     {
-                      status: "rejected",
-                      code: "E_INTENT_REJECTED",
-                      verdict: "REJECTED",
-                      summary: "Intent confirmation was rejected by user.",
+                      status: "error",
+                      code: "E_CONFIRMATION_NOT_FOUND",
+                      verdict: "ERROR",
+                      summary: `Confirmation ${checkConfirmationStatus} not found.`,
+                    },
+                    null,
+                    2,
+                  ),
+                },
+              ],
+            };
+          }
+
+          // Return current status based on human's response (or lack thereof)
+          if (confirmation.status === "pending") {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      status: "awaiting_confirmation",
+                      code: "STILL_PENDING",
+                      verdict: "PAUSED",
+                      summary:
+                        "Still waiting for human confirmation. Please ask the user to check the Third Eye portal.",
                       metadata: {
-                        sessionId: confirmation?.sessionId ?? null,
-                        confirmationId,
-                        portalUrl: confirmation?.sessionId
-                          ? `http://127.0.0.1:3300/monitor?sessionId=${confirmation.sessionId}`
-                          : null,
+                        sessionId: confirmation.sessionId,
+                        confirmationId: confirmation.id,
+                        portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${confirmation.sessionId}`,
+                      },
+                      data: {
+                        confirmationPrompt: confirmation.confirmationPrompt,
+                        intentAnalysis: confirmation.intentAnalysis,
                       },
                     },
                     null,
@@ -473,12 +488,33 @@ export function createMCPServer(): Server {
             };
           }
 
-          // If confirmed, continue with pipeline execution
-          // The sessionId should be loaded from the confirmation
-          const resumeSessionId = confirmation.sessionId;
-          // Continue execution with the confirmed intent...
-          // Note: For now, we'll return success and let the agent re-invoke with the original task
-          // A full implementation would resume the exact pipeline state
+          if (confirmation.status === "rejected") {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      status: "rejected",
+                      code: "E_INTENT_REJECTED",
+                      verdict: "REJECTED",
+                      summary:
+                        "Human rejected this intent. Do not proceed with the task.",
+                      metadata: {
+                        sessionId: confirmation.sessionId,
+                        confirmationId: confirmation.id,
+                        portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${confirmation.sessionId}`,
+                      },
+                    },
+                    null,
+                    2,
+                  ),
+                },
+              ],
+            };
+          }
+
+          // Status is "confirmed" - human approved
           return {
             content: [
               {
@@ -488,11 +524,98 @@ export function createMCPServer(): Server {
                     status: "success",
                     code: "INTENT_CONFIRMED",
                     verdict: "APPROVED",
-                    summary: "Intent confirmed. You may proceed with the task.",
+                    summary:
+                      "Human confirmed the intent. You may proceed with the task.",
                     metadata: {
-                      sessionId: resumeSessionId,
-                      confirmationId,
-                      portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${resumeSessionId}`,
+                      sessionId: confirmation.sessionId,
+                      confirmationId: confirmation.id,
+                      portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${confirmation.sessionId}`,
+                    },
+                  },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          };
+        }
+
+        // Phase 2-B: Poll for human clarification response (human-in-the-loop)
+        // Agent cannot self-answer - must wait for human to answer via UI
+        // Use session ID to poll (clarification IDs follow pattern clar_{sessionId}_{field})
+        const checkClarificationStatus =
+          typeof toolArgs.checkClarificationStatus === "string"
+            ? toolArgs.checkClarificationStatus
+            : undefined;
+
+        if (checkClarificationStatus) {
+          const { getPendingClarifications, getResolvedFacts } =
+            await import("@third-eye/eyes");
+
+          // Check pending clarifications for this session
+          const pendingClarifications = await getPendingClarifications(
+            checkClarificationStatus,
+          );
+
+          if (pendingClarifications.length > 0) {
+            // Still waiting for human to answer
+            const questions = pendingClarifications.map(
+              (c: { field: string; question: string }) => ({
+                field: c.field,
+                question: c.question,
+              }),
+            );
+
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      status: "awaiting_clarification",
+                      code: "STILL_PENDING",
+                      verdict: "PAUSED",
+                      summary:
+                        "Still waiting for human to answer clarification questions. Please ask the user to check the Third Eye portal.",
+                      metadata: {
+                        sessionId: checkClarificationStatus,
+                        portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${checkClarificationStatus}`,
+                        pendingCount: pendingClarifications.length,
+                      },
+                      data: {
+                        questions,
+                      },
+                    },
+                    null,
+                    2,
+                  ),
+                },
+              ],
+            };
+          }
+
+          // No pending = all answered. Get resolved facts.
+          const resolvedFacts = await getResolvedFacts(
+            checkClarificationStatus,
+          );
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(
+                  {
+                    status: "success",
+                    code: "CLARIFICATION_ANSWERED",
+                    verdict: "PROCEED",
+                    summary:
+                      "Human answered all clarification questions. You may proceed with the task using these answers.",
+                    metadata: {
+                      sessionId: checkClarificationStatus,
+                      portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${checkClarificationStatus}`,
+                    },
+                    data: {
+                      resolvedFacts,
                     },
                   },
                   null,
@@ -577,6 +700,55 @@ export function createMCPServer(): Server {
                         confirmationPrompt,
                         intentAnalysis,
                         confirmationId: confirmation.id,
+                      },
+                    },
+                    null,
+                    2,
+                  ),
+                },
+              ],
+            };
+          }
+
+          // Phase 2-B: Check for clarification pause
+          if (finalResult && finalResult.code === "NEED_CLARIFICATION") {
+            const questions =
+              typeof finalResult.data === "object" &&
+              finalResult.data !== null &&
+              "questions" in finalResult.data
+                ? (
+                    (finalResult.data as Record<string, unknown>)
+                      .questions as Array<{ field: string; question: string }>
+                  ).map((q) => ({ field: q.field, question: q.question }))
+                : [];
+
+            // Store clarification request
+            if (questions.length > 0) {
+              const { addClarificationRequest } =
+                await import("@third-eye/eyes");
+              await addClarificationRequest(result.sessionId, questions);
+            }
+
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      status: "awaiting_clarification",
+                      code: "NEED_CLARIFICATION",
+                      verdict: "PAUSED",
+                      summary:
+                        "Clarification required before proceeding. Please ask the user to answer questions in the Third Eye portal.",
+                      metadata: {
+                        sessionId: result.sessionId,
+                        portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${result.sessionId}`,
+                        stepsExecuted: result.results.length,
+                      },
+                      data: {
+                        questions,
+                        instruction:
+                          "Use checkClarificationStatus with sessionId to poll for human responses.",
                       },
                     },
                     null,
