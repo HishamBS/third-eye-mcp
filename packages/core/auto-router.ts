@@ -502,7 +502,68 @@ export class AutoRouter {
         }
 
         // REPAIR_PLAN A3: Check for pause codes - BEFORE rejection check
-        // Fix: Check for BOTH NEED_CLARIFICATION (from blueprints) and E_NEEDS_CLARIFICATION (error code)
+        // FIX: Check CONFIRMATION FIRST (highest priority - catches risky ops)
+        // This ensures dangerous operations get confirmation before any clarification
+        if (
+          result.code === EyeStatusCode.AWAIT_CONFIRMATION ||
+          result.code === EyeStatusCode.E_INTENT_UNCONFIRMED
+        ) {
+          const { PauseResumeManager } = await import("./pause-resume-manager");
+          const { getDb } = await import("@third-eye/db");
+          const { sqlite } = getDb();
+          const pauseManager = new PauseResumeManager(sqlite);
+
+          await pauseManager.pausePipeline({
+            sessionId: decision.sessionId,
+            currentEye: eyeName,
+            reason: "confirmation",
+            pendingData: result.data,
+            expiresInMs: 24 * 60 * 60 * 1000,
+          });
+
+          // Log the intent confirmation request to conversation timeline
+          const confirmationPrompt =
+            (result.data?.confirmationPrompt as string) ||
+            (result.data?.intentAnalysis as string) ||
+            "Intent requires confirmation";
+          conversationTracker.logAgentMessage(
+            decision.sessionId,
+            eyeName,
+            `**Intent Confirmation Required:**\n\n${confirmationPrompt}`,
+            {
+              type: "intent_confirmation_request",
+              intentAnalysis: result.data?.intentAnalysis,
+              confirmationPrompt: result.data?.confirmationPrompt,
+              riskLevel: result.data?.riskLevel,
+            },
+          );
+
+          conversationTracker.logPause(
+            decision.sessionId,
+            "confirmation",
+            `Eye ${eyeName} requested intent confirmation`,
+          );
+
+          if (ws) {
+            ws.broadcastToSession(decision.sessionId, {
+              type: "pipeline_paused",
+              reason: "confirmation",
+              eye: eyeName,
+              timestamp: Date.now(),
+            });
+          }
+
+          return {
+            sessionId: decision.sessionId,
+            results,
+            completed: false,
+            paused: true,
+            pauseReason: "confirmation",
+          };
+        }
+
+        // FIX: Check CLARIFICATION SECOND (lower priority than confirmation)
+        // Only ask for clarification if not a risky operation requiring confirmation
         if (
           result.code === EyeStatusCode.NEED_CLARIFICATION ||
           result.code === EyeStatusCode.E_NEEDS_CLARIFICATION
@@ -591,65 +652,7 @@ export class AutoRouter {
           };
         }
 
-        // Fix: Check for BOTH AWAIT_CONFIRMATION (from blueprints) and E_INTENT_UNCONFIRMED (error code)
-        if (
-          result.code === EyeStatusCode.AWAIT_CONFIRMATION ||
-          result.code === EyeStatusCode.E_INTENT_UNCONFIRMED
-        ) {
-          const { PauseResumeManager } = await import("./pause-resume-manager");
-          const { getDb } = await import("@third-eye/db");
-          const { sqlite } = getDb();
-          const pauseManager = new PauseResumeManager(sqlite);
-
-          await pauseManager.pausePipeline({
-            sessionId: decision.sessionId,
-            currentEye: eyeName,
-            reason: "confirmation",
-            pendingData: result.data,
-            expiresInMs: 24 * 60 * 60 * 1000,
-          });
-
-          // Log the intent confirmation request to conversation timeline
-          const confirmationPrompt =
-            (result.data?.confirmationPrompt as string) ||
-            (result.data?.intentAnalysis as string) ||
-            "Intent requires confirmation";
-          conversationTracker.logAgentMessage(
-            decision.sessionId,
-            eyeName,
-            `**Intent Confirmation Required:**\n\n${confirmationPrompt}`,
-            {
-              type: "intent_confirmation_request",
-              intentAnalysis: result.data?.intentAnalysis,
-              confirmationPrompt: result.data?.confirmationPrompt,
-            },
-          );
-
-          conversationTracker.logPause(
-            decision.sessionId,
-            "confirmation",
-            `Eye ${eyeName} requested intent confirmation`,
-          );
-
-          if (ws) {
-            ws.broadcastToSession(decision.sessionId, {
-              type: "pipeline_paused",
-              reason: "confirmation",
-              eye: eyeName,
-              timestamp: Date.now(),
-            });
-          }
-
-          return {
-            sessionId: decision.sessionId,
-            results,
-            completed: false,
-            paused: true,
-            pauseReason: "confirmation",
-          };
-        }
-
-        // Only check isRejected AFTER checking pause codes
+        // Only check isRejected AFTER checking pause codes (confirmation & clarification)
         if (isRejected(result)) {
           // Phase 5: Log error
           conversationTracker.logError(

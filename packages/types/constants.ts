@@ -9,6 +9,7 @@ export type StrictnessPresetId = "casual" | "enterprise" | "security";
 
 export interface StrictnessSettings {
   ambiguityThreshold: number;
+  riskThreshold: number; // Threshold for risky operation detection (lower = stricter)
   citationCutoff: number;
   consistencyTolerance: number;
   mangekyoStrictness: number;
@@ -29,7 +30,8 @@ export const STRICTNESS_PRESETS: Record<StrictnessPresetId, StrictnessPreset> =
       name: "Casual",
       description: "Relaxed validation for quick iterations",
       settings: {
-        ambiguityThreshold: 60,
+        ambiguityThreshold: 50, // Lowered from 60 for better clarity detection
+        riskThreshold: 80, // High tolerance - only block extreme danger
         citationCutoff: 50,
         consistencyTolerance: 70,
         mangekyoStrictness: 50,
@@ -41,7 +43,8 @@ export const STRICTNESS_PRESETS: Record<StrictnessPresetId, StrictnessPreset> =
       name: "Enterprise",
       description: "Balanced validation for production work",
       settings: {
-        ambiguityThreshold: 40,
+        ambiguityThreshold: 25, // Lowered from 40 - clear tasks like "JWT auth" should pass
+        riskThreshold: 50, // Medium - flag DROP/DELETE/production operations
         citationCutoff: 70,
         consistencyTolerance: 60,
         mangekyoStrictness: 70,
@@ -53,7 +56,8 @@ export const STRICTNESS_PRESETS: Record<StrictnessPresetId, StrictnessPreset> =
       name: "Security",
       description: "Strict validation for high-assurance systems",
       settings: {
-        ambiguityThreshold: 20,
+        ambiguityThreshold: 15, // Lowered from 20 for stricter clarity requirements
+        riskThreshold: 20, // Strict - confirm any modification operation
         citationCutoff: 90,
         consistencyTolerance: 40,
         mangekyoStrictness: 90,
