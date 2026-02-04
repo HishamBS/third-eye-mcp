@@ -514,12 +514,36 @@ export class AutoRouter {
 
           // Log the clarification questions to conversation timeline
           const questions = result.data?.questions as
-            | Array<{ id?: string; text?: string } | string>
+            | Array<
+                | {
+                    id?: string;
+                    text?: string;
+                    field?: string;
+                    question?: string;
+                  }
+                | string
+              >
             | undefined;
           if (questions && Array.isArray(questions)) {
+            // Store clarification questions in database for polling
+            const { addClarificationRequest } = await import("@third-eye/eyes");
+            const mappedQuestions = questions.map((q) => {
+              if (typeof q === "string") {
+                return { field: "question", question: q };
+              }
+              return {
+                field: q.field || q.id || "unknown",
+                question: q.question || q.text || "No question provided",
+              };
+            });
+            await addClarificationRequest(decision.sessionId, mappedQuestions);
+
             const questionTexts = questions
               .map((q, idx) => {
-                const text = typeof q === "string" ? q : q.text || q.id || "";
+                const text =
+                  typeof q === "string"
+                    ? q
+                    : q.text || q.question || q.id || "";
                 return `${idx + 1}. ${text}`;
               })
               .join("\n");
