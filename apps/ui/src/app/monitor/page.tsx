@@ -24,6 +24,57 @@ import type { ConnectionStatus } from "@/components/theatre";
 export const dynamic = "force-dynamic";
 
 /**
+ * Known Eye names for extraction from event codes
+ */
+const EYE_NAMES = [
+  "sharingan",
+  "kyuubi",
+  "jogan",
+  "rinnegan",
+  "mangekyo",
+  "tenseigan",
+  "byakugan",
+  "overseer",
+] as const;
+
+/**
+ * Transform pipeline event from API to theatre event format
+ *
+ * API returns events with:
+ * - code: "SHARINGAN_STARTED" (uppercase, DB format)
+ * - eyeId: UUID (database reference)
+ * - dataJson: {...} (nested data)
+ * - createdAt: timestamp
+ *
+ * Theatre expects:
+ * - type: "sharingan_started" (lowercase, matches THEATRE_EVENT_TEMPLATES)
+ * - eye: "sharingan" (eye name string)
+ * - data: {...} (flat data)
+ * - timestamp: timestamp
+ */
+function transformPipelineEvent(
+  event: Record<string, unknown>,
+): RawHistoricalEvent {
+  // Transform code to type (lowercase, matching theatre templates)
+  const code = (event.code as string)?.toLowerCase() ?? "";
+  const eventType = code || (event.type as string) || "pipeline_event";
+
+  // Extract eye name from code prefix (e.g., "sharingan_started" -> "sharingan")
+  const eye = EYE_NAMES.find((name) => code.startsWith(name)) ?? "overseer";
+
+  return {
+    ...event,
+    type: eventType,
+    eye: eye,
+    timestamp: (event.createdAt as string) ?? (event.timestamp as string),
+    data:
+      (event.dataJson as Record<string, unknown>) ??
+      (event.data as Record<string, unknown>) ??
+      {},
+  } as RawHistoricalEvent;
+}
+
+/**
  * Clarification item from API
  */
 interface ClarificationItem {
@@ -87,7 +138,9 @@ function TheatreMonitorContent() {
         const result = await res.json();
         // Handle both { data: [...] } and direct array responses
         const events = Array.isArray(result) ? result : (result.data ?? []);
-        setHistoricalEvents(events as RawHistoricalEvent[]);
+        // Transform events from API format to theatre format
+        const transformedEvents = events.map(transformPipelineEvent);
+        setHistoricalEvents(transformedEvents);
       }
     } catch (err) {
       console.error("Failed to fetch historical events:", err);
