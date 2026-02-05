@@ -285,46 +285,21 @@ async function installWithFallback(
   label: string,
   verbose: boolean,
 ) {
-  const strategies: Array<{ cmd: string; args: string[]; display: string }> =
-    [];
-
-  if (commandExists("bun"))
-    strategies.push({ cmd: "bun", args: ["install"], display: "bun install" });
-  if (commandExists("npm"))
-    strategies.push({ cmd: "npm", args: ["install"], display: "npm install" });
-
-  if (strategies.length === 0) {
+  if (!commandExists("bun")) {
     throw new Error(
-      "No package manager found (bun/npm). Install bun for the best experience.",
+      "Bun is required but not installed. Install bun: https://bun.sh/docs/installation",
     );
   }
 
-  const labelPrefix = `Installing ${label}`;
-  let lastError: Error | null = null;
-
-  for (const strategy of strategies) {
-    try {
-      await runInstallCommand(
-        strategy.cmd,
-        strategy.args,
-        cwd,
-        `${labelPrefix} (${strategy.display})...`,
-        verbose,
-      );
-      // Verify install succeeded by checking node_modules
-      const nodeModulesPath = resolve(cwd, "node_modules");
-      if (hasNodeModules(nodeModulesPath)) {
-        return;
-      }
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      if (verbose) {
-        console.warn(`⚠️  ${strategy.display} failed: ${lastError.message}`);
-      }
-    }
-  }
-
-  throw lastError ?? new Error(`Failed to install dependencies for ${label}`);
+  // In bun workspaces, dependencies are hoisted to root node_modules
+  // so we trust bun install success rather than checking local node_modules
+  await runInstallCommand(
+    "bun",
+    ["install"],
+    cwd,
+    `Installing ${label}...`,
+    verbose,
+  );
 }
 
 async function prepareDatabase(
@@ -987,12 +962,12 @@ async function runReleasePipeline() {
   }
 
   const publishConfirmed = await confirm({
-    message: "Publish to npm now?",
+    message: "Publish package now?",
     default: true,
   });
 
   if (!publishConfirmed) {
-    console.log("Release pipeline cancelled before npm publish.");
+    console.log("Release pipeline cancelled before publish.");
     return;
   }
 
@@ -2316,10 +2291,11 @@ async function runReleaseAssistant() {
   }
 
   console.log("\n📝 Updating package version...");
-  execSync(`npm version ${targetVersion} --no-git-tag-version`, {
-    cwd: projectRoot,
-    stdio: "inherit",
-  });
+  const pkgPath = resolve(projectRoot, "package.json");
+  const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
+  pkg.version = targetVersion;
+  writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
+  console.log(`  Updated version to ${targetVersion}`);
 
   const changelogPath = resolve(projectRoot, "CHANGELOG.md");
   const addNotes = await confirm({
