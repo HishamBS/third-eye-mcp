@@ -29,8 +29,7 @@ export default function PipelinesPage() {
   const [mode, setMode] = useState<RoutingModeName>("fully_dynamic");
   // FIX 8: Use UIContext for session state instead of local state
   // This ensures session selection is shared across pages
-  const { selectedSessionIdId, setSelectedSession: setContextSession } =
-    useUI();
+  const { selectedSessionId, setSelectedSession: setContextSession } = useUI();
   const [routingDecision, setRoutingDecision] =
     useState<RoutingDecision | null>(null);
 
@@ -135,7 +134,7 @@ export default function PipelinesPage() {
                     </h3>
                     <SessionSelector
                       controlled
-                      selectedSessionIdId={selectedSessionId}
+                      selectedSessionId={selectedSessionId}
                       onSessionSelect={handleSessionSelect}
                     />
                   </div>

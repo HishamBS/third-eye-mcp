@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import {
   STATUS_TEXT_COLORS,
+  STATUS_BG_COLORS,
   STATUS_BG_COLORS_SUBTLE,
   STATUS_BORDER_COLORS_SUBTLE,
 } from "@/constants/color-mappings";

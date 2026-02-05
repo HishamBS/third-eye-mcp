@@ -74,7 +74,9 @@ export default function SessionsPage() {
       if (response.ok) {
         const result = await response.json();
         const data = result.data || result;
-        setSessions(Array.isArray(data) ? data : []);
+        const sessionsArray =
+          data.sessions || (Array.isArray(data) ? data : []);
+        setSessions(Array.isArray(sessionsArray) ? sessionsArray : []);
       }
     } catch (error) {
       console.error("Failed to fetch sessions:", error);
