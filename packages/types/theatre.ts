@@ -9,8 +9,6 @@
  * - Interactive actions and celebrations
  */
 
-import type { EyeId } from "@third-eye/constants";
-
 // ===========================================
 // EYE PERSONA TYPES
 // ===========================================
