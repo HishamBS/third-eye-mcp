@@ -127,6 +127,44 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+/**
+ * Extract a meaningful title from user task input
+ * Used for session naming to make sessions identifiable
+ */
+function extractTaskTitle(input: string, maxLength: number = 50): string {
+  if (!input || typeof input !== "string") {
+    return "Auto-Router Session";
+  }
+
+  // Clean up the input
+  let title = input.trim();
+
+  // Remove common prefixes
+  title = title.replace(
+    /^(please\s+|can\s+you\s+|i\s+want\s+to\s+|i\s+need\s+to\s+|help\s+me\s+)/i,
+    "",
+  );
+
+  // Get first line only (task might be multi-line)
+  const firstLine = title.split(/[\n\r]/)[0]?.trim() || title;
+
+  // Truncate to max length
+  if (firstLine.length <= maxLength) {
+    return firstLine || "Auto-Router Session";
+  }
+
+  // Find a good break point (word boundary)
+  const truncated = firstLine.substring(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(" ");
+
+  if (lastSpace > maxLength * 0.6) {
+    // Break at word boundary if it's not too far back
+    return truncated.substring(0, lastSpace) + "...";
+  }
+
+  return truncated + "...";
+}
+
 function formatStrictnessDirective(
   strictness?: Record<string, unknown>,
 ): string | null {
@@ -253,7 +291,7 @@ export class AutoRouter {
     if (!actualSessionId) {
       const bootstrapConfig: Record<string, unknown> = {
         agentName: "Auto-Router",
-        displayName: "Auto-Router Session",
+        displayName: extractTaskTitle(enrichedInput),
       };
 
       if (options.strictness && isPlainObject(options.strictness)) {
@@ -504,7 +542,7 @@ export class AutoRouter {
         // Create a session for the dangerous operation
         const bootstrapConfig: Record<string, unknown> = {
           agentName: "Risk-Detector",
-          displayName: "Dangerous Operation Detected",
+          displayName: `⚠️ ${extractTaskTitle(input, 40)}`,
         };
         const session = await this.orchestrator.createSession(bootstrapConfig);
         const sessionId = session.sessionId;

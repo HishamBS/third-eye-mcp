@@ -14,7 +14,11 @@ import { useWebSocket, type WSMessage } from "@/hooks/useWebSocket";
 import { useUI } from "@/contexts/UIContext";
 import { API_BASE_URL } from "@/consts/api";
 import { API_ROUTES } from "@/constants/api-routes";
-import { TheatreShell, type TheatreShellProps } from "./_components";
+import {
+  TheatreShell,
+  type TheatreShellProps,
+  type RawHistoricalEvent,
+} from "./_components";
 import type { ConnectionStatus } from "@/components/theatre";
 
 export const dynamic = "force-dynamic";
@@ -39,8 +43,10 @@ function TheatreMonitorContent() {
   const sessionIdFromQuery = searchParams.get("sessionId");
   const sessionId = sessionIdFromQuery ?? selectedSessionId ?? null;
 
-  // WebSocket connection
-  const { connectionStatus, subscribe } = useWebSocket();
+  // WebSocket connection - pass sessionId to connect to session-specific events
+  const { connectionStatus, subscribe } = useWebSocket({
+    sessionId: sessionId ?? undefined,
+  });
 
   // Map connection status to theatre format
   const theatreConnectionStatus: ConnectionStatus =
@@ -56,12 +62,37 @@ function TheatreMonitorContent() {
   >(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Historical events loaded on mount
+  const [historicalEvents, setHistoricalEvents] = useState<
+    RawHistoricalEvent[]
+  >([]);
+
   // Sync session from query params
   useEffect(() => {
     if (sessionIdFromQuery && sessionIdFromQuery !== selectedSessionId) {
       setSelectedSession(sessionIdFromQuery);
     }
   }, [sessionIdFromQuery, selectedSessionId, setSelectedSession]);
+
+  /**
+   * Fetch historical events for the session (events that happened before page load)
+   */
+  const fetchHistoricalEvents = useCallback(async () => {
+    if (!sessionId) return;
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}${API_ROUTES.SESSION_EVENTS(sessionId)}`,
+      );
+      if (res.ok) {
+        const result = await res.json();
+        // Handle both { data: [...] } and direct array responses
+        const events = Array.isArray(result) ? result : (result.data ?? []);
+        setHistoricalEvents(events as RawHistoricalEvent[]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch historical events:", err);
+    }
+  }, [sessionId]);
 
   /**
    * Fetch clarifications for the session
@@ -107,9 +138,18 @@ function TheatreMonitorContent() {
   // Load data on session change
   useEffect(() => {
     if (!sessionId) return;
+    // Clear historical events when session changes to avoid stale data
+    setHistoricalEvents([]);
+    // Fetch fresh data for the new session
+    fetchHistoricalEvents();
     fetchClarifications();
     fetchIntentConfirmations();
-  }, [sessionId, fetchClarifications, fetchIntentConfirmations]);
+  }, [
+    sessionId,
+    fetchHistoricalEvents,
+    fetchClarifications,
+    fetchIntentConfirmations,
+  ]);
 
   /**
    * Subscribe to WebSocket messages and return handler
@@ -262,6 +302,7 @@ function TheatreMonitorContent() {
   return (
     <TheatreShell
       sessionId={sessionId}
+      initialEvents={historicalEvents}
       onWebSocketMessage={handleWebSocketMessage}
       onClarificationSubmit={handleClarificationSubmit}
       onPlanApprove={handlePlanApprove}

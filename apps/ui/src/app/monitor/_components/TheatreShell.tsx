@@ -29,9 +29,23 @@ import {
 } from "../_hooks";
 import type { TheatreState } from "@third-eye/types";
 
+/**
+ * Raw event from API or WebSocket
+ */
+export interface RawHistoricalEvent {
+  type: string;
+  sessionId?: string;
+  timestamp?: string | number;
+  eye?: string;
+  data?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
 export interface TheatreShellProps {
   /** Session ID to monitor */
   sessionId: string | null;
+  /** Initial historical events to load (fetched before WebSocket connects) */
+  initialEvents?: RawHistoricalEvent[];
   /** WebSocket message handler - call this when messages arrive */
   onWebSocketMessage?: (handler: (message: unknown) => void) => () => void;
   /** Submit clarification answer */
@@ -50,6 +64,7 @@ export interface TheatreShellProps {
 
 function TheatreShellComponent({
   sessionId,
+  initialEvents,
   onWebSocketMessage,
   onClarificationSubmit,
   onPlanApprove,
@@ -92,6 +107,30 @@ function TheatreShellComponent({
     events: theatreState.events,
     isLiveSessionActive: theatreState.connectionStatus === "connected",
   });
+
+  // Process initial historical events on mount (before WebSocket connects)
+  // This ensures events that happened before page load are displayed
+  useEffect(() => {
+    if (!initialEvents || initialEvents.length === 0) return;
+
+    // Process each historical event through the theatre pipeline
+    // Sort by timestamp to ensure chronological order
+    const sortedEvents = [...initialEvents].sort((a, b) => {
+      const timeA =
+        typeof a.timestamp === "string"
+          ? new Date(a.timestamp).getTime()
+          : (a.timestamp ?? 0);
+      const timeB =
+        typeof b.timestamp === "string"
+          ? new Date(b.timestamp).getTime()
+          : (b.timestamp ?? 0);
+      return timeA - timeB;
+    });
+
+    sortedEvents.forEach((event) => {
+      processEvent(event as Record<string, unknown>);
+    });
+  }, [initialEvents, processEvent]);
 
   // Handle incoming WebSocket messages
   useEffect(() => {
