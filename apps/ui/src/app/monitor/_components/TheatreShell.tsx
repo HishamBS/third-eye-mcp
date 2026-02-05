@@ -159,15 +159,12 @@ function TheatreShellComponent({
   }, [theatreState.connectionStatus]);
 
   // Handle curtain state on session change
+  // Always open curtain - even without session, user should see the stage with session selector
   useEffect(() => {
-    if (sessionId && theatreState.curtainState === "closed") {
-      // Open curtain when session is available
+    if (theatreState.curtainState === "closed") {
       setTimeout(openCurtain, 500);
-    } else if (!sessionId && theatreState.curtainState === "open") {
-      // Close curtain when no session
-      closeCurtain();
     }
-  }, [sessionId, theatreState.curtainState, openCurtain, closeCurtain]);
+  }, [theatreState.curtainState, openCurtain]);
 
   // Handle celebration dismiss
   const handleCelebrationDismiss = useCallback(() => {

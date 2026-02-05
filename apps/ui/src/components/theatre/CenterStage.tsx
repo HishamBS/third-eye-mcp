@@ -21,6 +21,7 @@ import type {
 import { EyeCharacter } from "./EyeCharacter";
 import { DialogueBox } from "./DialogueBox";
 import { Spotlight } from "./effects";
+import { SessionSelector } from "@/components/SessionSelector";
 
 export interface CenterStageProps {
   /** Active Eye persona (null if no one on stage) */
@@ -103,12 +104,12 @@ function SuspenseIndicator({ state }: { state: SuspenseState }) {
 }
 
 /**
- * Empty stage placeholder
+ * Empty stage placeholder with session selector
  */
 function EmptyStage() {
   return (
     <motion.div
-      className="flex flex-col items-center justify-center gap-4"
+      className="flex flex-col items-center justify-center gap-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 0.3 }}
@@ -116,12 +117,31 @@ function EmptyStage() {
       <div className="h-24 w-24 rounded-full border-2 border-dashed border-neutral-700 flex items-center justify-center">
         <span className="text-4xl text-neutral-700">?</span>
       </div>
-      <p
-        className="text-sm text-neutral-500"
-        style={{ fontFamily: "var(--font-narrative, serif)" }}
-      >
-        The stage awaits its next performer...
-      </p>
+      <div className="text-center">
+        <h2
+          className="text-xl font-semibold text-neutral-300 mb-2"
+          style={{ fontFamily: "var(--font-narrative, serif)" }}
+        >
+          Select a Session
+        </h2>
+        <p
+          className="text-sm text-neutral-500 mb-4"
+          style={{ fontFamily: "var(--font-narrative, serif)" }}
+        >
+          Choose a session to monitor in real-time
+        </p>
+        <SessionSelector
+          config={{
+            allowDelete: false,
+            allowDeleteAll: false,
+            showSearch: true,
+            showMonitorLink: false,
+            autoPoll: true,
+            useNavigation: true,
+            minWidth: "280px",
+          }}
+        />
+      </div>
     </motion.div>
   );
 }

@@ -16,6 +16,7 @@ import {
   STATUS_BG_COLORS_SUBTLE,
   STATUS_BORDER_COLORS_SUBTLE,
 } from "@/constants/color-mappings";
+import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 
 interface PipelineEvent {
   id: string;
@@ -187,13 +188,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
             </div>
           )}
 
-          {currentEvent.md && (
-            <div className="rounded-lg bg-brand-paper/50 p-4">
-              <p className="text-sm leading-relaxed text-semantic-muted">
-                {currentEvent.md}
-              </p>
-            </div>
-          )}
+          {currentEvent.md && <MarkdownRenderer content={currentEvent.md} />}
 
           {currentEvent.dataJson &&
             Object.keys(currentEvent.dataJson).length > 0 && (

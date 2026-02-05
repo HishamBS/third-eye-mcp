@@ -188,22 +188,19 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       };
 
       ws.onerror = (error) => {
-        // Only log/report errors if we have a session ID
-        // If no session, connection errors are expected and should be silent
-        if (sessionId) {
-          // WebSocket errors don't contain useful error messages in the Event object
-          // Log connection details instead
-          console.error("[WebSocket] Connection error:", {
-            url,
-            readyState: ws.readyState,
-            readyStateText:
-              ["CONNECTING", "OPEN", "CLOSING", "CLOSED"][ws.readyState] ||
-              "UNKNOWN",
-            timestamp: new Date().toISOString(),
-          });
+        // WebSocket errors don't contain useful error messages in the Event object
+        // Log connection details for debugging
+        console.error("[WebSocket] Connection error:", {
+          url,
+          sessionId: sessionId ?? "none",
+          readyState: ws.readyState,
+          readyStateText:
+            ["CONNECTING", "OPEN", "CLOSING", "CLOSED"][ws.readyState] ||
+            "UNKNOWN",
+          timestamp: new Date().toISOString(),
+        });
 
-          onError?.(error);
-        }
+        onError?.(error);
       };
 
       ws.onclose = (event) => {
@@ -326,11 +323,21 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   }, []);
 
   useEffect(() => {
+    // Log connection attempt for debugging
+    console.log(
+      `[WebSocket] Effect triggered with sessionId: ${sessionId ?? "none"}`,
+    );
     connect();
 
     return () => {
+      console.log(
+        `[WebSocket] Effect cleanup for sessionId: ${sessionId ?? "none"}`,
+      );
       disconnect();
     };
+    // Note: connect/disconnect are stable functions that capture refs, not state
+    // We intentionally only re-run when sessionId changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
   return {
