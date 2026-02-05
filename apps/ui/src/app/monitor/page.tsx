@@ -416,6 +416,52 @@ function MonitorContent() {
     awaitingConfirmation: boolean;
   } | null>(null);
 
+  // Define fetchClarifications BEFORE the useEffect that uses it
+  const fetchClarifications = useCallback(async () => {
+    if (!sessionId) return;
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}${API_ROUTES.SESSION_CLARIFICATIONS(sessionId)}`,
+      );
+      if (res.ok) {
+        const result = await res.json();
+        // Backend returns array directly (wrapped in createSuccessResponse)
+        const data = result.data || result;
+        const clarificationsArray = Array.isArray(data) ? data : [];
+
+        const outstanding: ClarificationItem[] = [];
+        const resolved: ResolvedClarificationItem[] = [];
+
+        for (const q of clarificationsArray) {
+          // Server data must have ID - skip malformed items
+          if (q && typeof q === "object" && q.id) {
+            if (q.answer) {
+              resolved.push({
+                id: q.id,
+                field: q.field || "unknown",
+                question: q.text || q.question || "",
+                answer: q.answer,
+                answeredAt: new Date(q.answeredAt || Date.now()),
+                status: "resolved",
+              });
+            } else {
+              outstanding.push({
+                id: q.id,
+                field: q.field || "unknown",
+                question: q.text || q.question || "",
+                status: "pending",
+              });
+            }
+          }
+        }
+
+        setClarifications({ outstanding, resolved });
+      }
+    } catch (err) {
+      console.error("Failed to fetch clarifications:", err);
+    }
+  }, [sessionId]);
+
   useEffect(() => {
     if (!sessionId) return;
 
@@ -482,51 +528,6 @@ function MonitorContent() {
       conversationEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [entries, autoScroll]);
-
-  const fetchClarifications = useCallback(async () => {
-    if (!sessionId) return;
-    try {
-      const res = await fetch(
-        `${API_BASE_URL}${API_ROUTES.SESSION_CLARIFICATIONS(sessionId)}`,
-      );
-      if (res.ok) {
-        const result = await res.json();
-        // Backend returns array directly (wrapped in createSuccessResponse)
-        const data = result.data || result;
-        const clarificationsArray = Array.isArray(data) ? data : [];
-
-        const outstanding: ClarificationItem[] = [];
-        const resolved: ResolvedClarificationItem[] = [];
-
-        for (const q of clarificationsArray) {
-          // Server data must have ID - skip malformed items
-          if (q && typeof q === "object" && q.id) {
-            if (q.answer) {
-              resolved.push({
-                id: q.id,
-                field: q.field || "unknown",
-                question: q.text || q.question || "",
-                answer: q.answer,
-                answeredAt: new Date(q.answeredAt || Date.now()),
-                status: "resolved",
-              });
-            } else {
-              outstanding.push({
-                id: q.id,
-                field: q.field || "unknown",
-                question: q.text || q.question || "",
-                status: "pending",
-              });
-            }
-          }
-        }
-
-        setClarifications({ outstanding, resolved });
-      }
-    } catch (err) {
-      console.error("Failed to fetch clarifications:", err);
-    }
-  }, [sessionId]);
 
   const fetchIntentConfirmations = useCallback(async () => {
     if (!sessionId) return;
