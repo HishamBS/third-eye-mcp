@@ -11,12 +11,16 @@ import { Download } from "lucide-react";
 import { exportSession, type ExportEvent } from "@third-eye/utils";
 import { API_BASE_URL } from "@/consts/api";
 import { STATUS_TEXT_COLORS } from "@/constants/color-mappings";
+import { useUI } from "@/contexts/UIContext";
 
 export const dynamic = "force-dynamic";
 
 function ReplayContent() {
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get("sessionId") || "unknown";
+  // FIX 7: Use UIContext as fallback when no query param provided
+  const { selectedSessionId: contextSessionId } = useUI();
+  const sessionIdFromQuery = searchParams.get("sessionId");
+  const sessionId = sessionIdFromQuery ?? contextSessionId ?? "unknown";
   const [events, setEvents] = useState<WebSocketEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

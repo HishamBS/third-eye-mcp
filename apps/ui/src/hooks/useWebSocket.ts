@@ -41,6 +41,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const subscribersRef = useRef<Array<(message: WSMessage) => void>>([]);
   const lastPongRef = useRef<number>(Date.now());
   const healthCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  // FIX 3: Track which sessionId we're currently connected to
+  const connectedSessionIdRef = useRef<string | undefined>(undefined);
 
   // Configuration constants
   const MAX_RECONNECT_ATTEMPTS = 10;
@@ -70,12 +72,22 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       return;
     }
 
-    // Don't create new connection if one is already open or connecting
+    // FIX 3: Check if we're already connected to the SAME session
+    // If sessionId changed, we need to disconnect and reconnect
     if (
       wsRef.current?.readyState === WebSocket.OPEN ||
       wsRef.current?.readyState === WebSocket.CONNECTING
     ) {
-      return;
+      // Check if the sessionId actually changed
+      if (connectedSessionIdRef.current === sessionId) {
+        // Same session, keep the existing connection
+        return;
+      }
+      // Different session - disconnect the old connection first
+      console.log(
+        `[WebSocket] Session changed from ${connectedSessionIdRef.current} to ${sessionId}, reconnecting...`,
+      );
+      disconnect();
     }
 
     // Clean up any existing connection before creating new one
@@ -106,6 +118,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
         setConnectionStatus("connected");
         reconnectAttemptsRef.current = 0;
         lastPongRef.current = Date.now(); // Reset pong timer on fresh connection
+        // FIX 3: Track which sessionId this connection is for
+        connectedSessionIdRef.current = sessionId;
         onOpen?.();
 
         // Clear any pending reconnect attempts
@@ -256,6 +270,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
 
     setConnectionStatus("disconnected");
     reconnectAttemptsRef.current = 0;
+    // FIX 3: Clear the connected session reference on disconnect
+    connectedSessionIdRef.current = undefined;
   };
 
   /**

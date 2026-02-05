@@ -23,32 +23,45 @@ import { RuntimeRouteHighlighter } from "@/components/pipeline-builder/RuntimeRo
 import { RoutingDecisionMetadata } from "@/components/pipeline-builder/RoutingDecisionMetadata";
 import type { RoutingModeName } from "@third-eye/config/eye-capabilities";
 import type { RoutingDecision } from "@/types/routing";
+import { useUI } from "@/contexts/UIContext";
 
 export default function PipelinesPage() {
   const [mode, setMode] = useState<RoutingModeName>("fully_dynamic");
-  const [selectedSession, setSelectedSession] = useState<string | null>(null);
+  // FIX 8: Use UIContext for session state instead of local state
+  // This ensures session selection is shared across pages
+  const { selectedSessionIdId, setSelectedSession: setContextSession } =
+    useUI();
   const [routingDecision, setRoutingDecision] =
     useState<RoutingDecision | null>(null);
 
-  const handleModeChange = useCallback((newMode: RoutingModeName) => {
-    setMode(newMode);
-    setSelectedSession(null); // Clear selection when mode changes
-  }, []);
+  const handleModeChange = useCallback(
+    (newMode: RoutingModeName) => {
+      setMode(newMode);
+      setContextSession(null); // Clear selection when mode changes
+    },
+    [setContextSession],
+  );
 
-  const handleSessionClick = useCallback((sessionId: string) => {
-    setSelectedSession(sessionId);
-  }, []);
+  const handleSessionClick = useCallback(
+    (sessionId: string) => {
+      setContextSession(sessionId);
+    },
+    [setContextSession],
+  );
 
   const handleCloseVisualizer = useCallback(() => {
-    setSelectedSession(null);
-  }, []);
+    setContextSession(null);
+  }, [setContextSession]);
 
-  const handleSessionSelect = useCallback((sessionId: string | null) => {
-    setSelectedSession(sessionId);
-    if (!sessionId) {
-      setRoutingDecision(null);
-    }
-  }, []);
+  const handleSessionSelect = useCallback(
+    (sessionId: string | null) => {
+      setContextSession(sessionId);
+      if (!sessionId) {
+        setRoutingDecision(null);
+      }
+    },
+    [setContextSession],
+  );
 
   const handleRoutingDecisionLoaded = useCallback(
     (decision: RoutingDecision) => {
@@ -75,9 +88,9 @@ export default function PipelinesPage() {
           {mode === "fully_dynamic" && (
             <div className="space-y-6">
               <CapabilityMatrix mode="dynamic" />
-              {selectedSession && (
+              {selectedSessionId && (
                 <DynamicRouteVisualizer
-                  sessionId={selectedSession}
+                  sessionId={selectedSessionId}
                   onClose={handleCloseVisualizer}
                 />
               )}
@@ -87,9 +100,9 @@ export default function PipelinesPage() {
           {mode === "constrained" && (
             <div className="space-y-6">
               <CapabilityMatrix mode="constrained" />
-              {selectedSession && (
+              {selectedSessionId && (
                 <DynamicRouteVisualizer
-                  sessionId={selectedSession}
+                  sessionId={selectedSessionId}
                   onClose={handleCloseVisualizer}
                 />
               )}
@@ -122,11 +135,11 @@ export default function PipelinesPage() {
                     </h3>
                     <SessionSelector
                       controlled
-                      selectedSessionId={selectedSession}
+                      selectedSessionIdId={selectedSessionId}
                       onSessionSelect={handleSessionSelect}
                     />
                   </div>
-                  {selectedSession && (
+                  {selectedSessionId && (
                     <button
                       onClick={() => handleSessionSelect(null)}
                       className="px-3 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
@@ -137,7 +150,7 @@ export default function PipelinesPage() {
                 </div>
 
                 {/* Routing Decision Metadata (only when session selected) */}
-                {selectedSession && routingDecision && (
+                {selectedSessionId && routingDecision && (
                   <RoutingDecisionMetadata decision={routingDecision} />
                 )}
 
@@ -145,7 +158,7 @@ export default function PipelinesPage() {
                 <div className="flex-1 min-h-0">
                   <PipelineCanvasEnhanced />
                   <RuntimeRouteHighlighter
-                    sessionId={selectedSession}
+                    sessionId={selectedSessionId}
                     onRoutingDecisionLoaded={handleRoutingDecisionLoaded}
                   />
                 </div>

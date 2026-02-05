@@ -116,6 +116,16 @@ const CLARITY_VALIDATED_CODES = new Set([
   EyeStatusCode.OK_NO_CLARIFICATION_NEEDED,
 ]);
 
+// Eyes that are part of guidance phase (need to re-run after clarification)
+const GUIDANCE_EYES = new Set([EyeId.SHARINGAN, EyeId.KYUUBI]);
+
+// Codes that indicate guidance is complete and ready for draft
+const GUIDANCE_COMPLETE_CODES = new Set([
+  EyeStatusCode.OK_GUIDE,
+  EyeStatusCode.OK_PROMPT_READY,
+  EyeStatusCode.GUIDANCE_COMPLETE,
+]);
+
 const STRICTNESS_LABELS: Record<string, string> = {
   ambiguityThreshold: "Ambiguity Threshold (0-100, lower = stricter)",
   citationCutoff: "Citation Confidence Cutoff (0-100%)",
@@ -238,8 +248,15 @@ export interface AutoRoutingResult {
   results: BaseEnvelope[];
   completed: boolean;
   paused?: boolean; // REPAIR_PLAN A3: Pipeline paused for human input
-  pauseReason?: string; // REPAIR_PLAN A3: Reason for pause
+  pauseReason?: "clarification" | "confirmation" | "draft_submission"; // Reason for pause
   error?: string;
+  data?: {
+    brief?: string;
+    requirements?: string[];
+    checkpoints?: string[];
+    questions?: Array<{ field: string; question: string }>;
+    [key: string]: unknown;
+  };
 }
 
 const SharinganAnalysisSchema = z.object({
@@ -506,7 +523,7 @@ export class AutoRouter {
       }
     }
 
-    return {
+    const routingDecision = {
       sessionId: actualSessionId,
       taskType:
         (overseerResult.data.contentDomain as "code" | "text" | "analysis") ||
@@ -520,6 +537,38 @@ export class AutoRouter {
         "Overseer-determined",
       estimatedSteps: pipelineRoute.length,
     };
+
+    // FIX 5: Persist routing decision to database for LiveRoutingPanel
+    try {
+      const { getDb } = await import("@third-eye/db");
+      const { routingDecisions } = await import("@third-eye/db/schema");
+      const { generateId } = await import("@third-eye/db/utils/uuid");
+      const { db } = getDb();
+
+      await db.insert(routingDecisions).values({
+        id: generateId(),
+        sessionId: actualSessionId,
+        requestAnalysis: JSON.stringify({
+          requestType: routingDecision.taskType,
+          complexity: routingDecision.complexity,
+          originalInput: input.substring(0, 500), // Store truncated input for context
+        }),
+        selectedEyes: JSON.stringify(routingDecision.recommendedFlow),
+        reasoning: routingDecision.reasoning,
+        executionMode: "sequential",
+        createdAt: new Date(),
+      });
+    } catch (persistError) {
+      // Log but don't fail - routing decision persistence is not critical
+      console.warn(
+        "[AutoRouter] Failed to persist routing decision:",
+        persistError instanceof Error
+          ? persistError.message
+          : String(persistError),
+      );
+    }
+
+    return routingDecision;
   }
 
   /**
@@ -957,6 +1006,10 @@ Do NOT ask clarifying questions - the task requirements are already clear.`;
 
   /**
    * Resume flow after clarification or intent confirmation
+   *
+   * CRITICAL FIX: After clarification, we MUST re-run guidance phase (Sharingan validates
+   * clarity, Kyuubi produces refined brief) before proceeding to validation.
+   * This follows VISION.md philosophy: "Guidance removes ambiguity; validation confirms alignment."
    */
   async resumeFlow(
     sessionId: string,
@@ -999,56 +1052,279 @@ Do NOT ask clarifying questions - the task requirements are already clear.`;
         };
       }
 
-      // Determine which Eyes still need to run based on phase and completed eyes
-      const nextEyes = orderGuard.getExpectedNext(sessionId);
-      if (!nextEyes || nextEyes.length === 0) {
-        return {
-          sessionId,
-          results: [],
-          completed: true,
-          error: "No pending Eyes to resume",
-        };
-      }
+      // Get pipeline state to check pause reason
+      const { PauseResumeManager } = await import("./pause-resume-manager");
+      const { getDb } = await import("@third-eye/db");
+      const { sqlite } = getDb();
+      const pauseManager = new PauseResumeManager(sqlite);
+      const pipelineState = await pauseManager.getPipelineState(sessionId);
 
-      // Build enriched input with clarifications
+      // Build enriched input with clarifications AND clarity signal
+      const claritySignal = `${CLARITY_VALIDATED_HEADER}
+Task clarity has been validated through human clarification.
+Resolved facts:
+${factsSummary}
+Skip guidance-phase questions and proceed with the validated requirements.`;
+
       const enrichedInput = input
-        ? `${input}\n\nResolved Context:\n${factsSummary}`
-        : `Resuming pipeline with resolved context:\n${factsSummary}`;
+        ? `${input}\n\n${claritySignal}`
+        : `Resuming pipeline with clarified context:\n\n${claritySignal}`;
 
-      // Execute remaining Eyes
-      const remainingEyes = nextEyes;
       const results: BaseEnvelope[] = [];
 
       // Mark as auto-router controlled
       orderGuard.markAsAutoRouterSession(sessionId);
 
       // Phase 5: Initialize ConversationTracker and log resume
-      const { getDb } = await import("@third-eye/db");
-      const { sqlite } = getDb();
       const conversationTracker = new ConversationTracker(sqlite);
-      conversationTracker.logResume(
-        sessionId,
-        `Pipeline resumed with ${remainingEyes.length} remaining eyes: ${remainingEyes.join(", ")}`,
-        { resolvedFacts, remainingEyes },
-      );
 
       // Import WebSocket bridge for real-time updates
       const { getWebSocketBridge } = await import("./websocket-registry");
       const ws = getWebSocketBridge();
 
-      // Broadcast pipeline_resumed event via WebSocket
+      // CRITICAL FIX: If resuming from clarification, re-run guidance phase
+      // Sharingan validates clarity is achieved, Kyuubi produces refined brief
+      if (pipelineState?.pauseReason === "clarification") {
+        conversationTracker.logResume(
+          sessionId,
+          "Pipeline resuming after clarification - re-running guidance phase",
+          { resolvedFacts, phase: "re-guidance" },
+        );
+
+        // Broadcast pipeline_resumed event
+        if (ws) {
+          ws.broadcastToSession(sessionId, {
+            type: "pipeline_resumed",
+            sessionId,
+            data: {
+              phase: "re-guidance",
+              resolvedFacts,
+              completedEyes: state.completedEyes,
+            },
+            timestamp: Date.now(),
+          });
+        }
+
+        // Re-run guidance eyes with clarified facts
+        const guidanceEyes: EyeName[] = [
+          EyeId.SHARINGAN as EyeName,
+          EyeId.KYUUBI as EyeName,
+        ];
+
+        for (let i = 0; i < guidanceEyes.length; i++) {
+          const eyeName = guidanceEyes[i];
+
+          // Emit eye_started event
+          if (ws) {
+            ws.broadcastToSession(sessionId, {
+              type: "eye_started",
+              eye: eyeName,
+              step: i + 1,
+              totalSteps: guidanceEyes.length,
+              phase: "re-guidance",
+              timestamp: Date.now(),
+            });
+          }
+
+          const result = await this.orchestrator.runEye(
+            eyeName,
+            enrichedInput,
+            sessionId,
+          );
+          results.push(result);
+
+          // Log agent message
+          conversationTracker.logAgentMessage(
+            sessionId,
+            eyeName,
+            result.md || "Eye completed execution",
+            {
+              code: result.code,
+              ok: result.ok,
+              step: i + 1,
+              phase: "re-guidance",
+            },
+          );
+
+          // Emit eye_complete event
+          if (ws) {
+            ws.broadcastToSession(sessionId, {
+              type: "eye_complete",
+              eye: eyeName,
+              step: i + 1,
+              totalSteps: guidanceEyes.length,
+              phase: "re-guidance",
+              result: {
+                ok: result.ok,
+                code: result.code,
+                md: result.md?.substring(0, 200),
+              },
+              timestamp: Date.now(),
+            });
+          }
+
+          // FIX 12: Check for NEW pauses during resume
+          if (
+            result.code === EyeStatusCode.NEED_CLARIFICATION ||
+            result.code === EyeStatusCode.E_NEEDS_CLARIFICATION
+          ) {
+            // New clarification needed - pause again
+            await pauseManager.pausePipeline({
+              sessionId,
+              currentEye: eyeName,
+              reason: "clarification",
+              pendingData: result.data,
+              expiresInMs: 24 * 60 * 60 * 1000,
+            });
+
+            conversationTracker.logPause(
+              sessionId,
+              "clarification",
+              `Eye ${eyeName} requested additional clarification during resume`,
+            );
+
+            if (ws) {
+              ws.broadcastToSession(sessionId, {
+                type: "pipeline_paused",
+                reason: "clarification",
+                eye: eyeName,
+                timestamp: Date.now(),
+              });
+            }
+
+            orderGuard.unmarkAsAutoRouterSession(sessionId);
+            return {
+              sessionId,
+              results,
+              completed: false,
+              paused: true,
+              pauseReason: "clarification",
+              data: {
+                questions: result.data?.questions as Array<{
+                  field: string;
+                  question: string;
+                }>,
+              },
+            };
+          }
+
+          // Check for guidance complete - ready for draft
+          if (
+            GUIDANCE_COMPLETE_CODES.has(result.code) ||
+            eyeName.toLowerCase() === EyeId.KYUUBI
+          ) {
+            // Kyuubi has produced a brief - pause for draft submission
+            const brief =
+              result.data?.brief || result.data?.structuredPrompt || result.md;
+            const requirements = result.data?.requirements as
+              | string[]
+              | undefined;
+            const checkpoints = result.data?.checkpoints as
+              | string[]
+              | undefined;
+
+            await pauseManager.pausePipeline({
+              sessionId,
+              currentEye: eyeName,
+              reason: "clarification", // We'll add draft_submission to the DB later
+              pendingData: {
+                brief,
+                requirements,
+                checkpoints,
+                awaitingDraft: true,
+              },
+              expiresInMs: 24 * 60 * 60 * 1000,
+            });
+
+            conversationTracker.logAgentMessage(
+              sessionId,
+              eyeName,
+              `**Guidance Complete - Awaiting Draft**\n\n${typeof brief === "string" ? brief : JSON.stringify(brief)}`,
+              {
+                type: "guidance_complete",
+                awaitingDraft: true,
+                requirements,
+                checkpoints,
+              },
+            );
+
+            conversationTracker.logPause(
+              sessionId,
+              "clarification", // Will be draft_submission once DB updated
+              "Guidance phase complete - awaiting agent draft submission",
+            );
+
+            if (ws) {
+              ws.broadcastToSession(sessionId, {
+                type: "pipeline_paused",
+                reason: "draft_submission",
+                eye: eyeName,
+                data: { brief, requirements, checkpoints },
+                timestamp: Date.now(),
+              });
+            }
+
+            orderGuard.unmarkAsAutoRouterSession(sessionId);
+            return {
+              sessionId,
+              results,
+              completed: false,
+              paused: true,
+              pauseReason: "draft_submission",
+              data: {
+                brief:
+                  typeof brief === "string" ? brief : JSON.stringify(brief),
+                requirements,
+                checkpoints,
+              },
+            };
+          }
+
+          if (isRejected(result)) {
+            orderGuard.unmarkAsAutoRouterSession(sessionId);
+            return {
+              sessionId,
+              results,
+              completed: false,
+              error: `Pipeline stopped: ${eyeName} rejected with ${result.code}`,
+            };
+          }
+        }
+      }
+
+      // Continue with remaining validation eyes
+      const nextEyes = orderGuard.getExpectedNext(sessionId);
+      if (!nextEyes || nextEyes.length === 0) {
+        orderGuard.unmarkAsAutoRouterSession(sessionId);
+        return {
+          sessionId,
+          results,
+          completed: true,
+        };
+      }
+
+      conversationTracker.logResume(
+        sessionId,
+        `Continuing with ${nextEyes.length} remaining eyes: ${nextEyes.join(", ")}`,
+        { resolvedFacts, remainingEyes: nextEyes },
+      );
+
+      // Broadcast continuation
       if (ws) {
         ws.broadcastToSession(sessionId, {
           type: "pipeline_resumed",
           sessionId,
           data: {
-            remainingEyes,
+            phase: "validation",
+            remainingEyes: nextEyes,
             resolvedFacts,
             completedEyes: state.completedEyes,
           },
           timestamp: Date.now(),
         });
       }
+
+      const remainingEyes = nextEyes;
 
       for (let i = 0; i < remainingEyes.length; i++) {
         const eyeName = remainingEyes[i];
@@ -1101,6 +1377,87 @@ Do NOT ask clarifying questions - the task requirements are already clear.`;
           });
         }
 
+        // FIX 12: Check for NEW pauses during resume loop
+        if (
+          result.code === EyeStatusCode.AWAIT_CONFIRMATION ||
+          result.code === EyeStatusCode.E_INTENT_UNCONFIRMED
+        ) {
+          await pauseManager.pausePipeline({
+            sessionId,
+            currentEye: eyeName,
+            reason: "confirmation",
+            pendingData: result.data,
+            expiresInMs: 24 * 60 * 60 * 1000,
+          });
+
+          conversationTracker.logPause(
+            sessionId,
+            "confirmation",
+            `Eye ${eyeName} requested confirmation during validation`,
+          );
+
+          if (ws) {
+            ws.broadcastToSession(sessionId, {
+              type: "pipeline_paused",
+              reason: "confirmation",
+              eye: eyeName,
+              timestamp: Date.now(),
+            });
+          }
+
+          orderGuard.unmarkAsAutoRouterSession(sessionId);
+          return {
+            sessionId,
+            results,
+            completed: false,
+            paused: true,
+            pauseReason: "confirmation",
+          };
+        }
+
+        if (
+          result.code === EyeStatusCode.NEED_CLARIFICATION ||
+          result.code === EyeStatusCode.E_NEEDS_CLARIFICATION
+        ) {
+          await pauseManager.pausePipeline({
+            sessionId,
+            currentEye: eyeName,
+            reason: "clarification",
+            pendingData: result.data,
+            expiresInMs: 24 * 60 * 60 * 1000,
+          });
+
+          conversationTracker.logPause(
+            sessionId,
+            "clarification",
+            `Eye ${eyeName} requested clarification during validation`,
+          );
+
+          if (ws) {
+            ws.broadcastToSession(sessionId, {
+              type: "pipeline_paused",
+              reason: "clarification",
+              eye: eyeName,
+              timestamp: Date.now(),
+            });
+          }
+
+          orderGuard.unmarkAsAutoRouterSession(sessionId);
+          return {
+            sessionId,
+            results,
+            completed: false,
+            paused: true,
+            pauseReason: "clarification",
+            data: {
+              questions: result.data?.questions as Array<{
+                field: string;
+                question: string;
+              }>,
+            },
+          };
+        }
+
         if (isRejected(result)) {
           orderGuard.unmarkAsAutoRouterSession(sessionId);
           return {
@@ -1126,6 +1483,222 @@ Do NOT ask clarifying questions - the task requirements are already clear.`;
         results: [],
         completed: false,
         error: `Resume failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      };
+    }
+  }
+
+  /**
+   * Resume pipeline with a draft submission (after guidance phase)
+   * This runs the validation eyes (Mangekyō, Tenseigan, Byakugan) on the submitted draft.
+   */
+  async resumeWithDraft(
+    sessionId: string,
+    draft: string,
+    options: AutoRouterOptions = {},
+  ): Promise<AutoRoutingResult> {
+    try {
+      const { getDb } = await import("@third-eye/db");
+      const { sqlite } = getDb();
+
+      // Get pipeline state to verify we're awaiting draft
+      const { PauseResumeManager } = await import("./pause-resume-manager");
+      const pauseManager = new PauseResumeManager(sqlite);
+      const pipelineState = await pauseManager.getPipelineState(sessionId);
+
+      if (!pipelineState) {
+        return {
+          sessionId,
+          results: [],
+          completed: false,
+          error: "No pipeline state found - cannot submit draft",
+        };
+      }
+
+      // Verify we're in draft submission state
+      if (!pipelineState.pendingData?.awaitingDraft) {
+        return {
+          sessionId,
+          results: [],
+          completed: false,
+          error: "Pipeline is not awaiting draft submission",
+        };
+      }
+
+      // Mark as auto-router controlled
+      orderGuard.markAsAutoRouterSession(sessionId);
+
+      // Initialize trackers
+      const conversationTracker = new ConversationTracker(sqlite);
+      const { getWebSocketBridge } = await import("./websocket-registry");
+      const ws = getWebSocketBridge();
+
+      // Log draft submission
+      conversationTracker.logHumanMessage(
+        sessionId,
+        `**Draft Submitted for Validation:**\n\n${draft.substring(0, 500)}${draft.length > 500 ? "..." : ""}`,
+      );
+
+      // Build validation input with the draft and original guidance
+      const brief = pipelineState.pendingData?.brief;
+      const requirements = pipelineState.pendingData?.requirements as
+        | string[]
+        | undefined;
+
+      const validationInput = `${CLARITY_VALIDATED_HEADER}
+Task clarity has been validated. Proceeding to validation phase.
+
+Original Guidance Brief:
+${typeof brief === "string" ? brief : JSON.stringify(brief)}
+
+${requirements ? `Requirements:\n${requirements.map((r, i) => `${i + 1}. ${r}`).join("\n")}` : ""}
+
+---
+
+DRAFT SUBMITTED FOR VALIDATION:
+
+${draft}
+
+---
+
+Validate this draft against the guidance brief and requirements above.`;
+
+      // Get remaining validation eyes
+      const state = orderGuard.getState(sessionId);
+      const validationEyes = orderGuard.getExpectedNext(sessionId);
+
+      if (!validationEyes || validationEyes.length === 0) {
+        // Fallback to standard validation eyes
+        const { getAllActiveEyes } =
+          await import("@third-eye/db/utils/lookups");
+        const activeEyes = await getAllActiveEyes();
+        const eyeNames = activeEyes.map((e) => e.name.toLowerCase());
+
+        // Use Mangekyō for code, Tenseigan for text, Byakugan for consistency
+        const defaultValidation = [
+          EyeId.TENSEIGAN,
+          EyeId.BYAKUGAN,
+        ] as EyeName[];
+        validationEyes.push(
+          ...defaultValidation.filter((e) => eyeNames.includes(e)),
+        );
+      }
+
+      conversationTracker.logResume(
+        sessionId,
+        `Validating draft with ${validationEyes.length} eyes: ${validationEyes.join(", ")}`,
+        { phase: "validation", validationEyes },
+      );
+
+      // Broadcast draft received
+      if (ws) {
+        ws.broadcastToSession(sessionId, {
+          type: "draft_submitted",
+          sessionId,
+          data: {
+            draftLength: draft.length,
+            validationEyes,
+          },
+          timestamp: Date.now(),
+        });
+      }
+
+      const results: BaseEnvelope[] = [];
+      const baseStep = state?.completedEyes.length || 0;
+
+      for (let i = 0; i < validationEyes.length; i++) {
+        const eyeName = validationEyes[i];
+
+        // Emit eye_started event
+        if (ws) {
+          ws.broadcastToSession(sessionId, {
+            type: "eye_started",
+            eye: eyeName,
+            step: baseStep + i + 1,
+            totalSteps: baseStep + validationEyes.length,
+            phase: "validation",
+            timestamp: Date.now(),
+          });
+        }
+
+        const result = await this.orchestrator.runEye(
+          eyeName,
+          validationInput,
+          sessionId,
+        );
+        results.push(result);
+
+        // Log agent message
+        conversationTracker.logAgentMessage(
+          sessionId,
+          eyeName,
+          result.md || "Validation complete",
+          {
+            code: result.code,
+            ok: result.ok,
+            step: baseStep + i + 1,
+            phase: "validation",
+          },
+        );
+
+        // Emit eye_complete event
+        if (ws) {
+          ws.broadcastToSession(sessionId, {
+            type: "eye_complete",
+            eye: eyeName,
+            step: baseStep + i + 1,
+            totalSteps: baseStep + validationEyes.length,
+            phase: "validation",
+            result: {
+              ok: result.ok,
+              code: result.code,
+              md: result.md?.substring(0, 200),
+            },
+            timestamp: Date.now(),
+          });
+        }
+
+        // Check for issues requiring revision
+        if (isRejected(result)) {
+          orderGuard.unmarkAsAutoRouterSession(sessionId);
+
+          // Mark pipeline as needing revision, not failed
+          return {
+            sessionId,
+            results,
+            completed: false,
+            error: `Validation failed: ${eyeName} - ${result.code}. Please revise and resubmit.`,
+          };
+        }
+      }
+
+      // Complete the pipeline
+      await pauseManager.completePipeline(sessionId);
+      orderGuard.unmarkAsAutoRouterSession(sessionId);
+
+      // Broadcast completion
+      if (ws) {
+        ws.broadcastToSession(sessionId, {
+          type: "pipeline_complete",
+          sessionId,
+          data: {
+            totalSteps: baseStep + validationEyes.length,
+            verdict: "APPROVED",
+          },
+          timestamp: Date.now(),
+        });
+      }
+
+      return {
+        sessionId,
+        results,
+        completed: true,
+      };
+    } catch (error) {
+      return {
+        sessionId,
+        results: [],
+        completed: false,
+        error: `Draft validation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       };
     }
   }

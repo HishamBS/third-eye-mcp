@@ -64,6 +64,10 @@ interface MCPToolArguments {
   context?: Record<string, unknown>;
   checkConfirmationStatus?: string;
   checkClarificationStatus?: string;
+  submitDraft?: {
+    sessionId: string;
+    draft: string;
+  };
 }
 
 function buildSessionMetadata(): Record<string, unknown> {
@@ -194,6 +198,23 @@ const OVERSEER_TOOL: Tool = {
         type: "string",
         description:
           "Poll for human clarification response. Pass the clarificationId received from a previous 'awaiting_clarification' response. Returns current status and answers if human has responded. Human must answer via the Third Eye portal UI.",
+      },
+      submitDraft: {
+        type: "object",
+        properties: {
+          sessionId: {
+            type: "string",
+            description: "The session ID from the guidance response",
+          },
+          draft: {
+            type: "string",
+            description:
+              "The draft content to validate against the guidance brief",
+          },
+        },
+        required: ["sessionId", "draft"],
+        description:
+          "Submit a draft for validation after receiving guidance. Use this after the pipeline returns 'awaiting_draft' status with a guidance brief.",
       },
     },
     required: ["task"],
@@ -681,6 +702,80 @@ export function createMCPServer(): Server {
             },
           );
 
+          // FIX 13: Handle draft_submission pause from resumeFlow
+          if (
+            resumeResult.paused &&
+            resumeResult.pauseReason === "draft_submission"
+          ) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      status: "awaiting_draft",
+                      code: "AWAIT_DRAFT",
+                      verdict: "PAUSED",
+                      summary:
+                        "Guidance complete. Create your draft based on the guidance brief below, then submit it using the submitDraft parameter.",
+                      metadata: {
+                        sessionId: checkClarificationStatus,
+                        portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${checkClarificationStatus}`,
+                        stepsExecuted: resumeResult.results.length,
+                      },
+                      data: {
+                        brief: resumeResult.data?.brief,
+                        requirements: resumeResult.data?.requirements,
+                        checkpoints: resumeResult.data?.checkpoints,
+                        instruction:
+                          "Use the submitDraft parameter with { sessionId: '<this sessionId>', draft: '<your draft content>' } to submit for validation.",
+                      },
+                    },
+                    null,
+                    2,
+                  ),
+                },
+              ],
+            };
+          }
+
+          // Handle new clarification pause during resume
+          if (
+            resumeResult.paused &&
+            resumeResult.pauseReason === "clarification"
+          ) {
+            const questions = resumeResult.data?.questions || [];
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      status: "awaiting_clarification",
+                      code: "NEED_CLARIFICATION",
+                      verdict: "PAUSED",
+                      summary:
+                        "Additional clarification required. Please ask the user to answer questions in the Third Eye portal.",
+                      metadata: {
+                        sessionId: checkClarificationStatus,
+                        portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${checkClarificationStatus}`,
+                        stepsExecuted: resumeResult.results.length,
+                      },
+                      data: {
+                        questions,
+                        clarificationId: checkClarificationStatus,
+                        instruction:
+                          "Use checkClarificationStatus with this sessionId to poll for human responses.",
+                      },
+                    },
+                    null,
+                    2,
+                  ),
+                },
+              ],
+            };
+          }
+
           // If resume failed, return the error
           if (!resumeResult.completed && resumeResult.error) {
             return {
@@ -768,10 +863,138 @@ export function createMCPServer(): Server {
           };
         }
 
+        // FIX 11 & 13: Handle draft submission
+        const submitDraft = toolArgs.submitDraft;
+        if (submitDraft && typeof submitDraft === "object") {
+          const { sessionId: draftSessionId, draft } = submitDraft;
+
+          if (!draftSessionId || typeof draftSessionId !== "string") {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      status: "error",
+                      code: "E_INVALID_SESSION",
+                      verdict: "REJECTED",
+                      summary: "submitDraft requires a valid sessionId",
+                    },
+                    null,
+                    2,
+                  ),
+                },
+              ],
+              isError: true,
+            };
+          }
+
+          if (!draft || typeof draft !== "string") {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      status: "error",
+                      code: "E_INVALID_DRAFT",
+                      verdict: "REJECTED",
+                      summary: "submitDraft requires draft content as a string",
+                    },
+                    null,
+                    2,
+                  ),
+                },
+              ],
+              isError: true,
+            };
+          }
+
+          // Submit draft for validation
+          const { autoRouter } = await import("@third-eye/core");
+          const validationResult = await autoRouter.resumeWithDraft(
+            draftSessionId,
+            draft,
+            {
+              strictness: strictnessOptions,
+              context: contextOptions,
+            },
+          );
+
+          // Handle validation failure
+          if (!validationResult.completed && validationResult.error) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      status: "needs_revision",
+                      code: "REJECT_NEEDS_REVISION",
+                      verdict: "REJECTED",
+                      summary: validationResult.error,
+                      metadata: {
+                        sessionId: draftSessionId,
+                        portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${draftSessionId}`,
+                        stepsExecuted: validationResult.results.length,
+                      },
+                      data: {
+                        instruction:
+                          "Revise your draft based on the feedback and resubmit using submitDraft.",
+                      },
+                    },
+                    null,
+                    2,
+                  ),
+                },
+              ],
+            };
+          }
+
+          // Validation successful
+          const finalResult = validationResult.results[
+            validationResult.results.length - 1
+          ] as Record<string, unknown> | undefined;
+
+          const sanitizedData: Record<string, unknown> = {};
+          if (finalResult && typeof finalResult === "object") {
+            if ("md" in finalResult && typeof finalResult.md === "string") {
+              sanitizedData.content = finalResult.md;
+            }
+          }
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(
+                  {
+                    status: "success",
+                    code: "OK_ALL_APPROVED",
+                    verdict: "APPROVED",
+                    summary:
+                      "Draft validated and approved. You may proceed with implementation.",
+                    metadata: {
+                      sessionId: draftSessionId,
+                      portalUrl: `http://127.0.0.1:3300/monitor?sessionId=${draftSessionId}`,
+                      stepsExecuted: validationResult.results.length,
+                      draftValidated: true,
+                    },
+                    data: sanitizedData,
+                  },
+                  null,
+                  2,
+                ),
+              },
+            ],
+          };
+        }
+
         try {
-          // Always execute the full pipeline (simplified - no analyze mode for agents)
-          // executeFlow accepts optional string (providedSessionId?: string)
-          const result = await autoRouter.executeFlow(
+          // FIX 1: Open browser IMMEDIATELY on task submission
+          // This ensures the user can see the monitor before the pipeline completes
+          // First, analyze task to get sessionId (this creates the session)
+          const routingDecision = await autoRouter.analyzeTask(
             task,
             undefined,
             providedSessionId,
@@ -781,8 +1004,19 @@ export function createMCPServer(): Server {
             },
           );
 
-          // Open browser for this session on first successful tool call
-          await openBrowserForSession(result.sessionId);
+          // Open browser immediately after session is created
+          await openBrowserForSession(routingDecision.sessionId);
+
+          // Now execute the full pipeline with the routing decision
+          const result = await autoRouter.executeFlow(
+            task,
+            routingDecision,
+            routingDecision.sessionId,
+            {
+              strictness: strictnessOptions,
+              context: contextOptions,
+            },
+          );
 
           const finalResult = result.results[result.results.length - 1] as
             | Record<string, unknown>
