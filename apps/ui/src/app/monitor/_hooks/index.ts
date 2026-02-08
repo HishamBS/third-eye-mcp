@@ -2,17 +2,6 @@
  * Monitor Hooks - Tactical state management and event processing
  */
 
-export {
-  useStagePerformance,
-  type UseStagePerformanceOptions,
-  type RawPipelineEvent,
-} from "./useStagePerformance";
-
-export {
-  useTimelineNavigation,
-  type UseTimelineNavigationOptions,
-} from "./useTimelineNavigation";
-
 export { useEventTransformer, type TacticalEvent } from "./useEventTransformer";
 
 export {
@@ -26,4 +15,5 @@ export {
   useTacticalState,
   type TacticalState,
   type QualityScore,
+  type UseTacticalStateReturn,
 } from "./useTacticalState";

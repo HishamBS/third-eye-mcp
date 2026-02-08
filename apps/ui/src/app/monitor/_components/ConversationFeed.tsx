@@ -3,6 +3,7 @@
 import { memo, useRef, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { SHARED_EYE_COLORS } from "@third-eye/theme";
+import { HEX_COLORS } from "@/constants/color-mappings";
 import {
   ConversationEntry,
   type ConversationEntryData,
@@ -18,13 +19,15 @@ interface ConversationFeedProps {
   onPlanApprove?: () => void;
   onPlanReject?: (feedback?: string) => void;
   isSubmitting?: boolean;
+  sessionId?: string | null;
   className?: string;
 }
 
 function getEyeColor(eyeId: string | null): string {
-  if (!eyeId) return "#9CA3AF";
+  if (!eyeId) return HEX_COLORS.muted;
   return (
-    SHARED_EYE_COLORS[eyeId as keyof typeof SHARED_EYE_COLORS] ?? "#9CA3AF"
+    SHARED_EYE_COLORS[eyeId as keyof typeof SHARED_EYE_COLORS] ??
+    HEX_COLORS.muted
   );
 }
 
@@ -35,6 +38,7 @@ function ConversationFeedInner({
   onPlanApprove,
   onPlanReject,
   isSubmitting = false,
+  sessionId,
   className,
 }: ConversationFeedProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -86,8 +90,10 @@ function ConversationFeedInner({
         )}
       >
         <div className="text-center">
-          <div className="text-sm text-semantic-muted animate-pulse">
-            Waiting for session to begin...
+          <div className="text-sm text-semantic-muted animate-pip">
+            {sessionId
+              ? "Awaiting transmission..."
+              : "Select a session to begin monitoring"}
           </div>
         </div>
       </div>

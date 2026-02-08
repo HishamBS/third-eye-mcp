@@ -120,7 +120,7 @@ export {
   extractLLMConfig,
 } from "./persona";
 
-// Theatre types - SSOT for theatrical Monitor experience
+// Eye persona types - SSOT for Eye persona configuration
 export type {
   EyeVoice,
   EyeColorPalette,
@@ -129,29 +129,7 @@ export type {
   EyePersonaConfig,
   CustomEyeConfig,
   PipelineContext,
-  StoryActId,
-  StoryAct,
-  ActProgress,
-  CelebrationType,
-  TheatreActionType,
-  ContentDisplayType,
-  NarrativeEvent,
-  SuspenseState,
-  EyeCharacterState,
-  CurtainState,
-  SpotlightIntensity,
-  TheatreState,
-  TimelineMode,
-  PlaybackSpeed,
-  TimelineFilters,
-  TimelineState,
-  PerformanceAction,
-  PerformanceEvent,
   ClarificationPromptData,
   PlanApprovalData,
   ReviewIssueData,
-  TheatreOrchestratorReturn,
-  TimelineNavigationReturn,
-  EyeCharacterReturn,
-  StagePerformanceReturn,
 } from "./theatre";

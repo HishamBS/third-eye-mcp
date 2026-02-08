@@ -4,7 +4,9 @@ import { memo } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { SHARED_EYE_COLORS } from "@third-eye/theme";
+import { type EyeId } from "@third-eye/constants";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import { HEX_COLORS } from "@/constants/color-mappings";
 
 type ConversationEntryType =
   | "eye_section_header"
@@ -32,7 +34,7 @@ interface PendingAction {
 export interface ConversationEntryData {
   id: string;
   type: ConversationEntryType;
-  eye: string | null;
+  eye: EyeId | null;
   timestamp: Date;
   speaker: {
     name: string;
@@ -58,9 +60,9 @@ interface ConversationEntryProps {
   className?: string;
 }
 
-const DEFAULT_EYE_COLOR = "#9CA3AF";
+const DEFAULT_EYE_COLOR = HEX_COLORS.muted;
 
-function getEyeColor(eyeId: string | null): string {
+function getEyeColor(eyeId: EyeId | null): string {
   if (!eyeId) return DEFAULT_EYE_COLOR;
   return (
     SHARED_EYE_COLORS[eyeId as keyof typeof SHARED_EYE_COLORS] ??
@@ -91,12 +93,26 @@ function MetricsBar({ metrics }: { metrics: Record<string, unknown> }) {
 
 function SectionHeader({ entry }: { entry: ConversationEntryData }) {
   const eyeColor = getEyeColor(entry.eye);
+  const isActive = entry.status === "active";
   return (
     <div>
       <div className="flex items-center gap-3 py-4">
         <div className="h-px flex-1 bg-brand-outline/30" />
         {entry.eye && (
-          <Image src={`/eyes/${entry.eye}.svg`} width={24} height={24} alt="" />
+          <div className="relative">
+            <Image
+              src={`/eyes/${entry.eye}.svg`}
+              width={24}
+              height={24}
+              alt=""
+            />
+            {isActive && (
+              <div
+                className="absolute -inset-1 rounded-full animate-spot-pulse"
+                style={{ "--eye-glow": `${eyeColor}60` } as React.CSSProperties}
+              />
+            )}
+          </div>
         )}
         <span className="text-sm font-medium" style={{ color: eyeColor }}>
           {entry.speaker.name}
@@ -123,16 +139,25 @@ function EyeDialogue({
   viewMode: "strategic" | "tactical";
 }) {
   const eyeColor = getEyeColor(entry.eye);
+  const isActive = entry.status === "active";
   return (
     <div className="flex gap-3 max-w-[80%]">
       {entry.eye && (
-        <Image
-          src={`/eyes/${entry.eye}.svg`}
-          width={32}
-          height={32}
-          className="mt-1 flex-shrink-0 rounded-full"
-          alt=""
-        />
+        <div className="relative mt-1 flex-shrink-0">
+          <Image
+            src={`/eyes/${entry.eye}.svg`}
+            width={32}
+            height={32}
+            className="rounded-full"
+            alt=""
+          />
+          {isActive && (
+            <div
+              className="absolute -inset-1 rounded-full animate-spot-pulse"
+              style={{ "--eye-glow": `${eyeColor}60` } as React.CSSProperties}
+            />
+          )}
+        </div>
       )}
       <div>
         <div className="flex items-center gap-2 mb-1">
@@ -144,7 +169,10 @@ function EyeDialogue({
           </span>
         </div>
         <div
-          className="rounded-lg px-4 py-3 bg-brand-paper-elev"
+          className={cn(
+            "rounded-lg px-4 py-3 bg-brand-paper-elev",
+            isActive && "animate-speak-pulse",
+          )}
           style={{ borderLeft: `3px solid ${eyeColor}` }}
         >
           <MarkdownRenderer

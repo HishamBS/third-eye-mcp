@@ -351,6 +351,7 @@ function TacticalMonitorContent() {
       onPlanApprove={handlePlanApprove}
       onPlanReject={handlePlanReject}
       onExport={handleExport}
+      isSubmitting={submitting}
       initialConnectionStatus={tacticalConnectionStatus}
       className="h-screen"
     />

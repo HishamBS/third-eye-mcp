@@ -49,6 +49,7 @@ export interface UseTacticalStateReturn {
   state: TacticalState;
   processEvent: (event: TacticalEvent) => void;
   setConnectionStatus: (status: TacticalState["connectionStatus"]) => void;
+  setViewMode: (mode: TacticalState["viewMode"]) => void;
   toggleViewMode: () => void;
   clearPendingAction: () => void;
   reset: () => void;
@@ -120,7 +121,10 @@ export function useTacticalState({
 
     // Extract pipeline route from overseer
     if (type === "overseer_route" && Array.isArray(data.route)) {
-      setPipelineRoute(data.route as EyeId[]);
+      const validRoute = (data.route as string[]).filter((id): id is EyeId =>
+        ALL_EYE_IDS.includes(id as EyeId),
+      );
+      setPipelineRoute(validRoute);
     }
 
     // Extract quality scores
@@ -191,6 +195,10 @@ export function useTacticalState({
     [],
   );
 
+  const setViewModeExplicit = useCallback((mode: TacticalState["viewMode"]) => {
+    setViewMode(mode);
+  }, []);
+
   const toggleViewMode = useCallback(() => {
     setViewMode((prev) => (prev === "strategic" ? "tactical" : "strategic"));
   }, []);
@@ -241,6 +249,7 @@ export function useTacticalState({
     state,
     processEvent,
     setConnectionStatus,
+    setViewMode: setViewModeExplicit,
     toggleViewMode,
     clearPendingAction,
     reset,

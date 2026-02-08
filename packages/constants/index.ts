@@ -60,7 +60,5 @@ export * from "./conversation-events";
 // Pipeline Stages - SSOT for pipeline execution stages
 export * from "./pipeline-stages";
 
-// Theatre System - SSOT for theatrical Monitor experience
-export * from "./story-structure";
+// Eye Personas - SSOT for Eye character definitions
 export * from "./eye-personas";
-export * from "./theatre-events";

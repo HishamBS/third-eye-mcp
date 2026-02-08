@@ -59,6 +59,12 @@ const config: Config = {
       borderRadius: {
         xl2: "1.25rem",
       },
+      animation: {
+        pip: "pip 2s infinite",
+        "spot-pulse": "spotPulse 3s infinite",
+        "speak-pulse": "speakPulse 2s infinite",
+        "feed-in": "feedIn 0.3s ease-out",
+      },
       fontFamily: {
         display: ['"InterVariable"', "ui-sans-serif", "system-ui"],
         mono: ['"GeistMono"', "ui-monospace", "SFMono-Regular"],
