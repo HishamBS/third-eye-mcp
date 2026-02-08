@@ -1,10 +1,10 @@
 "use client";
 
 /**
- * Monitor Page - Theatrical Experience
+ * Monitor Page - Tactical Operations View
  *
- * Real-time session monitoring transformed into a live theatrical performance
- * where 8 AI characters (Eyes) perform their roles on stage.
+ * Real-time session monitoring with a conversation-based layout
+ * where 8 Eyes process requests through a tactical pipeline.
  */
 
 import { Suspense, useEffect, useState, useCallback } from "react";
@@ -15,11 +15,10 @@ import { useUI } from "@/contexts/UIContext";
 import { API_BASE_URL } from "@/consts/api";
 import { API_ROUTES } from "@/constants/api-routes";
 import {
-  TheatreShell,
-  type TheatreShellProps,
+  TacticalShell,
+  type TacticalShellProps,
   type RawHistoricalEvent,
 } from "./_components";
-import type { ConnectionStatus } from "@/components/theatre";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +37,7 @@ const EYE_NAMES = [
 ] as const;
 
 /**
- * Transform pipeline event from API to theatre event format
+ * Transform pipeline event from API to raw event format
  *
  * API returns events with:
  * - code: "SHARINGAN_STARTED" (uppercase, DB format)
@@ -46,8 +45,8 @@ const EYE_NAMES = [
  * - dataJson: {...} (nested data)
  * - createdAt: timestamp
  *
- * Theatre expects:
- * - type: "sharingan_started" (lowercase, matches THEATRE_EVENT_TEMPLATES)
+ * TacticalShell expects:
+ * - type: "sharingan_started" (lowercase)
  * - eye: "sharingan" (eye name string)
  * - data: {...} (flat data)
  * - timestamp: timestamp
@@ -55,11 +54,9 @@ const EYE_NAMES = [
 function transformPipelineEvent(
   event: Record<string, unknown>,
 ): RawHistoricalEvent {
-  // Transform code to type (lowercase, matching theatre templates)
   const code = (event.code as string)?.toLowerCase() ?? "";
   const eventType = code || (event.type as string) || "pipeline_event";
 
-  // Extract eye name from code prefix (e.g., "sharingan_started" -> "sharingan")
   const eye = EYE_NAMES.find((name) => code.startsWith(name)) ?? "overseer";
 
   return {
@@ -86,21 +83,21 @@ interface ClarificationItem {
 }
 
 /**
- * Main theatre monitor content
+ * Tactical monitor content - data fetching and action handlers
  */
-function TheatreMonitorContent() {
+function TacticalMonitorContent() {
   const searchParams = useSearchParams();
   const { selectedSessionId, setSelectedSession } = useUI();
   const sessionIdFromQuery = searchParams.get("sessionId");
   const sessionId = sessionIdFromQuery ?? selectedSessionId ?? null;
 
-  // WebSocket connection - pass sessionId to connect to session-specific events
+  // WebSocket connection
   const { connectionStatus, subscribe } = useWebSocket({
     sessionId: sessionId ?? undefined,
   });
 
-  // Map connection status to theatre format
-  const theatreConnectionStatus: ConnectionStatus =
+  // Map connection status to tactical format
+  const tacticalConnectionStatus: TacticalShellProps["initialConnectionStatus"] =
     connectionStatus === "connected"
       ? "connected"
       : connectionStatus === "reconnecting"
@@ -126,7 +123,7 @@ function TheatreMonitorContent() {
   }, [sessionIdFromQuery, selectedSessionId, setSelectedSession]);
 
   /**
-   * Fetch historical events for the session (events that happened before page load)
+   * Fetch historical events for the session
    */
   const fetchHistoricalEvents = useCallback(async () => {
     if (!sessionId) return;
@@ -136,9 +133,7 @@ function TheatreMonitorContent() {
       );
       if (res.ok) {
         const result = await res.json();
-        // Handle both { data: [...] } and direct array responses
         const events = Array.isArray(result) ? result : (result.data ?? []);
-        // Transform events from API format to theatre format
         const transformedEvents = events.map(transformPipelineEvent);
         setHistoricalEvents(transformedEvents);
       }
@@ -191,9 +186,7 @@ function TheatreMonitorContent() {
   // Load data on session change
   useEffect(() => {
     if (!sessionId) return;
-    // Clear historical events when session changes to avoid stale data
     setHistoricalEvents([]);
-    // Fetch fresh data for the new session
     fetchHistoricalEvents();
     fetchClarifications();
     fetchIntentConfirmations();
@@ -207,14 +200,12 @@ function TheatreMonitorContent() {
   /**
    * Subscribe to WebSocket messages and return handler
    */
-  const handleWebSocketMessage: TheatreShellProps["onWebSocketMessage"] =
+  const handleWebSocketMessage: TacticalShellProps["onWebSocketMessage"] =
     useCallback(
       (handler) => {
         const unsubscribe = subscribe((message: WSMessage) => {
-          // Pass message to theatre handler
           handler(message);
 
-          // Handle clarification answered event
           if (message.type === "clarification_answered") {
             fetchClarifications();
           }
@@ -348,12 +339,11 @@ function TheatreMonitorContent() {
    * Export session transcript
    */
   const handleExport = useCallback(() => {
-    // Export functionality - can be expanded later
     toast.info("Export functionality coming soon");
   }, []);
 
   return (
-    <TheatreShell
+    <TacticalShell
       sessionId={sessionId}
       initialEvents={historicalEvents}
       onWebSocketMessage={handleWebSocketMessage}
@@ -361,7 +351,7 @@ function TheatreMonitorContent() {
       onPlanApprove={handlePlanApprove}
       onPlanReject={handlePlanReject}
       onExport={handleExport}
-      initialConnectionStatus={theatreConnectionStatus}
+      initialConnectionStatus={tacticalConnectionStatus}
       className="h-screen"
     />
   );
@@ -374,17 +364,17 @@ export default function MonitorPage() {
   return (
     <Suspense
       fallback={
-        <div className="h-screen bg-gradient-to-b from-neutral-950 via-neutral-900 to-neutral-950 flex items-center justify-center">
+        <div className="flex h-screen items-center justify-center bg-brand-paper">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-amber-500/30 border-t-amber-500 rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-amber-500/80 text-sm font-medium tracking-wider uppercase">
-              Opening Curtains...
+            <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-brand-accent/30 border-t-brand-accent" />
+            <p className="text-sm font-medium uppercase tracking-wider text-semantic-muted">
+              Initializing Monitor...
             </p>
           </div>
         </div>
       }
     >
-      <TheatreMonitorContent />
+      <TacticalMonitorContent />
     </Suspense>
   );
 }
