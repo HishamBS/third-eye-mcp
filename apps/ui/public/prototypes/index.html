@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Third Eye Monitor - Visual Proposals</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --bg: #0a0e14;
+        --surface: #111820;
+        --border: #1a2332;
+        --text: #e0e6ed;
+        --text-dim: #6b7f99;
+        --cyan: #00ffff;
+        --indigo: #6366f1;
+        --emerald: #50c878;
+        --gold: #d4af37;
+      }
+      body {
+        min-height: 100vh;
+        font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+      }
+      h1 {
+        font-size: 14px;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        color: var(--cyan);
+      }
+      .subtitle {
+        font-size: 11px;
+        color: var(--text-dim);
+        margin-bottom: 48px;
+        letter-spacing: 1px;
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        max-width: 1100px;
+        width: 100%;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 28px;
+        transition: all 0.3s;
+        cursor: pointer;
+        text-decoration: none;
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+      }
+      .card:hover {
+        border-color: var(--cyan);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      }
+      .card-label {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 12px;
+        font-weight: 600;
+      }
+      .card-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        line-height: 1.3;
+      }
+      .card-desc {
+        font-size: 11px;
+        color: var(--text-dim);
+        line-height: 1.6;
+        margin-bottom: 16px;
+        flex: 1;
+      }
+      .card-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 16px;
+      }
+      .tag {
+        padding: 3px 8px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        font-size: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-dim);
+      }
+      .card-link {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--cyan);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .card-link::after {
+        content: "\u2192";
+      }
+      .footer {
+        margin-top: 48px;
+        font-size: 10px;
+        color: var(--text-dim);
+        text-align: center;
+        line-height: 1.8;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Third Eye Monitor Proposals</h1>
+    <p class="subtitle">
+      3 visual directions for the real-time pipeline monitoring experience
+    </p>
+
+    <div class="cards">
+      <a href="proposal-a-neural-command-center.html" class="card">
+        <div class="card-label" style="color: var(--cyan)">Proposal A</div>
+        <div class="card-title">Neural Command Center</div>
+        <div class="card-desc">
+          NASA mission control meets cyberpunk HUD. Eyes as interconnected
+          neural network nodes with data particles flowing between them. Eye
+          Dock + SVG Canvas + Intel Panel + Command Log.
+        </div>
+        <div class="card-tags">
+          <span class="tag">4-zone layout</span>
+          <span class="tag">SVG network</span>
+          <span class="tag">dual mode</span>
+          <span class="tag">data particles</span>
+        </div>
+        <div class="card-link">Open Prototype</div>
+      </a>
+
+      <a href="proposal-b-intelligence-constellation.html" class="card">
+        <div class="card-label" style="color: var(--indigo)">Proposal B</div>
+        <div class="card-title">Intelligence Constellation</div>
+        <div class="card-desc">
+          Star maps and celestial navigation. Central task star with 8 Eyes
+          orbiting in a constellation ring. Luminous filaments, signal strength
+          rings, and ambient star field.
+        </div>
+        <div class="card-tags">
+          <span class="tag">orbital layout</span>
+          <span class="tag">star field</span>
+          <span class="tag">cinematic</span>
+          <span class="tag">focus zoom</span>
+        </div>
+        <div class="card-link">Open Prototype</div>
+      </a>
+
+      <a href="proposal-c-tactical-operations.html" class="card">
+        <div class="card-label" style="color: var(--emerald)">Proposal C</div>
+        <div class="card-title">Tactical Operations</div>
+        <div class="card-desc">
+          XCOM mission control with 3-column war room layout. Specialist Roster
+          + Active Eye Spotlight + Pipeline Flow + Intel Feed.
+          Strategic/Tactical toggle for dual audience.
+        </div>
+        <div class="card-tags">
+          <span class="tag">3-column</span>
+          <span class="tag">roster cards</span>
+          <span class="tag">quality score</span>
+          <span class="tag">war room</span>
+        </div>
+        <div class="card-link">Open Prototype</div>
+      </a>
+    </div>
+
+    <div class="footer">
+      Each prototype auto-plays a simulated pipeline execution.<br />
+      Open each in a new tab to experience the full flow, then choose your
+      preferred direction.
+    </div>
+  </body>
+</html>

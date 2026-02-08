@@ -1,0 +1,1226 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Proposal B: Intelligence Constellation - Third Eye Monitor</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --bg: #06080d;
+        --surface: #0c1018;
+        --surface-2: #111825;
+        --border: #1a2235;
+        --text: #e0e6ed;
+        --text-dim: #5a6d85;
+        --gold: #d4af37;
+        --crimson: #dc143c;
+        --orange: #ff6b00;
+        --cyan: #00ffff;
+        --purple: #9b59b6;
+        --pink: #ff1493;
+        --indigo: #6366f1;
+        --emerald: #50c878;
+        --star-core: #fff8e0;
+      }
+      html,
+      body {
+        height: 100%;
+        font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+        background: var(--bg);
+        color: var(--text);
+        overflow: hidden;
+      }
+
+      /* Star field background */
+      .starfield {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+      }
+      .star {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        background: #fff;
+        border-radius: 50%;
+        opacity: 0.3;
+      }
+      .star.bright {
+        width: 2px;
+        height: 2px;
+        opacity: 0.6;
+      }
+      .star.twinkle {
+        animation: twinkle 3s ease-in-out infinite;
+      }
+      @keyframes twinkle {
+        0%,
+        100% {
+          opacity: 0.2;
+        }
+        50% {
+          opacity: 0.8;
+        }
+      }
+
+      /* Layout */
+      .layout {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        position: relative;
+        z-index: 1;
+      }
+      .header {
+        height: 44px;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        background: rgba(12, 16, 24, 0.9);
+        border-bottom: 1px solid var(--border);
+        gap: 16px;
+        backdrop-filter: blur(8px);
+        flex-shrink: 0;
+      }
+      .header-title {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+      }
+      .header-title .third {
+        color: var(--indigo);
+      }
+      .header-title .eye {
+        color: var(--cyan);
+      }
+      .header-session {
+        font-size: 10px;
+        color: var(--text-dim);
+        margin-left: 16px;
+        letter-spacing: 1px;
+      }
+      .header-right {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .status-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 10px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+      }
+      .status-badge.live {
+        background: rgba(80, 200, 120, 0.12);
+        color: var(--emerald);
+        border: 1px solid rgba(80, 200, 120, 0.25);
+      }
+      .status-badge.complete {
+        background: rgba(0, 255, 255, 0.1);
+        color: var(--cyan);
+        border: 1px solid rgba(0, 255, 255, 0.2);
+      }
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+      .mission-label {
+        font-size: 11px;
+        color: var(--text-dim);
+      }
+      .mission-text {
+        font-size: 11px;
+        color: var(--text);
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      /* Constellation Area */
+      .constellation {
+        flex: 1;
+        position: relative;
+        overflow: hidden;
+        min-height: 0;
+      }
+      .constellation canvas {
+        position: absolute;
+        inset: 0;
+      }
+      .constellation svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* Focus overlay */
+      .focus-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(6, 8, 13, 0.85);
+        z-index: 10;
+        display: none;
+        backdrop-filter: blur(4px);
+      }
+      .focus-overlay.visible {
+        display: flex;
+      }
+      .focus-card {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 480px;
+        max-height: 70vh;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .focus-header {
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid var(--border);
+      }
+      .focus-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        border: 1.5px solid;
+      }
+      .focus-name {
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .focus-role {
+        font-size: 10px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+      }
+      .focus-close {
+        margin-left: auto;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        color: var(--text-dim);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        transition: all 0.2s;
+      }
+      .focus-close:hover {
+        color: var(--text);
+        border-color: var(--text-dim);
+      }
+      .focus-body {
+        padding: 20px;
+        overflow-y: auto;
+        max-height: calc(70vh - 80px);
+      }
+      .focus-section {
+        margin-bottom: 16px;
+      }
+      .focus-section-title {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--text-dim);
+        margin-bottom: 8px;
+      }
+      .focus-dialogue {
+        font-size: 13px;
+        line-height: 1.7;
+        padding: 14px;
+        background: var(--bg);
+        border-radius: 8px;
+        border-left: 3px solid var(--border);
+      }
+      .focus-metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+      }
+      .focus-metric {
+        padding: 10px;
+        background: var(--bg);
+        border-radius: 6px;
+        text-align: center;
+        border: 1px solid var(--border);
+      }
+      .focus-metric-val {
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .focus-metric-lbl {
+        font-size: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-dim);
+        margin-top: 2px;
+      }
+
+      /* Comms Channel */
+      .comms {
+        height: 40%;
+        min-height: 200px;
+        background: rgba(12, 16, 24, 0.95);
+        border-top: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        backdrop-filter: blur(8px);
+      }
+      .comms-header {
+        padding: 8px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+      .comms-title {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--text-dim);
+      }
+      .comms-progress {
+        flex: 1;
+        height: 3px;
+        background: var(--border);
+        border-radius: 2px;
+        margin: 0 12px;
+      }
+      .comms-progress-fill {
+        height: 100%;
+        border-radius: 2px;
+        background: linear-gradient(90deg, var(--indigo), var(--cyan));
+        transition: width 0.5s;
+      }
+      .comms-count {
+        font-size: 10px;
+        color: var(--text-dim);
+      }
+      .comms-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 20px;
+      }
+      .comm-entry {
+        display: flex;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        animation: commIn 0.4s ease-out;
+      }
+      @keyframes commIn {
+        from {
+          opacity: 0;
+          transform: translateX(-8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      .comm-marker {
+        width: 3px;
+        border-radius: 2px;
+        flex-shrink: 0;
+        min-height: 20px;
+      }
+      .comm-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        flex-shrink: 0;
+        border: 1px solid var(--border);
+      }
+      .comm-content {
+        flex: 1;
+        min-width: 0;
+      }
+      .comm-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 3px;
+      }
+      .comm-name {
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .comm-time {
+        font-size: 9px;
+        color: var(--text-dim);
+      }
+      .comm-text {
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--text);
+      }
+      .comm-text .hl {
+        font-weight: 600;
+      }
+
+      /* Action inline */
+      .comm-action {
+        margin-top: 8px;
+        padding: 10px;
+        background: var(--bg);
+        border-radius: 6px;
+        border: 1px solid var(--border);
+      }
+      .comm-action-title {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+      .comm-action-text {
+        font-size: 11px;
+        line-height: 1.5;
+        margin-bottom: 8px;
+      }
+      .comm-action input {
+        width: 100%;
+        padding: 7px 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: var(--text);
+        font-family: inherit;
+        font-size: 11px;
+        outline: none;
+        margin-bottom: 8px;
+      }
+      .comm-action input:focus {
+        border-color: var(--cyan);
+      }
+      .action-btns {
+        display: flex;
+        gap: 6px;
+      }
+      .action-btn {
+        padding: 5px 14px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-family: inherit;
+        cursor: pointer;
+        border: 1px solid;
+        transition: all 0.2s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+      }
+      .action-btn.approve {
+        background: rgba(80, 200, 120, 0.12);
+        border-color: rgba(80, 200, 120, 0.3);
+        color: var(--emerald);
+      }
+      .action-btn.approve:hover {
+        background: rgba(80, 200, 120, 0.2);
+      }
+      .action-btn.reject {
+        background: rgba(220, 20, 60, 0.08);
+        border-color: rgba(220, 20, 60, 0.2);
+        color: var(--crimson);
+      }
+      .action-btn.submit {
+        background: rgba(0, 255, 255, 0.08);
+        border-color: rgba(0, 255, 255, 0.2);
+        color: var(--cyan);
+      }
+
+      /* Trajectory Arc */
+      .trajectory {
+        position: absolute;
+        bottom: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 4px;
+        align-items: center;
+        z-index: 5;
+        background: rgba(6, 8, 13, 0.7);
+        padding: 6px 14px;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        backdrop-filter: blur(6px);
+      }
+      .traj-node {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        border: 1.5px solid var(--text-dim);
+        transition: all 0.4s;
+      }
+      .traj-node.active {
+        border-color: var(--eye-color);
+        background: var(--eye-color);
+        box-shadow: 0 0 8px var(--eye-color);
+      }
+      .traj-node.complete {
+        border-color: var(--emerald);
+        background: var(--emerald);
+      }
+      .traj-line {
+        width: 16px;
+        height: 1px;
+        background: var(--border);
+        transition: background 0.4s;
+      }
+      .traj-line.complete {
+        background: var(--emerald);
+      }
+      .traj-label {
+        font-size: 7px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-dim);
+        margin-left: 8px;
+      }
+
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="starfield" id="starfield"></div>
+    <div class="layout">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-title">
+          <span class="third">THIRD</span> <span class="eye">EYE</span>
+        </div>
+        <div class="header-session">Intelligence Constellation</div>
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 12px;
+          "
+        >
+          <span class="mission-label">Mission:</span>
+          <span class="mission-text" id="missionText"
+            >Review authentication module</span
+          >
+        </div>
+        <div class="header-right">
+          <div class="status-badge live" id="statusBadge">
+            <span class="status-dot"></span>
+            <span id="statusText">LIVE</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Constellation -->
+      <div class="constellation" id="constellation">
+        <canvas id="bgCanvas"></canvas>
+        <svg id="constSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+        <!-- Trajectory arc -->
+        <div class="trajectory" id="trajectory"></div>
+        <!-- Focus overlay -->
+        <div class="focus-overlay" id="focusOverlay">
+          <div class="focus-card" id="focusCard"></div>
+        </div>
+      </div>
+
+      <!-- Comms Channel -->
+      <div class="comms">
+        <div class="comms-header">
+          <div class="comms-title">Communications Channel</div>
+          <div class="comms-progress">
+            <div
+              class="comms-progress-fill"
+              id="commsProgress"
+              style="width: 0%"
+            ></div>
+          </div>
+          <div class="comms-count" id="commsCount">0 events</div>
+        </div>
+        <div class="comms-body" id="commsBody"></div>
+      </div>
+    </div>
+
+    <script>
+      const EYES = [
+        {
+          id: "overseer",
+          name: "Overseer",
+          role: "The Director",
+          symbol: "\u25B3",
+          color: "#d4af37",
+          glow: "rgba(212,175,55,0.5)",
+        },
+        {
+          id: "sharingan",
+          name: "Sharingan",
+          role: "The Detective",
+          symbol: "\u25CE",
+          color: "#dc143c",
+          glow: "rgba(220,20,60,0.5)",
+        },
+        {
+          id: "kyuubi",
+          name: "Kyuubi",
+          role: "Pattern Hunter",
+          symbol: "\u2726",
+          color: "#ff6b00",
+          glow: "rgba(255,107,0,0.5)",
+        },
+        {
+          id: "jogan",
+          name: "Jogan",
+          role: "The Verifier",
+          symbol: "\u25CB",
+          color: "#00ffff",
+          glow: "rgba(0,255,255,0.5)",
+        },
+        {
+          id: "rinnegan",
+          name: "Rinnegan",
+          role: "The Strategist",
+          symbol: "\u25C9",
+          color: "#9b59b6",
+          glow: "rgba(155,89,182,0.5)",
+        },
+        {
+          id: "mangekyo",
+          name: "Mangekyo",
+          role: "Perfectionist",
+          symbol: "\u2727",
+          color: "#ff1493",
+          glow: "rgba(255,20,147,0.5)",
+        },
+        {
+          id: "tenseigan",
+          name: "Tenseigan",
+          role: "The Scholar",
+          symbol: "\u2740",
+          color: "#6366f1",
+          glow: "rgba(99,102,241,0.5)",
+        },
+        {
+          id: "byakugan",
+          name: "Byakugan",
+          role: "Final Judge",
+          symbol: "\u25D0",
+          color: "#50c878",
+          glow: "rgba(80,200,120,0.5)",
+        },
+      ];
+
+      let eyeStates = {};
+      let activeEyeId = null;
+      let positions = {};
+      let commCount = 0;
+      let orbitAngle = 0;
+      let animFrame;
+
+      EYES.forEach((e) => (eyeStates[e.id] = "standby"));
+
+      // Star field
+      function createStars() {
+        const sf = document.getElementById("starfield");
+        for (let i = 0; i < 200; i++) {
+          const s = document.createElement("div");
+          s.className =
+            "star" +
+            (Math.random() > 0.85 ? " bright" : "") +
+            (Math.random() > 0.7 ? " twinkle" : "");
+          s.style.left = Math.random() * 100 + "%";
+          s.style.top = Math.random() * 100 + "%";
+          s.style.animationDelay = Math.random() * 5 + "s";
+          sf.appendChild(s);
+        }
+      }
+
+      // Background nebula canvas
+      function drawNebula() {
+        const c = document.getElementById("bgCanvas");
+        const area = document.getElementById("constellation");
+        c.width = area.offsetWidth;
+        c.height = area.offsetHeight;
+        const ctx = c.getContext("2d");
+        // Subtle radial gradient
+        const grd = ctx.createRadialGradient(
+          c.width / 2,
+          c.height / 2,
+          0,
+          c.width / 2,
+          c.height / 2,
+          c.width * 0.6,
+        );
+        grd.addColorStop(0, "rgba(99,102,241,0.06)");
+        grd.addColorStop(0.5, "rgba(0,255,255,0.02)");
+        grd.addColorStop(1, "transparent");
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, c.width, c.height);
+      }
+
+      // Compute positions
+      function computePositions() {
+        const area = document.getElementById("constellation");
+        const w = area.offsetWidth,
+          h = area.offsetHeight;
+        const cx = w / 2,
+          cy = h / 2;
+        const r = Math.min(w, h) * 0.32;
+
+        // Center star
+        positions._center = { x: cx, y: cy };
+
+        // 8 Eyes in octagonal ring
+        EYES.forEach((e, i) => {
+          const angle =
+            (Math.PI * 2 * i) / EYES.length - Math.PI / 2 + orbitAngle;
+          positions[e.id] = {
+            x: cx + r * Math.cos(angle),
+            y: cy + r * Math.sin(angle),
+            angle: angle,
+          };
+        });
+      }
+
+      // Draw constellation SVG
+      function drawConstellation() {
+        const svg = document.getElementById("constSvg");
+        const area = document.getElementById("constellation");
+        svg.setAttribute("width", area.offsetWidth);
+        svg.setAttribute("height", area.offsetHeight);
+
+        computePositions();
+        const center = positions._center;
+        let html = `<defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="4"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="softglow"><feGaussianBlur stdDeviation="8"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>`;
+
+        // Center star
+        html += `<circle cx="${center.x}" cy="${center.y}" r="18" fill="var(--star-core)" opacity=".15" filter="url(#softglow)"/>`;
+        html += `<circle cx="${center.x}" cy="${center.y}" r="8" fill="var(--star-core)" opacity=".6" filter="url(#glow)"/>`;
+        html += `<circle cx="${center.x}" cy="${center.y}" r="3" fill="#fff" opacity=".9"/>`;
+
+        // Filaments from center to each eye
+        EYES.forEach((e) => {
+          const p = positions[e.id];
+          const state = eyeStates[e.id];
+          const opacity =
+            state === "running" ? 0.6 : state === "complete" ? 0.3 : 0.08;
+          const width = state === "running" ? 1.5 : 0.5;
+          html += `<line x1="${center.x}" y1="${center.y}" x2="${p.x}" y2="${p.y}" stroke="${e.color}" stroke-width="${width}" opacity="${opacity}"/>`;
+        });
+
+        // Adjacent filaments
+        for (let i = 0; i < EYES.length; i++) {
+          const a = EYES[i],
+            b = EYES[(i + 1) % EYES.length];
+          const pa = positions[a.id],
+            pb = positions[b.id];
+          const opacity =
+            eyeStates[a.id] !== "standby" || eyeStates[b.id] !== "standby"
+              ? 0.15
+              : 0.04;
+          html += `<line x1="${pa.x}" y1="${pa.y}" x2="${pb.x}" y2="${pb.y}" stroke="var(--border)" stroke-width="0.5" opacity="${opacity}"/>`;
+        }
+
+        // Eye nodes
+        EYES.forEach((e) => {
+          const p = positions[e.id];
+          const state = eyeStates[e.id];
+          const isActive = state === "running";
+          const isComplete = state === "complete";
+          const nodeR = isActive ? 24 : 18;
+
+          // Signal strength ring for complete
+          if (isComplete) {
+            html += `<circle cx="${p.x}" cy="${p.y}" r="${nodeR + 12}" fill="none" stroke="${e.color}" stroke-width="0.5" opacity="0.3" stroke-dasharray="3 3"/>`;
+            html += `<circle cx="${p.x}" cy="${p.y}" r="${nodeR + 6}" fill="none" stroke="var(--emerald)" stroke-width="1" opacity="0.4"/>`;
+          }
+
+          // Glow for active
+          if (isActive) {
+            html += `<circle cx="${p.x}" cy="${p.y}" r="${nodeR + 14}" fill="${e.glow}" opacity="0.15" filter="url(#softglow)">
+        <animate attributeName="r" values="${nodeR + 10};${nodeR + 18};${nodeR + 10}" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.15;0.25;0.15" dur="3s" repeatCount="indefinite"/>
+      </circle>`;
+          }
+
+          // Core
+          html += `<circle cx="${p.x}" cy="${p.y}" r="${nodeR}" fill="var(--surface-2)" stroke="${isComplete ? "var(--emerald)" : e.color}" stroke-width="${isActive ? 2 : 1}" opacity="${state === "standby" ? 0.4 : 1}" style="cursor:pointer" onclick="openFocus('${e.id}')"/>`;
+
+          // Symbol
+          html += `<text x="${p.x}" y="${p.y}" text-anchor="middle" dominant-baseline="central" fill="${isComplete ? "var(--emerald)" : e.color}" font-size="${isActive ? 16 : 13}" font-family="inherit" opacity="${state === "standby" ? 0.4 : 1}" style="cursor:pointer" onclick="openFocus('${e.id}')">${e.symbol}</text>`;
+
+          // Label
+          html += `<text x="${p.x}" y="${p.y + nodeR + 14}" text-anchor="middle" fill="${state === "standby" ? "var(--text-dim)" : "var(--text)"}" font-size="8" font-family="inherit" letter-spacing="1.5" text-transform="uppercase" opacity="${state === "standby" ? 0.3 : 0.8}">${e.name.toUpperCase()}</text>`;
+
+          // Beam particles for active
+          if (isActive) {
+            for (let j = 0; j < 3; j++) {
+              const delay = j * 1;
+              html += `<circle r="2" fill="${e.color}" opacity="0">
+          <animate attributeName="cx" values="${p.x};${center.x}" dur="2s" begin="${delay}s" repeatCount="indefinite"/>
+          <animate attributeName="cy" values="${p.y};${center.y}" dur="2s" begin="${delay}s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;0.7;0" dur="2s" begin="${delay}s" repeatCount="indefinite"/>
+          <animate attributeName="r" values="2;1;0" dur="2s" begin="${delay}s" repeatCount="indefinite"/>
+        </circle>`;
+            }
+          }
+        });
+
+        svg.innerHTML = html;
+      }
+
+      // Trajectory
+      function updateTrajectory() {
+        const traj = document.getElementById("trajectory");
+        let html = "";
+        EYES.forEach((e, i) => {
+          const state = eyeStates[e.id];
+          const cls =
+            state === "running"
+              ? "active"
+              : state === "complete"
+                ? "complete"
+                : "";
+          html += `<div class="traj-node ${cls}" style="--eye-color:${e.color}" title="${e.name}"></div>`;
+          if (i < EYES.length - 1) {
+            const nextComplete =
+              eyeStates[EYES[i + 1].id] !== "standby" || state === "complete";
+            html += `<div class="traj-line ${state === "complete" ? "complete" : ""}"></div>`;
+          }
+        });
+        traj.innerHTML =
+          html + '<span class="traj-label">Mission Progress</span>';
+      }
+
+      // Comms
+      function addComm(eyeId, text, opts = {}) {
+        const eye = EYES.find((e) => e.id === eyeId);
+        const time = new Date().toLocaleTimeString("en", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        });
+        commCount++;
+        document.getElementById("commsCount").textContent =
+          commCount + " events";
+
+        const body = document.getElementById("commsBody");
+        const entry = document.createElement("div");
+        entry.className = "comm-entry";
+
+        let actionHtml = "";
+        if (opts.clarification) {
+          actionHtml = `<div class="comm-action" style="border-color:rgba(255,107,0,.2)">
+      <div class="comm-action-title" style="color:var(--orange)">Clarification Required</div>
+      <div class="comm-action-text">${opts.clarification}</div>
+      <input placeholder="Type your answer..." id="clarInput-${commCount}"/>
+      <div class="action-btns"><button class="action-btn submit" onclick="answerClar(${commCount})">SUBMIT</button></div>
+    </div>`;
+        }
+        if (opts.approval) {
+          actionHtml = `<div class="comm-action" style="border-color:rgba(155,89,182,.2)">
+      <div class="comm-action-title" style="color:var(--purple)">Plan Approval</div>
+      <div class="comm-action-text">${opts.approval}</div>
+      <div class="action-btns">
+        <button class="action-btn approve" onclick="handleApproval(true)">APPROVE</button>
+        <button class="action-btn reject" onclick="handleApproval(false)">REJECT</button>
+      </div>
+    </div>`;
+        }
+
+        entry.innerHTML = `
+    <div class="comm-marker" style="background:${eye.color}"></div>
+    <div class="comm-icon" style="border-color:${eye.color};color:${eye.color}">${eye.symbol}</div>
+    <div class="comm-content">
+      <div class="comm-meta">
+        <span class="comm-name" style="color:${eye.color}">${eye.name}</span>
+        <span class="comm-time">${time}</span>
+      </div>
+      <div class="comm-text">${text}</div>
+      ${actionHtml}
+    </div>
+  `;
+        body.appendChild(entry);
+        body.scrollTop = body.scrollHeight;
+      }
+
+      function answerClar(id) {
+        const input = document.getElementById(`clarInput-${id}`);
+        if (input && input.value) {
+          addComm("sharingan", `Clarification received: "${input.value}"`);
+          input.parentElement.parentElement.style.display = "none";
+          continueAfterAction();
+        }
+      }
+
+      function handleApproval(approved) {
+        if (approved) {
+          addComm(
+            "rinnegan",
+            'Plan <span class="hl">APPROVED</span> by operator',
+          );
+        } else {
+          addComm(
+            "rinnegan",
+            'Plan <span class="hl">REJECTED</span> - revision needed',
+          );
+        }
+        document
+          .querySelectorAll(".comm-action")
+          .forEach((el) => (el.style.display = "none"));
+        continueAfterAction();
+      }
+
+      // Focus panel
+      function openFocus(eyeId) {
+        const eye = EYES.find((e) => e.id === eyeId);
+        const state = eyeStates[eyeId];
+        const overlay = document.getElementById("focusOverlay");
+        const card = document.getElementById("focusCard");
+
+        card.innerHTML = `
+    <div class="focus-header">
+      <div class="focus-icon" style="border-color:${eye.color};color:${eye.color}">${eye.symbol}</div>
+      <div>
+        <div class="focus-name" style="color:${eye.color}">${eye.name}</div>
+        <div class="focus-role">${eye.role}</div>
+      </div>
+      <button class="focus-close" onclick="closeFocus()">&times;</button>
+    </div>
+    <div class="focus-body">
+      <div class="focus-section">
+        <div class="focus-section-title">Status</div>
+        <div class="focus-dialogue" style="border-left-color:${eye.color}">
+          ${state === "running" ? "Currently analyzing..." : state === "complete" ? "Analysis complete." : "Standing by."}
+        </div>
+      </div>
+      ${
+        state !== "standby"
+          ? `<div class="focus-section">
+        <div class="focus-section-title">Metrics</div>
+        <div class="focus-metrics">
+          <div class="focus-metric"><div class="focus-metric-val" style="color:var(--cyan)">1,240</div><div class="focus-metric-lbl">Tokens</div></div>
+          <div class="focus-metric"><div class="focus-metric-val" style="color:var(--emerald)">420ms</div><div class="focus-metric-lbl">Latency</div></div>
+          <div class="focus-metric"><div class="focus-metric-val" style="color:${eye.color}">${state === "complete" ? "Done" : "Active"}</div><div class="focus-metric-lbl">State</div></div>
+        </div>
+      </div>`
+          : ""
+      }
+    </div>
+  `;
+        overlay.classList.add("visible");
+      }
+
+      function closeFocus() {
+        document.getElementById("focusOverlay").classList.remove("visible");
+      }
+
+      // Slow orbital rotation
+      function orbitLoop() {
+        orbitAngle += 0.0003;
+        drawConstellation();
+        animFrame = requestAnimationFrame(orbitLoop);
+      }
+
+      // Progress
+      function setProgress(pct) {
+        document.getElementById("commsProgress").style.width = pct + "%";
+      }
+
+      // Simulation
+      const SIM = [
+        {
+          delay: 1200,
+          fn: () => {
+            eyeStates.overseer = "running";
+            activeEyeId = "overseer";
+            addComm(
+              "overseer",
+              "Pipeline initiated. Routing request through the constellation...",
+            );
+            setProgress(5);
+            updateTrajectory();
+            drawConstellation();
+          },
+        },
+        {
+          delay: 2500,
+          fn: () => {
+            addComm(
+              "overseer",
+              "Optimal route: Sharingan \u2192 Kyuubi \u2192 Jogan \u2192 Rinnegan \u2192 Mangekyo \u2192 Tenseigan \u2192 Byakugan",
+            );
+            eyeStates.overseer = "complete";
+            eyeStates.sharingan = "running";
+            activeEyeId = "sharingan";
+            setProgress(12);
+            updateTrajectory();
+            drawConstellation();
+          },
+        },
+        {
+          delay: 2000,
+          fn: () => {
+            addComm(
+              "sharingan",
+              "Scanning for ambiguities and hidden complexities...",
+            );
+            setProgress(18);
+          },
+        },
+        {
+          delay: 2500,
+          fn: () => {
+            addComm(
+              "sharingan",
+              "Found 2 ambiguities requiring clarification.",
+              {
+                clarification:
+                  "Which authentication method is being used? (JWT, OAuth2, Session-based)",
+              },
+            );
+            setProgress(22);
+            setTimeout(() => {
+              const input = document.getElementById(`clarInput-${commCount}`);
+              if (input) {
+                input.value = "JWT with refresh tokens";
+                answerClar(commCount);
+              }
+            }, 3500);
+          },
+        },
+        {
+          delay: 6000,
+          fn: () => {
+            addComm("sharingan", "Analysis complete. No ambiguities remain.");
+            eyeStates.sharingan = "complete";
+            eyeStates.kyuubi = "running";
+            activeEyeId = "kyuubi";
+            setProgress(30);
+            updateTrajectory();
+            drawConstellation();
+          },
+        },
+        {
+          delay: 2000,
+          fn: () => {
+            addComm(
+              "kyuubi",
+              "Weaving patterns from the threads of your request...",
+            );
+            setProgress(38);
+          },
+        },
+        {
+          delay: 2500,
+          fn: () => {
+            addComm(
+              "kyuubi",
+              'The patterns reveal themselves: <span class="hl">12 threads, 7 bonds</span>. Structured prompt generated.',
+            );
+            eyeStates.kyuubi = "complete";
+            eyeStates.jogan = "running";
+            activeEyeId = "jogan";
+            setProgress(45);
+            updateTrajectory();
+            drawConstellation();
+          },
+        },
+        {
+          delay: 2000,
+          fn: () => {
+            addComm(
+              "jogan",
+              "Confirming alignment between your words and desires...",
+            );
+            setProgress(50);
+          },
+        },
+        {
+          delay: 2000,
+          fn: () => {
+            addComm("jogan", "Your intent is crystal clear. We are aligned.");
+            eyeStates.jogan = "complete";
+            eyeStates.rinnegan = "running";
+            activeEyeId = "rinnegan";
+            setProgress(55);
+            updateTrajectory();
+            drawConstellation();
+          },
+        },
+        {
+          delay: 2000,
+          fn: () => {
+            addComm("rinnegan", "Devising the optimal strategy...", {
+              approval:
+                "1. Audit JWT token lifecycle\n2. Review refresh token rotation\n3. Check CORS & CSP headers\n4. Validate middleware chain\n5. Test token expiry edge cases",
+            });
+            setProgress(60);
+            setTimeout(() => handleApproval(true), 3500);
+          },
+        },
+        {
+          delay: 6000,
+          fn: () => {
+            eyeStates.rinnegan = "complete";
+            eyeStates.mangekyo = "running";
+            activeEyeId = "mangekyo";
+            addComm(
+              "mangekyo",
+              "Every line, every detail, under my scrutiny...",
+            );
+            setProgress(70);
+            updateTrajectory();
+            drawConstellation();
+          },
+        },
+        {
+          delay: 3000,
+          fn: () => {
+            addComm(
+              "mangekyo",
+              'Quality assessment: <span class="hl">92/100</span>. 3 minor suggestions.',
+            );
+            eyeStates.mangekyo = "complete";
+            eyeStates.tenseigan = "running";
+            activeEyeId = "tenseigan";
+            setProgress(80);
+            updateTrajectory();
+            drawConstellation();
+          },
+        },
+        {
+          delay: 3000,
+          fn: () => {
+            addComm(
+              "tenseigan",
+              'Evidence examined: <span class="hl">18 of 20 claims verified</span>.',
+            );
+            eyeStates.tenseigan = "complete";
+            eyeStates.byakugan = "running";
+            activeEyeId = "byakugan";
+            setProgress(90);
+            updateTrajectory();
+            drawConstellation();
+          },
+        },
+        {
+          delay: 3000,
+          fn: () => {
+            addComm(
+              "byakugan",
+              'VERDICT: <span class="hl">APPROVED FOR DELIVERY</span>.',
+            );
+            eyeStates.byakugan = "complete";
+            setProgress(100);
+            updateTrajectory();
+            drawConstellation();
+          },
+        },
+        {
+          delay: 2000,
+          fn: () => {
+            addComm(
+              "overseer",
+              'Mission complete. All Eyes have reported. Final score: <span class="hl">92/100</span>.',
+            );
+            const badge = document.getElementById("statusBadge");
+            badge.className = "status-badge complete";
+            document.getElementById("statusText").textContent = "COMPLETE";
+            badge.querySelector(".status-dot").style.animation = "none";
+          },
+        },
+      ];
+
+      let simIdx = 0;
+      function runSim() {
+        if (simIdx >= SIM.length) return;
+        const s = SIM[simIdx];
+        setTimeout(() => {
+          s.fn();
+          simIdx++;
+          runSim();
+        }, s.delay);
+      }
+
+      function continueAfterAction() {}
+
+      function init() {
+        createStars();
+        drawNebula();
+        computePositions();
+        drawConstellation();
+        updateTrajectory();
+        orbitLoop();
+        setTimeout(runSim, 1500);
+      }
+
+      window.addEventListener("resize", () => {
+        drawNebula();
+        computePositions();
+        drawConstellation();
+      });
+      window.addEventListener("load", init);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeFocus();
+      });
+    </script>
+  </body>
+</html>

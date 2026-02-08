@@ -1,0 +1,1543 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Proposal C: Tactical Operations - Third Eye Monitor</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --bg: #080b11;
+        --surface: #0d1117;
+        --surface-2: #151b25;
+        --surface-3: #1a2233;
+        --border: #1e2a3a;
+        --border-active: #2a3a50;
+        --text: #e0e6ed;
+        --text-dim: #5a6d85;
+        --text-muted: #3a4d65;
+        --gold: #d4af37;
+        --crimson: #dc143c;
+        --orange: #ff6b00;
+        --cyan: #00ffff;
+        --purple: #9b59b6;
+        --pink: #ff1493;
+        --indigo: #6366f1;
+        --emerald: #50c878;
+        --accent: #00ffff;
+      }
+      html,
+      body {
+        height: 100%;
+        font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+        background: var(--bg);
+        color: var(--text);
+        overflow: hidden;
+      }
+
+      /* Subtle background */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse at 20% 50%,
+            rgba(99, 102, 241, 0.04),
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse at 80% 30%,
+            rgba(0, 255, 255, 0.03),
+            transparent 50%
+          );
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* Layout */
+      .layout {
+        display: grid;
+        grid-template-columns: 240px 1fr 280px;
+        grid-template-rows: 44px 1fr;
+        height: 100vh;
+        position: relative;
+        z-index: 1;
+      }
+      .header {
+        grid-column: 1/-1;
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        gap: 12px;
+      }
+      .logo {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .logo-icon {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        background: linear-gradient(135deg, var(--indigo), var(--cyan));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        color: var(--bg);
+        font-weight: 900;
+      }
+      .header-sep {
+        width: 1px;
+        height: 20px;
+        background: var(--border);
+        margin: 0 4px;
+      }
+
+      .view-toggle {
+        display: flex;
+        background: var(--bg);
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+      }
+      .view-btn {
+        padding: 4px 12px;
+        font-size: 9px;
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.2s;
+      }
+      .view-btn.active {
+        background: var(--accent);
+        color: var(--bg);
+        font-weight: 700;
+      }
+
+      .header-mission {
+        flex: 1;
+        text-align: center;
+      }
+      .mission-strip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 14px;
+        background: var(--surface-2);
+        border-radius: 4px;
+        border: 1px solid var(--border);
+      }
+      .mission-label {
+        font-size: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: var(--text-dim);
+      }
+      .mission-text {
+        font-size: 11px;
+        color: var(--text);
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .status-pill {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 10px;
+        border-radius: 10px;
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .status-pill.live {
+        background: rgba(80, 200, 120, 0.1);
+        color: var(--emerald);
+        border: 1px solid rgba(80, 200, 120, 0.2);
+      }
+      .status-pill.done {
+        background: rgba(0, 255, 255, 0.08);
+        color: var(--cyan);
+        border: 1px solid rgba(0, 255, 255, 0.15);
+      }
+      .status-pip {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: currentColor;
+        animation: pip 2s infinite;
+      }
+      @keyframes pip {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+
+      /* Eye Roster - Left */
+      .roster {
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        overflow-y: auto;
+        padding: 8px;
+      }
+      .roster-title {
+        font-size: 8px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--text-muted);
+        padding: 8px 8px 6px;
+        margin-bottom: 4px;
+      }
+      .roster-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+        margin-bottom: 2px;
+      }
+      .roster-card:hover {
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .roster-card.active {
+        background: var(--surface-2);
+        border-color: var(--border-active);
+      }
+      .roster-card.running {
+        border-color: var(--eye-color);
+      }
+      .roster-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        border: 1.5px solid var(--border);
+        flex-shrink: 0;
+        position: relative;
+        transition: all 0.3s;
+      }
+      .roster-card.running .roster-avatar {
+        border-color: var(--eye-color);
+        box-shadow: 0 0 12px var(--eye-glow);
+      }
+      .roster-card.complete .roster-avatar {
+        border-color: var(--emerald);
+      }
+      .roster-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .roster-name {
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .roster-role {
+        font-size: 9px;
+        color: var(--text-dim);
+      }
+      .roster-state {
+        font-size: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 2px 6px;
+        border-radius: 3px;
+        margin-top: 3px;
+        display: inline-block;
+      }
+      .roster-state.standby {
+        background: var(--bg);
+        color: var(--text-muted);
+      }
+      .roster-state.running {
+        background: rgba(0, 255, 255, 0.1);
+        color: var(--cyan);
+      }
+      .roster-state.complete {
+        background: rgba(80, 200, 120, 0.1);
+        color: var(--emerald);
+      }
+
+      /* Operations Display - Center */
+      .operations {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      /* Mission briefing strip */
+      .briefing {
+        padding: 10px 20px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+      .briefing-text {
+        font-size: 11px;
+        color: var(--text-dim);
+        line-height: 1.5;
+      }
+      .briefing-text strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      /* Active Eye Spotlight */
+      .spotlight {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        min-height: 0;
+      }
+      .spot-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 16px;
+      }
+      .spot-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        border: 2px solid var(--border);
+      }
+      .spot-avatar.active {
+        animation: spotPulse 3s infinite;
+      }
+      @keyframes spotPulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 var(--eye-glow);
+        }
+        50% {
+          box-shadow: 0 0 20px 4px var(--eye-glow);
+        }
+      }
+      .spot-name {
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .spot-role {
+        font-size: 10px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+      }
+      .spot-state {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 3px 8px;
+        border-radius: 4px;
+        margin-top: 4px;
+        display: inline-block;
+      }
+
+      .spot-dialogue {
+        margin-bottom: 16px;
+      }
+      .dialogue-bubble {
+        padding: 14px 16px;
+        background: var(--surface-2);
+        border-radius: 0 10px 10px 10px;
+        border: 1px solid var(--border);
+        font-size: 13px;
+        line-height: 1.7;
+        position: relative;
+      }
+      .dialogue-bubble.speaking::before {
+        content: "";
+        position: absolute;
+        left: -1px;
+        top: 0;
+        width: 3px;
+        height: 100%;
+        border-radius: 2px;
+        background: var(--eye-color);
+        animation: speakPulse 2s infinite;
+      }
+      @keyframes speakPulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+
+      /* Action Area */
+      .spot-action {
+        margin-bottom: 16px;
+      }
+      .action-card {
+        padding: 14px;
+        background: var(--surface-2);
+        border-radius: 8px;
+        border: 1px solid var(--border);
+      }
+      .action-title {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      .action-text {
+        font-size: 12px;
+        line-height: 1.6;
+        margin-bottom: 10px;
+        white-space: pre-line;
+      }
+      .action-input {
+        width: 100%;
+        padding: 8px 12px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: var(--text);
+        font-family: inherit;
+        font-size: 12px;
+        outline: none;
+        margin-bottom: 10px;
+      }
+      .action-input:focus {
+        border-color: var(--accent);
+      }
+      .action-btns {
+        display: flex;
+        gap: 8px;
+      }
+      .act-btn {
+        padding: 6px 16px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-family: inherit;
+        cursor: pointer;
+        border: 1px solid;
+        transition: all 0.15s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+      }
+      .act-btn.approve {
+        background: rgba(80, 200, 120, 0.1);
+        border-color: rgba(80, 200, 120, 0.3);
+        color: var(--emerald);
+      }
+      .act-btn.approve:hover {
+        background: rgba(80, 200, 120, 0.2);
+      }
+      .act-btn.reject {
+        background: rgba(220, 20, 60, 0.08);
+        border-color: rgba(220, 20, 60, 0.2);
+        color: var(--crimson);
+      }
+      .act-btn.submit {
+        background: rgba(0, 255, 255, 0.08);
+        border-color: rgba(0, 255, 255, 0.2);
+        color: var(--cyan);
+      }
+      .act-btn.submit:hover {
+        background: rgba(0, 255, 255, 0.15);
+      }
+
+      /* Strategic view metrics */
+      .strat-summary {
+        padding: 14px;
+        background: var(--surface-2);
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        margin-bottom: 16px;
+      }
+      .strat-title {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--text-dim);
+        margin-bottom: 10px;
+      }
+      .strat-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .strat-item {
+        padding: 10px;
+        background: var(--bg);
+        border-radius: 6px;
+        border: 1px solid var(--border);
+      }
+      .strat-val {
+        font-size: 20px;
+        font-weight: 700;
+      }
+      .strat-lbl {
+        font-size: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-dim);
+        margin-top: 2px;
+      }
+      .strat-qual {
+        font-size: 12px;
+        color: var(--emerald);
+        font-weight: 600;
+      }
+
+      /* Tactical dev details */
+      .tact-details {
+        display: none;
+        margin-bottom: 16px;
+      }
+      .tact-details.visible {
+        display: block;
+      }
+      .tact-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        font-size: 11px;
+      }
+      .tact-key {
+        color: var(--text-dim);
+      }
+      .tact-val {
+        color: var(--cyan);
+        font-variant-numeric: tabular-nums;
+      }
+      .tact-json {
+        background: var(--bg);
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 10px;
+        overflow-x: auto;
+        border: 1px solid var(--border);
+        max-height: 120px;
+        overflow-y: auto;
+        margin-top: 8px;
+        color: var(--text-dim);
+      }
+
+      /* Pipeline Flow */
+      .pipeline {
+        padding: 0 20px 12px;
+        flex-shrink: 0;
+        border-top: 1px solid var(--border);
+        background: var(--surface);
+      }
+      .pipeline-title {
+        font-size: 8px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--text-muted);
+        padding: 8px 0;
+      }
+      .pipeline-flow {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+      .pipe-node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        flex-shrink: 0;
+        cursor: pointer;
+        padding: 4px 2px;
+      }
+      .pipe-dot {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        border: 1.5px solid var(--border);
+        transition: all 0.3s;
+        background: var(--surface-2);
+      }
+      .pipe-dot.running {
+        border-color: var(--eye-color);
+        box-shadow: 0 0 10px var(--eye-glow);
+      }
+      .pipe-dot.complete {
+        border-color: var(--emerald);
+        background: rgba(80, 200, 120, 0.08);
+      }
+      .pipe-label {
+        font-size: 7px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        white-space: nowrap;
+      }
+      .pipe-dot.running .pipe-label,
+      .pipe-dot.complete .pipe-label {
+        color: var(--text-dim);
+      }
+      .pipe-arrow {
+        width: 20px;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 10px;
+        flex-shrink: 0;
+      }
+      .pipe-arrow.active {
+        color: var(--emerald);
+      }
+
+      /* Intel Feed - Right */
+      .intel {
+        background: var(--surface);
+        border-left: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .intel-title {
+        font-size: 8px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--text-muted);
+        padding: 10px 12px 6px;
+      }
+      .intel-feed {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 12px 8px;
+      }
+      .feed-entry {
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        animation: feedIn 0.3s ease-out;
+      }
+      @keyframes feedIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .feed-meta {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 3px;
+      }
+      .feed-dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+      }
+      .feed-eye {
+        font-size: 9px;
+        font-weight: 600;
+      }
+      .feed-time {
+        font-size: 8px;
+        color: var(--text-muted);
+        margin-left: auto;
+      }
+      .feed-text {
+        font-size: 10px;
+        line-height: 1.4;
+        color: var(--text-dim);
+      }
+      .feed-text .hl {
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      /* Quality score panel */
+      .quality-panel {
+        padding: 12px;
+        border-top: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+      .quality-title {
+        font-size: 8px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+      }
+      .quality-score {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .quality-ring {
+        width: 56px;
+        height: 56px;
+        position: relative;
+      }
+      .quality-ring svg {
+        transform: rotate(-90deg);
+      }
+      .quality-ring-val {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .quality-breakdown {
+        flex: 1;
+      }
+      .quality-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 9px;
+        padding: 2px 0;
+      }
+      .quality-row-name {
+        color: var(--text-dim);
+      }
+      .quality-row-val {
+        font-weight: 600;
+      }
+
+      /* Incoming transmission */
+      .transmission {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 100;
+        display: none;
+        pointer-events: none;
+      }
+      .transmission.visible {
+        display: block;
+        pointer-events: auto;
+      }
+      .trans-bg {
+        position: fixed;
+        inset: 0;
+        background: rgba(8, 11, 17, 0.85);
+        backdrop-filter: blur(4px);
+      }
+      .trans-card {
+        position: relative;
+        width: 400px;
+        background: var(--surface-2);
+        border: 1px solid var(--orange);
+        border-radius: 8px;
+        overflow: hidden;
+        animation: transIn 0.4s ease-out;
+      }
+      @keyframes transIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95) translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+      .trans-strip {
+        padding: 6px 14px;
+        background: rgba(255, 107, 0, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--orange);
+        font-weight: 700;
+      }
+      .trans-strip-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--orange);
+        animation: pip 0.8s infinite;
+      }
+      .trans-body {
+        padding: 16px;
+      }
+
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 2px;
+      }
+
+      /* Idle state */
+      .idle-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        z-index: 5;
+      }
+      .idle-text {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        color: var(--text-muted);
+        animation: idlePulse 4s infinite;
+      }
+      @keyframes idlePulse {
+        0%,
+        100% {
+          opacity: 0.3;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <!-- Header -->
+      <header class="header">
+        <div class="logo">
+          <div class="logo-icon">TE</div>
+          THIRD EYE
+        </div>
+        <div class="header-sep"></div>
+        <div class="view-toggle">
+          <button
+            class="view-btn active"
+            data-view="strategic"
+            onclick="setView('strategic')"
+          >
+            STRATEGIC
+          </button>
+          <button
+            class="view-btn"
+            data-view="tactical"
+            onclick="setView('tactical')"
+          >
+            TACTICAL
+          </button>
+        </div>
+        <div class="header-mission">
+          <div class="mission-strip">
+            <span class="mission-label">Mission</span>
+            <span class="mission-text" id="missionText"
+              >Review authentication module</span
+            >
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="status-pill live" id="statusPill">
+            <span class="status-pip"></span>
+            <span id="statusText">LIVE</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Eye Roster -->
+      <nav class="roster" id="roster">
+        <div class="roster-title">Specialist Roster</div>
+      </nav>
+
+      <!-- Operations Display -->
+      <main class="operations" id="opsMain">
+        <div class="briefing" id="briefing">
+          <div class="briefing-text">
+            <strong>Objective:</strong> Comprehensive review of JWT
+            authentication module including token lifecycle, refresh rotation,
+            CORS/CSP headers, middleware chain, and edge cases.
+          </div>
+        </div>
+        <div class="spotlight" id="spotlight"></div>
+        <div class="pipeline" id="pipelineArea">
+          <div class="pipeline-title">Pipeline Flow</div>
+          <div class="pipeline-flow" id="pipelineFlow"></div>
+        </div>
+      </main>
+
+      <!-- Intel Feed -->
+      <aside class="intel">
+        <div class="intel-title">Intel Feed</div>
+        <div class="intel-feed" id="intelFeed"></div>
+        <div class="quality-panel" id="qualityPanel">
+          <div class="quality-title">Quality Score</div>
+          <div class="quality-score">
+            <div class="quality-ring">
+              <svg width="56" height="56" viewBox="0 0 56 56">
+                <circle
+                  cx="28"
+                  cy="28"
+                  r="24"
+                  fill="none"
+                  stroke="var(--border)"
+                  stroke-width="3"
+                />
+                <circle
+                  cx="28"
+                  cy="28"
+                  r="24"
+                  fill="none"
+                  stroke="var(--emerald)"
+                  stroke-width="3"
+                  id="qualityArc"
+                  stroke-dasharray="0 151"
+                  stroke-linecap="round"
+                  style="transition: stroke-dasharray 0.8s"
+                />
+              </svg>
+              <div
+                class="quality-ring-val"
+                id="qualityVal"
+                style="color: var(--text-muted)"
+              >
+                --
+              </div>
+            </div>
+            <div class="quality-breakdown" id="qualityBreakdown">
+              <div class="quality-row">
+                <span class="quality-row-name">Clarity</span
+                ><span class="quality-row-val" id="qClarity">--</span>
+              </div>
+              <div class="quality-row">
+                <span class="quality-row-name">Accuracy</span
+                ><span class="quality-row-val" id="qAccuracy">--</span>
+              </div>
+              <div class="quality-row">
+                <span class="quality-row-name">Coverage</span
+                ><span class="quality-row-val" id="qCoverage">--</span>
+              </div>
+              <div class="quality-row">
+                <span class="quality-row-name">Evidence</span
+                ><span class="quality-row-val" id="qEvidence">--</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Transmission overlay -->
+    <div class="transmission" id="transmission"></div>
+
+    <script>
+      const EYES = [
+        {
+          id: "overseer",
+          name: "Overseer",
+          role: "The Director",
+          symbol: "\u25B3",
+          color: "#d4af37",
+          glow: "rgba(212,175,55,0.4)",
+        },
+        {
+          id: "sharingan",
+          name: "Sharingan",
+          role: "The Detective",
+          symbol: "\u25CE",
+          color: "#dc143c",
+          glow: "rgba(220,20,60,0.4)",
+        },
+        {
+          id: "kyuubi",
+          name: "Kyuubi",
+          role: "Pattern Hunter",
+          symbol: "\u2726",
+          color: "#ff6b00",
+          glow: "rgba(255,107,0,0.4)",
+        },
+        {
+          id: "jogan",
+          name: "Jogan",
+          role: "The Verifier",
+          symbol: "\u25CB",
+          color: "#00ffff",
+          glow: "rgba(0,255,255,0.4)",
+        },
+        {
+          id: "rinnegan",
+          name: "Rinnegan",
+          role: "The Strategist",
+          symbol: "\u25C9",
+          color: "#9b59b6",
+          glow: "rgba(155,89,182,0.4)",
+        },
+        {
+          id: "mangekyo",
+          name: "Mangekyo",
+          role: "Perfectionist",
+          symbol: "\u2727",
+          color: "#ff1493",
+          glow: "rgba(255,20,147,0.4)",
+        },
+        {
+          id: "tenseigan",
+          name: "Tenseigan",
+          role: "The Scholar",
+          symbol: "\u2740",
+          color: "#6366f1",
+          glow: "rgba(99,102,241,0.4)",
+        },
+        {
+          id: "byakugan",
+          name: "Byakugan",
+          role: "Final Judge",
+          symbol: "\u25D0",
+          color: "#50c878",
+          glow: "rgba(80,200,120,0.4)",
+        },
+      ];
+
+      let currentView = "strategic";
+      let eyeStates = {};
+      let activeEye = null;
+      let currentDialogue = "";
+      let currentMetrics = null;
+      let currentAction = null;
+
+      EYES.forEach((e) => (eyeStates[e.id] = "standby"));
+
+      function setView(view) {
+        currentView = view;
+        document
+          .querySelectorAll(".view-btn")
+          .forEach((b) =>
+            b.classList.toggle("active", b.dataset.view === view),
+          );
+        renderSpotlight();
+      }
+
+      // Roster
+      function renderRoster() {
+        const roster = document.getElementById("roster");
+        roster.innerHTML =
+          '<div class="roster-title">Specialist Roster</div>' +
+          EYES.map((e) => {
+            const state = eyeStates[e.id];
+            const isActive = activeEye === e.id;
+            return `<div class="roster-card ${state} ${isActive ? "active" : ""}" style="--eye-color:${e.color};--eye-glow:${e.glow}" onclick="focusEye('${e.id}')">
+        <div class="roster-avatar" style="color:${e.color};border-color:${state === "running" ? e.color : state === "complete" ? "var(--emerald)" : "var(--border)"}">${e.symbol}</div>
+        <div class="roster-info">
+          <div class="roster-name" style="color:${isActive || state === "running" ? e.color : "var(--text)"}">${e.name}</div>
+          <div class="roster-role">${e.role}</div>
+          <span class="roster-state ${state}">${state === "running" ? "ACTIVE" : state === "complete" ? "DONE" : "STANDBY"}</span>
+        </div>
+      </div>`;
+          }).join("");
+      }
+
+      // Pipeline flow
+      function renderPipeline() {
+        const flow = document.getElementById("pipelineFlow");
+        flow.innerHTML = EYES.map((e, i) => {
+          const state = eyeStates[e.id];
+          const dot = `<div class="pipe-node" onclick="focusEye('${e.id}')">
+      <div class="pipe-dot ${state}" style="--eye-color:${e.color};--eye-glow:${e.glow};${state === "running" ? `border-color:${e.color}` : state === "complete" ? "" : ""}">
+        <span style="color:${state === "complete" ? "var(--emerald)" : e.color}">${e.symbol}</span>
+      </div>
+      <div class="pipe-label" style="${state !== "standby" ? `color:${state === "complete" ? "var(--emerald)" : e.color}` : ""}">${e.name}</div>
+    </div>`;
+          const arrow =
+            i < EYES.length - 1
+              ? `<div class="pipe-arrow ${state === "complete" ? "active" : ""}">\u2192</div>`
+              : "";
+          return dot + arrow;
+        }).join("");
+      }
+
+      // Spotlight
+      function renderSpotlight() {
+        const spot = document.getElementById("spotlight");
+        if (!activeEye) {
+          spot.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:12px">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:3px;color:var(--text-muted);animation:idlePulse 4s infinite">Awaiting Orders</div>
+      <div style="font-size:11px;color:var(--text-dim)">All specialists on standby</div>
+    </div>`;
+          return;
+        }
+
+        const eye = EYES.find((e) => e.id === activeEye);
+        const state = eyeStates[activeEye];
+        const isRunning = state === "running";
+
+        let metricsHtml = "";
+        if (currentMetrics) {
+          if (currentView === "strategic") {
+            metricsHtml = `<div class="strat-summary">
+        <div class="strat-title">Analysis Summary</div>
+        <div class="strat-grid">${currentMetrics
+          .map(
+            (m) => `
+          <div class="strat-item">
+            <div class="strat-val" style="color:${m.color || "var(--cyan)"}">${m.value}</div>
+            <div class="strat-lbl">${m.label}</div>
+          </div>
+        `,
+          )
+          .join("")}</div>
+      </div>`;
+          } else {
+            metricsHtml = `<div class="tact-details visible">
+        <div class="strat-title">Technical Details</div>
+        ${currentMetrics.map((m) => `<div class="tact-row"><span class="tact-key">${m.label}</span><span class="tact-val" style="color:${m.color || "var(--cyan)"}">${m.value}</span></div>`).join("")}
+        <div class="tact-row"><span class="tact-key">Provider</span><span class="tact-val">anthropic/claude-sonnet</span></div>
+        <div class="tact-row"><span class="tact-key">Tokens In</span><span class="tact-val">2,847</span></div>
+        <div class="tact-row"><span class="tact-key">Tokens Out</span><span class="tact-val">1,234</span></div>
+        <div class="tact-row"><span class="tact-key">Latency</span><span class="tact-val">340ms</span></div>
+        <div class="tact-json"><pre>${JSON.stringify({ type: `${activeEye}_complete`, result: { ok: true }, tokens: { in: 2847, out: 1234 }, latency_ms: 340 }, null, 2)}</pre></div>
+      </div>`;
+          }
+        }
+
+        let actionHtml = "";
+        if (currentAction) {
+          if (currentAction.type === "clarification") {
+            actionHtml = `<div class="spot-action">
+        <div class="action-card" style="border-color:rgba(255,107,0,.3)">
+          <div class="action-title" style="color:var(--orange)">Clarification Required</div>
+          <div class="action-text">${currentAction.question}</div>
+          <input class="action-input" placeholder="Type your answer..." id="spotClarInput"/>
+          <div class="action-btns"><button class="act-btn submit" onclick="submitClar()">SUBMIT</button></div>
+        </div>
+      </div>`;
+          } else if (currentAction.type === "approval") {
+            actionHtml = `<div class="spot-action">
+        <div class="action-card" style="border-color:rgba(155,89,182,.3)">
+          <div class="action-title" style="color:var(--purple)">Plan Approval Required</div>
+          <div class="action-text">${currentAction.plan}</div>
+          <div class="action-btns">
+            <button class="act-btn approve" onclick="approvePlan()">APPROVE</button>
+            <button class="act-btn reject" onclick="rejectPlan()">REJECT</button>
+          </div>
+        </div>
+      </div>`;
+          }
+        }
+
+        spot.innerHTML = `
+    <div class="spot-header">
+      <div class="spot-avatar ${isRunning ? "active" : ""}" style="border-color:${state === "complete" ? "var(--emerald)" : eye.color};color:${eye.color};--eye-glow:${eye.glow}">${eye.symbol}</div>
+      <div>
+        <div class="spot-name" style="color:${eye.color}">${eye.name}</div>
+        <div class="spot-role">${eye.role}</div>
+        <span class="spot-state" style="background:${state === "running" ? "rgba(0,255,255,.1)" : state === "complete" ? "rgba(80,200,120,.1)" : "var(--bg)"};color:${state === "running" ? "var(--cyan)" : state === "complete" ? "var(--emerald)" : "var(--text-muted)"}">${state === "running" ? "ACTIVE" : state === "complete" ? "COMPLETE" : "STANDBY"}</span>
+      </div>
+    </div>
+    <div class="spot-dialogue">
+      <div class="dialogue-bubble ${isRunning ? "speaking" : ""}" style="--eye-color:${eye.color};border-color:${eye.color}30">${currentDialogue || "Standing by..."}</div>
+    </div>
+    ${actionHtml}
+    ${metricsHtml}
+  `;
+      }
+
+      // Feed
+      function addFeed(eyeId, text) {
+        const eye = EYES.find((e) => e.id === eyeId);
+        const time = new Date().toLocaleTimeString("en", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        });
+        const feed = document.getElementById("intelFeed");
+        const entry = document.createElement("div");
+        entry.className = "feed-entry";
+        entry.innerHTML = `
+    <div class="feed-meta">
+      <div class="feed-dot" style="background:${eye.color}"></div>
+      <span class="feed-eye" style="color:${eye.color}">${eye.name}</span>
+      <span class="feed-time">${time}</span>
+    </div>
+    <div class="feed-text">${text}</div>
+  `;
+        feed.appendChild(entry);
+        feed.scrollTop = feed.scrollHeight;
+      }
+
+      // Quality
+      function setQuality(score, clarity, accuracy, coverage, evidence) {
+        const circ = 151; // 2*pi*24
+        document
+          .getElementById("qualityArc")
+          .setAttribute("stroke-dasharray", `${(score / 100) * circ} ${circ}`);
+        document.getElementById("qualityVal").textContent = score;
+        document.getElementById("qualityVal").style.color =
+          score >= 80
+            ? "var(--emerald)"
+            : score >= 60
+              ? "var(--orange)"
+              : "var(--crimson)";
+        document.getElementById("qClarity").textContent = clarity;
+        document.getElementById("qAccuracy").textContent = accuracy;
+        document.getElementById("qCoverage").textContent = coverage;
+        document.getElementById("qEvidence").textContent = evidence;
+      }
+
+      function focusEye(eyeId) {
+        activeEye = eyeId;
+        renderRoster();
+        renderSpotlight();
+      }
+
+      function submitClar() {
+        const input = document.getElementById("spotClarInput");
+        if (input && input.value) {
+          addFeed("sharingan", `Clarification: "${input.value}"`);
+          currentAction = null;
+          renderSpotlight();
+          afterAction();
+        }
+      }
+
+      function approvePlan() {
+        addFeed("rinnegan", 'Plan <span class="hl">APPROVED</span>');
+        currentAction = null;
+        renderSpotlight();
+        afterAction();
+      }
+
+      function rejectPlan() {
+        addFeed("rinnegan", 'Plan <span class="hl">REJECTED</span>');
+        currentAction = null;
+        renderSpotlight();
+      }
+
+      function showTransmission(eyeId, title, text) {
+        const eye = EYES.find((e) => e.id === eyeId);
+        const trans = document.getElementById("transmission");
+        trans.innerHTML = `
+    <div class="trans-bg" onclick="hideTransmission()"></div>
+    <div class="trans-card" style="border-color:${eye.color}">
+      <div class="trans-strip" style="background:${eye.color}15;color:${eye.color}">
+        <span class="trans-strip-dot" style="background:${eye.color}"></span>
+        ${title}
+      </div>
+      <div class="trans-body">
+        <div style="font-size:12px;line-height:1.6">${text}</div>
+      </div>
+    </div>
+  `;
+        trans.classList.add("visible");
+        setTimeout(hideTransmission, 2500);
+      }
+
+      function hideTransmission() {
+        document.getElementById("transmission").classList.remove("visible");
+      }
+
+      function afterAction() {}
+
+      // Simulation
+      const SIM = [
+        {
+          delay: 1000,
+          fn: () => {
+            eyeStates.overseer = "running";
+            activeEye = "overseer";
+            currentDialogue =
+              "I am orchestrating this performance. Routing request through optimal pipeline...";
+            addFeed(
+              "overseer",
+              '<span class="hl">Pipeline initiated</span> - Analyzing request',
+            );
+            renderAll();
+          },
+        },
+        {
+          delay: 2500,
+          fn: () => {
+            addFeed(
+              "overseer",
+              "Route: Sharingan \u2192 Kyuubi \u2192 Jogan \u2192 Rinnegan \u2192 Mangekyo \u2192 Tenseigan \u2192 Byakugan",
+            );
+            eyeStates.overseer = "complete";
+            eyeStates.sharingan = "running";
+            activeEye = "sharingan";
+            currentDialogue = "Let me examine what lies beneath...";
+            currentMetrics = null;
+            currentAction = null;
+            renderAll();
+          },
+        },
+        {
+          delay: 2000,
+          fn: () => {
+            currentDialogue =
+              "Scanning for ambiguities and hidden complexities...";
+            addFeed("sharingan", "Scanning for ambiguities");
+            currentMetrics = [
+              { label: "Ambiguities", value: "2", color: "var(--crimson)" },
+              { label: "Complexity", value: "High", color: "var(--orange)" },
+            ];
+            renderSpotlight();
+          },
+        },
+        {
+          delay: 2500,
+          fn: () => {
+            currentAction = {
+              type: "clarification",
+              question:
+                "Which authentication method is being used? (JWT, OAuth2, Session-based)",
+            };
+            currentDialogue = "A question demands an answer...";
+            addFeed(
+              "sharingan",
+              '<span class="hl">Clarification requested</span>',
+            );
+            showTransmission(
+              "sharingan",
+              "Incoming Transmission",
+              "Sharingan requires clarification before proceeding.",
+            );
+            renderSpotlight();
+            setTimeout(() => {
+              const input = document.getElementById("spotClarInput");
+              if (input) {
+                input.value = "JWT with refresh tokens";
+                submitClar();
+              }
+            }, 3500);
+          },
+        },
+        {
+          delay: 6000,
+          fn: () => {
+            currentDialogue = "Analysis complete. No ambiguities remain.";
+            addFeed("sharingan", "Analysis complete");
+            eyeStates.sharingan = "complete";
+            eyeStates.kyuubi = "running";
+            activeEye = "kyuubi";
+            currentDialogue = "I sense connections forming in the chaos...";
+            currentMetrics = [
+              { label: "Patterns", value: "12", color: "var(--orange)" },
+              { label: "Dependencies", value: "7", color: "var(--cyan)" },
+            ];
+            currentAction = null;
+            addFeed(
+              "kyuubi",
+              '<span class="hl">Pattern analysis</span> started',
+            );
+            renderAll();
+          },
+        },
+        {
+          delay: 3000,
+          fn: () => {
+            currentDialogue =
+              "The patterns reveal themselves: 12 threads, 7 bonds.";
+            addFeed("kyuubi", "Structured prompt generated");
+            eyeStates.kyuubi = "complete";
+            eyeStates.jogan = "running";
+            activeEye = "jogan";
+            currentDialogue = "Let me peer into your true intent...";
+            currentMetrics = null;
+            addFeed("jogan", '<span class="hl">Intent verification</span>');
+            renderAll();
+          },
+        },
+        {
+          delay: 2500,
+          fn: () => {
+            currentDialogue = "Your intent is crystal clear. We are aligned.";
+            addFeed("jogan", "Intent verified");
+            eyeStates.jogan = "complete";
+            eyeStates.rinnegan = "running";
+            activeEye = "rinnegan";
+            currentDialogue = "I am devising the perfect strategy...";
+            currentMetrics = null;
+            addFeed("rinnegan", '<span class="hl">Strategy formulation</span>');
+            renderAll();
+          },
+        },
+        {
+          delay: 2500,
+          fn: () => {
+            currentDialogue = "My 5-step masterplan awaits your approval:";
+            currentAction = {
+              type: "approval",
+              plan: "1. Audit JWT token lifecycle\n2. Review refresh token rotation\n3. Check CORS & CSP headers\n4. Validate middleware chain\n5. Test token expiry edge cases",
+            };
+            addFeed(
+              "rinnegan",
+              '<span class="hl">Awaiting plan approval</span>',
+            );
+            showTransmission(
+              "rinnegan",
+              "Plan Submission",
+              "Rinnegan has prepared a 5-step execution plan.",
+            );
+            renderSpotlight();
+            setTimeout(() => approvePlan(), 3500);
+          },
+        },
+        {
+          delay: 6000,
+          fn: () => {
+            eyeStates.rinnegan = "complete";
+            eyeStates.mangekyo = "running";
+            activeEye = "mangekyo";
+            currentDialogue = "Every line, every detail, under my scrutiny...";
+            currentMetrics = [
+              { label: "Quality", value: "92/100", color: "var(--emerald)" },
+              { label: "Issues", value: "3", color: "var(--orange)" },
+              { label: "Lines", value: "847", color: "var(--cyan)" },
+              { label: "Coverage", value: "94%", color: "var(--emerald)" },
+            ];
+            currentAction = null;
+            addFeed(
+              "mangekyo",
+              '<span class="hl">Code review</span> initiated',
+            );
+            setQuality(72, "Good", "Good", "--", "--");
+            renderAll();
+          },
+        },
+        {
+          delay: 3000,
+          fn: () => {
+            currentDialogue =
+              "Quality assessment: 92/100. Minor refinements noted.";
+            addFeed("mangekyo", 'Quality: <span class="hl">92/100</span>');
+            eyeStates.mangekyo = "complete";
+            eyeStates.tenseigan = "running";
+            activeEye = "tenseigan";
+            currentDialogue = "I am consulting the records of truth...";
+            currentMetrics = [
+              { label: "Verified", value: "18/20", color: "var(--emerald)" },
+              { label: "Sources", value: "7", color: "var(--cyan)" },
+            ];
+            addFeed("tenseigan", '<span class="hl">Fact validation</span>');
+            setQuality(85, "Excellent", "Good", "94%", "--");
+            renderAll();
+          },
+        },
+        {
+          delay: 3000,
+          fn: () => {
+            currentDialogue = "Evidence examined: 18 of 20 claims verified.";
+            addFeed(
+              "tenseigan",
+              '<span class="hl">18/20</span> claims verified',
+            );
+            eyeStates.tenseigan = "complete";
+            eyeStates.byakugan = "running";
+            activeEye = "byakugan";
+            currentDialogue = "My all-seeing gaze examines the final work...";
+            currentMetrics = null;
+            addFeed("byakugan", '<span class="hl">Final inspection</span>');
+            setQuality(90, "Excellent", "Excellent", "94%", "90%");
+            renderAll();
+          },
+        },
+        {
+          delay: 3000,
+          fn: () => {
+            currentDialogue = "VERDICT: APPROVED FOR DELIVERY.";
+            addFeed("byakugan", 'Verdict: <span class="hl">APPROVED</span>');
+            eyeStates.byakugan = "complete";
+            currentMetrics = [
+              { label: "Verdict", value: "PASS", color: "var(--emerald)" },
+              { label: "Score", value: "92", color: "var(--emerald)" },
+              { label: "Duration", value: "34s", color: "var(--cyan)" },
+              { label: "Eyes", value: "8/8", color: "var(--gold)" },
+            ];
+            setQuality(92, "Excellent", "Excellent", "94%", "90%");
+            renderAll();
+          },
+        },
+        {
+          delay: 2000,
+          fn: () => {
+            addFeed(
+              "overseer",
+              '<span class="hl">Mission complete</span> - All Eyes reported',
+            );
+            const pill = document.getElementById("statusPill");
+            pill.className = "status-pill done";
+            document.getElementById("statusText").textContent = "COMPLETE";
+            pill.querySelector(".status-pip").style.animation = "none";
+          },
+        },
+      ];
+
+      function renderAll() {
+        renderRoster();
+        renderPipeline();
+        renderSpotlight();
+      }
+
+      let simIdx = 0;
+      function runSim() {
+        if (simIdx >= SIM.length) return;
+        const s = SIM[simIdx];
+        setTimeout(() => {
+          s.fn();
+          simIdx++;
+          runSim();
+        }, s.delay);
+      }
+
+      function init() {
+        renderAll();
+        setTimeout(runSim, 1500);
+      }
+
+      window.addEventListener("load", init);
+    </script>
+  </body>
+</html>

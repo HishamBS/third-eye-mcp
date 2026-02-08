@@ -1,0 +1,1595 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Proposal A: Neural Command Center - Third Eye Monitor</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --bg: #0a0e14;
+        --surface: #111820;
+        --border: #1a2332;
+        --text: #e0e6ed;
+        --text-dim: #6b7f99;
+        --gold: #d4af37;
+        --crimson: #dc143c;
+        --orange: #ff6b00;
+        --cyan: #00ffff;
+        --purple: #9b59b6;
+        --pink: #ff1493;
+        --indigo: #6366f1;
+        --emerald: #50c878;
+        --grid: rgba(0, 255, 80, 0.03);
+        --scanline: rgba(0, 255, 80, 0.015);
+      }
+      html,
+      body {
+        height: 100%;
+        font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+        background: var(--bg);
+        color: var(--text);
+        overflow: hidden;
+      }
+
+      /* Grid + Scanline Background */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          linear-gradient(var(--grid) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+        z-index: 0;
+      }
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: repeating-linear-gradient(
+          0deg,
+          var(--scanline),
+          var(--scanline) 1px,
+          transparent 1px,
+          transparent 3px
+        );
+        pointer-events: none;
+        z-index: 9999;
+        animation: scanMove 8s linear infinite;
+      }
+      @keyframes scanMove {
+        0% {
+          transform: translateY(0);
+        }
+        100% {
+          transform: translateY(3px);
+        }
+      }
+
+      /* Layout */
+      .layout {
+        display: grid;
+        grid-template-columns: 80px 1fr 360px;
+        grid-template-rows: 48px 1fr 180px;
+        height: 100vh;
+        position: relative;
+        z-index: 1;
+      }
+      .header {
+        grid-column: 1/-1;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        gap: 16px;
+      }
+      .header-title {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--cyan);
+      }
+      .header-title span {
+        color: var(--text-dim);
+        font-weight: 400;
+        margin-left: 12px;
+        letter-spacing: 0;
+      }
+      .header-status {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+      }
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--emerald);
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+      .mode-toggle {
+        display: flex;
+        background: var(--bg);
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+      }
+      .mode-btn {
+        padding: 4px 12px;
+        font-size: 10px;
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.2s;
+      }
+      .mode-btn.active {
+        background: var(--cyan);
+        color: var(--bg);
+        font-weight: 700;
+      }
+
+      /* Eye Dock */
+      .eye-dock {
+        grid-row: 2/4;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 12px 0;
+        gap: 6px;
+        overflow-y: auto;
+      }
+      .dock-eye {
+        width: 52px;
+        height: 52px;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 1px solid transparent;
+        position: relative;
+      }
+      .dock-eye:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .dock-eye.active {
+        border-color: var(--eye-color);
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .dock-eye.active::after {
+        content: "";
+        position: absolute;
+        right: -1px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3px;
+        height: 20px;
+        background: var(--eye-color);
+        border-radius: 2px 0 0 2px;
+      }
+      .dock-symbol {
+        font-size: 18px;
+        line-height: 1;
+      }
+      .dock-name {
+        font-size: 7px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-dim);
+        margin-top: 2px;
+      }
+      .dock-eye.active .dock-name {
+        color: var(--eye-color);
+      }
+      .dock-status {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--text-dim);
+      }
+      .dock-status.running {
+        background: var(--eye-color);
+        animation: pulse 1.5s infinite;
+      }
+      .dock-status.complete {
+        background: var(--emerald);
+      }
+      .dock-status.standby {
+        background: var(--text-dim);
+      }
+
+      /* Neural Canvas */
+      .neural-canvas {
+        position: relative;
+        overflow: hidden;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(0, 40, 30, 0.3),
+          var(--bg)
+        );
+      }
+      .canvas-svg {
+        width: 100%;
+        height: 100%;
+      }
+      .node-group {
+        cursor: pointer;
+      }
+      .node-ring {
+        fill: none;
+        stroke-width: 2;
+        opacity: 0.3;
+        transition: all 0.5s;
+      }
+      .node-ring.active {
+        opacity: 1;
+        stroke-width: 3;
+      }
+      .node-core {
+        transition: all 0.5s;
+      }
+      .node-label {
+        fill: var(--text-dim);
+        font-size: 9px;
+        text-anchor: middle;
+        font-family: inherit;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        transition: fill 0.3s;
+      }
+      .node-label.active {
+        fill: var(--text);
+      }
+      .node-symbol {
+        font-size: 16px;
+        text-anchor: middle;
+        dominant-baseline: central;
+        transition: all 0.3s;
+      }
+      .connection {
+        stroke: var(--border);
+        stroke-width: 1;
+        fill: none;
+        opacity: 0.3;
+        transition: opacity 0.5s;
+      }
+      .connection.active {
+        opacity: 0.8;
+      }
+      .particle {
+        r: 2;
+        opacity: 0;
+      }
+
+      /* Intel Panel */
+      .intel-panel {
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        border-left: 1px solid var(--border);
+        overflow: hidden;
+      }
+      .intel-header {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .intel-eye-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        border: 1px solid var(--border);
+      }
+      .intel-eye-name {
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .intel-eye-role {
+        font-size: 10px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .intel-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+      }
+      .intel-section {
+        margin-bottom: 16px;
+      }
+      .intel-section-title {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--text-dim);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .intel-section-title::before {
+        content: "";
+        width: 12px;
+        height: 1px;
+        background: var(--text-dim);
+      }
+      .intel-dialogue {
+        font-size: 12px;
+        line-height: 1.6;
+        color: var(--text);
+        padding: 12px;
+        background: var(--bg);
+        border-radius: 6px;
+        border-left: 2px solid var(--border);
+      }
+      .intel-dialogue.speaking {
+        border-left-color: var(--eye-color);
+        animation: dialoguePulse 2s infinite;
+      }
+      @keyframes dialoguePulse {
+        0%,
+        100% {
+          background: var(--bg);
+        }
+        50% {
+          background: rgba(255, 255, 255, 0.02);
+        }
+      }
+      .intel-metrics {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .metric-card {
+        padding: 10px;
+        background: var(--bg);
+        border-radius: 6px;
+        border: 1px solid var(--border);
+      }
+      .metric-value {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--cyan);
+      }
+      .metric-label {
+        font-size: 9px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 2px;
+      }
+      .intel-action {
+        padding: 12px;
+        background: rgba(255, 107, 0, 0.08);
+        border: 1px solid rgba(255, 107, 0, 0.2);
+        border-radius: 6px;
+        margin-top: 8px;
+      }
+      .intel-action-title {
+        font-size: 10px;
+        color: var(--orange);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+      .intel-action-text {
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .action-buttons {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .action-btn {
+        padding: 6px 16px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-family: inherit;
+        cursor: pointer;
+        border: 1px solid;
+        transition: all 0.2s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+      }
+      .action-btn.approve {
+        background: rgba(80, 200, 120, 0.15);
+        border-color: var(--emerald);
+        color: var(--emerald);
+      }
+      .action-btn.approve:hover {
+        background: rgba(80, 200, 120, 0.25);
+      }
+      .action-btn.reject {
+        background: rgba(220, 20, 60, 0.1);
+        border-color: var(--crimson);
+        color: var(--crimson);
+      }
+      .action-btn.reject:hover {
+        background: rgba(220, 20, 60, 0.2);
+      }
+      .action-btn.submit {
+        background: rgba(0, 255, 255, 0.1);
+        border-color: var(--cyan);
+        color: var(--cyan);
+      }
+      .action-btn.submit:hover {
+        background: rgba(0, 255, 255, 0.2);
+      }
+      .action-input {
+        width: 100%;
+        padding: 8px 12px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: var(--text);
+        font-family: inherit;
+        font-size: 12px;
+        margin-top: 8px;
+        outline: none;
+        transition: border 0.2s;
+      }
+      .action-input:focus {
+        border-color: var(--cyan);
+      }
+
+      /* Command Log */
+      .command-log {
+        grid-column: 2/4;
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+      }
+      .log-header {
+        padding: 8px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+      .log-title {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--text-dim);
+      }
+      .log-acts {
+        display: flex;
+        gap: 4px;
+        margin-left: auto;
+      }
+      .log-act {
+        padding: 3px 10px;
+        font-size: 9px;
+        border-radius: 3px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        color: var(--text-dim);
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.2s;
+      }
+      .log-act.active {
+        border-color: var(--cyan);
+        color: var(--cyan);
+      }
+      .log-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 16px;
+      }
+      .log-entry {
+        display: flex;
+        align-items: flex-start;
+        padding: 6px 0;
+        gap: 10px;
+        font-size: 11px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        animation: logIn 0.3s ease-out;
+      }
+      @keyframes logIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .log-time {
+        color: var(--text-dim);
+        font-size: 10px;
+        flex-shrink: 0;
+        width: 55px;
+      }
+      .log-eye {
+        width: 18px;
+        height: 18px;
+        border-radius: 3px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        flex-shrink: 0;
+        border: 1px solid var(--border);
+      }
+      .log-text {
+        flex: 1;
+        color: var(--text);
+        line-height: 1.4;
+      }
+      .log-text .highlight {
+        color: var(--cyan);
+        font-weight: 600;
+      }
+
+      /* Dev mode extras */
+      .dev-section {
+        font-size: 10px;
+        color: var(--text-dim);
+      }
+      .dev-json {
+        background: var(--bg);
+        padding: 8px;
+        border-radius: 4px;
+        font-size: 9px;
+        overflow-x: auto;
+        margin-top: 4px;
+        border: 1px solid var(--border);
+        max-height: 100px;
+        overflow-y: auto;
+      }
+      .dev-metrics-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 6px;
+        margin-top: 6px;
+      }
+      .dev-metric {
+        padding: 6px;
+        background: var(--bg);
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        text-align: center;
+      }
+      .dev-metric-val {
+        font-size: 14px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .dev-metric-lbl {
+        font-size: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-dim);
+      }
+
+      /* Heartbeat idle animation */
+      @keyframes heartbeat {
+        0%,
+        100% {
+          opacity: 0.15;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+      .idle-pulse {
+        animation: heartbeat 8s ease-in-out infinite;
+      }
+
+      /* Glow effects */
+      .glow {
+        filter: drop-shadow(0 0 8px var(--eye-color));
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 2px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-dim);
+      }
+
+      /* Progress bar in log */
+      .progress-track {
+        width: 100%;
+        height: 3px;
+        background: var(--border);
+        border-radius: 2px;
+        margin: 0 16px 0;
+        flex-shrink: 0;
+      }
+      .progress-fill {
+        height: 100%;
+        border-radius: 2px;
+        background: linear-gradient(90deg, var(--cyan), var(--emerald));
+        transition: width 0.5s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-title">
+          THIRD EYE <span>Neural Command Center</span>
+        </div>
+        <div class="mode-toggle">
+          <button
+            class="mode-btn active"
+            data-mode="overview"
+            onclick="setMode('overview')"
+          >
+            OVERVIEW
+          </button>
+          <button
+            class="mode-btn"
+            data-mode="deepdive"
+            onclick="setMode('deepdive')"
+          >
+            DEEP DIVE
+          </button>
+        </div>
+        <div class="header-status">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">LIVE</span>
+          <span
+            style="color: var(--text-dim); margin-left: 8px"
+            id="sessionLabel"
+            >SESSION #a4f7c2</span
+          >
+        </div>
+      </header>
+
+      <!-- Eye Dock -->
+      <nav class="eye-dock" id="eyeDock"></nav>
+
+      <!-- Neural Canvas -->
+      <main class="neural-canvas" id="neuralCanvas">
+        <svg class="canvas-svg" id="canvasSvg"></svg>
+      </main>
+
+      <!-- Intel Panel -->
+      <aside class="intel-panel" id="intelPanel">
+        <div class="intel-header" id="intelHeader">
+          <div
+            class="intel-eye-icon"
+            id="intelIcon"
+            style="border-color: var(--cyan)"
+          >
+            --
+          </div>
+          <div>
+            <div class="intel-eye-name" id="intelName">System</div>
+            <div class="intel-eye-role" id="intelRole">Awaiting Activity</div>
+          </div>
+        </div>
+        <div class="intel-body" id="intelBody">
+          <div class="intel-section">
+            <div class="intel-section-title">Status</div>
+            <div class="intel-dialogue" id="intelDialogue">
+              Neural network initialized. Awaiting pipeline execution...
+            </div>
+          </div>
+          <div
+            class="intel-section"
+            id="intelMetricsSection"
+            style="display: none"
+          >
+            <div class="intel-section-title">Metrics</div>
+            <div class="intel-metrics" id="intelMetrics"></div>
+          </div>
+          <div id="intelActionArea"></div>
+          <div id="devSection" style="display: none"></div>
+        </div>
+      </aside>
+
+      <!-- Command Log -->
+      <section class="command-log">
+        <div class="log-header">
+          <div class="log-title">Command Log</div>
+          <div class="progress-track">
+            <div
+              class="progress-fill"
+              id="progressFill"
+              style="width: 0%"
+            ></div>
+          </div>
+          <div class="log-acts">
+            <button
+              class="log-act active"
+              data-act="all"
+              onclick="filterAct('all')"
+            >
+              ALL
+            </button>
+            <button class="log-act" data-act="1" onclick="filterAct('1')">
+              ACT I
+            </button>
+            <button class="log-act" data-act="2" onclick="filterAct('2')">
+              ACT II
+            </button>
+            <button class="log-act" data-act="3" onclick="filterAct('3')">
+              ACT III
+            </button>
+          </div>
+        </div>
+        <div class="log-body" id="logBody"></div>
+      </section>
+    </div>
+
+    <script>
+      // Eye Data (from SSOT constants)
+      const EYES = [
+        {
+          id: "overseer",
+          name: "Overseer",
+          role: "The Director",
+          symbol: "\u25B3",
+          color: "#d4af37",
+          glow: "rgba(212,175,55,0.4)",
+        },
+        {
+          id: "sharingan",
+          name: "Sharingan",
+          role: "The Detective",
+          symbol: "\u25CE",
+          color: "#dc143c",
+          glow: "rgba(220,20,60,0.4)",
+        },
+        {
+          id: "kyuubi",
+          name: "Kyuubi",
+          role: "Pattern Hunter",
+          symbol: "\u2726",
+          color: "#ff6b00",
+          glow: "rgba(255,107,0,0.4)",
+        },
+        {
+          id: "jogan",
+          name: "Jogan",
+          role: "The Verifier",
+          symbol: "\u25CB",
+          color: "#00ffff",
+          glow: "rgba(0,255,255,0.4)",
+        },
+        {
+          id: "rinnegan",
+          name: "Rinnegan",
+          role: "The Strategist",
+          symbol: "\u25C9",
+          color: "#9b59b6",
+          glow: "rgba(155,89,182,0.4)",
+        },
+        {
+          id: "mangekyo",
+          name: "Mangekyo",
+          role: "Perfectionist",
+          symbol: "\u2727",
+          color: "#ff1493",
+          glow: "rgba(255,20,147,0.4)",
+        },
+        {
+          id: "tenseigan",
+          name: "Tenseigan",
+          role: "The Scholar",
+          symbol: "\u2740",
+          color: "#4b0082",
+          glow: "rgba(75,0,130,0.4)",
+        },
+        {
+          id: "byakugan",
+          name: "Byakugan",
+          role: "Final Judge",
+          symbol: "\u25D0",
+          color: "#50c878",
+          glow: "rgba(80,200,120,0.4)",
+        },
+      ];
+
+      // State
+      let currentMode = "overview";
+      let activeEyeId = null;
+      let eyeStates = {};
+      let logEntries = [];
+      let simulationStep = 0;
+      let particleAnims = [];
+
+      EYES.forEach((e) => (eyeStates[e.id] = "standby"));
+
+      // Mode toggle
+      function setMode(mode) {
+        currentMode = mode;
+        document
+          .querySelectorAll(".mode-btn")
+          .forEach((b) =>
+            b.classList.toggle("active", b.dataset.mode === mode),
+          );
+        const devSec = document.getElementById("devSection");
+        if (mode === "deepdive") {
+          devSec.style.display = "block";
+          updateDevSection();
+        } else {
+          devSec.style.display = "none";
+        }
+      }
+
+      // Build Eye Dock
+      function buildDock() {
+        const dock = document.getElementById("eyeDock");
+        dock.innerHTML = EYES.map(
+          (e) => `
+    <div class="dock-eye" data-eye="${e.id}" style="--eye-color:${e.color}" onclick="selectEye('${e.id}')">
+      <div class="dock-status ${eyeStates[e.id]}" style="background:${eyeStates[e.id] === "running" ? e.color : eyeStates[e.id] === "complete" ? "var(--emerald)" : "var(--text-dim)"}"></div>
+      <div class="dock-symbol" style="color:${e.color}">${e.symbol}</div>
+      <div class="dock-name">${e.name}</div>
+    </div>
+  `,
+        ).join("");
+      }
+
+      // Build Neural Network SVG
+      function buildCanvas() {
+        const svg = document.getElementById("canvasSvg");
+        const rect = svg.getBoundingClientRect();
+        const cx = rect.width / 2,
+          cy = rect.height / 2;
+        const r = Math.min(cx, cy) * 0.55;
+
+        // Node positions: overseer at center-top, others in a ring
+        const positions = {};
+        positions["overseer"] = { x: cx, y: cy - r * 0.4 };
+        const ringEyes = EYES.filter((e) => e.id !== "overseer");
+        ringEyes.forEach((e, i) => {
+          const angle = (Math.PI * 2 * i) / ringEyes.length - Math.PI / 2;
+          positions[e.id] = {
+            x: cx + r * 0.85 * Math.cos(angle),
+            y: cy + r * 0.15 + r * 0.7 * Math.sin(angle),
+          };
+        });
+
+        // Connections from overseer to each, and between adjacent ring eyes
+        let connectionsHtml = "";
+        const connIds = [];
+        ringEyes.forEach((e) => {
+          const from = positions["overseer"],
+            to = positions[e.id];
+          const mid = {
+            x: (from.x + to.x) / 2 + (Math.random() - 0.5) * 30,
+            y: (from.y + to.y) / 2 + (Math.random() - 0.5) * 20,
+          };
+          const connId = `conn-overseer-${e.id}`;
+          connIds.push({ id: connId, from: "overseer", to: e.id });
+          connectionsHtml += `<path id="${connId}" class="connection" d="M${from.x},${from.y} Q${mid.x},${mid.y} ${to.x},${to.y}" stroke="${e.color}"/>`;
+        });
+        for (let i = 0; i < ringEyes.length; i++) {
+          const a = ringEyes[i],
+            b = ringEyes[(i + 1) % ringEyes.length];
+          const from = positions[a.id],
+            to = positions[b.id];
+          const connId = `conn-${a.id}-${b.id}`;
+          connIds.push({ id: connId, from: a.id, to: b.id });
+          connectionsHtml += `<path id="${connId}" class="connection" d="M${from.x},${from.y} L${to.x},${to.y}" stroke="var(--border)"/>`;
+        }
+
+        // Particle defs
+        let particleDefs = "";
+        EYES.forEach((e) => {
+          particleDefs += `<circle id="particle-${e.id}" class="particle" fill="${e.color}" r="2.5"/>`;
+        });
+
+        // Nodes
+        let nodesHtml = "";
+        EYES.forEach((e) => {
+          const p = positions[e.id];
+          const isOverseer = e.id === "overseer";
+          const nodeR = isOverseer ? 28 : 22;
+          nodesHtml += `
+      <g class="node-group" id="node-${e.id}" data-eye="${e.id}" onclick="selectEye('${e.id}')">
+        <circle class="node-ring" cx="${p.x}" cy="${p.y}" r="${nodeR + 8}" stroke="${e.color}" id="ring-${e.id}"/>
+        <circle class="node-core" cx="${p.x}" cy="${p.y}" r="${nodeR}" fill="var(--surface)" stroke="${e.color}" stroke-width="1.5" id="core-${e.id}"/>
+        <text class="node-symbol" x="${p.x}" y="${p.y}" fill="${e.color}" id="symbol-${e.id}">${e.symbol}</text>
+        <text class="node-label" x="${p.x}" y="${p.y + nodeR + 16}" id="label-${e.id}">${e.name.toUpperCase()}</text>
+      </g>
+    `;
+        });
+
+        svg.innerHTML = `
+    <defs>
+      <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    ${connectionsHtml}${particleDefs}${nodesHtml}
+  `;
+
+        window._positions = positions;
+        window._connections = connIds;
+      }
+
+      // Update node visual states
+      function updateNodeStates() {
+        EYES.forEach((e) => {
+          const state = eyeStates[e.id];
+          const ring = document.getElementById(`ring-${e.id}`);
+          const core = document.getElementById(`core-${e.id}`);
+          const label = document.getElementById(`label-${e.id}`);
+          const symbol = document.getElementById(`symbol-${e.id}`);
+          if (!ring) return;
+
+          ring.classList.toggle(
+            "active",
+            state === "running" || e.id === activeEyeId,
+          );
+          label.classList.toggle(
+            "active",
+            state === "running" || e.id === activeEyeId,
+          );
+
+          if (state === "running") {
+            core.setAttribute("filter", "url(#glow)");
+            symbol.setAttribute("filter", "url(#glow)");
+            ring.style.animation = "pulse 1.5s infinite";
+          } else {
+            core.removeAttribute("filter");
+            symbol.removeAttribute("filter");
+            ring.style.animation = state === "standby" ? "" : "none";
+          }
+
+          if (state === "complete") {
+            ring.style.opacity = "0.6";
+            ring.setAttribute("stroke", "var(--emerald)");
+          }
+        });
+
+        // Connections
+        window._connections.forEach((c) => {
+          const el = document.getElementById(c.id);
+          if (!el) return;
+          const fromActive = eyeStates[c.from] === "running";
+          const toActive = eyeStates[c.to] === "running";
+          el.classList.toggle("active", fromActive || toActive);
+        });
+      }
+
+      // Animate particle along connection
+      function animateParticle(fromId, toId) {
+        const connId = window._connections.find(
+          (c) =>
+            (c.from === fromId && c.to === toId) ||
+            (c.from === toId && c.to === fromId),
+        );
+        if (!connId) return;
+        const path = document.getElementById(connId.id);
+        const particle = document.getElementById(`particle-${toId}`);
+        if (!path || !particle) return;
+
+        const length = path.getTotalLength();
+        let start = null;
+        const duration = 1200;
+
+        function step(ts) {
+          if (!start) start = ts;
+          const progress = Math.min((ts - start) / duration, 1);
+          const reverse = connId.from !== fromId;
+          const t = reverse ? 1 - progress : progress;
+          const pt = path.getPointAtLength(t * length);
+          particle.setAttribute("cx", pt.x);
+          particle.setAttribute("cy", pt.y);
+          particle.style.opacity = Math.sin(progress * Math.PI);
+          if (progress < 1) requestAnimationFrame(step);
+          else particle.style.opacity = 0;
+        }
+        requestAnimationFrame(step);
+      }
+
+      // Select eye to show in intel panel
+      function selectEye(eyeId) {
+        activeEyeId = eyeId;
+        const eye = EYES.find((e) => e.id === eyeId);
+        if (!eye) return;
+
+        document
+          .querySelectorAll(".dock-eye")
+          .forEach((d) =>
+            d.classList.toggle("active", d.dataset.eye === eyeId),
+          );
+        document.getElementById("intelIcon").textContent = eye.symbol;
+        document.getElementById("intelIcon").style.borderColor = eye.color;
+        document.getElementById("intelIcon").style.color = eye.color;
+        document.getElementById("intelName").textContent = eye.name;
+        document.getElementById("intelName").style.color = eye.color;
+        document.getElementById("intelRole").textContent = eye.role;
+        updateNodeStates();
+      }
+
+      // Add log entry
+      function addLog(eyeId, text, act) {
+        const eye = EYES.find((e) => e.id === eyeId);
+        const now = new Date();
+        const time = now.toLocaleTimeString("en", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        });
+        logEntries.push({ eyeId, text, act, time });
+
+        const body = document.getElementById("logBody");
+        const entry = document.createElement("div");
+        entry.className = "log-entry";
+        entry.dataset.act = act;
+        entry.innerHTML = `
+    <span class="log-time">${time}</span>
+    <span class="log-eye" style="border-color:${eye.color};color:${eye.color}">${eye.symbol}</span>
+    <span class="log-text">${text}</span>
+  `;
+        body.appendChild(entry);
+        body.scrollTop = body.scrollHeight;
+      }
+
+      // Filter by act
+      function filterAct(act) {
+        document
+          .querySelectorAll(".log-act")
+          .forEach((b) => b.classList.toggle("active", b.dataset.act === act));
+        document.querySelectorAll(".log-entry").forEach((e) => {
+          e.style.display =
+            act === "all" || e.dataset.act === act ? "" : "none";
+        });
+      }
+
+      // Update intel panel dialogue
+      function setDialogue(text, eyeColor, speaking) {
+        const el = document.getElementById("intelDialogue");
+        el.textContent = text;
+        el.style.setProperty("--eye-color", eyeColor || "var(--border)");
+        el.style.borderLeftColor = eyeColor || "var(--border)";
+        el.classList.toggle("speaking", !!speaking);
+      }
+
+      // Show metrics
+      function showMetrics(metrics) {
+        const section = document.getElementById("intelMetricsSection");
+        const container = document.getElementById("intelMetrics");
+        section.style.display = "block";
+        container.innerHTML = metrics
+          .map(
+            (m) => `
+    <div class="metric-card">
+      <div class="metric-value" style="color:${m.color || "var(--cyan)"}">${m.value}</div>
+      <div class="metric-label">${m.label}</div>
+    </div>
+  `,
+          )
+          .join("");
+      }
+
+      // Show action (clarification or approval)
+      function showAction(type, data) {
+        const area = document.getElementById("intelActionArea");
+        if (type === "clarification") {
+          area.innerHTML = `
+      <div class="intel-action" style="--eye-color:var(--orange)">
+        <div class="intel-action-title">Clarification Required</div>
+        <div class="intel-action-text">${data.question}</div>
+        <input class="action-input" placeholder="Type your response..." id="clarInput"/>
+        <div class="action-buttons">
+          <button class="action-btn submit" onclick="submitClarification()">SUBMIT</button>
+        </div>
+      </div>
+    `;
+        } else if (type === "approval") {
+          area.innerHTML = `
+      <div class="intel-action" style="background:rgba(155,89,182,.08);border-color:rgba(155,89,182,.2)">
+        <div class="intel-action-title" style="color:var(--purple)">Plan Approval Required</div>
+        <div class="intel-action-text">${data.plan}</div>
+        <div class="action-buttons">
+          <button class="action-btn approve" onclick="approvePlan()">APPROVE</button>
+          <button class="action-btn reject" onclick="rejectPlan()">REJECT</button>
+        </div>
+      </div>
+    `;
+        } else {
+          area.innerHTML = "";
+        }
+      }
+
+      function submitClarification() {
+        const input = document.getElementById("clarInput");
+        if (input && input.value) {
+          addLog("sharingan", `Clarification answered: "${input.value}"`, "1");
+          showAction("none");
+          continueSimulation();
+        }
+      }
+
+      function approvePlan() {
+        addLog(
+          "rinnegan",
+          'Plan <span class="highlight">APPROVED</span> by operator',
+          "2",
+        );
+        showAction("none");
+        continueSimulation();
+      }
+
+      function rejectPlan() {
+        addLog(
+          "rinnegan",
+          'Plan <span class="highlight">REJECTED</span> - revision requested',
+          "2",
+        );
+      }
+
+      // Dev section update
+      function updateDevSection() {
+        if (currentMode !== "deepdive") return;
+        const sec = document.getElementById("devSection");
+        sec.innerHTML = `
+    <div class="intel-section">
+      <div class="intel-section-title">Developer Metrics</div>
+      <div class="dev-metrics-grid">
+        <div class="dev-metric"><div class="dev-metric-val" style="color:var(--cyan)">2,847</div><div class="dev-metric-lbl">Tokens In</div></div>
+        <div class="dev-metric"><div class="dev-metric-val" style="color:var(--emerald)">1,234</div><div class="dev-metric-lbl">Tokens Out</div></div>
+        <div class="dev-metric"><div class="dev-metric-val" style="color:var(--orange)">340ms</div><div class="dev-metric-lbl">Latency</div></div>
+      </div>
+    </div>
+    <div class="intel-section">
+      <div class="intel-section-title">Raw Event</div>
+      <div class="dev-json"><pre>${JSON.stringify({ type: "eye_complete", eye: activeEyeId || "system", result: { ok: true, score: 92 }, tokens: { in: 2847, out: 1234 }, latency_ms: 340 }, null, 2)}</pre></div>
+    </div>
+  `;
+      }
+
+      // Simulation Timeline
+      const SIMULATION = [
+        {
+          delay: 1000,
+          fn: () => {
+            eyeStates.overseer = "running";
+            selectEye("overseer");
+            setDialogue(
+              "I am orchestrating this performance...",
+              "#d4af37",
+              true,
+            );
+            addLog(
+              "overseer",
+              '<span class="highlight">Pipeline initiated</span> - Analyzing request: "Review my authentication module"',
+              "1",
+            );
+            buildDock();
+            updateNodeStates();
+            document.getElementById("progressFill").style.width = "5%";
+          },
+        },
+        {
+          delay: 2500,
+          fn: () => {
+            addLog(
+              "overseer",
+              "Route determined: Sharingan \u2192 Kyuubi \u2192 Jogan \u2192 Rinnegan \u2192 Mangekyo \u2192 Tenseigan \u2192 Byakugan",
+              "1",
+            );
+            setDialogue(
+              "Route optimized. Dispatching Sharingan for initial analysis.",
+              "#d4af37",
+              true,
+            );
+            animateParticle("overseer", "sharingan");
+            document.getElementById("progressFill").style.width = "8%";
+          },
+        },
+        {
+          delay: 2000,
+          fn: () => {
+            eyeStates.overseer = "complete";
+            eyeStates.sharingan = "running";
+            selectEye("sharingan");
+            setDialogue("Let me examine what lies beneath...", "#dc143c", true);
+            addLog(
+              "sharingan",
+              '<span class="highlight">Sharingan activated</span> - Scanning for ambiguities',
+              "1",
+            );
+            buildDock();
+            updateNodeStates();
+            document.getElementById("progressFill").style.width = "15%";
+          },
+        },
+        {
+          delay: 3000,
+          fn: () => {
+            setDialogue(
+              "Scanning for ambiguities and hidden complexities...",
+              "#dc143c",
+              true,
+            );
+            addLog(
+              "sharingan",
+              "Found 2 ambiguities in the request scope",
+              "1",
+            );
+            showMetrics([
+              { label: "Ambiguities", value: "2", color: "var(--crimson)" },
+              { label: "Complexity", value: "High", color: "var(--orange)" },
+              { label: "Confidence", value: "78%", color: "var(--cyan)" },
+              { label: "Depth", value: "L3", color: "var(--purple)" },
+            ]);
+            document.getElementById("progressFill").style.width = "20%";
+          },
+        },
+        {
+          delay: 2000,
+          fn: () => {
+            showAction("clarification", {
+              question:
+                "Which authentication method is being used? (JWT, OAuth2, Session-based)",
+            });
+            setDialogue("A question demands an answer...", "#dc143c", true);
+            addLog(
+              "sharingan",
+              'Requesting <span class="highlight">clarification</span> from operator',
+              "1",
+            );
+            // Auto-answer after 3s for demo
+            setTimeout(() => {
+              const input = document.getElementById("clarInput");
+              if (input) {
+                input.value = "JWT with refresh tokens";
+                submitClarification();
+              }
+            }, 3000);
+          },
+        },
+        {
+          delay: 5000,
+          fn: () => {
+            eyeStates.sharingan = "complete";
+            eyeStates.kyuubi = "running";
+            selectEye("kyuubi");
+            setDialogue(
+              "I sense connections forming in the chaos...",
+              "#ff6b00",
+              true,
+            );
+            addLog(
+              "kyuubi",
+              '<span class="highlight">Kyuubi activated</span> - Pattern analysis starting',
+              "1",
+            );
+            animateParticle("sharingan", "kyuubi");
+            buildDock();
+            updateNodeStates();
+            document.getElementById("progressFill").style.width = "30%";
+            showAction("none");
+            showMetrics([
+              { label: "Patterns", value: "12", color: "var(--orange)" },
+              { label: "Dependencies", value: "7", color: "var(--cyan)" },
+            ]);
+          },
+        },
+        {
+          delay: 3000,
+          fn: () => {
+            setDialogue(
+              "The patterns reveal themselves: 12 threads, 7 bonds.",
+              "#ff6b00",
+              true,
+            );
+            addLog(
+              "kyuubi",
+              "Structured prompt generated with 12 requirement threads",
+              "1",
+            );
+            document.getElementById("progressFill").style.width = "40%";
+          },
+        },
+        {
+          delay: 2000,
+          fn: () => {
+            eyeStates.kyuubi = "complete";
+            eyeStates.jogan = "running";
+            selectEye("jogan");
+            setDialogue(
+              "Let me peer into your true intent...",
+              "#00ffff",
+              true,
+            );
+            addLog(
+              "jogan",
+              '<span class="highlight">Jogan activated</span> - Intent verification',
+              "2",
+            );
+            animateParticle("kyuubi", "jogan");
+            buildDock();
+            updateNodeStates();
+            document.getElementById("progressFill").style.width = "45%";
+          },
+        },
+        {
+          delay: 2500,
+          fn: () => {
+            setDialogue(
+              "Your intent is crystal clear. We are aligned.",
+              "#00ffff",
+              true,
+            );
+            addLog("jogan", "Intent verified - alignment confirmed", "2");
+            document.getElementById("progressFill").style.width = "50%";
+          },
+        },
+        {
+          delay: 2000,
+          fn: () => {
+            eyeStates.jogan = "complete";
+            eyeStates.rinnegan = "running";
+            selectEye("rinnegan");
+            setDialogue(
+              "I am devising the perfect strategy...",
+              "#9b59b6",
+              true,
+            );
+            addLog(
+              "rinnegan",
+              '<span class="highlight">Rinnegan activated</span> - Strategy formulation',
+              "2",
+            );
+            animateParticle("jogan", "rinnegan");
+            buildDock();
+            updateNodeStates();
+            document.getElementById("progressFill").style.width = "55%";
+          },
+        },
+        {
+          delay: 2500,
+          fn: () => {
+            setDialogue(
+              "My 5-step masterplan awaits your approval:",
+              "#9b59b6",
+              true,
+            );
+            showAction("approval", {
+              plan: "1. Audit JWT token lifecycle\n2. Review refresh token rotation\n3. Check CORS & CSP headers\n4. Validate middleware chain\n5. Test token expiry edge cases",
+            });
+            addLog(
+              "rinnegan",
+              'Plan presented - <span class="highlight">awaiting approval</span>',
+              "2",
+            );
+            // Auto-approve after 3s
+            setTimeout(() => approvePlan(), 3000);
+            document.getElementById("progressFill").style.width = "60%";
+          },
+        },
+        {
+          delay: 5000,
+          fn: () => {
+            eyeStates.rinnegan = "complete";
+            eyeStates.mangekyo = "running";
+            selectEye("mangekyo");
+            setDialogue(
+              "Every line, every detail, under my scrutiny...",
+              "#ff1493",
+              true,
+            );
+            addLog(
+              "mangekyo",
+              '<span class="highlight">Mangekyo activated</span> - Code review',
+              "3",
+            );
+            animateParticle("rinnegan", "mangekyo");
+            buildDock();
+            updateNodeStates();
+            document.getElementById("progressFill").style.width = "70%";
+            showAction("none");
+            showMetrics([
+              { label: "Quality", value: "92/100", color: "var(--emerald)" },
+              { label: "Issues", value: "3", color: "var(--orange)" },
+              { label: "Lines", value: "847", color: "var(--cyan)" },
+              { label: "Coverage", value: "94%", color: "var(--emerald)" },
+            ]);
+          },
+        },
+        {
+          delay: 3000,
+          fn: () => {
+            setDialogue(
+              "Quality assessment: 92/100. Minor refinements noted.",
+              "#ff1493",
+              true,
+            );
+            addLog(
+              "mangekyo",
+              'Code review: <span class="highlight">92/100</span> - 3 suggestions',
+              "3",
+            );
+            document.getElementById("progressFill").style.width = "78%";
+          },
+        },
+        {
+          delay: 2000,
+          fn: () => {
+            eyeStates.mangekyo = "complete";
+            eyeStates.tenseigan = "running";
+            selectEye("tenseigan");
+            setDialogue(
+              "I am consulting the records of truth...",
+              "#6366f1",
+              true,
+            );
+            addLog(
+              "tenseigan",
+              '<span class="highlight">Tenseigan activated</span> - Fact validation',
+              "3",
+            );
+            animateParticle("mangekyo", "tenseigan");
+            buildDock();
+            updateNodeStates();
+            document.getElementById("progressFill").style.width = "85%";
+          },
+        },
+        {
+          delay: 3000,
+          fn: () => {
+            setDialogue(
+              "Evidence examined: 18 of 20 claims verified.",
+              "#6366f1",
+              true,
+            );
+            addLog(
+              "tenseigan",
+              'Evidence validated: <span class="highlight">18/20</span> claims verified',
+              "3",
+            );
+            showMetrics([
+              { label: "Verified", value: "18/20", color: "var(--emerald)" },
+              { label: "Sources", value: "7", color: "var(--cyan)" },
+            ]);
+            document.getElementById("progressFill").style.width = "90%";
+          },
+        },
+        {
+          delay: 2500,
+          fn: () => {
+            eyeStates.tenseigan = "complete";
+            eyeStates.byakugan = "running";
+            selectEye("byakugan");
+            setDialogue(
+              "My all-seeing gaze examines the final work...",
+              "#50c878",
+              true,
+            );
+            addLog(
+              "byakugan",
+              '<span class="highlight">Byakugan activated</span> - Final inspection',
+              "3",
+            );
+            animateParticle("tenseigan", "byakugan");
+            buildDock();
+            updateNodeStates();
+            document.getElementById("progressFill").style.width = "95%";
+          },
+        },
+        {
+          delay: 3000,
+          fn: () => {
+            setDialogue("VERDICT: APPROVED FOR DELIVERY.", "#50c878", true);
+            addLog(
+              "byakugan",
+              'Final verdict: <span class="highlight">APPROVED</span>',
+              "3",
+            );
+            eyeStates.byakugan = "complete";
+            buildDock();
+            updateNodeStates();
+            document.getElementById("progressFill").style.width = "100%";
+            showMetrics([
+              { label: "Overall", value: "PASS", color: "var(--emerald)" },
+              { label: "Quality", value: "92", color: "var(--emerald)" },
+              { label: "Duration", value: "34s", color: "var(--cyan)" },
+              { label: "Eyes Used", value: "8/8", color: "var(--gold)" },
+            ]);
+          },
+        },
+        {
+          delay: 2000,
+          fn: () => {
+            addLog(
+              "overseer",
+              '<span class="highlight">Pipeline complete</span> - All Eyes have reported',
+              "3",
+            );
+            document.getElementById("statusText").textContent = "COMPLETE";
+            document.getElementById("statusDot").style.background =
+              "var(--emerald)";
+            document.getElementById("statusDot").style.animation = "none";
+          },
+        },
+      ];
+
+      let simIndex = 0;
+      function runSimulation() {
+        if (simIndex >= SIMULATION.length) return;
+        const step = SIMULATION[simIndex];
+        setTimeout(() => {
+          step.fn();
+          if (currentMode === "deepdive") updateDevSection();
+          simIndex++;
+          runSimulation();
+        }, step.delay);
+      }
+
+      function continueSimulation() {
+        // no-op, simulation runs on timers
+      }
+
+      // Init
+      function init() {
+        buildDock();
+        buildCanvas();
+        updateNodeStates();
+        // Start simulation after brief pause
+        setTimeout(runSimulation, 1500);
+      }
+
+      window.addEventListener("resize", () => {
+        buildCanvas();
+        updateNodeStates();
+      });
+      window.addEventListener("load", init);
+    </script>
+  </body>
+</html>
