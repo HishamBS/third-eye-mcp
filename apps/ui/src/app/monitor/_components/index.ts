@@ -1,13 +1,7 @@
 /**
- * Monitor Page Components
+ * Monitor Page Components - Tactical Operations
  */
 
-export {
-  TheatreShell,
-  type TheatreShellProps,
-  type RawHistoricalEvent as TheatreRawHistoricalEvent,
-} from "./TheatreShell";
-export { StageArea, type StageAreaProps } from "./StageArea";
 export {
   TacticalShell,
   type TacticalShellProps,

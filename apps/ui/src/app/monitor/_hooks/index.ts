@@ -3,21 +3,10 @@
  */
 
 export {
-  useTheatreOrchestrator,
-  type UseTheatreOrchestratorOptions,
-} from "./useTheatreOrchestrator";
-
-export {
   useStagePerformance,
   type UseStagePerformanceOptions,
   type RawPipelineEvent,
 } from "./useStagePerformance";
-
-export {
-  useEyeCharacter,
-  useEyePersonas,
-  type UseEyeCharacterOptions,
-} from "./useEyeCharacter";
 
 export {
   useTimelineNavigation,
