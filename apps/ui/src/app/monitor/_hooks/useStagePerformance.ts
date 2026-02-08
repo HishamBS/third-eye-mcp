@@ -84,6 +84,71 @@ export function useStagePerformance({
   const isProcessingRef = useRef(false);
 
   /**
+   * Get duration for different action types
+   */
+  const getActionDuration = (action: PerformanceAction): number => {
+    switch (action) {
+      case "enter":
+        return 800;
+      case "speak":
+        return 2000;
+      case "think":
+        return 1500;
+      case "ask":
+        return 500; // Interactive, don't auto-advance
+      case "approve":
+      case "reject":
+        return 1000;
+      case "celebrate":
+        return 2500;
+      case "exit":
+        return 600;
+      default:
+        return 1000;
+    }
+  };
+
+  /**
+   * Process the next performance in queue
+   */
+  const processNextPerformance = useCallback(() => {
+    if (performanceQueueRef.current.length === 0) {
+      isProcessingRef.current = false;
+      setCurrentPerformance(null);
+      setIsPerforming(false);
+      return;
+    }
+
+    isProcessingRef.current = true;
+    setIsPerforming(true);
+
+    const nextPerformance = performanceQueueRef.current.shift()!;
+    setCurrentPerformance(nextPerformance);
+
+    // Auto-advance after a delay based on action type
+    const delay = getActionDuration(nextPerformance.action);
+    setTimeout(() => {
+      processNextPerformance();
+    }, delay);
+  }, []);
+
+  /**
+   * Queue a performance for execution
+   */
+  const queuePerformance = useCallback(
+    (performance: PerformanceEvent) => {
+      performanceQueueRef.current.push(performance);
+      setEvents((prev) => [...prev, performance]);
+
+      // Start processing if not already
+      if (!isProcessingRef.current) {
+        processNextPerformance();
+      }
+    },
+    [processNextPerformance],
+  );
+
+  /**
    * Transform raw pipeline event into narrative event
    */
   const processEvent = useCallback(
@@ -96,7 +161,7 @@ export function useStagePerformance({
         const narrator = rawEvent.eye ?? "overseer";
         const actId = getActForEvent(eventType) ?? "act-1";
 
-        return {
+        const narrativeEvent: NarrativeEvent = {
           id: generateEventId(),
           timestamp: new Date(rawEvent.timestamp ?? Date.now()),
           eventType,
@@ -113,6 +178,25 @@ export function useStagePerformance({
           metadata: rawEvent.data ?? {},
           rawEvent,
         };
+
+        // CRITICAL: Notify orchestrator for unknown events too!
+        onNarrativeEvent?.(narrativeEvent);
+
+        // Auto-queue performance for unknown events
+        if (autoQueue) {
+          const performance: PerformanceEvent = {
+            id: narrativeEvent.id,
+            timestamp: narrativeEvent.timestamp,
+            act: narrativeEvent.actId,
+            performer: narrativeEvent.narrator,
+            action: getPerformanceAction(eventType),
+            dialogue: narrativeEvent.narrative,
+            metadata: narrativeEvent.metadata,
+          };
+          queuePerformance(performance);
+        }
+
+        return narrativeEvent;
       }
 
       // Build narrative from template
@@ -171,70 +255,8 @@ export function useStagePerformance({
 
       return narrativeEvent;
     },
-    [onNarrativeEvent, autoQueue],
+    [onNarrativeEvent, autoQueue, queuePerformance],
   );
-
-  /**
-   * Queue a performance for execution
-   */
-  const queuePerformance = useCallback((performance: PerformanceEvent) => {
-    performanceQueueRef.current.push(performance);
-    setEvents((prev) => [...prev, performance]);
-
-    // Start processing if not already
-    if (!isProcessingRef.current) {
-      processNextPerformance();
-    }
-  }, []);
-
-  /**
-   * Process the next performance in queue
-   */
-  const processNextPerformance = useCallback(() => {
-    if (performanceQueueRef.current.length === 0) {
-      isProcessingRef.current = false;
-      setCurrentPerformance(null);
-      setIsPerforming(false);
-      return;
-    }
-
-    isProcessingRef.current = true;
-    setIsPerforming(true);
-
-    const nextPerformance = performanceQueueRef.current.shift()!;
-    setCurrentPerformance(nextPerformance);
-
-    // Auto-advance after a delay based on action type
-    const delay = getActionDuration(nextPerformance.action);
-    setTimeout(() => {
-      processNextPerformance();
-    }, delay);
-  }, []);
-
-  /**
-   * Get duration for different action types
-   */
-  const getActionDuration = (action: PerformanceAction): number => {
-    switch (action) {
-      case "enter":
-        return 800;
-      case "speak":
-        return 2000;
-      case "think":
-        return 1500;
-      case "ask":
-        return 500; // Interactive, don't auto-advance
-      case "approve":
-      case "reject":
-        return 1000;
-      case "celebrate":
-        return 2500;
-      case "exit":
-        return 600;
-      default:
-        return 1000;
-    }
-  };
 
   /**
    * Clear the performance queue
