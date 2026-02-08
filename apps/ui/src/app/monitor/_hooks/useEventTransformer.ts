@@ -4,8 +4,9 @@
  * useEventTransformer - Normalizes raw pipeline/WebSocket events into TacticalEvents
  *
  * Handles:
- * - Eye name extraction from event codes
+ * - Eye name extraction from event codes (including non-standard patterns like ok_*)
  * - Phase detection (started/analyzing/complete/error)
+ * - Content field mapping (md -> data.markdown)
  * - UI metadata generation (title, summary, detail, speaker, direction)
  * - Special event type classification (agent messages, clarifications, etc.)
  */
@@ -18,6 +19,7 @@ import {
 } from "@third-eye/constants";
 
 const EYE_NAMES: readonly string[] = ALL_EYE_IDS;
+const SUMMARY_TRUNCATE_LENGTH = 100;
 
 const PHASE_SUFFIXES = [
   "_started",
@@ -45,25 +47,51 @@ export interface TacticalEvent {
   };
 }
 
-let eventCounter = 0;
+interface ParsedCode {
+  eye: EyeId | null;
+  phase: EyePhase | null;
+  eventType: string;
+}
 
 function generateEventId(): string {
-  eventCounter += 1;
-  return `tev_${Date.now()}_${eventCounter}`;
+  return `tev_${crypto.randomUUID()}`;
 }
 
-function extractEyeFromCode(code: string): EyeId | null {
-  const match = EYE_NAMES.find((name) => code.startsWith(name));
-  return (match as EyeId) ?? null;
+function isValidEyeId(value: string): value is EyeId {
+  return (EYE_NAMES as readonly string[]).includes(value);
 }
 
-function extractPhase(code: string): EyePhase | null {
-  for (const suffix of PHASE_SUFFIXES) {
-    if (code.endsWith(suffix)) {
-      return suffix.slice(1) as EyePhase;
+function parseEventCode(raw: Record<string, unknown>): ParsedCode {
+  const code = (
+    typeof raw.code === "string" ? raw.code.toLowerCase() : ""
+  ) as string;
+  const eventType = code || (raw.type as string) || "pipeline_event";
+
+  // Strategy 1: Standard {eye}_{phase} pattern
+  for (const eyeName of EYE_NAMES) {
+    if (eventType.startsWith(eyeName)) {
+      const suffix = eventType.slice(eyeName.length);
+      let phase: EyePhase | null = null;
+      for (const ps of PHASE_SUFFIXES) {
+        if (suffix === ps) {
+          phase = ps.slice(1) as EyePhase;
+          break;
+        }
+      }
+      return { eye: eyeName as EyeId, phase, eventType };
     }
   }
-  return null;
+
+  // Strategy 2: Terminal/approval codes are Overseer pipeline outcomes
+  if (eventType.startsWith("ok_") || eventType === "ok") {
+    return { eye: "overseer" as EyeId, phase: "complete", eventType };
+  }
+
+  // Strategy 3: Fall back to raw event's eye field (set by page.tsx or WebSocket)
+  const rawEye = typeof raw.eye === "string" ? raw.eye.toLowerCase() : null;
+  const eye = rawEye && isValidEyeId(rawEye) ? (rawEye as EyeId) : null;
+
+  return { eye, phase: null, eventType };
 }
 
 function humanizeEventType(type: string): string {
@@ -78,13 +106,13 @@ function extractSummary(data: Record<string, unknown>): string {
     return data.summary;
   }
   if (typeof data.markdown === "string" && data.markdown.length > 0) {
-    return data.markdown.slice(0, 100);
+    return data.markdown.slice(0, SUMMARY_TRUNCATE_LENGTH);
   }
   if (typeof data.content === "string" && data.content.length > 0) {
-    return data.content.slice(0, 100);
+    return data.content.slice(0, SUMMARY_TRUNCATE_LENGTH);
   }
   if (typeof data.message === "string" && data.message.length > 0) {
-    return data.message.slice(0, 100);
+    return data.message.slice(0, SUMMARY_TRUNCATE_LENGTH);
   }
   return "";
 }
@@ -129,6 +157,7 @@ function resolveSpeaker(
 function resolveDirection(
   eventType: string,
   data: Record<string, unknown>,
+  eye: EyeId | null,
 ): "incoming" | "outgoing" | "system" | null {
   if (eventType === "agent_message") {
     const direction = data.direction as string | undefined;
@@ -153,6 +182,7 @@ function resolveDirection(
 
   // Eye events are incoming
   if (
+    eye ||
     EYE_NAMES.some((name) => eventType.startsWith(name)) ||
     eventType === "clarification_asked" ||
     eventType === "overseer_route"
@@ -176,18 +206,18 @@ function parseTimestamp(raw: unknown): Date {
 }
 
 function transformSingleEvent(raw: Record<string, unknown>): TacticalEvent {
-  const code = (
-    typeof raw.code === "string" ? raw.code.toLowerCase() : ""
-  ) as string;
-  const eventType = code || (raw.type as string) || "pipeline_event";
+  const { eye, phase: eyePhase, eventType } = parseEventCode(raw);
 
-  const eye = extractEyeFromCode(eventType);
-  const eyePhase = extractPhase(eventType);
+  const data: Record<string, unknown> = {
+    ...((raw.dataJson as Record<string, unknown>) ??
+      (raw.data as Record<string, unknown>) ??
+      {}),
+  };
 
-  const data: Record<string, unknown> =
-    (raw.dataJson as Record<string, unknown>) ??
-    (raw.data as Record<string, unknown>) ??
-    {};
+  // The API's primary content field is `md` - map it into data for downstream extraction
+  if (typeof raw.md === "string" && raw.md.length > 0 && !data.markdown) {
+    data.markdown = raw.md;
+  }
 
   const timestamp = parseTimestamp(raw.createdAt ?? raw.timestamp);
 
@@ -195,7 +225,7 @@ function transformSingleEvent(raw: Record<string, unknown>): TacticalEvent {
   const summary = extractSummary(data);
   const detail = extractDetail(data);
   const speaker = resolveSpeaker(eye, eventType, data);
-  const direction = resolveDirection(eventType, data);
+  const direction = resolveDirection(eventType, data, eye);
 
   return {
     id: (raw.id as string) ?? generateEventId(),
