@@ -42,10 +42,16 @@ function parseRoutingDecision(row: {
   execution_mode: string;
   created_at: number;
 }): RoutingDecision {
+  const rawAnalysis = JSON.parse(row.request_analysis);
   return {
     id: row.id,
     sessionId: row.session_id,
-    requestAnalysis: JSON.parse(row.request_analysis),
+    requestAnalysis: {
+      requestType: rawAnalysis.requestType ?? "unknown",
+      contentDomain: rawAnalysis.contentDomain ?? "general",
+      complexity: rawAnalysis.complexity ?? "unknown",
+      capabilitiesNeeded: rawAnalysis.capabilitiesNeeded ?? [],
+    },
     selectedEyes: JSON.parse(row.selected_eyes),
     reasoning: row.reasoning,
     executionMode: row.execution_mode as "sequential" | "parallel",

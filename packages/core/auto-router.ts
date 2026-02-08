@@ -550,8 +550,11 @@ export class AutoRouter {
         sessionId: actualSessionId,
         requestAnalysis: JSON.stringify({
           requestType: routingDecision.taskType,
+          contentDomain: "general",
           complexity: routingDecision.complexity,
-          originalInput: input.substring(0, 500), // Store truncated input for context
+          capabilitiesNeeded: routingDecision.recommendedFlow.map((eye) =>
+            eye.toLowerCase(),
+          ),
         }),
         selectedEyes: JSON.stringify(routingDecision.recommendedFlow),
         reasoning: routingDecision.reasoning,

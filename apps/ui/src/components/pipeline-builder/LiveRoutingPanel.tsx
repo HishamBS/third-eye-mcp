@@ -79,7 +79,7 @@ function SessionCard({
           {decision.requestAnalysis.requestType}
         </span>
         <span className="px-2 py-0.5 text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded">
-          {decision.requestAnalysis.contentDomain}
+          {decision.requestAnalysis.contentDomain ?? "general"}
         </span>
       </div>
 
