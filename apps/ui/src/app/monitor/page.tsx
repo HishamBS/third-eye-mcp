@@ -178,8 +178,11 @@ function TacticalMonitorContent() {
       let conversationEvents: RawHistoricalEvent[] = [];
       if (conversationRes?.ok) {
         const result = await conversationRes.json();
-        const events = Array.isArray(result) ? result : (result.data ?? []);
-        conversationEvents = events.map(transformConversationEvent);
+        if (result.success && result.data?.events) {
+          conversationEvents = result.data.events.map(
+            transformConversationEvent,
+          );
+        }
       }
 
       const merged = [...pipelineEvents, ...conversationEvents].sort((a, b) => {
