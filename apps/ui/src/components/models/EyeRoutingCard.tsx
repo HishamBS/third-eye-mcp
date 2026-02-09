@@ -24,6 +24,7 @@ import {
 } from "@/constants/color-mappings";
 import { MESSAGES } from "@/constants/messages";
 import { PROVIDERS } from "@/constants/models";
+import type { EyeRouting } from "@third-eye/types";
 import { EyeId } from "@third-eye/constants";
 
 interface ModelInfo {
@@ -37,7 +38,11 @@ interface ModelInfo {
   };
 }
 
-interface EyeRouting {
+/**
+ * Routing as returned by /api/routing. Extends the shared EyeRouting with
+ * an `eye` slug field used by the current API.
+ */
+interface UiEyeRouting extends Partial<EyeRouting> {
   eye: string;
   primaryProvider: string;
   primaryModel: string;
@@ -45,13 +50,13 @@ interface EyeRouting {
 
 interface EyeRoutingCardProps {
   eye: string;
-  routing: EyeRouting | undefined;
+  routing: UiEyeRouting | undefined;
   models: Record<string, ModelInfo[]>;
   health: Record<string, boolean>;
   pendingChanges: boolean;
   saving: boolean;
   lastSaved: Date | null;
-  onChange: (updates: Partial<EyeRouting>) => void;
+  onChange: (updates: Partial<UiEyeRouting>) => void;
   onQuickAction: (action: "copy-overseer" | "reset-default" | "clear") => void;
   expanded: boolean;
   onToggle: () => void;

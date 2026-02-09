@@ -7,6 +7,7 @@ import { RefreshCw, Info } from "lucide-react";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { ProviderCard } from "@/components/models/ProviderCard";
 import { EyeRoutingCard } from "@/components/models/EyeRoutingCard";
+import type { EyeRouting } from "@third-eye/types";
 import { API_BASE_URL } from "@/consts/api";
 import {
   STATUS_TEXT_COLORS,
@@ -33,7 +34,12 @@ interface ModelInfo {
   lastSeen?: string;
 }
 
-interface EyeRouting {
+/**
+ * Routing as returned by /api/routing. The API currently keys routing by eye
+ * slug (`eye`) rather than the DB UUID (`eyeId`). This extends the shared
+ * EyeRouting with the `eye` slug field until the API fully migrates.
+ */
+interface UiEyeRouting extends Partial<EyeRouting> {
   eye: string;
   primaryProvider: string;
   primaryModel: string;
@@ -45,9 +51,9 @@ interface ProviderHealth {
 
 export default function ModelsPage() {
   const [models, setModels] = useState<Record<string, ModelInfo[]>>({});
-  const [routing, setRouting] = useState<EyeRouting[]>([]);
+  const [routing, setRouting] = useState<UiEyeRouting[]>([]);
   const [pendingRoutingChanges, setPendingRoutingChanges] = useState<
-    Record<string, Partial<EyeRouting>>
+    Record<string, Partial<UiEyeRouting>>
   >({});
   const [health, setHealth] = useState<ProviderHealth>({});
   const [loading, setLoading] = useState<string | null>(null);
@@ -190,7 +196,7 @@ export default function ModelsPage() {
   };
 
   const handleRoutingChange = useCallback(
-    (eye: string, updates: Partial<EyeRouting>) => {
+    (eye: string, updates: Partial<UiEyeRouting>) => {
       setPendingRoutingChanges((prev) => ({
         ...prev,
         [eye]: { ...(prev[eye] || {}), ...updates },
@@ -199,7 +205,7 @@ export default function ModelsPage() {
     [],
   );
 
-  const saveRoutingForEye = async (eye: string, routingData: EyeRouting) => {
+  const saveRoutingForEye = async (eye: string, routingData: UiEyeRouting) => {
     try {
       // Normalize eye name to lowercase to match backend validation
       // TODO: Phase 2 - Use UUID-based eye IDs instead of names
@@ -257,7 +263,7 @@ export default function ModelsPage() {
             ...currentRouting,
             ...updates,
             eye,
-          } as EyeRouting;
+          } as UiEyeRouting;
           return saveRoutingForEye(eye, fullRouting);
         },
       );
@@ -320,14 +326,16 @@ export default function ModelsPage() {
     };
   }, [pendingRoutingChanges, saveAllRoutingChanges]);
 
-  const getRoutingForEye = (eye: string): EyeRouting | undefined => {
+  const getRoutingForEye = (eye: string): UiEyeRouting | undefined => {
     const baseRouting = routing.find(
       (r) => r.eye.toLowerCase() === eye.toLowerCase(),
     );
     const pendingChanges = pendingRoutingChanges[eye];
 
     if (!baseRouting) {
-      return pendingChanges ? { eye, ...pendingChanges } : undefined;
+      return pendingChanges
+        ? { eye, primaryProvider: "", primaryModel: "", ...pendingChanges }
+        : undefined;
     }
 
     return pendingChanges ? { ...baseRouting, ...pendingChanges } : baseRouting;
@@ -367,7 +375,7 @@ export default function ModelsPage() {
 
     try {
       const promises = allEyes.map(async (eye) => {
-        const fullRouting: EyeRouting = {
+        const fullRouting: UiEyeRouting = {
           eye,
           primaryProvider: globalProvider,
           primaryModel: globalModel,

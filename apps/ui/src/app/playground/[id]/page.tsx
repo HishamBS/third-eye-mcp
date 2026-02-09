@@ -18,7 +18,7 @@ import {
 } from "@/components/ViewModeToggle";
 import { StrictnessControls } from "@/components/StrictnessControls";
 import type { PipelineEvent } from "@/types/pipeline";
-import type { Envelope } from "@third-eye/types";
+import type { Envelope, Session, Run } from "@third-eye/types";
 import { TOOL_NAME } from "@third-eye/types";
 import { getApiUrl, WS_BASE_URL, API_BASE_URL } from "@/consts/api";
 import {
@@ -36,31 +36,10 @@ import { toast } from "sonner";
  */
 const MIN_INPUT_LENGTH = 10;
 
-interface Run {
-  id: string;
-  eye: string;
-  provider: string;
-  model: string;
-  inputMd: string;
-  outputJson: Record<string, unknown>;
-  tokensIn?: number;
-  tokensOut?: number;
-  latencyMs?: number;
-  createdAt: string;
-}
-
-interface Session {
-  id: string;
-  agentName: string;
-  createdAt: string;
-  status: string;
-}
-
 interface EyeDefinition {
   id: string;
   name: string;
   description: string;
-  source: "built-in" | "custom";
 }
 
 export default function PlaygroundPage() {
@@ -712,7 +691,7 @@ export default function PlaygroundPage() {
                             <span
                               className={`px-2 py-1 ${STATUS_BG_COLORS_SUBTLE.info} ${STATUS_TEXT_COLORS.info} rounded text-xs font-mono`}
                             >
-                              {run.eye}
+                              {run.eyeId}
                             </span>
                             <span className="text-xs text-semantic-muted dark:text-semantic-muted">
                               {new Date(run.createdAt).toLocaleString()}

@@ -10,6 +10,7 @@ import {
   Rewind,
   FastForward,
 } from "lucide-react";
+import type { PipelineEvent } from "@third-eye/types";
 import {
   STATUS_TEXT_COLORS,
   STATUS_BG_COLORS,
@@ -18,20 +19,18 @@ import {
 } from "@/constants/color-mappings";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 
-interface PipelineEvent {
-  id: string;
-  sessionId: string;
-  eye: string | null;
-  type: string;
-  code: string | null;
-  md: string | null;
-  dataJson: Record<string, unknown> | null;
-  createdAt: Date;
+/**
+ * UI event type for the replay theater. Extends the shared PipelineEvent
+ * with an optional `eye` field (slug) that the API may return alongside
+ * `eyeId` for display convenience.
+ */
+interface ReplayEvent extends PipelineEvent {
+  eye?: string | null;
 }
 
 export interface ReplayTheaterProps {
   sessionId: string;
-  events: PipelineEvent[];
+  events: ReplayEvent[];
 }
 
 const SPEED_OPTIONS = [0.5, 1, 2, 3, 5];
@@ -169,7 +168,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
                 className={`h-3 w-3 rounded-full ${getEventStatusColor(currentEvent.code)}`}
               />
               <span className="text-lg font-semibold text-brand-foreground">
-                {currentEvent.eye || "System"}
+                {currentEvent.eye ?? currentEvent.eyeId ?? "System"}
               </span>
               <span className="rounded-full bg-brand-accent/20 px-2 py-0.5 text-xs font-medium text-brand-accent">
                 {currentEvent.type}
@@ -235,7 +234,7 @@ export function ReplayTheater({ sessionId, events }: ReplayTheaterProps) {
                   ? "bg-brand-accent text-brand-foreground"
                   : "bg-brand-paperElev text-semantic-muted hover:bg-brand-outline/80"
               }`}
-              title={`${event.eye || "System"} - ${event.type}`}
+              title={`${event.eye ?? event.eyeId ?? "System"} - ${event.type}`}
             >
               {index + 1}
             </button>

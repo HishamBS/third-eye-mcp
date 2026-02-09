@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import type { Session } from "@third-eye/types";
 import { useUI } from "@/contexts/UIContext";
 import {
   ViewModeToggle,
@@ -23,17 +24,6 @@ const SESSION_STATUS_COLORS = Object.freeze({
 } as const);
 
 type SessionStatus = keyof typeof SESSION_STATUS_COLORS;
-
-interface Session {
-  id: string;
-  agentName: string | null;
-  model: string | null;
-  displayName: string | null;
-  status: SessionStatus;
-  createdAt: string;
-  lastActivity: string | null;
-  configJson: Record<string, unknown> | null;
-}
 
 export default function SessionsPage() {
   const { viewMode } = useUI();
@@ -89,7 +79,7 @@ export default function SessionsPage() {
     return SESSION_STATUS_COLORS[status];
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: Date | string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -233,7 +223,7 @@ export default function SessionsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusBadge(session.status)}`}
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusBadge(session.status as SessionStatus)}`}
                       >
                         {session.status}
                       </span>

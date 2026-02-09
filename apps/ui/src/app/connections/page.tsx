@@ -16,6 +16,7 @@ import {
 import { GlassCard } from "@/components/ui/GlassCard";
 import { useDialog } from "@/hooks/useDialog";
 import { UI_HELP_TEXT } from "@third-eye/constants";
+import type { McpIntegration } from "@third-eye/types";
 import { API_BASE_URL } from "@/consts/api";
 import {
   STATUS_TEXT_COLORS,
@@ -24,23 +25,22 @@ import {
 } from "@/constants/color-mappings";
 import { TIMING } from "@/constants/timing";
 
-interface McpIntegration {
-  id: string;
-  name: string;
-  slug: string;
-  logoUrl: string | null;
-  description: string | null;
-  status: string;
-  platforms: string[];
-  configType: string;
+/**
+ * UI-specific integration type. The API returns rich objects for configFiles
+ * and setupSteps (structured JSON), whereas the shared McpIntegration DB type
+ * stores them as flat string arrays. This extends the shared type with the
+ * richer shapes the API actually delivers.
+ */
+interface ConnectionIntegration extends Omit<
+  McpIntegration,
+  "configFiles" | "setupSteps" | "enabled" | "displayOrder"
+> {
   configFiles: Array<{ platform: string; path: string }>;
-  configTemplate: string;
   setupSteps: Array<{
     title: string;
     description: string;
     code: string | null;
   }>;
-  docsUrl: string | null;
   enabled: boolean;
   displayOrder: number;
 }
@@ -98,7 +98,7 @@ const emptyFormData: IntegrationFormData = {
 
 export default function ConnectionsPage() {
   const dialog = useDialog();
-  const [integrations, setIntegrations] = useState<McpIntegration[]>([]);
+  const [integrations, setIntegrations] = useState<ConnectionIntegration[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [configs, setConfigs] = useState<
     Record<string, IntegrationConfigResponse>
@@ -109,7 +109,7 @@ export default function ConnectionsPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingIntegration, setEditingIntegration] =
-    useState<McpIntegration | null>(null);
+    useState<ConnectionIntegration | null>(null);
   const [formData, setFormData] = useState<IntegrationFormData>(emptyFormData);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
@@ -188,7 +188,7 @@ export default function ConnectionsPage() {
     setShowModal(true);
   };
 
-  const openEditModal = (integration: McpIntegration) => {
+  const openEditModal = (integration: ConnectionIntegration) => {
     setEditingIntegration(integration);
     setFormData({
       name: integration.name,
@@ -320,7 +320,7 @@ export default function ConnectionsPage() {
     }
   };
 
-  const handleDelete = async (integration: McpIntegration) => {
+  const handleDelete = async (integration: ConnectionIntegration) => {
     const confirmed = await dialog.confirm(
       UI_HELP_TEXT.CONNECTIONS_DIALOG_DELETE_TITLE,
       UI_HELP_TEXT.CONNECTIONS_DIALOG_DELETE_MESSAGE.replace(

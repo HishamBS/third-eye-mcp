@@ -14,6 +14,7 @@ import { UI_HELP_TEXT } from "@third-eye/constants";
 import { PersonaWizardModal } from "@/components/persona-form/PersonaWizardModal";
 import { CustomEyeWizard } from "@/components/custom-eye-form/CustomEyeWizard";
 import { EyeWizardModal } from "@/components/eye-wizard/EyeWizardModal";
+import type { Eye, Persona } from "@third-eye/types";
 import { API_BASE_URL } from "@/consts/api";
 import {
   STATUS_TEXT_COLORS,
@@ -23,25 +24,19 @@ import {
 } from "@/constants/color-mappings";
 import { TIMING, ANIMATION_DURATION } from "@/constants/timing";
 
-interface Eye {
-  id: string;
-  name: string;
-  version: string;
-  description: string;
+/**
+ * Extended Eye type for UI display. The backend API may return fields under
+ * different names than the DB schema (e.g., `capabilities` instead of
+ * `capabilityTags`). This type extends the shared Eye with those optional
+ * UI-enriched fields.
+ */
+interface UiEye extends Omit<Eye, "version"> {
+  version: number | string;
   capabilities?: string[];
   personaTemplate?: string;
   inputSchema?: Record<string, unknown>;
   outputSchema?: Record<string, unknown>;
   defaultRouting?: Record<string, unknown>;
-  createdAt?: string;
-  personaId?: string | null;
-  iconSvg?: string;
-}
-
-interface Persona {
-  id: string;
-  name: string;
-  eye: string;
 }
 
 interface CreateEyePayload {
@@ -70,9 +65,9 @@ interface EyeTestResult {
 
 export default function EyesPage() {
   const dialog = useDialog();
-  const [eyes, setEyes] = useState<Eye[]>([]);
+  const [eyes, setEyes] = useState<UiEye[]>([]);
   const [personas, setPersonas] = useState<Persona[]>([]);
-  const [selectedEye, setSelectedEye] = useState<Eye | null>(null);
+  const [selectedEye, setSelectedEye] = useState<UiEye | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -158,7 +153,7 @@ export default function EyesPage() {
       }
 
       const payload = await response.json();
-      let allEyesData: Eye[] = Array.isArray(payload?.data)
+      let allEyesData: UiEye[] = Array.isArray(payload?.data)
         ? payload.data
         : Array.isArray(payload)
           ? payload
@@ -172,7 +167,7 @@ export default function EyesPage() {
 
       // Enrich with capabilities from blueprints (call server API directly)
       const enrichedEyesData = await Promise.all(
-        allEyesData.map(async (eye: Eye) => {
+        allEyesData.map(async (eye: UiEye) => {
           if (!eye.capabilities) {
             try {
               const blueprintRes = await fetch(
@@ -229,7 +224,7 @@ export default function EyesPage() {
     setSelectedEye(null);
   };
 
-  const viewEye = (eye: Eye) => {
+  const viewEye = (eye: UiEye) => {
     setSelectedEye(eye);
     setIsCreating(false);
     setIsEditing(false);
@@ -242,8 +237,16 @@ export default function EyesPage() {
       name: eye.name,
       description: eye.description,
       iconSvg: eye.iconSvg ?? "",
-      inputSchema: JSON.stringify(eye.inputSchema, null, 2),
-      outputSchema: JSON.stringify(eye.outputSchema, null, 2),
+      inputSchema: JSON.stringify(
+        eye.inputSchema ?? eye.inputSchemaJson ?? {},
+        null,
+        2,
+      ),
+      outputSchema: JSON.stringify(
+        eye.outputSchema ?? eye.outputSchemaJson ?? {},
+        null,
+        2,
+      ),
       personaTemplate: eye.personaTemplate || "",
       personaId: eye.personaId || "",
     };
@@ -477,7 +480,7 @@ export default function EyesPage() {
   };
 
   // Phase 15: Persona configuration handlers
-  const openPersonaConfig = (eye: Eye) => {
+  const openPersonaConfig = (eye: UiEye) => {
     setSelectedPersonaEye({ id: eye.id, name: eye.name });
     setIsPersonaModalOpen(true);
   };
@@ -493,7 +496,7 @@ export default function EyesPage() {
   };
 
   // Eye wizard handlers
-  const openEyeWizard = (eye: Eye) => {
+  const openEyeWizard = (eye: UiEye) => {
     setSelectedEyeForEdit({ id: eye.id, name: eye.name });
     setIsEyeWizardOpen(true);
   };
@@ -762,7 +765,9 @@ export default function EyesPage() {
                         className={`overflow-x-auto rounded-lg bg-brand-paperElev p-4 text-xs ${STATUS_TEXT_COLORS.success}`}
                       >
                         {JSON.stringify(
-                          JSON.parse(selectedEye.inputSchema || "{}"),
+                          selectedEye.inputSchema ??
+                            selectedEye.inputSchemaJson ??
+                            {},
                           null,
                           2,
                         )}
@@ -778,7 +783,9 @@ export default function EyesPage() {
                         className={`overflow-x-auto rounded-lg bg-brand-paperElev p-4 text-xs ${STATUS_TEXT_COLORS.success}`}
                       >
                         {JSON.stringify(
-                          JSON.parse(selectedEye.outputSchema || "{}"),
+                          selectedEye.outputSchema ??
+                            selectedEye.outputSchemaJson ??
+                            {},
                           null,
                           2,
                         )}

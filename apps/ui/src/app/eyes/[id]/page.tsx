@@ -6,6 +6,7 @@ import Link from "next/link";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { EyeWizardModal } from "@/components/eye-wizard/EyeWizardModal";
 import { EyeIcon } from "@/components/EyeIcon";
+import type { Eye, Persona, EyeRouting } from "@third-eye/types";
 import { API_BASE_URL } from "@/consts/api";
 import {
   STATUS_TEXT_COLORS,
@@ -13,28 +14,37 @@ import {
   STATUS_BORDER_COLORS_SUBTLE,
 } from "@/constants/color-mappings";
 
-interface Eye {
-  id: string;
-  name: string;
-  version: string;
-  description: string;
-  source: "built-in" | "custom";
+/**
+ * Extended Eye type for detail page. The API may return enriched fields
+ * (capabilities from blueprint, source label) not in the base DB schema.
+ */
+interface UiEye extends Omit<Eye, "version"> {
+  version: number | string;
+  source?: string;
   capabilities?: string[];
   personaTemplate?: string;
 }
 
-interface Persona {
+/**
+ * Extended Persona for the detail page. The API may return a `content` field
+ * representing the serialised persona body, plus `eye` (slug) for display.
+ */
+interface UiPersona extends Partial<Persona> {
   id: string;
-  eye: string;
   name: string;
   version: number;
-  content: string;
   active: boolean;
-  createdAt: string;
+  createdAt: Date | string;
+  content?: string;
+  eye?: string;
 }
 
-interface EyeRouting {
-  eye: string;
+/**
+ * Routing as returned by /api/routing. The API currently returns `eye` (slug)
+ * rather than the DB `eyeId` (UUID). Keep a local type until the API migrates.
+ */
+interface UiEyeRouting extends Partial<EyeRouting> {
+  eye?: string;
   primaryProvider: string | null;
   primaryModel: string | null;
 }
@@ -44,9 +54,9 @@ export default function EyeDetailPage() {
   const router = useRouter();
   const eyeId = params.id as string;
 
-  const [eye, setEye] = useState<Eye | null>(null);
-  const [personas, setPersonas] = useState<Persona[]>([]);
-  const [routing, setRouting] = useState<EyeRouting | null>(null);
+  const [eye, setEye] = useState<UiEye | null>(null);
+  const [personas, setPersonas] = useState<UiPersona[]>([]);
+  const [routing, setRouting] = useState<UiEyeRouting | null>(null);
   const [activeTab, setActiveTab] = useState<
     "overview" | "persona" | "routing" | "test"
   >("overview");
@@ -112,7 +122,7 @@ export default function EyeDetailPage() {
         const eyesRes = await fetch(`${API_BASE_URL}/api/eyes/all`);
         if (eyesRes.ok) {
           const result = await eyesRes.json();
-          const foundEye = result.data?.find((e: Eye) => e.id === eyeId);
+          const foundEye = result.data?.find((e: UiEye) => e.id === eyeId);
           setEye(foundEye || null);
         }
       }
@@ -136,7 +146,7 @@ export default function EyeDetailPage() {
         if (routingRes.ok) {
           const result = await routingRes.json();
           const eyeRouting = result.data?.find(
-            (r: EyeRouting) => r.eye === eyeId,
+            (r: UiEyeRouting) => r.eye === eyeId || r.eyeId === eyeId,
           );
           setRouting(eyeRouting || null);
         }
