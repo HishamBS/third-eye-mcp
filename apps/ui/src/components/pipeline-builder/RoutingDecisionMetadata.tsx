@@ -174,7 +174,9 @@ export function RoutingDecisionMetadata({
                   {METADATA_FIELD_REQUEST_TYPE}
                 </label>
                 <div className="px-3 py-2 bg-brand-surface/60 border border-brand-outline/30 rounded-md text-sm text-brand-foreground">
-                  {getRequestTypeDisplay(decision.requestAnalysis.requestType)}
+                  {getRequestTypeDisplay(
+                    decision.requestAnalysis?.requestType ?? "unknown",
+                  )}
                 </div>
               </div>
 
@@ -185,7 +187,7 @@ export function RoutingDecisionMetadata({
                 </label>
                 <div className="px-3 py-2 bg-brand-surface/60 border border-brand-outline/30 rounded-md text-sm text-brand-foreground">
                   {getContentDomainDisplay(
-                    decision.requestAnalysis.contentDomain,
+                    decision.requestAnalysis?.contentDomain ?? "general",
                   )}
                 </div>
               </div>
@@ -196,12 +198,14 @@ export function RoutingDecisionMetadata({
                   {METADATA_FIELD_COMPLEXITY}
                 </label>
                 <div className="px-3 py-2 bg-brand-surface/60 border border-brand-outline/30 rounded-md text-sm text-brand-foreground">
-                  {getComplexityDisplay(decision.requestAnalysis.complexity)}
+                  {getComplexityDisplay(
+                    decision.requestAnalysis?.complexity ?? "unknown",
+                  )}
                 </div>
               </div>
 
               {/* Confidence Score (if available) */}
-              {decision.requestAnalysis.capabilitiesNeeded && (
+              {decision.requestAnalysis?.capabilitiesNeeded && (
                 <div>
                   <label className="block text-xs font-medium text-brand-foreground/60 mb-1">
                     {METADATA_FIELD_CONFIDENCE}

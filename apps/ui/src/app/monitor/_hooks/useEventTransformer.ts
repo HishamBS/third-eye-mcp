@@ -4,8 +4,8 @@
  * useEventTransformer - Normalizes raw pipeline/WebSocket events into TacticalEvents
  *
  * Handles:
- * - Eye name extraction from event codes (including non-standard patterns like ok_*)
- * - Phase detection (started/analyzing/complete/error)
+ * - Eye identity resolution from raw.eye field (authoritative source)
+ * - Phase detection from WebSocket status or envelope code classification
  * - Content field mapping (md -> data.markdown)
  * - UI metadata generation (title, summary, detail, speaker, direction)
  * - Special event type classification (agent messages, clarifications, etc.)
@@ -17,16 +17,15 @@ import {
   ALL_EYE_IDS,
   EYE_DISPLAY_NAMES,
 } from "@third-eye/constants";
+import {
+  isSuccessCode,
+  isNeedsInputCode,
+  isRejectionCode,
+  isErrorCode,
+} from "@third-eye/types/envelope-codes";
 
 const EYE_NAMES: readonly string[] = ALL_EYE_IDS;
 const SUMMARY_TRUNCATE_LENGTH = 100;
-
-const PHASE_SUFFIXES = [
-  "_started",
-  "_analyzing",
-  "_complete",
-  "_error",
-] as const;
 
 type EyePhase = "started" | "analyzing" | "complete" | "error";
 
@@ -61,37 +60,58 @@ function isValidEyeId(value: string): value is EyeId {
   return (EYE_NAMES as readonly string[]).includes(value);
 }
 
-function parseEventCode(raw: Record<string, unknown>): ParsedCode {
-  const code = (
-    typeof raw.code === "string" ? raw.code.toLowerCase() : ""
-  ) as string;
-  const eventType = code || (raw.type as string) || "pipeline_event";
-
-  // Strategy 1: Standard {eye}_{phase} pattern
-  for (const eyeName of EYE_NAMES) {
-    if (eventType.startsWith(eyeName)) {
-      const suffix = eventType.slice(eyeName.length);
-      let phase: EyePhase | null = null;
-      for (const ps of PHASE_SUFFIXES) {
-        if (suffix === ps) {
-          phase = ps.slice(1) as EyePhase;
-          break;
-        }
-      }
-      return { eye: eyeName as EyeId, phase, eventType };
-    }
-  }
-
-  // Strategy 2: Terminal/approval codes are Overseer pipeline outcomes
-  if (eventType.startsWith("ok_") || eventType === "ok") {
-    return { eye: "overseer" as EyeId, phase: "complete", eventType };
-  }
-
-  // Strategy 3: Fall back to raw event's eye field (set by page.tsx or WebSocket)
+/**
+ * Eye identity comes ONLY from the pre-resolved `eye` field.
+ * For DB events: page.tsx sets raw.eye from the LEFT JOIN eyeSlug.
+ * For WebSocket events: orchestrator sets data.eye directly.
+ * We NEVER derive eye identity from the event code.
+ */
+function resolveEye(raw: Record<string, unknown>): EyeId | null {
   const rawEye = typeof raw.eye === "string" ? raw.eye.toLowerCase() : null;
-  const eye = rawEye && isValidEyeId(rawEye) ? (rawEye as EyeId) : null;
+  if (rawEye && isValidEyeId(rawEye)) {
+    return rawEye as EyeId;
+  }
+  return null;
+}
 
-  return { eye, phase: null, eventType };
+/**
+ * Phase comes from two sources depending on event origin:
+ * 1. WebSocket events carry `status` in data ("started"/"completed"/"error")
+ * 2. DB events have generic envelope codes - map via SSOT helpers
+ */
+function resolvePhase(raw: Record<string, unknown>): EyePhase | null {
+  const data = (raw.dataJson ?? raw.data ?? {}) as Record<string, unknown>;
+  const status = (data.status ?? raw.status) as string | undefined;
+  if (typeof status === "string") {
+    const normalized = status.toLowerCase();
+    if (normalized === "started") return "started";
+    if (normalized === "completed" || normalized === "complete")
+      return "complete";
+    if (normalized === "error") return "error";
+    if (normalized === "analyzing") return "analyzing";
+  }
+
+  const code = typeof raw.code === "string" ? raw.code.toUpperCase() : "";
+  if (code) {
+    if (isSuccessCode(code)) return "complete";
+    if (isNeedsInputCode(code)) return "analyzing";
+    if (isRejectionCode(code) || isErrorCode(code)) return "error";
+  }
+
+  return null;
+}
+
+function resolveEventType(raw: Record<string, unknown>): string {
+  const code = typeof raw.code === "string" ? raw.code.toLowerCase() : "";
+  return code || (raw.type as string) || "pipeline_event";
+}
+
+function parseEventCode(raw: Record<string, unknown>): ParsedCode {
+  return {
+    eye: resolveEye(raw),
+    phase: resolvePhase(raw),
+    eventType: resolveEventType(raw),
+  };
 }
 
 function humanizeEventType(type: string): string {

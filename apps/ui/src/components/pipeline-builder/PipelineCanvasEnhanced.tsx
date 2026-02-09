@@ -245,12 +245,20 @@ export function PipelineCanvasEnhanced() {
       activePipeline?.workflowJson?.nodes &&
       activePipeline?.workflowJson?.edges
     ) {
-      setNodesValidated(
-        activePipeline.workflowJson.nodes as Node<EyeNodeData>[],
-      );
-      setEdges(activePipeline.workflowJson.edges as Edge<EdgeConditionData>[]);
+      try {
+        setNodesValidated(
+          activePipeline.workflowJson.nodes as Node<EyeNodeData>[],
+        );
+        setEdges(
+          activePipeline.workflowJson.edges as Edge<EdgeConditionData>[],
+        );
+      } catch (err) {
+        console.error("[PipelineCanvas] Failed to load pipeline:", err);
+        setNodes([]);
+        setEdges([]);
+      }
     }
-  }, [activePipeline, setNodesValidated, setEdges]);
+  }, [activePipeline, setNodesValidated, setEdges, setNodes]);
 
   // Single click node → zoom to node
   const handleNodeClick = useCallback(
