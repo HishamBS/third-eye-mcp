@@ -36,6 +36,8 @@ export {
 export {
   PROVIDERS,
   type ProviderId,
+  LOCAL_PROVIDERS,
+  type LocalProviderId,
   EYES,
   type EyeName,
   STATUS_CODES,

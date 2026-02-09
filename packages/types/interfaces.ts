@@ -18,6 +18,7 @@ import type {
   PromptCategory,
   PipelineCategory,
 } from "./enums";
+import type { PipelineDag } from "./pipeline";
 
 /**
  * Overseer JSON Envelope - Standard Eye response format
@@ -205,14 +206,16 @@ export interface PipelineWorkflow {
 
 /**
  * Pipeline Definition - matches DB pipelines table
- * workflowJson is stored as JSON; actual shape depends on pipeline type
+ * workflowJson is stored as text({mode:"json"}) in the DB layer.
+ * The typed shape is PipelineDag (from packages/types/pipeline.ts).
+ * UI extends this further with React Flow node/edge types.
  */
 export interface Pipeline {
   id: string;
   name: string;
   version: number;
   description: string;
-  workflowJson: Record<string, unknown>;
+  workflowJson: PipelineDag;
   category: string;
   active: boolean;
   createdAt: Date | string;

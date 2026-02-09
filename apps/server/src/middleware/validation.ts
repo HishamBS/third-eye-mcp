@@ -6,7 +6,7 @@ import {
   RATE_LIMIT_WINDOW_MS,
   TIME_WINDOWS,
 } from "@third-eye/constants";
-import { PROVIDERS } from "@third-eye/types";
+import { PROVIDERS, LOCAL_PROVIDERS } from "@third-eye/types";
 
 /**
  * Input Validation Middleware
@@ -82,7 +82,8 @@ export function sanitizeObject(obj: unknown): SanitizedValue {
     return obj as SanitizedPrimitive;
   }
 
-  // Default fallback
+  // Fallback for unsupported types (e.g. undefined, symbol, bigint, function).
+  // Returns null to ensure sanitized output contains only JSON-safe primitives.
   return null;
 }
 
@@ -267,8 +268,9 @@ export const schemas = {
     })
     .refine(
       (data) => {
-        // Ollama and LM Studio are local providers - no API key needed
-        const requiresKey = !["ollama", "lmstudio"].includes(
+        // Local providers (Ollama, LM Studio) do not require an API key
+        const localProviders: readonly string[] = LOCAL_PROVIDERS;
+        const requiresKey = !localProviders.includes(
           data.provider.toLowerCase(),
         );
         return !requiresKey || (data.apiKey && data.apiKey.length > 0);
@@ -434,11 +436,9 @@ export async function validateProviderExists(
     return false;
   }
 
-  // For local providers (ollama, lmstudio), they're always valid
-  if (
-    providerId.toLowerCase() === "ollama" ||
-    providerId.toLowerCase() === "lmstudio"
-  ) {
+  // Local providers are always valid (no API key required)
+  const localProviders: readonly string[] = LOCAL_PROVIDERS;
+  if (localProviders.includes(providerId.toLowerCase())) {
     return true;
   }
 

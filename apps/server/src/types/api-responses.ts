@@ -2,9 +2,24 @@
  * Strict TypeScript interfaces for all API responses
  * R07 Compliance: No 'any' types, proper strict typing
  * R01 Compliance: SSOT for all API response types
+ *
+ * NOTE: These are HTTP API response shapes, NOT the canonical entity types.
+ * Base entity types (Session, Run, Eye, Persona, Pipeline, etc.) live in
+ * @third-eye/types (packages/types/interfaces.ts). The types here are
+ * serialized response variants (e.g., Date -> string) and API-specific
+ * wrappers/summaries that extend or reshape the base types for HTTP transport.
  */
 
-import type { HealthResponse } from "@third-eye/types";
+import type {
+  HealthResponse,
+  Session,
+  Run,
+  PipelineEvent,
+  Persona,
+  EyeRouting,
+  StrictnessProfile,
+  Pipeline,
+} from "@third-eye/types";
 
 // ============================================================================
 // SESSION API RESPONSES
@@ -30,6 +45,10 @@ export interface ListSessionsResponse {
   }>;
 }
 
+/**
+ * Serialized Session for single-session HTTP responses.
+ * Subset of Session from @third-eye/types for API transport.
+ */
 export interface GetSessionResponse {
   id: string;
   status: string;
@@ -58,29 +77,19 @@ export interface SessionSummaryResponse {
   duration?: number;
 }
 
-export interface SessionRun {
-  id: string;
-  sessionId: string;
-  eyeId: string;
-  provider: string;
-  model: string;
-  inputMd: string;
-  outputJson: Record<string, unknown> | null;
-  tokensIn: number | null;
-  tokensOut: number | null;
-  latencyMs: number | null;
+/**
+ * Serialized Run for HTTP responses. Mirrors Run from @third-eye/types
+ * with Date fields serialized to string for JSON transport.
+ */
+export interface SessionRun extends Omit<Run, "createdAt"> {
   createdAt: string;
 }
 
-export interface SessionEvent {
-  id: string;
-  sessionId: string;
-  eyeId: string | null;
-  type: string;
-  code: string | null;
-  md: string | null;
-  dataJson: Record<string, unknown> | null;
-  nextAction: string | null;
+/**
+ * Serialized PipelineEvent for HTTP responses. Mirrors PipelineEvent from
+ * @third-eye/types with Date fields serialized to string for JSON transport.
+ */
+export interface SessionEvent extends Omit<PipelineEvent, "createdAt"> {
   createdAt: string;
 }
 
@@ -120,16 +129,14 @@ export interface KillSessionResponse {
 // PERSONAS API RESPONSES
 // ============================================================================
 
-export interface PersonaResponse {
-  id: string;
-  eyeId: string;
-  name: string;
-  version: number;
-  metadataJson: Record<string, unknown>;
-  mission: string;
-  guidanceJson: Record<string, unknown> | null;
-  envelopeJson: Record<string, unknown>;
-  active: boolean;
+/**
+ * Serialized Persona for HTTP responses. Subset of Persona from @third-eye/types
+ * with Date fields serialized to string and optional fields omitted.
+ */
+export interface PersonaResponse extends Omit<
+  Persona,
+  "validationJson" | "remindersJson" | "notes" | "llmConfigJson" | "createdAt"
+> {
   createdAt: string;
 }
 
@@ -145,13 +152,11 @@ export interface GetActivePersonaResponse extends PersonaResponse {
 // ROUTING API RESPONSES
 // ============================================================================
 
-export interface RoutingConfigResponse {
-  id: string;
-  eyeId: string;
-  primaryProvider: string | null;
-  primaryModel: string | null;
-  fallbackProvider: string | null;
-  fallbackModel: string | null;
+/**
+ * Serialized EyeRouting for HTTP responses. Mirrors EyeRouting from
+ * @third-eye/types with Date fields serialized to string.
+ */
+export interface RoutingConfigResponse extends Omit<EyeRouting, "createdAt"> {
   createdAt: string;
 }
 
@@ -165,15 +170,16 @@ export type UpdateRoutingResponse = RoutingConfigResponse;
 // STRICTNESS API RESPONSES
 // ============================================================================
 
-export interface StrictnessProfileResponse {
-  id: string;
-  name: string;
-  description: string | null;
-  ambiguityThreshold: number;
-  citationCutoff: number;
-  consistencyTolerance: number;
+/**
+ * Serialized StrictnessProfile for HTTP responses. Mirrors StrictnessProfile from
+ * @third-eye/types with Date fields serialized to string and mangekyoStrictness
+ * widened to string for transport.
+ */
+export interface StrictnessProfileResponse extends Omit<
+  StrictnessProfile,
+  "mangekyoStrictness" | "createdAt"
+> {
   mangekyoStrictness: string;
-  isBuiltIn: boolean;
   createdAt: string;
 }
 
@@ -214,14 +220,11 @@ export type ListProviderModelsResponse = ProviderModel[];
 // PIPELINES API RESPONSES
 // ============================================================================
 
-export interface PipelineResponse {
-  id: string;
-  name: string;
-  version: number;
-  description: string;
-  workflowJson: Record<string, unknown>;
-  category: string;
-  active: boolean;
+/**
+ * Serialized Pipeline for HTTP responses. Mirrors Pipeline from
+ * @third-eye/types with Date fields serialized to string.
+ */
+export interface PipelineResponse extends Omit<Pipeline, "createdAt"> {
   createdAt: string;
 }
 

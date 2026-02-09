@@ -211,6 +211,11 @@ export const BUILT_IN_PROFILES = {
  */
 
 /**
+ * Fallback/neutral color for unknown or unresolved UI elements (Tailwind gray-500)
+ */
+export const FALLBACK_HEX_COLOR = "#6b7280" as const;
+
+/**
  * Eye Colors (for UI visualization)
  * Uses EyeId constants from SSOT
  */

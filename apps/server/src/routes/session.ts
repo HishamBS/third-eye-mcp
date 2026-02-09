@@ -10,6 +10,7 @@ import {
   eyes,
 } from "@third-eye/db";
 import { getConfig } from "@third-eye/config";
+import { logger } from "@third-eye/core";
 import { eq, desc, count, sql, or, gte, and } from "drizzle-orm";
 import { validateBody, schemas, rateLimit } from "../middleware/validation";
 import { getEyeNameById, getEyeIdByName } from "@third-eye/db/utils/lookups";
@@ -177,7 +178,13 @@ function safeJsonParse<T>(jsonStr: string | null | undefined, fallback: T): T {
   }
   try {
     return JSON.parse(jsonStr) as T;
-  } catch {
+  } catch (error) {
+    const preview =
+      jsonStr.length > 80 ? jsonStr.slice(0, 80) + "..." : jsonStr;
+    logger.warn("Failed to parse JSON field, using fallback", {
+      preview,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return fallback;
   }
 }

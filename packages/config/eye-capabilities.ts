@@ -5,6 +5,10 @@
  * Per R01: Single source of truth for eye capabilities
  * Per R07: Strict typing, no 'any'
  * Per R13: All capability tags centralized here
+ *
+ * Related: @third-eye/constants/eye-personas.ts defines display/persona metadata
+ * (colors, symbols, voice, phrases, animations) for the theatrical Monitor UI.
+ * This file defines functional capabilities; eye-personas defines presentation.
  */
 
 export interface EyeCapability {

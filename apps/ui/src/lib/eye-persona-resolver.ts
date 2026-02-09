@@ -17,6 +17,7 @@ import {
   type VoiceTone,
   type VoiceStyle,
 } from "@third-eye/constants";
+import { FALLBACK_HEX_COLOR } from "@third-eye/config/constants";
 import type {
   EyePersonaConfig,
   CustomEyeConfig,
@@ -50,8 +51,6 @@ export function generateColorFromHash(str: string): string {
 /**
  * Convert HSL string to hex
  */
-const FALLBACK_HEX_COLOR = "#6b7280"; // gray-500
-
 function hslToHex(hsl: string): string {
   const match = hsl.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
   if (!match) return FALLBACK_HEX_COLOR;

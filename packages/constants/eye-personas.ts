@@ -11,6 +11,10 @@
  * - Contextual phrases for different situations
  *
  * Per R13: NO magic string literals - all text from constants
+ *
+ * Related: @third-eye/config/eye-capabilities.ts defines functional capabilities
+ * (capability tags, scenarios, routing logic) for each eye.
+ * This file defines presentation/persona metadata; eye-capabilities defines function.
  */
 
 import { EyeId } from "./taxonomy";

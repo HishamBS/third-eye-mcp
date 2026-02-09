@@ -12,6 +12,15 @@ export const PROVIDERS = ["groq", "openrouter", "ollama", "lmstudio"] as const;
 export type ProviderId = (typeof PROVIDERS)[number];
 
 /**
+ * Local Providers - providers that run locally and do not require an API key
+ */
+export const LOCAL_PROVIDERS: readonly ProviderId[] = [
+  "ollama",
+  "lmstudio",
+] as const;
+export type LocalProviderId = (typeof LOCAL_PROVIDERS)[number];
+
+/**
  * Eye Names - All Eyes in the pipeline
  */
 export const EYES = [
