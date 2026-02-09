@@ -132,8 +132,7 @@ app.route("/overseer", overseerRoutes);
 
 // MCP Routes - Primary API for task execution
 // NOTE: Only Overseer-driven pipeline execution is exposed (Golden Rule #1)
-app.route("/api/mcp", mcpRoutes); // Primary route for UI
-app.route("/mcp", mcpRoutes); // Legacy route for backward compatibility
+app.route("/api/mcp", mcpRoutes);
 
 // Simple ping endpoint for testing routing
 app.get("/ping", (c) => {

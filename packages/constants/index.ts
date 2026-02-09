@@ -26,7 +26,6 @@ export {
 export * from "./envelope-constants";
 export * from "./prompt-texts";
 export * from "./response-constants";
-export * from "./eye-icons";
 export * from "./speaker";
 export * from "./monitor-tabs";
 export * from "./status-badges";
