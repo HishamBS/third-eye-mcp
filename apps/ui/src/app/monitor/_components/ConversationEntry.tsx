@@ -385,11 +385,16 @@ function HumanMessage({ entry }: { entry: ConversationEntryData }) {
 }
 
 function AgentMessage({ entry }: { entry: ConversationEntryData }) {
+  const eyeColor = entry.eye ? getEyeColor(entry.eye) : null;
+  const iconSrc = entry.eye ? `/eyes/${entry.eye}.svg` : "/eyes/overseer.svg";
+  const displayName = entry.speaker.name;
+  const nameColor = eyeColor ?? undefined;
+
   return (
     <div className="flex gap-3 max-w-[80%]">
       <div className="w-8 h-8 rounded-full bg-semantic-info/10 border border-semantic-info/20 flex items-center justify-center flex-shrink-0 mt-1 overflow-hidden">
         <Image
-          src="/eyes/overseer.svg"
+          src={iconSrc}
           width={24}
           height={24}
           alt=""
@@ -398,14 +403,20 @@ function AgentMessage({ entry }: { entry: ConversationEntryData }) {
       </div>
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-sm font-medium text-semantic-info">
-            Third Eye
+          <span
+            className="text-sm font-semibold"
+            style={nameColor ? { color: nameColor } : undefined}
+          >
+            {displayName}
           </span>
           <span className="text-[10px] text-semantic-muted">
             {formatTime(entry.timestamp)}
           </span>
         </div>
-        <div className="rounded-lg px-4 py-3 bg-semantic-info/5 border border-semantic-info/20">
+        <div
+          className="rounded-lg px-4 py-3 bg-semantic-info/5 border border-semantic-info/20"
+          style={eyeColor ? { borderLeft: `3px solid ${eyeColor}` } : undefined}
+        >
           <MarkdownRenderer
             content={entry.content.markdown ?? entry.content.text}
           />
