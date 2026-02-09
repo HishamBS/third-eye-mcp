@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { PipelineVisualization } from "./monitor/PipelineVisualization";
 import { useWebSocket, type WSMessage } from "@/hooks/useWebSocket";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 import {
   STATUS_TEXT_COLORS,
   STATUS_BG_COLORS_SUBTLE,

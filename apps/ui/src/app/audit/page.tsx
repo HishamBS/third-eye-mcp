@@ -7,7 +7,7 @@ import Link from "next/link";
 import { GlassCard } from "@/components/ui/GlassCard";
 import AuditTrail from "@/components/AuditTrail";
 import type { AuditRecord } from "@/components/AuditTrail";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 
 export default function AuditPage() {
   const [audit, setAudit] = useState<AuditRecord[]>([]);

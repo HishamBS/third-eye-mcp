@@ -1,86 +1,23 @@
-import { z } from "zod";
+import type {
+  ProviderModelInfo,
+  CompletionRequest,
+  CompletionResponse,
+  HealthStatus,
+  ProviderConfig,
+  FunctionTool,
+  ToolCall,
+} from "@third-eye/types";
 
-// Provider types
-export interface ModelInfo {
-  id: string;
-  name: string;
-  context_window: number;
-  family?: string;
-  capability?: {
-    ctx?: number;
-    vision?: boolean;
-    jsonMode?: boolean;
-  };
-  pricing?: {
-    prompt: number; // per 1M tokens
-    completion: number; // per 1M tokens
-  };
-}
-
-// Phase 1-A4: Function tool definition for function calling
-export interface FunctionTool {
-  type: "function";
-  function: {
-    name: string;
-    description: string;
-    parameters: Record<string, unknown>; // JSON Schema
-  };
-}
-
-// Phase 1-A4: Tool call response from model
-export interface ToolCall {
-  id: string;
-  type: "function";
-  function: {
-    name: string;
-    arguments: string; // JSON string
-  };
-}
-
-export interface CompletionRequest {
-  model: string;
-  messages: Array<{
-    role: "system" | "user" | "assistant";
-    content: string;
-  }>;
-  temperature?: number;
-  max_tokens?: number;
-  top_p?: number;
-  stop?: string[];
-  response_format?: { type: "json_object" | "text" };
-  tools?: FunctionTool[]; // Phase 1-A4: Function calling support
-  tool_choice?:
-    | "auto"
-    | "none"
-    | "required"
-    | { type: "function"; function: { name: string } }; // Phase 1-A4
-}
-
-export interface CompletionResponse {
-  id: string;
-  model: string;
-  content: string;
-  usage: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
-  finish_reason: "stop" | "length" | "content_filter" | "tool_calls";
-  tool_calls?: ToolCall[]; // Phase 1-A4: Function calling responses
-}
-
-export interface HealthStatus {
-  healthy: boolean;
-  latency_ms?: number;
-  error?: string;
-}
-
-export interface ProviderConfig {
-  apiKey?: string;
-  baseUrl?: string;
-  timeout?: number; // milliseconds
-  maxRetries?: number;
-}
+// Re-export types from SSOT for convenience
+export type {
+  ProviderModelInfo as ModelInfo,
+  CompletionRequest,
+  CompletionResponse,
+  HealthStatus,
+  ProviderConfig,
+  FunctionTool,
+  ToolCall,
+};
 
 // Base provider interface
 export abstract class BaseProvider {
@@ -97,7 +34,7 @@ export abstract class BaseProvider {
   abstract get name(): string;
   abstract get requiresApiKey(): boolean;
 
-  abstract listModels(): Promise<ModelInfo[]>;
+  abstract listModels(): Promise<ProviderModelInfo[]>;
   abstract complete(request: CompletionRequest): Promise<CompletionResponse>;
   abstract health(): Promise<HealthStatus>;
 

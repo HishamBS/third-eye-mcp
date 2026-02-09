@@ -9,7 +9,7 @@ import { ReplayTheater } from "@/components/ReplayTheater";
 import type { WebSocketEvent } from "@third-eye/types/events";
 import { Download } from "lucide-react";
 import { exportSession, type ExportEvent } from "@third-eye/utils";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 import { STATUS_TEXT_COLORS } from "@/constants/color-mappings";
 import { useUI } from "@/contexts/UIContext";
 

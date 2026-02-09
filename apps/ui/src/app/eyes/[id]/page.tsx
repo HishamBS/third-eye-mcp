@@ -7,7 +7,7 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { EyeWizardModal } from "@/components/eye-wizard/EyeWizardModal";
 import { EyeIcon } from "@/components/EyeIcon";
 import type { Eye, Persona, EyeRouting } from "@third-eye/types";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 import {
   STATUS_TEXT_COLORS,
   STATUS_BG_COLORS_SUBTLE,

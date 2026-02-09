@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 
 /**
  * Raw session from API response

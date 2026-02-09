@@ -28,7 +28,7 @@ import {
   PLATFORM_HIGHLIGHTS,
   POLLING_INTERVALS,
 } from "@third-eye/constants";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 import { ANIMATION_DURATION } from "@/constants/timing";
 import {
   STATUS_TEXT_COLORS,

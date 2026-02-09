@@ -40,7 +40,7 @@ import { SessionSelector } from "@/components/SessionSelector";
 import { RuntimeRouteHighlighter } from "./RuntimeRouteHighlighter";
 import { RoutingDecisionMetadata } from "./RoutingDecisionMetadata";
 import { CANVAS_SETTINGS, LAYOUT, PIPELINE_UI_TEXT } from "./constants";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 import type { RoutingDecision } from "@/types/routing";
 import type {
   PipelineNode,

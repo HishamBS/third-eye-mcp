@@ -15,7 +15,7 @@ import { PersonaWizardModal } from "@/components/persona-form/PersonaWizardModal
 import { CustomEyeWizard } from "@/components/custom-eye-form/CustomEyeWizard";
 import { EyeWizardModal } from "@/components/eye-wizard/EyeWizardModal";
 import type { Eye, Persona } from "@third-eye/types";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 import {
   STATUS_TEXT_COLORS,
   STATUS_BG_COLORS_SUBTLE,

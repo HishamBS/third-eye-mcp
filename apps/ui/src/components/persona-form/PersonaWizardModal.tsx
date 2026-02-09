@@ -10,7 +10,7 @@ import {
   STATUS_BG_COLORS_SUBTLE,
   STATUS_BORDER_COLORS_SUBTLE,
 } from "@/constants/color-mappings";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 
 /**
  * PersonaWizardModal - Modal wrapper for PersonaWizard

@@ -103,12 +103,12 @@ function wizardReducer(
         formData: {
           name: eye.name || "",
           description: eye.description || "",
-          iconSvg: "", // TODO: Add iconSvg to Eye type if available
-          inputSchema: eye.inputSchema
-            ? JSON.stringify(eye.inputSchema, null, 2)
+          iconSvg: eye.iconSvg ?? "",
+          inputSchema: eye.inputSchemaJson
+            ? JSON.stringify(eye.inputSchemaJson, null, 2)
             : "{}",
-          outputSchema: eye.outputSchema
-            ? JSON.stringify(eye.outputSchema, null, 2)
+          outputSchema: eye.outputSchemaJson
+            ? JSON.stringify(eye.outputSchemaJson, null, 2)
             : "{}",
           personaId: eye.personaId || "",
         },

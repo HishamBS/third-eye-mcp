@@ -10,6 +10,7 @@
     }
   },
   "dependencies": {
+    "@third-eye/constants": "workspace:*",
     "@third-eye/types": "workspace:*",
     "zod": "^3.22.4"
   }

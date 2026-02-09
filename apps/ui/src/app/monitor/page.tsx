@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { useWebSocket, type WSMessage } from "@/hooks/useWebSocket";
 import { useUI } from "@/contexts/UIContext";
 import { EYES } from "@third-eye/types";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 import { API_ROUTES } from "@/constants/api-routes";
 import {
   TacticalShell,

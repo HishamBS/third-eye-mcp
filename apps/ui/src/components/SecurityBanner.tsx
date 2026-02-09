@@ -6,7 +6,7 @@ import {
   STATUS_BG_COLORS_SUBTLE,
   STATUS_TEXT_COLORS,
 } from "@/constants/color-mappings";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 
 /**
  * Security Warning Banner

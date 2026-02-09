@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import { useDialog } from "@/hooks/useDialog";
-import { getApiUrl } from "@/consts/api";
+import { getApiUrl } from "@/constants/api";
 
 type ExportFormat = "pdf" | "html" | "json" | "md";
 

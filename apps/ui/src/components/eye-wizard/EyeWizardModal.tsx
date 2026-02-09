@@ -12,7 +12,7 @@ import { formDataToPayload, eyeToFormData } from "@/types/eye-wizard";
 import type { Eye } from "@/types/api";
 import { EyeWizard } from "./EyeWizard";
 import { SUCCESS_MESSAGES } from "./constants";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 
 /**
  * EyeWizardModal - Wrapper component for EyeWizard

@@ -14,7 +14,7 @@ import {
   ERROR_ROUTING_DECISION_NOT_FOUND,
   ERROR_ROUTING_DECISION_FETCH_FAILED,
 } from "@third-eye/constants";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 
 export interface RuntimeRouteHighlighterProps {
   sessionId: string | null;

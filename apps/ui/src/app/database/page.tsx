@@ -13,7 +13,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 import {
   STATUS_TEXT_COLORS,
   STATUS_BG_COLORS_SUBTLE,

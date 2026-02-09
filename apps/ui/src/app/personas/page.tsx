@@ -24,7 +24,7 @@ import {
   STATUS_BORDER_COLORS_SUBTLE,
 } from "@/constants/color-mappings";
 import { API_ROUTES } from "@/constants/api-routes";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 
 // Framer Motion animation duration (in seconds)
 const ANIMATION_FAST = 0.2; // 200ms

@@ -63,6 +63,18 @@ export const EVENT_TYPES = {
 export type EventType = (typeof EVENT_TYPES)[keyof typeof EVENT_TYPES];
 
 /**
+ * WebSocket Pipeline Envelope Types - Real-time message categories
+ */
+export const WS_ENVELOPE_TYPES = {
+  EYE_UPDATE: "eye_update",
+  SETTINGS_UPDATE: "settings_update",
+  TENSEIGAN_CLAIMS: "tenseigan_claims",
+  USER_INPUT: "user_input",
+} as const;
+export type WsEnvelopeType =
+  (typeof WS_ENVELOPE_TYPES)[keyof typeof WS_ENVELOPE_TYPES];
+
+/**
  * Strictness Levels - Mangekyō validation modes
  */
 export const STRICTNESS_LEVELS = {

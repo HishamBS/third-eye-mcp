@@ -13,18 +13,24 @@ export {
 } from "./envelope";
 
 export {
-  ModelInfoSchema,
-  type ModelInfo,
+  ProviderModelInfoSchema,
+  type ProviderModelInfo,
   CompletionRequestSchema,
   type CompletionRequest,
   CompletionResponseSchema,
   type CompletionResponse,
   HealthResponseSchema,
   type HealthResponse,
+  type HealthStatus,
   ProviderConfigSchema,
   type ProviderConfig,
   type ProviderClient,
+  type FunctionTool,
+  type ToolCall,
+  ToolCallSchema,
   type Role,
+  ProviderEndpointConfigSchema,
+  type ProviderEndpointConfig,
 } from "./providers";
 
 export {
@@ -37,6 +43,8 @@ export {
   type SessionStatus,
   EVENT_TYPES,
   type EventType,
+  WS_ENVELOPE_TYPES,
+  type WsEnvelopeType,
   STRICTNESS_LEVELS,
   type StrictnessLevel,
   THEMES,
@@ -69,6 +77,7 @@ export type {
 
 export type {
   OverseerEnvelope,
+  ModelInfo,
   SessionConfig,
   Session,
   Run,
@@ -86,6 +95,13 @@ export type {
   McpIntegration,
   Clarification,
   ConversationEvent,
+  AppSettings,
+  OrderViolation,
+  ProblemJson,
+  ExportRequest,
+  DuelConfig,
+  DuelResult,
+  MetricsSummary,
   ApiEnvelope,
 } from "./interfaces";
 

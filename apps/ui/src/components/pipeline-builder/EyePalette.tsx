@@ -4,7 +4,7 @@ import { memo, useState, useMemo, useCallback, useEffect } from "react";
 import { EyeIcon } from "@/components/EyeIcon";
 import { PALETTE_TEXT, LAYOUT } from "./constants";
 import type { EyeDefinition } from "@/types/pipeline";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 
 /**
  * Eye Palette Props

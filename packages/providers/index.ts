@@ -15,12 +15,15 @@ export type { ProviderType } from "./src/factory";
 
 export type { ProviderConfig } from "./src/base";
 
-// Re-export types
+// Re-export types from SSOT
 export type {
   ProviderId,
   ProviderClient,
-  ModelInfo,
+  ProviderModelInfo,
   CompletionRequest,
   CompletionResponse,
   HealthResponse,
+  HealthStatus,
+  FunctionTool,
+  ToolCall,
 } from "@third-eye/types";

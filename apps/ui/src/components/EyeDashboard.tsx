@@ -13,7 +13,7 @@ import {
   Activity,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 import {
   STATUS_TEXT_COLORS,
   STATUS_BG_COLORS_SUBTLE,

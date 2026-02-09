@@ -6,7 +6,7 @@ import Link from "next/link";
 import MetricsOverview from "@/components/MetricsOverview";
 import type { MetricsData } from "@/components/MetricsOverview";
 import { UI_HELP_TEXT } from "@third-eye/constants";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 
 export default function MetricsPage() {
   const [metrics, setMetrics] = useState<MetricsData | null>(null);

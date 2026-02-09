@@ -8,7 +8,7 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { useDialog } from "@/hooks/useDialog";
 import { THEME_METADATA } from "@third-eye/theme";
 import { UI_HELP_TEXT } from "@third-eye/constants";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 import {
   STATUS_TEXT_COLORS,
   STATUS_BG_COLORS_SUBTLE,

@@ -8,7 +8,7 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { ProviderCard } from "@/components/models/ProviderCard";
 import { EyeRoutingCard } from "@/components/models/EyeRoutingCard";
 import type { EyeRouting } from "@third-eye/types";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 import {
   STATUS_TEXT_COLORS,
   STATUS_BG_COLORS_SUBTLE,

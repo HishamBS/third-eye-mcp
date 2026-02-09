@@ -160,6 +160,7 @@
       "name": "@third-eye/providers",
       "version": "1.0.0",
       "dependencies": {
+        "@third-eye/constants": "workspace:*",
         "@third-eye/types": "workspace:*",
         "zod": "^3.22.4",
       },

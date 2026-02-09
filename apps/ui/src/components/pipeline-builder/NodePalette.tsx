@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { PALETTE_TEXT, LAYOUT } from "./constants";
 import type { EyeDefinition } from "@/types/pipeline";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 
 /**
  * Control node definitions (Switch, IF, Loop, etc.)

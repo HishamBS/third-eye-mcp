@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { WizardStepProps } from "@/types/eye-wizard";
 import type { Persona } from "@/types/api";
 import { PERSONA_LABELS } from "./constants";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 import {
   STATUS_BG_COLORS_SUBTLE,
   STATUS_BORDER_COLORS_SUBTLE,

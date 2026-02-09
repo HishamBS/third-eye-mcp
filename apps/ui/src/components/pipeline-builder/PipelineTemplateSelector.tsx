@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { TEMPLATE_TEXT } from "./constants";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { ARIA_LABELS } from "@/constants/accessibility";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 import type { PipelineNode, PipelineEdge } from "@/types/pipeline";
 
 /**

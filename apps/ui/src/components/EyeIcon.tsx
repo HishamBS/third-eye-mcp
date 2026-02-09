@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { SHARED_EYE_COLORS } from "@third-eye/theme";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 import { METRIC_COLORS } from "@/constants/design-tokens";
 
 interface EyeIconProps {

@@ -11,7 +11,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { ConversationEventRecord } from "@/components/conversation/ConversationTimeline";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 
 /**
  * Hook to fetch conversation timeline for a specific session

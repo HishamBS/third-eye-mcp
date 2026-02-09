@@ -15,7 +15,7 @@ import {
 } from "@third-eye/types";
 import { type ThemeName, DEFAULT_THEME } from "@third-eye/theme";
 import { STORAGE_KEYS } from "@/constants/storage";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 
 export type ViewMode = "novice" | "expert";
 

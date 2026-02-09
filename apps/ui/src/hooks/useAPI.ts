@@ -6,7 +6,7 @@
 import { useCallback, useMemo } from "react";
 import { REQUEST_TIMEOUT, ERROR_MESSAGES } from "@third-eye/config/constants";
 import type { ProblemJson } from "@third-eye/types";
-import { API_BASE_URL } from "@/consts/api";
+import { API_BASE_URL } from "@/constants/api";
 
 export interface APIError extends Error {
   status?: number;

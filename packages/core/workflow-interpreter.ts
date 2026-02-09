@@ -12,7 +12,10 @@ import {
   type ExpressionContext,
 } from "./expression-evaluator";
 import type { EyeResponse } from "@third-eye/eyes";
-import { WORKFLOW_NODE_TYPES, STATUS_CODES } from "@third-eye/constants";
+import {
+  WORKFLOW_NODE_TYPES,
+  WORKFLOW_STATUS_CODES,
+} from "@third-eye/constants";
 
 export interface WorkflowNode {
   id: string;
@@ -306,7 +309,7 @@ export class WorkflowInterpreter {
       result: {
         tag: WORKFLOW_NODE_TYPES.CONDITION,
         ok: true,
-        code: STATUS_CODES.OK,
+        code: WORKFLOW_STATUS_CODES.OK,
         md: `Condition evaluated to ${conditionResult}`,
         data: { conditionResult, branch: conditionResult ? "true" : "false" },
         next: nextNodeId || "",
@@ -369,7 +372,7 @@ export class WorkflowInterpreter {
       result: {
         tag: WORKFLOW_NODE_TYPES.SWITCH,
         ok: true,
-        code: STATUS_CODES.OK,
+        code: WORKFLOW_STATUS_CODES.OK,
         md: `Switch routed to output ${matchedIndex}`,
         data: { matchedIndex, outputCount: outputs?.length || 0 },
         next: nextNodeId || "",
@@ -409,7 +412,7 @@ export class WorkflowInterpreter {
         result: {
           tag: WORKFLOW_NODE_TYPES.LOOP,
           ok: true,
-          code: STATUS_CODES.OK,
+          code: WORKFLOW_STATUS_CODES.OK,
           md: `Loop completed after ${currentIterations} iterations`,
           data: { iterations: currentIterations, maxIterations },
           next: node.next || "",
@@ -430,7 +433,7 @@ export class WorkflowInterpreter {
       result: {
         tag: WORKFLOW_NODE_TYPES.LOOP,
         ok: true,
-        code: STATUS_CODES.OK,
+        code: WORKFLOW_STATUS_CODES.OK,
         md: `Loop iteration ${currentIterations + 1}/${maxIterations}`,
         data: {
           iteration: currentIterations + 1,
@@ -460,7 +463,7 @@ export class WorkflowInterpreter {
       result: {
         tag: WORKFLOW_NODE_TYPES.USER_INPUT,
         ok: false,
-        code: STATUS_CODES.NEED_CLARIFICATION,
+        code: WORKFLOW_STATUS_CODES.NEED_CLARIFICATION,
         md: node.prompt || "Waiting for user input",
         data: { prompt: node.prompt },
         next: "",
@@ -485,7 +488,7 @@ export class WorkflowInterpreter {
       result: {
         tag: WORKFLOW_NODE_TYPES.TERMINAL,
         ok: true,
-        code: STATUS_CODES.OK,
+        code: WORKFLOW_STATUS_CODES.OK,
         md: "Workflow completed",
         data: {},
         next: "",

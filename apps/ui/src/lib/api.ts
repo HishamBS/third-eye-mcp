@@ -5,7 +5,7 @@ import type {
   SessionSettingsPayload,
   SessionSummary,
 } from "../types/pipeline";
-import { getApiUrl } from "@/consts/api";
+import { getApiUrl } from "@/constants/api";
 
 function buildBaseUrl(): string {
   return getApiUrl();

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import clsx from "clsx";
-import { getApiUrl } from "@/consts/api";
+import { getApiUrl } from "@/constants/api";
 import { STATUS_TEXT_COLORS } from "@/constants/color-mappings";
 
 async function launchDuel(

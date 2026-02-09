@@ -31,18 +31,15 @@ export interface OverseerEnvelope {
   next: string;
 }
 
-/**
- * Provider Configuration
- */
-export interface ProviderConfig {
-  baseUrl: string;
-  apiKey?: string;
-  timeout?: number;
-  maxRetries?: number;
-}
+// ProviderConfig, CompletionRequest, CompletionResponse are exported from providers.ts (SSOT)
+// Removed duplicate definitions to comply with R01 (SSOT & DRY)
 
 /**
- * Model Information
+ * App-Level Model Information
+ *
+ * This represents a model as stored in the application (with provider association,
+ * display name, and tracking metadata). For the provider-level model representation
+ * (as returned by provider APIs), see ProviderModelInfo in providers.ts.
  */
 export interface ModelInfo {
   provider: ProviderId;
@@ -56,23 +53,6 @@ export interface ModelInfo {
   supportsJsonMode?: boolean;
   lastSeen: string;
 }
-
-/**
- * Completion Request
- */
-export interface CompletionRequest {
-  model: string;
-  messages: Array<{
-    role: "system" | "user" | "assistant";
-    content: string;
-  }>;
-  temperature?: number;
-  maxTokens?: number;
-  jsonMode?: boolean;
-}
-
-// CompletionResponse is now exported from providers.ts (SSOT)
-// Removed duplicate definition to comply with R01 (SSOT & DRY)
 
 /**
  * Session Configuration
