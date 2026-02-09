@@ -258,26 +258,10 @@ function runInstallCommand(
 
 async function ensureDependencies(verbose: boolean) {
   const projectRoot = getProjectRoot();
-  const rootNodeModules = resolve(projectRoot, "node_modules");
-  const uiNodeModules = resolve(projectRoot, "apps/ui/node_modules");
 
-  const needsRootInstall = !hasNodeModules(rootNodeModules);
-  if (needsRootInstall) {
-    await installWithFallback(projectRoot, "root dependencies", verbose);
-  } else if (verbose) {
-    console.log("📦 Root dependencies already installed");
-  }
-
-  const needsUiInstall = !hasNodeModules(uiNodeModules);
-  if (needsUiInstall) {
-    await installWithFallback(
-      resolve(projectRoot, "apps/ui"),
-      "UI dependencies",
-      verbose,
-    );
-  } else if (verbose) {
-    console.log("📦 UI dependencies already installed");
-  }
+  // Single `bun install` at root handles all workspace deps (apps/*, packages/*)
+  // If deps are already installed and lockfile unchanged, this is a near-instant no-op
+  await installWithFallback(projectRoot, "dependencies", verbose);
 }
 
 async function installWithFallback(
@@ -1765,9 +1749,8 @@ async function startServices() {
   await ensureDependencies(!args.quiet);
   checkEnvironment();
 
-  // Quick mode: Skip updates and stale checks (but ALWAYS clean .next for module resolution)
+  // Quick mode: Skip stale checks (but ALWAYS clean .next for module resolution)
   if (!args.quick) {
-    await updateDependencies(projectRoot, args.skipUpdate || false, args.quiet);
     cleanSourceArtifacts(projectRoot, args.quiet);
     cleanStaleBuilds(projectRoot, args.quiet);
   } else {
