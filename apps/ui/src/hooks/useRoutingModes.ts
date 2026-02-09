@@ -3,87 +3,34 @@
  *
  * API hooks for policies and templates management
  * Per R07: Strict typing, no 'any'
+ * Per R01: Types imported from SSOT at @/types/routing
  * Per R13: Centralized API logic in hooks
  */
 
 import { useState, useCallback, useEffect } from "react";
 import { useAPI } from "./useAPI";
+import type {
+  RoutingPolicy,
+  Constraint,
+  PipelineTemplate,
+  PolicyValidationResult,
+  TemplateExecutionPlan,
+  CreatePolicyRequest,
+  UpdatePolicyRequest,
+  CreateTemplateRequest,
+} from "@/types/routing";
 
-// ============================================================================
-// Types
-// ============================================================================
-
-export interface RoutingPolicy {
-  readonly id: string;
-  readonly name: string;
-  readonly description?: string;
-  readonly mandatoryEyes: readonly string[];
-  readonly forbiddenEyes?: readonly string[];
-  readonly minValidationEyes?: number;
-  readonly securityRequired: boolean;
-  readonly alwaysConfirmIntent: boolean;
-  readonly customConstraints?: readonly Constraint[];
-  readonly isActive: boolean;
-  readonly createdAt: number;
-}
-
-export interface Constraint {
-  readonly type: string;
-  readonly value: unknown;
-  readonly reason: string;
-}
-
-export interface PipelineTemplate {
-  readonly id: string;
-  readonly name: string;
-  readonly description?: string;
-  readonly eyes: readonly string[];
-  readonly strict: boolean;
-  readonly autoTriggerPattern?: string;
-  readonly createdBy?: string;
-  readonly isPublic: boolean;
-  readonly usageCount: number;
-  readonly createdAt: number;
-}
-
-export interface PolicyValidationResult {
-  readonly valid: boolean;
-  readonly errors: readonly string[];
-  readonly warnings: readonly string[];
-}
-
-export interface TemplateExecutionPlan {
-  readonly templateId: string;
-  readonly templateName: string;
-  readonly eyeSequence: readonly string[];
-  readonly strict: boolean;
-  readonly reasoning: string;
-}
-
-export interface CreatePolicyRequest {
-  name: string;
-  description?: string;
-  mandatoryEyes: string[];
-  forbiddenEyes?: string[];
-  minValidationEyes?: number;
-  securityRequired?: boolean;
-  alwaysConfirmIntent?: boolean;
-  customConstraints?: Constraint[];
-}
-
-export interface UpdatePolicyRequest extends Partial<CreatePolicyRequest> {
-  isActive?: boolean;
-}
-
-export interface CreateTemplateRequest {
-  name: string;
-  description?: string;
-  eyes: string[];
-  strict?: boolean;
-  autoTriggerPattern?: string;
-  createdBy?: string;
-  isPublic?: boolean;
-}
+// Re-export types for backward compatibility with existing consumers
+export type {
+  RoutingPolicy,
+  Constraint,
+  PipelineTemplate,
+  PolicyValidationResult,
+  TemplateExecutionPlan,
+  CreatePolicyRequest,
+  UpdatePolicyRequest,
+  CreateTemplateRequest,
+} from "@/types/routing";
 
 // ============================================================================
 // Policies Hooks

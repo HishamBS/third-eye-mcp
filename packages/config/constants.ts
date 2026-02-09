@@ -216,8 +216,13 @@ export const BUILT_IN_PROFILES = {
 export const FALLBACK_HEX_COLOR = "#6b7280" as const;
 
 /**
- * Eye Colors (for UI visualization)
- * Uses EyeId constants from SSOT
+ * Eye Colors - Hex values for pipeline DAG and config UI visualization.
+ * Uses EyeId constants from SSOT.
+ *
+ * NOTE: These hex color values are DISTINCT from:
+ * - @third-eye/types/events.ts EYE_COLORS: semantic tokens ("red", "purple") for WebSocket event display
+ * - @third-eye/theme SHARED_EYE_COLORS: theme-level hex colors for themed components
+ * Each serves a different UI layer and should NOT be consolidated.
  */
 export const EYE_COLORS: Record<string, string> = {
   [EyeId.SHARINGAN]: "#ef4444", // red

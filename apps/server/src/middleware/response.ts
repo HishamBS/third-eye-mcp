@@ -5,9 +5,19 @@ import { z } from "zod";
 const RESPONSE_VERSION = process.env.npm_package_version || "dev";
 
 /**
- * Standardized Response Envelope Formatting
+ * Standardized HTTP Response Envelope Formatting
  *
  * Provides consistent API response structure following RFC7807 problem+json
+ * for HTTP error responses.
+ *
+ * NOTE: This envelope format is intentionally DIFFERENT from the core messaging
+ * Envelope in @third-eye/types (packages/types/envelope.ts). The core Envelope
+ * is the Eye-to-Eye communication protocol with fields like {tag, ok, code, md,
+ * data, next}. This HTTP envelope wraps API responses with {success, data/error,
+ * meta} following REST/RFC7807 conventions. They serve different architectural
+ * layers and should NOT be merged.
+ *
+ * @see packages/types/envelope.ts for the core Eye messaging protocol envelope
  */
 
 // Standard success response envelope

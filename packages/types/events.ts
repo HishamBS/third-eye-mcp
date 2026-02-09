@@ -188,8 +188,15 @@ export type WebSocketEvent =
   | OverseerRouteEvent
   | PipelineEvent;
 
+// NOTE: UI display constants co-located with event types for tight coupling.
+// These map event eye identifiers to display metadata used by WebSocket event
+// consumers. SSOT for theme-level hex colors: @third-eye/theme (SHARED_EYE_COLORS).
+// SSOT for Eye persona display: @third-eye/constants/eye-personas.
+// These semantic color tokens (e.g., "red", "purple") are event-specific and
+// distinct from hex color values used in theming.
+
 /**
- * Eye Icons Mapping
+ * Eye Icons Mapping - Event-specific display icons for WebSocket events
  */
 export const EYE_ICONS: Record<string, string> = {
   overseer: "🧿",
@@ -210,7 +217,10 @@ export const EYE_ICONS: Record<string, string> = {
 };
 
 /**
- * Eye Colors Mapping
+ * Eye Colors Mapping - Semantic color tokens for WebSocket event display.
+ * NOTE: These are NOT hex colors. For hex eye colors, see:
+ * - @third-eye/config/constants EYE_COLORS (pipeline DAG visualization)
+ * - @third-eye/theme SHARED_EYE_COLORS (themed components)
  */
 export const EYE_COLORS: Record<string, EventUI["color"]> = {
   overseer: "purple",
