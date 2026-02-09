@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Copy, ExternalLink, ChevronLeft, Check, Loader2 } from "lucide-react";
+import { TIMING } from "@/constants/timing";
 import type { RoutingDecision } from "@/types/routing";
 import {
   METADATA_PANEL_TITLE,
@@ -71,7 +72,7 @@ export function RoutingDecisionMetadata({
     try {
       await navigator.clipboard.writeText(JSON.stringify(decision, null, 2));
       setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
+      setTimeout(() => setCopySuccess(false), TIMING.COPY_FEEDBACK_MS);
     } catch (err) {
       console.error("[RoutingDecisionMetadata] Failed to copy JSON:", err);
     }

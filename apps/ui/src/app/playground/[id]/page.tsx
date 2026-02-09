@@ -20,7 +20,7 @@ import { StrictnessControls } from "@/components/StrictnessControls";
 import type { WSPipelineEvent } from "@/types/pipeline";
 import type { Envelope, Session, Run, Eye } from "@third-eye/types";
 import { TOOL_NAME } from "@third-eye/types";
-import { getApiUrl, WS_BASE_URL, API_BASE_URL } from "@/consts/api";
+import { getApiUrl, WS_BASE_URL, API_BASE_URL } from "@/constants/api";
 import {
   STATUS_TEXT_COLORS,
   STATUS_BG_COLORS_SUBTLE,
@@ -28,6 +28,7 @@ import {
   STATUS_BG_COLORS,
 } from "@/constants/color-mappings";
 import { toast } from "sonner";
+import { TIMING } from "@/constants/timing";
 
 /**
  * Minimum character length for task/input submissions.
@@ -151,7 +152,7 @@ export default function PlaygroundPage() {
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ type: "ping" }));
         }
-      }, 15000);
+      }, TIMING.PLAYGROUND_TIMEOUT_MS);
     };
 
     ws.onmessage = (event) => {

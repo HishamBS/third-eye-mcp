@@ -24,8 +24,3 @@ export const WORKFLOW_STATUS_CODES = {
   OK: "OK",
   NEED_CLARIFICATION: "NEED_CLARIFICATION",
 } as const;
-
-/**
- * @deprecated Use WORKFLOW_STATUS_CODES instead. Alias for backward compatibility.
- */
-export const STATUS_CODES = WORKFLOW_STATUS_CODES;

@@ -2,6 +2,7 @@
 
 import { memo, useCallback, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
+import { TIMING } from "@/constants/timing";
 
 type ViewMode = "strategic" | "tactical";
 type ConnectionStatus = "connected" | "disconnected" | "reconnecting";
@@ -62,7 +63,7 @@ function HeaderBarComponent({
     if (!sessionId) return;
     navigator.clipboard.writeText(sessionId).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      setTimeout(() => setCopied(false), TIMING.COPY_FEEDBACK_MS);
     });
   }, [sessionId]);
 

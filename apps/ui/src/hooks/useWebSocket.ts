@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { WS_BASE_URL } from "@/consts/api";
+import { WS_BASE_URL } from "@/constants/api";
+import { TIMING } from "@/constants/timing";
 
 export interface WSMessage {
   type: string;
@@ -52,7 +53,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const getReconnectDelay = () => {
     // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 32s (max)
     const baseDelay = 1000;
-    const maxDelay = 32000;
+    const maxDelay = TIMING.WEBSOCKET_MAX_BACKOFF_MS;
     const delay = Math.min(
       baseDelay * Math.pow(2, reconnectAttemptsRef.current),
       maxDelay,

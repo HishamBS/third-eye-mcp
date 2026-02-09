@@ -2,8 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { buildWebSocketUrl, fetchEvents } from "../lib/api";
 import { usePipelineStore } from "../store/pipelineStore";
 import type { WSPipelineEvent, EvidenceClaim } from "../types/pipeline";
-
-const BACKOFF_STEPS = [0, 1000, 2000, 4000, 7000, 11000, 16000, 20000];
+import { WEBSOCKET_BACKOFF_WITH_IMMEDIATE } from "@third-eye/constants";
 
 function parseClaims(payload: unknown): EvidenceClaim[] {
   if (!Array.isArray(payload)) return [];
@@ -175,7 +174,12 @@ export function usePipelineWS(options: {
         retryRef.current += 1;
         incrementAttempts();
         const delay =
-          BACKOFF_STEPS[Math.min(retryRef.current, BACKOFF_STEPS.length - 1)];
+          WEBSOCKET_BACKOFF_WITH_IMMEDIATE[
+            Math.min(
+              retryRef.current,
+              WEBSOCKET_BACKOFF_WITH_IMMEDIATE.length - 1,
+            )
+          ];
         setTimeout(connect, delay + Math.random() * 250);
       };
 

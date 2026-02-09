@@ -67,6 +67,18 @@ export const TIMING = {
    * Used in: models page
    */
   AUTO_SAVE_DELAY_MS: 1500,
+
+  /**
+   * Ping interval for playground WebSocket keep-alive
+   * Used in: playground page
+   */
+  PLAYGROUND_TIMEOUT_MS: 15000,
+
+  /**
+   * Maximum backoff delay for WebSocket exponential reconnection
+   * Used in: useWebSocket hook
+   */
+  WEBSOCKET_MAX_BACKOFF_MS: 32000,
 } as const;
 
 /**

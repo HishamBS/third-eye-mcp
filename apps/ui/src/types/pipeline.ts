@@ -1,27 +1,29 @@
 // Phase 10 imports - React Flow types for pipeline builder
 import type { Node, Edge } from "reactflow";
-import type { EyeName, Pipeline as BasePipeline } from "@third-eye/types";
+import type {
+  Eye,
+  EyeName,
+  Pipeline as BasePipeline,
+  SessionStatus,
+  WsEnvelopeType,
+} from "@third-eye/types";
 import type { EdgeConditionType } from "@/components/pipeline-builder/constants";
 
-export type EyeType =
-  | "SHARINGAN"
-  | "KYUUBI"
-  | "JOGAN"
-  | "RINNEGAN_PLAN"
-  | "RINNEGAN_REVIEW"
-  | "RINNEGAN_FINAL"
-  | "MANGEKYO_SCAFFOLD"
-  | "MANGEKYO_IMPL"
-  | "MANGEKYO_TESTS"
-  | "MANGEKYO_DOCS"
-  | "TENSEIGAN"
-  | "BYAKUGAN";
+/**
+ * Eye stage identifiers for pipeline nodes.
+ * Base names from shared EyeName, with sub-stage suffixes for multi-phase Eyes.
+ * Uses Uppercase<EyeName> + optional stage suffix convention.
+ */
+export type EyeStage =
+  | Uppercase<EyeName>
+  | `${Uppercase<"rinnegan">}_${"PLAN" | "REVIEW" | "FINAL"}`
+  | `${Uppercase<"mangekyo">}_${"SCAFFOLD" | "IMPL" | "TESTS" | "DOCS"}`;
 
-export type PipelineEnvelopeType =
-  | "eye_update"
-  | "settings_update"
-  | "tenseigan_claims"
-  | "user_input";
+/**
+ * WebSocket pipeline envelope types - imported from shared SSOT.
+ * Re-exported for backward compatibility with existing frontend imports.
+ */
+export type PipelineEnvelopeType = WsEnvelopeType;
 
 /**
  * WebSocket pipeline event - distinct from DB PipelineEvent entity.
@@ -48,7 +50,7 @@ export interface SessionSettingsPayload {
 }
 
 export interface EyeState {
-  eye: EyeType | string;
+  eye: EyeStage | string;
   ok: boolean | null;
   code: string | null;
   md: string | null;
@@ -102,10 +104,20 @@ export interface ClarificationContext {
   isCodeRelated?: boolean;
 }
 
+/**
+ * UI-specific session display status.
+ * Maps to SessionStatus from shared types with additional display states.
+ */
+export type SessionDisplayStatus =
+  | SessionStatus
+  | "in_progress"
+  | "approved"
+  | "blocked";
+
 export interface SessionOverview {
   session_id: string;
   title: string;
-  status: "in_progress" | "approved" | "blocked";
+  status: SessionDisplayStatus;
   created_at: string | null;
   last_event_at: string | null;
   tenant?: string | null;
@@ -281,14 +293,13 @@ export interface PipelineValidationResult {
 }
 
 /**
- * Eye Definition for UI components - extends shared Eye with optional UI-specific fields.
- * This is the canonical UI type for eye data in palettes and pipeline builders.
+ * Eye Definition for UI components - picks fields from shared Eye and adds UI-specific ones.
  * The shared Eye interface (from @third-eye/types) is the DB SSOT.
  */
-export interface EyeDefinition {
-  id: string;
-  name: string;
-  description: string;
+export interface EyeDefinition extends Pick<
+  Eye,
+  "id" | "name" | "description"
+> {
   iconSvg?: string;
   capabilities: string[];
   version?: number;

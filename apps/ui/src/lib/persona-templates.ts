@@ -7,6 +7,7 @@
  */
 
 import type { PersonaFormState } from "@/types/persona-form";
+import { LLM_DEFAULTS } from "@/constants/llm-defaults";
 
 /**
  * Template metadata for display
@@ -84,7 +85,7 @@ export const PERSONA_TEMPLATES: readonly PersonaTemplate[] = [
         temperature: 0.3,
         top_p: 0.9,
         response_format: "json_object",
-        max_tokens: 2000,
+        max_tokens: LLM_DEFAULTS.MAX_TOKENS,
       },
       notes:
         "Optimized for code review tasks with focus on actionable feedback",
@@ -196,7 +197,7 @@ export const PERSONA_TEMPLATES: readonly PersonaTemplate[] = [
         temperature: 0,
         top_p: 1,
         response_format: "json_object",
-        max_tokens: 1500,
+        max_tokens: LLM_DEFAULTS.MAX_TOKENS_COMPACT,
       },
       notes: "Deterministic validation with zero temperature for consistency",
     },
@@ -311,7 +312,7 @@ export const PERSONA_TEMPLATES: readonly PersonaTemplate[] = [
         temperature: 0.7,
         top_p: 0.95,
         response_format: "json_object",
-        max_tokens: 2000,
+        max_tokens: LLM_DEFAULTS.MAX_TOKENS,
       },
       notes: "User-focused with emphasis on clarity and actionability",
     },

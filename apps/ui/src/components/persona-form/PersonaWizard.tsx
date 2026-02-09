@@ -39,6 +39,7 @@ import {
 import { TemplateSelector } from "./TemplateSelector";
 import type { PersonaTemplate } from "@/lib/persona-templates";
 import { ANIMATION_DURATION } from "@/constants/timing";
+import { LLM_DEFAULTS } from "@/constants/llm-defaults";
 
 /**
  * PersonaWizard - Multi-step form for persona configuration
@@ -74,7 +75,7 @@ const createInitialState = (): PersonaFormState => ({
     temperature: 0,
     top_p: 1,
     response_format: "json_object",
-    max_tokens: 2000,
+    max_tokens: LLM_DEFAULTS.MAX_TOKENS,
   },
   notes: "",
   isDirty: false,
@@ -261,7 +262,7 @@ export function PersonaWizard({
                 temperature: 0,
                 top_p: 1,
                 response_format: "json_object",
-                max_tokens: 2000,
+                max_tokens: LLM_DEFAULTS.MAX_TOKENS,
               },
               notes: imported.notes || "",
             },
