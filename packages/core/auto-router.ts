@@ -555,6 +555,7 @@ export class AutoRouter {
           capabilitiesNeeded: routingDecision.recommendedFlow.map((eye) =>
             eye.toLowerCase(),
           ),
+          originalInput: input,
         }),
         selectedEyes: JSON.stringify(routingDecision.recommendedFlow),
         reasoning: routingDecision.reasoning,
