@@ -127,20 +127,72 @@ function TacticalMonitorContent() {
   }, [sessionIdFromQuery, selectedSessionId, setSelectedSession]);
 
   /**
-   * Fetch historical events for the session
+   * Transform a conversation event (human message, routing decision, etc.)
+   * into the RawHistoricalEvent format expected by TacticalShell.
+   */
+  function transformConversationEvent(
+    event: Record<string, unknown>,
+  ): RawHistoricalEvent {
+    const eventType =
+      (event.eventType as string) ?? (event.type as string) ?? "system";
+    const speaker = event.speaker as string | undefined;
+    const message = (event.message as string) ?? "";
+
+    return {
+      id: event.id as string,
+      type: eventType,
+      eye: null,
+      code: eventType,
+      timestamp: (event.createdAt as string) ?? (event.timestamp as string),
+      createdAt: (event.createdAt as string) ?? (event.timestamp as string),
+      data: {
+        content: message,
+        direction: speaker === "human" ? "from_human" : undefined,
+      },
+      md: message,
+    } as RawHistoricalEvent;
+  }
+
+  /**
+   * Fetch historical events for the session.
+   * Merges pipeline events and conversation events into a single
+   * chronological feed sorted by createdAt.
    */
   const fetchHistoricalEvents = useCallback(async () => {
     if (!sessionId) return;
     try {
-      const res = await fetch(
-        `${API_BASE_URL}${API_ROUTES.SESSION_EVENTS(sessionId)}`,
-      );
-      if (res.ok) {
-        const result = await res.json();
+      const [pipelineRes, conversationRes] = await Promise.all([
+        fetch(`${API_BASE_URL}${API_ROUTES.SESSION_EVENTS(sessionId)}`),
+        fetch(
+          `${API_BASE_URL}${API_ROUTES.CONVERSATION_EVENTS(sessionId)}`,
+        ).catch(() => null),
+      ]);
+
+      let pipelineEvents: RawHistoricalEvent[] = [];
+      if (pipelineRes.ok) {
+        const result = await pipelineRes.json();
         const events = Array.isArray(result) ? result : (result.data ?? []);
-        const transformedEvents = events.map(transformPipelineEvent);
-        setHistoricalEvents(transformedEvents);
+        pipelineEvents = events.map(transformPipelineEvent);
       }
+
+      let conversationEvents: RawHistoricalEvent[] = [];
+      if (conversationRes?.ok) {
+        const result = await conversationRes.json();
+        const events = Array.isArray(result) ? result : (result.data ?? []);
+        conversationEvents = events.map(transformConversationEvent);
+      }
+
+      const merged = [...pipelineEvents, ...conversationEvents].sort((a, b) => {
+        const tA = new Date(
+          (a.createdAt as string) ?? (a.timestamp as string),
+        ).getTime();
+        const tB = new Date(
+          (b.createdAt as string) ?? (b.timestamp as string),
+        ).getTime();
+        return tA - tB;
+      });
+
+      setHistoricalEvents(merged);
     } catch (err) {
       console.error("Failed to fetch historical events:", err);
     }

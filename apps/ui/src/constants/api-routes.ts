@@ -48,6 +48,10 @@ export const API_ROUTES = {
   INTENT_CONFIRMATIONS_SESSION: (sessionId: string) =>
     `/api/intent-confirmations/session/${sessionId}`,
 
+  // Conversation Events
+  CONVERSATION_EVENTS: (sessionId: string) =>
+    `/api/conversation-events/session/${sessionId}`,
+
   // Routing
   ROUTING: "/api/routing",
   ROUTING_BY_EYE: (eye: string) => `/api/routing/${eye}`,

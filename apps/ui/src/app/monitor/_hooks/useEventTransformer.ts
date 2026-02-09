@@ -235,7 +235,7 @@ function transformSingleEvent(raw: Record<string, unknown>): TacticalEvent {
   };
 
   // The API's primary content field is `md` - map it into data for downstream extraction
-  if (typeof raw.md === "string" && raw.md.length > 0 && !data.markdown) {
+  if (typeof raw.md === "string" && raw.md.length > 0) {
     data.markdown = raw.md;
   }
 

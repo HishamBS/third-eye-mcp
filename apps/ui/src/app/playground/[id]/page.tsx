@@ -205,8 +205,10 @@ export default function PlaygroundPage() {
       }
     };
 
-    ws.onerror = (error) => {
-      console.error("❌ WebSocket error:", error);
+    ws.onerror = () => {
+      console.error(
+        `WebSocket connection failed: ${wsUrl} — is the backend running on port 7070?`,
+      );
       setWsConnected(false);
     };
 

@@ -169,6 +169,9 @@ function EyeDialogue({
             height={32}
             className="rounded-full"
             alt=""
+            style={{
+              boxShadow: `0 0 0 2px ${eyeColor}26`,
+            }}
           />
           {isActive && (
             <div
@@ -206,6 +209,12 @@ function EyeDialogue({
   );
 }
 
+function getScoreColor(score: number): string {
+  if (score >= 80) return HEX_COLORS.success ?? "#22c55e";
+  if (score >= 50) return HEX_COLORS.warning ?? "#f59e0b";
+  return HEX_COLORS.error ?? "#ef4444";
+}
+
 function EyeResult({
   entry,
   viewMode,
@@ -227,6 +236,9 @@ function EyeResult({
           height={32}
           className="mt-1 flex-shrink-0 rounded-full"
           alt=""
+          style={{
+            boxShadow: `0 0 0 2px ${eyeColor}26`,
+          }}
         />
       )}
       <div>
@@ -250,9 +262,36 @@ function EyeResult({
           )}
         </div>
         {(score !== undefined || issues !== undefined) && (
-          <div className="mt-2 flex items-center gap-3 px-4 py-2 rounded bg-brand-paper text-xs">
-            {score !== undefined && <span>Score: {score}/100</span>}
-            {issues !== undefined && <span>Issues: {issues}</span>}
+          <div className="mt-2 flex items-center gap-3 px-3 py-1.5 rounded-md bg-brand-paper border border-brand-outline/20 text-xs">
+            {score !== undefined && (
+              <span className="flex items-center gap-1.5">
+                <span
+                  className="inline-block w-2 h-2 rounded-full"
+                  style={{ backgroundColor: getScoreColor(score) }}
+                />
+                <span className="text-brand-foreground/70">Score</span>
+                <span className="font-medium text-brand-foreground">
+                  {score}/100
+                </span>
+              </span>
+            )}
+            {issues !== undefined && (
+              <span className="flex items-center gap-1.5">
+                <span
+                  className="inline-block w-2 h-2 rounded-full"
+                  style={{
+                    backgroundColor:
+                      issues === 0
+                        ? (HEX_COLORS.success ?? "#22c55e")
+                        : (HEX_COLORS.warning ?? "#f59e0b"),
+                  }}
+                />
+                <span className="text-brand-foreground/70">Issues</span>
+                <span className="font-medium text-brand-foreground">
+                  {issues}
+                </span>
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -262,6 +301,7 @@ function EyeResult({
 
 function EyeQuestion({ entry }: { entry: ConversationEntryData }) {
   const eyeColor = getEyeColor(entry.eye);
+  const options = entry.action?.options;
   return (
     <div className="max-w-[85%]">
       <div className="flex items-center gap-2 mb-1">
@@ -298,6 +338,24 @@ function EyeQuestion({ entry }: { entry: ConversationEntryData }) {
           content={entry.content.markdown ?? entry.content.text}
           className="text-brand-foreground"
         />
+        {options && options.length > 0 && (
+          <div className="mt-3 space-y-1.5">
+            {options.map((option, idx) => (
+              <div
+                key={idx}
+                className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm border border-brand-outline/20 bg-brand-paper"
+              >
+                <span
+                  className="flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center text-[10px] font-medium"
+                  style={{ borderColor: `${eyeColor}60`, color: eyeColor }}
+                >
+                  {idx + 1}
+                </span>
+                <span className="text-brand-foreground/80">{option}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -305,7 +363,7 @@ function EyeQuestion({ entry }: { entry: ConversationEntryData }) {
 
 function HumanMessage({ entry }: { entry: ConversationEntryData }) {
   return (
-    <div className="flex justify-end">
+    <div className="flex justify-end gap-3">
       <div className="max-w-[70%]">
         <div className="flex items-center justify-end gap-2 mb-1">
           <span className="text-[10px] text-semantic-muted">
@@ -313,11 +371,14 @@ function HumanMessage({ entry }: { entry: ConversationEntryData }) {
           </span>
           <span className="text-sm font-medium text-brand-foreground">You</span>
         </div>
-        <div className="rounded-lg px-4 py-3 bg-brand-primary/10 border border-brand-primary/20">
+        <div className="rounded-2xl rounded-tr-md px-4 py-3 bg-brand-primary/10 border border-brand-primary/20 transition-shadow hover:shadow-[0_0_12px_rgba(var(--color-primary)/0.08)]">
           <MarkdownRenderer
             content={entry.content.markdown ?? entry.content.text}
           />
         </div>
+      </div>
+      <div className="w-8 h-8 rounded-full bg-brand-primary/20 border border-brand-primary/30 flex items-center justify-center flex-shrink-0 mt-6">
+        <span className="text-xs font-medium text-brand-primary">U</span>
       </div>
     </div>
   );
@@ -326,8 +387,14 @@ function HumanMessage({ entry }: { entry: ConversationEntryData }) {
 function AgentMessage({ entry }: { entry: ConversationEntryData }) {
   return (
     <div className="flex gap-3 max-w-[80%]">
-      <div className="w-8 h-8 rounded-full bg-semantic-info/10 border border-semantic-info/20 flex items-center justify-center flex-shrink-0 mt-1">
-        <span className="text-xs text-semantic-info">TE</span>
+      <div className="w-8 h-8 rounded-full bg-semantic-info/10 border border-semantic-info/20 flex items-center justify-center flex-shrink-0 mt-1 overflow-hidden">
+        <Image
+          src="/eyes/overseer.svg"
+          width={24}
+          height={24}
+          alt=""
+          className="rounded-full"
+        />
       </div>
       <div>
         <div className="flex items-center gap-2 mb-1">
@@ -423,10 +490,12 @@ function EyeError({ entry }: { entry: ConversationEntryData }) {
 
 function SystemMessage({ entry }: { entry: ConversationEntryData }) {
   return (
-    <div className="flex justify-center py-1">
+    <div className="flex items-center gap-3 py-1">
+      <div className="h-px flex-1 bg-brand-outline/20" />
       <span className="text-[11px] text-semantic-muted">
         {entry.content.text}
       </span>
+      <div className="h-px flex-1 bg-brand-outline/20" />
     </div>
   );
 }
@@ -467,9 +536,13 @@ function RoutingAnnounced({ entry }: { entry: ConversationEntryData }) {
             return (
               <Fragment key={eyeId}>
                 {index > 0 && (
-                  <span className="text-semantic-muted text-xs mx-0.5">
-                    &rarr;
-                  </span>
+                  <div className="flex items-center mx-1">
+                    <span className="w-3 border-t border-dashed border-semantic-muted/40" />
+                    <span className="text-semantic-muted text-[10px]">
+                      &rsaquo;
+                    </span>
+                    <span className="w-3 border-t border-dashed border-semantic-muted/40" />
+                  </div>
                 )}
                 <div className="flex flex-col items-center gap-0.5">
                   <Image

@@ -22,7 +22,17 @@ export function renderMarkdown(md?: string | null): string {
   if (!md) return "";
 
   const config: Config = {
-    ALLOWED_ATTR: ["href", "title", "target", "rel", "class"],
+    ALLOWED_ATTR: [
+      "href",
+      "title",
+      "target",
+      "rel",
+      "class",
+      "style",
+      "type",
+      "checked",
+      "disabled",
+    ],
     ALLOWED_TAGS: [
       "a",
       "p",
@@ -42,6 +52,19 @@ export function renderMarkdown(md?: string | null): string {
       "h5",
       "h6",
       "span",
+      "table",
+      "thead",
+      "tbody",
+      "tr",
+      "th",
+      "td",
+      "hr",
+      "del",
+      "sup",
+      "sub",
+      "details",
+      "summary",
+      "input",
     ],
   };
 

@@ -168,7 +168,7 @@ function ConversationFeedInner({
           </div>
         ) : (
           filteredEntries.map((entry) => (
-            <div key={entry.id}>
+            <div key={entry.id} className="animate-feed-in">
               <ConversationEntry entry={entry} viewMode={viewMode} />
               {entry.action && entry.status === "active" && (
                 <ActiveActionPanel
