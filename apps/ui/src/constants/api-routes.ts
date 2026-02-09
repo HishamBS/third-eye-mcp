@@ -19,6 +19,7 @@ export const API_ROUTES = {
 
   // Pipelines
   PIPELINES: "/api/pipelines",
+  PIPELINES_ACTIVE: "/api/pipelines/active",
   PIPELINES_BY_ID: (id: string) => `/api/pipelines/${id}`,
   PIPELINES_EXECUTE: (id: string) => `/api/pipelines/${id}/execute`,
   PIPELINES_RUNS: (id: string) => `/api/pipelines/${id}/runs`,

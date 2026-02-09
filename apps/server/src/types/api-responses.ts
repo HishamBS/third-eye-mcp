@@ -1,13 +1,14 @@
 /**
- * Strict TypeScript interfaces for all API responses
- * R07 Compliance: No 'any' types, proper strict typing
- * R01 Compliance: SSOT for all API response types
+ * HTTP API Response Types - Serialized transport layer
  *
- * NOTE: These are HTTP API response shapes, NOT the canonical entity types.
- * Base entity types (Session, Run, Eye, Persona, Pipeline, etc.) live in
- * @third-eye/types (packages/types/interfaces.ts). The types here are
- * serialized response variants (e.g., Date -> string) and API-specific
- * wrappers/summaries that extend or reshape the base types for HTTP transport.
+ * R07 Compliance: No 'any' types, proper strict typing
+ * R01 Compliance: Derives from SSOT entity types in @third-eye/types via Omit/extends
+ *
+ * These are HTTP response shapes, NOT the canonical entity types.
+ * Base entity types (Session, Run, Eye, Persona, Pipeline, etc.) are SSOT in
+ * @third-eye/types (packages/types/interfaces.ts). These response types use
+ * Omit<Base, 'field'> to create serialized variants (Date -> string) for JSON transport.
+ * API-specific composite types (summaries, wrappers) are defined only here.
  */
 
 import type {

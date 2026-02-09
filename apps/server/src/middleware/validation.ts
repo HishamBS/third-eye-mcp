@@ -31,7 +31,8 @@ export interface SanitizedObject {
 
 export interface SanitizedArray extends Array<SanitizedValue> {}
 
-// Rate limiting storage (in-memory, use Redis in production)
+// STUB(rate-limit): In-memory rate limiting for single-instance deployment.
+// Will not work across load-balanced instances. Requires Redis or distributed store for production.
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
 /**

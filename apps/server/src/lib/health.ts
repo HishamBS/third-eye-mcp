@@ -3,7 +3,21 @@ import { getConfig } from "@third-eye/config";
 import { ProviderFactory } from "@third-eye/providers";
 import type { ProviderId } from "@third-eye/types";
 import { HEALTH_CHECK_CACHE_TTL_MS } from "@third-eye/constants";
-import serverPkg from "../../../package.json";
+import { readFileSync } from "fs";
+import { resolve } from "path";
+
+// Read version at module load time (avoids JSON import bundler issues)
+const SERVER_VERSION = (() => {
+  try {
+    const pkgPath = resolve(__dirname, "../../package.json");
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf-8")) as {
+      version: string;
+    };
+    return pkg.version;
+  } catch {
+    return "1.0.0";
+  }
+})();
 
 interface HealthCheckResult {
   ok: boolean;
@@ -154,8 +168,8 @@ export async function getSystemHealth(): Promise<{
   // Calculate uptime
   const uptime_seconds = Math.floor(process.uptime());
 
-  // Get version from package.json or environment
-  const version = process.env.npm_package_version || serverPkg.version;
+  // Get version from environment or package.json
+  const version = process.env.npm_package_version || SERVER_VERSION;
 
   const { server } = getConfig();
   const host = server.host;

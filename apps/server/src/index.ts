@@ -99,8 +99,10 @@ app.route("/api/guidance", guidanceRoutes);
 app.route("/api/pipelines", pipelinesRoutes);
 app.route("/api/pipeline-execution", pipelineExecutionRoutes);
 app.route("/api/strictness", strictnessRoutes);
+// Leaderboards served under /api/metrics namespace (FE SSOT: API_ROUTES.METRICS_LEADERBOARDS)
+// Also mounted at /api/leaderboards for direct access by backend services
+app.route("/api/metrics/leaderboards", leaderboardsRoutes);
 app.route("/api/leaderboards", leaderboardsRoutes);
-app.route("/api/metrics/leaderboards", leaderboardsRoutes); // Alias for /api/leaderboards
 app.route("/api/duel", duelRoutes);
 app.route("/api/export", exportRoutes);
 app.route("/api/integrations", integrationsRoutes);
@@ -140,6 +142,8 @@ app.get("/ping", (c) => {
 });
 
 // Enhanced health check with DB and provider status
+// Returns: 200 (healthy), 207 (degraded - some providers down), 503 (down)
+// Note: FE should treat both 200 and 207 as operational states
 app.get("/health", async (c) => {
   const { getSystemHealth } = await import("./lib/health");
 

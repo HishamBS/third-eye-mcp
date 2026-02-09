@@ -6,8 +6,15 @@ import { eq } from "drizzle-orm";
 /**
  * API Authentication Middleware
  *
- * Optional API key authentication for production deployments
- * Local-first mode: API key optional, defaults to localhost-only binding
+ * STUB(auth): Env-var based API key authentication for local-first development.
+ * Production requirements not yet implemented:
+ *  - DB-backed key storage (currently reads from API_KEYS env var)
+ *  - Key rotation and expiry
+ *  - Scoped permissions per key
+ *  - Rate limiting per key
+ *
+ * Local-first mode: API key optional, defaults to localhost-only binding.
+ * Enable with REQUIRE_API_KEY=true and API_KEYS=key1,key2 env vars.
  */
 
 /**

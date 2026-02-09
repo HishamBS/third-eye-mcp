@@ -92,6 +92,39 @@ app.get("/", async (c) => {
 });
 
 /**
+ * GET /api/pipelines/active - Get the currently active pipeline
+ * Returns the active pipeline with the highest version number.
+ * Per M3: Implements endpoint that FE useActivePipeline() previously worked around with client-side filtering.
+ */
+app.get("/active", async (c) => {
+  try {
+    const { db } = getDb();
+
+    const activePipelines = await db
+      .select()
+      .from(pipelines)
+      .where(eq(pipelines.active, true))
+      .orderBy(desc(pipelines.version))
+      .all();
+
+    if (activePipelines.length === 0) {
+      return createSuccessResponse(c, null);
+    }
+
+    // Return the highest-version active pipeline
+    return createSuccessResponse(c, activePipelines[0]);
+  } catch (error) {
+    return createInternalErrorResponse(
+      c,
+      formatErrorWithMessage(
+        ApiErrorMessage.PIPELINE_FETCH_FAILED,
+        error instanceof Error ? error.message : ApiErrorMessage.UNKNOWN_ERROR,
+      ),
+    );
+  }
+});
+
+/**
  * GET /api/pipelines/:id - Get specific pipeline
  */
 app.get("/:id", async (c) => {

@@ -2,13 +2,12 @@
  * Pipeline Service Hooks - Phase 10
  *
  * Per R07: Strict typing, no 'any'
- * Per R16: Ready for backend integration (placeholders for now)
+ * Per R16: Connected to backend pipeline endpoints
  */
 
 import { useState, useCallback } from "react";
 import { useAPI } from "./useAPI";
 import type { Pipeline, PipelineNode, PipelineEdge } from "@/types/pipeline";
-import { MASTER_PIPELINE_ID } from "@third-eye/constants";
 
 /**
  * Get all pipelines
@@ -38,9 +37,7 @@ export function usePipelines() {
 
 /**
  * Get active pipeline
- * Backend: GET /api/pipelines/active endpoint not implemented
- * Workaround: Client-side filtering for active=true with max version
- * Per MASTER_PIPELINE_ID: Prefer overseer-dynamic-master as the production pipeline
+ * Backend: GET /api/pipelines/active - returns highest-version active pipeline
  */
 export function useActivePipeline() {
   const { get } = useAPI();
@@ -52,35 +49,8 @@ export function useActivePipeline() {
     setLoading(true);
     setError(null);
     try {
-      // Workaround: Fetch all pipelines and filter client-side
-      const allPipelines = await get<Pipeline[]>("/api/pipelines");
-
-      // Filter for active pipelines
-      const activePipelines = allPipelines.filter((p) => p.active);
-
-      if (activePipelines.length === 0) {
-        setPipeline(null);
-      } else if (activePipelines.length === 1) {
-        // Only one active pipeline - use it
-        setPipeline(activePipelines[0]);
-      } else {
-        // Multiple active pipelines - prefer master, then highest version
-        // CRITICAL FIX: Explicit master selection prevents wrong pipeline in Fixed Template mode
-        // Per R13: Import from SSOT, no hardcoded string literals
-        const masterPipeline = activePipelines.find(
-          (p) => p.id === MASTER_PIPELINE_ID,
-        );
-
-        if (masterPipeline) {
-          setPipeline(masterPipeline);
-        } else {
-          // Fallback: Get pipeline with highest version number
-          const latestActive = activePipelines.reduce((prev, current) =>
-            current.version > prev.version ? current : prev,
-          );
-          setPipeline(latestActive);
-        }
-      }
+      const data = await get<Pipeline | null>("/api/pipelines/active");
+      setPipeline(data);
     } catch (err) {
       setError(err as Error);
     } finally {

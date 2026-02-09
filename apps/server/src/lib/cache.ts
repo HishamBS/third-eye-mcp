@@ -5,6 +5,12 @@ import { CACHE_TTL_MS, TIME_WINDOWS } from "@third-eye/constants";
 /**
  * Response Caching System
  *
+ * STUB(cache): In-memory caching for single-instance deployment.
+ * Known limitations:
+ *  - invalidateEye() clears entire cache (SHA-256 hashes lose original eye name)
+ *  - cacheMiddleware() cannot extract response body in Hono middleware pipeline
+ *  - No distributed cache backing (Redis) for multi-instance deployments
+ *
  * Caches Eye responses for identical inputs (TTL: 5 minutes)
  * Skips cache for session-dependent Eyes (Byakugan, Rinnegan)
  */
