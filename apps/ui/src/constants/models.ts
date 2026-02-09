@@ -1,8 +1,10 @@
 /**
  * Models & Providers Constants - SSOT for model/provider configuration
  * Per R13: No magic strings
- * Per R01: Single source of truth
+ * Per R01: Derives from @third-eye/types PROVIDERS (single source of truth)
  */
+
+import { PROVIDERS as PROVIDER_IDS } from "@third-eye/types";
 
 export interface ProviderDefinition {
   readonly id: string;
@@ -10,12 +12,24 @@ export interface ProviderDefinition {
   readonly requiresKey: boolean;
 }
 
-export const PROVIDERS: readonly ProviderDefinition[] = [
-  { id: "groq", name: "Groq", requiresKey: true },
-  { id: "openrouter", name: "OpenRouter", requiresKey: true },
-  { id: "ollama", name: "Ollama", requiresKey: false },
-  { id: "lmstudio", name: "LM Studio", requiresKey: false },
-] as const;
+/** Display names for each provider ID */
+const PROVIDER_DISPLAY_NAMES: Record<string, string> = {
+  groq: "Groq",
+  openrouter: "OpenRouter",
+  ollama: "Ollama",
+  lmstudio: "LM Studio",
+};
+
+/** Local providers that do not require an API key */
+const LOCAL_PROVIDERS = new Set(["ollama", "lmstudio"]);
+
+export const PROVIDERS: readonly ProviderDefinition[] = PROVIDER_IDS.map(
+  (id) => ({
+    id,
+    name: PROVIDER_DISPLAY_NAMES[id] ?? id,
+    requiresKey: !LOCAL_PROVIDERS.has(id),
+  }),
+);
 
 export interface CapabilityFilter {
   readonly vision: boolean;

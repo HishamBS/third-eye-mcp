@@ -1,5 +1,5 @@
 import type {
-  PipelineEvent,
+  WSWSPipelineEvent,
   SessionDetail,
   SessionOverview,
   SessionSettingsPayload,
@@ -24,7 +24,7 @@ export async function fetchEvents(options: {
   apiKey: string;
   limit?: number;
   signal?: AbortSignal;
-}): Promise<PipelineEvent[]> {
+}): Promise<WSPipelineEvent[]> {
   const { sessionId, apiKey, limit = 200, signal } = options;
   const base = buildBaseUrl();
   const url = `${base}/api/session/${encodeURIComponent(sessionId)}/events?limit=${limit}`;
@@ -37,7 +37,9 @@ export async function fetchEvents(options: {
     throw new Error(`Failed to load events (${response.status})`);
   }
   const payload = await response.json();
-  return Array.isArray(payload.items) ? (payload.items as PipelineEvent[]) : [];
+  return Array.isArray(payload.items)
+    ? (payload.items as WSPipelineEvent[])
+    : [];
 }
 
 export async function submitClarifications(options: {

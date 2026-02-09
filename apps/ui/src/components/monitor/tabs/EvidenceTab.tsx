@@ -1,12 +1,12 @@
 import EvidenceLens from "../../EvidenceLens";
 import SessionMemoryPanel from "../../SessionMemoryPanel";
-import type { EvidenceClaim, PipelineEvent } from "../../../types/pipeline";
+import type { EvidenceClaim, WSPipelineEvent } from "../../../types/pipeline";
 
 export interface EvidenceTabProps {
   claims: EvidenceClaim[];
-  events: PipelineEvent[];
+  events: WSPipelineEvent[];
   latestDraft: string;
-  byakuganEvents: PipelineEvent[];
+  byakuganEvents: WSPipelineEvent[];
   noviceMode: boolean;
   loading?: boolean;
 }

@@ -95,6 +95,12 @@ export const LATENCY_THRESHOLDS = Object.freeze({
 });
 
 /**
+ * Cache Time-To-Live Durations (Server-Side)
+ */
+export const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes - default response cache TTL
+export const HEALTH_CHECK_CACHE_TTL_MS = 5_000; // 5 seconds - health check result cache
+
+/**
  * Time Window Durations
  */
 export const TIME_WINDOWS = Object.freeze({

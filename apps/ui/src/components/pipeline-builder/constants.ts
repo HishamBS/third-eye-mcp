@@ -12,6 +12,9 @@
  */
 export type EyeStage = "GUIDANCE" | "VALIDATION" | "BOTH" | "ROUTER";
 
+/** Default stage when database does not provide one */
+export const DEFAULT_EYE_STAGE: EyeStage = "GUIDANCE";
+
 /**
  * Pipeline Builder UI Text Constants
  */

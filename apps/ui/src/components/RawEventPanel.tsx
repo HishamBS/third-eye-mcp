@@ -1,9 +1,9 @@
 import { useMemo } from "react";
-import type { PipelineEvent } from "../types/pipeline";
+import type { WSPipelineEvent } from "../types/pipeline";
 import { renderMarkdown } from "../lib/markdown";
 
 export interface RawEventPanelProps {
-  event: PipelineEvent | null;
+  event: WSPipelineEvent | null;
 }
 
 export function RawEventPanel({ event }: RawEventPanelProps) {

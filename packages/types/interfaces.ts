@@ -119,11 +119,6 @@ export interface Eye {
 }
 
 /**
- * @deprecated Use Eye interface instead. All eyes are unified.
- */
-export type CustomEye = Eye;
-
-/**
  * Eye Routing Configuration - matches DB eyes_routing table
  */
 export interface EyeRouting {
@@ -131,6 +126,8 @@ export interface EyeRouting {
   eyeId: string;
   primaryProvider: string | null;
   primaryModel: string | null;
+  fallbackProvider: string | null;
+  fallbackModel: string | null;
   createdAt: Date | string;
 }
 
@@ -172,11 +169,6 @@ export interface Run {
 }
 
 /**
- * @deprecated Use Run interface instead. Kept for backward compatibility.
- */
-export type PipelineRun = Run;
-
-/**
  * Pipeline Event - matches DB pipeline_events table (9 columns)
  */
 export interface PipelineEvent {
@@ -193,6 +185,7 @@ export interface PipelineEvent {
 
 /**
  * Prompt Template
+ * NOTE: No backing DB table yet. Defined for future prompt library feature.
  */
 export interface PromptTemplate {
   id: string;
@@ -219,6 +212,15 @@ export interface StrictnessProfile {
   mangekyoStrictness: StrictnessLevel;
   isBuiltIn: boolean;
   createdAt: Date | string;
+}
+
+/**
+ * Pipeline Workflow Structure - typed shape of Pipeline.workflowJson
+ * Used by the UI pipeline builder for typed node/edge access
+ */
+export interface PipelineWorkflow {
+  nodes: Array<Record<string, unknown>>;
+  edges: Array<Record<string, unknown>>;
 }
 
 /**

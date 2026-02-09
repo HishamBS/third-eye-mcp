@@ -22,7 +22,7 @@ const warnOnUnsafeBind = (host: string) => {
   }
   if (host === "0.0.0.0" || host === "::") {
     console.warn(
-      "\n⚠️  WARNING: Third Eye MCP is binding to a public interface.",
+      "\n[Security] WARNING: Third Eye MCP is binding to a public interface.",
     );
     console.warn("   This exposes the server to your local network.");
     console.warn(

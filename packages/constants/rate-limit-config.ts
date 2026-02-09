@@ -73,6 +73,13 @@ export const PROVIDER_RATE_LIMITS = Object.freeze({
 });
 
 /**
+ * HTTP Middleware Rate Limit Defaults
+ * Used by the validation middleware for per-session/IP rate limiting
+ */
+export const RATE_LIMIT_MAX_REQUESTS = 100;
+export const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+
+/**
  * Rate Limit Event Types for logging and metrics
  */
 export const RATE_LIMIT_EVENT_TYPE = Object.freeze({

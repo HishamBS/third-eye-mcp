@@ -23,7 +23,11 @@ import {
   Monitor,
 } from "lucide-react";
 import { PROVIDERS } from "@third-eye/types/enums";
-import { UI_HELP_TEXT, PLATFORM_HIGHLIGHTS } from "@third-eye/constants";
+import {
+  UI_HELP_TEXT,
+  PLATFORM_HIGHLIGHTS,
+  POLLING_INTERVALS,
+} from "@third-eye/constants";
 import { API_BASE_URL } from "@/consts/api";
 import { ANIMATION_DURATION } from "@/constants/timing";
 import {
@@ -65,7 +69,10 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchStats();
-    const interval = setInterval(fetchStats, 3000);
+    const interval = setInterval(
+      fetchStats,
+      POLLING_INTERVALS.REALTIME_STATS_MS,
+    );
     return () => clearInterval(interval);
   }, []);
 
@@ -112,7 +119,7 @@ export default function HomePage() {
         // Set all providers to offline
         setStats((prev) => ({
           ...prev,
-          providers: ["groq", "openrouter", "ollama", "lmstudio"].map((id) => ({
+          providers: [...PROVIDERS].map((id) => ({
             id,
             status: "offline" as const,
           })),

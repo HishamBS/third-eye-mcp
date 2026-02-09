@@ -3,6 +3,8 @@ import {
   ApiErrorCode,
   ApiErrorTitle,
   ApiErrorMessage,
+  DEFAULT_PRIMARY_PROVIDER,
+  DEFAULT_PRIMARY_MODEL,
 } from "@third-eye/constants";
 import {
   generateId,
@@ -42,8 +44,8 @@ import {
 const app = new Hono();
 
 const SUPPORTED_PROVIDERS = new Set<string>(PROVIDERS as readonly string[]);
-const DEFAULT_DUEL_PROVIDER = "groq" as ProviderType;
-const DEFAULT_DUEL_MODEL = "llama-3.3-70b-versatile";
+const DEFAULT_DUEL_PROVIDER = DEFAULT_PRIMARY_PROVIDER as ProviderType;
+const DEFAULT_DUEL_MODEL = DEFAULT_PRIMARY_MODEL;
 
 // Helper to safely extract numeric values from BaseEnvelope
 function getNumericValue(result: BaseEnvelope, key: string): number {

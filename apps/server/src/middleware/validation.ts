@@ -1,6 +1,11 @@
 import { Context, Next } from "hono";
 import { z, ZodSchema } from "zod";
 import { getEyeIdByName } from "@third-eye/db/utils/lookups";
+import {
+  RATE_LIMIT_MAX_REQUESTS,
+  RATE_LIMIT_WINDOW_MS,
+} from "@third-eye/constants";
+import { PROVIDERS } from "@third-eye/types";
 
 /**
  * Input Validation Middleware
@@ -132,8 +137,8 @@ export function rateLimit(options?: {
   windowMs?: number;
   keyGenerator?: (c: Context) => string;
 }) {
-  const maxRequests = options?.maxRequests || 100;
-  const windowMs = options?.windowMs || 60000; // 1 minute
+  const maxRequests = options?.maxRequests || RATE_LIMIT_MAX_REQUESTS;
+  const windowMs = options?.windowMs || RATE_LIMIT_WINDOW_MS;
   const keyGenerator =
     options?.keyGenerator ||
     ((c: Context) => {
@@ -423,9 +428,8 @@ export async function validateProviderExists(
     return false;
   }
 
-  // Known providers from types (for type checking, not runtime validation)
-  // But we validate against database configuration
-  const validProviders = ["groq", "openrouter", "ollama", "lmstudio"];
+  // Validate against SSOT provider list from @third-eye/types
+  const validProviders: readonly string[] = PROVIDERS;
   if (!validProviders.includes(providerId.toLowerCase())) {
     return false;
   }

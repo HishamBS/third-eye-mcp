@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { buildWebSocketUrl, fetchEvents } from "../lib/api";
 import { usePipelineStore } from "../store/pipelineStore";
-import type { PipelineEvent, EvidenceClaim } from "../types/pipeline";
+import type { WSPipelineEvent, EvidenceClaim } from "../types/pipeline";
 
 const BACKOFF_STEPS = [0, 1000, 2000, 4000, 7000, 11000, 16000, 20000];
 
@@ -59,11 +59,11 @@ function parseClaims(payload: unknown): EvidenceClaim[] {
     .filter(Boolean) as EvidenceClaim[];
 }
 
-function normaliseEvent(raw: unknown): PipelineEvent | null {
+function normaliseEvent(raw: unknown): WSPipelineEvent | null {
   if (!raw || typeof raw !== "object") return null;
   const event = raw as Record<string, unknown>;
   return {
-    type: String(event.type || "eye_update") as PipelineEvent["type"],
+    type: String(event.type || "eye_update") as WSPipelineEvent["type"],
     session_id: String(event.session_id ?? ""),
     eye: typeof event.eye === "string" ? event.eye : undefined,
     ok: typeof event.ok === "boolean" ? (event.ok as boolean) : undefined,

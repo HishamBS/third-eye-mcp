@@ -82,6 +82,8 @@ export const eyesRouting = sqliteTable(
       .references(() => eyes.id), // FK to eyes
     primaryProvider: text(),
     primaryModel: text(),
+    fallbackProvider: text(),
+    fallbackModel: text(),
     createdAt: integer({ mode: "timestamp" }).notNull(),
   },
   (table) => ({

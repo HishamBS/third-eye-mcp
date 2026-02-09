@@ -1,6 +1,6 @@
 // Phase 10 imports - React Flow types for pipeline builder
 import type { Node, Edge } from "reactflow";
-import type { EyeName } from "@third-eye/types";
+import type { EyeName, Pipeline as BasePipeline } from "@third-eye/types";
 import type { EdgeConditionType } from "@/components/pipeline-builder/constants";
 
 export type EyeType =
@@ -15,8 +15,7 @@ export type EyeType =
   | "MANGEKYO_TESTS"
   | "MANGEKYO_DOCS"
   | "TENSEIGAN"
-  | "BYAKUGAN"
-  | "RINNEGAN_FINAL";
+  | "BYAKUGAN";
 
 export type PipelineEnvelopeType =
   | "eye_update"
@@ -39,11 +38,6 @@ export interface WSPipelineEvent {
   data?: Record<string, unknown>;
   ts?: string | null;
 }
-
-/**
- * @deprecated Use WSPipelineEvent instead. Kept for backward compatibility.
- */
-export type PipelineEvent = WSPipelineEvent;
 
 export interface SessionSettingsPayload {
   ambiguity_threshold?: number;
@@ -76,7 +70,7 @@ export interface PipelineStoreState {
   connected: boolean;
   connectionAttempts: number;
   eyes: Record<string, EyeState>;
-  events: PipelineEvent[];
+  events: WSPipelineEvent[];
   settings: SessionSettingsPayload | null;
   claims: EvidenceClaim[];
   error: string | null;
@@ -86,7 +80,7 @@ export type PipelineStoreActions = {
   setSessionId: (sessionId: string) => void;
   switchSession: (sessionId: string) => void;
   reset: () => void;
-  addEvent: (event: PipelineEvent) => void;
+  addEvent: (event: WSPipelineEvent) => void;
   setEyeState: (eye: string, state: EyeState) => void;
   setSettings: (settings: SessionSettingsPayload) => void;
   setClaims: (claims: EvidenceClaim[]) => void;
@@ -243,24 +237,15 @@ export interface PipelineEdge extends Edge<EdgeConditionData> {
 }
 
 /**
- * Complete Pipeline Definition
- * Per R07: All fields explicitly typed
- *
- * Note: Backend returns workflowJson containing {nodes, edges}
- * This matches the database schema from apps/server/src/routes/pipelines.ts
+ * UI Pipeline Definition - extends shared Pipeline with typed workflowJson
+ * Per R07: Strict typing for pipeline builder
  */
-export interface Pipeline {
-  id: string;
-  name: string;
-  description: string;
+export interface Pipeline extends Omit<BasePipeline, "workflowJson"> {
   workflowJson: {
     nodes: PipelineNode[];
     edges: PipelineEdge[];
   };
-  category: string;
-  active: boolean;
   version: number;
-  createdAt: string | Date;
 }
 
 /**
@@ -296,8 +281,9 @@ export interface PipelineValidationResult {
 }
 
 /**
- * Eye Definition - Unified type for ALL eyes (no built-in vs custom distinction)
- * Per R07: Single interface, all fields optional where appropriate
+ * Eye Definition for UI components - extends shared Eye with optional UI-specific fields.
+ * This is the canonical UI type for eye data in palettes and pipeline builders.
+ * The shared Eye interface (from @third-eye/types) is the DB SSOT.
  */
 export interface EyeDefinition {
   id: string;

@@ -2,14 +2,14 @@ import { useMemo } from "react";
 import KillSwitchBar from "../../KillSwitchBar";
 import DuelLauncher from "../../DuelLauncher";
 import DuelResults from "../../DuelResults";
-import type { PipelineEvent } from "../../../types/pipeline";
+import type { WSPipelineEvent } from "../../../types/pipeline";
 
 export interface OperationsTabProps {
   sessionId: string | null;
   apiKey: string | null;
   latestDraft: string;
-  latestEvent: PipelineEvent | null;
-  events: PipelineEvent[];
+  latestEvent: WSPipelineEvent | null;
+  events: WSPipelineEvent[];
   resubmitMessage: string | null;
   loading?: boolean;
 }

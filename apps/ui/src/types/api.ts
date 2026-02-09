@@ -14,7 +14,6 @@ export type {
   EyeRouting,
   Persona,
   Run,
-  PipelineRun,
   PipelineEvent,
   Pipeline,
   McpIntegration,

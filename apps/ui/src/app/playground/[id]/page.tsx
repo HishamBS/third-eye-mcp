@@ -17,7 +17,7 @@ import {
   ViewModeDescription,
 } from "@/components/ViewModeToggle";
 import { StrictnessControls } from "@/components/StrictnessControls";
-import type { PipelineEvent } from "@/types/pipeline";
+import type { WSPipelineEvent } from "@/types/pipeline";
 import type { Envelope, Session, Run } from "@third-eye/types";
 import { TOOL_NAME } from "@third-eye/types";
 import { getApiUrl, WS_BASE_URL, API_BASE_URL } from "@/consts/api";
@@ -50,7 +50,7 @@ export default function PlaygroundPage() {
 
   const [session, setSession] = useState<Session | null>(null);
   const [runs, setRuns] = useState<Run[]>([]);
-  const [byakuganEvents, setByakuganEvents] = useState<PipelineEvent[]>([]);
+  const [byakuganEvents, setByakuganEvents] = useState<WSPipelineEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
   const [taskInput, setTaskInput] = useState("");
@@ -248,7 +248,7 @@ export default function PlaygroundPage() {
       }
 
       const payload = await response.json();
-      const events: PipelineEvent[] = Array.isArray(payload?.data)
+      const events: WSPipelineEvent[] = Array.isArray(payload?.data)
         ? payload.data
         : Array.isArray(payload)
           ? payload

@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 import clsx from "clsx";
-import type { PipelineEvent } from "../types/pipeline";
+import type { WSPipelineEvent } from "../types/pipeline";
 
 export interface TimelineProps {
-  events: PipelineEvent[];
+  events: WSPipelineEvent[];
   selectedIndex?: number;
-  onSelect?: (index: number, event: PipelineEvent) => void;
-  onFocusEye?: (event: PipelineEvent) => void;
+  onSelect?: (index: number, event: WSPipelineEvent) => void;
+  onFocusEye?: (event: WSPipelineEvent) => void;
 }
 
 function formatTimestamp(value?: string | null): string {

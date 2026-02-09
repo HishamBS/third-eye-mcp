@@ -1,4 +1,4 @@
-import type { PipelineEvent } from "../types/pipeline";
+import type { WSPipelineEvent } from "../types/pipeline";
 import {
   STATUS_TEXT_COLORS,
   STATUS_BG_COLORS_SUBTLE,
@@ -6,10 +6,10 @@ import {
 } from "@/constants/color-mappings";
 
 export interface DuelResultsProps {
-  events: PipelineEvent[];
+  events: WSPipelineEvent[];
 }
 
-function inferAgent(event: PipelineEvent): string | null {
+function inferAgent(event: WSPipelineEvent): string | null {
   if (typeof event.data?.agent === "string") return event.data.agent;
   if (typeof event.data?.agent_name === "string") return event.data.agent_name;
   return null;
@@ -25,7 +25,7 @@ export function DuelResults({ events }: DuelResultsProps) {
     );
   }
 
-  const grouped = duelEvents.reduce<Record<string, PipelineEvent[]>>(
+  const grouped = duelEvents.reduce<Record<string, WSPipelineEvent[]>>(
     (acc, event) => {
       const agent = inferAgent(event) ?? "unknown";
       acc[agent] = acc[agent] || [];

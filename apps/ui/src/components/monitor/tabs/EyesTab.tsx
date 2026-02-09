@@ -5,18 +5,18 @@ import ClarificationsPanel from "../../ClarificationsPanel";
 import clsx from "clsx";
 import type {
   EyeState,
-  PipelineEvent,
+  WSPipelineEvent,
   ClarificationContext,
 } from "../../../types/pipeline";
 
 export interface EyesTabProps {
   eyes: Record<string, EyeState>;
-  events: PipelineEvent[];
+  events: WSPipelineEvent[];
   personaMode: boolean;
   onOpenDetails: (eye: string) => void;
   onShowWhy: (eye: string) => void;
   selectedEventIndex: number | undefined;
-  onSelectEvent: (index: number, event: PipelineEvent) => void;
+  onSelectEvent: (index: number, event: WSPipelineEvent) => void;
   clarifications: ClarificationContext;
   sessionId: string | null;
   apiKey: string | null;

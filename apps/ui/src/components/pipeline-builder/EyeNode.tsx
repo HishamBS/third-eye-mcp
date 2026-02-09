@@ -4,6 +4,7 @@ import { memo } from "react";
 import { Handle, Position, type NodeProps } from "reactflow";
 import { EyeIcon, getEyeColor } from "@/components/EyeIcon";
 import type { EyeStage } from "./constants";
+import { DEFAULT_EYE_STAGE } from "./constants";
 import type { EyeName } from "@third-eye/types";
 import {
   STATUS_TEXT_COLORS,
@@ -52,7 +53,7 @@ function EyeNodeComponent({
 
   // Use provided data from database, fallback to eyeId if not provided
   const displayName = dataDisplayName || eyeId;
-  const stage = dataStage || "GUIDANCE"; // Default fallback - should always be provided from DB
+  const stage = dataStage || DEFAULT_EYE_STAGE;
 
   // Get Eye-specific color from theme SSOT
   const eyeColor = getEyeColor(eyeId);

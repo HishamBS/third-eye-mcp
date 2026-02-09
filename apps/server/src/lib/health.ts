@@ -2,6 +2,7 @@ import { getDb } from "@third-eye/db";
 import { getConfig } from "@third-eye/config";
 import { ProviderFactory } from "@third-eye/providers";
 import type { ProviderId } from "@third-eye/types";
+import { HEALTH_CHECK_CACHE_TTL_MS } from "@third-eye/constants";
 
 interface HealthCheckResult {
   ok: boolean;
@@ -13,9 +14,9 @@ interface ProviderHealth {
   [key: string]: boolean;
 }
 
-// Cache health check results for 5 seconds
+// Cache health check results to avoid excessive provider probing
 const healthCache = new Map<string, { result: unknown; timestamp: number }>();
-const CACHE_TTL = 5000; // 5 seconds
+const CACHE_TTL = HEALTH_CHECK_CACHE_TTL_MS;
 
 function getCached<T>(key: string): T | null {
   const cached = healthCache.get(key);

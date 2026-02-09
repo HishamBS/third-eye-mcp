@@ -1,5 +1,6 @@
 import { createHash } from "crypto";
 import type { MiddlewareHandler } from "hono";
+import { CACHE_TTL_MS } from "@third-eye/constants";
 
 /**
  * Response Caching System
@@ -16,10 +17,12 @@ interface CacheEntry<T> {
 
 class ResponseCache {
   private cache = new Map<string, CacheEntry<unknown>>();
-  private readonly defaultTTL = 5 * 60 * 1000; // 5 minutes
+  private readonly defaultTTL = CACHE_TTL_MS;
 
   /**
-   * Eyes that should skip caching (session-dependent)
+   * Eyes that should skip caching because they are session-dependent.
+   * These eyes (and their substages like rinnegan:requirements) produce
+   * different outputs per session context, making cached responses invalid.
    */
   private readonly skipCacheEyes = new Set([
     "byakugan",
@@ -195,11 +198,11 @@ export async function withCache<T>(
   // Check cache
   const cached = responseCache.get<T>(eye, input);
   if (cached) {
-    console.log(`📦 Cache HIT for ${eye}`);
+    console.log(`[Cache] HIT for ${eye}`);
     return cached;
   }
 
-  console.log(`🔄 Cache MISS for ${eye}`);
+  console.log(`[Cache] MISS for ${eye}`);
 
   // Execute and cache
   const result = await executor();

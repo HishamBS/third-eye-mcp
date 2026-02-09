@@ -1,7 +1,7 @@
-import type { PipelineEvent } from "../types/pipeline";
+import type { WSPipelineEvent } from "../types/pipeline";
 
 export interface SessionMemoryPanelProps {
-  byakuganEvents?: PipelineEvent[];
+  byakuganEvents?: WSPipelineEvent[];
 }
 
 type MemoryReference = {
@@ -11,7 +11,7 @@ type MemoryReference = {
   similarity?: number;
 };
 
-function toMemoryList(event: PipelineEvent): MemoryReference[] {
+function toMemoryList(event: WSPipelineEvent): MemoryReference[] {
   const data = event.data ?? {};
   const record = data as Record<string, unknown>;
   const candidates = Array.isArray(record.memory_references)

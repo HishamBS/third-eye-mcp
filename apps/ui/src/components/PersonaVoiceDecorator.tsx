@@ -5,15 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { EyeIcon } from "@/components/EyeIcon";
 import type { ReactNode } from "react";
 import { ANIMATION_DURATION } from "@/constants/timing";
-
-type EyeName =
-  | "sharingan"
-  | "rinnegan"
-  | "byakugan"
-  | "tenseigan"
-  | "mangekyo"
-  | "jogan"
-  | "overseer";
+import type { EyeName } from "@third-eye/types";
 
 interface PersonaTheme {
   gradient: string;

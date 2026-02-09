@@ -14,13 +14,13 @@ const SERVER_DIR = resolve(ROOT, "apps/server");
 const DIST_DIR = resolve(SERVER_DIR, "dist");
 const ENTRY = resolve(SERVER_DIR, "src/index.ts");
 
-console.log("🔨 Building Third Eye MCP Server...");
+console.log("[Build] Building Third Eye MCP Server...");
 console.log(`   Entry: ${ENTRY}`);
 console.log(`   Output: ${DIST_DIR}`);
 
 // Clean dist directory
 if (existsSync(DIST_DIR)) {
-  console.log("🧹 Cleaning dist directory...");
+  console.log("[Build] Cleaning dist directory...");
   rmSync(DIST_DIR, { recursive: true, force: true });
 }
 
@@ -46,14 +46,14 @@ try {
   });
 
   if (result.success) {
-    console.log("✅ Server build completed successfully!");
+    console.log("[Build] Server build completed successfully!");
     console.log(`   Output: ${DIST_DIR}/index.js`);
     console.log(`   Sourcemap: ${DIST_DIR}/index.js.map`);
 
     // Display build artifacts
     const { readdirSync, statSync } = await import("fs");
     const files = readdirSync(DIST_DIR);
-    console.log("\n📦 Build artifacts:");
+    console.log("\n[Build] Artifacts:");
     files.forEach((file) => {
       const filePath = resolve(DIST_DIR, file);
       const stats = statSync(filePath);
@@ -61,10 +61,10 @@ try {
       console.log(`   - ${file} (${sizeKB} KB)`);
     });
   } else {
-    console.error("❌ Build failed");
+    console.error("[Build] Build failed");
     process.exit(1);
   }
 } catch (error) {
-  console.error("❌ Build error:", error);
+  console.error("[Build] Build error:", error);
   process.exit(1);
 }

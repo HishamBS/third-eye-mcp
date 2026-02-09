@@ -11,8 +11,10 @@ import {
   STATUS_BORDER_COLORS_SUBTLE,
   STATUS_BG_COLORS,
 } from "@/constants/color-mappings";
+import { PROVIDERS } from "@third-eye/types";
 
-const ALLOWED_PROVIDERS = ["groq", "ollama", "lmstudio"] as const;
+/** Duel mode excludes openrouter (cloud-only, no direct model comparison) */
+const ALLOWED_PROVIDERS = PROVIDERS.filter((p) => p !== "openrouter");
 
 const PROVIDER_LABELS: Record<string, string> = {
   groq: "Groq",

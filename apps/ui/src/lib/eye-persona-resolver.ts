@@ -50,9 +50,11 @@ export function generateColorFromHash(str: string): string {
 /**
  * Convert HSL string to hex
  */
+const FALLBACK_HEX_COLOR = "#6b7280"; // gray-500
+
 function hslToHex(hsl: string): string {
   const match = hsl.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
-  if (!match) return "#6b7280"; // gray-500 fallback
+  if (!match) return FALLBACK_HEX_COLOR;
 
   const h = parseInt(match[1]) / 360;
   const s = parseInt(match[2]) / 100;

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type {
   EyeState,
-  PipelineEvent,
+  WSWSPipelineEvent,
   PipelineStore,
   SessionSettingsPayload,
   EvidenceClaim,
@@ -46,7 +46,7 @@ export const usePipelineStore = create<PipelineStore>((set, _get) => ({
       connected: false,
       connectionAttempts: 0,
     }),
-  addEvent: (event: PipelineEvent) =>
+  addEvent: (event: WSPipelineEvent) =>
     set(({ events }) => {
       const trimmed = [...events, event];
       if (trimmed.length > MAX_EVENTS) {
@@ -75,7 +75,7 @@ export function selectEyeStates(): Record<string, EyeState> {
   return usePipelineStore.getState().eyes;
 }
 
-export function selectEvents(): PipelineEvent[] {
+export function selectEvents(): WSPipelineEvent[] {
   return usePipelineStore.getState().events;
 }
 

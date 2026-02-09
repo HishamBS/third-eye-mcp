@@ -16,7 +16,7 @@ const HOST = config.server.host;
 
 if (config.security.bindWarning && (HOST === "0.0.0.0" || HOST === "::")) {
   console.warn(
-    "\n⚠️  WARNING: Third Eye MCP is binding to a public interface.",
+    "\n[Security] WARNING: Third Eye MCP is binding to a public interface.",
   );
   console.warn("   This exposes the server to your local network.");
   console.warn("   Set MCP_HOST=127.0.0.1 to keep the instance local-first.\n");
@@ -50,9 +50,9 @@ setInterval(
   5 * 60 * 1000,
 ); // Every 5 minutes
 
-console.log(`🚀 Third Eye MCP Server running at http://${HOST}:${PORT}`);
+console.log(`[Server] Third Eye MCP Server running at http://${HOST}:${PORT}`);
 console.log(
-  `📡 WebSocket endpoint: ws://${HOST}:${PORT}/ws/monitor?sessionId=<id>`,
+  `[WS] WebSocket endpoint: ws://${HOST}:${PORT}/ws/monitor?sessionId=<id>`,
 );
 
 // Auto-open portal in browser if configured
@@ -60,7 +60,7 @@ if (config.ui.autoOpen) {
   const portalUrl = `http://${HOST}:${config.ui.port}`;
 
   setTimeout(() => {
-    console.log(`\n🌐 Opening Third Eye Portal: ${portalUrl}`);
+    console.log(`\n[Server] Opening Third Eye Portal: ${portalUrl}`);
 
     const command =
       process.platform === "darwin"
@@ -80,13 +80,13 @@ if (config.ui.autoOpen) {
 
 // Graceful shutdown
 process.on("SIGINT", () => {
-  console.log("\n🛑 Shutting down server...");
+  console.log("\n[Server] Shutting down server...");
   server.stop();
   process.exit(0);
 });
 
 process.on("SIGTERM", () => {
-  console.log("\n🛑 Shutting down server...");
+  console.log("\n[Server] Shutting down server...");
   server.stop();
   process.exit(0);
 });

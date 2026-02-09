@@ -1,7 +1,7 @@
 import { useState } from "react";
 import clsx from "clsx";
 import { postKillSwitch } from "../lib/api";
-import type { PipelineEvent } from "../types/pipeline";
+import type { WSPipelineEvent } from "../types/pipeline";
 import {
   STATUS_TEXT_COLORS,
   STATUS_BG_COLORS_SUBTLE,
@@ -12,7 +12,7 @@ export interface KillSwitchBarProps {
   sessionId: string;
   apiKey: string;
   latestDraft: string;
-  latestEvent?: PipelineEvent;
+  latestEvent?: WSPipelineEvent;
 }
 
 export function KillSwitchBar({

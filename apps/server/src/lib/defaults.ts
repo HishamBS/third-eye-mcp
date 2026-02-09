@@ -1,6 +1,10 @@
 import { getDb } from "@third-eye/db";
 import { appSettings } from "@third-eye/db";
 import { eq } from "drizzle-orm";
+import {
+  DEFAULT_PRIMARY_PROVIDER,
+  DEFAULT_PRIMARY_MODEL,
+} from "@third-eye/constants";
 
 /**
  * Default Routing Configuration - SSOT Helper
@@ -48,9 +52,9 @@ export async function getDefaultRouting(): Promise<DefaultRouting> {
     }
   }
 
-  // System defaults
+  // System defaults from SSOT
   return {
-    primaryProvider: "groq",
-    primaryModel: "llama-3.3-70b-versatile",
+    primaryProvider: DEFAULT_PRIMARY_PROVIDER,
+    primaryModel: DEFAULT_PRIMARY_MODEL,
   };
 }

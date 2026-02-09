@@ -1,10 +1,10 @@
 import RawEventPanel from "../../RawEventPanel";
 import Leaderboards from "../../Leaderboards";
-import type { PipelineEvent, SessionSummary } from "../../../types/pipeline";
+import type { WSPipelineEvent, SessionSummary } from "../../../types/pipeline";
 
 export interface DiagnosticsTabProps {
-  events: PipelineEvent[];
-  selectedEvent: PipelineEvent | null;
+  events: WSPipelineEvent[];
+  selectedEvent: WSPipelineEvent | null;
   sessionId: string | null;
   apiKey: string | null;
   summary: SessionSummary | null;

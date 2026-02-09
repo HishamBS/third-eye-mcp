@@ -4,6 +4,8 @@
  * R01 Compliance: SSOT for all API response types
  */
 
+import type { HealthResponse } from "@third-eye/types";
+
 // ============================================================================
 // SESSION API RESPONSES
 // ============================================================================
@@ -59,19 +61,27 @@ export interface SessionSummaryResponse {
 export interface SessionRun {
   id: string;
   sessionId: string;
-  eye: string;
-  input: Record<string, unknown>;
-  output: Record<string, unknown>;
-  latency: number;
+  eyeId: string;
+  provider: string;
+  model: string;
+  inputMd: string;
+  outputJson: Record<string, unknown> | null;
+  tokensIn: number | null;
+  tokensOut: number | null;
+  latencyMs: number | null;
   createdAt: string;
 }
 
 export interface SessionEvent {
   id: string;
   sessionId: string;
+  eyeId: string | null;
   type: string;
-  data: Record<string, unknown>;
-  timestamp: string;
+  code: string | null;
+  md: string | null;
+  dataJson: Record<string, unknown> | null;
+  nextAction: string | null;
+  createdAt: string;
 }
 
 export interface SessionExportResponse {
@@ -112,31 +122,23 @@ export interface KillSessionResponse {
 
 export interface PersonaResponse {
   id: string;
-  eye: string;
+  eyeId: string;
+  name: string;
   version: number;
-  content: string;
+  metadataJson: Record<string, unknown>;
+  mission: string;
+  guidanceJson: Record<string, unknown> | null;
+  envelopeJson: Record<string, unknown>;
   active: boolean;
   createdAt: string;
 }
 
 export type ListPersonasResponse = PersonaResponse[];
 
-export interface CreatePersonaResponse {
-  id: string;
-  eye: string;
-  version: number;
-  content: string;
-  active: boolean;
-  createdAt: string;
-}
+export type CreatePersonaResponse = PersonaResponse;
 
-export interface GetActivePersonaResponse {
-  id: string;
-  eye: string;
-  version: number;
-  content: string;
+export interface GetActivePersonaResponse extends PersonaResponse {
   active: true;
-  createdAt: string;
 }
 
 // ============================================================================
@@ -145,9 +147,11 @@ export interface GetActivePersonaResponse {
 
 export interface RoutingConfigResponse {
   id: string;
-  eye: string;
-  primaryProvider: string;
-  primaryModel: string;
+  eyeId: string;
+  primaryProvider: string | null;
+  primaryModel: string | null;
+  fallbackProvider: string | null;
+  fallbackModel: string | null;
   createdAt: string;
 }
 
@@ -164,14 +168,12 @@ export type UpdateRoutingResponse = RoutingConfigResponse;
 export interface StrictnessProfileResponse {
   id: string;
   name: string;
-  sharinganMinScore: number;
-  rinneganRequireTests: boolean;
-  tenseiganMinConfidence: number;
-  byakuganAllowPartial: boolean;
-  mangekyoStrictness: "strict" | "moderate" | "lenient";
-  joganRequireEvidence: boolean;
-  overseerMinApprovals: number;
-  custom: boolean;
+  description: string | null;
+  ambiguityThreshold: number;
+  citationCutoff: number;
+  consistencyTolerance: number;
+  mangekyoStrictness: string;
+  isBuiltIn: boolean;
   createdAt: string;
 }
 
@@ -216,7 +218,9 @@ export interface PipelineResponse {
   id: string;
   name: string;
   version: number;
-  steps: string[];
+  description: string;
+  workflowJson: Record<string, unknown>;
+  category: string;
   active: boolean;
   createdAt: string;
 }
@@ -266,7 +270,7 @@ export interface McpSchemasResponse {
 export interface McpExampleOutput {
   eye: string;
   verdict: string;
-  [key: string]: unknown;
+  metadata?: Record<string, unknown>;
 }
 
 export interface McpExample {
@@ -289,18 +293,11 @@ export interface McpHealthResponse {
 // HEALTH API RESPONSES
 // ============================================================================
 
-export interface HealthCheckResponse {
-  ok: boolean;
+export interface HealthCheckResponse extends HealthResponse {
   status: "healthy" | "degraded" | "down";
-  version?: string;
-  uptime_seconds?: number;
   host?: string;
   bindAddress?: string;
   timestamp: string;
-  checks?: {
-    database?: { ok: boolean };
-    providers?: { ok: boolean };
-  };
   error?: string;
 }
 

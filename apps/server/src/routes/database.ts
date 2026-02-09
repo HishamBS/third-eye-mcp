@@ -35,6 +35,8 @@ app.use("*", errorHandler());
 const updateEyeRoutingSchema = z.object({
   primaryProvider: z.string().optional(),
   primaryModel: z.string().optional(),
+  fallbackProvider: z.string().optional(),
+  fallbackModel: z.string().optional(),
 });
 
 // Get all tables with their data

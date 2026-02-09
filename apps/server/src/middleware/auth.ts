@@ -109,10 +109,10 @@ export function cors(options?: {
   methods?: string[];
   headers?: string[];
 }) {
-  const origins = options?.origins || [
-    "http://localhost:3000",
-    "http://localhost:5173",
-  ];
+  const defaultOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(",")
+    : ["http://localhost:3000", "http://localhost:5173"];
+  const origins = options?.origins || defaultOrigins;
   const methods = options?.methods || [
     "GET",
     "POST",

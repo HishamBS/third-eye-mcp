@@ -83,7 +83,7 @@ export const THEMES = {
   FOREST: "forest",
   SUNSET: "sunset",
   MONOCHROME: "monochrome",
-  OVERSEER: "overseer", // Legacy compatibility
+  OVERSEER: "overseer", // Legacy alias - use THIRD_EYE instead. Kept for existing DB records.
 } as const;
 export type ThemeName = (typeof THEMES)[keyof typeof THEMES];
 

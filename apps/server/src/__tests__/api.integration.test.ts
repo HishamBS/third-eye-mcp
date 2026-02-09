@@ -123,7 +123,7 @@ describe("Personas API", () => {
     expect(response.ok).toBe(true);
     const data = (await response.json()) as CreatePersonaResponse;
 
-    expect(data).toHaveProperty("eye", "test-eye");
+    expect(data).toHaveProperty("eyeId");
     expect(data).toHaveProperty("version");
   });
 
@@ -155,7 +155,7 @@ describe("Routing API", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        eye: "test-routing-eye",
+        eyeId: "test-routing-eye",
         primaryProvider: "groq",
         primaryModel: "llama-3.3-70b-versatile",
       }),
@@ -164,7 +164,7 @@ describe("Routing API", () => {
     expect(response.ok).toBe(true);
     const data = (await response.json()) as CreateRoutingResponse;
 
-    expect(data).toHaveProperty("eye", "test-routing-eye");
+    expect(data).toHaveProperty("eyeId", "test-routing-eye");
     expect(data).toHaveProperty("primaryProvider", "groq");
   });
 
@@ -201,15 +201,11 @@ describe("Strictness API", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: "test-profile",
-        sharinganMinScore: 75,
-        rinneganRequireTests: true,
-        tenseiganMinConfidence: 0.8,
-        byakuganAllowPartial: false,
-        mangekyoStrictness: "strict",
-        joganRequireEvidence: true,
-        overseerMinApprovals: 5,
-        custom: false,
-        createdAt: new Date(),
+        ambiguityThreshold: 30,
+        citationCutoff: 70,
+        consistencyTolerance: 80,
+        mangekyoStrictness: "standard",
+        isBuiltIn: false,
       }),
     });
 
@@ -261,9 +257,10 @@ describe("Pipelines API", () => {
       body: JSON.stringify({
         name: "test-pipeline",
         version: 1,
-        steps: ["sharingan", "rinnegan", "tenseigan"],
+        description: "Test pipeline for integration tests",
+        workflowJson: { eyes: ["sharingan", "rinnegan", "tenseigan"] },
+        category: "custom",
         active: true,
-        createdAt: new Date(),
       }),
     });
 
@@ -271,7 +268,7 @@ describe("Pipelines API", () => {
     const data = (await response.json()) as CreatePipelineResponse;
 
     expect(data).toHaveProperty("name", "test-pipeline");
-    expect(data.steps).toHaveLength(3);
+    expect(data).toHaveProperty("workflowJson");
   });
 });
 
