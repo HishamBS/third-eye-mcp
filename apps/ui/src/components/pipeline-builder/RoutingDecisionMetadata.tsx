@@ -241,10 +241,10 @@ export function RoutingDecisionMetadata({
               {/* Selected Eyes */}
               <div>
                 <label className="block text-xs font-medium text-brand-foreground/60 mb-2">
-                  Selected Eyes ({decision.selectedEyes.length})
+                  Selected Eyes ({(decision.selectedEyes ?? []).length})
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {decision.selectedEyes.map((eyeId) => (
+                  {(decision.selectedEyes ?? []).map((eyeId) => (
                     <span
                       key={eyeId}
                       className="px-2.5 py-1 bg-emerald-500/10 text-emerald-700 border border-emerald-500/30 rounded-md text-xs font-medium"

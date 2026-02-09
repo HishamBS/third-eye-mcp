@@ -36,6 +36,26 @@ export interface RoutingDecisionsPagination {
 }
 
 // ============================================================================
+// Normalization
+// ============================================================================
+
+/** Ensure fields that the API may omit are always safe to iterate */
+function normalizeDecision(raw: RoutingDecision): RoutingDecision {
+  return {
+    ...raw,
+    selectedEyes: Array.isArray(raw.selectedEyes) ? raw.selectedEyes : [],
+    requestAnalysis: {
+      requestType: raw.requestAnalysis?.requestType ?? "unknown",
+      contentDomain: raw.requestAnalysis?.contentDomain ?? "",
+      complexity: raw.requestAnalysis?.complexity ?? "unknown",
+      capabilitiesNeeded: Array.isArray(raw.requestAnalysis?.capabilitiesNeeded)
+        ? raw.requestAnalysis.capabilitiesNeeded
+        : [],
+    },
+  };
+}
+
+// ============================================================================
 // Hooks
 // ============================================================================
 
@@ -74,7 +94,7 @@ export function useRoutingDecisions(filters?: {
       }>(url);
 
       if (data && "decisions" in data && "pagination" in data) {
-        setDecisions(data.decisions);
+        setDecisions(data.decisions.map(normalizeDecision));
         setPagination(data.pagination);
       } else {
         throw new Error("Invalid response format from routing decisions API");
@@ -122,7 +142,7 @@ export function useRoutingDecisionBySession(sessionId: string | null) {
       }>(`/api/routing-decisions/session/${sessionId}`);
 
       if (data && "decision" in data) {
-        setDecision(data.decision);
+        setDecision(normalizeDecision(data.decision));
       } else {
         throw new Error(`No routing decision found for session ${sessionId}`);
       }
@@ -170,7 +190,7 @@ export function useRoutingDecision(decisionId: string | null) {
       }>(`/api/routing-decisions/${decisionId}`);
 
       if (data && "decision" in data) {
-        setDecision(data.decision);
+        setDecision(normalizeDecision(data.decision));
       } else {
         throw new Error(`Routing decision ${decisionId} not found`);
       }

@@ -105,7 +105,7 @@ export function RuntimeRouteHighlighter({
    */
   const highlightPath = useCallback(
     (decision: RoutingDecision) => {
-      const activePath = new Set(decision.selectedEyes);
+      const activePath = new Set(decision.selectedEyes ?? []);
       const nodes = getNodes();
       const edges = getEdges();
 

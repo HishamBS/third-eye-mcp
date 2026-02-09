@@ -61,7 +61,14 @@ export function DynamicRouteVisualizer({
     );
   }
 
-  const { requestAnalysis, selectedEyes, reasoning, executionMode } = decision;
+  const {
+    requestAnalysis,
+    selectedEyes: rawEyes,
+    reasoning,
+    executionMode,
+  } = decision;
+  const selectedEyes = rawEyes ?? [];
+  const capabilitiesNeeded = requestAnalysis?.capabilitiesNeeded ?? [];
 
   return (
     <div className="mt-6 space-y-4">
@@ -125,13 +132,13 @@ export function DynamicRouteVisualizer({
             </div>
           </div>
         </div>
-        {requestAnalysis.capabilitiesNeeded?.length > 0 && (
+        {capabilitiesNeeded.length > 0 && (
           <div className="mt-3">
             <span className="text-xs text-blue-700 dark:text-blue-300 uppercase font-semibold">
               Required Capabilities
             </span>
             <div className="mt-1 flex flex-wrap gap-1">
-              {requestAnalysis.capabilitiesNeeded?.map((cap) => (
+              {capabilitiesNeeded.map((cap) => (
                 <span
                   key={cap}
                   className="px-2 py-0.5 text-xs bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100 rounded-full"

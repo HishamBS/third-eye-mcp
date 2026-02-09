@@ -85,13 +85,14 @@ function SessionCard({
 
       {/* Selected eyes (icons only) */}
       <div className="flex items-center gap-1">
-        {decision.selectedEyes.map((eyeName, idx) => {
+        {(decision.selectedEyes ?? []).map((eyeName, idx) => {
+          const eyes = decision.selectedEyes ?? [];
           return (
             <div key={`${eyeName}-${idx}`} className="flex items-center">
               <div title={eyeName}>
                 <EyeIcon eye={eyeName} size={24} />
               </div>
-              {idx < decision.selectedEyes.length - 1 && (
+              {idx < eyes.length - 1 && (
                 <span className="text-gray-400 text-xs mx-0.5">→</span>
               )}
             </div>
