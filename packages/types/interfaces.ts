@@ -1,6 +1,9 @@
 /**
  * Third Eye MCP - Interface Definitions
  * Shared TypeScript interfaces for API contracts
+ *
+ * SSOT: These interfaces reflect the database schema in packages/db/schema.ts.
+ * Frontend and backend MUST import from here instead of defining local copies.
  */
 
 import type {
@@ -82,64 +85,110 @@ export interface SessionConfig {
 }
 
 /**
- * Session
+ * Session - matches DB sessions table (8 columns)
  */
 export interface Session {
   id: string;
-  createdAt: string;
-  status: SessionStatus;
-  configJson: SessionConfig;
+  agentName: string | null;
+  model: string | null;
+  displayName: string | null;
+  status: string;
+  createdAt: Date | string;
+  lastActivity: Date | string | null;
+  configJson: SessionConfig | null;
 }
 
 /**
- * Pipeline Run
+ * Eye Definition (Unified) - matches DB eyes table (12 columns)
+ * All eyes use the same structure - no distinction between seeded and user-created
+ * Database is single source of truth
  */
-export interface PipelineRun {
+export interface Eye {
+  id: string;
+  slug: string;
+  name: string;
+  version: number;
+  description: string;
+  iconSvg: string | null;
+  inputSchemaJson: Record<string, unknown>;
+  outputSchemaJson: Record<string, unknown>;
+  personaId: string | null;
+  capabilityTags: string[];
+  active: boolean;
+  createdAt: Date | string;
+}
+
+/**
+ * @deprecated Use Eye interface instead. All eyes are unified.
+ */
+export type CustomEye = Eye;
+
+/**
+ * Eye Routing Configuration - matches DB eyes_routing table
+ */
+export interface EyeRouting {
+  id: string;
+  eyeId: string;
+  primaryProvider: string | null;
+  primaryModel: string | null;
+  createdAt: Date | string;
+}
+
+/**
+ * Persona - matches DB personas table (14 columns)
+ */
+export interface Persona {
+  id: string;
+  eyeId: string;
+  name: string;
+  version: number;
+  metadataJson: Record<string, unknown>;
+  mission: string;
+  guidanceJson: Record<string, unknown> | null;
+  validationJson: Record<string, unknown> | null;
+  envelopeJson: Record<string, unknown>;
+  remindersJson: string[];
+  notes: string | null;
+  llmConfigJson: Record<string, unknown>;
+  active: boolean;
+  createdAt: Date | string;
+}
+
+/**
+ * Run - matches DB runs table
+ */
+export interface Run {
   id: string;
   sessionId: string;
-  eye: EyeName;
-  provider: ProviderId;
+  eyeId: string;
+  provider: string;
   model: string;
   inputMd: string;
-  outputJson: OverseerEnvelope;
-  tokensIn: number;
-  tokensOut: number;
-  latencyMs: number;
-  createdAt: string;
+  outputJson: Record<string, unknown> | null;
+  tokensIn: number | null;
+  tokensOut: number | null;
+  latencyMs: number | null;
+  createdAt: Date | string;
 }
 
 /**
- * Pipeline Event (WebSocket)
+ * @deprecated Use Run interface instead. Kept for backward compatibility.
+ */
+export type PipelineRun = Run;
+
+/**
+ * Pipeline Event - matches DB pipeline_events table (9 columns)
  */
 export interface PipelineEvent {
   id: string;
   sessionId: string;
-  type: EventType;
-  eye?: EyeName;
-  code?: StatusCode;
-  md?: string;
-  dataJson?: Record<string, unknown>;
-  createdAt: string;
-}
-
-/**
- * Eye Routing Configuration
- */
-export interface EyeRouting {
-  eye: EyeName;
-  primaryProvider: ProviderId;
-  primaryModel: string;
-}
-
-/**
- * Persona Version
- */
-export interface Persona {
-  eye: EyeName;
-  version: number;
-  content: string;
-  active: boolean;
-  createdAt: string;
+  eyeId: string | null;
+  type: string;
+  code: string | null;
+  md: string | null;
+  dataJson: Record<string, unknown> | null;
+  nextAction: string | null;
+  createdAt: Date | string;
 }
 
 /**
@@ -158,7 +207,7 @@ export interface PromptTemplate {
 }
 
 /**
- * Strictness Profile
+ * Strictness Profile - matches DB strictness_profiles table
  */
 export interface StrictnessProfile {
   id: string;
@@ -169,64 +218,107 @@ export interface StrictnessProfile {
   consistencyTolerance: number;
   mangekyoStrictness: StrictnessLevel;
   isBuiltIn: boolean;
-  createdAt: string;
+  createdAt: Date | string;
 }
 
 /**
- * Eye Definition (Unified)
- * All eyes use the same structure - no distinction between seeded and user-created
- * Database is single source of truth
- */
-export interface Eye {
-  id: string;
-  name: string;
-  description: string;
-  inputSchema: Record<string, unknown>;
-  outputSchema: Record<string, unknown>;
-  personaTemplate?: string;
-  defaultRouting?: EyeRouting;
-  createdAt: string;
-}
-
-/**
- * @deprecated Use Eye interface instead. All eyes are unified.
- */
-export type CustomEye = Eye;
-
-/**
- * Pipeline Definition
+ * Pipeline Definition - matches DB pipelines table
+ * workflowJson is stored as JSON; actual shape depends on pipeline type
  */
 export interface Pipeline {
   id: string;
   name: string;
   version: number;
   description: string;
-  category: PipelineCategory;
-  workflowJson: {
-    steps: Array<{
-      id: string;
-      eye?: EyeName;
-      type?: "condition" | "user_input" | "terminal";
-      next?: string;
-      condition?: string;
-      true?: string;
-      false?: string;
-      prompt?: string;
-    }>;
-  };
+  workflowJson: Record<string, unknown>;
+  category: string;
   active: boolean;
-  createdAt: string;
+  createdAt: Date | string;
 }
 
 /**
- * Provider Key (encrypted storage)
+ * Provider Key (encrypted storage) - matches DB provider_keys table
  */
 export interface ProviderKey {
-  id: number;
-  provider: ProviderId;
+  id: string;
+  provider: string;
   label: string;
-  metadata: Record<string, unknown>;
-  createdAt: string;
+  metadata: Record<string, unknown> | null;
+  createdAt: Date | string;
+}
+
+/**
+ * Routing Decision Request Analysis
+ * Sub-structure stored in routing_decisions.requestAnalysis JSON column
+ */
+export interface RoutingDecisionRequest {
+  readonly requestType: string;
+  readonly contentDomain: string;
+  readonly complexity: string;
+  readonly capabilitiesNeeded: readonly string[];
+  readonly originalInput?: string;
+}
+
+/**
+ * Routing Decision - matches DB routing_decisions table (7 columns)
+ */
+export interface RoutingDecision {
+  id: string;
+  sessionId: string;
+  requestAnalysis: RoutingDecisionRequest;
+  selectedEyes: readonly string[];
+  reasoning: string;
+  executionMode: "sequential" | "parallel";
+  createdAt: Date | number;
+}
+
+/**
+ * MCP Integration - matches DB mcp_integrations table (16 columns)
+ */
+export interface McpIntegration {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  description: string | null;
+  status: string;
+  platforms: string[];
+  configType: string;
+  configFiles: string[];
+  configTemplate: string;
+  setupSteps: string[];
+  docsUrl: string | null;
+  enabled: boolean | null;
+  displayOrder: number | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+/**
+ * Clarification - matches DB clarifications table (8 columns)
+ */
+export interface Clarification {
+  id: string;
+  sessionId: string;
+  field: string;
+  question: string;
+  answer: string | null;
+  status: string;
+  createdAt: Date | string;
+  answeredAt: Date | string | null;
+}
+
+/**
+ * Conversation Event - matches DB conversation_events table (6 columns)
+ */
+export interface ConversationEvent {
+  id: string;
+  sessionId: string;
+  eventType: string;
+  speaker: string;
+  message: string;
+  metadata: Record<string, unknown> | null;
+  createdAt: Date | string;
 }
 
 /**
@@ -257,18 +349,6 @@ export interface AppSettings {
   darkMode: boolean;
   autoOpen: boolean;
   telemetry: boolean;
-}
-
-/**
- * Routing Decision (from auto-router)
- */
-export interface RoutingDecision {
-  sessionId: string;
-  taskType: "code" | "text" | "unknown";
-  recommendedFlow: EyeName[];
-  primaryProvider: ProviderId;
-  primaryModel: string;
-  reasoning: string;
 }
 
 /**
@@ -362,4 +442,24 @@ export interface MetricsSummary {
       avgLatency: number;
     }
   >;
+}
+
+/**
+ * Standard API Envelope - wraps all API responses
+ */
+export interface ApiEnvelope<T> {
+  success: boolean;
+  data: T;
+  meta: {
+    requestId?: string;
+    timestamp?: number;
+    version?: string;
+    pagination?: {
+      page: number;
+      limit: number;
+      total: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  };
 }

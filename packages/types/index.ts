@@ -71,6 +71,7 @@ export type {
   OverseerEnvelope,
   SessionConfig,
   Session,
+  Run,
   PipelineRun,
   PipelineEvent,
   EyeRouting,
@@ -78,6 +79,15 @@ export type {
   PromptTemplate,
   StrictnessProfile,
   CustomEye,
+  Eye,
+  Pipeline,
+  ProviderKey,
+  RoutingDecisionRequest,
+  RoutingDecision,
+  McpIntegration,
+  Clarification,
+  ConversationEvent,
+  ApiEnvelope,
 } from "./interfaces";
 
 export type { PipelineDagNode, PipelineDagEdge, PipelineDag } from "./pipeline";

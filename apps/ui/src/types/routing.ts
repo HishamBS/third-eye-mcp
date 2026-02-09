@@ -1,31 +1,17 @@
 /**
  * Routing Decision Types
  *
- * Type definitions for Overseer routing decisions and path highlighting
+ * SSOT: Re-exported from @third-eye/types (packages/types/interfaces.ts)
+ * Per R01: Single source of truth
  * Per R07: Strict typing throughout
  */
 
-export interface RoutingDecisionRequest {
-  readonly requestType: string;
-  readonly contentDomain: string;
-  readonly complexity: string;
-  readonly capabilitiesNeeded: readonly string[];
-}
-
-export interface RoutingDecision {
-  readonly id: string;
-  readonly sessionId: string;
-  readonly requestAnalysis: RoutingDecisionRequest;
-  readonly selectedEyes: readonly string[];
-  readonly reasoning: string;
-  readonly executionMode: "sequential" | "parallel";
-  readonly createdAt: number;
-}
+export type { RoutingDecisionRequest, RoutingDecision } from "@third-eye/types";
 
 export interface RoutingDecisionResponse {
   readonly success: boolean;
   readonly data?: {
-    readonly decision: RoutingDecision;
+    readonly decision: import("@third-eye/types").RoutingDecision;
   };
   readonly error?: {
     readonly code: string;

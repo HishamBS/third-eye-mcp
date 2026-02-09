@@ -1,32 +1,45 @@
 /**
  * TypeScript Interfaces for Third Eye MCP API Responses
  *
- * These interfaces match the exact backend response structures.
- * All endpoints use the Overseer Envelope format:
- * {
- *   success: boolean,
- *   data: T,
- *   meta: { requestId, timestamp }
- * }
+ * SSOT: Entity types are re-exported from @third-eye/types (packages/types/interfaces.ts).
+ * This file adds API-specific response envelope types.
  *
- * IMPORTANT: Frontend MUST match backend exactly (Architectural Principle from FINAL_OVERSEER_VISION.md)
- * - NO defensive transformations (|| [], || {}, .data?.x)
- * - Trust backend structure
- * - Throw clear errors if structure doesn't match
+ * IMPORTANT: Do NOT define entity interfaces here. Import from @third-eye/types.
  */
 
-// ============================================================================
-// BASE ENVELOPE
-// ============================================================================
+// Re-export entity types from SSOT (packages/types/interfaces.ts)
+export type {
+  Session,
+  Eye,
+  EyeRouting,
+  Persona,
+  Run,
+  PipelineRun,
+  PipelineEvent,
+  Pipeline,
+  McpIntegration,
+  Clarification,
+  RoutingDecision,
+  RoutingDecisionRequest,
+  ConversationEvent,
+  ApiEnvelope,
+} from "@third-eye/types";
 
-export interface ApiEnvelope<T> {
-  success: boolean;
-  data: T;
-  meta: {
-    requestId?: string;
-    timestamp?: string;
-  };
-}
+import type {
+  Session,
+  Run,
+  PipelineEvent,
+  EyeRouting,
+  Pipeline,
+  Persona,
+  Eye,
+  McpIntegration,
+  ApiEnvelope,
+} from "@third-eye/types";
+
+// ============================================================================
+// API ERROR
+// ============================================================================
 
 export interface ApiError {
   title: string;
@@ -40,19 +53,8 @@ export interface ApiError {
 // SESSION RESPONSES
 // ============================================================================
 
-export interface Session {
-  id: string;
-  agentName: string;
-  model: string | null;
-  displayName: string;
-  createdAt: Date | string;
-  status: "active" | "completed" | "failed" | "killed";
-  configJson: unknown;
-}
-
 export interface SessionWithStats extends Session {
   eventCount?: number;
-  lastActivity?: Date | string;
 }
 
 // POST /api/session - Create session
@@ -87,19 +89,6 @@ export type GetSessionResponse = ApiEnvelope<{
 }>;
 
 // GET /api/session/:id/runs - Get session runs
-export interface Run {
-  id: string;
-  sessionId: string;
-  eye: string;
-  provider: string;
-  model: string;
-  tokensIn: number;
-  tokensOut: number;
-  latencyMs: number;
-  createdAt: Date | string;
-  outputJson: unknown;
-}
-
 export type GetSessionRunsResponse = ApiEnvelope<{
   sessionId: string;
   runs: Run[];
@@ -109,26 +98,11 @@ export type GetSessionRunsResponse = ApiEnvelope<{
 }>;
 
 // GET /api/session/:id/events - Get pipeline events
-export interface PipelineEvent {
-  id: string;
-  sessionId: string;
-  eye: string | null;
-  code: string;
-  md: string | null;
-  createdAt: Date | string;
-}
-
 export type GetSessionEventsResponse = ApiEnvelope<PipelineEvent[]>;
 
 // ============================================================================
 // ROUTING RESPONSES
 // ============================================================================
-
-export interface EyeRouting {
-  eye: string;
-  primaryProvider: string;
-  primaryModel: string;
-}
 
 // GET /api/routing - Get all routing configs
 export type GetAllRoutingsResponse = ApiEnvelope<{
@@ -149,29 +123,7 @@ export type CreateRoutingResponse = ApiEnvelope<{
 // PIPELINE RESPONSES
 // ============================================================================
 
-export interface Pipeline {
-  id: string;
-  name: string;
-  version: number;
-  description: string;
-  workflowJson: {
-    steps: Array<{
-      id: string;
-      eye?: string;
-      type?: string;
-      next?: string;
-      condition?: string;
-      true?: string;
-      false?: string;
-      prompt?: string;
-    }>;
-  };
-  category: string;
-  active: boolean;
-  createdAt: string | Date;
-}
-
-export interface PipelineRun {
+export interface PipelineRunStatus {
   id: string;
   pipelineId: string;
   sessionId: string;
@@ -209,7 +161,7 @@ export type ExecutePipelineResponse = ApiEnvelope<{
 
 // GET /api/pipelines/:id/runs - Get pipeline runs
 export type GetPipelineRunsResponse = ApiEnvelope<{
-  runs: PipelineRun[];
+  runs: PipelineRunStatus[];
 }>;
 
 // ============================================================================
@@ -226,7 +178,7 @@ export interface TableSchema {
 
 export interface TableInfo {
   name: string;
-  data: Record<string, any>[];
+  data: Record<string, unknown>[];
   editable: boolean;
   schema: TableSchema[];
 }
@@ -239,25 +191,6 @@ export type GetDatabaseTablesResponse = ApiEnvelope<{
 // ============================================================================
 // INTEGRATION RESPONSES
 // ============================================================================
-
-export interface McpIntegration {
-  id: string;
-  name: string;
-  slug: string;
-  logoUrl: string | null;
-  description: string | null;
-  status: string;
-  platforms: string[];
-  configType: string;
-  configFiles: string[];
-  configTemplate: string;
-  setupSteps: string[];
-  docsUrl: string | null;
-  enabled: boolean;
-  displayOrder: number;
-  createdAt: Date | string;
-  updatedAt: Date | string;
-}
 
 // GET /api/integrations - Get all integrations
 export type GetIntegrationsResponse = ApiEnvelope<{
@@ -280,39 +213,6 @@ export type GetIntegrationConfigResponse = ApiEnvelope<{
 // ============================================================================
 // PERSONA RESPONSES
 // ============================================================================
-
-export interface Persona {
-  id: string;
-  eye: string; // Note: This is eyeId (UUID) after migration
-  eyeName?: string; // Actual eye name (e.g., 'overseer', 'sharingan') - returned by backend
-  name: string;
-  version: number;
-  metadata_json: {
-    eyeId: string;
-    name: string;
-    description: string;
-    version: number;
-    capabilities: string[];
-  };
-  mission: string;
-  guidance_json: Record<string, unknown> | null;
-  validation_json: Record<string, unknown> | null;
-  envelope_json: {
-    requiredKeys?: string[];
-    requiredDataKeys?: string[];
-    requiredUiKeys?: string[];
-  };
-  reminders_json: string[];
-  notes: string | null;
-  llm_config_json: {
-    temperature: number;
-    top_p: number;
-    response_format: string;
-    max_tokens: number;
-  };
-  active: boolean;
-  createdAt: string | Date;
-}
 
 // GET /api/personas - Get all personas (flat array)
 export type GetAllPersonasResponse = ApiEnvelope<Persona[]>;
@@ -346,20 +246,6 @@ export type ActivatePersonaResponse = ApiEnvelope<{
 // EYE RESPONSES (Custom Eyes Management)
 // ============================================================================
 
-export interface Eye {
-  id: string;
-  name: string;
-  version: string;
-  description: string;
-  source: "built-in" | "custom";
-  personaTemplate?: string;
-  inputSchema?: Record<string, unknown>;
-  outputSchema?: Record<string, unknown>;
-  defaultRouting?: Record<string, unknown>;
-  createdAt?: string | Date;
-  personaId?: string | null;
-}
-
 // GET /api/eyes/all - Get all eyes
 export type GetAllEyesResponse = ApiEnvelope<Eye[]>;
 
@@ -377,7 +263,7 @@ export interface Metrics {
   topProviders: Array<{ provider: string; count: number }>;
 }
 
-export type GetMetricsResponse = Metrics; // Note: /api/metrics is a Next.js API route (not wrapped in envelope)
+export type GetMetricsResponse = Metrics;
 
 // ============================================================================
 // LEADERBOARD RESPONSES
@@ -396,4 +282,4 @@ export interface Leaderboards {
   eyes: LeaderboardEntry[];
 }
 
-export type GetLeaderboardsResponse = Leaderboards; // Note: /api/metrics/leaderboards is a Next.js API route (not wrapped in envelope)
+export type GetLeaderboardsResponse = Leaderboards;

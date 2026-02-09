@@ -15,7 +15,7 @@ interface HeaderBarProps {
   className?: string;
 }
 
-const SESSION_ID_DISPLAY_LENGTH = 8;
+export const SESSION_ID_DISPLAY_LENGTH = 8;
 
 const CONNECTION_STATUS_CONFIG = {
   connected: {

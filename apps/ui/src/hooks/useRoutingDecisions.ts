@@ -8,25 +8,10 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useAPI } from "./useAPI";
+import type { RoutingDecision } from "@third-eye/types";
+import { API_ROUTES } from "@/constants/api-routes";
 
-// ============================================================================
-// Types
-// ============================================================================
-
-export interface RoutingDecision {
-  readonly id: string;
-  readonly sessionId: string;
-  readonly requestAnalysis: {
-    readonly requestType: string;
-    readonly contentDomain: string;
-    readonly complexity: string;
-    readonly capabilitiesNeeded: readonly string[];
-  };
-  readonly selectedEyes: readonly string[];
-  readonly reasoning: string;
-  readonly executionMode: "sequential" | "parallel";
-  readonly createdAt: number;
-}
+export type { RoutingDecision } from "@third-eye/types";
 
 export interface RoutingDecisionsPagination {
   readonly limit: number;
@@ -85,7 +70,7 @@ export function useRoutingDecisions(filters?: {
       if (filters?.sort) params.set("sort", filters.sort);
 
       const queryString = params.toString();
-      const url = `/api/routing-decisions${queryString ? `?${queryString}` : ""}`;
+      const url = `${API_ROUTES.ROUTING_DECISIONS}${queryString ? `?${queryString}` : ""}`;
 
       // useAPI automatically unwraps the response envelope
       const data = await api.get<{
@@ -139,7 +124,7 @@ export function useRoutingDecisionBySession(sessionId: string | null) {
       // useAPI automatically unwraps the response envelope
       const data = await api.get<{
         decision: RoutingDecision;
-      }>(`/api/routing-decisions/session/${sessionId}`);
+      }>(API_ROUTES.ROUTING_DECISIONS_BY_SESSION(sessionId));
 
       if (data && "decision" in data) {
         setDecision(normalizeDecision(data.decision));
@@ -187,7 +172,7 @@ export function useRoutingDecision(decisionId: string | null) {
       // useAPI automatically unwraps the response envelope
       const data = await api.get<{
         decision: RoutingDecision;
-      }>(`/api/routing-decisions/${decisionId}`);
+      }>(API_ROUTES.ROUTING_DECISIONS_BY_ID(decisionId));
 
       if (data && "decision" in data) {
         setDecision(normalizeDecision(data.decision));

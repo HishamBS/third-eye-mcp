@@ -561,17 +561,25 @@ app.post("/custom", async (c) => {
         .run();
     }
 
+    // Derive slug from name: lowercase, alphanumeric + hyphens
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+
     // Insert new version
     await db
       .insert(eyes)
       .values({
         id,
+        slug,
         name,
         version: nextVersion,
         description,
         inputSchemaJson: inputSchema,
         outputSchemaJson: outputSchema,
         personaId: personaId || null,
+        capabilityTags: [],
         iconSvg: "",
         active: true,
         createdAt: now,

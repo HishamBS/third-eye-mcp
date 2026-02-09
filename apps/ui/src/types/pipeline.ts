@@ -24,7 +24,11 @@ export type PipelineEnvelopeType =
   | "tenseigan_claims"
   | "user_input";
 
-export interface PipelineEvent {
+/**
+ * WebSocket pipeline event - distinct from DB PipelineEvent entity.
+ * This represents real-time WS messages, NOT the persisted pipeline_events table.
+ */
+export interface WSPipelineEvent {
   type: PipelineEnvelopeType;
   session_id: string;
   eye?: string | null;
@@ -35,6 +39,11 @@ export interface PipelineEvent {
   data?: Record<string, unknown>;
   ts?: string | null;
 }
+
+/**
+ * @deprecated Use WSPipelineEvent instead. Kept for backward compatibility.
+ */
+export type PipelineEvent = WSPipelineEvent;
 
 export interface SessionSettingsPayload {
   ambiguity_threshold?: number;
