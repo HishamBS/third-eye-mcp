@@ -80,7 +80,9 @@ export interface WSMessage {
     | "policy_activated"
     | "policy_deactivated"
     | "template_created"
-    | "template_deleted";
+    | "template_deleted"
+    | "clarification_asked"
+    | "clarification_answered";
   sessionId?: string;
   data?: unknown;
   timestamp: number;

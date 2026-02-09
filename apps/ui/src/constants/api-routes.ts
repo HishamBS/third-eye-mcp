@@ -52,6 +52,12 @@ export const API_ROUTES = {
   CONVERSATION_EVENTS: (sessionId: string) =>
     `/api/conversation-events/session/${sessionId}`,
 
+  // Routing Decisions
+  ROUTING_DECISIONS: "/api/routing-decisions",
+  ROUTING_DECISIONS_BY_SESSION: (sessionId: string) =>
+    `/api/routing-decisions/session/${sessionId}`,
+  ROUTING_DECISIONS_BY_ID: (id: string) => `/api/routing-decisions/${id}`,
+
   // Routing
   ROUTING: "/api/routing",
   ROUTING_BY_EYE: (eye: string) => `/api/routing/${eye}`,

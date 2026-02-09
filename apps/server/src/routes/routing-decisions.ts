@@ -8,7 +8,11 @@
 
 import { Hono } from "hono";
 import { getDb } from "@third-eye/db";
-import { ApiErrorCode } from "@third-eye/constants";
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  ERROR_TYPES,
+} from "../middleware/response";
 
 const app = new Hono();
 
@@ -74,16 +78,12 @@ app.get("/", async (c) => {
 
     // Validate params
     if (limit < 1 || limit > 100) {
-      return c.json(
-        {
-          success: false,
-          error: {
-            code: ApiErrorCode.INVALID_LIMIT,
-            detail: "Limit must be between 1 and 100",
-          },
-        },
-        400,
-      );
+      return createErrorResponse(c, {
+        type: ERROR_TYPES.VALIDATION_ERROR,
+        title: "Validation Error",
+        status: 400,
+        detail: "Limit must be between 1 and 100",
+      });
     }
 
     // Query routing decisions
@@ -114,33 +114,26 @@ app.get("/", async (c) => {
       .get() as { count: number };
     const total = countRow.count;
 
-    return c.json({
-      success: true,
-      data: {
-        decisions,
-        pagination: {
-          limit,
-          offset,
-          total,
-          hasMore: offset + decisions.length < total,
-        },
+    return createSuccessResponse(c, {
+      decisions,
+      pagination: {
+        limit,
+        offset,
+        total,
+        hasMore: offset + decisions.length < total,
       },
     });
   } catch (error) {
     console.error("[routing-decisions] List error:", error);
-    return c.json(
-      {
-        success: false,
-        error: {
-          code: ApiErrorCode.INTERNAL_ERROR,
-          detail:
-            error instanceof Error
-              ? error.message
-              : "Failed to list routing decisions",
-        },
-      },
-      500,
-    );
+    return createErrorResponse(c, {
+      type: ERROR_TYPES.INTERNAL_ERROR,
+      title: "Internal Server Error",
+      status: 500,
+      detail:
+        error instanceof Error
+          ? error.message
+          : "Failed to list routing decisions",
+    });
   }
 });
 
@@ -154,16 +147,12 @@ app.get("/session/:sessionId", async (c) => {
     const sessionId = c.req.param("sessionId");
 
     if (!sessionId) {
-      return c.json(
-        {
-          success: false,
-          error: {
-            code: ApiErrorCode.MISSING_SESSION_ID,
-            detail: "Session ID is required",
-          },
-        },
-        400,
-      );
+      return createErrorResponse(c, {
+        type: ERROR_TYPES.VALIDATION_ERROR,
+        title: "Validation Error",
+        status: 400,
+        detail: "Session ID is required",
+      });
     }
 
     const query = `
@@ -189,41 +178,28 @@ app.get("/session/:sessionId", async (c) => {
       | undefined;
 
     if (!row) {
-      return c.json(
-        {
-          success: false,
-          error: {
-            code: ApiErrorCode.NOT_FOUND,
-            detail: `No routing decision found for session ${sessionId}`,
-          },
-        },
-        404,
-      );
+      return createErrorResponse(c, {
+        type: ERROR_TYPES.NOT_FOUND,
+        title: "Not Found",
+        status: 404,
+        detail: `No routing decision found for session ${sessionId}`,
+      });
     }
 
     const decision = parseRoutingDecision(row);
 
-    return c.json({
-      success: true,
-      data: {
-        decision,
-      },
-    });
+    return createSuccessResponse(c, { decision });
   } catch (error) {
     console.error("[routing-decisions] Get by session error:", error);
-    return c.json(
-      {
-        success: false,
-        error: {
-          code: ApiErrorCode.INTERNAL_ERROR,
-          detail:
-            error instanceof Error
-              ? error.message
-              : "Failed to get routing decision",
-        },
-      },
-      500,
-    );
+    return createErrorResponse(c, {
+      type: ERROR_TYPES.INTERNAL_ERROR,
+      title: "Internal Server Error",
+      status: 500,
+      detail:
+        error instanceof Error
+          ? error.message
+          : "Failed to get routing decision",
+    });
   }
 });
 
@@ -237,16 +213,12 @@ app.get("/:id", async (c) => {
     const id = c.req.param("id");
 
     if (!id) {
-      return c.json(
-        {
-          success: false,
-          error: {
-            code: ApiErrorCode.MISSING_ID,
-            detail: "Routing decision ID is required",
-          },
-        },
-        400,
-      );
+      return createErrorResponse(c, {
+        type: ERROR_TYPES.VALIDATION_ERROR,
+        title: "Validation Error",
+        status: 400,
+        detail: "Routing decision ID is required",
+      });
     }
 
     const query = `
@@ -270,41 +242,28 @@ app.get("/:id", async (c) => {
       | undefined;
 
     if (!row) {
-      return c.json(
-        {
-          success: false,
-          error: {
-            code: ApiErrorCode.NOT_FOUND,
-            detail: `Routing decision ${id} not found`,
-          },
-        },
-        404,
-      );
+      return createErrorResponse(c, {
+        type: ERROR_TYPES.NOT_FOUND,
+        title: "Not Found",
+        status: 404,
+        detail: `Routing decision ${id} not found`,
+      });
     }
 
     const decision = parseRoutingDecision(row);
 
-    return c.json({
-      success: true,
-      data: {
-        decision,
-      },
-    });
+    return createSuccessResponse(c, { decision });
   } catch (error) {
     console.error("[routing-decisions] Get error:", error);
-    return c.json(
-      {
-        success: false,
-        error: {
-          code: ApiErrorCode.INTERNAL_ERROR,
-          detail:
-            error instanceof Error
-              ? error.message
-              : "Failed to get routing decision",
-        },
-      },
-      500,
-    );
+    return createErrorResponse(c, {
+      type: ERROR_TYPES.INTERNAL_ERROR,
+      title: "Internal Server Error",
+      status: 500,
+      detail:
+        error instanceof Error
+          ? error.message
+          : "Failed to get routing decision",
+    });
   }
 });
 

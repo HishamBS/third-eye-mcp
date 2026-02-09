@@ -20,6 +20,15 @@ import {
   ConversationTracker,
   type ConversationEventType,
 } from "@third-eye/core/conversation-tracker";
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  ERROR_TYPES,
+} from "../middleware/response";
+import {
+  CONVERSATION_EVENT_TYPES,
+  isConversationEventType,
+} from "@third-eye/constants";
 
 const app = new Hono();
 
@@ -40,39 +49,34 @@ app.get("/session/:sessionId", async (c) => {
     const sessionId = c.req.param("sessionId");
 
     if (!sessionId) {
-      return c.json(
-        {
-          success: false,
-          message: "Session ID is required",
-        },
-        400,
-      );
+      return createErrorResponse(c, {
+        type: ERROR_TYPES.VALIDATION_ERROR,
+        title: "Validation Error",
+        status: 400,
+        detail: "Session ID is required",
+      });
     }
 
     const { sqlite } = getDb();
     const tracker = new ConversationTracker(sqlite);
     const events = tracker.getConversationTimeline(sessionId);
 
-    return c.json({
-      success: true,
-      data: {
-        sessionId,
-        events,
-        count: events.length,
-      },
+    return createSuccessResponse(c, {
+      sessionId,
+      events,
+      count: events.length,
     });
   } catch (error) {
     console.error("Error fetching conversation timeline:", error);
-    return c.json(
-      {
-        success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch conversation timeline",
-      },
-      500,
-    );
+    return createErrorResponse(c, {
+      type: ERROR_TYPES.INTERNAL_ERROR,
+      title: "Internal Server Error",
+      status: 500,
+      detail:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch conversation timeline",
+    });
   }
 });
 
@@ -89,26 +93,18 @@ app.get("/recent", zValidator("query", RecentEventsQuerySchema), async (c) => {
     const tracker = new ConversationTracker(sqlite);
     const events = tracker.getRecentEvents(limit);
 
-    return c.json({
-      success: true,
-      data: {
-        events,
-        count: events.length,
-        limit,
-      },
-    });
+    return createSuccessResponse(c, { events, count: events.length, limit });
   } catch (error) {
     console.error("Error fetching recent conversation events:", error);
-    return c.json(
-      {
-        success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch recent events",
-      },
-      500,
-    );
+    return createErrorResponse(c, {
+      type: ERROR_TYPES.INTERNAL_ERROR,
+      title: "Internal Server Error",
+      status: 500,
+      detail:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch recent events",
+    });
   }
 });
 
@@ -123,43 +119,31 @@ app.get("/session/:sessionId/type/:eventType", async (c) => {
     const eventType = c.req.param("eventType");
 
     if (!sessionId) {
-      return c.json(
-        {
-          success: false,
-          message: "Session ID is required",
-        },
-        400,
-      );
+      return createErrorResponse(c, {
+        type: ERROR_TYPES.VALIDATION_ERROR,
+        title: "Validation Error",
+        status: 400,
+        detail: "Session ID is required",
+      });
     }
 
     if (!eventType) {
-      return c.json(
-        {
-          success: false,
-          message: "Event type is required",
-        },
-        400,
-      );
+      return createErrorResponse(c, {
+        type: ERROR_TYPES.VALIDATION_ERROR,
+        title: "Validation Error",
+        status: 400,
+        detail: "Event type is required",
+      });
     }
 
-    // Validate event type
-    const validEventTypes = [
-      "agent_message",
-      "human_message",
-      "routing_decision",
-      "pause",
-      "resume",
-      "error",
-    ];
-
-    if (!validEventTypes.includes(eventType)) {
-      return c.json(
-        {
-          success: false,
-          message: `Invalid event type. Must be one of: ${validEventTypes.join(", ")}`,
-        },
-        400,
-      );
+    // Validate event type against SSOT constants
+    if (!isConversationEventType(eventType)) {
+      return createErrorResponse(c, {
+        type: ERROR_TYPES.VALIDATION_ERROR,
+        title: "Invalid Event Type",
+        status: 400,
+        detail: `Invalid event type '${eventType}'. Must be one of: ${Object.values(CONVERSATION_EVENT_TYPES).join(", ")}`,
+      });
     }
 
     const { sqlite } = getDb();
@@ -169,27 +153,23 @@ app.get("/session/:sessionId/type/:eventType", async (c) => {
       eventType as ConversationEventType,
     );
 
-    return c.json({
-      success: true,
-      data: {
-        sessionId,
-        eventType,
-        events,
-        count: events.length,
-      },
+    return createSuccessResponse(c, {
+      sessionId,
+      eventType,
+      events,
+      count: events.length,
     });
   } catch (error) {
     console.error("Error fetching conversation events by type:", error);
-    return c.json(
-      {
-        success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch events by type",
-      },
-      500,
-    );
+    return createErrorResponse(c, {
+      type: ERROR_TYPES.INTERNAL_ERROR,
+      title: "Internal Server Error",
+      status: 500,
+      detail:
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch events by type",
+    });
   }
 });
 
