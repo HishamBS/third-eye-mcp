@@ -26,6 +26,8 @@ import {
 } from "../middleware/response";
 import { z } from "zod";
 
+const MAX_DB_QUERY_LIMIT = 1000;
+
 const app = new Hono();
 
 app.use("*", requestIdMiddleware());
@@ -59,7 +61,11 @@ app.get("/tables", async (c) => {
         .from(personas)
         .orderBy(personas.eyeId, desc(personas.version)),
       db.select().from(sessions).orderBy(desc(sessions.createdAt)).limit(100),
-      db.select().from(runs).orderBy(desc(runs.createdAt)).limit(1000),
+      db
+        .select()
+        .from(runs)
+        .orderBy(desc(runs.createdAt))
+        .limit(MAX_DB_QUERY_LIMIT),
       db.select().from(mcpIntegrations).orderBy(mcpIntegrations.displayOrder),
     ]);
 

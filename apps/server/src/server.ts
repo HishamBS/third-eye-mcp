@@ -10,6 +10,8 @@ import { getConfig } from "@third-eye/config";
  * Bun server with HTTP + WebSocket support
  */
 
+const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
+
 const config = getConfig();
 const PORT = config.server.port;
 const HOST = config.server.host;
@@ -43,12 +45,9 @@ const server = serve({
 });
 
 // Cleanup interval for stale connections
-setInterval(
-  () => {
-    wsManager.cleanup();
-  },
-  5 * 60 * 1000,
-); // Every 5 minutes
+setInterval(() => {
+  wsManager.cleanup();
+}, SESSION_TIMEOUT_MS);
 
 console.log(`[Server] Third Eye MCP Server running at http://${HOST}:${PORT}`);
 console.log(

@@ -64,7 +64,7 @@ function ensurePassphraseFile(): void {
     // Write passphrase file with correct permissions
     writeFileSync(passphraseFile, passphrase, { mode: 0o600 });
 
-    console.log("🔑 Created new passphrase file at:", passphraseFile);
+    console.log("[Key] Created new passphrase file at:", passphraseFile);
   }
 }
 
@@ -90,10 +90,12 @@ function getEncryptionKey(): string {
   const passphraseFile = getPassphraseFilePath();
   try {
     _masterKey = readFileSync(passphraseFile, "utf8").trim();
-    console.log("🔐 Using passphrase from ~/.third-eye-mcp/.passphrase");
+    console.log(
+      "[Encryption] Using passphrase from ~/.third-eye-mcp/.passphrase",
+    );
     return _masterKey;
   } catch (error) {
-    console.warn("⚠️  Failed to read passphrase file:", error);
+    console.warn("[Warning] Failed to read passphrase file:", error);
   }
 
   // 3. Generate and save new passphrase
@@ -108,11 +110,13 @@ function getEncryptionKey(): string {
 
     // Write passphrase file with chmod 600
     writeFileSync(passphraseFile, _masterKey, { mode: 0o600 });
-    console.log("🔐 Generated new passphrase at ~/.third-eye-mcp/.passphrase");
+    console.log(
+      "[Encryption] Generated new passphrase at ~/.third-eye-mcp/.passphrase",
+    );
   } catch (error) {
-    console.warn("⚠️  Failed to save passphrase file:", error);
+    console.warn("[Warning] Failed to save passphrase file:", error);
     console.warn(
-      "🔐 Set THIRD_EYE_SECURITY_ENCRYPTION_KEY environment variable for production.",
+      "[Encryption] Set THIRD_EYE_SECURITY_ENCRYPTION_KEY environment variable for production.",
     );
   }
 
@@ -257,10 +261,10 @@ export function testEncryption(): boolean {
       throw new Error("Serialization roundtrip test failed: data mismatch");
     }
 
-    console.log("✅ Encryption system test passed");
+    console.log("[OK] Encryption system test passed");
     return true;
   } catch (error) {
-    console.error("❌ Encryption system test failed:", error);
+    console.error("[Error] Encryption system test failed:", error);
     return false;
   }
 }
@@ -326,7 +330,7 @@ export function rotatePassphrase(): string {
     if (existsSync(passphraseFile)) {
       const backup = `${passphraseFile}.backup.${Date.now()}`;
       writeFileSync(backup, readFileSync(passphraseFile), { mode: 0o600 });
-      console.log(`🔐 Backed up old passphrase to ${backup}`);
+      console.log(`[Encryption] Backed up old passphrase to ${backup}`);
     }
 
     // Write new passphrase
@@ -336,7 +340,7 @@ export function rotatePassphrase(): string {
     _masterKey = null;
 
     console.log(
-      "🔐 Passphrase rotated successfully at ~/.third-eye-mcp/.passphrase",
+      "[Encryption] Passphrase rotated successfully at ~/.third-eye-mcp/.passphrase",
     );
     return newPassphrase;
   } catch (error) {

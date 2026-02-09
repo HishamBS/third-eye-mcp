@@ -88,7 +88,7 @@ export class ModelDiscoveryService {
   async discoverAllModels(): Promise<void> {
     const providers = ProviderFactory.getSupportedProviders();
 
-    console.log("🔍 Starting model discovery for all providers...");
+    console.log("[Discovery] Starting model discovery for all providers...");
 
     const results = await Promise.allSettled(
       providers.map((providerId: string) =>
@@ -103,15 +103,15 @@ export class ModelDiscoveryService {
       const providerId = providers[index];
       if (result.status === "fulfilled") {
         successful++;
-        console.log(`✅ ${providerId}: ${result.value} models discovered`);
+        console.log(`[OK] ${providerId}: ${result.value} models discovered`);
       } else {
         failed++;
-        console.warn(`⚠️  ${providerId}: ${result.reason}`);
+        console.warn(`[Warning] ${providerId}: ${result.reason}`);
       }
     });
 
     console.log(
-      `🧿 Model discovery complete: ${successful} providers successful, ${failed} failed`,
+      `[Summary] Model discovery complete: ${successful} providers successful, ${failed} failed`,
     );
   }
 
@@ -126,7 +126,7 @@ export class ModelDiscoveryService {
     this.discoveryInProgress.add(providerId);
 
     try {
-      console.log(`🔍 Discovering models for ${providerId}...`);
+      console.log(`[Discovery] Discovering models for ${providerId}...`);
 
       const provider = await this.createProviderInstance(providerId);
       if (!provider) {
@@ -144,7 +144,7 @@ export class ModelDiscoveryService {
       const models = await provider.listModels();
 
       if (models.length === 0) {
-        console.warn(`⚠️  No models found for ${providerId}`);
+        console.warn(`[Warning] No models found for ${providerId}`);
         return 0;
       }
 
@@ -225,7 +225,7 @@ export class ModelDiscoveryService {
         }
       });
 
-      console.log(`💾 Cached ${models.length} models for ${providerId}`);
+      console.log(`[Cache] Cached ${models.length} models for ${providerId}`);
     } catch (error) {
       console.error(`Failed to cache models for ${providerId}:`, error);
       throw error;
@@ -512,7 +512,7 @@ export class ModelDiscoveryService {
    * Refresh cache for a specific provider
    */
   async refreshProvider(providerId: ProviderId): Promise<void> {
-    console.log(`🔄 Refreshing model cache for ${providerId}...`);
+    console.log(`[Refresh] Refreshing model cache for ${providerId}...`);
     await this.discoverProviderModels(providerId);
   }
 

@@ -326,7 +326,7 @@ export class EyeOrchestrator {
 
           // 6. Execute with configured provider
           console.log(
-            `\n🔄 Attempting provider: ${targetProvider}/${targetModel}`,
+            `\n[Retry] Attempting provider: ${targetProvider}/${targetModel}`,
           );
 
           {
@@ -469,7 +469,7 @@ export class EyeOrchestrator {
                       context: `${providerType}/${targetModel} API call for ${eyeName} Eye`,
                       onRetry: (attemptNum, maxAttempts, delayMs, error) => {
                         console.warn(
-                          `🔄 Retrying ${eyeName} provider call (${attemptNum}/${maxAttempts}) after ${delayMs}ms`,
+                          `[Retry] Retrying ${eyeName} provider call (${attemptNum}/${maxAttempts}) after ${delayMs}ms`,
                         );
                       },
                     },
@@ -505,9 +505,9 @@ export class EyeOrchestrator {
                     // Retry on invalid JSON from function call
                     if (attempt < MAX_PERSONA_RETRIES) {
                       console.warn(
-                        `⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Invalid JSON in function arguments`,
+                        `[Warning] ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Invalid JSON in function arguments`,
                       );
-                      enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\nYour previous function call had invalid JSON arguments. You MUST call submit_eye_analysis with valid JSON.`;
+                      enrichedInput = `${input}\n\n[IMPORTANT] REMINDER (Attempt ${attempt + 1}):\nYour previous function call had invalid JSON arguments. You MUST call submit_eye_analysis with valid JSON.`;
                       continue;
                     } else {
                       throw new Error(
@@ -517,7 +517,7 @@ export class EyeOrchestrator {
                   }
 
                   console.log(
-                    `\n📤 ${eyeName} LLM function call response (attempt ${attempt}/${MAX_PERSONA_RETRIES}):\n${toolCall.function.arguments}\n`,
+                    `\n[Response] ${eyeName} LLM function call response (attempt ${attempt}/${MAX_PERSONA_RETRIES}):\n${toolCall.function.arguments}\n`,
                   );
 
                   // 9. Validate envelope with Eye's validator
@@ -545,7 +545,7 @@ export class EyeOrchestrator {
                       )
                       .join("; ");
                     console.warn(
-                      `⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Schema validation failed`,
+                      `[Warning] ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Schema validation failed`,
                     );
                     console.warn(`   Validation errors: ${errorDetails}`);
                     console.warn(
@@ -553,7 +553,7 @@ export class EyeOrchestrator {
                     );
 
                     if (attempt < MAX_PERSONA_RETRIES) {
-                      enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\nYour previous response failed schema validation: ${errorDetails}\n\nReview the envelope schema in your prompt and ensure all required fields are present with correct types:\n- tag: string (required)\n- ok: boolean (required)\n- code: EyeStatusCode enum (required)\n- md: string (required, min 1 char)\n- data: object (required)\n- next: string or string[] (required)\n- ui: object (optional)\n\nYour response must be valid JSON matching this schema exactly.`;
+                      enrichedInput = `${input}\n\n[IMPORTANT] REMINDER (Attempt ${attempt + 1}):\nYour previous response failed schema validation: ${errorDetails}\n\nReview the envelope schema in your prompt and ensure all required fields are present with correct types:\n- tag: string (required)\n- ok: boolean (required)\n- code: EyeStatusCode enum (required)\n- md: string (required, min 1 char)\n- data: object (required)\n- next: string or string[] (required)\n- ui: object (optional)\n\nYour response must be valid JSON matching this schema exactly.`;
                       envelope = null;
                       continue;
                     } else {
@@ -570,7 +570,7 @@ export class EyeOrchestrator {
 
                   if (!guardResult.valid) {
                     console.warn(
-                      `⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Persona contract violated`,
+                      `[Warning] ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: Persona contract violated`,
                     );
 
                     if (attempt < MAX_PERSONA_RETRIES) {
@@ -578,7 +578,7 @@ export class EyeOrchestrator {
                       const reminder = buildReminderMessage(
                         guardResult.violations,
                       );
-                      enrichedInput = `${input}\n\n🔴 IMPORTANT REMINDER (Attempt ${attempt + 1}):\n${reminder}`;
+                      enrichedInput = `${input}\n\n[IMPORTANT] REMINDER (Attempt ${attempt + 1}):\n${reminder}`;
                       envelope = null;
                       continue;
                     } else {
@@ -594,7 +594,7 @@ export class EyeOrchestrator {
                   // LLM call failed
                   if (attempt < MAX_PERSONA_RETRIES) {
                     console.warn(
-                      `⚠️  ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: LLM call failed:`,
+                      `[Warning] ${eyeName} attempt ${attempt}/${MAX_PERSONA_RETRIES}: LLM call failed:`,
                       error,
                     );
                     continue;
@@ -608,13 +608,13 @@ export class EyeOrchestrator {
               successfulProviderType = providerType;
               successfulModel = targetModel;
               console.log(
-                `✅ Successfully received valid response from ${providerType}/${targetModel}`,
+                `[OK] Successfully received valid response from ${providerType}/${targetModel}`,
               );
             } catch (providerError) {
               // Provider failed
               lastError = providerError;
               console.error(
-                `❌ Provider ${targetProvider}/${targetModel} failed for ${eyeName}:`,
+                `[Error] Provider ${targetProvider}/${targetModel} failed for ${eyeName}:`,
                 providerError,
               );
               throw providerError;
@@ -1001,16 +1001,16 @@ export class EyeOrchestrator {
    */
   private getEyeIcon(eyeName: string): string {
     const iconMap: Record<string, string> = {
-      overseer: "🧿",
-      sharingan: "👁️",
-      kyuubi: "✨",
-      jogan: "🔮",
-      rinnegan: "🌀",
-      mangekyo: "⚡",
-      tenseigan: "💫",
-      byakugan: "👀",
+      overseer: "[OV]",
+      sharingan: "[SH]",
+      kyuubi: "[KY]",
+      jogan: "[JO]",
+      rinnegan: "[RI]",
+      mangekyo: "[MA]",
+      tenseigan: "[TE]",
+      byakugan: "[BY]",
     };
-    return iconMap[eyeName] || "👁️";
+    return iconMap[eyeName] || "[Eye]";
   }
 
   /**
@@ -1207,7 +1207,7 @@ export class EyeOrchestrator {
     // Look up eyeId from eye name
     const eyeId = await getEyeIdByName(eyeName);
     if (!eyeId) {
-      console.warn(`⚠️ Eye ID not found for ${eyeName}`);
+      console.warn(`[Warning] Eye ID not found for ${eyeName}`);
       return "";
     }
 
@@ -1236,13 +1236,13 @@ export class EyeOrchestrator {
       }
 
       console.log(
-        `📖 Loaded persona from database for Eye: ${eyeName} (v${personaAfterSeed.version}) after seeding`,
+        `[Persona] Loaded persona from database for Eye: ${eyeName} (v${personaAfterSeed.version}) after seeding`,
       );
       return personaAfterSeed.mission;
     }
 
     console.log(
-      `📖 Loaded persona from database for Eye: ${eyeName} (v${persona.version})`,
+      `[Persona] Loaded persona from database for Eye: ${eyeName} (v${persona.version})`,
     );
     return persona.mission;
   }

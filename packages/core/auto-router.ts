@@ -595,7 +595,7 @@ export class AutoRouter {
         // Create a session for the dangerous operation
         const bootstrapConfig: Record<string, unknown> = {
           agentName: "Risk-Detector",
-          displayName: `⚠️ ${extractTaskTitle(input, 40)}`,
+          displayName: `[Warning] ${extractTaskTitle(input, 40)}`,
         };
         const session = await this.orchestrator.createSession(bootstrapConfig);
         const sessionId = session.sessionId;
@@ -631,7 +631,7 @@ export class AutoRouter {
           reason: "confirmation",
           pendingData: {
             riskAssessment,
-            confirmationPrompt: `⚠️ DANGEROUS OPERATION DETECTED\n\nRisk Level: ${riskAssessment.riskLevel}\nCategories: ${riskAssessment.categories.join(", ")}\nPatterns Found: ${riskAssessment.detectedPatterns.join(", ")}\n\nThis operation may cause irreversible changes. Please confirm you want to proceed.`,
+            confirmationPrompt: `[Warning] DANGEROUS OPERATION DETECTED\n\nRisk Level: ${riskAssessment.riskLevel}\nCategories: ${riskAssessment.categories.join(", ")}\nPatterns Found: ${riskAssessment.detectedPatterns.join(", ")}\n\nThis operation may cause irreversible changes. Please confirm you want to proceed.`,
           },
           expiresInMs: 24 * 60 * 60 * 1000,
         });
