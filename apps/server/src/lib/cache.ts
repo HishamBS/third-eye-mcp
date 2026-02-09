@@ -1,6 +1,6 @@
 import { createHash } from "crypto";
 import type { MiddlewareHandler } from "hono";
-import { CACHE_TTL_MS } from "@third-eye/constants";
+import { CACHE_TTL_MS, TIME_WINDOWS } from "@third-eye/constants";
 
 /**
  * Response Caching System
@@ -144,7 +144,7 @@ export const responseCache = new ResponseCache();
 // Clean up expired entries every minute
 setInterval(() => {
   responseCache.clearExpired();
-}, 60000);
+}, TIME_WINDOWS.MINUTE_MS);
 
 /**
  * Cache middleware for Hono

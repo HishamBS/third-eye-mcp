@@ -1,6 +1,11 @@
 import type { ServerWebSocket } from "bun";
 import { registerWebSocketBridge } from "@third-eye/core";
 import { generateWebSocketId } from "@third-eye/db/utils/uuid";
+import {
+  WEBSOCKET_BACKOFF_MS,
+  WEBSOCKET_HEARTBEAT,
+  WEBSOCKET_CLEANUP,
+} from "@third-eye/constants";
 
 type IntervalHandle = ReturnType<typeof setInterval>;
 type TimeoutHandle = ReturnType<typeof setTimeout>;
@@ -118,9 +123,7 @@ export interface ConnectionInfo {
 export class WSConnectionManager {
   private connections = new Map<string, ConnectionInfo>();
   private sessionConnections = new Map<string, Set<string>>();
-  private static readonly RETRY_BACKOFF_MS = [
-    1000, 2000, 4000, 8000, 12000, 16000, 20000, 24000,
-  ] as const;
+  private static readonly RETRY_BACKOFF_MS = WEBSOCKET_BACKOFF_MS;
 
   /**
    * Register new WebSocket connection
@@ -210,12 +213,12 @@ export class WSConnectionManager {
           }
 
           this.removeConnection(connectionId);
-        }, 45000); // 45 second timeout - enough for network delays
+        }, WEBSOCKET_HEARTBEAT.PONG_TIMEOUT_MS);
       } catch (error) {
         console.error(`Failed to send ping to ${connectionId}:`, error);
         this.removeConnection(connectionId);
       }
-    }, 30000);
+    }, WEBSOCKET_HEARTBEAT.PING_INTERVAL_MS);
 
     console.log(
       `[WS] WebSocket connected: ${connectionId} -> session:${sessionId}`,
@@ -463,7 +466,7 @@ export class WSConnectionManager {
    */
   cleanup() {
     const now = Date.now();
-    const staleThreshold = 30 * 60 * 1000; // 30 minutes
+    const staleThreshold = WEBSOCKET_CLEANUP.STALE_THRESHOLD_MS;
 
     for (const [connectionId, connection] of this.connections) {
       if (now - connection.connectedAt > staleThreshold) {

@@ -28,6 +28,11 @@ import {
  * Rankings of models by performance metrics
  */
 
+const TOKEN_COST_DIVISOR = 1000;
+const TOKEN_COST_RATE = 0.001;
+const LEADERBOARD_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const LEADERBOARD_TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000;
+
 const app = new Hono();
 
 app.use("*", requestIdMiddleware());
@@ -122,7 +127,7 @@ app.get("/:category", async (c) => {
       const costs = group.runs.map((r) => {
         const totalTokens = (r.tokensIn || 0) + (r.tokensOut || 0);
         // Rough cost estimate: $0.001 per 1K tokens (adjust per provider)
-        return (totalTokens / 1000) * 0.001;
+        return (totalTokens / TOKEN_COST_DIVISOR) * TOKEN_COST_RATE;
       });
 
       const avgLatency =
@@ -290,8 +295,8 @@ app.get("/trending/models", async (c) => {
 
     // Get runs from last 7 days vs previous 7 days
     const now = new Date();
-    const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const previous7Days = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+    const last7Days = new Date(now.getTime() - LEADERBOARD_WEEK_MS);
+    const previous7Days = new Date(now.getTime() - LEADERBOARD_TWO_WEEKS_MS);
 
     const recentRuns = await db
       .select()

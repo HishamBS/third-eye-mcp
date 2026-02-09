@@ -14,6 +14,8 @@ interface ProviderHealth {
   [key: string]: boolean;
 }
 
+const HEALTH_VERSION_FALLBACK = "1.0.0";
+
 // Cache health check results to avoid excessive provider probing
 const healthCache = new Map<string, { result: unknown; timestamp: number }>();
 const CACHE_TTL = HEALTH_CHECK_CACHE_TTL_MS;
@@ -154,7 +156,7 @@ export async function getSystemHealth(): Promise<{
   const uptime_seconds = Math.floor(process.uptime());
 
   // Get version from package.json or environment
-  const version = process.env.npm_package_version || "1.0.0";
+  const version = process.env.npm_package_version || HEALTH_VERSION_FALLBACK;
 
   const { server } = getConfig();
   const host = server.host;

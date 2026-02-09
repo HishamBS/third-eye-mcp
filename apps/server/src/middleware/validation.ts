@@ -4,6 +4,7 @@ import { getEyeIdByName } from "@third-eye/db/utils/lookups";
 import {
   RATE_LIMIT_MAX_REQUESTS,
   RATE_LIMIT_WINDOW_MS,
+  TIME_WINDOWS,
 } from "@third-eye/constants";
 import { PROVIDERS } from "@third-eye/types";
 
@@ -207,12 +208,11 @@ export function rateLimit(options?: {
 setInterval(() => {
   const now = Date.now();
   for (const [key, entry] of rateLimitStore.entries()) {
-    if (now > entry.resetAt + 60000) {
-      // 1 minute grace period
+    if (now > entry.resetAt + TIME_WINDOWS.MINUTE_MS) {
       rateLimitStore.delete(key);
     }
   }
-}, 60000); // Run every minute
+}, TIME_WINDOWS.MINUTE_MS);
 
 /**
  * Common validation schemas for all API endpoints

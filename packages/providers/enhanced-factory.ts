@@ -1,10 +1,14 @@
 import type {
   ProviderClient,
-  ModelInfo,
+  ProviderModelInfo,
   CompletionRequest,
   CompletionResponse,
   HealthResponse,
 } from "@third-eye/types";
+import {
+  RATE_LIMIT_WINDOW_MS,
+  RATE_LIMIT_MAX_REQUESTS,
+} from "@third-eye/constants";
 import { ProviderFactory, type ProviderType } from "./src/factory";
 import type { ProviderConfig } from "./src/base";
 
@@ -23,8 +27,6 @@ interface ProviderStats {
   lastHealthCheckAt: number;
 }
 
-const RATE_LIMIT_WINDOW_MS = 60_000;
-const MAX_REQUESTS_PER_WINDOW = 100;
 const HEALTH_CHECK_INTERVAL_MS = 300_000;
 
 export class EnhancedProviderFactory {
@@ -158,7 +160,7 @@ export class EnhancedProviderFactory {
       return;
     }
 
-    if (instance.requestCount >= MAX_REQUESTS_PER_WINDOW) {
+    if (instance.requestCount >= RATE_LIMIT_MAX_REQUESTS) {
       const secondsRemaining = Math.ceil(
         (RATE_LIMIT_WINDOW_MS - (now - instance.lastRequestAt)) / 1000,
       );
@@ -183,7 +185,7 @@ export class EnhancedProviderFactory {
   }
 
   private static wrapClient(client: ProviderClient): ProviderClient {
-    const wrapListModels = async (): Promise<ModelInfo[]> =>
+    const wrapListModels = async (): Promise<ProviderModelInfo[]> =>
       client.listModels();
 
     const wrapComplete = async (

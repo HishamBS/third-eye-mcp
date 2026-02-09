@@ -198,6 +198,9 @@ function parseSessionConfig(
   return {};
 }
 
+const SESSION_ACTIVE_WINDOW_MS = 10 * 60 * 1000;
+const SESSION_RECENT_WINDOW_MS = 5 * 60 * 1000;
+
 const app = new Hono();
 
 app.use("*", requestIdMiddleware());
@@ -381,7 +384,7 @@ app.post("/open", async (c) => {
 app.get("/active", async (c) => {
   try {
     const { db } = getDb();
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    const tenMinutesAgo = new Date(Date.now() - SESSION_ACTIVE_WINDOW_MS);
 
     // Get sessions that are either:
     // 1. Status is 'active'
@@ -880,7 +883,7 @@ app.post("/:id/kill", async (c) => {
 
     // Find runs that might still be in progress (no output or recent)
     const now = Date.now();
-    const fiveMinutesAgo = now - 5 * 60 * 1000;
+    const fiveMinutesAgo = now - SESSION_RECENT_WINDOW_MS;
 
     const potentiallyActiveRuns = sessionRuns.filter((run) => {
       const runTime = new Date(run.createdAt).getTime();
