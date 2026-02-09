@@ -7,6 +7,7 @@ import {
   pipelineEvents,
   clarifications,
   intentConfirmations,
+  eyes,
 } from "@third-eye/db";
 import { getConfig } from "@third-eye/config";
 import { eq, desc, count, sql, or, gte, and } from "drizzle-orm";
@@ -681,8 +682,20 @@ app.get("/:id/events", async (c) => {
     );
 
     const events = await db
-      .select()
+      .select({
+        id: pipelineEvents.id,
+        sessionId: pipelineEvents.sessionId,
+        eyeId: pipelineEvents.eyeId,
+        eyeSlug: eyes.slug,
+        type: pipelineEvents.type,
+        code: pipelineEvents.code,
+        md: pipelineEvents.md,
+        dataJson: pipelineEvents.dataJson,
+        nextAction: pipelineEvents.nextAction,
+        createdAt: pipelineEvents.createdAt,
+      })
       .from(pipelineEvents)
+      .leftJoin(eyes, eq(pipelineEvents.eyeId, eyes.id))
       .where(eq(pipelineEvents.sessionId, sessionId))
       .orderBy(pipelineEvents.createdAt)
       .limit(limit)

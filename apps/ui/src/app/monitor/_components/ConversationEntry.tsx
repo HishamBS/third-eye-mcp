@@ -1,10 +1,10 @@
 "use client";
 
-import { memo } from "react";
+import { memo, Fragment } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { SHARED_EYE_COLORS } from "@third-eye/theme";
-import { type EyeId } from "@third-eye/constants";
+import { type EyeId, EYE_DISPLAY_NAMES } from "@third-eye/constants";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { HEX_COLORS } from "@/constants/color-mappings";
 
@@ -20,6 +20,7 @@ type ConversationEntryType =
   | "agent_to_eye"
   | "plan_presented"
   | "plan_decision"
+  | "routing_announced"
   | "system";
 
 interface PendingAction {
@@ -94,10 +95,28 @@ function MetricsBar({ metrics }: { metrics: Record<string, unknown> }) {
 function SectionHeader({ entry }: { entry: ConversationEntryData }) {
   const eyeColor = getEyeColor(entry.eye);
   const isActive = entry.status === "active";
+  const previousEye = entry.content.metrics?.previousEye as EyeId | undefined;
+  const prevEyeColor = previousEye ? getEyeColor(previousEye) : null;
+
   return (
     <div>
       <div className="flex items-center gap-3 py-4">
         <div className="h-px flex-1 bg-brand-outline/30" />
+        {previousEye && (
+          <>
+            <Image
+              src={`/eyes/${previousEye}.svg`}
+              width={16}
+              height={16}
+              alt=""
+              className="rounded-full opacity-50"
+            />
+            <span className="text-xs" style={{ color: `${prevEyeColor}80` }}>
+              {EYE_DISPLAY_NAMES[previousEye] ?? previousEye}
+            </span>
+            <span className="text-semantic-muted text-xs">&rarr;</span>
+          </>
+        )}
         {entry.eye && (
           <div className="relative">
             <Image
@@ -412,6 +431,75 @@ function SystemMessage({ entry }: { entry: ConversationEntryData }) {
   );
 }
 
+const EYE_NAME_ABBREV_LENGTH = 4;
+
+function RoutingAnnounced({ entry }: { entry: ConversationEntryData }) {
+  const overseerColor = SHARED_EYE_COLORS.overseer;
+  const route = entry.content.metrics?.route as string[] | undefined;
+  const summary = entry.content.metrics?.summary as string | undefined;
+
+  if (!route || route.length === 0) {
+    return <SystemMessage entry={entry} />;
+  }
+
+  return (
+    <div className="flex justify-center py-3">
+      <div
+        className="rounded-lg px-5 py-3 bg-brand-paper-elev max-w-[90%]"
+        style={{ border: `1px solid ${overseerColor}30` }}
+      >
+        <div
+          className="text-[10px] font-medium uppercase tracking-wider mb-3 text-center"
+          style={{ color: overseerColor }}
+        >
+          Pipeline Route
+        </div>
+        <div className="flex items-center justify-center gap-1 flex-wrap">
+          {route.map((eyeId, index) => {
+            const color =
+              SHARED_EYE_COLORS[eyeId as keyof typeof SHARED_EYE_COLORS] ??
+              DEFAULT_EYE_COLOR;
+            const displayName =
+              EYE_DISPLAY_NAMES[eyeId as keyof typeof EYE_DISPLAY_NAMES] ??
+              eyeId;
+            const shortName = displayName.substring(0, EYE_NAME_ABBREV_LENGTH);
+
+            return (
+              <Fragment key={eyeId}>
+                {index > 0 && (
+                  <span className="text-semantic-muted text-xs mx-0.5">
+                    &rarr;
+                  </span>
+                )}
+                <div className="flex flex-col items-center gap-0.5">
+                  <Image
+                    src={`/eyes/${eyeId}.svg`}
+                    width={16}
+                    height={16}
+                    alt=""
+                    className="rounded-full"
+                  />
+                  <span
+                    className="text-[8px] uppercase tracking-wider font-medium"
+                    style={{ color }}
+                  >
+                    {shortName}
+                  </span>
+                </div>
+              </Fragment>
+            );
+          })}
+        </div>
+        {summary && (
+          <div className="text-xs text-semantic-muted text-center mt-2 pt-2 border-t border-brand-outline/20">
+            {summary}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ConversationEntryInner({
   entry,
   viewMode,
@@ -437,6 +525,8 @@ function ConversationEntryInner({
         return <PlanPresented entry={entry} />;
       case "plan_decision":
         return <PlanDecision entry={entry} />;
+      case "routing_announced":
+        return <RoutingAnnounced entry={entry} />;
       case "eye_error":
         return <EyeError entry={entry} />;
       case "system":

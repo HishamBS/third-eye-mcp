@@ -1,8 +1,10 @@
 "use client";
 
-import { memo, useRef, useEffect, useCallback } from "react";
+import { memo, useRef, useEffect, useCallback, useMemo } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { SHARED_EYE_COLORS } from "@third-eye/theme";
+import { type EyeId, EYE_DISPLAY_NAMES } from "@third-eye/constants";
 import { HEX_COLORS } from "@/constants/color-mappings";
 import {
   ConversationEntry,
@@ -15,6 +17,8 @@ const SCROLL_THRESHOLD = 100;
 interface ConversationFeedProps {
   entries: ConversationEntryData[];
   viewMode: "strategic" | "tactical";
+  selectedEye?: EyeId | null;
+  onClearFilter?: () => void;
   onClarificationSubmit?: (id: string, answer: string) => void;
   onPlanApprove?: () => void;
   onPlanReject?: (feedback?: string) => void;
@@ -34,6 +38,8 @@ function getEyeColor(eyeId: string | null): string {
 function ConversationFeedInner({
   entries,
   viewMode,
+  selectedEye = null,
+  onClearFilter,
   onClarificationSubmit,
   onPlanApprove,
   onPlanReject,
@@ -43,6 +49,16 @@ function ConversationFeedInner({
 }: ConversationFeedProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const shouldAutoScrollRef = useRef(true);
+
+  const filteredEntries = useMemo(() => {
+    if (!selectedEye) return entries;
+    return entries.filter(
+      (entry) =>
+        entry.eye === selectedEye ||
+        entry.type === "routing_announced" ||
+        (entry.type === "eye_section_header" && entry.eye === selectedEye),
+    );
+  }, [entries, selectedEye]);
 
   const checkShouldAutoScroll = useCallback(() => {
     const container = scrollRef.current;
@@ -100,30 +116,74 @@ function ConversationFeedInner({
     );
   }
 
+  const filterEyeColor = selectedEye
+    ? SHARED_EYE_COLORS[selectedEye as keyof typeof SHARED_EYE_COLORS]
+    : null;
+
   return (
     <div
       ref={scrollRef}
       onScroll={handleScroll}
       className={cn(
-        "flex-1 overflow-y-auto px-6 py-4 bg-brand-paper",
+        "flex-1 overflow-y-auto bg-brand-paper flex flex-col",
         className,
       )}
     >
-      {entries.map((entry) => (
-        <div key={entry.id}>
-          <ConversationEntry entry={entry} viewMode={viewMode} />
-          {entry.action && entry.status === "active" && (
-            <ActiveActionPanel
-              action={entry.action}
-              eyeColor={getEyeColor(entry.eye)}
-              onClarificationSubmit={handleClarificationSubmit}
-              onPlanApprove={handlePlanApprove}
-              onPlanReject={handlePlanReject}
-              isSubmitting={isSubmitting}
-            />
-          )}
+      {selectedEye && (
+        <div
+          className="shrink-0 flex items-center gap-2 px-6 py-1.5 border-b"
+          style={{
+            borderColor: `${filterEyeColor}30`,
+            backgroundColor: `${filterEyeColor}08`,
+          }}
+        >
+          <Image
+            src={`/eyes/${selectedEye}.svg`}
+            width={16}
+            height={16}
+            alt=""
+            className="rounded-full"
+          />
+          <span
+            className="text-xs font-medium"
+            style={{ color: filterEyeColor ?? undefined }}
+          >
+            {EYE_DISPLAY_NAMES[selectedEye] ?? selectedEye}
+          </span>
+          <span className="text-[10px] text-semantic-muted">filtered</span>
+          <button
+            onClick={onClearFilter}
+            className="ml-auto text-[10px] text-semantic-muted hover:text-brand-foreground transition-colors"
+          >
+            Clear
+          </button>
         </div>
-      ))}
+      )}
+      <div className="flex-1 overflow-y-auto px-6 py-4">
+        {filteredEntries.length === 0 && selectedEye ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-sm text-semantic-muted">
+              No events for {EYE_DISPLAY_NAMES[selectedEye] ?? selectedEye}
+            </div>
+          </div>
+        ) : (
+          filteredEntries.map((entry) => (
+            <div key={entry.id}>
+              <ConversationEntry entry={entry} viewMode={viewMode} />
+              {entry.action && entry.status === "active" && (
+                <ActiveActionPanel
+                  action={entry.action}
+                  eyeColor={getEyeColor(entry.eye)}
+                  onClarificationSubmit={handleClarificationSubmit}
+                  onPlanApprove={handlePlanApprove}
+                  onPlanReject={handlePlanReject}
+                  isSubmitting={isSubmitting}
+                />
+              )}
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }

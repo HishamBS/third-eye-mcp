@@ -7,11 +7,13 @@ import { SHARED_EYE_COLORS } from "@third-eye/theme";
 import { ALL_EYE_IDS, EYE_DISPLAY_NAMES } from "@third-eye/constants";
 
 type EyeState = "standby" | "active" | "complete" | "error";
+const EYE_NAME_ABBREV_LENGTH = 4;
 
 interface PipelineProgressProps {
   eyeStates: Record<string, EyeState>;
   pipelineRoute: string[];
   activeEye: string | null;
+  selectedEye: string | null;
   onEyeClick: (eyeId: string) => void;
   className?: string;
 }
@@ -20,6 +22,7 @@ function PipelineProgressInner({
   eyeStates,
   pipelineRoute,
   activeEye,
+  selectedEye,
   onEyeClick,
   className,
 }: PipelineProgressProps) {
@@ -40,10 +43,12 @@ function PipelineProgressInner({
           const isActive = state === "active";
           const isComplete = state === "complete";
           const isError = state === "error";
+          const isSelected = selectedEye === eyeId;
           const displayName =
             EYE_DISPLAY_NAMES[eyeId as keyof typeof EYE_DISPLAY_NAMES];
           const shortName =
-            displayName?.substring(0, 4) ?? eyeId.substring(0, 4);
+            displayName?.substring(0, EYE_NAME_ABBREV_LENGTH) ??
+            eyeId.substring(0, EYE_NAME_ABBREV_LENGTH);
 
           return (
             <Fragment key={eyeId}>
@@ -52,11 +57,16 @@ function PipelineProgressInner({
                 onClick={() => onEyeClick(eyeId)}
                 className={cn(
                   "relative flex flex-col items-center gap-0.5 px-1.5 py-1 rounded transition-all",
-                  state === "standby" && "opacity-40",
-                  isActive && "opacity-100",
+                  state === "standby" && !isSelected && "opacity-40",
+                  (isActive || isSelected) && "opacity-100",
                   isComplete && "opacity-100",
                   isError && "opacity-100",
                 )}
+                style={
+                  isSelected
+                    ? { boxShadow: `0 0 0 2px ${eyeColor}` }
+                    : undefined
+                }
                 title={displayName}
               >
                 <div className="relative">
@@ -83,11 +93,13 @@ function PipelineProgressInner({
                 <span
                   className={cn(
                     "text-[8px] uppercase tracking-wider",
-                    isActive
+                    isActive || isSelected
                       ? "text-brand-foreground font-medium"
                       : "text-semantic-muted",
                   )}
-                  style={isActive ? { color: eyeColor } : undefined}
+                  style={
+                    isActive || isSelected ? { color: eyeColor } : undefined
+                  }
                 >
                   {shortName}
                 </span>

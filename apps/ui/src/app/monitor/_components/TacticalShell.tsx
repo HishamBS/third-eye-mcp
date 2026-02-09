@@ -9,6 +9,7 @@
 
 import { memo, useCallback, useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { type EyeId } from "@third-eye/constants";
 import {
   useEventTransformer,
   useConversationFeed,
@@ -64,6 +65,7 @@ function TacticalShellComponent({
     processEvent: processTacticalEvent,
     setConnectionStatus,
     setViewMode,
+    selectEye,
   } = useTacticalState({
     sessionId,
     initialConnectionStatus,
@@ -146,9 +148,18 @@ function TacticalShellComponent({
     [setViewMode],
   );
 
-  const handleEyeClick = useCallback((_eyeId: string) => {
-    // Future: scroll to eye section in conversation
-  }, []);
+  const handleEyeClick = useCallback(
+    (eyeId: string) => {
+      selectEye(eyeId as EyeId);
+    },
+    [selectEye],
+  );
+
+  const handleClearFilter = useCallback(() => {
+    if (tacticalState.selectedEye) {
+      selectEye(tacticalState.selectedEye);
+    }
+  }, [selectEye, tacticalState.selectedEye]);
 
   return (
     <div
@@ -178,6 +189,7 @@ function TacticalShellComponent({
             eyeStates={tacticalState.eyeStates}
             activeEye={tacticalState.activeEye}
             pipelineRoute={tacticalState.pipelineRoute}
+            selectedEye={tacticalState.selectedEye}
             onEyeClick={handleEyeClick}
           />
         </div>
@@ -199,6 +211,8 @@ function TacticalShellComponent({
           <ConversationFeed
             entries={entries}
             viewMode={tacticalState.viewMode}
+            selectedEye={tacticalState.selectedEye}
+            onClearFilter={handleClearFilter}
             onClarificationSubmit={onClarificationSubmit}
             onPlanApprove={onPlanApprove}
             onPlanReject={onPlanReject}
@@ -211,6 +225,7 @@ function TacticalShellComponent({
             eyeStates={tacticalState.eyeStates}
             pipelineRoute={tacticalState.pipelineRoute}
             activeEye={tacticalState.activeEye}
+            selectedEye={tacticalState.selectedEye}
             onEyeClick={handleEyeClick}
           />
         </div>

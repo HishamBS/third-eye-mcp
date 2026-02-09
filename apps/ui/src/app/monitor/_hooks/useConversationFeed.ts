@@ -28,6 +28,7 @@ export type ConversationEntryType =
   | "agent_to_eye"
   | "plan_presented"
   | "plan_decision"
+  | "routing_announced"
   | "system";
 
 export interface ConversationEntry {
@@ -76,11 +77,8 @@ const EYE_SPECIALTIES: Readonly<Record<string, string>> = Object.freeze({
   byakugan: "Final comprehensive inspection before delivery",
 });
 
-let entryCounter = 0;
-
 function generateEntryId(): string {
-  entryCounter += 1;
-  return `ce_${Date.now()}_${entryCounter}`;
+  return `ce_${crypto.randomUUID()}`;
 }
 
 function classifyEvent(event: TacticalEvent): ConversationEntryType {
@@ -115,12 +113,13 @@ function classifyEvent(event: TacticalEvent): ConversationEntryType {
 
   if (eyePhase === "started" || eyePhase === "analyzing") return "eye_dialogue";
 
+  // Routing announcement
+  if (type === "overseer_route") {
+    return "routing_announced";
+  }
+
   // System events
-  if (
-    type.startsWith("session_") ||
-    type.startsWith("pipeline_") ||
-    type === "overseer_route"
-  ) {
+  if (type.startsWith("session_") || type.startsWith("pipeline_")) {
     return "system";
   }
 
@@ -140,6 +139,7 @@ function resolveAlignment(
       return "right";
     case "system":
     case "eye_section_header":
+    case "routing_announced":
       return "center";
     default:
       return "left";
@@ -214,12 +214,22 @@ function extractContent(event: TacticalEvent): ConversationEntry["content"] {
   const text = event.ui.summary || event.ui.title;
   const markdown = event.ui.detail;
 
-  const metrics: Record<string, unknown> | null =
-    typeof event.data.metrics === "object" && event.data.metrics !== null
-      ? (event.data.metrics as Record<string, unknown>)
-      : typeof event.data.score === "number"
-        ? { score: event.data.score }
-        : null;
+  let metrics: Record<string, unknown> | null = null;
+
+  if (event.type === "overseer_route" && Array.isArray(event.data.route)) {
+    metrics = {
+      route: event.data.route,
+      summary:
+        typeof event.data.summary === "string" ? event.data.summary : null,
+    };
+  } else if (
+    typeof event.data.metrics === "object" &&
+    event.data.metrics !== null
+  ) {
+    metrics = event.data.metrics as Record<string, unknown>;
+  } else if (typeof event.data.score === "number") {
+    metrics = { score: event.data.score };
+  }
 
   return { text, markdown, metrics };
 }
@@ -286,7 +296,11 @@ function buildEntry(
   };
 }
 
-function buildSectionHeader(eye: EyeId, timestamp: Date): ConversationEntry {
+function buildSectionHeader(
+  eye: EyeId,
+  timestamp: Date,
+  previousEye: EyeId | null,
+): ConversationEntry {
   return {
     id: generateEntryId(),
     type: "eye_section_header",
@@ -303,7 +317,7 @@ function buildSectionHeader(eye: EyeId, timestamp: Date): ConversationEntry {
     content: {
       text: `${EYE_DISPLAY_NAMES[eye]} - ${EYE_ROLE_TITLES[eye]}`,
       markdown: null,
-      metrics: null,
+      metrics: previousEye ? { previousEye } : null,
     },
     action: null,
     status: "active",
@@ -335,11 +349,14 @@ export function useConversationFeed(): UseConversationFeedReturn {
       event.eye &&
       event.eye !== lastEyeRef.current &&
       entryType !== "system" &&
+      entryType !== "routing_announced" &&
       entryType !== "human_answer" &&
       entryType !== "human_message" &&
       entryType !== "plan_decision"
     ) {
-      newEntries.push(buildSectionHeader(event.eye, event.timestamp));
+      newEntries.push(
+        buildSectionHeader(event.eye, event.timestamp, lastEyeRef.current),
+      );
       lastEyeRef.current = event.eye;
     }
 

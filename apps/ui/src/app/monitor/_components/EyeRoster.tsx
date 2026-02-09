@@ -13,6 +13,7 @@ interface EyeRosterProps {
   eyeStates: Record<string, EyeStatus>;
   activeEye: string | null;
   pipelineRoute: string[];
+  selectedEye: string | null;
   onEyeClick: (eyeId: string) => void;
   className?: string;
 }
@@ -41,10 +42,17 @@ interface EyeCardProps {
   eyeId: EyeId;
   status: EyeStatus;
   isActive: boolean;
+  isSelected: boolean;
   onClick: (eyeId: string) => void;
 }
 
-function EyeCardComponent({ eyeId, status, isActive, onClick }: EyeCardProps) {
+function EyeCardComponent({
+  eyeId,
+  status,
+  isActive,
+  isSelected,
+  onClick,
+}: EyeCardProps) {
   const eyeColor = SHARED_EYE_COLORS[eyeId];
   const displayName = EYE_DISPLAY_NAMES[eyeId];
   const roleTitle = EYE_ROLE_TITLES[eyeId];
@@ -55,6 +63,10 @@ function EyeCardComponent({ eyeId, status, isActive, onClick }: EyeCardProps) {
   const containerClasses = useMemo(() => {
     const base =
       "px-3 py-2.5 mx-2 mb-1.5 rounded-lg cursor-pointer transition-all duration-200 flex items-center gap-3";
+
+    if (isSelected) {
+      return cn(base, "border-2 bg-brand-paper-elev");
+    }
 
     if (isActive) {
       return cn(base, "border bg-brand-paper-elev");
@@ -74,7 +86,7 @@ function EyeCardComponent({ eyeId, status, isActive, onClick }: EyeCardProps) {
       default:
         return cn(base, "border border-transparent hover:bg-brand-paper-elev");
     }
-  }, [isActive, status]);
+  }, [isActive, isSelected, status]);
 
   const badgeClasses = useMemo(() => {
     const base = "text-[10px] font-medium px-1.5 py-0.5 rounded-full";
@@ -94,6 +106,13 @@ function EyeCardComponent({ eyeId, status, isActive, onClick }: EyeCardProps) {
   }, [status]);
 
   const containerStyle = useMemo(() => {
+    if (isSelected) {
+      return {
+        borderColor: eyeColor,
+        backgroundColor: `${eyeColor}0A`,
+        boxShadow: `0 0 0 1px ${eyeColor}40`,
+      };
+    }
     if (isActive) {
       return {
         borderColor: `${eyeColor}66`,
@@ -101,7 +120,7 @@ function EyeCardComponent({ eyeId, status, isActive, onClick }: EyeCardProps) {
       };
     }
     return undefined;
-  }, [isActive, eyeColor]);
+  }, [isActive, isSelected, eyeColor]);
 
   const badgeStyle = useMemo(() => {
     if (status === "active") {
@@ -155,6 +174,7 @@ function EyeRosterComponent({
   eyeStates,
   activeEye,
   pipelineRoute: _pipelineRoute,
+  selectedEye,
   onEyeClick,
   className,
 }: EyeRosterProps) {
@@ -180,6 +200,7 @@ function EyeRosterComponent({
             eyeId={eyeId as EyeId}
             status={getEyeStatus(eyeId)}
             isActive={activeEye === eyeId}
+            isSelected={selectedEye === eyeId}
             onClick={onEyeClick}
           />
         ))}

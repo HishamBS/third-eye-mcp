@@ -24,6 +24,7 @@ export interface TacticalState {
   connectionStatus: "connected" | "disconnected" | "reconnecting";
   viewMode: "strategic" | "tactical";
   activeEye: EyeId | null;
+  selectedEye: EyeId | null;
   eyeStates: Record<string, EyeStatus>;
   pipelineProgress: number;
   pipelineRoute: EyeId[];
@@ -51,6 +52,7 @@ export interface UseTacticalStateReturn {
   setConnectionStatus: (status: TacticalState["connectionStatus"]) => void;
   setViewMode: (mode: TacticalState["viewMode"]) => void;
   toggleViewMode: () => void;
+  selectEye: (eyeId: EyeId) => void;
   clearPendingAction: () => void;
   reset: () => void;
 }
@@ -73,6 +75,7 @@ export function useTacticalState({
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(
     null,
   );
+  const [selectedEye, setSelectedEye] = useState<EyeId | null>(null);
   const [missionSummary, setMissionSummary] = useState<string>("");
 
   const pipelineProgress = useMemo((): number => {
@@ -203,6 +206,10 @@ export function useTacticalState({
     setViewMode((prev) => (prev === "strategic" ? "tactical" : "strategic"));
   }, []);
 
+  const selectEye = useCallback((eyeId: EyeId) => {
+    setSelectedEye((prev) => (prev === eyeId ? null : eyeId));
+  }, []);
+
   const clearPendingAction = useCallback(() => {
     setPendingAction(null);
   }, []);
@@ -211,6 +218,7 @@ export function useTacticalState({
     setConnectionStatusState("disconnected");
     setViewMode("tactical");
     setActiveEye(null);
+    setSelectedEye(null);
     setEyeStates(buildInitialEyeStates());
     setPipelineRoute([]);
     setQualityScore(null);
@@ -224,6 +232,7 @@ export function useTacticalState({
       connectionStatus,
       viewMode,
       activeEye,
+      selectedEye,
       eyeStates,
       pipelineProgress,
       pipelineRoute,
@@ -236,6 +245,7 @@ export function useTacticalState({
       connectionStatus,
       viewMode,
       activeEye,
+      selectedEye,
       eyeStates,
       pipelineProgress,
       pipelineRoute,
@@ -251,6 +261,7 @@ export function useTacticalState({
     setConnectionStatus,
     setViewMode: setViewModeExplicit,
     toggleViewMode,
+    selectEye,
     clearPendingAction,
     reset,
   };

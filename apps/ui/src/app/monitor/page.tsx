@@ -57,7 +57,11 @@ function transformPipelineEvent(
   const code = (event.code as string)?.toLowerCase() ?? "";
   const eventType = code || (event.type as string) || "pipeline_event";
 
-  const eye = EYE_NAMES.find((name) => code.startsWith(name)) ?? "overseer";
+  // Primary: use eyeSlug from backend JOIN (authoritative)
+  const eyeSlug = typeof event.eyeSlug === "string" ? event.eyeSlug : null;
+  // Fallback: extract from code prefix (for backwards compat)
+  const eye =
+    eyeSlug ?? EYE_NAMES.find((name) => code.startsWith(name)) ?? null;
 
   return {
     ...event,
