@@ -119,7 +119,7 @@ app.post("/run", async (c) => {
 
       if (!existingSession) {
         // Session doesn't exist - create it now
-        console.log(`📝 Creating session on-demand: ${providedSessionId}`);
+        console.log(`[MCP] Creating session on-demand: ${providedSessionId}`);
         await db
           .insert(sessions)
           .values({
@@ -157,7 +157,7 @@ app.post("/run", async (c) => {
     // Import AutoRouter for FULL pipeline execution
     const { autoRouter } = await import("@third-eye/core/auto-router");
 
-    console.log(`🚀 Executing full pipeline for task via AutoRouter`);
+    console.log(`[MCP] Executing full pipeline for task via AutoRouter`);
 
     // Execute COMPLETE pipeline via AutoRouter
     // AutoRouter will:
@@ -177,7 +177,7 @@ app.post("/run", async (c) => {
     );
 
     if (!result.completed) {
-      console.error(`❌ Pipeline incomplete: ${result.error}`);
+      console.error(`[MCP] Pipeline incomplete: ${result.error}`);
       return createErrorResponse(c, {
         title: ApiErrorTitle.PIPELINE_EXECUTION_ERROR,
         code: ApiErrorCode.PIPELINE_EXECUTION_FAILED,

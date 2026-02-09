@@ -68,14 +68,16 @@ const server = serve({
 });
 
 console.log(`
-🧿 Third-Eye MCP — READY
-• MCP tool: ${TOOL_NAME}
-• Server: http://${HOST}:${PORT}
-• UI:     http://${HOST}:${config.ui.port}
-• DB:     ~/${DATA_DIRECTORY}/mcp.db
-• Providers: ${PROVIDERS.join(", ")}  (health: green)
-• Agent Primer: http://${HOST}:${PORT}/mcp/quickstart
+[Server] Third-Eye MCP -- READY
+  MCP tool: ${TOOL_NAME}
+  Server: http://${HOST}:${PORT}
+  UI:     http://${HOST}:${config.ui.port}
+  DB:     ~/${DATA_DIRECTORY}/mcp.db
+  Providers: ${PROVIDERS.join(", ")}  (health: green)
+  Agent Primer: http://${HOST}:${PORT}/mcp/quickstart
 `);
-console.log(`📡 WebSocket: ws://${HOST}:${PORT}/ws/monitor?sessionId=<id>`);
-console.log(`🧪 Test: curl http://${HOST}:${PORT}/ping`);
-console.log(`\n💡 Browser will auto-open when an MCP agent creates a session`);
+console.log(`[WS] WebSocket: ws://${HOST}:${PORT}/ws/monitor?sessionId=<id>`);
+console.log(`[Health] Test: curl http://${HOST}:${PORT}/ping`);
+console.log(
+  `\n[Server] Browser will auto-open when an MCP agent creates a session`,
+);

@@ -18,7 +18,7 @@ import {
 } from "@/components/ViewModeToggle";
 import { StrictnessControls } from "@/components/StrictnessControls";
 import type { WSPipelineEvent } from "@/types/pipeline";
-import type { Envelope, Session, Run } from "@third-eye/types";
+import type { Envelope, Session, Run, Eye } from "@third-eye/types";
 import { TOOL_NAME } from "@third-eye/types";
 import { getApiUrl, WS_BASE_URL, API_BASE_URL } from "@/consts/api";
 import {
@@ -36,11 +36,8 @@ import { toast } from "sonner";
  */
 const MIN_INPUT_LENGTH = 10;
 
-interface EyeDefinition {
-  id: string;
-  name: string;
-  description: string;
-}
+/** Use shared Eye type with only the fields this page needs */
+type EyeDefinition = Pick<Eye, "id" | "name" | "description">;
 
 export default function PlaygroundPage() {
   const params = useParams();

@@ -15,9 +15,17 @@ export type WorkflowNodeType =
   (typeof WORKFLOW_NODE_TYPES)[keyof typeof WORKFLOW_NODE_TYPES];
 
 /**
- * Status code constants - Re-exported from eyes for convenience
+ * Workflow-level status codes used by the workflow interpreter.
+ * These are distinct from the Eye-level StatusCodes in @third-eye/types/envelope
+ * which contain fine-grained codes like OK_PLAN, OK_CLASSIFICATION, etc.
+ * The workflow interpreter only needs coarse OK / NEED_CLARIFICATION signals.
  */
-export const STATUS_CODES = {
+export const WORKFLOW_STATUS_CODES = {
   OK: "OK",
   NEED_CLARIFICATION: "NEED_CLARIFICATION",
 } as const;
+
+/**
+ * @deprecated Use WORKFLOW_STATUS_CODES instead. Alias for backward compatibility.
+ */
+export const STATUS_CODES = WORKFLOW_STATUS_CODES;

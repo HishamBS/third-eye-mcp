@@ -879,7 +879,7 @@ async function executeDuel(
       .where(eq(duels.id, duelId))
       .run();
 
-    console.log(`✅ Duel ${duelId} completed. Winner: ${winner}`);
+    console.log(`[Duel] Duel ${duelId} completed. Winner: ${winner}`);
   } catch (error) {
     console.error(`Duel ${duelId} execution failed:`, error);
 

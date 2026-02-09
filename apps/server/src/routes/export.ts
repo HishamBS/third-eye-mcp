@@ -247,7 +247,7 @@ function generateHTML(data: ExportData, forPrint = false): string {
   </style>
 </head>
 <body>
-  <h1>🧿 Third Eye Session Export</h1>
+  <h1>Third Eye Session Export</h1>
 
   <div class="meta">
     <p><strong>Session ID:</strong> ${session.id}</p>

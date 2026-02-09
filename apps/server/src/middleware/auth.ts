@@ -49,7 +49,9 @@ export function requireApiKey() {
       const validKeys = (process.env.API_KEYS || "").split(",").filter(Boolean);
 
       if (validKeys.length === 0) {
-        console.warn("⚠️  REQUIRE_API_KEY=true but no API_KEYS configured");
+        console.warn(
+          "[Security] REQUIRE_API_KEY=true but no API_KEYS configured",
+        );
         return c.json(
           {
             error: "Server misconfiguration",
@@ -188,7 +190,7 @@ export function checkLocalhostBinding() {
 
   if (security.bindWarning && (host === "0.0.0.0" || host === "::")) {
     console.warn(
-      "⚠️  WARNING: Server binding to a public interface (all network interfaces)",
+      "[Security] WARNING: Server binding to a public interface (all network interfaces)",
     );
     console.warn("   This exposes the server to your local network.");
     console.warn(
@@ -196,7 +198,7 @@ export function checkLocalhostBinding() {
     );
   } else if (host === "127.0.0.1" || host === "localhost") {
     console.log(
-      "✅ Server binding to localhost only (secure local-first mode)",
+      "[Security] Server binding to localhost only (secure local-first mode)",
     );
   }
 }

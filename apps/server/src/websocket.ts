@@ -178,7 +178,7 @@ export class WSConnectionManager {
           const retryInMs = backoff + jitter;
 
           console.log(
-            `❌ No pong received from ${connectionId}, closing connection (retry in ${retryInMs}ms)`,
+            `[WS] No pong received from ${connectionId}, closing connection (retry in ${retryInMs}ms)`,
           );
 
           try {
@@ -218,7 +218,7 @@ export class WSConnectionManager {
     }, 30000);
 
     console.log(
-      `📡 WebSocket connected: ${connectionId} → session:${sessionId}`,
+      `[WS] WebSocket connected: ${connectionId} -> session:${sessionId}`,
     );
   }
 
@@ -249,7 +249,7 @@ export class WSConnectionManager {
     }
 
     this.connections.delete(connectionId);
-    console.log(`📡 WebSocket disconnected: ${connectionId}`);
+    console.log(`[WS] WebSocket disconnected: ${connectionId}`);
   }
 
   /**
@@ -284,7 +284,7 @@ export class WSConnectionManager {
       const msgType =
         typeof message.type === "string" ? message.type : "unknown";
       console.log(
-        `📡 Broadcasted ${msgType} to ${sentCount} connections for session:${sessionId}`,
+        `[WS] Broadcasted ${msgType} to ${sentCount} connections for session:${sessionId}`,
       );
     }
   }
@@ -316,7 +316,7 @@ export class WSConnectionManager {
 
     if (sentCount > 0) {
       console.log(
-        `📡 Broadcasted ${wsMessage.type} to ${sentCount} total connections`,
+        `[WS] Broadcasted ${wsMessage.type} to ${sentCount} total connections`,
       );
     }
   }

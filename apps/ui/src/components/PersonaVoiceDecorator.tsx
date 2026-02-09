@@ -23,6 +23,13 @@ const PERSONA_THEMES: Record<EyeName, PersonaTheme> = {
     eyeName: "sharingan",
     voice: "Analytical and questioning, seeking clarity",
   },
+  kyuubi: {
+    gradient: "from-semantic-error/20 via-semantic-error/10 to-transparent",
+    accent: "text-semantic-error",
+    glow: "shadow-semantic-error/30",
+    eyeName: "kyuubi",
+    voice: "Fierce and relentless, detecting anomalies",
+  },
   rinnegan: {
     gradient: "from-semantic-info/20 via-semantic-info/10 to-transparent",
     accent: "text-semantic-info",
