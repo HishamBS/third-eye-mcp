@@ -127,7 +127,7 @@ export function MarkdownRenderer({
   // Normal markdown rendering
   return (
     <div
-      className={`prose prose-sm prose-gray dark:prose-invert max-w-none ${className}`}
+      className={`prose prose-sm prose-gray dark:prose-invert max-w-none [&_strong]:text-gray-900 [&_strong]:dark:text-gray-100 [&_ul]:space-y-1 [&_li]:ml-4 [&_li]:list-disc [&_code]:font-mono [&_code]:bg-gray-100 [&_code]:dark:bg-gray-700 [&_code]:px-1 [&_code]:rounded ${className}`}
       dangerouslySetInnerHTML={{ __html: processedHtml }}
     />
   );
@@ -143,7 +143,7 @@ export function TimelineMarkdownRenderer({
   return (
     <MarkdownRenderer
       content={content}
-      className={`text-gray-700 dark:text-gray-300 [&_ul]:space-y-1 [&_li]:ml-4 [&_li]:list-disc [&_code]:font-mono [&_code]:bg-gray-100 [&_code]:dark:bg-gray-700 [&_code]:px-1 [&_code]:rounded [&_strong]:text-gray-900 [&_strong]:dark:text-gray-100 ${className}`}
+      className={`text-gray-700 dark:text-gray-300 ${className}`}
       errorOnJson={false}
     />
   );

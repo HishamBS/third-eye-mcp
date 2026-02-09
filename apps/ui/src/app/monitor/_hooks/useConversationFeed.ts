@@ -13,6 +13,7 @@ import {
   type EyeId,
   EYE_DISPLAY_NAMES,
   EYE_ROLE_TITLES,
+  isClarificationEventType,
 } from "@third-eye/constants";
 import type { TacticalEvent } from "./useEventTransformer";
 
@@ -107,7 +108,7 @@ function classifyEvent(event: TacticalEvent): ConversationEntryType {
   // Eye events
   if (eyePhase === "error") return "eye_error";
 
-  if (type === "clarification_asked") return "eye_question";
+  if (isClarificationEventType(type)) return "eye_question";
 
   if (eyePhase === "complete") return "eye_result";
 
@@ -237,7 +238,7 @@ function extractContent(event: TacticalEvent): ConversationEntry["content"] {
 function extractAction(event: TacticalEvent): PendingAction | null {
   const { type, data } = event;
 
-  if (type === "clarification_asked") {
+  if (isClarificationEventType(type)) {
     return {
       type: "clarification",
       id: (data.clarificationId as string) ?? (data.id as string) ?? event.id,

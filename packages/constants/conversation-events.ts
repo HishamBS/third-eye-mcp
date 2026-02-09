@@ -125,3 +125,26 @@ export function isConversationEventType(
     type as ConversationEventType,
   );
 }
+
+/**
+ * Event types that represent clarification/input-needed events.
+ * Covers both WebSocket event types and lowercased envelope codes from DB.
+ *
+ * WebSocket uses "clarification_asked" but DB events store envelope codes
+ * like NEED_CLARIFICATION which resolveEventType lowercases to "need_clarification".
+ * This set ensures both paths are recognized.
+ */
+export const CLARIFICATION_EVENT_TYPES: ReadonlySet<string> = new Set([
+  "clarification_asked", // WebSocket event type
+  "need_clarification", // NEED_CLARIFICATION envelope code (lowercased)
+  "need_more_context", // NEED_MORE_CONTEXT envelope code (lowercased)
+  "suggest_alternative", // SUGGEST_ALTERNATIVE envelope code (lowercased)
+]);
+
+/**
+ * Check if an event type represents a clarification/input-needed event.
+ * Handles the mismatch between WebSocket event names and lowercased DB envelope codes.
+ */
+export function isClarificationEventType(type: string): boolean {
+  return CLARIFICATION_EVENT_TYPES.has(type);
+}

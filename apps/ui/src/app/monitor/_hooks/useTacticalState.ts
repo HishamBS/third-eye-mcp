@@ -8,7 +8,11 @@
  */
 
 import { useState, useCallback, useMemo } from "react";
-import { type EyeId, ALL_EYE_IDS } from "@third-eye/constants";
+import {
+  type EyeId,
+  ALL_EYE_IDS,
+  isClarificationEventType,
+} from "@third-eye/constants";
 import type { TacticalEvent } from "./useEventTransformer";
 import type { PendingAction } from "./useConversationFeed";
 
@@ -151,7 +155,7 @@ export function useTacticalState({
     }
 
     // Track pending actions
-    if (type === "clarification_asked") {
+    if (isClarificationEventType(type)) {
       setPendingAction({
         type: "clarification",
         id: (data.clarificationId as string) ?? (data.id as string) ?? event.id,

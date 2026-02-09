@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import typography from "@tailwindcss/typography";
 import { generateTailwindThemeConfig } from "@third-eye/theme";
 
 /**
@@ -77,6 +78,7 @@ const config: Config = {
     },
   },
   plugins: [
+    typography,
     // Theme CSS variables - programmatically generated from SSOT
     function ({ addBase }) {
       addBase(cssVariables);
