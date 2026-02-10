@@ -363,20 +363,13 @@ export class EyeOrchestrator {
 
               if (isOverseer) {
                 try {
-                  const {
-                    loadDynamicCapabilities,
-                    buildRouterPersona,
-                    extractUserNeeds,
-                  } = await import("./capability-loader");
+                  const { loadDynamicCapabilities, buildRouterPersona } =
+                    await import("./capability-loader");
                   const { getDb } = await import("@third-eye/db");
                   const { db } = getDb();
 
                   const capabilityRegistry = await loadDynamicCapabilities(db);
                   dynamicRouterPersona = buildRouterPersona(capabilityRegistry);
-
-                  // Enrich input with user needs analysis
-                  const userNeeds = extractUserNeeds(input);
-                  enrichedInput = `${input}\n\n[User Needs Detected: ${userNeeds.join(", ")}]`;
 
                   console.log(
                     "[Orchestrator] Dynamic capabilities loaded for Overseer routing",

@@ -155,13 +155,17 @@ You are the Overseer router for Third Eye MCP. Your job is to analyze the user's
 Available Eyes and Capabilities:
 ${capabilityList}
 
+Request Type Classification:
+1. DRAFT_REVIEW: User provides existing content (code, text, draft) for review. Route to validation-stage eyes only. Skip all guidance-stage eyes. Example: "Review this code", "Check my draft", "Here's my implementation".
+2. VALIDATION_ONLY: User asks a single validation question. Route to the single most relevant validation eye. Example: "Is this claim accurate?", "Does this code have bugs?"
+3. NEW_TASK: User requests new work without providing content. Full pipeline: guidance -> validation. Intent confirmation (intent_validation capability) is REQUIRED for new tasks -- confirm understanding before executing.
+
 Routing Rules:
-1. **If draft provided**: SKIP all [GUIDANCE] eyes, start directly with [VALIDATION] eyes
-2. **If clarifications already resolved**: SKIP eyes with clarification capability
-3. **Match capabilities to needs**: Only select eyes whose capabilities match the request requirements
-4. **Code review only**: Select eyes with code_review + final_approval capabilities
-5. **New task**: Full pipeline with clarification → guidance → validation
-6. **Smart routing**: Don't run unnecessary eyes. Be efficient.
+- If content/draft/code is PROVIDED in the input -> DRAFT_REVIEW (skip guidance eyes)
+- If the request is a single validation question -> VALIDATION_ONLY (minimal route)
+- If no content provided and new work requested -> NEW_TASK (full pipeline with intent confirmation)
+- Match eye capabilities to request needs. Only include eyes whose capabilities are required.
+- Fewer eyes = faster pipeline. Be efficient.
 
 Request Types Examples (dynamically generated from available eyes):
 ${generateDynamicExamples(registry)}
@@ -212,124 +216,67 @@ The "ui.color" field MUST be one of: "success", "warning", "error", "info", "dan
  * Replaces hardcoded eye names with actual available eyes
  */
 function generateDynamicExamples(registry: CapabilityRegistry): string {
+  // Helper: find first active eye with a capability substring
+  const findEye = (capSubstring: string): string | null => {
+    const entry = Object.entries(registry).find(
+      ([_, info]) =>
+        info.active && info.capabilities.some((c) => c.includes(capSubstring)),
+    );
+    return entry ? entry[0] : null;
+  };
+
+  const codeReview = findEye("code_review");
+  const finalApproval = findEye("final_approval");
+  const clarification = findEye("clarification");
+  const prompt = findEye("prompt") || findEye("structuring");
+  const intentValidation = findEye("intent_validation");
+  const factCheck = findEye("fact") || findEye("evidence");
+  const planning = findEye("strategic_planning") || findEye("architecture");
+
   const examples: string[] = [];
 
-  // Find eyes with specific capabilities
-  const codeReviewEyes = Object.entries(registry)
-    .filter(
-      ([_, info]) =>
-        info.active &&
-        info.capabilities.some(
-          (cap) => cap.includes("code_review") || cap.includes("code_review"),
-        ),
-    )
-    .map(([eyeId]) => eyeId);
-
-  const finalApprovalEyes = Object.entries(registry)
-    .filter(
-      ([_, info]) =>
-        info.active &&
-        info.capabilities.some(
-          (cap) => cap.includes("final_approval") || cap.includes("approval"),
-        ),
-    )
-    .map(([eyeId]) => eyeId);
-
-  const clarificationEyes = Object.entries(registry)
-    .filter(
-      ([_, info]) =>
-        info.active &&
-        info.capabilities.some((cap) => cap.includes("clarification")),
-    )
-    .map(([eyeId]) => eyeId);
-
-  const factCheckEyes = Object.entries(registry)
-    .filter(
-      ([_, info]) =>
-        info.active &&
-        info.capabilities.some(
-          (cap) => cap.includes("fact") || cap.includes("evidence"),
-        ),
-    )
-    .map(([eyeId]) => eyeId);
-
-  const promptEyes = Object.entries(registry)
-    .filter(
-      ([_, info]) =>
-        info.active &&
-        info.capabilities.some(
-          (cap) => cap.includes("prompt") || cap.includes("structuring"),
-        ),
-    )
-    .map(([eyeId]) => eyeId);
-
-  if (codeReviewEyes.length > 0 && finalApprovalEyes.length > 0) {
+  // Example 1: VALIDATION_ONLY -- content provided, single validation eye
+  if (codeReview) {
     examples.push(
-      `- "Review this code for bugs" → ${codeReviewEyes[0]} + ${finalApprovalEyes[0]} only`,
+      `- VALIDATION_ONLY: "Review this code" → requestType: validation_only → [${codeReview}] (content provided, single validation)`,
     );
   }
 
-  if (clarificationEyes.length > 0 && promptEyes.length > 0) {
-    const guidanceEyes = Object.entries(registry)
-      .filter(
-        ([_, info]) => info.active && info.stage === EyeStageToken.GUIDANCE,
-      )
-      .map(([eyeId]) => eyeId)
-      .slice(0, 3);
-    const validationEyes = Object.entries(registry)
-      .filter(
-        ([_, info]) => info.active && info.stage === EyeStageToken.VALIDATION,
-      )
-      .map(([eyeId]) => eyeId)
-      .slice(0, 2);
-
-    if (guidanceEyes.length > 0 && validationEyes.length > 0) {
-      const route = [
-        ...clarificationEyes.slice(0, 1),
-        ...guidanceEyes,
-        ...validationEyes,
-      ].join(" → ");
-      examples.push(`- "Build a new feature" → ${route}`);
-    }
-  }
-
-  if (factCheckEyes.length > 0 && finalApprovalEyes.length > 0) {
+  // Example 2: VALIDATION_ONLY -- single fact-check question
+  if (factCheck) {
     examples.push(
-      `- "Validate these facts" → ${factCheckEyes[0]} + ${finalApprovalEyes[0]} only`,
+      `- VALIDATION_ONLY: "Is this claim accurate?" → requestType: validation_only → [${factCheck}] (single question)`,
     );
   }
 
-  if (promptEyes.length > 0) {
-    examples.push(`- "Generate structured prompt" → ${promptEyes[0]} only`);
+  // Example 3: DRAFT_REVIEW -- content provided, skip guidance
+  if (codeReview && factCheck) {
+    examples.push(
+      `- DRAFT_REVIEW: "Here's my draft code + tests" → requestType: draft_review → [${codeReview}, ${factCheck}] (content provided, skip guidance, no intent confirmation)`,
+    );
+  }
+
+  // Example 4: NEW_TASK -- new work, full pipeline with intent confirmation
+  if (
+    clarification &&
+    prompt &&
+    intentValidation &&
+    factCheck &&
+    finalApproval
+  ) {
+    examples.push(
+      `- NEW_TASK: "Generate a report on X" → requestType: new_task → [${clarification}, ${prompt}, ${intentValidation}, ${factCheck}, ${finalApproval}] (new work, intent confirmation required)`,
+    );
+  }
+
+  // Example 5: NEW_TASK -- high-risk new work with planning
+  if (clarification && prompt && intentValidation && planning) {
+    examples.push(
+      `- NEW_TASK: "Plan a production database migration" → requestType: new_task → [${clarification}, ${prompt}, ${intentValidation}, ${planning}] (new work, high-risk, intent confirmation required)`,
+    );
   }
 
   return examples.length > 0
     ? examples.join("\n")
     : "- Examples will be generated based on available eyes";
-}
-
-export function extractUserNeeds(input: string): string[] {
-  const needs: string[] = [];
-
-  // Simple keyword matching
-  if (/review|check|validate|verify|inspect/i.test(input)) {
-    needs.push("validation");
-  }
-  if (/build|create|generate|write|develop/i.test(input)) {
-    needs.push("creation");
-  }
-  if (/clarify|explain|what|how|why/i.test(input)) {
-    needs.push("clarification");
-  }
-  if (/code|program|function|class/i.test(input)) {
-    needs.push("code_review");
-  }
-  if (/fact|citation|evidence|source/i.test(input)) {
-    needs.push("fact_checking");
-  }
-  if (/plan|strategy|roadmap|steps/i.test(input)) {
-    needs.push("planning");
-  }
-
-  return needs.length > 0 ? needs : ["general"];
 }

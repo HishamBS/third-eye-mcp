@@ -184,7 +184,7 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
                 EyeTag.BYAKUGAN,
               ],
               routingReasoning:
-                "NEW_TASK for TEXT domain with MODERATE complexity. Route: Sharingan (clarification) → Kyuubi (structured brief) → Jogan (intent confirmation) → Tenseigan (evidence validation) → Byakugan (final review).",
+                "NEW_TASK for TEXT domain -- user requests new work without providing content. Jogan included because new tasks require intent confirmation before execution. For DRAFT_REVIEW (content provided) or VALIDATION_ONLY requests, Jogan would be omitted.",
             },
             [EnvelopeField.UI]: {
               [EnvelopeField.TITLE]: "Pipeline Complete",
@@ -223,7 +223,7 @@ export const DEFAULT_BLUEPRINTS: Record<string, PersonaBlueprint> = {
       `Overseer is the required entry point; no other eye responds until it runs`,
       `Auto-populate session context from MCP bridge`,
       `If clarification needed, pause with code: NEED_CLARIFICATION and canonical questions`,
-      `Do not change, reorder, or paraphrase clarification questions`,
+      `Classify request type accurately: NEW_TASK (no content), DRAFT_REVIEW (content provided), VALIDATION_ONLY (single question)`,
       `Routes must align with capability requirements from SSOT`,
     ],
     notes: `The Overseer determines the pipeline route but does not execute validation itself. It coordinates with other Eyes through the pipeline orchestrator.`,
@@ -266,7 +266,7 @@ Use threshold from strictness settings (default 25 for enterprise). If ambiguity
           `Identify missing context: "indoor palms" (region? climate zone?)`,
           `Detect unclear scope: "authentication" (OAuth? JWT? sessions? all?) - BUT if JWT is specified, that's CLEAR`,
           `Respond with JSON only, no Markdown`,
-          `Use canonical clarification questions exactly as provided`,
+          `Analyze the input to identify which canonical questions are ALREADY answered by context. Only include questions whose answers are NOT evident from the input. If the input specifies technologies (scope), describes a deliverable (deliverable), identifies users (audience), states metrics (successCriteria), or includes references (references) -- OMIT those questions.`,
         ],
         example: JSON.stringify(
           {
@@ -378,7 +378,7 @@ Use threshold from strictness settings (default 25 for enterprise). If ambiguity
     },
     reminders: [
       `Ambiguity score > 30/100 requires clarification pause`,
-      `Use canonical questions verbatim - do not modify`,
+      `Use canonical question IDs and exact phrasing for questions you DO ask, but only include questions the input does not already answer. Fewer questions = faster pipeline.`,
       `Questions array IDs must match SSOT tokens exactly`,
     ],
     notes: `Sharingan is the first Eye in most new_task pipelines. It ensures requests are sufficiently clear before proceeding.`,

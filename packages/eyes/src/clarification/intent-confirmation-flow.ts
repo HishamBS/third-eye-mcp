@@ -145,15 +145,7 @@ export function canResumeAfterConfirmation(confirmation: IntentConfirmation): {
   statusCode: string;
   nextAction: string;
 } {
-  if (!confirmation.response) {
-    return {
-      canResume: false,
-      statusCode: EyeStatusCode.AWAIT_CONFIRMATION,
-      nextAction: "await_confirmation",
-    };
-  }
-
-  if (confirmation.response === "approved") {
+  if (confirmation.status === "confirmed") {
     return {
       canResume: true,
       statusCode: EyeStatusCode.OK_NEXT_EYE,
@@ -161,7 +153,7 @@ export function canResumeAfterConfirmation(confirmation: IntentConfirmation): {
     };
   }
 
-  if (confirmation.response === "rejected") {
+  if (confirmation.status === "rejected") {
     return {
       canResume: false,
       statusCode: EyeStatusCode.AWAIT_CONFIRMATION,
@@ -169,10 +161,18 @@ export function canResumeAfterConfirmation(confirmation: IntentConfirmation): {
     };
   }
 
-  // Modified case - proceed with modifications
+  if (confirmation.status === "expired") {
+    return {
+      canResume: false,
+      statusCode: EyeStatusCode.AWAIT_CONFIRMATION,
+      nextAction: "expired",
+    };
+  }
+
+  // "pending" or any other state
   return {
-    canResume: true,
-    statusCode: EyeStatusCode.OK_NEXT_EYE,
-    nextAction: "proceed",
+    canResume: false,
+    statusCode: EyeStatusCode.AWAIT_CONFIRMATION,
+    nextAction: "await_confirmation",
   };
 }
