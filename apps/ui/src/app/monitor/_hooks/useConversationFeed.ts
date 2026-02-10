@@ -50,6 +50,7 @@ export interface ConversationEntry {
     text: string;
     markdown: string | null;
     metrics: Record<string, unknown> | null;
+    structuredData: Record<string, unknown> | null;
   };
   action: PendingAction | null;
   status: "pending" | "active" | "complete";
@@ -232,7 +233,14 @@ function extractContent(event: TacticalEvent): ConversationEntry["content"] {
     metrics = { score: event.data.score };
   }
 
-  return { text, markdown, metrics };
+  const hasStructuredPayload =
+    event.eye !== null &&
+    event.data !== null &&
+    typeof event.data === "object" &&
+    Object.keys(event.data).length > 0;
+  const structuredData = hasStructuredPayload ? event.data : null;
+
+  return { text, markdown, metrics, structuredData };
 }
 
 function extractAction(event: TacticalEvent): PendingAction | null {
@@ -319,6 +327,7 @@ function buildSectionHeader(
       text: `${EYE_DISPLAY_NAMES[eye]} - ${EYE_ROLE_TITLES[eye]}`,
       markdown: null,
       metrics: previousEye ? { previousEye } : null,
+      structuredData: null,
     },
     action: null,
     status: "active",

@@ -1,11 +1,50 @@
 import DOMPurify from "dompurify";
 import type { Config } from "dompurify";
-import { marked } from "marked";
+import { marked, type MarkedExtension } from "marked";
+import hljs from "highlight.js/lib/core";
+import typescript from "highlight.js/lib/languages/typescript";
+import javascript from "highlight.js/lib/languages/javascript";
+import python from "highlight.js/lib/languages/python";
+import json from "highlight.js/lib/languages/json";
+import bash from "highlight.js/lib/languages/bash";
+import css from "highlight.js/lib/languages/css";
+import xml from "highlight.js/lib/languages/xml";
 
-marked.setOptions({
+// Register selective languages to keep bundle small
+hljs.registerLanguage("typescript", typescript);
+hljs.registerLanguage("ts", typescript);
+hljs.registerLanguage("javascript", javascript);
+hljs.registerLanguage("js", javascript);
+hljs.registerLanguage("python", python);
+hljs.registerLanguage("py", python);
+hljs.registerLanguage("json", json);
+hljs.registerLanguage("bash", bash);
+hljs.registerLanguage("sh", bash);
+hljs.registerLanguage("shell", bash);
+hljs.registerLanguage("css", css);
+hljs.registerLanguage("xml", xml);
+hljs.registerLanguage("html", xml);
+
+// Custom renderer for syntax-highlighted code blocks
+const highlightExtension: MarkedExtension = {
+  renderer: {
+    code({ text, lang }: { text: string; lang?: string }) {
+      const language = lang && hljs.getLanguage(lang) ? lang : null;
+      const highlighted = language
+        ? hljs.highlight(text, { language }).value
+        : hljs.highlightAuto(text).value;
+      const langClass = language ? `language-${language}` : "";
+      return `<pre><code class="hljs ${langClass}">${highlighted}</code></pre>`;
+    },
+  },
+};
+
+marked.use({
   gfm: true,
   breaks: true,
 });
+
+marked.use(highlightExtension);
 
 /**
  * Render markdown to sanitized HTML
@@ -13,6 +52,7 @@ marked.setOptions({
  * Handles:
  * - GitHub Flavored Markdown
  * - Line breaks (breaks: true)
+ * - Syntax-highlighted code blocks via highlight.js
  * - XSS protection via DOMPurify
  *
  * Note: Escaped newlines (\\n) should be normalized BEFORE calling this function.

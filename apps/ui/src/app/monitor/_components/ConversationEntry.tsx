@@ -7,6 +7,7 @@ import { SHARED_EYE_COLORS } from "@third-eye/theme";
 import { type EyeId, EYE_DISPLAY_NAMES } from "@third-eye/constants";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { HEX_COLORS } from "@/constants/color-mappings";
+import { EyeStructuredData } from "./eye-renderers";
 
 type ConversationEntryType =
   | "eye_section_header"
@@ -49,6 +50,7 @@ export interface ConversationEntryData {
     text: string;
     markdown: string | null;
     metrics: Record<string, unknown> | null;
+    structuredData: Record<string, unknown> | null;
   };
   action: PendingAction | null;
   status: "pending" | "active" | "complete";
@@ -82,12 +84,80 @@ function formatTime(date: Date): string {
 
 function MetricsBar({ metrics }: { metrics: Record<string, unknown> }) {
   return (
-    <div className="mt-2 pt-2 border-t border-brand-outline/20 flex gap-4 text-[10px] text-semantic-muted">
-      {Object.entries(metrics).map(([key, value]) => (
-        <span key={key}>
-          {key}: {String(value)}
-        </span>
-      ))}
+    <div className="mt-2 pt-2 border-t border-brand-outline/20 flex flex-wrap gap-3 text-[10px] text-semantic-muted">
+      {Object.entries(metrics).map(([key, value]) => {
+        // Score: colored dot + formatted value
+        if (key === "score" && typeof value === "number") {
+          const scoreColor = getScoreColor(value);
+          return (
+            <span key={key} className="inline-flex items-center gap-1">
+              <span
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ backgroundColor: scoreColor }}
+              />
+              <span className="uppercase tracking-wider">Score</span>
+              <span className="font-medium text-brand-foreground tabular-nums">
+                {value}/100
+              </span>
+            </span>
+          );
+        }
+
+        // Route: eye-colored mini badges
+        if (key === "route" && Array.isArray(value)) {
+          return (
+            <span key={key} className="inline-flex items-center gap-1">
+              <span className="uppercase tracking-wider">Route</span>
+              {(value as string[]).map((eyeId) => {
+                const color =
+                  SHARED_EYE_COLORS[eyeId as keyof typeof SHARED_EYE_COLORS] ??
+                  DEFAULT_EYE_COLOR;
+                return (
+                  <span
+                    key={eyeId}
+                    className="inline-flex items-center rounded px-1 py-0.5 font-medium"
+                    style={{
+                      backgroundColor: `${color}15`,
+                      color,
+                    }}
+                  >
+                    {(
+                      EYE_DISPLAY_NAMES[
+                        eyeId as keyof typeof EYE_DISPLAY_NAMES
+                      ] ?? eyeId
+                    ).substring(0, 4)}
+                  </span>
+                );
+              })}
+            </span>
+          );
+        }
+
+        // Issues: green/yellow dot + count
+        if (key === "issues" && typeof value === "number") {
+          const issueColor =
+            value === 0 ? HEX_COLORS.success : HEX_COLORS.warning;
+          return (
+            <span key={key} className="inline-flex items-center gap-1">
+              <span
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ backgroundColor: issueColor }}
+              />
+              <span className="uppercase tracking-wider">Issues</span>
+              <span className="font-medium text-brand-foreground tabular-nums">
+                {value}
+              </span>
+            </span>
+          );
+        }
+
+        // Default: plain key-value (backward compat)
+        return (
+          <span key={key}>
+            {key}: {String(value)}
+          </span>
+        );
+      })}
     </div>
   );
 }
@@ -213,6 +283,15 @@ function EyeDialogue({
           {viewMode === "tactical" && entry.content.metrics && (
             <MetricsBar metrics={entry.content.metrics} />
           )}
+          {viewMode === "tactical" &&
+            entry.content.structuredData &&
+            entry.eye && (
+              <EyeStructuredData
+                eye={entry.eye}
+                data={entry.content.structuredData}
+                eyeColor={eyeColor}
+              />
+            )}
         </div>
       </div>
     </div>
@@ -270,6 +349,15 @@ function EyeResult({
           {viewMode === "tactical" && entry.content.metrics && (
             <MetricsBar metrics={entry.content.metrics} />
           )}
+          {viewMode === "tactical" &&
+            entry.content.structuredData &&
+            entry.eye && (
+              <EyeStructuredData
+                eye={entry.eye}
+                data={entry.content.structuredData}
+                eyeColor={eyeColor}
+              />
+            )}
         </div>
         {(score !== undefined || issues !== undefined) && (
           <div className="mt-2 flex items-center gap-3 px-3 py-1.5 rounded-md bg-brand-paper border border-brand-outline/20 text-xs">
