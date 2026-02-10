@@ -159,7 +159,15 @@ function resolveSpeaker(
     return "AI Agent";
   }
 
-  if (eventType === "clarification_answered" || eventType === "human_message") {
+  // Human-originated events
+  if (
+    eventType === "clarification_answered" ||
+    eventType === "human_message" ||
+    eventType === "human_request" ||
+    eventType === "human_clarification_answer" ||
+    eventType === "intent_confirmed" ||
+    eventType === "intent_rejected"
+  ) {
     return "You";
   }
 
@@ -190,6 +198,10 @@ function resolveDirection(
   if (
     eventType === "clarification_answered" ||
     eventType === "human_message" ||
+    eventType === "human_request" ||
+    eventType === "human_clarification_answer" ||
+    eventType === "intent_confirmed" ||
+    eventType === "intent_rejected" ||
     eventType === "plan_approved" ||
     eventType === "plan_rejected"
   ) {
@@ -205,6 +217,7 @@ function resolveDirection(
     eye ||
     EYE_NAMES.some((name) => eventType.startsWith(name)) ||
     eventType === "clarification_asked" ||
+    eventType === "intent_confirmation_requested" ||
     eventType === "overseer_route"
   ) {
     return "incoming";

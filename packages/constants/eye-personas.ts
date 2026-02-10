@@ -48,6 +48,27 @@ export const EYE_DISPLAY_NAMES = Object.freeze({
 } as const);
 
 /**
+ * Eye Specialties - Short descriptions of each Eye's core capability
+ */
+export const EYE_SPECIALTIES = Object.freeze({
+  [EyeId.OVERSEER]:
+    "Orchestrates the pipeline and determines the optimal route for your request",
+  [EyeId.SHARINGAN]:
+    "Analyzes your request for ambiguities, gaps, and hidden complexities",
+  [EyeId.KYUUBI]:
+    "Identifies patterns, structures requirements, and builds the structured prompt",
+  [EyeId.JOGAN]:
+    "Verifies that the interpreted intent matches your actual goals",
+  [EyeId.RINNEGAN]:
+    "Creates a strategic execution plan and seeks your approval",
+  [EyeId.MANGEKYO]:
+    "Reviews code quality with precision - every line, every detail",
+  [EyeId.TENSEIGAN]:
+    "Validates facts and claims against evidence and documentation",
+  [EyeId.BYAKUGAN]: "Final comprehensive inspection before delivery",
+} as const);
+
+/**
  * Eye Symbols - Single character or short symbol for avatar display
  */
 export const EYE_SYMBOLS = Object.freeze({

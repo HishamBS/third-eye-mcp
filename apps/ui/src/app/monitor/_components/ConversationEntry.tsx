@@ -186,10 +186,20 @@ function EyeDialogue({
           <span className="text-sm font-medium" style={{ color: eyeColor }}>
             {entry.speaker.name}
           </span>
+          {entry.speaker.role && (
+            <span className="text-[10px] text-semantic-muted">
+              {entry.speaker.role}
+            </span>
+          )}
           <span className="text-[10px] text-semantic-muted">
             {formatTime(entry.timestamp)}
           </span>
         </div>
+        {entry.speaker.specialty && (
+          <span className="text-xs text-semantic-muted block mb-1 italic">
+            {entry.speaker.specialty}
+          </span>
+        )}
         <div
           className={cn(
             "rounded-lg px-4 py-3 bg-brand-paper-elev",
@@ -302,6 +312,10 @@ function EyeResult({
 function EyeQuestion({ entry }: { entry: ConversationEntryData }) {
   const eyeColor = getEyeColor(entry.eye);
   const options = entry.action?.options;
+  const questions = entry.content.metrics?.questions as
+    | Array<{ question?: string; field?: string }>
+    | undefined;
+
   return (
     <div className="max-w-[85%]">
       <div className="flex items-center gap-2 mb-1">
@@ -317,6 +331,11 @@ function EyeQuestion({ entry }: { entry: ConversationEntryData }) {
         <span className="text-sm font-medium" style={{ color: eyeColor }}>
           {entry.speaker.name}
         </span>
+        {entry.speaker.specialty && (
+          <span className="text-[10px] text-semantic-muted italic">
+            {entry.speaker.specialty}
+          </span>
+        )}
         <span className="text-[10px] text-semantic-muted">
           {formatTime(entry.timestamp)}
         </span>
@@ -324,7 +343,7 @@ function EyeQuestion({ entry }: { entry: ConversationEntryData }) {
       <div
         className="rounded-lg p-4"
         style={{
-          border: `1px solid ${eyeColor}40`,
+          border: `1px dashed ${eyeColor}40`,
           backgroundColor: `${eyeColor}08`,
         }}
       >
@@ -338,6 +357,23 @@ function EyeQuestion({ entry }: { entry: ConversationEntryData }) {
           content={entry.content.markdown ?? entry.content.text}
           className="text-brand-foreground"
         />
+        {questions && questions.length > 0 && (
+          <div className="space-y-2 mt-3">
+            {questions.map((q, i) => (
+              <div key={i} className="flex gap-2 text-sm">
+                <span
+                  className="font-mono shrink-0 font-medium"
+                  style={{ color: eyeColor }}
+                >
+                  {i + 1}.
+                </span>
+                <span className="text-brand-foreground/90">
+                  {q.question || q.field || ""}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
         {options && options.length > 0 && (
           <div className="mt-3 space-y-1.5">
             {options.map((option, idx) => (

@@ -108,24 +108,34 @@ app.get("/session/:sessionId", async (c) => {
 
 // POST /api/intent-confirmations/:id/submit
 // Submit human response to intent confirmation
+// Expects: { confirmed: boolean, response?: string, userIdentity?: string }
 app.post("/:id/submit", async (c) => {
   try {
     const confirmationId = c.req.param("id");
     const body = await c.req.json();
 
-    if (!body.response || typeof body.response !== "string") {
+    if (typeof body.confirmed !== "boolean") {
       return createErrorResponse(c, {
         title: ApiErrorTitle.VALIDATION_ERROR,
         code: ApiErrorCode.VALIDATION_ERROR,
         status: 400,
-        detail: "response (string) is required",
+        detail:
+          "confirmed (boolean) is required. Optional: response (string), userIdentity (string)",
       });
     }
 
     const { sqlite } = getDb();
     const manager = new IntentConfirmationManager(sqlite);
 
-    await manager.submitConfirmation(confirmationId, body.response);
+    const confirmationResponse = {
+      confirmed: body.confirmed,
+      response: typeof body.response === "string" ? body.response : "",
+      source: "human" as const,
+      userIdentity:
+        typeof body.userIdentity === "string" ? body.userIdentity : undefined,
+    };
+
+    await manager.submitConfirmation(confirmationId, confirmationResponse);
 
     return createSuccessResponse(c, {
       message: "Intent confirmation submitted successfully",

@@ -3,7 +3,7 @@ import { drizzle } from "drizzle-orm/bun-sqlite";
 import * as schema from "./schema";
 import { resolve } from "path";
 import { homedir } from "os";
-import { mkdirSync, existsSync, readFileSync, rmSync, statSync } from "fs";
+import { mkdirSync, existsSync, readFileSync, rmSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
@@ -96,52 +96,10 @@ export function createDb(dbPath?: string) {
       }
     }
   } else {
-    // Database exists - proactively clean empty/corrupted WAL files
-    // CRITICAL: Remove WAL files immediately before opening to prevent disk I/O errors
-    if (existsSync(walFile)) {
-      try {
-        const walStats = statSync(walFile);
-        // Empty WAL files (0 bytes) are corrupted and will cause disk I/O errors
-        // Also remove if file is suspiciously small (< 1000 bytes) as it might be corrupted
-        if (walStats.size === 0 || walStats.size < 1000) {
-          rmSync(walFile, { force: true });
-          console.error("🔧 Proactively removed empty/corrupted WAL file");
-        }
-      } catch (err) {
-        // If stat fails, try to remove anyway - corrupted files might not stat correctly
-        try {
-          rmSync(walFile, { force: true });
-          console.error(
-            "🔧 Removed WAL file (stat failed, assuming corrupted)",
-          );
-        } catch {
-          // Ignore removal errors
-        }
-      }
-    }
-
-    if (existsSync(shmFile)) {
-      try {
-        const shmStats = statSync(shmFile);
-        // Very small SHM files (< 100 bytes) might be corrupted
-        if (shmStats.size < 100) {
-          rmSync(shmFile, { force: true });
-          console.error(
-            "🔧 Proactively removed potentially corrupted SHM file",
-          );
-        }
-      } catch (err) {
-        // If stat fails, try to remove anyway
-        try {
-          rmSync(shmFile, { force: true });
-          console.error(
-            "🔧 Removed SHM file (stat failed, assuming corrupted)",
-          );
-        } catch {
-          // Ignore removal errors
-        }
-      }
-    }
+    // Database exists - do NOT delete WAL/SHM files.
+    // Another process may be actively using them.
+    // SQLite's WAL recovery handles corruption on open.
+    // The busy_timeout PRAGMA handles lock contention gracefully.
   }
 
   // Try to create database connection with retry logic for corrupted WAL files
@@ -181,6 +139,13 @@ export function createDb(dbPath?: string) {
           continue;
         }
         throw pragmaErr;
+      }
+
+      // busy_timeout: wait 5s when another process holds the lock instead of failing immediately
+      try {
+        sqlite.exec("PRAGMA busy_timeout = 5000");
+      } catch (err) {
+        console.error("Warning: Could not set busy_timeout PRAGMA");
       }
 
       // Set other PRAGMAs with individual error handling

@@ -275,6 +275,49 @@ const NextInputSchema = z.object({
 });
 
 /**
+ * Relevance patterns for clarification question filtering.
+ * If a question's field matches a pattern already present in the user's input,
+ * the question is unnecessary and should be filtered out.
+ */
+const QUESTION_RELEVANCE_PATTERNS: Record<string, readonly RegExp[]> = {
+  audience: [
+    /\bfor\s+(developers?|engineers?|managers?|designers?|users?|customers?|team)\b/i,
+    /\b(target|intended)\s+(audience|users?|readers?)\b/i,
+  ],
+  deliverable: [
+    /\b(create|write|build|generate|produce)\s+(a|an|the)?\s*(report|plan|api|component|function|service|app)\b/i,
+  ],
+  scope: [
+    /\b(using|with|in)\s+(react|vue|node|python|typescript|go|rust|postgresql|mongodb|redis|aws)\b/i,
+    /\b(scope|constraints?|boundaries?)\s*[:=]/i,
+  ],
+  successCriteria: [
+    /\b(success|criteria|metric|kpi|benchmark|threshold)\b/i,
+    /\b(must|should)\s+(pass|achieve|meet|satisfy)\b/i,
+  ],
+  references: [
+    /\bhttps?:\/\//i,
+    /\b(doc|documentation|spec|specification|rfc)\b/i,
+  ],
+};
+
+/**
+ * Filter out clarification questions that the user's input already answers.
+ * Returns only questions whose field-patterns are NOT matched by the input.
+ */
+function filterQuestionsForInput<
+  T extends { field?: string; question?: string },
+>(questions: T[], input: string): T[] {
+  if (!input || questions.length === 0) return questions;
+
+  return questions.filter((q) => {
+    const patterns = QUESTION_RELEVANCE_PATTERNS[q.field || ""];
+    if (!patterns) return true; // Unknown field -> keep the question
+    return !patterns.some((p) => p.test(input));
+  });
+}
+
+/**
  * Intelligent router that analyzes tasks and executes optimal Eye pipelines
  */
 export class AutoRouter {
@@ -701,6 +744,47 @@ export class AutoRouter {
       for (let i = 0; i < decision.recommendedFlow.length; i++) {
         const eyeName = decision.recommendedFlow[i];
 
+        // Skip Jogan for low-risk, clear requests
+        if (
+          eyeName.toLowerCase() === EyeId.JOGAN &&
+          !riskAssessment.isRisky &&
+          currentInput.includes(CLARITY_VALIDATED_HEADER)
+        ) {
+          orderGuard.recordEyeCompletion(decision.sessionId, eyeName, {
+            code: EyeStatusCode.OK_INTENT_CONFIRMED,
+            metadata: { autoConfirmed: true, reason: "low-risk-clear-request" },
+          });
+
+          conversationTracker.logAgentMessage(
+            decision.sessionId,
+            eyeName,
+            "Intent auto-confirmed: low-risk request with validated clarity",
+            {
+              code: EyeStatusCode.OK_INTENT_CONFIRMED,
+              ok: true,
+              autoConfirmed: true,
+            },
+          );
+
+          if (ws) {
+            ws.broadcastToSession(decision.sessionId, {
+              type: "eye_complete",
+              eye: eyeName,
+              step: i + 1,
+              totalSteps: decision.recommendedFlow.length,
+              result: {
+                ok: true,
+                code: EyeStatusCode.OK_INTENT_CONFIRMED,
+                md: "Auto-confirmed: low-risk request with clear requirements",
+              },
+              autoConfirmed: true,
+              timestamp: Date.now(),
+            });
+          }
+
+          continue;
+        }
+
         // Emit eye_started event
         if (ws) {
           ws.broadcastToSession(decision.sessionId, {
@@ -846,8 +930,7 @@ export class AutoRouter {
               >
             | undefined;
           if (questions && Array.isArray(questions)) {
-            // Store clarification questions in database for polling
-            const { addClarificationRequest } = await import("@third-eye/eyes");
+            // Map to uniform shape first
             const mappedQuestions = questions.map((q) => {
               if (typeof q === "string") {
                 return { field: "question", question: q };
@@ -857,16 +940,30 @@ export class AutoRouter {
                 question: q.question || q.text || "No question provided",
               };
             });
-            await addClarificationRequest(decision.sessionId, mappedQuestions);
 
-            const questionTexts = questions
-              .map((q, idx) => {
-                const text =
-                  typeof q === "string"
-                    ? q
-                    : q.text || q.question || q.id || "";
-                return `${idx + 1}. ${text}`;
-              })
+            // Filter out questions already answered by user input
+            const filteredQuestions = filterQuestionsForInput(
+              mappedQuestions,
+              input,
+            );
+
+            // If all questions filtered out, input is already clear - skip pause
+            if (filteredQuestions.length === 0) {
+              if (!currentInput.includes(CLARITY_VALIDATED_HEADER)) {
+                currentInput = `${currentInput}\n\n${CLARITY_VALIDATED_HEADER}\nTask clarity validated (all clarification questions answered by input context).`;
+              }
+              continue;
+            }
+
+            // Store remaining clarification questions in database for polling
+            const { addClarificationRequest } = await import("@third-eye/eyes");
+            await addClarificationRequest(
+              decision.sessionId,
+              filteredQuestions,
+            );
+
+            const questionTexts = filteredQuestions
+              .map((q, idx) => `${idx + 1}. ${q.question}`)
               .join("\n");
             conversationTracker.logAgentMessage(
               decision.sessionId,
@@ -874,7 +971,7 @@ export class AutoRouter {
               `**Clarification Questions:**\n\n${questionTexts}`,
               {
                 type: "clarification_request",
-                questions: questions,
+                questions: filteredQuestions,
               },
             );
           }
@@ -1292,6 +1389,152 @@ Skip guidance-phase questions and proceed with the validated requirements.`;
               completed: false,
               error: `Pipeline stopped: ${eyeName} rejected with ${result.code}`,
             };
+          }
+        }
+      } else if (pipelineState?.pauseReason === "confirmation") {
+        const confirmedEye = pipelineState.currentEye as EyeName;
+
+        orderGuard.recordEyeCompletion(sessionId, confirmedEye, {
+          code: EyeStatusCode.OK_INTENT_CONFIRMED,
+        });
+
+        conversationTracker.logResume(
+          sessionId,
+          `Pipeline resuming after confirmation - ${confirmedEye} confirmed`,
+          { confirmedEye, phase: "post-confirmation" },
+        );
+
+        if (ws) {
+          ws.broadcastToSession(sessionId, {
+            type: "pipeline_resumed",
+            sessionId,
+            data: { phase: "post-confirmation", confirmedEye },
+            timestamp: Date.now(),
+          });
+        }
+
+        // Retrieve original pipeline route from routing_decisions
+        const routeRow = sqlite
+          .prepare(
+            `SELECT selected_eyes FROM routing_decisions WHERE session_id = ? ORDER BY created_at DESC LIMIT 1`,
+          )
+          .get(sessionId) as { selected_eyes: string } | undefined;
+
+        if (routeRow) {
+          const fullRoute = JSON.parse(routeRow.selected_eyes) as string[];
+          const confirmedIndex = fullRoute.findIndex(
+            (eye) => eye.toLowerCase() === confirmedEye.toLowerCase(),
+          );
+          const remainingEyes =
+            confirmedIndex >= 0 ? fullRoute.slice(confirmedIndex + 1) : [];
+
+          for (let i = 0; i < remainingEyes.length; i++) {
+            const eyeName = remainingEyes[i] as EyeName;
+
+            if (ws) {
+              ws.broadcastToSession(sessionId, {
+                type: "eye_started",
+                eye: eyeName,
+                step: state.completedEyes.length + i + 1,
+                totalSteps: state.completedEyes.length + remainingEyes.length,
+                phase: "post-confirmation",
+                timestamp: Date.now(),
+              });
+            }
+
+            const result = await this.orchestrator.runEye(
+              eyeName,
+              enrichedInput,
+              sessionId,
+            );
+            results.push(result);
+
+            conversationTracker.logAgentMessage(
+              sessionId,
+              eyeName,
+              result.md || "Eye completed execution",
+              {
+                code: result.code,
+                ok: result.ok,
+                step: state.completedEyes.length + i + 1,
+                totalSteps: state.completedEyes.length + remainingEyes.length,
+                resumed: true,
+              },
+            );
+
+            if (ws) {
+              ws.broadcastToSession(sessionId, {
+                type: "eye_complete",
+                eye: eyeName,
+                step: state.completedEyes.length + i + 1,
+                totalSteps: state.completedEyes.length + remainingEyes.length,
+                result: {
+                  ok: result.ok,
+                  code: result.code,
+                  md: result.md?.substring(0, 200),
+                },
+                timestamp: Date.now(),
+              });
+            }
+
+            // Handle new pauses during post-confirmation execution
+            if (
+              result.code === EyeStatusCode.AWAIT_CONFIRMATION ||
+              result.code === EyeStatusCode.E_INTENT_UNCONFIRMED
+            ) {
+              await pauseManager.pausePipeline({
+                sessionId,
+                currentEye: eyeName,
+                reason: "confirmation",
+                pendingData: result.data,
+                expiresInMs: 24 * 60 * 60 * 1000,
+              });
+              orderGuard.unmarkAsAutoRouterSession(sessionId);
+              return {
+                sessionId,
+                results,
+                completed: false,
+                paused: true,
+                pauseReason: "confirmation",
+              };
+            }
+
+            if (
+              result.code === EyeStatusCode.NEED_CLARIFICATION ||
+              result.code === EyeStatusCode.E_NEEDS_CLARIFICATION
+            ) {
+              await pauseManager.pausePipeline({
+                sessionId,
+                currentEye: eyeName,
+                reason: "clarification",
+                pendingData: result.data,
+                expiresInMs: 24 * 60 * 60 * 1000,
+              });
+              orderGuard.unmarkAsAutoRouterSession(sessionId);
+              return {
+                sessionId,
+                results,
+                completed: false,
+                paused: true,
+                pauseReason: "clarification",
+                data: {
+                  questions: result.data?.questions as Array<{
+                    field: string;
+                    question: string;
+                  }>,
+                },
+              };
+            }
+
+            if (isRejected(result)) {
+              orderGuard.unmarkAsAutoRouterSession(sessionId);
+              return {
+                sessionId,
+                results,
+                completed: false,
+                error: `Pipeline stopped: ${eyeName} rejected with ${result.code}`,
+              };
+            }
           }
         }
       }

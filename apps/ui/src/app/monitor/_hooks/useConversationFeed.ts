@@ -13,6 +13,7 @@ import {
   type EyeId,
   EYE_DISPLAY_NAMES,
   EYE_ROLE_TITLES,
+  EYE_SPECIALTIES,
   isClarificationEventType,
 } from "@third-eye/constants";
 import type { TacticalEvent } from "./useEventTransformer";
@@ -64,20 +65,6 @@ export interface PendingAction {
   planSteps?: number;
 }
 
-const EYE_SPECIALTIES: Readonly<Record<string, string>> = Object.freeze({
-  overseer:
-    "Orchestrates the pipeline and determines the optimal route for your request",
-  sharingan:
-    "Analyzes your request for ambiguities, gaps, and hidden complexities",
-  kyuubi:
-    "Identifies patterns, structures requirements, and builds the structured prompt",
-  jogan: "Verifies that the interpreted intent matches your actual goals",
-  rinnegan: "Creates a strategic execution plan and seeks your approval",
-  mangekyo: "Reviews code quality with precision - every line, every detail",
-  tenseigan: "Validates facts and claims against evidence and documentation",
-  byakugan: "Final comprehensive inspection before delivery",
-});
-
 function generateEntryId(): string {
   return `ce_${crypto.randomUUID()}`;
 }
@@ -85,10 +72,23 @@ function generateEntryId(): string {
 function classifyEvent(event: TacticalEvent): ConversationEntryType {
   const { type, eyePhase, ui } = event;
 
+  // Initial human request
+  if (type === "human_request") return "human_message";
+
   // Human interactions
   if (type === "clarification_answered" || type === "human_message") {
     return "human_answer";
   }
+
+  // Human answer to clarification
+  if (type === "human_clarification_answer") return "human_answer";
+
+  // Human decision on intent confirmation
+  if (type === "intent_confirmed" || type === "intent_rejected")
+    return "plan_decision";
+
+  // Eye requesting intent confirmation
+  if (type === "intent_confirmation_requested") return "plan_presented";
 
   if (type === "agent_message") {
     const direction = event.data.direction as string | undefined;

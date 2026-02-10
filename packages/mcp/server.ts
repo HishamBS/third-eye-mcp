@@ -1541,11 +1541,26 @@ export async function startMCPServer() {
   // Set up graceful shutdown handlers
   const shutdown = () => {
     console.error("\n[MCP Server] Shutting down gracefully...");
+    try {
+      const { closeDb } = require("@third-eye/db");
+      closeDb();
+    } catch {
+      // Database may not have been initialized
+    }
     process.exit(0);
   };
 
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
+
+  process.on("exit", () => {
+    try {
+      const { closeDb } = require("@third-eye/db");
+      closeDb();
+    } catch {
+      // Best effort cleanup
+    }
+  });
 
   // Handle uncaught errors - log but try to continue
   process.on("uncaughtException", (error) => {

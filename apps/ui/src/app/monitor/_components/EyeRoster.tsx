@@ -3,8 +3,13 @@
 import { memo, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { EyeId, ALL_EYE_IDS } from "@third-eye/constants";
-import { EYE_DISPLAY_NAMES, EYE_ROLE_TITLES } from "@third-eye/constants";
+import {
+  EyeId,
+  ALL_EYE_IDS,
+  EYE_DISPLAY_NAMES,
+  EYE_ROLE_TITLES,
+  EYE_SPECIALTIES,
+} from "@third-eye/constants";
 import { SHARED_EYE_COLORS } from "@third-eye/theme";
 
 type EyeStatus = "standby" | "active" | "complete" | "error";
@@ -17,17 +22,6 @@ interface EyeRosterProps {
   onEyeClick: (eyeId: string) => void;
   className?: string;
 }
-
-const EYE_SPECIALTIES: Readonly<Record<string, string>> = Object.freeze({
-  overseer: "Orchestrates the pipeline and determines optimal routing",
-  sharingan: "Analyzes requests for ambiguities and hidden complexities",
-  kyuubi: "Identifies patterns and builds structured prompts",
-  jogan: "Verifies interpreted intent matches actual goals",
-  rinnegan: "Creates strategic execution plans for approval",
-  mangekyo: "Reviews code quality with precision",
-  tenseigan: "Validates facts and claims against evidence",
-  byakugan: "Final comprehensive inspection before delivery",
-});
 
 const STATUS_LABELS: Readonly<Record<EyeStatus, string>> = Object.freeze({
   standby: "STANDBY",

@@ -145,6 +145,39 @@ function TacticalMonitorContent() {
         return tA - tB;
       });
 
+      // Inject the initial request as the first conversation entry
+      // Extract from the first human_message event or routing_decision's original input
+      const firstEvent = events[0];
+      const humanMessageEvent = events.find(
+        (e) => (e.type as string) === "human_message",
+      );
+      const routeEvent = events.find(
+        (e) => (e.type as string) === "overseer_route",
+      );
+
+      const originalInput =
+        (humanMessageEvent?.data as Record<string, unknown>)?.content ||
+        (humanMessageEvent?.data as Record<string, unknown>)?.markdown ||
+        (routeEvent?.data as Record<string, unknown>)?.originalInput ||
+        null;
+
+      if (originalInput && typeof originalInput === "string") {
+        const initialRequestEvent = transformPipelineEvent({
+          code: "HUMAN_REQUEST",
+          eyeSlug: null,
+          dataJson: {
+            request: originalInput,
+            sessionId,
+            content: originalInput,
+          },
+          createdAt:
+            firstEvent?.createdAt ??
+            firstEvent?.timestamp ??
+            new Date().toISOString(),
+        });
+        events.unshift(initialRequestEvent);
+      }
+
       setHistoricalEvents(events);
     } catch (err) {
       console.error("Failed to fetch historical events:", err);
@@ -152,7 +185,7 @@ function TacticalMonitorContent() {
   }, [sessionId]);
 
   /**
-   * Fetch clarifications for the session
+   * Fetch clarifications for the session and merge into historical events
    */
   const fetchClarifications = useCallback(async () => {
     if (!sessionId) return;
@@ -160,8 +193,63 @@ function TacticalMonitorContent() {
       const res = await fetch(
         `${API_BASE_URL}${API_ROUTES.SESSION_CLARIFICATIONS(sessionId)}`,
       );
-      if (res.ok) {
-        // Process clarifications if needed
+      if (!res.ok) return;
+      const result = await res.json();
+      const clarifications = Array.isArray(result)
+        ? result
+        : Array.isArray(result.data)
+          ? result.data
+          : [];
+
+      if (clarifications.length === 0) return;
+
+      const syntheticEvents: RawHistoricalEvent[] = [];
+
+      for (const c of clarifications) {
+        syntheticEvents.push(
+          transformPipelineEvent({
+            code: "CLARIFICATION_ASKED",
+            eyeSlug: c.eyeSlug || "sharingan",
+            dataJson: {
+              clarificationId: c.id,
+              questions: c.questions,
+              status: c.status,
+              response: c.response,
+            },
+            createdAt: c.createdAt,
+          }),
+        );
+
+        if (c.response && c.status === "answered") {
+          syntheticEvents.push(
+            transformPipelineEvent({
+              code: "HUMAN_CLARIFICATION_ANSWER",
+              eyeSlug: null,
+              dataJson: {
+                clarificationId: c.id,
+                answer: c.response,
+                answeredBy: c.respondedBy || "human",
+              },
+              createdAt: c.respondedAt || c.updatedAt,
+            }),
+          );
+        }
+      }
+
+      if (syntheticEvents.length > 0) {
+        setHistoricalEvents((prev) => {
+          const merged = [...prev, ...syntheticEvents];
+          merged.sort((a, b) => {
+            const tA = new Date(
+              (a.createdAt as string) ?? (a.timestamp as string),
+            ).getTime();
+            const tB = new Date(
+              (b.createdAt as string) ?? (b.timestamp as string),
+            ).getTime();
+            return tA - tB;
+          });
+          return merged;
+        });
       }
     } catch (err) {
       console.error("Failed to fetch clarifications:", err);
@@ -169,7 +257,7 @@ function TacticalMonitorContent() {
   }, [sessionId]);
 
   /**
-   * Fetch intent confirmations for the session
+   * Fetch intent confirmations for the session and merge into events
    */
   const fetchIntentConfirmations = useCallback(async () => {
     if (!sessionId) return;
@@ -177,15 +265,79 @@ function TacticalMonitorContent() {
       const res = await fetch(
         `${API_BASE_URL}${API_ROUTES.SESSION_INTENT_CONFIRMATIONS(sessionId)}`,
       );
-      if (res.ok) {
-        const result = await res.json();
-        const data = result.data !== undefined ? result.data : result;
+      if (!res.ok) return;
+      const result = await res.json();
+      const data = result.data !== undefined ? result.data : result;
 
-        if (data && typeof data === "object" && typeof data.id === "string") {
-          setIntentConfirmationId(data.id);
-        } else {
-          setIntentConfirmationId(null);
+      // Handle single confirmation object or array
+      const confirmations = Array.isArray(data)
+        ? data
+        : data && typeof data === "object" && typeof data.id === "string"
+          ? [data]
+          : Array.isArray(data?.confirmations)
+            ? data.confirmations
+            : [];
+
+      // Track pending confirmation for approval UI
+      const pending = confirmations.find(
+        (ic: Record<string, unknown>) => ic.status === "pending",
+      );
+      setIntentConfirmationId(
+        pending && typeof pending.id === "string" ? pending.id : null,
+      );
+
+      // Generate synthetic events
+      const syntheticEvents: RawHistoricalEvent[] = [];
+
+      for (const ic of confirmations) {
+        syntheticEvents.push(
+          transformPipelineEvent({
+            code: "INTENT_CONFIRMATION_REQUESTED",
+            eyeSlug: ic.eyeSlug || "jogan",
+            dataJson: {
+              confirmationId: ic.id,
+              intent: ic.intentAnalysis,
+              riskLevel: ic.riskLevel,
+              status: ic.status,
+              planContent: ic.confirmationPrompt,
+            },
+            createdAt: ic.createdAt,
+          }),
+        );
+
+        if (ic.status === "confirmed" || ic.status === "rejected") {
+          syntheticEvents.push(
+            transformPipelineEvent({
+              code:
+                ic.status === "confirmed"
+                  ? "INTENT_CONFIRMED"
+                  : "INTENT_REJECTED",
+              eyeSlug: null,
+              dataJson: {
+                confirmationId: ic.id,
+                decision: ic.status,
+                response: ic.response,
+              },
+              createdAt: ic.respondedAt || ic.updatedAt,
+            }),
+          );
         }
+      }
+
+      if (syntheticEvents.length > 0) {
+        setHistoricalEvents((prev) => {
+          const merged = [...prev, ...syntheticEvents];
+          merged.sort((a, b) => {
+            const tA = new Date(
+              (a.createdAt as string) ?? (a.timestamp as string),
+            ).getTime();
+            const tB = new Date(
+              (b.createdAt as string) ?? (b.timestamp as string),
+            ).getTime();
+            return tA - tB;
+          });
+          return merged;
+        });
       }
     } catch (err) {
       console.error("Failed to fetch intent confirmations:", err);
@@ -286,7 +438,7 @@ function TacticalMonitorContent() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ response: "approved" }),
+          body: JSON.stringify({ confirmed: true, response: "approved" }),
         },
       );
 
@@ -323,7 +475,10 @@ function TacticalMonitorContent() {
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ response: "rejected", feedback }),
+            body: JSON.stringify({
+              confirmed: false,
+              response: feedback || "rejected",
+            }),
           },
         );
 

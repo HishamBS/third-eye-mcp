@@ -536,7 +536,7 @@ For dangerous operations, skip clarification questions and go STRAIGHT to confir
           `For dangerous ops: Return AWAIT_CONFIRMATION with riskLevel: "CRITICAL" or "HIGH" and clear warning`,
           `Intent categories: CREATE, MODIFY, EXPLAIN, ANALYZE, PLAN, REVIEW, DESTROY (new - for destructive ops)`,
           `Scope: small (< 200 lines, < 30 min), medium (200-1000 lines, 30-120 min), large (1000+ lines, > 2 hours)`,
-          `Always request confirmation before proceeding`,
+          `Request confirmation when risk is MEDIUM or higher, or when clarity has not been validated`,
           `Respond with JSON only, no Markdown`,
         ],
         example: JSON.stringify(
