@@ -38,11 +38,7 @@ export interface TacticalShellProps {
   sessionId: string | null;
   initialEvents?: RawHistoricalEvent[];
   onWebSocketMessage?: (handler: (message: unknown) => void) => () => void;
-  onClarificationSubmit?: (id: string, answer: string) => void;
-  onPlanApprove?: () => void;
-  onPlanReject?: (feedback?: string) => void;
   onExport?: () => void;
-  isSubmitting?: boolean;
   initialConnectionStatus?: "connected" | "disconnected" | "reconnecting";
   className?: string;
 }
@@ -51,10 +47,6 @@ function TacticalShellComponent({
   sessionId,
   initialEvents,
   onWebSocketMessage,
-  onClarificationSubmit,
-  onPlanApprove,
-  onPlanReject,
-  isSubmitting,
   initialConnectionStatus = "disconnected",
   className,
 }: TacticalShellProps) {
@@ -213,10 +205,6 @@ function TacticalShellComponent({
             viewMode={tacticalState.viewMode}
             selectedEye={tacticalState.selectedEye}
             onClearFilter={handleClearFilter}
-            onClarificationSubmit={onClarificationSubmit}
-            onPlanApprove={onPlanApprove}
-            onPlanReject={onPlanReject}
-            isSubmitting={isSubmitting}
             sessionId={sessionId}
             className="flex-1"
           />

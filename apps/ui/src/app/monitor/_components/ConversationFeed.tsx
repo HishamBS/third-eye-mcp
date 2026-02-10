@@ -19,10 +19,6 @@ interface ConversationFeedProps {
   viewMode: "strategic" | "tactical";
   selectedEye?: EyeId | null;
   onClearFilter?: () => void;
-  onClarificationSubmit?: (id: string, answer: string) => void;
-  onPlanApprove?: () => void;
-  onPlanReject?: (feedback?: string) => void;
-  isSubmitting?: boolean;
   sessionId?: string | null;
   className?: string;
 }
@@ -40,10 +36,6 @@ function ConversationFeedInner({
   viewMode,
   selectedEye = null,
   onClearFilter,
-  onClarificationSubmit,
-  onPlanApprove,
-  onPlanReject,
-  isSubmitting = false,
   sessionId,
   className,
 }: ConversationFeedProps) {
@@ -77,24 +69,6 @@ function ConversationFeedInner({
   const handleScroll = useCallback(() => {
     checkShouldAutoScroll();
   }, [checkShouldAutoScroll]);
-
-  const handleClarificationSubmit = useCallback(
-    (id: string, answer: string) => {
-      onClarificationSubmit?.(id, answer);
-    },
-    [onClarificationSubmit],
-  );
-
-  const handlePlanApprove = useCallback(() => {
-    onPlanApprove?.();
-  }, [onPlanApprove]);
-
-  const handlePlanReject = useCallback(
-    (feedback?: string) => {
-      onPlanReject?.(feedback);
-    },
-    [onPlanReject],
-  );
 
   if (entries.length === 0) {
     return (
@@ -174,10 +148,6 @@ function ConversationFeedInner({
                 <ActiveActionPanel
                   action={entry.action}
                   eyeColor={getEyeColor(entry.eye)}
-                  onClarificationSubmit={handleClarificationSubmit}
-                  onPlanApprove={handlePlanApprove}
-                  onPlanReject={handlePlanReject}
-                  isSubmitting={isSubmitting}
                 />
               )}
             </div>

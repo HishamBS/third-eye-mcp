@@ -952,6 +952,16 @@ Do NOT ask clarifying questions - the task requirements are already clear.`;
       // Future direct Eye calls should be validated
       orderGuard.unmarkAsAutoRouterSession(decision.sessionId);
 
+      // Broadcast pipeline completion
+      if (ws) {
+        ws.broadcastToSession(decision.sessionId, {
+          type: "pipeline_complete",
+          sessionId: decision.sessionId,
+          data: { totalSteps: results.length, verdict: "COMPLETED" },
+          timestamp: Date.now(),
+        });
+      }
+
       return {
         sessionId: decision.sessionId,
         results,
@@ -1617,6 +1627,16 @@ Skip guidance-phase questions and proceed with the validated requirements.`;
 
       // Unmark session after completion
       orderGuard.unmarkAsAutoRouterSession(sessionId);
+
+      // Broadcast pipeline completion
+      if (ws) {
+        ws.broadcastToSession(sessionId, {
+          type: "pipeline_complete",
+          sessionId,
+          data: { totalSteps: results.length, verdict: "COMPLETED" },
+          timestamp: Date.now(),
+        });
+      }
 
       return {
         sessionId,

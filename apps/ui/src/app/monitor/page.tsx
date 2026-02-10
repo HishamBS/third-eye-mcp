@@ -100,12 +100,6 @@ function TacticalMonitorContent() {
         ? "reconnecting"
         : "disconnected";
 
-  // Intent confirmation state
-  const [intentConfirmationId, setIntentConfirmationId] = useState<
-    string | null
-  >(null);
-  const [submitting, setSubmitting] = useState(false);
-
   // Historical events loaded on mount
   const [historicalEvents, setHistoricalEvents] = useState<
     RawHistoricalEvent[]
@@ -278,14 +272,6 @@ function TacticalMonitorContent() {
             ? data.confirmations
             : [];
 
-      // Track pending confirmation for approval UI
-      const pending = confirmations.find(
-        (ic: Record<string, unknown>) => ic.status === "pending",
-      );
-      setIntentConfirmationId(
-        pending && typeof pending.id === "string" ? pending.id : null,
-      );
-
       // Generate synthetic events
       const syntheticEvents: RawHistoricalEvent[] = [];
 
@@ -378,128 +364,6 @@ function TacticalMonitorContent() {
     );
 
   /**
-   * Submit clarification answer
-   */
-  const handleClarificationSubmit = useCallback(
-    async (clarificationId: string, answer: string) => {
-      if (!sessionId) return;
-
-      setSubmitting(true);
-
-      try {
-        const res = await fetch(
-          `${API_BASE_URL}${API_ROUTES.SESSION_CLARIFICATION_VALIDATE(sessionId, clarificationId)}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ answer }),
-          },
-        );
-
-        if (res.ok) {
-          const result = await res.json();
-          const data = result.data || result;
-
-          if (data.valid) {
-            toast.success("Answer submitted successfully");
-            await fetchClarifications();
-          } else {
-            toast.error(data.reason || "Answer validation failed", {
-              description: data.suggestion,
-            });
-          }
-        } else {
-          toast.error("Failed to submit answer");
-        }
-      } catch (err) {
-        console.error("Failed to submit clarification:", err);
-        toast.error("Failed to submit answer");
-      } finally {
-        setSubmitting(false);
-      }
-    },
-    [sessionId, fetchClarifications],
-  );
-
-  /**
-   * Approve plan (intent confirmation)
-   */
-  const handlePlanApprove = useCallback(async () => {
-    if (!intentConfirmationId) {
-      toast.error("No plan pending approval");
-      return;
-    }
-
-    setSubmitting(true);
-
-    try {
-      const res = await fetch(
-        `${API_BASE_URL}${API_ROUTES.INTENT_CONFIRMATION_SUBMIT(intentConfirmationId)}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ confirmed: true, response: "approved" }),
-        },
-      );
-
-      if (res.ok) {
-        toast.success("Plan approved - proceeding with execution");
-        await fetchIntentConfirmations();
-      } else {
-        const text = await res.text();
-        toast.error(`Failed to approve plan: ${text}`);
-      }
-    } catch (err) {
-      console.error("Failed to approve plan:", err);
-      toast.error("Failed to approve plan");
-    } finally {
-      setSubmitting(false);
-    }
-  }, [intentConfirmationId, fetchIntentConfirmations]);
-
-  /**
-   * Reject plan with optional feedback
-   */
-  const handlePlanReject = useCallback(
-    async (feedback?: string) => {
-      if (!intentConfirmationId) {
-        toast.error("No plan pending rejection");
-        return;
-      }
-
-      setSubmitting(true);
-
-      try {
-        const res = await fetch(
-          `${API_BASE_URL}${API_ROUTES.INTENT_CONFIRMATION_SUBMIT(intentConfirmationId)}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              confirmed: false,
-              response: feedback || "rejected",
-            }),
-          },
-        );
-
-        if (res.ok) {
-          toast.success("Plan rejected - task halted");
-          await fetchIntentConfirmations();
-        } else {
-          const text = await res.text();
-          toast.error(`Failed to reject plan: ${text}`);
-        }
-      } catch (err) {
-        console.error("Failed to reject plan:", err);
-        toast.error("Failed to reject plan");
-      } finally {
-        setSubmitting(false);
-      }
-    },
-    [intentConfirmationId, fetchIntentConfirmations],
-  );
-
-  /**
    * Export session transcript
    */
   const handleExport = useCallback(() => {
@@ -511,11 +375,7 @@ function TacticalMonitorContent() {
       sessionId={sessionId}
       initialEvents={historicalEvents}
       onWebSocketMessage={handleWebSocketMessage}
-      onClarificationSubmit={handleClarificationSubmit}
-      onPlanApprove={handlePlanApprove}
-      onPlanReject={handlePlanReject}
       onExport={handleExport}
-      isSubmitting={submitting}
       initialConnectionStatus={tacticalConnectionStatus}
       className="h-screen"
     />
