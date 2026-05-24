@@ -94,3 +94,4 @@ pipeline-e2e-test-results.json
 *-test-results.json
 scripts/test-*.ts
 scripts/analyze-*.ts
+.todos/
